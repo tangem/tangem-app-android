@@ -150,4 +150,11 @@ internal sealed interface TokensListItemUM2 {
     ) : TokensListItemUM2 {
         override val id: String = state.id
     }
+
+    data class Collectibles(
+        val state: TangemAccountRow.State,
+        val avatar: TangemAvatar.UiState,
+    ) : TokensListItemUM2 {
+        override val id: String = state.id
+    }
 }

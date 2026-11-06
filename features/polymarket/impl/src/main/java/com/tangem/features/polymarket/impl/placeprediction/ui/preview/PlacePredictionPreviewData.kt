@@ -13,6 +13,8 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
@@ -61,7 +63,11 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
             previewState(amountValue = "4000", quote = previewQuote(), balance = BigDecimal("10"))
                 .copy(notifications = persistentListOf(PredictionNotificationUM.AwaitingFunds)),
             previewState(order = previewSell()),
-            previewState(amountValue = "12.80", quote = QuoteUM.Loading, order = previewSell()),
+            previewState(
+                amountValue = "12.80",
+                quote = QuoteUM.Loading,
+                order = previewSell(),
+            ),
             previewState(amountValue = "51.23", quote = previewSellQuote(), order = previewSell()),
             previewState(
                 amountValue = "3",
@@ -123,7 +129,7 @@ internal object PlacePredictionPreviewIntents :
     override fun onPolymarketTermsClick() = Unit
     override fun onTangemTermsClick() = Unit
     override fun onNextClick() = Unit
-    override fun onPlaceClick() = Unit
+    override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) = Unit
     override fun onBackClick() = Unit
     override fun onCloseClick() = Unit
     override fun onToMainClick() = Unit
@@ -176,7 +182,7 @@ private fun previewState(
     minAmount = minAmount,
     notifications = persistentListOf(),
     submit = SubmitUM.Idle,
-    isPrimaryButtonEnabled = false,
+    placeAction = PlaceActionUM.Unavailable,
 ).recomputeGate()
 
 private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.FULL): QuoteUM.Content = QuoteUM.Content(

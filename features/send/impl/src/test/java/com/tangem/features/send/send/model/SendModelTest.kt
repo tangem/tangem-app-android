@@ -1,10 +1,14 @@
 package com.tangem.features.send.send.model
 
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -16,6 +20,8 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.loadedStatus
@@ -27,6 +33,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
@@ -248,6 +255,59 @@ internal class SendModelTest : SendModelTestBase() {
             // Assert
             assertThat(result).isEqualTo(GetFeeError.UnknownError.left())
         }
+
+        @Test
+        fun `GIVEN QR amount lost and no entered amount WHEN loadFee THEN return DataError instead of crashing`() =
+            runTest {
+                // Arrange
+                val model = createSendModel(this)
+                advanceUntilIdle()
+                model.predefinedValues = qrCode(amount = null)
+
+                // Act
+                val result = runCatching { model.loadFee() }
+
+                // Assert
+                assertThat(result.exceptionOrNull()).isNull()
+                assertThat(result.getOrNull()?.leftOrNull()).isInstanceOf(GetFeeError.DataError::class.java)
+            }
+
+        @Test
+        fun `GIVEN QR predefined recipient AND recipient edited WHEN loadFee THEN transaction goes to edited recipient`() =
+            runTest {
+                // Arrange
+                val model = createSendModel(this)
+                advanceUntilIdle()
+                model.predefinedValues = qrCode(amount = "1.0")
+                model.onDestinationResult(destinationContent(address = EDITED_ADDRESS))
+                coEvery { getFeeUseCase(any(), any(), any()) } returns mockk<TransactionFee>(relaxed = true).right()
+
+                // Act
+                model.loadFee()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    createTransferTransactionUseCase(any(), any<String>(), EDITED_ADDRESS, any(), any(), any())
+                }
+            }
+
+        @Test
+        fun `GIVEN QR predefined recipient AND recipient never edited WHEN loadFee THEN transaction goes to predefined`() =
+            runTest {
+                // Arrange
+                val model = createSendModel(this)
+                advanceUntilIdle()
+                model.predefinedValues = qrCode(amount = "1.0")
+                coEvery { getFeeUseCase(any(), any(), any()) } returns mockk<TransactionFee>(relaxed = true).right()
+
+                // Act
+                model.loadFee()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    createTransferTransactionUseCase(any(), any<String>(), QR_PREDEFINED_ADDRESS, any(), any(), any())
+                }
+            }
     }
 
     @Nested
@@ -282,7 +342,7 @@ internal class SendModelTest : SendModelTestBase() {
 
             // Assert
             assertThat(result).isEqualTo(tokenFee.right())
-            coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any(), any()) }
         }
 
         @Test
@@ -297,7 +357,7 @@ internal class SendModelTest : SendModelTestBase() {
                 model.loadFeeExtended(maybeToken = null)
 
                 // Assert
-                coVerify(exactly = 2) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) }
+                coVerify(exactly = 2) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any(), any()) }
                 coVerify(exactly = 0) { getFeeUseCase(any(), any(), any()) }
             }
 
@@ -313,7 +373,7 @@ internal class SendModelTest : SendModelTestBase() {
             model.loadFeeExtended(maybeToken = null)
 
             // Assert
-            coVerify(exactly = 1) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) }
+            coVerify(exactly = 1) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any(), any()) }
             coVerify(exactly = 1) { getFeeUseCase(any(), any(), any()) }
         }
 
@@ -325,8 +385,8 @@ internal class SendModelTest : SendModelTestBase() {
         }
 
         private fun givenDefaultFee(isNativeFeePreferred: Boolean) {
-            coEvery { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) } answers {
-                if (isNativeFeePreferred) arg<() -> Unit>(5).invoke()
+            coEvery { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any(), any()) } answers {
+                if (isNativeFeePreferred) arg<() -> Unit>(6).invoke()
                 defaultFee.right()
             }
         }
@@ -556,6 +616,52 @@ internal class SendModelTest : SendModelTestBase() {
             model.onDestroy()
         }
 
+        @Test
+        fun `GIVEN predefined amount WHEN QR without amount scanned THEN amount kept and address replaced`() = runTest {
+            // Arrange
+            val scans = MutableSharedFlow<String>()
+            every { listenToQrScanningUseCase(SourceType.SEND) } returns scans.right()
+            every { parseQrCodeUseCase(QR_CODE, any()) } returns QrResult(address = QR_ADDRESS).right()
+            val model = createSendModel(this)
+            advanceUntilIdle()
+            model.predefinedValues = qrCode(amount = "1.0")
+
+            // Act
+            scans.emit(QR_CODE)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.predefinedValues).isEqualTo(
+                PredefinedValues.Content.QrCode(
+                    amount = "1.0",
+                    address = QR_ADDRESS,
+                    memo = null,
+                    source = PredefinedValues.Source.SEND_SCREEN,
+                ),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN predefined amount WHEN QR with amount scanned THEN scanned amount wins`() = runTest {
+            // Arrange
+            val scans = MutableSharedFlow<String>()
+            every { listenToQrScanningUseCase(SourceType.SEND) } returns scans.right()
+            every { parseQrCodeUseCase(QR_CODE, any()) } returns
+                QrResult(address = QR_ADDRESS, amount = BigDecimal("2")).right()
+            val model = createSendModel(this)
+            advanceUntilIdle()
+            model.predefinedValues = qrCode(amount = "1.0")
+
+            // Act
+            scans.emit(QR_CODE)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.predefinedValues as PredefinedValues.Content.QrCode).amount).isEqualTo("2")
+            model.onDestroy()
+        }
+
         private fun provideTestModels() = listOf(BigDecimal("-10"), BigDecimal("-0.5"), BigDecimal.ZERO)
     }
 
@@ -573,7 +679,33 @@ internal class SendModelTest : SendModelTestBase() {
         transactionId = "tx123",
     )
 
+    private fun qrCode(amount: String?) = PredefinedValues.Content.QrCode(
+        amount = amount,
+        address = QR_PREDEFINED_ADDRESS,
+        memo = null,
+        source = PredefinedValues.Source.MAIN_SCREEN,
+    )
+
+    private fun destinationContent(address: String): DestinationUM.Content = DestinationUM.Content(
+        isPrimaryButtonEnabled = true,
+        isInitialized = true,
+        addressTextField = DestinationTextFieldUM.RecipientAddress(
+            value = address,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, keyboardType = KeyboardType.Text),
+            placeholder = stringReference(""),
+            label = stringReference(""),
+            isValuePasted = false,
+        ),
+        memoTextField = null,
+        recent = persistentListOf(),
+        wallets = persistentListOf(),
+        networkName = "Ethereum",
+        isRecentHidden = false,
+    )
+
     private companion object {
+        const val QR_PREDEFINED_ADDRESS = "qrPredefinedAddress"
+        const val EDITED_ADDRESS = "editedAddress"
         const val INTENT_ADDRESS = "intentAddress"
         const val INTENT_MEMO = "intentMemo"
         const val QR_CODE = "qrCode"

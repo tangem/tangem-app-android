@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.features.polymarket.impl.common.PolymarketOutcomeButtonTitle
 import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.common.toResolutionSourceUM
@@ -51,6 +52,7 @@ internal class PolymarketEventDetailsContentTransformer(
     private val onReadMoreClick: () -> Unit,
     private val onResolutionSourceClick: (String) -> Unit = {},
     private val categoryLabel: String? = null,
+    private val isTeamAbbreviationEnabled: Boolean = false,
 ) : Transformer<PolymarketEventDetailsUM> {
 
     override fun transform(prevState: PolymarketEventDetailsUM): PolymarketEventDetailsUM {
@@ -86,6 +88,11 @@ internal class PolymarketEventDetailsContentTransformer(
     }
 
     private fun transformMarket(market: PolymarketMarket, isTradable: Boolean): PolymarketDetailsMarketUM {
+        val titles = PolymarketOutcomeButtonTitle.convert(
+            market.outcomes.map { it.title },
+            event.teams,
+            isTeamAbbreviationEnabled,
+        )
         return PolymarketDetailsMarketUM(
             id = market.id,
             title = transformMarketTitle(market),
@@ -93,7 +100,9 @@ internal class PolymarketEventDetailsContentTransformer(
             iconUrl = market.iconUrl ?: event.iconUrl,
             outcomes = if (isTradable) {
                 market.outcomes
-                    .map { transformOutcome(market = market, outcome = it) }
+                    .mapIndexed { index, outcome ->
+                        transformOutcome(market = market, outcome = outcome, title = titles[index])
+                    }
                     .toImmutableList()
             } else {
                 persistentListOf()
@@ -112,10 +121,14 @@ internal class PolymarketEventDetailsContentTransformer(
         }
     }
 
-    private fun transformOutcome(market: PolymarketMarket, outcome: PolymarketOutcome): PolymarketDetailsOutcomeUM {
+    private fun transformOutcome(
+        market: PolymarketMarket,
+        outcome: PolymarketOutcome,
+        title: String,
+    ): PolymarketDetailsOutcomeUM {
         return PolymarketDetailsOutcomeUM(
             assetId = outcome.assetId,
-            title = stringReference(outcome.title),
+            title = stringReference(title),
             price = stringReference(outcome.probability.formatPolymarketPrice()),
             onClick = { onOutcomeClick(market.id, outcome.assetId) },
         )

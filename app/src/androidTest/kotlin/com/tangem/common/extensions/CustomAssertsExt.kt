@@ -122,12 +122,16 @@ private fun String.stripToNumeric(): String = replace(NON_NUMERIC_REGEX, "")
 
 /**
  * Numeric value parsed from a balance/amount label such as `"$0.00"` or `"1,234.5"` — strips currency
- * symbols and grouping separators. So a dash balance (`"—"`) has no digits and fails here by design:
- * callers must branch on the dash before parsing.
+ * symbols and grouping separators. The leading sign is preserved (a hyphen-minus or a Unicode minus),
+ * so `"-$1.00"` parses as negative and a `>= 0` check actually tests something. A dash balance (`"—"`)
+ * has no digits and fails here by design: callers must branch on the dash before parsing.
  */
-fun String.parseNumericBalance(): BigDecimal =
-    stripToNumeric().toBigDecimalOrNull()
+fun String.parseNumericBalance(): BigDecimal {
+    val magnitude = stripToNumeric().toBigDecimalOrNull()
         ?: error("Cannot parse a numeric balance from '$this'")
+    val isNegative = trimStart().firstOrNull() in setOf('-', '−')
+    return if (isNegative) magnitude.negate() else magnitude
+}
 
 private fun parseVolume(node: SemanticsNode): Double? {
     val text = extractText(node) ?: return null

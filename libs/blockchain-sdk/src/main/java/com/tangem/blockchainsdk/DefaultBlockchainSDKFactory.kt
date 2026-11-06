@@ -2,8 +2,10 @@ package com.tangem.blockchainsdk
 
 import com.tangem.blockchain.assetsdiscovery.AssetsDiscoveryServiceFactory
 import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.common.memo.MemoValidatorFactory
+import com.tangem.blockchainsdk.analytics.BlockchainExceptionHandler
 import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.models.ProviderModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -20,6 +22,8 @@ internal typealias BlockchainProvidersResponse = Map<String, List<ProviderModel>
  * @property blockchainSdkConfig             blockchain SDK config
  * @property blockchainProvidersTypesManager blockchain providers types manager
  * @property walletManagerFactoryCreator     wallet manager factory creator
+ * @param blockchainExceptionHandler      reports node host switches, registered with the SDK before any of
+
  * @param dispatchers                     coroutine dispatchers provider
  *
 [REDACTED_AUTHOR]
@@ -28,8 +32,13 @@ internal class DefaultBlockchainSDKFactory(
     private val blockchainSdkConfig: BlockchainSdkConfig,
     private val blockchainProvidersTypesManager: BlockchainProvidersTypesManager,
     private val walletManagerFactoryCreator: WalletManagerFactoryCreator,
+    blockchainExceptionHandler: BlockchainExceptionHandler,
     dispatchers: CoroutineDispatcherProvider,
 ) : BlockchainSDKFactory {
+
+    init {
+        ExceptionHandler.append(blockchainExceptionHandler)
+    }
 
     private val mainScope = CoroutineScope(dispatchers.main)
 

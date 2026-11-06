@@ -25,6 +25,7 @@ import com.tangem.lib.auth.session.PreparedWalletRegistration
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.lib.auth.session.WalletRegistrationResult
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -52,23 +53,25 @@ internal class DefaultWalletRegistrar(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletRegistrar {
 
-    override suspend fun register(walletId: String, signer: WalletSigner): Either<WalletRegistrationError, Unit> =
-        withContext(dispatchers.io) {
-            // Hold the per-wallet lock across the WHOLE one-shot flow (idempotency + nonce + sign +
-            // submit), so two concurrent register() calls for the same wallet can't both pass the
-            // idempotency check and consume/sign separate nonces.
-            locks.forWallet(walletId).withLock {
-                either {
-                    if (isAlreadyRegistered(walletId)) return@either
-                    requireSession()
-                    val nonce = fetchNonce(NonceRequestType.MOBILE_WALLET)
-                    val prepared = assemble(walletId, nonce, signer)
-                    locks.sessionRotation.withLock {
-                        handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request))
-                    }
+    override suspend fun register(
+        walletId: String,
+        signer: WalletSigner,
+    ): Either<WalletRegistrationError, WalletRegistrationResult> = withContext(dispatchers.io) {
+        // Hold the per-wallet lock across the WHOLE one-shot flow (idempotency + nonce + sign +
+        // submit), so two concurrent register() calls for the same wallet can't both pass the
+        // idempotency check and consume/sign separate nonces.
+        locks.forWallet(walletId).withLock {
+            either {
+                if (isAlreadyRegistered(walletId)) return@either WalletRegistrationResult.AlreadyRegistered
+                requireSession()
+                val nonce = fetchNonce(NonceRequestType.MOBILE_WALLET)
+                val prepared = assemble(walletId, nonce, signer)
+                locks.sessionRotation.withLock {
+                    handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request))
                 }
             }
         }
+    }
 
     override suspend fun isRegistered(walletId: String): Boolean = withContext(dispatchers.io) {
         runSuspendCatching { walletId in registeredWalletIdsSync() }
@@ -138,14 +141,15 @@ internal class DefaultWalletRegistrar(
         }
     }
 
-    override suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit> =
-        withContext(dispatchers.io) {
-            locks.forWallet(prepared.walletId).withLock {
-                locks.sessionRotation.withLock {
-                    either { handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request)) }
-                }
+    override suspend fun submit(
+        prepared: PreparedWalletRegistration,
+    ): Either<WalletRegistrationError, WalletRegistrationResult> = withContext(dispatchers.io) {
+        locks.forWallet(prepared.walletId).withLock {
+            locks.sessionRotation.withLock {
+                either { handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request)) }
             }
         }
+    }
 
     override suspend fun unregister(
         walletId: String,
@@ -313,7 +317,7 @@ internal class DefaultWalletRegistrar(
     private suspend fun Raise<WalletRegistrationError>.handleRegisterResponse(
         walletId: String,
         response: ApiResponse<TokenApiResponse>,
-    ) {
+    ): WalletRegistrationResult {
         when (response) {
             is ApiResponse.Success -> {
                 val tokens = SessionTokensConverter.convertBack(response.data)
@@ -327,6 +331,7 @@ internal class DefaultWalletRegistrar(
                     raise(WalletRegistrationError.PersistenceFailed(e))
                 }
                 TangemLogger.i("Wallet registered successfully")
+                return WalletRegistrationResult.Registered
             }
             is ApiResponse.Error -> {
                 val authError = errorConverter.convert(response.cause)
@@ -340,7 +345,7 @@ internal class DefaultWalletRegistrar(
                         TangemLogger.e("Failed to persist wallet-registration marker after 409", e)
                         raise(WalletRegistrationError.PersistenceFailed(e))
                     }
-                    return
+                    return WalletRegistrationResult.AlreadyRegistered
                 }
                 TangemLogger.e("/wallet request failed: $authError")
                 raise(WalletRegistrationError.Api(authError))

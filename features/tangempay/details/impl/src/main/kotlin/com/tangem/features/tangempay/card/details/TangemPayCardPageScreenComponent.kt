@@ -132,10 +132,9 @@ internal class TangemPayCardPageScreenComponent(
             is TangemPayCardNavigation.VaBankingDetailsError -> DefaultTangemPayBankingDetailsErrorComponent(
                 appComponentContext = context,
                 params = TangemPayBankingDetailsErrorComponent.Params(
-                    retry = { model.loadBankCredentials(navigation.productInstanceId) },
+                    retry = { model.retryBankCredentials(navigation.productInstanceId) },
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onContactSupport = model::onContactSupportClicked,
-                    onResolved = model::onVaBankingDetailsResolved,
                 ),
             )
             is TangemPayCardNavigation.Receive -> tokenReceiveComponentFactory.create(

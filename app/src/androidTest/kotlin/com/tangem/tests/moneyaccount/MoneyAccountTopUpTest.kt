@@ -134,9 +134,9 @@ class MoneyAccountTopUpTest : BaseTestCase() {
     }
 
     @AllureId("13149")
-    @DisplayName("Money account: without an account address the Add funds sheet offers only the bank transfer")
+    @DisplayName("Money account: with the balance unavailable the Add funds and Send buttons are disabled")
     @Test
-    fun addFundsSheetOffersOnlyBankTransferWithoutAddressTest() {
+    fun actionButtonsDisabledWhenBalanceUnavailableTest() {
         val providersPolygonMockOnlyState = "PolygonMockOnly"
 
         setupHooks(
@@ -154,15 +154,16 @@ class MoneyAccountTopUpTest : BaseTestCase() {
                 setWireMockScenarioState(usdcBalanceScenario, usdcBalanceUnreachableState)
             }
             step("Open 'Money account' screen") { openMoneyAccount() }
-            step("Open 'Add funds' sheet") { openMoneyAccountAddFunds() }
-            step("Assert 'From a bank account' option is displayed") {
-                onMoneyAccountAddFundsSheet { bankTransferOption.assertIsDisplayed() }
-            }
-            step("Assert 'From your Tangem Wallet' and 'From another wallet or exchange' are not displayed") {
-                onMoneyAccountAddFundsSheet {
-                    swapOption.assertDoesNotExist()
-                    receiveOption.assertDoesNotExist()
+            step("Assert 'Balance unavailable' banner is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onMoneyAccountScreen { balanceUnavailableBanner.assertIsDisplayed() }
                 }
+            }
+            step("Assert 'Add funds' button is disabled") {
+                onMoneyAccountScreen { addFundsButton.assertIsNotEnabled() }
+            }
+            step("Assert 'Send' button is disabled") {
+                onMoneyAccountScreen { sendButton.assertIsNotEnabled() }
             }
         }
     }
@@ -203,7 +204,7 @@ class MoneyAccountTopUpTest : BaseTestCase() {
             step("Enter amount '$depositAmount'") { inputAmount(depositAmount) }
             step("Assert Transfer mode is ready without a provider") { assertTransferReady() }
             step("Assert network fee is displayed") { waitForFeeDisplayed() }
-            step("Hold to confirm the transfer") { holdToConfirmTransfer() }
+            step("Hold to confirm the transfer") { holdToConfirmTransferUntilInProgress() }
             step("Assert 'Transfer in progress' screen is displayed") {
                 onSwapSuccessScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { transferInProgressTitle.assertIsDisplayed() }

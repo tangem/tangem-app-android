@@ -29,6 +29,7 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.transactionrow.TangemTransactionRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import kotlinx.collections.immutable.ImmutableSet
 
@@ -657,6 +658,35 @@ internal data class TangemTokenRowMarketStory(
     val onLongTitleToggle: () -> Unit,
 ) : DsStoryBookPage
 
+@Suppress("BooleanPropertyNaming")
+internal data class TangemTransactionRowStory(
+    val variant: Variant,
+    val status: TangemTransactionRow.Status,
+    val subtitle: Subtitle,
+    val hasDescription: Boolean,
+    val hasAmount: Boolean,
+    val hasCaption: Boolean,
+    val hasBadge: Boolean,
+    val hasStatusMessage: Boolean,
+    val isBalanceHidden: Boolean,
+    val onVariantChange: (Variant) -> Unit,
+    val onStatusChange: (TangemTransactionRow.Status) -> Unit,
+    val onSubtitleChange: (Subtitle) -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onAmountToggle: () -> Unit,
+    val onCaptionToggle: () -> Unit,
+    val onBadgeToggle: () -> Unit,
+    val onStatusMessageToggle: () -> Unit,
+    val onBalanceHiddenToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Which [TangemTransactionRow] variant is rendered. */
+    enum class Variant { Content, Shimmer }
+
+    /** Which [TangemTransactionRow.Subtitle] variant is shown under the title. */
+    enum class Subtitle { None, Entity, Address, Stack, Text }
+}
+
 internal data class TangemFilterGroupStory(
     val variant: TangemFilterItem.Variant,
     val background: Background,
@@ -924,17 +954,23 @@ internal data class TangemExpandableRowStory(
 @Suppress("BooleanPropertyNaming")
 internal data class TangemAvatarStory(
     val variant: Variant,
+    val accountVariant: AccountVariant,
     val fillColor: TangemAvatar.FillColor,
     val appearance: TangemAvatar.Appearance,
     val status: TangemAvatar.Status,
+    val transactionType: TransactionType,
+    val address: AddressSample,
     val hasAccountIndicator: Boolean,
     val hasLetter: Boolean,
     val isRemoteAsset: Boolean,
     val isRoundedSquare: Boolean,
     val onVariantChange: (Variant) -> Unit,
+    val onAccountVariantChange: (AccountVariant) -> Unit,
     val onFillColorChange: (TangemAvatar.FillColor) -> Unit,
     val onAppearanceChange: (TangemAvatar.Appearance) -> Unit,
     val onStatusChange: (TangemAvatar.Status) -> Unit,
+    val onTransactionTypeChange: (TransactionType) -> Unit,
+    val onAddressChange: (AddressSample) -> Unit,
     val onAccountIndicatorToggle: () -> Unit,
     val onLetterToggle: () -> Unit,
     val onRemoteAssetToggle: () -> Unit,
@@ -943,6 +979,15 @@ internal data class TangemAvatarStory(
 
     /** Which [com.tangem.core.ui.ds2.avatar.TangemAvatar.UiState] subtype is rendered. */
     enum class Variant { Account, User, Address, Icon, Transaction, Asset, Shimmer }
+
+    /** Figma `Avatar Module [Account]` variants. */
+    enum class AccountVariant { Crypto, Letter, Prediction, Gacha, Visa, Money }
+
+    /** Figma `Avatar Module [Transaction]` variants. */
+    enum class TransactionType { Send, Receive, Swap, TopUp, Staking, Delivery, Pack, Fee }
+
+    /** Seeds for the Address identicon. */
+    enum class AddressSample { First, Second, Third }
 }
 
 internal data class TangemMenuStory(

@@ -18,6 +18,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
+import com.tangem.core.ui.ds2.button.GroupEntry
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -75,10 +76,8 @@ internal fun WalletTopBar(
         endButtonsGroup = if (topBarConfig.endActions.isNotEmpty()) {
             {
                 topBarConfig.endActions.forEach { action ->
-                    TangemButton(
-                        variant = TangemButton.Variant.Ghost,
-                        size = TangemButton.Size.X11,
-                        iconStart = TangemIconUM.Icon(iconRes = action.iconRes),
+                    TangemButton.GroupEntry(
+                        iconUM = TangemIconUM.Icon(iconRes = action.iconRes),
                         isEnabled = action.isActionable && action.onClick != null,
                         onClick = {
                             hapticManager.perform(TangemHapticEffect.View.ContextClick)

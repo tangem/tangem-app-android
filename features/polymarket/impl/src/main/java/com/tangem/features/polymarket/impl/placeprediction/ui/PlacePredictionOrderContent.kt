@@ -31,6 +31,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
@@ -82,11 +83,13 @@ internal fun PlacePredictionOrderContent(
                 PredictionPlaceButton(
                     order = state.order,
                     isLoading = !isIdle,
-                    isEnabled = state.isPrimaryButtonEnabled,
-                    onClick = {
+                    isEnabled = state.placeAction != PlaceActionUM.Unavailable,
+                    onClick = { confirmedWith ->
                         focusManager.clearFocus()
-                        intents.onPlaceClick()
+                        intents.onPlaceClick(confirmedWith = confirmedWith)
                     },
+                    style = state.placeButtonStyle,
+                    holdResetKey = state.holdResetKey,
                 )
             }
         },

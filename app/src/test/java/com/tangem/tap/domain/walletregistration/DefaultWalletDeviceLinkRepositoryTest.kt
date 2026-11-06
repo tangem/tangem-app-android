@@ -6,13 +6,18 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.registration.WalletLinkError
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.lib.auth.session.WalletRegistrationResult
 import com.tangem.lib.auth.session.WalletSigner
+import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -33,6 +38,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 
 internal class DefaultWalletDeviceLinkRepositoryTest {
@@ -40,11 +46,15 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
     private val walletRegistrar: WalletRegistrar = mockk()
     private val mobileSigner: MobileWalletRegistrationSigner = mockk()
     private val coldSigner: ColdWalletRegistrationSigner = mockk()
+    private val walletFeatureToggles: WalletFeatureToggles = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
 
     private val repository = DefaultWalletDeviceLinkRepository(
         walletRegistrar = walletRegistrar,
         mobileSigner = mobileSigner,
         coldSigner = coldSigner,
+        walletFeatureToggles = walletFeatureToggles,
+        analyticsEventHandler = analyticsEventHandler,
     )
 
     private val coldWallet = MockUserWalletFactory.create()
@@ -65,7 +75,8 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(walletRegistrar, mobileSigner, coldSigner)
+        clearMocks(walletRegistrar, mobileSigner, coldSigner, walletFeatureToggles, analyticsEventHandler)
+        every { walletFeatureToggles.isWalletLinkingEnabled } returns true
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
@@ -129,6 +140,19 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
         }
 
         private fun provideUnsupportedWallets() = unsupportedColdWallets
+
+        @Test
+        fun `GIVEN linking disabled WHEN isLinked collected THEN emits true without reading registrations`() = runTest {
+            // Arrange
+            every { walletFeatureToggles.isWalletLinkingEnabled } returns false
+
+            // Act
+            val actual = repository.isLinked(hotWallet).toList()
+
+            // Assert
+            assertThat(actual).containsExactly(true)
+            verify(exactly = 0) { walletRegistrar.registeredWalletIds() }
+        }
     }
 
     @Nested
@@ -140,7 +164,7 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
             // Arrange
             val signer = mockk<WalletSigner>()
             every { mobileSigner.signerFor(hotWallet) } returns signer
-            coEvery { walletRegistrar.register(any(), any()) } returns Unit.right()
+            coEvery { walletRegistrar.register(any(), any()) } returns WalletRegistrationResult.Registered.right()
             val expectedWalletId = hotWallet.base64Id()
 
             // Act
@@ -167,11 +191,24 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
         private fun provideUnsupportedWallets() = unsupportedColdWallets
 
         @Test
+        fun `GIVEN linking disabled WHEN link THEN returns NotSupported without registering`() = runTest {
+            // Arrange
+            every { walletFeatureToggles.isWalletLinkingEnabled } returns false
+
+            // Act
+            val actual = repository.link(hotWallet)
+
+            // Assert
+            assertThat(actual).isEqualTo(WalletLinkError.NotSupported.left())
+            coVerify(exactly = 0) { walletRegistrar.register(any(), any()) }
+        }
+
+        @Test
         fun `GIVEN cold wallet WHEN link THEN registers its Base64 id with the card signer`() = runTest {
             // Arrange
             val signer = mockk<WalletSigner>()
             every { coldSigner.signerFor(coldWallet) } returns signer
-            coEvery { walletRegistrar.register(any(), any()) } returns Unit.right()
+            coEvery { walletRegistrar.register(any(), any()) } returns WalletRegistrationResult.Registered.right()
             val expectedWalletId = coldWallet.base64Id()
 
             // Act
@@ -196,6 +233,74 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
             assertThat(actual).isEqualTo(model.expected.left())
         }
 
+        @ParameterizedTest
+        @EnumSource(WalletRegistrationResult::class)
+        fun `GIVEN registration succeeds WHEN link THEN only a new link is reported to analytics`(
+            result: WalletRegistrationResult,
+        ) = runTest {
+            // Arrange
+            every { mobileSigner.signerFor(hotWallet) } returns mockk()
+            coEvery { walletRegistrar.register(any(), any()) } returns result.right()
+
+            // Act
+            val actual = repository.link(hotWallet)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            val expectedCount = if (result == WalletRegistrationResult.Registered) 1 else 0
+            verify(exactly = expectedCount) { analyticsEventHandler.send(BackendAuthAnalyticsEvent.WalletLinked()) }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN registration fails WHEN link THEN only a real failure is reported to analytics`(
+            model: ErrorMappingModel,
+        ) = runTest {
+            // Arrange
+            every { mobileSigner.signerFor(hotWallet) } returns mockk()
+            coEvery { walletRegistrar.register(any(), any()) } returns model.registrationError.left()
+
+            // Act
+            repository.link(hotWallet)
+
+            // Assert
+            val expectedEvents = when (val expected = model.expected) {
+                is WalletLinkError.Failed -> listOf(
+                    WalletRegistrationFailed(
+                        walletType = WalletRegistrationFailed.WalletType.Mobile,
+                        stage = WalletRegistrationFailed.Stage.Register,
+                        reason = expected.reason,
+                    ),
+                )
+                else -> emptyList()
+            }
+            val sentEvents = mutableListOf<AnalyticsEvent>()
+            verify(atLeast = 0) { analyticsEventHandler.send(capture(sentEvents)) }
+            assertThat(sentEvents).containsExactlyElementsIn(expectedEvents)
+        }
+
+        @Test
+        fun `GIVEN cold registration fails WHEN link THEN failure is reported with the cold wallet type`() = runTest {
+            // Arrange
+            val error = WalletRegistrationError.NoActiveSession
+            every { coldSigner.signerFor(coldWallet) } returns mockk()
+            coEvery { walletRegistrar.register(any(), any()) } returns error.left()
+
+            // Act
+            repository.link(coldWallet)
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    WalletRegistrationFailed(
+                        walletType = WalletRegistrationFailed.WalletType.Cold,
+                        stage = WalletRegistrationFailed.Stage.Register,
+                        reason = error.toString(),
+                    ),
+                )
+            }
+        }
+
         private fun provideTestModels(): List<ErrorMappingModel> {
             val signingFailed = WalletRegistrationError.SigningFailed(IllegalStateException("no key"))
             val apiFailed = WalletRegistrationError.Api(AuthError.Forbidden(problem = null))
@@ -203,6 +308,10 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
                 ErrorMappingModel(
                     registrationError = WalletRegistrationError.SigningFailed(TangemSdkError.UserCancelled()),
                     expected = WalletLinkError.Cancelled,
+                ),
+                ErrorMappingModel(
+                    registrationError = WalletRegistrationError.SigningFailed(TangemSdkError.WalletNotFound()),
+                    expected = WalletLinkError.WrongCard,
                 ),
                 ErrorMappingModel(
                     registrationError = signingFailed,

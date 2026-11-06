@@ -51,4 +51,9 @@ interface WalletCardsBackupRepository {
      * never an empty list, so "the backend cannot be reached" is never mistaken for "the backend knows nothing".
      */
     suspend fun getWalletCards(userWalletId: UserWalletId): Either<WalletCardsBackupError, List<WalletCardBackup>>
+
+    /** Whether this device has already delivered the stored `CardLinked` state of [userWalletId] to the backend */
+    suspend fun isCardLinkedReported(userWalletId: UserWalletId): Boolean
+
+    suspend fun setCardLinkedReported(userWalletId: UserWalletId)
 }

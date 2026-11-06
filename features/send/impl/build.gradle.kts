@@ -103,7 +103,6 @@ dependencies {
     kapt(deps.hilt.kapt)
     
     testImplementation(projects.common.test)
-    testImplementation(projects.core.remote)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.arrow.core)

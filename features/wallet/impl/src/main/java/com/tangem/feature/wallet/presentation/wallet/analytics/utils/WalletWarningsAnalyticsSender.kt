@@ -81,7 +81,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.Warning.SomeNetworksUnreachable,
             is WalletNotification.Warning.NetworksUnreachable,
             is WalletNotification.UsedOutdatedData,
-            is WalletNotification.UnlockVisaAccess,
             is WalletNotification.Warning.YeildSupplyApprove, // TODO apply correct event
             is WalletNotification.CloreMigration,
             -> null
@@ -120,6 +119,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             WalletNotificationUM.TestnetCard -> TestnetCard()
             WalletNotificationUM.DemoCard -> DemoCard()
             is WalletNotificationUM.MissingAddresses -> MissingAddresses()
+            is WalletNotificationUM.LinkWalletToDevice -> NoticeLinkWallet()
             is WalletNotificationUM.RateApp -> HowDoYouLikeTangem()
             is WalletNotificationUM.BackupError -> BackupError()
             is WalletNotificationUM.NoteMigration -> NotePromo()
@@ -150,7 +150,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotificationUM.UsedOutdatedData,
             is WalletNotificationUM.CloreMigration,
             is WalletNotificationUM.TangemPayRefreshNeeded,
-            is WalletNotificationUM.LinkWalletToDevice,
             WalletNotificationUM.TangemPayUnreachable,
             is WalletNotificationUM.YieldBoostPromo,
             is WalletNotificationUM.AssetsDiscoveryCompleted,

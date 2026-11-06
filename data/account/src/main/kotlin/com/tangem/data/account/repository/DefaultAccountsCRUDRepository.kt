@@ -20,13 +20,11 @@ import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
-import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.isCollectibles
-import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
@@ -37,7 +35,6 @@ import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.replaceBy
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -51,7 +48,6 @@ internal class DefaultAccountsCRUDRepository(
     private val walletAccountsSaver: WalletAccountsSaver,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val archivedAccountsStoreFactory: ArchivedAccountsStoreFactory,
-    private val userTokensSaver: UserTokensSaver,
     private val archivedAccountsETagStore: RuntimeStateStore<Map<String, String?>>,
     private val convertersContainer: AccountConverterFactoryContainer,
     private val resources: Resources,
@@ -208,14 +204,7 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun syncTokens(userWalletId: UserWalletId) {
-        val response = getAccountsResponseSync(userWalletId = userWalletId)
-
-        if (response == null) {
-            TangemLogger.e("Can't sync tokens. No accounts response found for wallet: $userWalletId")
-            return
-        }
-
-        userTokensSaver.pushWithRetryer(userWalletId = userWalletId, response = response.toUserTokensResponse())
+        walletAccountsSaver.syncTokens(userWalletId)
     }
 
     override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {

@@ -2,6 +2,7 @@ package com.tangem.feature.swap.domain.fee
 
 import android.util.Base64
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
@@ -18,17 +19,22 @@ import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndetermina
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySwapCallData
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessApproval
+import com.tangem.domain.transaction.models.isGasless
+import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.models.tron.TronGaslessApprove
 import com.tangem.domain.transaction.models.tron.TronGaslessSwap
 import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
@@ -73,12 +79,14 @@ class DexSwapFeeCalculator(
     private val getFeeUseCase: GetFeeUseCase,
     private val getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase,
     private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
+    private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
     private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+    private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
 ) {
 
     suspend fun calculate(
@@ -117,6 +125,12 @@ class DexSwapFeeCalculator(
                 transaction = transaction,
                 otherNativeFee = otherNativeFee,
             )
+            isGasless -> calculateEvmGaslessFee(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                transaction = transaction,
+                selectedToken = selectedToken,
+                permissionState = permissionState,
+            )
             else -> calculateEvmFee(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 transaction = transaction,
@@ -125,6 +139,97 @@ class DexSwapFeeCalculator(
                 otherNativeFee = otherNativeFee,
             )
         }
+    }
+
+    private suspend fun Raise<GetFeeError>.calculateEvmGaslessFee(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transaction: ExpressTransactionModel.DEX,
+        selectedToken: CryptoCurrencyStatus?,
+        permissionState: PermissionDataState,
+    ): DexFeeResult {
+        if (fromSwapCurrencyStatus.currency !is CryptoCurrency.Token) {
+            raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+        }
+        val txValue = transaction.txValue ?: raise(GetFeeError.UnknownError)
+        val network = fromSwapCurrencyStatus.currency.network
+        val nativeAmount = createNativeAmountForDex(txValue, network)
+        // State override is applied by the SDK only for a token amount — it takes the token contract from it
+        val estimationAmount = if (permissionState is PermissionDataState.PermissionSettings) {
+            transaction.fromAmount.value.convertToSdkAmount(fromSwapCurrencyStatus.status)
+        } else {
+            nativeAmount
+        }
+        // The gasless executor always calls with value = 0, and a bridge fee is paid in the native coin
+        val isNativeCoinRequired = nativeAmount.value.orZero().signum() != 0 ||
+            transaction.otherNativeFeeWei.orZero().signum() != 0
+        if (isNativeCoinRequired) raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+
+        val extras = createTransactionExtrasUseCase(data = transaction.txData, network = network)
+            .getOrNull() ?: raise(GetFeeError.UnknownError)
+        val transactionData = TransactionData.Uncompiled(
+            amount = estimationAmount,
+            destinationAddress = transaction.txTo,
+            fee = null,
+            sourceAddress = transaction.txFrom,
+            extras = extras,
+        )
+
+        val approval = (permissionState as? PermissionDataState.PermissionSettings)
+            ?.let { createGaslessApproval(fromSwapCurrencyStatus, transaction, it) }
+
+        val feeExtended = when (val feeToken = selectedToken?.currency) {
+            is CryptoCurrency.Token -> getFeeForTokenUseCase(
+                userWallet = fromSwapCurrencyStatus.userWallet,
+                token = feeToken,
+                transactionData = transactionData,
+                approval = approval,
+            )
+            is CryptoCurrency.Coin, null -> getFeeForGaslessUseCase(
+                userWallet = fromSwapCurrencyStatus.userWallet,
+                network = network,
+                transactionData = transactionData,
+                sentCurrencyStatus = fromSwapCurrencyStatus.status,
+                approval = approval,
+            )
+        }.bind()
+
+        // Paid in the native coin, the swap is a regular transaction and gets the native path's gas-limit margin
+        val swapFee = if (feeExtended.isGasless) {
+            feeExtended
+        } else {
+            val patchedFee = patchEthGasLimitForSwap(feeExtended.transactionFee)
+            feeExtended.copy(transactionFee = patchedFee, nativeFee = patchedFee)
+        }
+
+        return DexFeeResult(
+            transactionFee = TransactionFeeResult.LoadedExtended(swapFee),
+            otherNativeFee = BigDecimal.ZERO,
+            gas = transaction.gas,
+        )
+    }
+
+    private suspend fun Raise<GetFeeError>.createGaslessApproval(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transaction: ExpressTransactionModel.DEX,
+        permission: PermissionDataState.PermissionSettings,
+    ): GaslessApproval {
+        val token = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token
+            ?: raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+        val approvalTransaction = createApprovalTransactionUseCase(
+            cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            amount = when (permission.type) {
+                ApproveType.LIMITED -> transaction.fromAmount.value
+                ApproveType.UNLIMITED -> null
+            },
+            contractAddress = token.contractAddress,
+            spenderAddress = permission.spenderAddress,
+        ).getOrElse { raise(GetFeeError.DataError(it)) }
+
+        return GaslessApproval(
+            spenderAddress = permission.spenderAddress,
+            approvalTransaction = approvalTransaction,
+        )
     }
 
     /**

@@ -111,6 +111,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
             val offsetModifier = when (item) {
                 is WalletSettingsAccountsUM.Account,
                 is WalletSettingsAccountsUM.JointAccount,
+                is WalletSettingsAccountsUM.CollectiblesAccount,
                 is WalletSettingsAccountsUM.Footer,
                 -> Modifier.padding(horizontal = 16.dp)
                 else -> Modifier.padding(
@@ -155,6 +156,13 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     modifier = itemModifier,
                 )
                 is WalletSettingsAccountsUM.JointAccount -> ReorderableAccountItem(
+                    id = item.id,
+                    accountState = item.state,
+                    reorderableListState = reorderableListState,
+                    accountReorderUM = state.accountReorderUM,
+                    modifier = itemModifier,
+                )
+                is WalletSettingsAccountsUM.CollectiblesAccount -> ReorderableAccountItem(
                     id = item.id,
                     accountState = item.state,
                     reorderableListState = reorderableListState,

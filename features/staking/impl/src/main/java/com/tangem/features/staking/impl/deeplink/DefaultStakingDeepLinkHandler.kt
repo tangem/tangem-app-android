@@ -40,7 +40,8 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
 
         // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         val selectedUserWalletId = getSelectedWalletSyncUseCase().getOrNull()?.walletId
-        val walletId = queryParams[WALLET_ID_KEY]?.let(::UserWalletId) ?: selectedUserWalletId
+        val rawWalletId = queryParams[WALLET_ID_KEY]
+        val walletId = if (rawWalletId != null) UserWalletId.fromHexOrNull(rawWalletId) else selectedUserWalletId
 
         // If selected user wallet is different than from deeplink - ignore deeplink
         // If selected user wallet is null - ignore deeplink

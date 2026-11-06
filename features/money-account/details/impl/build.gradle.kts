@@ -30,12 +30,14 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
     implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.txhistory)
     implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
     implementation(projects.domain.wallets)
 
     /** Features */
     implementation(projects.features.moneyAccount.details.api)
+    implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.txhistory.api)
@@ -64,6 +66,8 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Tests */
+    testImplementation(projects.domain.express.models)
+    testImplementation(projects.domain.jointAccount)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
 }

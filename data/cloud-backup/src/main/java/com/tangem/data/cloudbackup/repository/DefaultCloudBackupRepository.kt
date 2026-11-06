@@ -277,6 +277,12 @@ internal class DefaultCloudBackupRepository(
         return withContext(GoogleDriveAccount(accountStore.getAccountName(walletId))) { block() }
     }
 
+    override suspend fun hasAccountOf(walletId: String): Boolean = accountStore.getAccountName(walletId) != null
+
+    override suspend fun <T> withAccount(accountName: String, block: suspend () -> T): T {
+        return withContext(GoogleDriveAccount(accountName)) { block() }
+    }
+
     private suspend fun <T> withAuthRetry(
         interactive: Boolean = true,
         block: suspend Raise<CloudBackupError>.(interactive: Boolean) -> T,

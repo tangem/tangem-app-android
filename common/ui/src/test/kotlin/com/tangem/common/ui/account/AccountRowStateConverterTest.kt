@@ -103,7 +103,11 @@ internal class AccountRowStateConverterTest {
             val actual = accountStatus.account.toAvatarState()
 
             // Assert
-            assertThat((actual as TangemAvatar.UiState.Account).color).isEqualTo(model.expected)
+            val expected = TangemAvatar.UiState.Account(
+                imageVector = CryptoPortfolioIcon.Icon.Star.toAvatarIcon(),
+                color = model.expected,
+            )
+            assertThat(actual).isEqualTo(expected)
         }
 
         private fun provideTestModels() = listOf(

@@ -22,10 +22,12 @@ import kotlinx.collections.immutable.persistentListOf
 internal class MoneyAccountDetailsStateFactory(
     private val onAddFundsClick: () -> Unit,
     private val onSendClick: () -> Unit,
+    private val onMenuClick: () -> Unit,
     private val onTermsClick: () -> Unit,
     private val onSupportClick: () -> Unit,
     private val onBackClick: () -> Unit,
     private val onRefresh: () -> Unit,
+    private val onTxHistoryReload: () -> Unit,
     private val onRenewSession: () -> Unit,
 ) {
     fun createInitialState(): MoneyAccountDetailsUM = MoneyAccountDetailsUM(
@@ -33,6 +35,7 @@ internal class MoneyAccountDetailsStateFactory(
         subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
         balance = MoneyAccountBalanceBlockState.Loading,
         isBalanceHidden = false,
+        isBalanceUnavailable = false,
         messageBanner = null,
         menuItems = persistentListOf(
             MoneyAccountMenuItemUM(
@@ -52,11 +55,15 @@ internal class MoneyAccountDetailsStateFactory(
                 onClick = onSupportClick,
             ),
         ),
+        onMenuClick = onMenuClick,
         onBackClick = onBackClick,
         onAddFundsClick = onAddFundsClick,
         onSendClick = onSendClick,
+        isAddFundsEnabled = true,
+        isSendEnabled = true,
         txHistoryCurrency = null,
         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
+        onTxHistoryReloadClick = onTxHistoryReload,
     )
 
     fun createAccountState(
@@ -64,6 +71,7 @@ internal class MoneyAccountDetailsStateFactory(
         account: MoneyAccountStatusValue.Account,
     ): MoneyAccountDetailsUM {
         val balance = account.balance
+        val isActionAvailable = account.error == null && balance != null
         return prevState.copy(
             balance = if (balance == null) {
                 MoneyAccountBalanceBlockState.Unavailable
@@ -81,15 +89,15 @@ internal class MoneyAccountDetailsStateFactory(
                 )
             },
             txHistoryCurrency = account.cryptoCurrency,
-            messageBanner = createErrorBanner(account.error)
-                ?: createBalanceUnavailableBanner().takeIf { balance == null },
+            isBalanceUnavailable = account.isBalanceUnavailable,
+            isAddFundsEnabled = isActionAvailable,
+            isSendEnabled = isActionAvailable,
+            messageBanner = when {
+                account.error == MoneyAccountStatusValue.Error.NotSynced -> createRenewSessionBanner()
+                account.hasBalanceUnavailableBanner -> createBalanceUnavailableBanner()
+                else -> null
+            },
         )
-    }
-
-    private fun createErrorBanner(error: MoneyAccountStatusValue.Error?): TangemMessageBanner.State? = when (error) {
-        null -> null
-        MoneyAccountStatusValue.Error.NotSynced -> createRenewSessionBanner()
-        else -> createAccountUnavailableBanner()
     }
 
     private fun createRenewSessionBanner() = TangemMessageBanner.State(
@@ -115,14 +123,13 @@ internal class MoneyAccountDetailsStateFactory(
             tintReference = { TangemTheme.colors3.icon.primary },
         ),
     )
-
-    private fun createAccountUnavailableBanner() = TangemMessageBanner.State(
-        title = resourceReference(R.string.tangempay_temporarily_unavailable),
-        variant = TangemMessageBanner.Variant.Error,
-        description = resourceReference(R.string.tangempay_service_unreachable_try_later),
-        iconEnd = TangemIconUM.Icon(
-            imageVector = Icons.ic_error_20,
-            tintReference = { TangemTheme.colors3.icon.primary },
-        ),
-    )
 }
+
+internal val MoneyAccountStatusValue.Account.isBalanceUnavailable: Boolean
+    get() = when (error) {
+        null, MoneyAccountStatusValue.Error.NotSynced -> balance == null
+        MoneyAccountStatusValue.Error.Unavailable, MoneyAccountStatusValue.Error.ExposedDevice -> true
+    }
+
+internal val MoneyAccountStatusValue.Account.hasBalanceUnavailableBanner: Boolean
+    get() = isBalanceUnavailable && error != MoneyAccountStatusValue.Error.NotSynced

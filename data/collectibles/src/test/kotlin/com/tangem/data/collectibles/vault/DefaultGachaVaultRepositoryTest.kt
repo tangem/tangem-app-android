@@ -24,8 +24,8 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
+import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.collectibles.vault.GachaVaultLimits
 import com.tangem.domain.models.network.Network
@@ -75,7 +75,7 @@ internal class DefaultGachaVaultRepositoryTest {
     private val cardSdkConfigRepository: CardSdkConfigRepository = mockk()
     private val tangemSdkManager: TangemSdkManager = mockk()
     private val hotWalletSignerFactory: TangemHotWalletSigner.Factory = mockk()
-    private val hotDelegate: CollectiblesHotDelegate = mockk()
+    private val sessionKey: CollectiblesSessionKey = mockk()
 
     private val currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc)
 
@@ -95,7 +95,7 @@ internal class DefaultGachaVaultRepositoryTest {
         cardSdkConfigRepository = cardSdkConfigRepository,
         tangemSdkManager = tangemSdkManager,
         hotWalletSignerFactory = hotWalletSignerFactory,
-        hotDelegate = hotDelegate,
+        sessionKey = sessionKey,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -126,13 +126,13 @@ internal class DefaultGachaVaultRepositoryTest {
             stubVault(vault = null)
 
             // Act
-            val actual = repository.initOrUpdateVault(userWallet, DELEGATE, GachaVaultLimits.Default)
+            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
 
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) {
                 walletManager.buildInitCollectiblesVault(
-                    hotDelegate = DELEGATE.base58,
+                    sessionKey = SESSION_KEY.base58,
                     perSpinCap = GachaVaultLimits.Default.perSpinCap,
                     dailyCap = GachaVaultLimits.Default.dailyCap,
                 )
@@ -142,18 +142,18 @@ internal class DefaultGachaVaultRepositoryTest {
         }
 
         @Test
-        fun `GIVEN a vault of another device WHEN initOrUpdate THEN the delegate is re-pointed`() = runTest {
+        fun `GIVEN a vault of another device WHEN initOrUpdate THEN the session key is re-pointed`() = runTest {
             // Arrange
-            stubVault(vault = vault(hotDelegate = OTHER_DELEGATE.base58))
+            stubVault(vault = vault(sessionKey = OTHER_SESSION_KEY.base58))
 
             // Act
-            val actual = repository.initOrUpdateVault(userWallet, DELEGATE, GachaVaultLimits.Default)
+            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
 
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) {
                 walletManager.buildUpdateCollectiblesVault(
-                    hotDelegate = DELEGATE.base58,
+                    sessionKey = SESSION_KEY.base58,
                     perSpinCap = null,
                     dailyCap = null,
                 )
@@ -165,10 +165,10 @@ internal class DefaultGachaVaultRepositoryTest {
         @Test
         fun `GIVEN the vault already points here WHEN initOrUpdate THEN nothing is signed`() = runTest {
             // Arrange
-            stubVault(vault = vault(hotDelegate = DELEGATE.base58))
+            stubVault(vault = vault(sessionKey = SESSION_KEY.base58))
 
             // Act
-            val actual = repository.initOrUpdateVault(userWallet, DELEGATE, GachaVaultLimits.Default)
+            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
 
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
@@ -186,7 +186,7 @@ internal class DefaultGachaVaultRepositoryTest {
                 Result.Failure(BlockchainSdkError.CustomError("rpc is down"))
 
             // Act
-            val actual = repository.initOrUpdateVault(userWallet, DELEGATE, GachaVaultLimits.Default)
+            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
 
             // Assert
             assertThat(actual.isLeft()).isTrue()
@@ -202,7 +202,7 @@ internal class DefaultGachaVaultRepositoryTest {
             coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns null
 
             // Act
-            val actual = repository.initOrUpdateVault(userWallet, DELEGATE, GachaVaultLimits.Default)
+            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
 
             // Assert
             assertThat(actual.isLeft()).isTrue()
@@ -215,7 +215,7 @@ internal class DefaultGachaVaultRepositoryTest {
             coEvery { networkProvider.create(userWallet) } returns GachaVaultError.WalletUnavailable.left()
 
             // Act
-            val actual = repository.initOrUpdateVault(userWallet, DELEGATE, GachaVaultLimits.Default)
+            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
 
             // Assert
             assertThat(actual.isLeft()).isTrue()
@@ -226,8 +226,8 @@ internal class DefaultGachaVaultRepositoryTest {
             coEvery { walletManager.getCollectiblesVault() } returns Result.Success(vault)
         }
 
-        private fun vault(hotDelegate: String): CollectiblesVault = mockk {
-            every { this@mockk.hotDelegate } returns hotDelegate
+        private fun vault(sessionKey: String): CollectiblesVault = mockk {
+            every { this@mockk.sessionKey } returns sessionKey
         }
     }
 
@@ -300,7 +300,7 @@ internal class DefaultGachaVaultRepositoryTest {
                 stubSend()
 
                 // Act
-                val setUp = async { repository.deriveOwnerAndSetUpVault(coldWallet, DELEGATE, LIMITS) }
+                val setUp = async { repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS) }
                 advanceUntilIdle()
 
                 // Assert
@@ -320,7 +320,7 @@ internal class DefaultGachaVaultRepositoryTest {
             stubSend()
 
             // Act
-            val setUp = async { repository.deriveOwnerAndSetUpVault(coldWallet, DELEGATE, LIMITS) }
+            val setUp = async { repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS) }
             advanceUntilIdle()
             broadcast.complete(Unit)
             advanceUntilIdle()
@@ -338,7 +338,7 @@ internal class DefaultGachaVaultRepositoryTest {
             stubSend(result = Result.Failure(BlockchainSdkError.FailedToSendException))
 
             // Act
-            val setUp = async { repository.deriveOwnerAndSetUpVault(coldWallet, DELEGATE, LIMITS) }
+            val setUp = async { repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS) }
             advanceUntilIdle()
             broadcast.complete(Unit)
             advanceUntilIdle()
@@ -357,7 +357,7 @@ internal class DefaultGachaVaultRepositoryTest {
                 Result.Failure(BlockchainSdkError.WrappedTangemError(TangemSdkError.UserCancelled()))
 
             // Act
-            val actual = repository.deriveOwnerAndSetUpVault(coldWallet, DELEGATE, LIMITS)
+            val actual = repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS)
 
             // Assert
             assertThat(actual).isEqualTo(CollectiblesAccountError.Cancelled.left())
@@ -372,7 +372,7 @@ internal class DefaultGachaVaultRepositoryTest {
                 Result.Failure(BlockchainSdkError.CustomError("rpc is down"))
 
             // Act
-            val actual = repository.deriveOwnerAndSetUpVault(coldWallet, DELEGATE, LIMITS)
+            val actual = repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS)
 
             // Assert
             assertThat(actual.isLeft()).isTrue()
@@ -550,8 +550,8 @@ internal class DefaultGachaVaultRepositoryTest {
 
         @BeforeEach
         fun resetMocks() {
-            clearMocks(walletManagersFacade, networkProvider, walletManager, hotDelegate)
-            coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns DELEGATE
+            clearMocks(walletManagersFacade, networkProvider, walletManager, sessionKey)
+            coEvery { sessionKey.getPublicKeyOrNull(any()) } returns SESSION_KEY
             coEvery { networkProvider.create(userWallet) } returns network.right()
             coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns walletManager
         }
@@ -560,7 +560,7 @@ internal class DefaultGachaVaultRepositoryTest {
         fun `GIVEN the purchase is sent WHEN sendPurchasePack THEN its hash is returned`() = runTest {
             // Arrange
             coEvery {
-                walletManager.sendPurchasePack(DELEGATE.base58, AMOUNT, FEE_AMOUNT, MEMO, any())
+                walletManager.sendPurchasePack(SESSION_KEY.base58, AMOUNT, FEE_AMOUNT, MEMO, any())
             } returns Result.Success(TransactionSendResult(hash = TX_HASH))
 
             // Act
@@ -571,10 +571,10 @@ internal class DefaultGachaVaultRepositoryTest {
         }
 
         @Test
-        fun `GIVEN the hot delegate fails to sign WHEN sendPurchasePack THEN its own error is returned`() = runTest {
+        fun `GIVEN the session key fails to sign WHEN sendPurchasePack THEN its own error is returned`() = runTest {
             // Arrange
-            val signingError = CollectiblesAccountError.DelegateSigningFailed(IllegalStateException())
-            coEvery { hotDelegate.sign(any(), any()) } returns signingError.left()
+            val signingError = CollectiblesAccountError.SessionKeySigningFailed(IllegalStateException())
+            coEvery { sessionKey.sign(any(), any()) } returns signingError.left()
             coEvery { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) } coAnswers {
                 arg<suspend (ByteArray) -> Result<ByteArray>>(4).invoke(byteArrayOf(1))
                 Result.Failure(BlockchainSdkError.CustomError("signing failed"))
@@ -601,15 +601,15 @@ internal class DefaultGachaVaultRepositoryTest {
         }
 
         @Test
-        fun `GIVEN the hot delegate is not provisioned WHEN sendPurchasePack THEN nothing is sent`() = runTest {
+        fun `GIVEN the session key is not provisioned WHEN sendPurchasePack THEN nothing is sent`() = runTest {
             // Arrange
-            coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns null
+            coEvery { sessionKey.getPublicKeyOrNull(any()) } returns null
 
             // Act
             val actual = sendPurchasePack()
 
             // Assert
-            assertThat(actual).isEqualTo(CollectiblesAccountError.DelegateNotProvisioned.left())
+            assertThat(actual).isEqualTo(CollectiblesAccountError.SessionKeyNotProvisioned.left())
             coVerify(exactly = 0) { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) }
         }
 
@@ -787,8 +787,8 @@ internal class DefaultGachaVaultRepositoryTest {
         const val MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
         const val OTHER_MINT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
 
-        val DELEGATE = HotDelegatePublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
-        val OTHER_DELEGATE = HotDelegatePublicKey("A4ahkivAG4NoZAE8Sy4qv8nn2DU9yoXRQcttuCeGtTJv")
+        val SESSION_KEY = SessionKeyPublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
+        val OTHER_SESSION_KEY = SessionKeyPublicKey("A4ahkivAG4NoZAE8Sy4qv8nn2DU9yoXRQcttuCeGtTJv")
         val LIMITS = GachaVaultLimits.Default
 
         const val AMOUNT = 50_000_000L
