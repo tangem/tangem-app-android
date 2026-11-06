@@ -78,6 +78,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -429,6 +430,40 @@ internal class CollectiblesPackOpeningModelTest {
 
         // Assert
         assertThat(shownSheet).isEqualTo(CollectiblesConfirmOrderBottomSheetConfig.PackUnopened(TX_ID))
+    }
+
+    @Test
+    fun `GIVEN the pack cannot be opened WHEN approve tapped THEN the failure screen replaces the order`() = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flowOf(OpenPackStep.Failed.OpenFailed)
+        val model = startModel()
+        var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+        model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+        // Act
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.replaceCurrent(CollectiblesRoute.PackOpenFailed, any()) }
+        assertThat(shownSheet).isNull()
+    }
+
+    @ParameterizedTest
+    @MethodSource("refundFailures")
+    fun `GIVEN a refund WHEN approve tapped THEN the refund sheet is shown`(failure: OpenPackStep.Failed) = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flowOf(failure)
+        val model = startModel()
+        var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+        model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+        // Act
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(shownSheet).isEqualTo(CollectiblesConfirmOrderBottomSheetConfig.RefundOnTheWay)
     }
 
     @Test
@@ -1437,6 +1472,9 @@ internal class CollectiblesPackOpeningModelTest {
     }
 
     private companion object {
+
+        @JvmStatic
+        fun refundFailures() = listOf(OpenPackStep.Failed.Refunded, OpenPackStep.Failed.Refunding)
 
         const val TX_ID = "tx-id"
 

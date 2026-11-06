@@ -144,12 +144,14 @@ internal class DefaultCollectiblesRepository @Inject constructor(
         txId: String,
         includeAutoBuyback: Boolean,
     ): CollectibleTxState = withContext(dispatchers.io) {
-        val response = collectiblesApi.openPack(
-            userWalletId = userWalletId.stringValue,
-            body = CollectibleTxRequestBody(txId = txId),
-            includeNftWon = true,
-            includeAutoBuyback = includeAutoBuyback,
-        ).getOrThrow()
+        val response = errorResolver.getOrThrow(
+            collectiblesApi.openPack(
+                userWalletId = userWalletId.stringValue,
+                body = CollectibleTxRequestBody(txId = txId),
+                includeNftWon = true,
+                includeAutoBuyback = includeAutoBuyback,
+            ),
+        )
 
         CollectibleTxStateConverter.convert(response)
     }
