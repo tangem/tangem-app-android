@@ -24,6 +24,7 @@ sealed interface EarnProductState {
         val secondary: List<EarnActionItem> = emptyList(),
         val freshness: EarnFreshness?,
         val position: EarnPositionState,
+        val incentiveRate: EarnProductRate? = null,
     ) : EarnProductState
 }
 
