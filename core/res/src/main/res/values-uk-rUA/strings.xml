@@ -508,6 +508,7 @@
   <string name="common_retry">Повторити</string>
   <string name="common_save">Зберегти</string>
   <string name="common_save_changes">Зберегти зміни</string>
+  <string name="common_scan_card">Сканувати картку</string>
   <string name="common_search">Пошук</string>
   <string name="common_search_tokens">Пошук токенів</string>
   <string name="common_second_no_param">сек</string>
@@ -929,6 +930,7 @@
   <string name="hw_cloud_backup_permissions_title_v2">Надайте повний доступ до %1$s</string>
   <string name="hw_cloud_backup_remove_title">%1$s: резервна копія «%2$s»</string>
   <string name="hw_cloud_backup_removed">Резервну копію видалено</string>
+  <string name="hw_cloud_backup_restore_all_added_hint">Усі резервні копії в цьому акаунті %1$s уже є в Tangem</string>
   <string name="hw_cloud_backup_restore_error_title">Щось пішло не так</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">Будь ласка, спробуйте пізніше або імпортуйте фразу відновлення.</string>
   <string name="hw_cloud_backup_restore_navtitle_v2">Копія в %1$s</string>
@@ -1017,6 +1019,8 @@
   <string name="hw_upgrade_title">Оновіть до апаратного гаманця</string>
   <string name="hw_upgrade_to_cold_banner_description">Зберігайте свою криптовалюту в безпеці за допомогою першокласного апаратного гаманця Tangem.</string>
   <string name="hw_upgrade_to_cold_banner_title">Оновіть свій гаманець до апаратної версії.</string>
+  <string name="hw_wallets_limit_alert_message">У Tangem можна мати до %1$s мобільних гаманців. Щоб додати ще один, спочатку видаліть один із наявних мобільних гаманців.</string>
+  <string name="hw_wallets_limit_alert_title">Досягнуто ліміту мобільних гаманців</string>
   <string name="information_generated_with_ai">Ця інформація була створена за допомогою ШІ.\nНатисніть тут, якщо знайшли помилку.</string>
   <string name="initial_message_change_access_code_body">Щоб змінити код доступу, прикладіть картку або кільце, як показано вище, і не прибирайте її до закінчення операції</string>
   <string name="initial_message_change_passcode_body">Щоб змінити пароль, прикладіть картку, як показано вище, і не прибирайте її до закінчення операції</string>
@@ -1032,7 +1036,7 @@
   <string name="introduction_button_buy_tangem">Купити Tangem</string>
   <string name="introduction_button_create_wallet">Створіть гаманець</string>
   <string name="introduction_button_i_have_a_wallet">У мене є гаманець</string>
-  <string name="introduction_create_wallet_hardware_description">Якщо у вас уже є гаманець Tangem</string>
+  <string name="introduction_create_wallet_hardware_description">Підключіть свій гаманець Tangem або отримайте новий</string>
   <string name="introduction_create_wallet_hardware_title">Картка або кільце Tangem</string>
   <string name="introduction_create_wallet_seed_phrase_description">Почніть без апаратного гаманця</string>
   <string name="introduction_create_wallet_seed_phrase_title">Створіть гаманець із сід-фразою</string>
@@ -2021,10 +2025,16 @@
   <string name="social_login_creating_wallet">Створення гаманця</string>
   <string name="social_login_creating_wallet_description">Це займе лише кілька секунд</string>
   <string name="social_login_error_backup_not_saved">Не вдалося зберегти резервну копію. Переконайтеся, що хмарне сховище доступне, і спробуйте ще раз</string>
+  <string name="social_login_error_backup_not_saved_description">Переконайтеся, що хмарне сховище доступне, і спробуйте ще раз.</string>
+  <string name="social_login_error_backup_not_saved_title">Не вдалося зберегти резервну копію</string>
   <string name="social_login_error_cloud_access_description">Переконайтеся, що Tangem має доступ до вашого акаунта %s, а потім спробуйте ще раз</string>
   <string name="social_login_error_cloud_access_title">Не вдалося відновити гаманець</string>
   <string name="social_login_error_generic">Щось пішло не так. Будь ласка, спробуйте ще раз</string>
+  <string name="social_login_error_generic_v2">Будь ласка, спробуйте ще раз. Якщо проблема не зникне, перевірте підключення до інтернету.</string>
+  <string name="social_login_error_network_description">Перевірте підключення та спробуйте ще раз.</string>
+  <string name="social_login_error_network_title">Немає з’єднання з інтернетом</string>
   <string name="social_login_error_no_account">Щоб продовжити, додайте на цей пристрій акаунт %s.</string>
+  <string name="social_login_error_no_account_title">На цьому пристрої немає акаунта %1$s</string>
   <string name="social_login_error_restore_failed_description">Не вдалося відновити гаманець для цього акаунта. Спробуйте ще раз або зверніться до служби підтримки</string>
   <string name="social_login_error_session_expired">Термін дії сеансу минув. Будь ласка, спробуйте ще раз</string>
   <string name="social_login_error_support">Звернутися до служби підтримки</string>
@@ -2033,6 +2043,8 @@
   <string name="social_login_restoring_wallet_description">Відновлюємо ваші токени</string>
   <string name="social_login_toast_wallet_added">Гаманець додано</string>
   <string name="social_login_toast_wallet_created">Гаманець створено</string>
+  <string name="social_wallet_already_added_alert_message">Лише один гаманець на цьому пристрої може використовувати вхід через %1$s. Щоб скористатися іншим акаунтом, спочатку вийдіть із поточного.</string>
+  <string name="social_wallet_already_added_alert_title">Ви вже увійшли через %1$s</string>
   <string name="social_wallet_delete_anyway">Усе одно видалити</string>
   <string name="social_wallet_delete_attention_acknowledge">Я розумію, що якщо резервну копію моєї фрази відновлення не збережено, то я назавжди втрачу доступ до цього гаманця.</string>
   <string name="social_wallet_delete_attention_description">Гаманець буде видалено з цього пристрою та відв’язано від вашого акаунта %1$s, а ваші зашифровані ключі буде видалено з хмари. Вхід через %1$s більше не дасть змоги відновити його.</string>
@@ -2371,7 +2383,7 @@
   <string name="tangempay_campaign_spend_description">З цифровою карткою через Apple Pay або Google Pay, без додаткових комісій за покупки</string>
   <string name="tangempay_campaign_unavailable_description">Ви можете замовити звичайну</string>
   <string name="tangempay_campaign_unavailable_title">Не вдалося отримати особливу картку</string>
-  <string name="tangempay_cancel_kyc">Приховати верифікацію з головного екрана</string>
+  <string name="tangempay_cancel_kyc">Приховати статус</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Зверніться до підтримки</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">Ви вичерпали спроби активації</string>
   <string name="tangempay_card_activation_description">Введіть останні 4 цифри номера вашої картки</string>
@@ -2577,7 +2589,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Верифікація для Tangem Pay в процесі</string>
   <string name="tangempay_kyc_in_progress_popup_description">Документи зазвичай перевіряються автоматично протягом 5 хвилин. У рідкісних випадках, коли потрібна ручна перевірка, це може зайняти до 48 годин.</string>
   <string name="tangempay_kyc_rejected">Відхилено</string>
-  <string name="tangempay_kyc_rejected_button_text">Приховати верифікацію</string>
+  <string name="tangempay_kyc_rejected_button_text">Приховати статус</string>
   <string name="tangempay_kyc_rejected_description">Вибачте, ми не змогли підтвердити</string>
   <string name="tangempay_kyc_rejected_description_span">вашу особу.</string>
   <string name="tangempay_main_select_plan">Обрати тариф</string>
@@ -2991,12 +3003,14 @@
   <string name="user_wallet_add_hardware_title">Додати апаратний гаманець</string>
   <string name="user_wallet_add_mobile_description">Створіть новий гаманець на цьому пристрої</string>
   <string name="user_wallet_add_mobile_title">Додати мобільний гаманець</string>
+  <string name="user_wallet_add_wallet">Додати гаманець</string>
   <string name="user_wallet_coming_soon_dialog_description">Ми працюємо над підтримкою кількох мобільних гаманців.</string>
   <string name="user_wallet_list_add_button">Додати гаманець</string>
   <string name="user_wallet_list_delete_hw_prompt">Якщо ви видалите цей гаманець без резервної копії, ви назавжди втратите доступ до своїх коштів.</string>
   <string name="user_wallet_list_delete_prompt">Ви впевнені, що хочете видалити цей гаманець?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Сталася помилка, будь ласка, відскануйте свою картку або кільце, для входу</string>
   <string name="user_wallet_list_error_wallet_already_saved">Цей гаманець вже збережено, ви можете додати інший</string>
+  <string name="user_wallet_list_error_wallet_already_saved_title">Гаманець уже додано</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">Гаманець з назвою %s вже існує</string>
   <string name="user_wallet_list_rename_popup_placeholder">Назва гаманця</string>
   <string name="user_wallet_list_rename_popup_title">Перейменування гаманця</string>
@@ -3197,6 +3211,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакція %1$s %2$s не була завершена. Ви можете спробувати відправити її ще раз.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">У вас є незавершена транзакція</string>
   <string name="warning_last_balance_updated_time">Останнє оновлення було %s</string>
+  <string name="warning_link_wallet_cold_message">Відскануйте картку, щоб прив’язати гаманець до цього пристрою.</string>
+  <string name="warning_link_wallet_hot_message">Підтвердьте прив’язку гаманця до цього пристрою.</string>
+  <string name="warning_link_wallet_title">Прив’яжіть гаманець до цього пристрою</string>
   <string name="warning_low_signatures_message">На цій картці залишається лише %s підписів. Ви повинні вивести всі свої кошти.</string>
   <string name="warning_low_signatures_title">Низька кількість підписів</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токени в різних мережах можуть мати різні адреси. Переконайтеся, що ваша адреса відповідає мережі, коли переказуєте кошти.</string>

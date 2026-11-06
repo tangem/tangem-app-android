@@ -285,6 +285,8 @@
   <string name="prediction_withdraw_status_in_progress_title">출금 진행 중</string>
   <string name="prediction_withdraw_status_sent_description">전송에 최대 %1$d분이 소요될 수 있습니다.</string>
   <string name="prediction_withdraw_status_sent_title">출금 전송됨</string>
+  <string name="tangempay_cancel_kyc">상태 숨기기</string>
+  <string name="tangempay_kyc_rejected_button_text">상태 숨기기</string>
   <string name="tangempay_pay_support">고객 지원</string>
   <string name="tangempay_residency_search_empty">검색 결과가 없습니다. 검색어를 변경해 주세요</string>
   <string name="tangempay_sync_needed_body">갱신하여 카드와 계좌를 확인해 주세요</string>
