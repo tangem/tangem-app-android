@@ -9,6 +9,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.mcp.models.analytics.McpSessionsAnalyticsEvent
@@ -82,6 +83,13 @@ internal class McpSessionInfoModel @Inject constructor(
 
             if (isRevoked) {
                 analytics.send(McpSessionsAnalyticsEvent.AgentDisconnected(session))
+                messageSender.send(
+                    SnackbarMessage(
+                        message = resourceReference(R.string.mcp_session_revoked),
+                        startIconId = R.drawable.ic_success_20,
+                        isIconTinted = false,
+                    ),
+                )
                 params.onDismiss()
             } else {
                 messageSender.send(
