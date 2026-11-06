@@ -56,13 +56,7 @@ internal class PolymarketActivityUMConverter(
             id = activity.id,
             type = type,
             title = type.title(),
-            subtitle = PolymarketActivitySubtitleUM.Plain(
-                if (activity.redeemResult == PolymarketActivity.RedeemResult.WON && activity.marketTitle.isNotBlank()) {
-                    resourceReference(R.string.prediction_history_won_description, wrappedList(activity.marketTitle))
-                } else {
-                    stringReference(activity.marketTitle.ifBlank { activity.transactionHash.orEmpty() })
-                },
-            ),
+            subtitle = activity.rowSubtitle(),
             amount = stringReference(
                 when (type) {
                     Type.LOST -> MINUS
@@ -106,3 +100,15 @@ internal val PolymarketActivity.marketTitle: String
 internal val PolymarketActivity.historyIconUrl: String?
     get() = sequenceOf(market?.icon, market?.image, market?.event?.icon, market?.event?.image)
         .firstOrNull { !it.isNullOrBlank() }
+
+private fun PolymarketActivity.rowSubtitle(): PolymarketActivitySubtitleUM {
+    val hash = transactionHash?.takeIf(String::isNotBlank)
+    val isWon = redeemResult == PolymarketActivity.RedeemResult.WON
+    return when {
+        marketTitle.isBlank() && hash != null -> PolymarketActivitySubtitleUM.TransactionHash(hash)
+        isWon && marketTitle.isNotBlank() -> PolymarketActivitySubtitleUM.Plain(
+            resourceReference(R.string.prediction_history_won_description, wrappedList(marketTitle)),
+        )
+        else -> PolymarketActivitySubtitleUM.Plain(stringReference(marketTitle))
+    }
+}

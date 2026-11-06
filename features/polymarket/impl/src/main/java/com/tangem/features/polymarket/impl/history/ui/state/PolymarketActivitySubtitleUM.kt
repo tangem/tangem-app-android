@@ -11,6 +11,8 @@ internal sealed interface PolymarketActivitySubtitleUM {
 
     data class Plain(val text: TextReference) : PolymarketActivitySubtitleUM
 
+    data class TransactionHash(val hash: String) : PolymarketActivitySubtitleUM
+
     data class Funding(
         val direction: Direction,
         val symbol: String,

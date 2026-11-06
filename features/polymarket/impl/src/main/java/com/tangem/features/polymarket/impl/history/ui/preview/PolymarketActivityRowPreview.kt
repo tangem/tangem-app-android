@@ -25,6 +25,7 @@ import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivitySu
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivitySubtitleUM.Direction
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivitySubtitleUM.Funding
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivitySubtitleUM.Plain
+import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivitySubtitleUM.TransactionHash
 
 @Preview(name = "Light", group = "Activity states", widthDp = 360)
 @Preview(name = "Dark", group = "Activity states", widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -134,6 +135,12 @@ private fun layoutCases(): List<ActivityRowPreviewCase> {
             name = "Funding without an account",
             state = activityRow(Type.WITHDRAWN, "- $10.00").copy(
                 subtitle = fundingSubtitle(Direction.TO, "Family").copy(account = null),
+            ),
+        ),
+        ActivityRowPreviewCase(
+            name = "Funding with a transaction hash",
+            state = activityRow(Type.WITHDRAWN, "- $10.00").copy(
+                subtitle = TransactionHash("0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
             ),
         ),
         ActivityRowPreviewCase(

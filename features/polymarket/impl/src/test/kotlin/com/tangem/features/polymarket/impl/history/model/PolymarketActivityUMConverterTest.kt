@@ -88,17 +88,47 @@ internal class PolymarketActivityUMConverterTest {
     }
 
     @Test
-    fun `GIVEN a withdrawal without funding metadata WHEN converted THEN uses its hash and a single negative sign`() {
+    fun `GIVEN a withdrawal without a market WHEN converted THEN keeps its raw hash and a single negative sign`() {
         // Arrange
         val activity = createHistoryActivity(type = PolymarketActivity.Type.WITHDRAW)
             .copy(transactionHash = "0xtransaction", amount = BigDecimal("-10"))
+        val expected = PolymarketActivityRowUM(
+            id = activity.id,
+            type = PolymarketActivityRowUM.Type.WITHDRAWN,
+            title = resourceReference(R.string.transaction_history_withdrawn),
+            subtitle = PolymarketActivitySubtitleUM.TransactionHash("0xtransaction"),
+            amount = stringReference("- $10.00"),
+        )
 
         // Act
         val actual = PolymarketActivityUMConverter(clock).convert(listOf(activity)).single().activities.single()
 
         // Assert
-        assertThat(actual.amount).isEqualTo(stringReference("- $10.00"))
-        assertThat(actual.subtitle).isEqualTo(PolymarketActivitySubtitleUM.Plain(stringReference("0xtransaction")))
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN a deposit with a blank hash WHEN converted THEN shows an empty subtitle`() {
+        // Arrange
+        val activity = createHistoryActivity(type = PolymarketActivity.Type.DEPOSIT).copy(transactionHash = " ")
+
+        // Act
+        val actual = PolymarketActivityUMConverter(clock).convert(listOf(activity)).single().activities.single()
+
+        // Assert
+        assertThat(actual.subtitle).isEqualTo(PolymarketActivitySubtitleUM.Plain(stringReference("")))
+    }
+
+    @Test
+    fun `GIVEN a trade with a market and a hash WHEN converted THEN shows the market title instead of the hash`() {
+        // Arrange
+        val activity = historyTrade(PolymarketActivity.Type.BUY).copy(transactionHash = "0xtransaction")
+
+        // Act
+        val actual = PolymarketActivityUMConverter(clock).convert(listOf(activity)).single().activities.single()
+
+        // Assert
+        assertThat(actual.subtitle).isEqualTo(PolymarketActivitySubtitleUM.Plain(stringReference(activity.marketTitle)))
     }
 
     @Test
