@@ -892,7 +892,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.to?.label).isEqualTo(resourceReference(R.string.common_to))
         assertThat(result.to?.owner).isEqualTo(
             TxHistoryDetailsUM.AssetOwnerUM.Account(
-                name = resourceReference(R.string.tangempay_unified_onboarding_money_account_header),
+                name = resourceReference(R.string.money_account_main_name),
                 icon = AccountIconUM.Money,
             ),
         )
