@@ -10,11 +10,13 @@ internal fun buildWithdrawSwapRoute(
     userWalletId: UserWalletId,
     cryptoCurrency: CryptoCurrency.Token,
     toCryptoCurrency: CryptoCurrency? = null,
+    accountFlow: AccountFlow = AccountFlow.Withdraw,
+    screenSource: String = AnalyticsParam.ScreensSources.TangemPay.value,
 ): AppRoute.Swap = AppRoute.Swap(
     fromCryptoCurrency = cryptoCurrency,
     userWalletId = userWalletId,
-    screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
+    screenSource = screenSource,
     fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
-    accountFlow = AccountFlow.Withdraw,
+    accountFlow = accountFlow,
     toCryptoCurrency = toCryptoCurrency,
 )

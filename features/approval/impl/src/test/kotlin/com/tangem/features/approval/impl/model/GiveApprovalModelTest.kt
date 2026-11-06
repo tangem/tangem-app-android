@@ -4,6 +4,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -127,6 +128,7 @@ class GiveApprovalModelTest {
         amount: String = "10",
         isTronGaslessSupported: Boolean = false,
     ): GiveApprovalModel = GiveApprovalModel(
+        tangemBlogUrlBuilder = mockk(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(createParams(amount, isTronGaslessSupported)),
         createApprovalTransactionUseCase = createApprovalTransactionUseCase,

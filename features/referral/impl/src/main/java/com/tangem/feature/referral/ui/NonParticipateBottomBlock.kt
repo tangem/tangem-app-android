@@ -44,7 +44,7 @@ internal fun NonParticipateBottomBlock(
 @Composable
 private fun Preview_NonParticipateBottomBlock() {
     TangemThemePreview {
-        Column(Modifier.background(TangemTheme.colors.background.primary)) {
+        Column(Modifier.background(TangemTheme.colors3.bg.primary)) {
             NonParticipateBottomBlock(buttonIconRes = null, onAgreementClick = {}, onParticipateClick = {})
         }
     }

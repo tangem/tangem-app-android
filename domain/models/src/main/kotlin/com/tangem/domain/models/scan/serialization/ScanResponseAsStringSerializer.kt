@@ -5,6 +5,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.domain.models.scan.ScanResponse
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -23,7 +24,8 @@ internal object ScanResponseAsStringSerializer : KSerializer<ScanResponse> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ScanResponse", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): ScanResponse {
-        return moshi.adapter(ScanResponse::class.java).fromJson(decoder.decodeString())!!
+        return moshi.adapter(ScanResponse::class.java).fromJson(decoder.decodeString())
+            ?: throw SerializationException("ScanResponse JSON is null")
     }
 
     override fun serialize(encoder: Encoder, value: ScanResponse) {

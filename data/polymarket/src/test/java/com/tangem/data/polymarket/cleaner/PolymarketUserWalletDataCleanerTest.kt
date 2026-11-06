@@ -3,6 +3,10 @@ package com.tangem.data.polymarket.cleaner
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
+import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
+import com.tangem.data.polymarket.sessionkey.DefaultPolymarketDeviceIdProvider
+import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionKeyStore
+import com.tangem.data.polymarket.sessionkey.InMemorySecureStorage
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.data.polymarket.store.PredictionPositionsValueStore
 import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
@@ -14,8 +18,15 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
+import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PredictionWithdrawalRecord
+import arrow.core.left
+import arrow.core.right
+import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -39,6 +50,8 @@ internal class PolymarketUserWalletDataCleanerTest {
     private val onboardedStore: PolymarketOnboardedStore = mockk(relaxUnitFun = true)
     private val requisitesStore: PredictionDepositRequisitesStore = mockk(relaxUnitFun = true)
     private val withdrawalStore: PredictionWithdrawalStore = mockk(relaxUnitFun = true)
+    private val sessionKeyStore: PolymarketSessionKeyStore = mockk()
+    private val sessionKeyTradingStore: PolymarketSessionKeyTradingStore = mockk(relaxUnitFun = true)
 
     private val cleaner = PolymarketUserWalletDataCleaner(
         credentialsStore = credentialsStore,
@@ -47,11 +60,23 @@ internal class PolymarketUserWalletDataCleanerTest {
         onboardedStore = onboardedStore,
         requisitesStore = requisitesStore,
         withdrawalStore = withdrawalStore,
+        sessionKeyStore = sessionKeyStore,
+        sessionKeyTradingStore = sessionKeyTradingStore,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(credentialsStore, statusStore, positionsValueStore, onboardedStore, requisitesStore, withdrawalStore)
+        clearMocks(
+            credentialsStore,
+            statusStore,
+            positionsValueStore,
+            onboardedStore,
+            requisitesStore,
+            withdrawalStore,
+            sessionKeyStore,
+            sessionKeyTradingStore,
+        )
+        coEvery { sessionKeyStore.delete(any()) } returns Unit.right()
     }
 
     @Test
@@ -68,6 +93,8 @@ internal class PolymarketUserWalletDataCleanerTest {
         coVerify(exactly = 1) { positionsValueStore.clear(WALLET_B) }
         coVerify(exactly = 1) { onboardedStore.clear(WALLET_A) }
         coVerify(exactly = 1) { onboardedStore.clear(WALLET_B) }
+        coVerify(exactly = 1) { sessionKeyTradingStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { sessionKeyTradingStore.clear(WALLET_B) }
     }
 
     @Test
@@ -144,6 +171,8 @@ internal class PolymarketUserWalletDataCleanerTest {
             onboardedStore = onboardedStore,
             requisitesStore = requisitesStore,
             withdrawalStore = withdrawalStore,
+            sessionKeyStore = sessionKeyStore,
+            sessionKeyTradingStore = sessionKeyTradingStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -164,6 +193,8 @@ internal class PolymarketUserWalletDataCleanerTest {
             onboardedStore = onboardedStore,
             requisitesStore = requisitesStore,
             withdrawalStore = withdrawalStore,
+            sessionKeyStore = sessionKeyStore,
+            sessionKeyTradingStore = sessionKeyTradingStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -218,6 +249,8 @@ internal class PolymarketUserWalletDataCleanerTest {
                 onboardedStore = onboardedStore,
                 requisitesStore = requisitesStore,
                 withdrawalStore = store,
+                sessionKeyStore = sessionKeyStore,
+                sessionKeyTradingStore = sessionKeyTradingStore,
             ).clear(listOf(WALLET_A))
 
             // Assert
@@ -236,6 +269,69 @@ internal class PolymarketUserWalletDataCleanerTest {
         coVerify(exactly = 1) { withdrawalStore.clear(WALLET_B) }
     }
 
+    @Test
+    fun `GIVEN wallets deleted WHEN cleared THEN their session keys are deleted`() = runTest {
+        // Act
+        cleaner.clear(listOf(WALLET_A, WALLET_B))
+
+        // Assert
+        coVerify(exactly = 1) { sessionKeyStore.delete(WALLET_A) }
+        coVerify(exactly = 1) { sessionKeyStore.delete(WALLET_B) }
+    }
+
+    @Test
+    fun `GIVEN a session key fails to delete WHEN clear THEN the other wallets are still cleared`() = runTest {
+        // Arrange
+        coEvery { sessionKeyStore.delete(WALLET_A) } returns
+            PolymarketSessionKeyError.Failure(IllegalStateException("keystore unavailable")).left()
+
+        // Act
+        cleaner.clear(listOf(WALLET_A, WALLET_B))
+
+        // Assert
+        coVerify(exactly = 1) { sessionKeyStore.delete(WALLET_B) }
+        coVerify(exactly = 1) { credentialsStore.clear(WALLET_B) }
+    }
+
+    @Test
+    fun `GIVEN a session key and a device id WHEN clear THEN the key is gone and the device id is kept`() = runTest {
+        // Arrange
+        val sessionKeyStorage = InMemorySecureStorage().apply { store(SESSION_KEY_STORAGE_KEY, "hot-a") }
+        val deviceIdStorage = InMemorySecureStorage()
+        val hotSdk: TangemHotSdk = mockk(relaxUnitFun = true)
+        val keyStore = DefaultPolymarketSessionKeyStore(
+            tangemHotSdk = hotSdk,
+            secureStorage = sessionKeyStorage,
+            addressFactory = PolymarketAddressFactory(),
+            dispatchers = TestingCoroutineDispatcherProvider(),
+        )
+        val deviceId = createDeviceIdProvider(deviceIdStorage).deviceId()
+
+        // Act
+        PolymarketUserWalletDataCleaner(
+            credentialsStore = credentialsStore,
+            predictionAccountStatusStore = statusStore,
+            positionsValueStore = positionsValueStore,
+            onboardedStore = onboardedStore,
+            requisitesStore = requisitesStore,
+            withdrawalStore = withdrawalStore,
+            sessionKeyStore = keyStore,
+            sessionKeyTradingStore = sessionKeyTradingStore,
+        ).clear(listOf(WALLET_A))
+
+        // Assert
+        assertThat(sessionKeyStorage.entries).isEmpty()
+        assertThat(createDeviceIdProvider(deviceIdStorage).deviceId()).isEqualTo(deviceId)
+        coVerify(exactly = 1) { hotSdk.delete(match { it.value == "hot-a" }) }
+    }
+
+    private fun createDeviceIdProvider(storage: InMemorySecureStorage) = DefaultPolymarketDeviceIdProvider(
+        androidId = { null },
+        appInfoProvider = mockk { every { device } returns "Google Pixel" },
+        secureStorage = storage,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
+
     private fun createStatusStore(testScope: TestScope) = PredictionAccountStatusStore(
         dtoConverter = PredictionAccountStatusValueDTOConverter(
             collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
@@ -250,6 +346,7 @@ internal class PolymarketUserWalletDataCleanerTest {
 
         val WALLET_A = UserWalletId("011")
         val WALLET_B = UserWalletId("022")
+        const val SESSION_KEY_STORAGE_KEY = "polymarket_session_key_wallet_id_011"
 
         val ACTIVE = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,

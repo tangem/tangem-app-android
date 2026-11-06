@@ -14,7 +14,9 @@ dependencies {
 
     /** Feature */
     implementation(projects.features.yieldSupply.api)
+    implementation(projects.features.send.api)
     implementation(projects.features.marketing.api)
+    implementation(projects.features.txhistory.api)
 
     /** Core */
     implementation(projects.core.abTests)

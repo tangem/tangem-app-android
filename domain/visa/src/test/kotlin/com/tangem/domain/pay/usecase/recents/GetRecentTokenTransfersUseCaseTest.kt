@@ -8,7 +8,9 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.recents.RecentTokenTransfer
-import com.tangem.domain.pay.repository.PaymentAccountRecentsStore
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
+import com.tangem.domain.pay.model.recents.TokenTransferJournal.PAYMENT_ACCOUNT
+import com.tangem.domain.pay.repository.AccountRecentsStore
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -22,7 +24,7 @@ import org.junit.jupiter.api.Test
 
 internal class GetRecentTokenTransfersUseCaseTest {
 
-    private val recentsStore: PaymentAccountRecentsStore = mockk()
+    private val recentsStore: AccountRecentsStore = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
 
     private val useCase = GetRecentTokenTransfersUseCase(
@@ -40,10 +42,10 @@ internal class GetRecentTokenTransfersUseCaseTest {
         // Arrange
         val account = MockAccounts.createAccount(derivationIndex = 1, userWalletId = WALLET)
         stubAccounts(listOf(account))
-        coEvery { recentsStore.getUsage(WALLET) } returns emptyMap()
+        coEvery { recentsStore.getUsage(WALLET, PAYMENT_ACCOUNT) } returns emptyMap()
 
         // Act
-        val actual = useCase(WALLET).first()
+        val actual = useCase(WALLET, PAYMENT_ACCOUNT).first()
 
         // Assert
         assertThat(actual).isEmpty()
@@ -60,10 +62,10 @@ internal class GetRecentTokenTransfersUseCaseTest {
         )
         val missingAccount = MockAccounts.createAccount(derivationIndex = 2, userWalletId = WALLET)
         stubAccounts(listOf(account))
-        coEvery { recentsStore.getUsage(WALLET) } returns mapOf(usage(missingAccount, currency) to 1L)
+        coEvery { recentsStore.getUsage(WALLET, PAYMENT_ACCOUNT) } returns mapOf(usage(missingAccount, currency) to 1L)
 
         // Act
-        val actual = useCase(WALLET).first()
+        val actual = useCase(WALLET, PAYMENT_ACCOUNT).first()
 
         // Assert
         assertThat(actual).isEmpty()
@@ -74,10 +76,10 @@ internal class GetRecentTokenTransfersUseCaseTest {
         // Arrange
         val account = MockAccounts.createAccount(derivationIndex = 1, userWalletId = WALLET)
         stubAccounts(listOf(account))
-        coEvery { recentsStore.getUsage(WALLET) } returns mapOf(usage(account, currency()) to 1L)
+        coEvery { recentsStore.getUsage(WALLET, PAYMENT_ACCOUNT) } returns mapOf(usage(account, currency()) to 1L)
 
         // Act
-        val actual = useCase(WALLET).first()
+        val actual = useCase(WALLET, PAYMENT_ACCOUNT).first()
 
         // Assert
         assertThat(actual).isEmpty()
@@ -93,7 +95,7 @@ internal class GetRecentTokenTransfersUseCaseTest {
             cryptoCurrencies = currencies,
         )
         stubAccounts(listOf(account))
-        coEvery { recentsStore.getUsage(WALLET) } returns mapOf(
+        coEvery { recentsStore.getUsage(WALLET, PAYMENT_ACCOUNT) } returns mapOf(
             usage(account, currencies[0]) to 10L,
             usage(account, currencies[1]) to 40L,
             usage(account, currencies[2]) to 30L,
@@ -101,7 +103,7 @@ internal class GetRecentTokenTransfersUseCaseTest {
         )
 
         // Act
-        val actual = useCase(WALLET).first()
+        val actual = useCase(WALLET, PAYMENT_ACCOUNT).first()
 
         // Assert
         assertThat(actual).containsExactly(
@@ -121,13 +123,34 @@ internal class GetRecentTokenTransfersUseCaseTest {
             cryptoCurrencies = listOf(currency),
         )
         stubAccounts(listOf(MockAccounts.createAccount(derivationIndex = 1, userWalletId = WALLET), joint))
-        coEvery { recentsStore.getUsage(WALLET) } returns mapOf(usage(joint, currency) to 5L)
+        coEvery { recentsStore.getUsage(WALLET, PAYMENT_ACCOUNT) } returns mapOf(usage(joint, currency) to 5L)
 
         // Act
-        val actual = useCase(WALLET).first()
+        val actual = useCase(WALLET, PAYMENT_ACCOUNT).first()
 
         // Assert
         assertThat(actual).containsExactly(RecentTokenTransfer(account = joint, currency = currency))
+    }
+
+    @Test
+    fun `GIVEN the Money account journal WHEN invoke THEN its entries are resolved`() = runTest {
+        // Arrange
+        val currency = currency()
+        val account = MockAccounts.createAccount(
+            derivationIndex = 1,
+            userWalletId = WALLET,
+            cryptoCurrencies = listOf(currency),
+        )
+        stubAccounts(listOf(account))
+        coEvery {
+            recentsStore.getUsage(WALLET, TokenTransferJournal.MONEY_ACCOUNT)
+        } returns mapOf(usage(account, currency) to 1L)
+
+        // Act
+        val actual = useCase(WALLET, TokenTransferJournal.MONEY_ACCOUNT).first()
+
+        // Assert
+        assertThat(actual).containsExactly(RecentTokenTransfer(account = account, currency = currency))
     }
 
     private fun stubAccounts(accounts: List<Account>) {

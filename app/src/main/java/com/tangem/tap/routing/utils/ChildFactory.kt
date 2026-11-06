@@ -52,7 +52,6 @@ import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
-import com.tangem.features.moneyaccount.onboarding.component.MoneyAccountOnboardingComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
@@ -128,7 +127,6 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val tangemPayCampaignComponentFactory: TangemPayCampaignComponent.Factory,
-    private val moneyAccountOnboardingComponentFactory: MoneyAccountOnboardingComponent.Factory,
     private val moneyAccountDetailsComponentFactory: MoneyAccountDetailsComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
@@ -170,7 +168,6 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.ManageTokens -> {
                 val source = when (route.source) {
                     AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
-                    AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
                     AppRoute.ManageTokens.Source.ACCOUNT -> ManageTokensSource.ACCOUNT
                     AppRoute.ManageTokens.Source.WALLET -> ManageTokensSource.WALLET
                 }
@@ -561,15 +558,9 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.CreateWalletStart -> {
-                val mode = when (route.mode) {
-                    AppRoute.CreateWalletStart.Mode.ColdWallet -> CreateWalletStartComponent.Mode.ColdWallet
-                    AppRoute.CreateWalletStart.Mode.HotWallet -> CreateWalletStartComponent.Mode.HotWallet
-                }
                 createComponentChild(
                     context = context,
-                    params = CreateWalletStartComponent.Params(
-                        mode = mode,
-                    ),
+                    params = Unit,
                     componentFactory = createWalletStartComponentFactory,
                 )
             }
@@ -797,20 +788,6 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = TangemPayCampaignComponent.Params(campaignKey = route.campaignKey),
                     componentFactory = tangemPayCampaignComponentFactory,
-                )
-            }
-            is AppRoute.MoneyAccountOnboarding -> {
-                createComponentChild(
-                    context = context,
-                    params = when (val mode = route.mode) {
-                        is AppRoute.MoneyAccountOnboarding.Mode.Deeplink ->
-                            MoneyAccountOnboardingComponent.Params.Deeplink(deeplink = mode.deeplink)
-                        AppRoute.MoneyAccountOnboarding.Mode.FromMain ->
-                            MoneyAccountOnboardingComponent.Params.FromMain
-                        AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen ->
-                            MoneyAccountOnboardingComponent.Params.FromDetailsScreen
-                    },
-                    componentFactory = moneyAccountOnboardingComponentFactory,
                 )
             }
             is AppRoute.MoneyAccountDetails -> {

@@ -8,6 +8,7 @@ import com.tangem.data.wallets.DefaultWalletNamesMigrationRepository
 import com.tangem.data.wallets.DefaultWalletsPromoRepository
 import com.tangem.data.wallets.DefaultWalletsRepository
 import com.tangem.data.wallets.backup.DefaultWalletCardsBackupDeliveryScheduler
+import com.tangem.data.wallets.balance.DefaultWalletBalanceStateRepository
 import com.tangem.data.wallets.cold.DefaultColdMapDerivationsRepository
 import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.data.wallets.derivations.DefaultDerivationsRepository
@@ -33,6 +34,7 @@ import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.derivations.HotMapDerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
+import com.tangem.domain.wallets.repository.WalletBalanceStateRepository
 import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
@@ -82,6 +84,7 @@ internal object WalletsDataModule {
     fun provideWalletCardsBackupRepository(
         tangemTechApi: TangemTechApi,
         dataStoreFactory: AppDataStoreFactory,
+        appPreferencesStore: AppPreferencesStore,
         deliveryScheduler: WalletCardsBackupDeliveryScheduler,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletCardsBackupRepository {
@@ -94,6 +97,7 @@ internal object WalletsDataModule {
                     fileName = "pending_wallet_cards_backups",
                 ),
             ),
+            appPreferencesStore = appPreferencesStore,
             deliveryScheduler = deliveryScheduler,
             dispatchers = dispatchers,
         )
@@ -173,4 +177,8 @@ internal interface WalletsDataBindsModule {
     fun bindWalletCardsBackupDeliveryScheduler(
         impl: DefaultWalletCardsBackupDeliveryScheduler,
     ): WalletCardsBackupDeliveryScheduler
+
+    @Binds
+    @Singleton
+    fun bindWalletBalanceStateRepository(impl: DefaultWalletBalanceStateRepository): WalletBalanceStateRepository
 }

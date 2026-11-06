@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -49,14 +48,12 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_16
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
-import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.models.TransactionCardType
 import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview
 
 @Composable
 internal fun TransactionCard(
-    priceImpact: PriceImpact,
     swapCardState: SwapCardState,
     onSelectTokenClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -81,7 +78,6 @@ internal fun TransactionCard(
         is SwapCardState.SwapCardData -> {
             TransactionCardData(
                 cardState = swapCardState,
-                priceImpact = priceImpact,
                 onChangeTokenClick = onChangeTokenClick,
                 modifier = modifier.testTag(cardTag),
             )
@@ -95,7 +91,6 @@ internal fun TransactionCard(
 @Composable
 private fun TransactionCardData(
     cardState: SwapCardState.SwapCardData,
-    priceImpact: PriceImpact,
     modifier: Modifier = Modifier,
     onChangeTokenClick: (() -> Unit)? = null,
 ) {
@@ -119,10 +114,7 @@ private fun TransactionCardData(
                 type = cardState.type,
             )
 
-            Content(
-                cardData = cardState,
-                priceImpact = priceImpact,
-            )
+            Content(cardData = cardState)
         }
 
         Box(modifier = Modifier.align(Alignment.BottomEnd)) {
@@ -186,7 +178,7 @@ private fun TransactionCardEmpty(
             ) {
                 Text(
                     text = cardState.amountField?.value.orEmpty(),
-                    color = TangemTheme.colors.text.disabled,
+                    color = TangemTheme.colors3.text.tertiary,
                     style = TangemTheme.typography.h2,
                     autoSize = TextAutoSize.StepBased(
                         minFontSize = 16.sp,
@@ -197,7 +189,7 @@ private fun TransactionCardEmpty(
                 )
                 Text(
                     text = cardState.amountEquivalent.resolveAnnotatedReference(),
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier
                         .defaultMinSize(minHeight = 20.dp)
@@ -298,9 +290,9 @@ private fun Header(
             .testTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER),
     ) {
         val titleColor = if (type.inputError is TransactionCardType.InputError.Empty) {
-            TangemTheme.colors.text.tertiary
+            TangemTheme.colors3.text.secondary
         } else {
-            TangemTheme.colors.text.warning
+            TangemTheme.colors3.text.accent.red
         }
         AccountTitle(
             accountTitleUM = type.accountTitleUM,
@@ -314,7 +306,7 @@ private fun Header(
             ) { balanceText ->
                 Text(
                     text = balanceText.resolveReference().orMaskWithStars(isBalanceHidden),
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier.testTag(SwapTokenScreenTestTags.BALANCE),
                 )
@@ -332,7 +324,7 @@ private fun Header(
 
 @Suppress("LongMethod")
 @Composable
-private fun Content(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpact) {
+private fun Content(cardData: SwapCardState.SwapCardData) {
     val type = cardData.type
     val amountEquivalent = cardData.amountEquivalent
     Row(
@@ -359,7 +351,7 @@ private fun Content(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpa
                     if (value != null) {
                         Text(
                             text = value,
-                            color = TangemTheme.colors.text.primary1,
+                            color = TangemTheme.colors3.text.primary,
                             style = TangemTheme.typography.h2,
                             autoSize = TextAutoSize.StepBased(
                                 minFontSize = 16.sp,
@@ -388,11 +380,7 @@ private fun Content(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpa
                 Spacer(modifier = Modifier.height(20.dp))
             } else if (amountEquivalent != null) {
                 when (type) {
-                    is TransactionCardType.ReadOnly -> ReceiveAmountEquivalent(
-                        amountEquivalent = amountEquivalent,
-                        type = type,
-                        priceImpact = priceImpact,
-                    )
+                    is TransactionCardType.ReadOnly -> ReceiveAmountEquivalent(amountEquivalent = amountEquivalent)
                     is TransactionCardType.Inputtable -> SwapAmountEquivalent(
                         amountEquivalent = amountEquivalent,
                         isFiatValue = cardData.amountField?.isFiatValue == true,
@@ -432,7 +420,7 @@ internal fun AmountInputField(
         value = amountField.value,
         decimals = activeAmount.decimals,
         onValueChange = amountField.onValueChange,
-        textStyle = TangemTheme.typography.h2.copy(color = TangemTheme.colors.text.primary1),
+        textStyle = TangemTheme.typography.h2.copy(color = TangemTheme.colors3.text.primary),
         isEnabled = type.isEnabled,
         isAutoResize = true,
         visualTransformation = AmountVisualTransformation(
@@ -441,11 +429,11 @@ internal fun AmountInputField(
             symbol = cardData.amountCurrencyOverride?.symbol
                 ?: activeAmount.currencySymbol.takeIf { amountField.isFiatValue },
             decimals = activeAmount.decimals,
-            symbolColor = TangemTheme.colors.text.disabled,
+            symbolColor = TangemTheme.colors3.text.tertiary,
         ),
         colors = AmountTextFieldColors(
-            textColor = TangemTheme.colors.text.primary1,
-            disabledTextColor = TangemTheme.colors.text.disabled,
+            textColor = TangemTheme.colors3.text.primary,
+            disabledTextColor = TangemTheme.colors3.text.tertiary,
             backgroundColor = Color.Unspecified,
         ),
         isValuePasted = amountField.isValuePasted,
@@ -468,11 +456,7 @@ internal fun AmountInputField(
 }
 
 @Composable
-private fun ReceiveAmountEquivalent(
-    amountEquivalent: TextReference,
-    type: TransactionCardType.ReadOnly,
-    priceImpact: PriceImpact,
-) {
+private fun ReceiveAmountEquivalent(amountEquivalent: TextReference) {
     Row(
         modifier = Modifier.defaultMinSize(minHeight = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -480,30 +464,10 @@ private fun ReceiveAmountEquivalent(
         AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
             Text(
                 text = amount.resolveAnnotatedReference(),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
                 modifier = Modifier.testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
             )
-        }
-        if (type.shouldShowWarning) {
-            SpacerW4()
-            IconButton(
-                onClick = { type.onWarningClick?.invoke() },
-                modifier = Modifier.size(size = 20.dp),
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_information_24),
-                    contentDescription = null,
-                    tint = when (priceImpact.type) {
-                        PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
-                        PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
-                        else -> TangemTheme.colors.text.tertiary
-                    },
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_INFORMATION_ICON),
-                )
-            }
         }
     }
 }
@@ -553,7 +517,7 @@ private fun SwapAmountEquivalent(
         AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
             Text(
                 text = amount.resolveAnnotatedReference(),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
                 modifier = Modifier.testTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT),
             )
@@ -577,7 +541,7 @@ fun Token(currencyIconState: CurrencyIconState, tokenSymbol: TextReference) {
         SpacerH4()
         Text(
             text = tokenSymbol.resolveReference(),
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             style = TangemTheme.typography.subtitle2,
             textAlign = TextAlign.Center,
@@ -604,7 +568,7 @@ fun ChangeTokenSelector() {
                 .size(20.dp)
                 .testTag(SwapTokenScreenTestTags.SELECT_TOKEN_ICON),
             painter = painterResource(id = R.drawable.ic_chevron_24),
-            tint = TangemTheme.colors.icon.secondary,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
     }
@@ -617,7 +581,6 @@ fun ChangeTokenSelector() {
 private fun TransactionCard_Preview(@PreviewParameter(PreviewProvider::class) params: SwapCardState) {
     TangemThemePreview {
         TransactionCard(
-            priceImpact = PriceImpact.Empty,
             swapCardState = params,
             onSelectTokenClick = {},
             modifier = Modifier,

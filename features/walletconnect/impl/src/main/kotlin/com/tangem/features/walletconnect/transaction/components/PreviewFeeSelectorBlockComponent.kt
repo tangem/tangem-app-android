@@ -30,7 +30,7 @@ internal class PreviewFeeSelectorBlockComponent : FeeSelectorBlockComponent {
     override fun Content(modifier: Modifier) {
         Row(
             modifier = modifier
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -38,13 +38,13 @@ internal class PreviewFeeSelectorBlockComponent : FeeSelectorBlockComponent {
                 modifier = Modifier.size(24.dp),
                 painter = painterResource(R.drawable.ic_fee_new_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
             )
             Text(
                 modifier = Modifier.padding(start = 4.dp),
                 text = stringResourceSafe(R.string.common_network_fee_title),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Icon(
                 modifier = Modifier
@@ -52,7 +52,7 @@ internal class PreviewFeeSelectorBlockComponent : FeeSelectorBlockComponent {
                     .size(16.dp),
                 painter = painterResource(id = R.drawable.ic_token_info_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
             )
             Spacer(modifier = Modifier.weight(1f))
             AuditLabel(
@@ -64,13 +64,13 @@ internal class PreviewFeeSelectorBlockComponent : FeeSelectorBlockComponent {
             Text(
                 text = "~ 0.25 \$",
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
             Icon(
                 modifier = Modifier.size(width = 18.dp, height = 24.dp),
                 painter = painterResource(id = R.drawable.ic_select_18_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
     }

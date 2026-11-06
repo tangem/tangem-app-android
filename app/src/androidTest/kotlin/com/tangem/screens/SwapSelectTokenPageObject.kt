@@ -117,6 +117,13 @@ class SwapSelectTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         hasClickAction()
     }
 
+    fun tokenWithNameNetworkAndAmount(tokenName: String, networkName: String, amount: String): KNode = child {
+        hasText(tokenName, substring = true)
+        hasText(networkName, substring = true)
+        hasText(amount)
+        hasClickAction()
+    }
+
     fun marketsTokenWithName(title: String): KNode {
         return child {
             hasTestTag(MarketsTestTags.TOKENS_LIST_ITEM)

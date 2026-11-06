@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.security.excludeFromAutofill
 
 /**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=213%3A218&t=TmfD6UBHPg9uYfev-4)
@@ -47,9 +48,11 @@ fun OutlineTextField(
     keyboardActions: KeyboardActions = KeyboardActions(),
     visualTransformation: VisualTransformation = VisualTransformation.None,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    isExcludedFromAutofill: Boolean = false,
 ) {
     TangemTextField(
         modifier = modifier,
+        isExcludedFromAutofill = isExcludedFromAutofill,
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
@@ -82,9 +85,11 @@ fun OutlineTextFieldWithIcon(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     caption: String? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    isExcludedFromAutofill: Boolean = false,
 ) {
     TangemTextFieldWithIcon(
         modifier = modifier,
+        isExcludedFromAutofill = isExcludedFromAutofill,
         value = value,
         onValueChange = onValueChange,
         iconResId = iconResId,
@@ -123,10 +128,12 @@ private fun TangemTextField(
     colors: TextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
     size: TangemTextFieldSize = TangemTextFieldSize.Default,
     onClear: () -> Unit = { onValueChange(TextFieldValue()) },
+    isExcludedFromAutofill: Boolean = false,
 ) {
     Column(modifier = modifier) {
         OutlinedTextField(
             modifier = Modifier
+                .then(if (isExcludedFromAutofill) Modifier.excludeFromAutofill() else Modifier)
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
                 .heightIn(size.toHeightDp()),
@@ -234,10 +241,12 @@ private fun TangemTextFieldWithIcon(
     colors: TextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
     size: TangemTextFieldSize = TangemTextFieldSize.Default,
     onIconClick: () -> Unit = {},
+    isExcludedFromAutofill: Boolean = false,
 ) {
     Column(modifier = modifier) {
         OutlinedTextField(
             modifier = Modifier
+                .then(if (isExcludedFromAutofill) Modifier.excludeFromAutofill() else Modifier)
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
                 .heightIn(size.toHeightDp()),
@@ -329,40 +338,40 @@ private fun TangemTextFieldSize.toShape(): Shape = when (this) {
 object TangemTextFieldsDefault {
     val defaultTextFieldColors: TextFieldColors
         @Composable @Stable get() = TextFieldColors(
-            focusedTextColor = TangemTheme.colors.text.primary1,
-            errorTextColor = TangemTheme.colors.text.primary1,
-            unfocusedTextColor = TangemTheme.colors.text.primary1,
-            disabledTextColor = TangemTheme.colors.text.disabled,
+            focusedTextColor = TangemTheme.colors3.text.primary,
+            errorTextColor = TangemTheme.colors3.text.primary,
+            unfocusedTextColor = TangemTheme.colors3.text.primary,
+            disabledTextColor = TangemTheme.colors3.text.tertiary,
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent,
             errorContainerColor = Color.Transparent,
-            cursorColor = TangemTheme.colors.icon.primary1,
-            errorCursorColor = TangemTheme.colors.icon.warning,
-            focusedIndicatorColor = TangemTheme.colors.icon.primary1,
-            unfocusedIndicatorColor = TangemTheme.colors.stroke.secondary,
-            disabledIndicatorColor = TangemTheme.colors.stroke.secondary,
-            errorIndicatorColor = TangemTheme.colors.icon.warning,
-            focusedLeadingIconColor = TangemTheme.colors.icon.informative,
-            unfocusedLeadingIconColor = TangemTheme.colors.icon.informative,
+            cursorColor = TangemTheme.colors3.icon.primary,
+            errorCursorColor = TangemTheme.colors3.icon.accent.red,
+            focusedIndicatorColor = TangemTheme.colors3.icon.primary,
+            unfocusedIndicatorColor = TangemTheme.colors3.border.tertiary,
+            disabledIndicatorColor = TangemTheme.colors3.border.tertiary,
+            errorIndicatorColor = TangemTheme.colors3.icon.accent.red,
+            focusedLeadingIconColor = TangemTheme.colors3.icon.secondary,
+            unfocusedLeadingIconColor = TangemTheme.colors3.icon.secondary,
             disabledLeadingIconColor = Color.Transparent,
-            errorLeadingIconColor = TangemTheme.colors.icon.warning,
-            focusedTrailingIconColor = TangemTheme.colors.icon.informative,
-            unfocusedTrailingIconColor = TangemTheme.colors.icon.informative,
+            errorLeadingIconColor = TangemTheme.colors3.icon.accent.red,
+            focusedTrailingIconColor = TangemTheme.colors3.icon.secondary,
+            unfocusedTrailingIconColor = TangemTheme.colors3.icon.secondary,
             disabledTrailingIconColor = Color.Transparent,
-            errorTrailingIconColor = TangemTheme.colors.icon.warning,
-            focusedLabelColor = TangemTheme.colors.text.primary1,
-            unfocusedLabelColor = TangemTheme.colors.text.secondary,
-            disabledLabelColor = TangemTheme.colors.text.disabled,
-            errorLabelColor = TangemTheme.colors.icon.warning,
-            focusedPlaceholderColor = TangemTheme.colors.text.secondary,
-            errorPlaceholderColor = TangemTheme.colors.text.secondary,
-            unfocusedPlaceholderColor = TangemTheme.colors.text.secondary,
-            disabledPlaceholderColor = TangemTheme.colors.text.disabled,
-            focusedSupportingTextColor = TangemTheme.colors.text.tertiary,
-            unfocusedSupportingTextColor = TangemTheme.colors.text.tertiary,
-            disabledSupportingTextColor = TangemTheme.colors.text.disabled,
-            errorSupportingTextColor = TangemTheme.colors.icon.warning,
+            errorTrailingIconColor = TangemTheme.colors3.icon.accent.red,
+            focusedLabelColor = TangemTheme.colors3.text.primary,
+            unfocusedLabelColor = TangemTheme.colors3.text.secondary,
+            disabledLabelColor = TangemTheme.colors3.text.tertiary,
+            errorLabelColor = TangemTheme.colors3.icon.accent.red,
+            focusedPlaceholderColor = TangemTheme.colors3.text.secondary,
+            errorPlaceholderColor = TangemTheme.colors3.text.secondary,
+            unfocusedPlaceholderColor = TangemTheme.colors3.text.secondary,
+            disabledPlaceholderColor = TangemTheme.colors3.text.tertiary,
+            focusedSupportingTextColor = TangemTheme.colors3.text.secondary,
+            unfocusedSupportingTextColor = TangemTheme.colors3.text.secondary,
+            disabledSupportingTextColor = TangemTheme.colors3.text.tertiary,
+            errorSupportingTextColor = TangemTheme.colors3.icon.accent.red,
             textSelectionColors = LocalTextSelectionColors.current,
             focusedPrefixColor = Color.Transparent,
             unfocusedPrefixColor = Color.Transparent,
@@ -472,7 +481,7 @@ fun TextFieldColors.captionColor(enabled: Boolean, isError: Boolean): State<Colo
 private fun OutlineTextFieldSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(horizontal = 16.dp),
     ) {
         val text = TextFieldValue(text = "Input")
@@ -519,7 +528,7 @@ private fun OutlineTextFieldSample(modifier: Modifier = Modifier) {
             value = TextFieldValue(),
             onValueChange = { /* no-op */ },
             iconResId = R.drawable.ic_alert_24,
-            iconColor = TangemTheme.colors.icon.informative,
+            iconColor = TangemTheme.colors3.icon.secondary,
             label = "Default without value",
             placeholder = "Placeholder",
             onIconClick = {},

@@ -6,6 +6,7 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.util.concurrent.Executors
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccountIdTest {
@@ -32,8 +33,33 @@ class AccountIdTest {
         val actual = AccountId.forCollectiblesAccount(userWalletId = userWalletId)
 
         // Assert
-        Truth.assertThat(actual.value).isEqualTo("collectibles_UserWalletId(271...C8F)")
-        Truth.assertThat(actual.userWalletId).isEqualTo(userWalletId)
+        val expected = AccountId.forCryptoPortfolio(
+            userWalletId = userWalletId,
+            derivationIndex = DerivationIndex(999799).getOrNull()!!,
+        )
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN parallel calls WHEN forCryptoPortfolio THEN every call returns the same id`() {
+        // Arrange
+        val userWalletId = UserWalletId("27163F47405CE73110837F24DF82607FF11C7AF9D78C93F409E4FEAFF3400C8F")
+        val expected = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = DerivationIndex.Main)
+        val executor = Executors.newFixedThreadPool(PARALLEL_THREADS)
+
+        // Act
+        val actual = try {
+            List(PARALLEL_CALLS) {
+                executor.submit<AccountId> {
+                    AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = DerivationIndex.Main)
+                }
+            }.map { it.get() }
+        } finally {
+            executor.shutdown()
+        }
+
+        // Assert
+        Truth.assertThat(actual.toSet()).containsExactly(expected)
     }
 
     private fun provideTestModels() = listOf(
@@ -50,6 +76,11 @@ class AccountIdTest {
             expected = "555C1E17A302659446C97393453B7C2B3246AF4DA082C56C28FB6EDD1A6606A4",
         ),
     )
+
+    private companion object {
+        const val PARALLEL_THREADS = 8
+        const val PARALLEL_CALLS = 10_000
+    }
 
     data class ForCryptoPortfolioModel(
         val derivationIndex: DerivationIndex,

@@ -31,7 +31,7 @@ internal object BankOfframpOrderRequestConverter :
                 is BankOfframpRecipient.Saved -> data(request = value, bankAccountId = recipient.bankAccountId)
                 is BankOfframpRecipient.New -> data(
                     request = value,
-                    bankAccount = convertBankAccount(details = recipient.details, rail = value.rail),
+                    bankAccount = convertBankAccount(details = recipient.details, rail = value.rail).bind(),
                 )
             }
             BankOfframpPlaceOrderRequest(data = data)
@@ -50,7 +50,10 @@ internal object BankOfframpOrderRequestConverter :
     )
 
     /** The rail comes from the route the customer picked, not from the recipient the wizard has just described. */
-    private fun Raise<BankOfframpError>.convertBankAccount(details: BankAccountDetails, rail: BankRail) =
+    fun convertBankAccount(
+        details: BankAccountDetails,
+        rail: BankRail,
+    ): Either<BankOfframpError, BankOfframpPlaceOrderRequest.BankAccount> = either {
         BankOfframpPlaceOrderRequest.BankAccount(
             details = BankOfframpPlaceOrderRequest.Details(
                 currency = required(details.currency),
@@ -65,6 +68,7 @@ internal object BankOfframpOrderRequestConverter :
                 bankAccountType = required(details.accountType).name,
             ),
         )
+    }
 
     private fun convertBeneficiary(value: Beneficiary) = when (value) {
         is Beneficiary.Individual -> BankOfframpPlaceOrderRequest.Beneficiary(

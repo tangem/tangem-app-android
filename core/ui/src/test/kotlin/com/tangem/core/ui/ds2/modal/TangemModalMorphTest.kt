@@ -158,6 +158,82 @@ internal class TangemModalMorphTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ModalCardHeight {
+
+        @ParameterizedTest
+        @MethodSource("provideTestModels")
+        fun `GIVEN content and a keyboard WHEN modalCardHeight THEN grows only as far as the content needs`(
+            model: CardHeightModel,
+        ) {
+            // Arrange
+            val carve = modalContentBottomCarve(
+                navClearance = model.navClearance,
+                imeBottom = modalKeyboardInset(
+                    imeBottom = model.imeBottom,
+                    focusExpansion = model.focusExpansion,
+                ),
+                cardBottomMargin = model.cardBottomMargin,
+                cardHeight = model.maxCardHeight,
+            )
+
+            // Act
+            val actual = modalCardHeight(
+                contentHeight = model.contentHeight,
+                contentCarve = carve,
+                maxCardHeight = model.maxCardHeight,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            // Resting card, no keyboard: as tall as its content.
+            CardHeightModel(
+                contentHeight = SHORT_CONTENT,
+                cardBottomMargin = NAV_BAR + MARGIN,
+                expected = SHORT_CONTENT,
+            ),
+            // Edge-to-edge card: the navigation-bar clearance moved inside it.
+            CardHeightModel(
+                contentHeight = SHORT_CONTENT,
+                navClearance = NAV_BAR,
+                expected = SHORT_CONTENT + NAV_BAR,
+            ),
+            // Short content with the keyboard up: reaches over the keyboard, nowhere near the full height.
+            CardHeightModel(
+                contentHeight = SHORT_CONTENT,
+                imeBottom = KEYBOARD,
+                cardBottomMargin = NAV_BAR + MARGIN,
+                expected = SHORT_CONTENT + KEYBOARD - NAV_BAR - MARGIN,
+            ),
+            // A keyboard that does not reach the card leaves it at its content height.
+            CardHeightModel(
+                contentHeight = SHORT_CONTENT,
+                imeBottom = MARGIN,
+                cardBottomMargin = NAV_BAR + MARGIN,
+                expected = SHORT_CONTENT,
+            ),
+            // The card under the one being typed in holds nothing focused, so the keyboard is not its business.
+            CardHeightModel(
+                contentHeight = SHORT_CONTENT,
+                imeBottom = KEYBOARD,
+                cardBottomMargin = NAV_BAR + MARGIN,
+                focusExpansion = 0f,
+                expected = SHORT_CONTENT,
+            ),
+            // Tall content with the keyboard up: capped at the full height, the content scrolls.
+            CardHeightModel(
+                contentHeight = TALL_CONTENT,
+                imeBottom = KEYBOARD,
+                cardBottomMargin = NAV_BAR + MARGIN,
+                expected = CARD_HEIGHT,
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ContentHeightCache {
 
         private val measurable: IntrinsicMeasurable = mockk()
@@ -272,6 +348,16 @@ internal class TangemModalMorphTest {
         val expected: Int,
     )
 
+    internal data class CardHeightModel(
+        val contentHeight: Int,
+        val navClearance: Int = 0,
+        val imeBottom: Int = 0,
+        val cardBottomMargin: Int = 0,
+        val focusExpansion: Float = 1f,
+        val maxCardHeight: Int = CARD_HEIGHT,
+        val expected: Int,
+    )
+
     internal data class MorphTargetModel(
         val intrinsicHeight: Int,
         val maxHeight: Int,
@@ -290,5 +376,7 @@ internal class TangemModalMorphTest {
         const val MARGIN = 21
         const val KEYBOARD = 900
         const val CARD_HEIGHT = 2000
+        const val SHORT_CONTENT = 700
+        const val TALL_CONTENT = 1800
     }
 }

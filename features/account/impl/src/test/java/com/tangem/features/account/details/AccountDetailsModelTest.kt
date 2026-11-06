@@ -28,6 +28,7 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.account.AccountDetailsComponent
+import com.tangem.features.account.details.entity.AccountDetailsSheetConfig
 import com.tangem.features.account.details.entity.AccountDetailsUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -98,8 +99,8 @@ internal class AccountDetailsModelTest {
         // Assert
         val expected = ActivationUM(
             isManageTokensAvailable = false,
-            isPendingActivation = true,
-            membersCount = testModel.expectedMembersCount,
+            membersProgress = testModel.expectedProgress,
+            approvals = testModel.expectedApprovals,
         )
         assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
 
@@ -121,8 +122,8 @@ internal class AccountDetailsModelTest {
             // Assert
             val expected = ActivationUM(
                 isManageTokensAvailable = true,
-                isPendingActivation = false,
-                membersCount = activeMembersCount,
+                membersProgress = null,
+                approvals = APPROVALS_TWO_OF_TWO,
             )
             assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
 
@@ -144,8 +145,8 @@ internal class AccountDetailsModelTest {
             // Assert
             val expected = ActivationUM(
                 isManageTokensAvailable = false,
-                isPendingActivation = false,
-                membersCount = activeMembersCount,
+                membersProgress = null,
+                approvals = APPROVALS_TWO_OF_TWO,
             )
             assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
 
@@ -158,7 +159,12 @@ internal class AccountDetailsModelTest {
         val account = MockAccounts.createJointAccount()
         val status = AccountStatus.Joint(
             account = account,
-            value = JointAccountStatusValue.Pending(source = StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 2),
+            value = JointAccountStatusValue.Pending(
+                source = StatusSource.ACTUAL,
+                joinedMembers = 1,
+                totalMembers = 2,
+                threshold = 2,
+            ),
             tokenList = TokenList.Empty,
             priceChangeLce = lceLoading(),
         )
@@ -195,7 +201,7 @@ internal class AccountDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        val expected = ActivationUM(isManageTokensAvailable = false, isPendingActivation = true)
+        val expected = ActivationUM(isManageTokensAvailable = false, membersProgress = null, approvals = null)
         assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
 
         model.onDestroy()
@@ -337,6 +343,44 @@ internal class AccountDetailsModelTest {
     }
 
     @Test
+    fun `GIVEN joint account WHEN status is loaded THEN the account block says how many members it has`() = runTest {
+        // Arrange
+        val account = MockAccounts.createJointAccount()
+        every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
+        givenWallet(isMultiCurrency = true)
+
+        // Act
+        val model = createModel(account = account, testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.accountSubtitle).isEqualTo(
+            pluralReference(id = R.plurals.joint_account_members_count, count = 2, formatArgs = wrappedList(2)),
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN joint account WHEN approvals info clicked THEN the about signatures sheet opens with the rule`() =
+        runTest {
+            // Arrange
+            val account = MockAccounts.createJointAccount()
+            every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
+            givenWallet(isMultiCurrency = true)
+            val model = createModel(account = account, testScope = this)
+            advanceUntilIdle()
+            val configs = mutableListOf<AccountDetailsSheetConfig?>()
+            model.bottomSheetNavigation.subscribe { event -> configs += event.transformer(configs.lastOrNull()) }
+
+            // Act
+            requireNotNull(model.uiState.value.requiredApprovals).onInfoClick()
+
+            // Assert
+            assertThat(configs.last()).isEqualTo(AccountDetailsSheetConfig.AboutSignatures(threshold = 2, total = 2))
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN personal account WHEN model loads THEN activation is not pending`() = runTest {
         // Arrange
         val account = MockAccounts.createAccount(derivationIndex = 1)
@@ -354,7 +398,7 @@ internal class AccountDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        val expected = ActivationUM(isManageTokensAvailable = true, isPendingActivation = false)
+        val expected = ActivationUM(isManageTokensAvailable = true, membersProgress = null, approvals = null)
         assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
 
         model.onDestroy()
@@ -389,7 +433,8 @@ internal class AccountDetailsModelTest {
             value = JointAccountStatusValue.Active(
                 source = StatusSource.ACTUAL,
                 totalMembers = 2,
-                safeAddress = "0x5afe"
+                safeAddress = "0x5afe",
+                threshold = 2,
             ),
             tokenList = TokenList.Empty,
             priceChangeLce = lceLoading(),
@@ -419,49 +464,66 @@ internal class AccountDetailsModelTest {
     private fun AccountDetailsUM.toActivationUM(): ActivationUM {
         return ActivationUM(
             isManageTokensAvailable = isManageTokensAvailable,
-            isPendingActivation = isPendingActivation,
-            membersCount = members?.membersCount,
+            membersProgress = members?.progress,
+            approvals = requiredApprovals?.value,
         )
     }
 
-    private val activeMembersCount: TextReference = pluralReference(
-        id = R.plurals.account_details_joint_members_count,
-        count = 2,
-        formatArgs = wrappedList(2),
-    )
-
     internal data class ActivationUM(
         val isManageTokensAvailable: Boolean,
-        val isPendingActivation: Boolean,
-        val membersCount: TextReference? = null,
+        val membersProgress: TextReference?,
+        val approvals: TextReference?,
     )
 
     internal data class InactiveJointModel(
         val statusValue: JointAccountStatusValue,
-        val expectedMembersCount: TextReference?,
+        val expectedProgress: TextReference?,
+        val expectedApprovals: TextReference?,
     )
 
     private fun provideTestModels() = listOf(
-        InactiveJointModel(statusValue = JointAccountStatusValue.Loading, expectedMembersCount = null),
+        InactiveJointModel(
+            statusValue = JointAccountStatusValue.Loading,
+            expectedProgress = null,
+            expectedApprovals = null,
+        ),
         InactiveJointModel(
             statusValue = JointAccountStatusValue.Pending(
                 source = StatusSource.ACTUAL,
                 joinedMembers = 1,
-                totalMembers = 2
+                totalMembers = 2,
+                threshold = 2,
             ),
-            expectedMembersCount = resourceReference(
-                id = R.string.account_details_joint_members_progress,
+            expectedProgress = resourceReference(
+                id = R.string.account_details_joint_members_joined,
                 formatArgs = wrappedList(1, 2),
             ),
+            expectedApprovals = APPROVALS_TWO_OF_TWO,
         ),
         InactiveJointModel(
-            statusValue = JointAccountStatusValue.Confirming(source = StatusSource.ACTUAL, totalMembers = 2),
-            expectedMembersCount = pluralReference(
-                id = R.plurals.account_details_joint_members_count,
-                count = 2,
-                formatArgs = wrappedList(2),
+            statusValue = JointAccountStatusValue.Confirming(
+                source = StatusSource.ACTUAL,
+                totalMembers = 2,
+                threshold = 2,
+                verifiedMembers = 1,
             ),
+            expectedProgress = resourceReference(
+                id = R.string.account_details_joint_members_confirmed,
+                formatArgs = wrappedList(1, 2),
+            ),
+            expectedApprovals = APPROVALS_TWO_OF_TWO,
         ),
-        InactiveJointModel(statusValue = JointAccountStatusValue.Error.Unavailable, expectedMembersCount = null),
+        InactiveJointModel(
+            statusValue = JointAccountStatusValue.Error.Unavailable,
+            expectedProgress = null,
+            expectedApprovals = null,
+        ),
     )
+
+    private companion object {
+        val APPROVALS_TWO_OF_TWO: TextReference = resourceReference(
+            id = R.string.joint_account_invite_members_approvals_value,
+            formatArgs = wrappedList(2, 2),
+        )
+    }
 }

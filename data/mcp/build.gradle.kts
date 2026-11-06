@@ -17,6 +17,7 @@ dependencies {
     implementation(projects.core.local)
     implementation(projects.core.remote)
     implementation(projects.core.utils)
+    implementation(projects.domain.core)
     implementation(projects.domain.models)
     implementation(projects.domain.mcp.models)
     implementation(projects.libs.auth)

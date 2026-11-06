@@ -122,7 +122,7 @@ internal class AppsFlyerDeeplinkRouterTest {
 
     private fun provideFreshInstallEntryModels(): List<BlockedRouteModel> = listOf(
         BlockedRouteModel(AppRoute.Home(), expected = true),
-        BlockedRouteModel(AppRoute.Stories(storyId = "id", screenSource = "src"), expected = true),
+        BlockedRouteModel(AppRoute.Stories(storyId = "id", screenSource = "src"), expected = false),
         BlockedRouteModel(
             AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten),
             expected = false,
@@ -130,7 +130,7 @@ internal class AppsFlyerDeeplinkRouterTest {
         BlockedRouteModel(AppRoute.Wallet, expected = false),
         BlockedRouteModel(AppRoute.AppSettings, expected = false),
         BlockedRouteModel(
-            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+            AppRoute.CreateWalletStart,
             expected = false,
         ),
         BlockedRouteModel(currentRoute = null, expected = false),
@@ -149,7 +149,7 @@ internal class AppsFlyerDeeplinkRouterTest {
         BlockedRouteModel(AppRoute.Initial, expected = false),
         BlockedRouteModel(AppRoute.Disclaimer(isTosAccepted = true), expected = false),
         BlockedRouteModel(
-            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+            AppRoute.CreateWalletStart,
             expected = false,
         ),
         BlockedRouteModel(AppRoute.TangemPayHotWalletOnboarding, expected = false),
@@ -203,22 +203,6 @@ internal class AppsFlyerDeeplinkRouterTest {
         }
 
     @Test
-    fun `GIVEN deeplink and empty wallets on Stories WHEN observe THEN replaceAll onboarding and clear`() =
-        runTest(UnconfinedTestDispatcher()) {
-            // Arrange
-            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
-            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Stories(storyId = "id", screenSource = "src"))
-
-            // Act
-            router.observe(backgroundScope, currentRoute)
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) { appRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
-            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
-        }
-
-    @Test
     fun `GIVEN deeplink and empty wallets on forgotten wallet Home WHEN observe THEN does not route`() =
         runTest(UnconfinedTestDispatcher()) {
             // Arrange
@@ -260,7 +244,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             // Arrange
             coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
             val currentRoute = MutableStateFlow<AppRoute?>(
-                AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+                AppRoute.CreateWalletStart,
             )
 
             // Act
@@ -302,15 +286,8 @@ internal class AppsFlyerDeeplinkRouterTest {
             router.observe(backgroundScope, currentRoute)
             advanceUntilIdle()
 
-            // Assert — referral install skips stories → hot wallet creation; deep link stays as attribution.
-            verify {
-                appRouter.replaceAll(
-                    match<AppRoute> {
-                        it is AppRoute.CreateWalletStart && it.mode == AppRoute.CreateWalletStart.Mode.HotWallet
-                    },
-                    onComplete = any(),
-                )
-            }
+            // Assert — referral install → hot wallet creation; the deep link stays until a wallet is created.
+            verify { appRouter.replaceAll(AppRoute.CreateWalletStart, onComplete = any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -388,7 +365,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(CAMPAIGN_VALUE)
             coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
             val currentRoute = MutableStateFlow<AppRoute?>(
-                AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+                AppRoute.CreateWalletStart,
             )
 
             // Act
@@ -407,7 +384,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf("referral")
             coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
             val currentRoute = MutableStateFlow<AppRoute?>(
-                AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+                AppRoute.CreateWalletStart,
             )
 
             // Act

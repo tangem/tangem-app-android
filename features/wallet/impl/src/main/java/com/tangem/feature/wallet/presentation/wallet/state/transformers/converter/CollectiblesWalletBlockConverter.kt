@@ -20,6 +20,8 @@ internal class CollectiblesWalletBlockConverter(
 ) : Converter<AccountStatus.Collectibles, CollectiblesWalletBlockUM> {
 
     override fun convert(value: AccountStatus.Collectibles): CollectiblesWalletBlockUM {
+        if (value.value is CollectiblesAccountStatusValue.NotOnboarded) return CollectiblesWalletBlockUM.Hidden
+
         return CollectiblesWalletBlockUM.Content(
             balance = value.value.toBalance(),
             onClick = if (value.value is CollectiblesAccountStatusValue.MissedDerivation) {
@@ -41,7 +43,7 @@ internal class CollectiblesWalletBlockConverter(
         fiat(
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
-            spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+            spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
         )
     }
 }

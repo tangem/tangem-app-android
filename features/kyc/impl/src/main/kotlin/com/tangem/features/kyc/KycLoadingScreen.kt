@@ -35,7 +35,7 @@ internal fun KycLoadingScreen(onBack: () -> Unit, modifier: Modifier = Modifier)
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier,
-                    color = TangemTheme.colors.icon.primary1,
+                    color = TangemTheme.colors3.icon.primary,
                 )
             }
         },

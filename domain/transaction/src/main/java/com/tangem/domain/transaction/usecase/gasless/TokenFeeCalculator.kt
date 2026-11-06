@@ -71,6 +71,42 @@ internal class TokenFeeCalculator(
         amount: BigDecimal,
         txTokenCurrencyStatus: CryptoCurrencyStatus,
     ): Either<GetFeeError, TransactionFee> {
+        return estimateFee(
+            userWallet = userWallet,
+            amount = amount,
+            txTokenCurrencyStatus = txTokenCurrencyStatus,
+            isYieldModuleUpgradeAllowed = false,
+        )
+    }
+
+    /**
+     * The fee when the network coin pays: a yield send then goes out wrapped in the module upgrade, which the
+     * relayer-executed [initialFee] does not cover.
+     */
+    suspend fun estimateNativeFee(
+        userWallet: UserWallet,
+        amount: BigDecimal,
+        txTokenCurrencyStatus: CryptoCurrencyStatus,
+        initialFee: TransactionFee,
+        isYieldModuleV3Enabled: Boolean,
+    ): Either<GetFeeError, TransactionFee> {
+        val isYieldSend = amount.convertToSdkAmount(txTokenCurrencyStatus).type is AmountType.TokenYieldSupply
+        if (!isYieldModuleV3Enabled || !isYieldSend) return Either.Right(initialFee)
+
+        return estimateFee(
+            userWallet = userWallet,
+            amount = amount,
+            txTokenCurrencyStatus = txTokenCurrencyStatus,
+            isYieldModuleUpgradeAllowed = true,
+        )
+    }
+
+    private suspend fun estimateFee(
+        userWallet: UserWallet,
+        amount: BigDecimal,
+        txTokenCurrencyStatus: CryptoCurrencyStatus,
+        isYieldModuleUpgradeAllowed: Boolean,
+    ): Either<GetFeeError, TransactionFee> {
         return either {
             val network = txTokenCurrencyStatus.currency.network
             val amountData = amount.convertToSdkAmount(txTokenCurrencyStatus)
@@ -86,6 +122,7 @@ internal class TokenFeeCalculator(
                     amount = amountData,
                     userWalletId = userWallet.walletId,
                     network = network,
+                    isYieldModuleUpgradeAllowed = isYieldModuleUpgradeAllowed,
                 )
             }
 
@@ -97,7 +134,14 @@ internal class TokenFeeCalculator(
         }
     }
 
-    @Suppress("LongMethod", "CyclomaticComplexity")
+    /**
+     * @param isLiquidBalanceCheckSkipped skips the checks that the liquid balance already covers the fee, for
+     *   callers that settle coverage themselves. On by default on the yield path, where the balance is topped up
+     *   by the appended withdraw.
+     * @param isCallGasLimitFinal the gas limit of [initialFee] already carries the safety margin, so it is signed
+     *   as is instead of being padded once more.
+     */
+    @Suppress("LongMethod", "CyclomaticComplexity", "LongParameterList")
     suspend fun calculateTokenFee(
         walletManager: EthereumWalletManager,
         tokenForPayFeeStatus: CryptoCurrencyStatus,
@@ -105,11 +149,12 @@ internal class TokenFeeCalculator(
         initialFee: Fee.Ethereum,
         isYieldActive: Boolean = false,
         userWallet: UserWallet? = null,
+        isLiquidBalanceCheckSkipped: Boolean = isYieldActive,
+        isCallGasLimitFinal: Boolean = false,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
             // fast finish to skip calculations if no funds in token.
-            // Skipped on the yield path: a zero plain balance is expected — it will be topped up from yield.
-            if (!isYieldActive && tokenForPayFeeStatus.value.amount?.isZero() == true) {
+            if (!isLiquidBalanceCheckSkipped && tokenForPayFeeStatus.value.amount?.isZero() == true) {
                 raise(GaslessError.NotEnoughFunds)
             }
 
@@ -130,7 +175,7 @@ internal class TokenFeeCalculator(
                 ),
             )
 
-            val feeTransferGasLimit = resolveFeeTransferGasLimit(feeTransferGasLimitResult, isYieldActive)
+            val feeTransferGasLimit = resolveFeeTransferGasLimit(feeTransferGasLimitResult, isLiquidBalanceCheckSkipped)
 
             val baseGas = gaslessTransactionRepository.getBaseGasForTransaction()
 
@@ -141,8 +186,11 @@ internal class TokenFeeCalculator(
             }
 
             // Safety margin over the raw estimation
-            val mainTransactionGasLimit = initialFee.gasLimit
-                .increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
+            val mainTransactionGasLimit = if (isCallGasLimitFinal) {
+                initialFee.gasLimit
+            } else {
+                initialFee.gasLimit.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
+            }
             val withdrawGasLimit = withdrawGas.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
 
             val maxTokenFeeGas = mainTransactionGasLimit + feeTransferGasLimit + baseGas + withdrawGasLimit
@@ -179,8 +227,7 @@ internal class TokenFeeCalculator(
             )
 
             val tokenBalance = tokenForPayFeeStatus.value.amount ?: BigDecimal.ZERO
-            // Skipped on the yield path: ResolveGaslessFeePlanUseCase decides plain-vs-yield coverage.
-            if (!isYieldActive && tokenBalance < feeInTokenCurrency) {
+            if (!isLiquidBalanceCheckSkipped && tokenBalance < feeInTokenCurrency) {
                 raise(GaslessError.NotEnoughFunds)
             }
 
@@ -198,9 +245,9 @@ internal class TokenFeeCalculator(
                 feeTokenId = tokenForPayFee.id,
                 gaslessProtocolData = GaslessProtocolData.Evm,
                 // Per-call gas limits for the v2 gasless meta-tx (bound into the EIP-712 hash).
-                // Main = the user's transaction execution gas; withdraw = the appended yield-withdraw
+                // Call = the user's transaction execution gas; withdraw = the appended yield-withdraw
                 // sub-call gas, present only on the yield path where a batch is built.
-                mainTransactionGasLimit = mainTransactionGasLimit,
+                callGasLimits = listOf(mainTransactionGasLimit),
                 withdrawGasLimit = withdrawGasLimit.takeIf { isYieldActive },
             )
         }
@@ -211,20 +258,20 @@ internal class TokenFeeCalculator(
      *
      * A revert of the probe transfer means the liquid balance does not cover it. The node does not answer it
      * uniformly — USDT reverts with an `INVALID` opcode under -32000 rather than code 3 — so any execution
-     * error answered by the node ([BlockchainSdkError.Ethereum]) is read as "not enough liquid balance": topped
-     * up from the module on the yield path, [GaslessError.NotEnoughFunds] otherwise.
+     * error answered by the node ([BlockchainSdkError.Ethereum]) is read as "not enough liquid balance": a fallback
+     * gas limit when the caller settles coverage itself, [GaslessError.NotEnoughFunds] otherwise.
      * Transport failures still propagate as [GaslessError.DataError].
      */
     private fun Raise<GetFeeError>.resolveFeeTransferGasLimit(
         feeTransferGasLimitResult: Result<BigInteger>,
-        isYieldActive: Boolean,
+        isLiquidBalanceCheckSkipped: Boolean,
     ): BigInteger {
         val rawFeeTransferGasLimit: BigInteger = when (feeTransferGasLimitResult) {
             is Result.Success -> feeTransferGasLimitResult.data
             is Result.Failure -> {
                 val error = feeTransferGasLimitResult.error
                 if (error.isContractExecutionError()) {
-                    if (isYieldActive) {
+                    if (isLiquidBalanceCheckSkipped) {
                         FALLBACK_FEE_TRANSFER_GAS_LIMIT
                     } else {
                         raise(GaslessError.NotEnoughFunds)

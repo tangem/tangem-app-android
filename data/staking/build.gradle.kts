@@ -27,7 +27,6 @@ dependencies {
     api(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.arrow.core)
-    implementation(deps.firebase.crashlytics)
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)

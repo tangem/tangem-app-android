@@ -8,7 +8,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal class ResidencyListComponent(
@@ -28,7 +27,6 @@ internal class ResidencyListComponent(
     }
 
     data class Params(
-        val product: TangemPayProduct,
         val userWalletId: UserWalletId,
         val step: Step,
         val onCloseClick: () -> Unit,

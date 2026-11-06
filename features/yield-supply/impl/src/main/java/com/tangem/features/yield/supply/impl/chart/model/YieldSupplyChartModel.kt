@@ -3,9 +3,6 @@ package com.tangem.features.yield.supply.impl.chart.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.incentives.YieldAprHistory
 import com.tangem.domain.yield.supply.usecase.GetYieldAprHistoryUseCase
@@ -13,12 +10,12 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetChartUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartAxisLabel
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartDataUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,10 +24,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.text.SimpleDateFormat
-import java.time.Month
 import java.time.format.TextStyle
-import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
@@ -122,9 +116,12 @@ internal class YieldSupplyChartModel @Inject constructor(
                                 y = chartData.y.toImmutableList(),
                                 x = chartData.x.toImmutableList(),
                                 avr = chartData.avr,
-                                percentFormat = getPercentFormatPattern(chartData.y),
+                                scale = YieldSupplyChartAxis.scaleOf(tallestColumn = chartData.y.max()),
+                                xLabels = YieldSupplyChartAxis.monthLabels(
+                                    columnStarts = chartData.bucketStarts,
+                                    locale = Locale.getDefault(),
+                                ).toImmutableList(),
                             ),
-                            monthLables = lastMonthLabels().toImmutableList(),
                         )
                     }
                     params.callback?.onIncentiveChanged(null)
@@ -173,59 +170,40 @@ internal class YieldSupplyChartModel @Inject constructor(
                 y = bases.toImmutableList(),
                 x = bases.indices.map(Int::toDouble).toImmutableList(),
                 avr = average.toDouble(),
-                percentFormat = getPercentFormatPattern(totals),
+                scale = YieldSupplyChartAxis.scaleOf(tallestColumn = totals.max()),
                 rewardCaps = caps.map(BigDecimal::toDouble).toImmutableList(),
                 xLabels = axisLabels(points = history.points, period = period).toImmutableList(),
             ),
-            monthLables = persistentListOf(),
             incentive = incentive(averageApy = average, period = period),
         )
     }
 
     private fun incentive(averageApy: BigDecimal?, period: YieldSupplyChartPeriod) = YieldSupplyChartIncentiveUM(
         period = period,
-        picker = periodPicker(period),
         averageApy = averageApy.formatApy(),
         onPeriodSelected = ::onPeriodSelected,
     )
 
-    /**
-     * A week is short enough to label every bar with its weekday; over three months only the first bar of each
-     * month is labelled, the rest stay blank so the axis does not collapse into noise.
-     */
-    private fun axisLabels(points: List<YieldAprHistory.Point>, period: YieldSupplyChartPeriod): List<String> {
+    /** A week is short enough to name every bar by its weekday; three months are named by month only. */
+    private fun axisLabels(
+        points: List<YieldAprHistory.Point>,
+        period: YieldSupplyChartPeriod,
+    ): List<YieldSupplyChartAxisLabel> {
         val locale = Locale.getDefault()
 
         return when (period) {
-            YieldSupplyChartPeriod.Week -> points.map {
-                it.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale)
+            YieldSupplyChartPeriod.Week -> points.mapIndexed { index, point ->
+                YieldSupplyChartAxisLabel(
+                    text = point.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale),
+                    position = index + COLUMN_CENTER,
+                    anchor = YieldSupplyChartAxisLabel.Anchor.Center,
+                )
             }
-            YieldSupplyChartPeriod.ThreeMonths -> {
-                var previousMonth: Month? = null
-
-                points.map { point ->
-                    val month = point.date.month
-                    if (month == previousMonth) {
-                        ""
-                    } else {
-                        previousMonth = month
-                        month.getDisplayName(TextStyle.SHORT, locale)
-                    }
-                }
-            }
+            YieldSupplyChartPeriod.ThreeMonths -> YieldSupplyChartAxis.monthLabels(
+                columnStarts = points.map(YieldAprHistory.Point::date),
+                locale = locale,
+            )
         }
-    }
-
-    private fun periodPicker(period: YieldSupplyChartPeriod): TangemSegmentedPickerUM {
-        val items = YieldSupplyChartPeriod.entries.map { entry ->
-            TangemSegmentUM(id = entry.name, title = resourceReference(entry.titleRes))
-        }
-
-        return TangemSegmentedPickerUM(
-            items = items.toImmutableList(),
-            initialSelectedItem = items.first { it.id == period.name },
-            isFixed = true,
-        )
     }
 
     private fun onPeriodSelected(periodName: String) {
@@ -249,28 +227,9 @@ internal class YieldSupplyChartModel @Inject constructor(
         params.callback?.onLoadFail()
     }
 
-    /** Narrowest range first: every value under a tenth of a percent is also under a whole one. */
-    @Suppress("MagicNumber")
-    private fun getPercentFormatPattern(values: List<Double>): String {
-        return when {
-            values.all { it < 0.1 } -> "%.2f"
-            values.all { it < 1.0 } -> "%.1f"
-            else -> "%.0f"
-        }
-    }
-
-    private fun lastMonthLabels(n: Int = MONTH_LABELS_COUNT, locale: Locale = Locale.getDefault()): List<String> {
-        val calendar = Calendar.getInstance()
-        val formatter = SimpleDateFormat("MMM", locale)
-
-        return (n downTo 1).map {
-            calendar.add(Calendar.MONTH, -1)
-            formatter.format(calendar.time)
-        }.reversed()
-    }
-
     companion object {
-        private const val MONTH_LABELS_COUNT = 5
+        private const val COLUMN_CENTER = 0.5
+
         /**
          * Guard digits, not display digits. Rounding the mean to the two decimals the header shows would turn a
          * rate like 0.004% into a flat zero, taking the reference line down to the axis with it; the formatter

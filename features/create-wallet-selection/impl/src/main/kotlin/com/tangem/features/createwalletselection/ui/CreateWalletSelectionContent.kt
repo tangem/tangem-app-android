@@ -1,7 +1,6 @@
 package com.tangem.features.createwalletselection.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -41,7 +40,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -49,13 +48,13 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
             modifier = Modifier
                 .statusBarsPadding(),
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = TangemTheme.colors.background.secondary,
+                containerColor = TangemTheme.colors3.bg.primary,
             ),
             navigationIcon = {
                 IconButton(onClick = state.onBackClick) {
                     Icon(
                         painter = painterResource(R.drawable.ic_back_24),
-                        tint = TangemTheme.colors.icon.primary1,
+                        tint = TangemTheme.colors3.icon.primary,
                         contentDescription = null,
                     )
                 }
@@ -67,7 +66,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                     text = stringResourceSafe(R.string.wallet_add_support_title),
                     textStyle = TangemTheme.typography.body1,
                     colors = TangemButtonsDefaults.defaultTextButtonColors.copy(
-                        contentColor = TangemTheme.colors.text.primary1,
+                        contentColor = TangemTheme.colors3.text.primary,
                     ),
                     onClick = state.onWhatToChooseClick,
                 )
@@ -93,7 +92,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                     ),
                 text = stringResourceSafe(R.string.wallet_add_common_title),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
             state.blocks.forEach { block ->
@@ -109,12 +108,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                 )
             }
         }
-        AnimatedVisibility(state.shouldShowAlreadyHaveWallet) {
-            AlreadyHaveTangemWalletBlock(
-                onBuyClick = state.onBuyClick,
-                isScanInProgress = state.isScanInProgress,
-            )
-        }
+        AlreadyHaveTangemWalletBlock(onBuyClick = state.onBuyClick)
     }
 }
 
@@ -133,7 +127,7 @@ private fun WalletBlock(
             .padding(top = 8.dp)
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
             .clickable(onClick = onClick)
@@ -149,7 +143,7 @@ private fun WalletBlock(
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             badge?.invoke()
         }
@@ -158,23 +152,19 @@ private fun WalletBlock(
                 .padding(top = 4.dp),
             text = description,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
 
 @Composable
-private fun AlreadyHaveTangemWalletBlock(
-    onBuyClick: () -> Unit,
-    isScanInProgress: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun AlreadyHaveTangemWalletBlock(onBuyClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
             .background(
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
             .padding(
@@ -189,7 +179,7 @@ private fun AlreadyHaveTangemWalletBlock(
                 .padding(end = 16.dp),
             text = stringResourceSafe(R.string.wallet_add_hardware_purchase),
             style = TangemTheme.typography.button,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
         )
@@ -198,7 +188,6 @@ private fun AlreadyHaveTangemWalletBlock(
             text = stringResourceSafe(R.string.wallet_import_buy_title),
             onClick = onBuyClick,
             size = TangemButtonSize.RoundedAction,
-            showProgress = isScanInProgress,
         )
     }
 }
@@ -228,7 +217,6 @@ private fun PreviewCreateWalletContent() {
                         onClick = { },
                     ),
                 ),
-                shouldShowAlreadyHaveWallet = true,
                 onBuyClick = { },
                 onWhatToChooseClick = { },
             ),

@@ -44,6 +44,7 @@ import kotlin.coroutines.cancellation.CancellationException
 @Stable
 @ModelScoped
 internal class ExpressTransactionsModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     override val dispatchers: CoroutineDispatcherProvider,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     paramsContainer: ParamsContainer,
@@ -133,7 +134,7 @@ internal class ExpressTransactionsModel @Inject constructor(
 
     override fun onReadAboutCrossChainBridgesClick() {
         modelScope.launch {
-            router.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
+            router.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
         }
     }
 

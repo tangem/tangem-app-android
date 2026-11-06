@@ -324,9 +324,9 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             if (params.feeCryptoCurrencyStatus.currency.id != tokenId) {
                 singleAccountStatusListSupplier.getSyncOrNull(params.userWalletId)
                     .getCryptoCurrencyStatus(currencyId = tokenId, network = null)
-                    .getOrElse {
-                        raise(GetFeeError.DataError(IllegalStateException("No token found for id: $tokenId")))
-                    }
+                    .getOrNull()
+                    ?: params.cryptoCurrencyStatus.takeIf { it.currency.id == tokenId }
+                    ?: raise(GetFeeError.DataError(IllegalStateException("No token found for id: $tokenId")))
             } else {
                 params.feeCryptoCurrencyStatus
             }
@@ -343,6 +343,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 network = params.cryptoCurrencyStatus.currency.network,
                 sentCurrencyStatus = params.cryptoCurrencyStatus,
                 nativeFeeAmount = nativeFeeAmount,
+                enteringYieldTokenId = (params as? FeeSelectorParams.FeeSelectorDetailsParams)?.enteringYieldTokenId,
             ).bind()
         }
     }

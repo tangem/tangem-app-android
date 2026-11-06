@@ -35,7 +35,7 @@ internal fun OptionBlock(
     description: String,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TangemTheme.colors.background.primary,
+    backgroundColor: Color = TangemTheme.colors3.bg.secondary,
     badge: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
@@ -64,7 +64,7 @@ internal fun OptionBlock(
                 Text(
                     text = title,
                     style = TangemTheme.typography.subtitle1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 badge?.invoke()
             }
@@ -73,7 +73,7 @@ internal fun OptionBlock(
                     .padding(top = 4.dp),
                 text = description,
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         trailingContent?.invoke()
@@ -84,7 +84,7 @@ internal fun OptionBlock(
 internal fun ChevronIcon() {
     Icon(
         painter = painterResource(R.drawable.ic_chevron_right_24),
-        tint = TangemTheme.colors.icon.informative,
+        tint = TangemTheme.colors3.icon.secondary,
         contentDescription = null,
     )
 }
@@ -94,6 +94,6 @@ internal fun LoaderIcon() {
     CircularProgressIndicator(
         modifier = Modifier.size(20.dp),
         strokeWidth = 2.dp,
-        color = TangemTheme.colors.icon.informative,
+        color = TangemTheme.colors3.icon.secondary,
     )
 }

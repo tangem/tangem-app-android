@@ -35,8 +35,8 @@ import com.tangem.store.datasource.txhistory.db.dao.StakingValidatorDao
 import com.tangem.datasource.local.token.converter.YieldTokenConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.NetworkType
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.NetworkType
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo

@@ -67,7 +67,7 @@ fun InputRowApprox(
             Icon(
                 painter = painterResource(id = R.drawable.ic_forward_12),
                 contentDescription = null,
-                tint = TangemTheme.colors.text.tertiary,
+                tint = TangemTheme.colors3.text.secondary,
                 modifier = Modifier
                     .padding(
                         horizontal = 8.dp,
@@ -111,14 +111,14 @@ private fun InputRowApproxItem(
             EllipsisText(
                 text = title.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 ellipsis = TextEllipsis.OffsetEnd(titleEllipsisOffset),
             )
             if (subtitle != null) {
                 EllipsisText(
                     text = subtitle.resolveReference(),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier
                         .padding(top = 2.dp),
                 )
@@ -144,7 +144,7 @@ private fun InputRowApproxPreview() {
                 rightSubtitle = TextReference.Str("Right subtitle Right subtitle Right subtitle USD"),
                 rightTitleEllipsisOffset = 3,
                 modifier = Modifier
-                    .background(TangemTheme.colors.background.action),
+                    .background(TangemTheme.colors3.bg.secondary),
             )
             InputRowApprox(
                 leftIcon = CurrencyIconState.Loading,
@@ -156,7 +156,7 @@ private fun InputRowApproxPreview() {
                 rightSubtitle = TextReference.Str("Right subtitle USD"),
                 rightTitleEllipsisOffset = 3,
                 modifier = Modifier
-                    .background(TangemTheme.colors.background.action),
+                    .background(TangemTheme.colors3.bg.secondary),
             )
             InputRowApprox(
                 leftIcon = CurrencyIconState.Loading,
@@ -168,7 +168,7 @@ private fun InputRowApproxPreview() {
                 rightSubtitle = null,
                 rightTitleEllipsisOffset = 3,
                 modifier = Modifier
-                    .background(TangemTheme.colors.background.action),
+                    .background(TangemTheme.colors3.bg.secondary),
             )
         }
     }

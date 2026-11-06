@@ -41,7 +41,7 @@ fun InformationBlock(
     Column(
         modifier = modifier
             .clip(shape)
-            .background(color = TangemTheme.colors.background.action),
+            .background(color = TangemTheme.colors3.bg.secondary),
         horizontalAlignment = Alignment.Start,
     ) {
         if (title != null) {
@@ -99,7 +99,7 @@ private fun Preview_List() {
                 Text(
                     text = "List",
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             },
             action = {
@@ -145,7 +145,7 @@ private fun Preview_Plain() {
                     Text(
                         text = "Subtitle",
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                     )
                 }
             },
@@ -193,12 +193,12 @@ private fun PreviewItem(text: TextReference) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(all = 12.dp),
     ) {
         Text(
             text = text.resolveReference(),
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }

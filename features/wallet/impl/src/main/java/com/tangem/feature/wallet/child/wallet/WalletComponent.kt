@@ -22,7 +22,6 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.core.ui.extensions.trackUserInteraction
 import com.tangem.core.ui.utils.parseBigDecimal
-import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.managetokens.AddAndManageBottomSheetComponent
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
@@ -38,10 +37,9 @@ import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
-import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
-import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.send.api.NetworkSelectionComponent
@@ -49,7 +47,6 @@ import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockC
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
-import com.tangem.features.tangempay.eligibility.TangemPayWaitlistComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
@@ -67,7 +64,6 @@ internal class WalletComponent @AssistedInject constructor(
     feedV2ComponentFactory: FeedV2Component.Factory,
     tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
     moneyAccountMainBlockComponentFactory: MoneyAccountMainBlockComponent.Factory,
-    jointAccountMainBlockComponentFactory: JointAccountMainBlockComponent.Factory,
     polymarketWalletBlockComponentFactory: PolymarketWalletBlockComponent.Factory,
     collectiblesWalletBlockComponentFactory: CollectiblesWalletBlockComponent.Factory,
     private val tangemPayTransactionBottomSheetComponentFactory: TangemPayTransactionBottomSheetComponent.Factory,
@@ -77,12 +73,11 @@ internal class WalletComponent @AssistedInject constructor(
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val promoBannersFeatureToggles: PromoBannersFeatureToggles,
+    private val walletFeatureToggles: WalletFeatureToggles,
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
-    private val tangemPayWaitlistComponentFactory: TangemPayWaitlistComponent.Factory,
     private val yieldModePromoBottomSheetComponentFactory: YieldModePromoBottomSheetComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -115,12 +110,6 @@ internal class WalletComponent @AssistedInject constructor(
     private val collectiblesWalletBlockComponent by lazy {
         collectiblesWalletBlockComponentFactory.create(
             context = child("collectiblesWalletBlockComponent"),
-            params = Unit,
-        )
-    }
-    private val jointAccountMainBlockComponent by lazy {
-        jointAccountMainBlockComponentFactory.create(
-            context = child("jointAccountMainBlockComponent"),
             params = Unit,
         )
     }
@@ -209,18 +198,6 @@ internal class WalletComponent @AssistedInject constructor(
                         ),
                     )
                 }
-                is WalletDialogConfig.TangemPayWaitlist -> {
-                    tangemPayWaitlistComponentFactory.create(
-                        context = childByContext(componentContext),
-                        params = TangemPayWaitlistComponent.Params(
-                            userWalletId = dialogConfig.userWalletId,
-                            product = TangemPayProduct.BANKING_ACCOUNT,
-                            countryCode = dialogConfig.countryCode,
-                            regionCode = null,
-                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
-                        ),
-                    )
-                }
                 is WalletDialogConfig.YieldModePromo -> {
                     yieldModePromoBottomSheetComponentFactory.create(
                         context = childByContext(componentContext),
@@ -237,6 +214,7 @@ internal class WalletComponent @AssistedInject constructor(
                             actions = dialogConfig.actionList,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                             tokenRowUM = dialogConfig.tokenRowUM,
+                            tokenRowState = dialogConfig.tokenRowState,
                             offsetX = dialogConfig.offsetX,
                             offsetY = dialogConfig.offsetY,
                         ),
@@ -357,11 +335,10 @@ internal class WalletComponent @AssistedInject constructor(
             promoBannersBlockComponent = promoBannersBlockComponent,
             tangemPayComponent = tangemPayMainBlockComponent,
             moneyAccountComponent = moneyAccountMainBlockComponent,
-            jointAccountComponent = jointAccountMainBlockComponent,
             polymarketComponent = polymarketWalletBlockComponent,
             collectiblesComponent = collectiblesWalletBlockComponent,
             modifier = modifier.trackUserInteraction(model.userInteractionTracker),
-            isHideMarketingWhileSystemEnabled = promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled,
+            isRedesignedAccountRowsEnabled = walletFeatureToggles.isRedesignedAccountRowsEnabled,
             isShtorkaBlurEnabled = { isShtorkaBlurEnabled },
             isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
             shtorkaHeaderContent = { sheetExpansion, onExpandSheet ->

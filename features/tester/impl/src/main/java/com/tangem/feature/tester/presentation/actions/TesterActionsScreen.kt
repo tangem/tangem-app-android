@@ -32,7 +32,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.findActivity
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.HideAllCurrenciesUM
-import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleHotWalletRestrictionUM
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.UsedeskTokenTtlUM
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
@@ -49,7 +48,7 @@ internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Mod
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         stickyHeader {
@@ -67,16 +66,6 @@ internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Mod
                 name = stringResourceSafe(R.string.hide_all_currencies),
                 progress = state.hideAllCurrenciesUM is HideAllCurrenciesUM.Progress,
                 onClick = onClick,
-            )
-        }
-
-        item {
-            val config = state.toggleHotWalletRestrictionUM
-            val statusText = if (config.isEnabled) "ON" else "OFF"
-
-            TesterActionItem(
-                name = stringResourceSafe(id = R.string.toggle_hot_wallet_restriction, statusText),
-                onClick = config.onClick,
             )
         }
 
@@ -216,12 +205,11 @@ private fun createEmailShareIntent(activity: Activity, file: File?): Intent {
 private fun TesterActionsScreenSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         TesterActionsScreen(
             state = TesterActionsContentState(
                 hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable {},
-                toggleHotWalletRestrictionUM = ToggleHotWalletRestrictionUM(isEnabled = true) {},
                 usedeskTokenTtlUM = UsedeskTokenTtlUM(
                     currentLabel = "7 days",
                     presets = listOf(

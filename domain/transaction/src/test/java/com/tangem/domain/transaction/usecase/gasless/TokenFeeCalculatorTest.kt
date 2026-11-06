@@ -131,7 +131,14 @@ class TokenFeeCalculatorTest {
         val tokenStatus = createMockTokenStatus()
         val expectedFee = createMockTransactionFee()
 
-        coEvery { walletManagersFacade.estimateFee(any(), any(), any()) } returns Result.Success(expectedFee)
+        coEvery {
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = false,
+            )
+        } returns Result.Success(expectedFee)
 
         // When
         val result = tokenFeeCalculator.estimateInitialFee(
@@ -155,7 +162,12 @@ class TokenFeeCalculatorTest {
         val failure = Result.Failure(BlockchainSdkError.NPError("Estimation failed"))
 
         coEvery {
-            walletManagersFacade.estimateFee(any(), any(), any())
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = false,
+            )
         } returns failure
 
         // When
@@ -175,7 +187,14 @@ class TokenFeeCalculatorTest {
         val amount = BigDecimal("100")
         val tokenStatus = createMockTokenStatus()
 
-        coEvery { walletManagersFacade.estimateFee(any(), any(), any()) } returns null
+        coEvery {
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = false,
+            )
+        } returns null
 
         // When
         val result = tokenFeeCalculator.estimateInitialFee(
@@ -227,9 +246,37 @@ class TokenFeeCalculatorTest {
             // dispatches on that marker alone.
             assertEquals(GaslessProtocolData.Evm, feeExtended.gaslessProtocolData)
             // main-tx per-call gas = initialFee.gasLimit * 1.40; no withdraw on the non-yield path
-            assertEquals(BigInteger("140000"), feeExtended.mainTransactionGasLimit)
+            assertEquals(listOf(BigInteger("140000")), feeExtended.callGasLimits)
             assertNull(feeExtended.withdrawGasLimit)
         }
+    }
+
+    @Test
+    fun `GIVEN call gas limit is final WHEN calculateTokenFee THEN it is signed and priced without margin`() = runTest {
+        // Arrange
+        val tokenStatus = createMockTokenStatus(balance = BigDecimal("1000"), fiatRate = BigDecimal("1"))
+        val nativeStatus = createMockNativeCurrencyStatus(fiatRate = BigDecimal("2000"))
+        val initialFee = createMockEIP1559Fee() // gasLimit = 100_000
+
+        coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Success(BigInteger("60000"))
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
+
+        // Act
+        val result = tokenFeeCalculator.calculateTokenFee(
+            walletManager = mockWalletManager,
+            tokenForPayFeeStatus = tokenStatus,
+            nativeCurrencyStatus = nativeStatus,
+            initialFee = initialFee,
+            isCallGasLimitFinal = true,
+        )
+
+        // Assert
+        val feeExtended = result.getOrNull()
+        val fee = feeExtended?.transactionFee?.normal as Fee.Ethereum.TokenCurrency
+        // 100_000 call + 66_000 fee transfer (60_000 * 1.10) + 21_000 base gas
+        assertEquals(BigInteger("187000"), fee.gasLimit)
+        assertEquals(listOf(BigInteger("100000")), feeExtended.callGasLimits)
     }
 
     @Test
@@ -483,7 +530,7 @@ class TokenFeeCalculatorTest {
             // feeTransferGasLimit stored in the fee object = 66_000
             assertEquals(BigInteger("66000"), fee.feeTransferGasLimit, "feeTransferGasLimit = 60000 * 1.10")
             // v2 per-call gas limits, both padded by 40%: main = 100_000 * 1.40, withdraw = 150_000 * 1.40
-            assertEquals(BigInteger("140000"), feeExtended.mainTransactionGasLimit)
+            assertEquals(listOf(BigInteger("140000")), feeExtended.callGasLimits)
             assertEquals(BigInteger("210000"), feeExtended.withdrawGasLimit)
         }
     }
@@ -778,7 +825,7 @@ class TokenFeeCalculatorTest {
             // gasLimit = 140_000 + 66_000 + 21_000 + 280_000 = 507_000
             assertEquals(BigInteger("507000"), fee.gasLimit, "gasLimit must include the estimated withdraw gas")
             // v2 per-call gas limits, both padded by 40%: main = 100_000 * 1.40, withdraw = 200_000 * 1.40
-            assertEquals(BigInteger("140000"), feeExtended.mainTransactionGasLimit)
+            assertEquals(listOf(BigInteger("140000")), feeExtended.callGasLimits)
             assertEquals(BigInteger("280000"), feeExtended.withdrawGasLimit)
         }
         coVerify { gaslessYieldRepository.getYieldContractAddress(mockUserWalletId, any()) }

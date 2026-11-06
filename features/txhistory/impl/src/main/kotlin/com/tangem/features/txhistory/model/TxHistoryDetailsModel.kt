@@ -4,6 +4,12 @@ import android.content.Context
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pushNew
+import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
+import com.tangem.features.txhistory.joint.operation.signers.FinishedJointOperationSigners
+import com.tangem.features.txhistory.joint.operation.signers.withCosign
+import com.tangem.features.txhistory.joint.operation.signers.ui.state.JointOperationSignersUM
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
@@ -40,10 +46,7 @@ import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
-import com.tangem.domain.txhistory.model.explorerHash
-import com.tangem.domain.txhistory.model.idToCopy
 import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
-import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.analytics.TxHistoryAnalyticsEvent
 import com.tangem.features.txhistory.analytics.toAnalyticsStatus
@@ -59,6 +62,7 @@ import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -76,6 +80,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -84,6 +89,7 @@ import javax.inject.Inject
 @ModelScoped
 @Suppress("LongParameterList")
 internal class TxHistoryDetailsModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     @ApplicationContext private val context: Context,
     override val dispatchers: CoroutineDispatcherProvider,
     private val clipboardManager: ClipboardManager,
@@ -91,7 +97,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val menuActions: TxDetailsMenuActions,
     private val getStakingTargetsByAddressUseCase: GetStakingTargetsByAddressUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
@@ -101,13 +107,15 @@ internal class TxHistoryDetailsModel @Inject constructor(
     getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
+    finishedJointOperationSigners: FinishedJointOperationSigners,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params: TxHistoryDetailsComponent.Params = paramsContainer.require()
 
     private val shareTextConverter = ExpressTxToShareTextConverter()
-    private val txHistoryInfo = params.historyTxListManager.txExpressHistoryItemFlow(params.txId)
+    private val txHistoryInfo = params.historyTxListManager.txHistoryItemFlow(params.txId)
+        .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
 
     /**
      * Known staking targets (StakeKit validators and P2P vaults) keyed by on-chain address, used to resolve the target
@@ -142,12 +150,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
 
     private var isRatingActivationStarted = false
 
-    /**
-     * One-shot guard for the screen-opened analytics, sent from the [uiState] combine below instead of a dedicated
-     * `.first()` collection of [txHistoryInfo]: that flow is cold and re-triggers its own standalone express-tx
-     * subscription per collector (see `DefaultHistoryTxListManager.txExpressHistoryItemFlow`), so a second collector
-     * would double the load for a tx not yet in the paginated list.
-     */
+    /** One-shot guard for the screen-opened analytics, sent from the [uiState] combine below */
     private var isScreenOpenedAnalyticsSent = false
 
     init {
@@ -159,6 +162,17 @@ internal class TxHistoryDetailsModel @Inject constructor(
             refundCurrency.value = addRefundTokenToPortfolio(refundAssetId)
         }
     }
+
+    val stackNavigation = StackNavigation<JointOperationRoutes>()
+
+    /** Who answered the viewed joint operation, drawn by the signers screen; fed while [uiState] is collected */
+    val signersState: StateFlow<JointOperationSignersUM?>
+        field = MutableStateFlow(null)
+
+    private val jointSignatures: Flow<FinishedJointOperationSigners.Signatures?> = finishedJointOperationSigners
+        .observe(userWalletId = params.userWalletId, currency = params.currency, txHistoryInfo = txHistoryInfo)
+        .onEach { signersState.value = it?.signers }
+        .flowOn(dispatchers.io)
 
     private val networkTokensFlow: Flow<Set<CryptoCurrency.Token>> = flow {
         emit(getCachedTokenInfoUseCase(params.userWalletId, params.currency.network.rawId))
@@ -193,12 +207,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
             flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
             flow3 = networkTokensFlow,
             flow4 = fiatConversionFlow,
-        ) { lookup, isCompatible, tokens, fiatConversion ->
+            flow5 = jointSignatures,
+        ) { lookup, isCompatible, tokens, fiatConversion, jointSignatures ->
             DetailsInputs(
                 lookup = lookup,
                 isAddressBookCompatible = isCompatible,
                 networkTokens = tokens,
                 fiatConversion = fiatConversion,
+                jointSignatures = jointSignatures,
             )
         }
 
@@ -213,8 +229,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
         // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
         // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
         // on-chain row has no "Share"; a blank id drops the copy-id row.
-        val explorerHash = txInfo.explorerHash?.ifBlank { null }
-        val idToCopy = txInfo.idToCopy.ifBlank { null }
         val shareText = (txInfo as? ExpressTx)?.let(shareTextConverter::convert)
         val contactCandidate = txInfo
             .contactCandidate(currency = params.currency, lookup = lookup)
@@ -223,11 +237,11 @@ internal class TxHistoryDetailsModel @Inject constructor(
             currency = params.currency,
             onCopyAddress = { address -> onCopyAddress(address, txInfo) },
             onGoToProvider = { url -> onGoToProvider(url, txInfo) },
-            onCopyTxId = idToCopy?.let { id -> { onCopyTxId(id, txInfo) } },
+            onCopyTxId = menuActions.copyTxIdAction(txInfo = txInfo, currency = params.currency),
             copyIdTitle = resourceReference(txInfo.copyIdLabels.title),
             shareText = shareText,
             onShare = { text -> onShare(text, txInfo) },
-            onExplore = explorerHash?.let { hash -> { explore(hash, txInfo) } },
+            onExplore = menuActions.exploreAction(txInfo = txInfo, currency = params.currency),
             refundCurrency = refundToken,
             onLearnMoreAboutRefundsClick = ::onLearnMoreAboutRefunds,
             onGoToRefundedTokenClick = params.onOpenTokenDetails,
@@ -238,7 +252,17 @@ internal class TxHistoryDetailsModel @Inject constructor(
             onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
             networkTokens = inputs.networkTokens,
             fiatConversion = inputs.fiatConversion,
-        ).convert(txInfo).also { um ->
+        ).convert(txInfo).let { um ->
+            val signatures = inputs.jointSignatures
+            if (um is TxHistoryDetailsUM.SingleAsset && signatures != null) {
+                um.withCosign(
+                    signatures = signatures,
+                    onSignersClick = { stackNavigation.pushNew(JointOperationRoutes.Signers) },
+                )
+            } else {
+                um
+            }
+        }.also { um ->
             if (!isScreenOpenedAnalyticsSent) {
                 isScreenOpenedAnalyticsSent = true
                 sendScreenOpenedAnalytics(txInfo = txInfo, title = um.header.title)
@@ -269,11 +293,15 @@ internal class TxHistoryDetailsModel @Inject constructor(
      * Only a completed deal gets the widget: the survey vendor caps API calls per day and a swap in flight
      * is re-opened many times while the user watches its status. The flow keeps collecting, so the slot
      * still appears by itself once a deal watched from this screen completes.
+     *
+     * The lookup starts [RATING_ENTER_DELAY_MILLIS] after the screen does, so the card never grows the sheet
+     * while it is still animating open — it lands on a settled sheet instead.
      */
     fun activateRatingForSwap() {
         if (isRatingActivationStarted) return
         isRatingActivationStarted = true
         txHistoryInfo
+            .onStart { delay(RATING_ENTER_DELAY_MILLIS) }
             .mapNotNull { it as? ExpressTx.Swap }
             .filter { swap -> swap.tx.status.isRateable }
             .map { swap ->
@@ -324,24 +352,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
         )
     }
 
-    /** Copies the transaction id to the clipboard — wired into the header menu's copy-id row. */
-    private fun onCopyTxId(id: String, txInfo: TxHistoryInfo) {
-        analyticsEventHandler.send(
-            TxHistoryAnalyticsEvent.ButtonCopyTransactionId(
-                token = params.currency.symbol,
-                blockchain = params.currency.network.name,
-                type = txInfo.toAnalyticsType(),
-            ),
-        )
-        clipboardManager.setText(text = id, isSensitive = false)
-        uiMessageSender.send(
-            SnackbarMessage(
-                message = resourceReference(txInfo.copyIdLabels.copied),
-                startIconId = R.drawable.ic_check_24,
-            ),
-        )
-    }
-
     /** Shares the transaction summary — wired into the header menu's "Share" row. */
     private fun onShare(text: String, txInfo: TxHistoryInfo) {
         analyticsEventHandler.send(
@@ -353,22 +363,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
             ),
         )
         shareManager.shareText(text)
-    }
-
-    /** Opens the transaction in the blockchain explorer — wired into the header menu's "Explore" row. */
-    private fun explore(txHash: String, txInfo: TxHistoryInfo) {
-        analyticsEventHandler.send(
-            TokenScreenAnalyticsEvent.ButtonExplore(
-                token = params.currency.symbol,
-                source = TokenScreenAnalyticsEvent.ButtonExplore.ExploreActionSource.TransactionDetail,
-                blockchain = params.currency.network.name,
-                type = txInfo.toAnalyticsType(),
-            ),
-        )
-        getExplorerTransactionUrlUseCase(txHash = txHash, currency = params.currency).fold(
-            ifLeft = { TangemLogger.e(it.toString()) },
-            ifRight = { urlOpener.openUrl(url = it) },
-        )
     }
 
     /**
@@ -428,7 +422,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     /** Opens the cross-chain-bridges blog article — wired into the refunded banner's "Learn more" link. */
     private fun onLearnMoreAboutRefunds() {
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
         }
     }
 
@@ -455,12 +449,16 @@ internal class TxHistoryDetailsModel @Inject constructor(
     }
 }
 
+/** How long the rating slot waits before it may appear, covering the sheet's opening animation. */
+private const val RATING_ENTER_DELAY_MILLIS = 1000L
+
 /** The per-wallet sources the details converter needs, combined apart from the already five-wide `uiState` combine. */
 private data class DetailsInputs(
     val lookup: TxHistoryLookupContext,
     val isAddressBookCompatible: Boolean,
     val networkTokens: Set<CryptoCurrency.Token>,
     val fiatConversion: FiatConversion,
+    val jointSignatures: FinishedJointOperationSigners.Signatures?,
 )
 
 /** Identity of the rating slot: re-activation is needed only when one of these deal fields changes. */

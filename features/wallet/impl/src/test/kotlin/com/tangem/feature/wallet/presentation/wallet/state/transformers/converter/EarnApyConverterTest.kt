@@ -11,8 +11,8 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
-import com.tangem.domain.models.staking.BalanceItem
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.BalanceItem
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingOption
@@ -283,6 +283,7 @@ internal class EarnApyConverterTest {
             text = resourceReference(badgeRes, wrappedList(rateText)),
             isActive = isActive,
             rate = rateValue,
+            isStaking = true,
         )
     }
 

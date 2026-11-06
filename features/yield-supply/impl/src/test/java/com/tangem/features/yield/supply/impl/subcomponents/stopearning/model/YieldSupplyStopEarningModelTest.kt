@@ -5,41 +5,30 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
-import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.yield.supply.YieldSupplyError
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
-import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
-import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
-import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
-import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.test.mock.yield.MockYieldSupply
-import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.slot
-import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -51,29 +40,7 @@ import kotlin.time.TestTimeSource
 import kotlin.time.TimeMark
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase() {
-
-    private val stopEarningUseCase: YieldSupplyStopEarningUseCase = mockk()
-    private val deactivateUseCase: YieldSupplyDeactivateUseCase = mockk()
-    private val withdrawalClaimPreparer: YieldSupplyWithdrawalClaimPreparer = mockk()
-    private val claimTracker: YieldSupplyClaimTracker = mockk(relaxed = true)
-    private val callback: YieldSupplyStopEarningComponent.ModelCallback = mockk(relaxed = true)
-
-    @BeforeEach
-    fun setUp() {
-        coEvery { stopEarningUseCase(any(), any(), any()) } returns uncompiledTx().right()
-        coEvery { getFeeUseCase(any(), any(), any()) } returns transactionFee().right()
-        coEvery {
-            sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
-        } returns listOf("0xhash").right()
-        coEvery { deactivateUseCase(any(), any()) } returns true.right()
-        coEvery {
-            withdrawalClaimPreparer.prepare(
-                userWallet = any(),
-                cryptoCurrencyStatus = any(),
-            )
-        } returns YieldPreClaim.Skip
-    }
+internal class YieldSupplyStopEarningModelTest : YieldSupplyStopEarningModelTestBase() {
 
     @Test
     fun `GIVEN successful fee load WHEN model created THEN fee content and button enabled`() = runTest {
@@ -145,7 +112,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
     }
 
     @Test
-    fun `GIVEN content loaded WHEN onClick THEN sends deactivates tracks pending and notifies sent`() = runTest {
+    fun `GIVEN content loaded WHEN onClick THEN sends deactivates tracks pending reloads history and notifies sent`() = runTest {
         // Arrange
         val model = createModel()
         advanceUntilIdle()
@@ -159,6 +126,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, any(), any()) }
         coVerify { deactivateUseCase(any(), any()) }
         coVerify { pendingTracker.addPending(userWalletId, any(), any()) }
+        verify(exactly = 1) { txHistoryUpdater.scheduleUpdates(userWalletId, any(), any()) }
         verify { callback.onStopEarningTransactionSent() }
 
         // Token fee asset (default fee currency is the token itself)
@@ -190,7 +158,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
 
     @Test
     fun `GIVEN fee not loaded WHEN onClick THEN does not send transaction`() = runTest {
-        // Arrange — fee load fails so the fee state is Error; onClick reports progress then early-returns
+        // Arrange
         coEvery { getFeeUseCase(any(), any(), any()) } returns GetFeeError.UnknownError.left()
         val model = createModel()
         advanceUntilIdle()
@@ -200,7 +168,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         advanceUntilIdle()
 
         // Assert
-        verify { callback.onTransactionProgress(true) }
+        verify(exactly = 0) { callback.onTransactionProgress(any()) }
         coVerify(exactly = 0) {
             sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
         }
@@ -244,23 +212,41 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
     }
 
     @Test
-    fun `WHEN onReadMoreClick THEN opens url`() = runTest {
-        // Arrange
-        mockkObject(TangemBlogUrlBuilder)
-        try {
-            coEvery { TangemBlogUrlBuilder.build(any()) } returns BLOG_URL
+    fun `GIVEN a fee load in flight WHEN a reload cannot build the exit THEN the load finishes with the fee`() =
+        runTest {
+            // Arrange
+            coEvery { stopEarningUseCase(any(), any(), any()) } returnsMany listOf(
+                uncompiledTx().right(),
+                YieldSupplyError.DataError(Throwable()).left(),
+            )
+            coEvery { getFeeUseCase(any(), any(), any()) } coAnswers {
+                delay(1_000)
+                transactionFee().right()
+            }
             val model = createModel()
-            advanceUntilIdle()
+            runCurrent()
 
             // Act
-            model.onReadMoreClick()
+            model.onFeeReload()
             advanceUntilIdle()
 
             // Assert
-            verify { urlOpener.openUrl(BLOG_URL) }
-        } finally {
-            unmockkObject(TangemBlogUrlBuilder)
+            assertThat(model.uiState.value.yieldSupplyFeeUM).isInstanceOf(YieldSupplyFeeUM.Content::class.java)
         }
+
+    @Test
+    fun `WHEN onReadMoreClick THEN opens url`() = runTest {
+        // Arrange
+        coEvery { tangemBlogUrlBuilder.build(any()) } returns BLOG_URL
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onReadMoreClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify { urlOpener.openUrl(BLOG_URL) }
     }
 
     @Nested
@@ -494,6 +480,45 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             }
 
         @Test
+        fun `GIVEN a claim wrapped in a module upgrade WHEN withdrawing THEN the claim hash is followed`() = runTest {
+            // Arrange
+            val callData = MerklClaimCallData.fromHex(CLAIM_CALL_DATA)
+            val upgradeClaimTransaction = claimTransaction.copy(
+                extras = EthereumTransactionExtras(
+                    callData = EthereumYieldSupplyUpgradeToAndCallCallData(
+                        newImplementation = LATEST_IMPLEMENTATION,
+                        innerCallData = callData,
+                    ),
+                ),
+            )
+            coEvery {
+                withdrawalClaimPreparer.prepare(userWallet = any(), cryptoCurrencyStatus = any())
+            } returns readyPreClaim(transactionData = upgradeClaimTransaction)
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentBatch().first()).isEqualTo(upgradeClaimTransaction)
+            verify {
+                claimTracker.track(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = token,
+                    chainId = CHAIN_ID,
+                    userAddress = SOURCE_ADDRESS,
+                    transactionHash = CLAIM_HASH,
+                    claimedRewards = listOf(MockYieldSupply.reward()),
+                    origin = YieldSupplyClaimOrigin.Withdrawal,
+                )
+            }
+
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN the fee currency is not found WHEN the fee loads THEN the withdrawal goes without the claim`() =
             runTest {
                 // Arrange
@@ -547,8 +572,11 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             return sent.captured
         }
 
-        private fun readyPreClaim(preparedAt: TimeMark = TestTimeSource().markNow()) = YieldPreClaim.Ready(
-            transactionData = claimTransaction,
+        private fun readyPreClaim(
+            preparedAt: TimeMark = TestTimeSource().markNow(),
+            transactionData: TransactionData.Uncompiled = claimTransaction,
+        ) = YieldPreClaim.Ready(
+            transactionData = transactionData,
             chainId = CHAIN_ID,
             userAddress = SOURCE_ADDRESS,
             token = token,
@@ -557,35 +585,8 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         )
     }
 
-    private fun TestScope.createModel(
-        statusFlow: StateFlow<CryptoCurrencyStatus> = cryptoCurrencyStatusFlow,
-    ): YieldSupplyStopEarningModel = YieldSupplyStopEarningModel(
-        dispatchers = createTestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(
-            YieldSupplyStopEarningComponent.Params(
-                userWallet = userWallet,
-                cryptoCurrencyStatusFlow = statusFlow,
-                callback = callback,
-            ),
-        ),
-        analytics = analytics,
-        getFeeUseCase = getFeeUseCase,
-        getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-        getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
-        sendTransactionUseCase = sendTransactionUseCase,
-        yieldSupplyStopEarningUseCase = stopEarningUseCase,
-        urlOpener = urlOpener,
-        yieldSupplyNotificationsUpdateTrigger = notificationsUpdateTrigger,
-        yieldSupplyAlertFactory = alertFactory,
-        yieldSupplyDeactivateUseCase = deactivateUseCase,
-        yieldSupplyRepository = yieldSupplyRepository,
-        yieldSupplyPendingTracker = pendingTracker,
-        appsFlyerRepository = appsFlyerRepository,
-        yieldSupplyWithdrawalClaimPreparer = withdrawalClaimPreparer,
-        yieldSupplyClaimTracker = claimTracker,
-    )
-
     private companion object {
+        const val LATEST_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
         const val BLOG_URL = "https://tangem.com/blog"
         const val CHAIN_ID = 1
         const val CLAIM_HASH = "0xclaim"

@@ -30,7 +30,7 @@ fun FeatureBlock(title: String, description: String, iconRes: Int, modifier: Mod
                 .padding(horizontal = 12.dp),
             painter = painterResource(iconRes),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
         )
         Column(
             modifier = Modifier
@@ -40,14 +40,14 @@ fun FeatureBlock(title: String, description: String, iconRes: Int, modifier: Mod
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 modifier = Modifier
                     .padding(top = 4.dp),
                 text = description,
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }
@@ -60,7 +60,7 @@ private fun PreviewFeatureBlock() {
     TangemThemePreview {
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
         ) {
             FeatureBlock(

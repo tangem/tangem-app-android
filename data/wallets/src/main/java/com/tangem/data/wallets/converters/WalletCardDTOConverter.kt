@@ -14,7 +14,7 @@ internal object WalletCardDTOConverter : Converter<WalletCardBackup, WalletCardD
         return WalletCardDTO(
             cardId = value.cardId,
             cardPublicKey = value.cardPublicKey,
-            role = value.role.toDTO(),
+            role = value.role?.toDTO(),
             backupStatus = value.backupStatus.toDTO(),
             curves = value.curves.map { it.curve },
             errorCode = value.error?.code?.take(MAX_ERROR_CODE_LENGTH),
