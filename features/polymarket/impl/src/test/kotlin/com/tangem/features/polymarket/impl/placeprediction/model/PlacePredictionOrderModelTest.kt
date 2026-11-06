@@ -1500,6 +1500,22 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
+        fun `GIVEN the clock moved back before the quote time WHEN place clicked THEN the quote is refused`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotedModel()
+                nowMillis -= 1
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                verify(exactly = 1) { messageSender.send(any()) }
+            }
+
+        @Test
         fun `GIVEN a refused stale quote WHEN the new quote arrives and place clicked THEN the new one is signed`() =
             runOrderTest {
                 // Arrange
