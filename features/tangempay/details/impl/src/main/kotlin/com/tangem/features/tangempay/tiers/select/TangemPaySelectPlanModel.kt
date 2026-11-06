@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.tiers.select
 
 import androidx.compose.runtime.Stable
+import arrow.core.raise.either
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -9,17 +10,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
-import com.tangem.core.ui.utils.DateTimeFormatters
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
-import com.tangem.domain.models.account.mainImageUrl
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
@@ -30,20 +21,14 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.components.TangemPaySelectPlanComponent
-import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
-import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPaySelectPlanModel @Inject constructor(
@@ -57,61 +42,82 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
-) : Model() {
+) : Model(), TangemPaySelectPlanClickIntents {
 
     private val params = paramsContainer.require<TangemPaySelectPlanComponent.Params>()
+    private val umFactory = TangemPaySelectPlanUMFactory(mode = params.mode, clicks = this)
+    private var data = TangemPaySelectPlanData()
 
-    private var tariffPlan: TangemPayCustomerTariffPlan? = null
-    private var transitions: List<TangemPayTariffPlanTransition> = emptyList()
+    private val analyticsProducts = (params.mode as? TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder)
+        ?.availableProducts
+        ?.let(TangemPayAnalyticsEvents.ProductSet::of)
 
-    private val allowedTransitions: List<TangemPayTariffPlanTransition>
-        get() = transitions.filter { it.type in ALLOWED_TYPES }
-
-    private val allowedTransitionsForCompare: List<TangemPayTariffPlanTransition>
-        get() = transitions.filter { it.type in ALLOWED_TYPES_FOR_COMPARE }
-
-    private var selectedIndex: Int = 0
-    private var isConfirm: Boolean = false
-    private var isProcessing: Boolean = false
+    private val analyticsContext = when (params.mode) {
+        TangemPaySelectPlanComponent.Mode.ChangePlan -> TangemPayAnalyticsEvents.Tiers.PlanContext.CHANGE_PLAN
+        TangemPaySelectPlanComponent.Mode.TiersOnboarding,
+        is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder,
+        -> TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING
+    }
 
     val state: StateFlow<TangemPaySelectPlanUM>
-        field = MutableStateFlow(buildState())
+        field = MutableStateFlow(umFactory.createLoading(data))
 
     init {
-        analytics.send(TangemPayAnalyticsEvents.Tiers.TierSelectionScreenShowed())
+        analytics.send(TangemPayAnalyticsEvents.Tiers.TierSelectionScreenShowed(products = analyticsProducts))
         loadData()
     }
 
     private fun loadData() {
+        state.value = umFactory.createLoading(data)
         modelScope.launch {
             val transitionsDeferred = async { getTransitions(params.userWalletId) }
             val tariffPlanDeferred = async { getCurrentTariffUseCase(params.userWalletId) }
-
-            transitionsDeferred.await().onRight { transitions = it }
-            tariffPlanDeferred.await().onRight { tariffPlan = it }
-            state.update { buildState() }
+            either {
+                val loadedTransitions = transitionsDeferred.await().bind()
+                val loadedTariffPlan = tariffPlanDeferred.await().bind()
+                updateData { it.copy(transitions = loadedTransitions, tariffPlan = loadedTariffPlan) }
+            }.onLeft {
+                state.value = umFactory.createError(data)
+            }
         }
     }
 
-    private fun onPlanSelected(index: Int) {
-        if (index == selectedIndex) return
-        selectedIndex = index
-        analytics.send(TangemPayAnalyticsEvents.Tiers.TiersSwiped())
-        state.update { buildState() }
+    private fun updateData(transform: (TangemPaySelectPlanData) -> TangemPaySelectPlanData) {
+        data = transform(data)
+        state.value = umFactory.create(data)
     }
 
-    private fun onSelectClick() {
-        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
+    override fun onRetryClick() {
+        loadData()
+    }
+
+    override fun onLinkClick(url: String) {
+        urlOpener.openUrl(url)
+    }
+
+    override fun onPlanSelected(index: Int) {
+        if (index == data.selectedIndex) return
+        analytics.send(TangemPayAnalyticsEvents.Tiers.TiersSwiped())
+        updateData { it.copy(selectedIndex = index) }
+    }
+
+    override fun onSelectClick() {
+        val transition = data.selectedTransition ?: return
 
         val tierId = transition.plan.tierId
-        analytics.send(TangemPayAnalyticsEvents.Tiers.PlanSelectedClick(tierId))
+        analytics.send(
+            TangemPayAnalyticsEvents.Tiers.PlanSelectedClick(
+                tierId = tierId,
+                products = analyticsProducts,
+                context = analyticsContext,
+            ),
+        )
 
         when (val mode = params.mode) {
             TangemPaySelectPlanComponent.Mode.TiersOnboarding -> applyTransition(transition)
             TangemPaySelectPlanComponent.Mode.ChangePlan -> {
                 analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeConfirmationScreenShowed(tierId))
-                isConfirm = true
-                state.update { buildState() }
+                updateData { it.copy(isConfirm = true) }
             }
             is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder -> {
                 createOnboardingOrder(transition = transition, availableProducts = mode.availableProducts)
@@ -119,48 +125,46 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         }
     }
 
-    private fun onComparePlansClick() {
-        if (allowedTransitions.isEmpty()) return
+    override fun onComparePlansClick() {
+        if (data.allowedTransitions.isEmpty()) return
         analytics.send(TangemPayAnalyticsEvents.Tiers.ComparePlansClicked())
         analytics.send(TangemPayAnalyticsEvents.Tiers.PlansComparisonPopupShowed())
-        state.update { buildState(showPlanCompare = true) }
+        updateData { it.copy(isCompareShown = true) }
     }
 
-    private fun onCompareDismiss() {
+    override fun onCompareDismiss() {
         analytics.send(TangemPayAnalyticsEvents.Tiers.PlansComparisonPopupClosed())
-        state.update { buildState(showPlanCompare = false) }
+        updateData { it.copy(isCompareShown = false) }
     }
 
-    fun onBackClick() {
-        if (isProcessing) return
-        if (isConfirm) {
+    override fun onBackClick() {
+        if (data.isProcessing) return
+        if (data.isConfirm) {
             analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeCancelClicked())
-            isConfirm = false
-            state.update { buildState() }
+            updateData { it.copy(isConfirm = false) }
         } else {
             router.pop()
         }
     }
 
-    private fun onCloseClick() {
-        if (isProcessing) return
+    override fun onCloseClick() {
+        if (data.isProcessing) return
         router.pop()
     }
 
-    private fun onConfirmClick() {
-        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
+    override fun onConfirmClick() {
+        val transition = data.selectedTransition ?: return
         applyTransition(transition)
     }
 
     private fun applyTransition(transition: TangemPayTariffPlanTransition) {
-        if (isProcessing) return
+        if (data.isProcessing) return
 
         if (transition.type == TangemPayTariffPlanTransition.Type.UPGRADE) {
             analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeUpgradeClicked())
         }
 
-        isProcessing = true
-        state.update { buildState() }
+        updateData { it.copy(isProcessing = true) }
         modelScope.launch {
             submitTariffTransitionUseCase(params.userWalletId, transition).fold(
                 ifRight = {
@@ -175,8 +179,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                     }
                 },
                 ifLeft = {
-                    isProcessing = false
-                    state.update { buildState() }
+                    updateData { data -> data.copy(isProcessing = false) }
                     uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
                 },
             )
@@ -187,18 +190,16 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         transition: TangemPayTariffPlanTransition,
         availableProducts: Set<TangemPayProduct>,
     ) {
-        if (isProcessing) return
+        if (data.isProcessing) return
 
-        isProcessing = true
-        state.update { buildState() }
+        updateData { it.copy(isProcessing = true) }
         modelScope.launch {
             startTangemPayOnboardingUseCase(
                 userWalletId = params.userWalletId,
                 tariffPlanTransition = transition,
                 availableProducts = availableProducts,
             ).onLeft { error ->
-                isProcessing = false
-                state.update { buildState() }
+                updateData { it.copy(isProcessing = false) }
                 if (error !is StartTangemPayOnboardingError.UserCancelled) {
                     uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
                 }
@@ -206,200 +207,5 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                 router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess)
             }
         }
-    }
-
-    private fun buildState(showPlanCompare: Boolean = false): TangemPaySelectPlanUM = TangemPaySelectPlanUM(
-        topBarTitle = resourceReference(
-            if (isConfirm) {
-                R.string.tangempay_select_plan_confirm_title
-            } else {
-                R.string.tangempay_select_plan_title
-            },
-        ),
-        plans = allowedTransitions.map { it.plan.toPlanUM() }.toImmutableList(),
-        selectedIndex = selectedIndex,
-        onPlanSelected = ::onPlanSelected,
-        onBackClick = ::onBackClick,
-        onCloseClick = ::onCloseClick,
-        onLinkClick = urlOpener::openUrl,
-        content = if (isConfirm) buildConfirmContent() else buildSelectContent(),
-        compare = if (showPlanCompare) buildCompare() else null,
-    )
-
-    private fun buildSelectContent() = TangemPaySelectPlanUM.Content.Select(
-        isProcessing = isProcessing,
-        selectButtonIconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
-            .takeIf { isMoneyAccountActivationRequired() },
-        onComparePlansClick = ::onComparePlansClick,
-        onSelectClick = ::onSelectClick,
-    )
-
-    private fun isMoneyAccountActivationRequired(): Boolean {
-        val mode = params.mode
-        return mode is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder &&
-            TangemPayProduct.BANKING_ACCOUNT in mode.availableProducts
-    }
-
-    private fun buildCompare(): TangemPaySelectPlanUM.ComparePlans {
-        val plans = listOfNotNull(tariffPlan?.plan) + allowedTransitionsForCompare.map { it.plan }
-        val orderedTitles = plans
-            .flatMap { plan -> plan.descriptionItems.filter { it.section in COMPARE_SECTIONS } }
-            .sortedWith(compareBy({ it.section.ordinal }, { it.order }))
-            .map { it.title }
-            .distinct()
-        return TangemPaySelectPlanUM.ComparePlans(
-            attributes = orderedTitles.map(::stringReference).toImmutableList(),
-            plans = plans.map { plan ->
-                val valueByTitle = plan.descriptionItems
-                    .filter { it.section in COMPARE_SECTIONS }
-                    .associate { it.title to it.body }
-                TangemPaySelectPlanUM.ComparePlans.Plan(
-                    name = stringReference(plan.name),
-                    values = orderedTitles
-                        .map { title -> stringReference(valueByTitle[title].orEmpty()) }
-                        .toImmutableList(),
-                )
-            }.toImmutableList(),
-            onDismiss = ::onCompareDismiss,
-        )
-    }
-
-    private fun buildConfirmContent(): TangemPaySelectPlanUM.Content {
-        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return buildSelectContent()
-        val targetPlan = transition.plan
-        return TangemPaySelectPlanUM.Content.Confirm(
-            title = when (transition.type) {
-                TangemPayTariffPlanTransition.Type.UPGRADE -> resourceReference(
-                    R.string.tangempay_select_plan_confirm_upgrade_title,
-                    wrappedList(targetPlan.programName),
-                )
-                TangemPayTariffPlanTransition.Type.DOWNGRADE -> {
-                    val nextBillingDate = nextBillingDate()
-                    val currentPlan = tariffPlan?.plan
-                    if (nextBillingDate != null && currentPlan != null) {
-                        resourceReference(
-                            R.string.tangempay_select_plan_confirm_downgrade_title,
-                            wrappedList(currentPlan.name, currentPlan.programName, nextBillingDate),
-                        )
-                    } else {
-                        resourceReference(
-                            R.string.tangempay_select_plan_confirm_switch_title,
-                            wrappedList(targetPlan.name),
-                        )
-                    }
-                }
-                else -> resourceReference(
-                    R.string.tangempay_select_plan_confirm_switch_title,
-                    wrappedList(targetPlan.name),
-                )
-            },
-            points = buildConfirmPoints(transition),
-            confirmButtonText = resourceReference(
-                when (transition.type) {
-                    TangemPayTariffPlanTransition.Type.UPGRADE -> R.string.tangempay_select_plan_btn_upgrade
-                    TangemPayTariffPlanTransition.Type.DOWNGRADE -> R.string.tangempay_select_plan_btn_downgrade
-                    else -> R.string.common_continue
-                },
-            ),
-            isProcessing = isProcessing,
-            onCancelClick = ::onBackClick,
-            onConfirmClick = ::onConfirmClick,
-        )
-    }
-
-    private fun buildConfirmPoints(
-        transition: TangemPayTariffPlanTransition,
-    ): ImmutableList<TangemPaySelectPlanUM.PointUM> {
-        val programName = transition.plan.programName
-        return when (transition.type) {
-            TangemPayTariffPlanTransition.Type.UPGRADE -> {
-                val feeText = transition.plan.formatRecurringFeeOrNull()
-                buildList {
-                    add(
-                        resourceReference(
-                            R.string.tangempay_select_plan_confirm_point_virtual_card,
-                            wrappedList(programName),
-                        ),
-                    )
-                    if (feeText != null) {
-                        add(
-                            resourceReference(
-                                R.string.tangempay_select_plan_confirm_point_monthly_fee,
-                                wrappedList(feeText),
-                            ),
-                        )
-                    }
-                }
-            }
-            TangemPayTariffPlanTransition.Type.DOWNGRADE -> {
-                val date = nextBillingDate()
-                val currentPlan = tariffPlan?.plan
-                buildList {
-                    if (date != null) {
-                        add(
-                            resourceReference(
-                                R.string.tangempay_select_plan_confirm_point_move_on_date,
-                                wrappedList(date, transition.plan.name),
-                            ),
-                        )
-                    }
-                    if (currentPlan != null) {
-                        add(
-                            resourceReference(
-                                R.string.tangempay_select_plan_confirm_point_cards_closed,
-                                wrappedList(currentPlan.programName),
-                            ),
-                        )
-                    }
-                    if (date != null) {
-                        add(
-                            resourceReference(
-                                R.string.tangempay_select_plan_confirm_point_cancel_till,
-                                wrappedList(date),
-                            ),
-                        )
-                    }
-                    add(resourceReference(R.string.tangempay_select_plan_confirm_point_no_fee))
-                }
-            }
-            else -> listOf(resourceReference(R.string.tangempay_select_plan_confirm_point_no_fee))
-        }
-            .map { TangemPaySelectPlanUM.PointUM(title = it, body = null) }
-            .toImmutableList()
-    }
-
-    private fun TangemPayTariffPlan.toPlanUM() = TangemPaySelectPlanUM.PlanUM(
-        name = stringReference(name),
-        imageUrl = mainImageUrl,
-        points = descriptionItems
-            .filter { it.section == TangemPayTariffPlan.Section.ONBOARDING_RELATED }
-            .sortedBy { it.order }
-            .map { item ->
-                TangemPaySelectPlanUM.PointUM(
-                    title = stringReference(item.title),
-                    body = item.body.takeIf(String::isNotBlank)?.let(::stringReference),
-                )
-            }
-            .toImmutableList(),
-    )
-
-    private fun nextBillingDate(): String? {
-        return tariffPlan?.formatNextBillingDateOrNull(DateTimeFormatters.dateMMMd)
-    }
-
-    companion object {
-        private val ALLOWED_TYPES = setOf(
-            TangemPayTariffPlanTransition.Type.UPGRADE,
-            TangemPayTariffPlanTransition.Type.DOWNGRADE,
-            TangemPayTariffPlanTransition.Type.ACTIVATION,
-        )
-        private val ALLOWED_TYPES_FOR_COMPARE = setOf(
-            TangemPayTariffPlanTransition.Type.UPGRADE,
-            TangemPayTariffPlanTransition.Type.DOWNGRADE,
-        )
-        private val COMPARE_SECTIONS = setOf(
-            TangemPayTariffPlan.Section.CARD_RELATED,
-            TangemPayTariffPlan.Section.PLAN_RELATED,
-        )
     }
 }

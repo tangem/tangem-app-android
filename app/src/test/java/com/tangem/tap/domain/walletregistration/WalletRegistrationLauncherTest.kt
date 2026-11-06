@@ -19,6 +19,7 @@ import com.tangem.lib.auth.session.PreparedWalletRegistration
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.lib.auth.session.WalletRegistrationResult
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed
 import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed.Stage
@@ -41,6 +42,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class WalletRegistrationLauncherTest {
@@ -68,7 +71,7 @@ internal class WalletRegistrationLauncherTest {
             java.util.Base64.getEncoder().encodeToString(firstArg())
         }
         every { mobileSigner.signerFor(any()) } returns mockk<WalletSigner>()
-        coEvery { walletRegistrar.register(any(), any()) } returns Unit.right()
+        coEvery { walletRegistrar.register(any(), any()) } returns WalletRegistrationResult.Registered.right()
         coEvery { walletRegistrar.hasActiveSession() } returns true
     }
 
@@ -79,7 +82,8 @@ internal class WalletRegistrationLauncherTest {
     fun `registerMobile registers with the Base64 walletId`() = runTest {
         val walletIdBytes = ByteArray(32) { 5 }
         val slot = slot<String>()
-        coEvery { walletRegistrar.register(capture(slot), any()) } returns Unit.right()
+        coEvery { walletRegistrar.register(capture(slot), any()) } returns
+            WalletRegistrationResult.Registered.right()
 
         launcher.registerMobile(hotWallet(walletIdBytes))
 
@@ -266,6 +270,20 @@ internal class WalletRegistrationLauncherTest {
     }
 
     @Test
+    fun `GIVEN twin card WHEN forced registerColdInSession THEN registration is skipped`() = runTest {
+        // Arrange
+        stubColdCard()
+        val card = mockk<Card>(relaxed = true) { every { cardId } returns TWIN_CARD_ID }
+
+        // Act
+        launcher.registerColdInSession(mockk<CardSession>(), card, mockk<WalletNonce>(), shouldForce = true)
+
+        // Assert
+        coVerify(exactly = 0) { walletRegistrar.forgetRegistration(any()) }
+        coVerify(exactly = 0) { walletRegistrar.prepare(any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `prefetchColdNonce returns the registrar nonce`() = runTest {
         val expected = mockk<WalletNonce>()
         coEvery { walletRegistrar.requestNonce() } returns expected.right()
@@ -299,6 +317,22 @@ internal class WalletRegistrationLauncherTest {
         verify(exactly = 1) {
             analyticsEventHandler.send(WalletRegistrationFailed(WalletType.Mobile, Stage.Register, error.toString()))
         }
+    }
+
+    @ParameterizedTest
+    @EnumSource(WalletRegistrationResult::class)
+    fun `GIVEN register succeeds WHEN registerMobile THEN only a new link is reported to analytics`(
+        result: WalletRegistrationResult,
+    ) = runTest {
+        // Arrange
+        coEvery { walletRegistrar.register(any(), any()) } returns result.right()
+
+        // Act
+        launcher.registerMobile(hotWallet())
+
+        // Assert
+        val expectedCount = if (result == WalletRegistrationResult.Registered) 1 else 0
+        verify(exactly = expectedCount) { analyticsEventHandler.send(BackendAuthAnalyticsEvent.WalletLinked()) }
     }
 
     @Test
@@ -386,18 +420,49 @@ internal class WalletRegistrationLauncherTest {
     }
 
     @Test
-    fun `GIVEN submit succeeds WHEN registerColdInSession THEN nothing is reported to analytics`() = runTest {
+    fun `GIVEN submit succeeds WHEN registerColdInSession THEN the link is reported to analytics`() = runTest {
         // Arrange
         stubColdCard()
         val prepared = mockk<PreparedWalletRegistration>()
         coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns prepared.right()
-        coEvery { walletRegistrar.submit(prepared) } returns Unit.right()
+        coEvery { walletRegistrar.submit(prepared) } returns WalletRegistrationResult.Registered.right()
 
         // Act
         launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), mockk<WalletNonce>())
 
         // Assert
         coVerify(exactly = 1) { walletRegistrar.submit(prepared) }
+        verify(exactly = 1) { analyticsEventHandler.send(BackendAuthAnalyticsEvent.WalletLinked()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any<WalletRegistrationFailed>()) }
+    }
+
+    @Test
+    fun `GIVEN server already knows the wallet WHEN registerColdInSession THEN nothing is reported to analytics`() =
+        runTest {
+            // Arrange
+            stubColdCard()
+            val prepared = mockk<PreparedWalletRegistration>()
+            coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns prepared.right()
+            coEvery { walletRegistrar.submit(prepared) } returns WalletRegistrationResult.AlreadyRegistered.right()
+
+            // Act
+            launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), mockk<WalletNonce>())
+
+            // Assert
+            coVerify(exactly = 1) { walletRegistrar.submit(prepared) }
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+        }
+
+    @Test
+    fun `GIVEN wallet already registered WHEN registerColdInSession THEN nothing is reported to analytics`() = runTest {
+        // Arrange
+        stubColdCard()
+        coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns null.right()
+
+        // Act
+        launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), mockk<WalletNonce>())
+
+        // Assert
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
@@ -424,5 +489,6 @@ internal class WalletRegistrationLauncherTest {
     private companion object {
         val COLD_WALLET_ID = ByteArray(32) { 3 }
         val COLD_WALLET_ID_BASE64: String = java.util.Base64.getEncoder().encodeToString(COLD_WALLET_ID)
+        const val TWIN_CARD_ID = "CB61000000000001"
     }
 }

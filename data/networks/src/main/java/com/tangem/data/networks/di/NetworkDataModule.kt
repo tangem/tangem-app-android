@@ -16,16 +16,19 @@ import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
+import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -80,16 +83,10 @@ internal object NetworkDataModule {
     }
 
     @Provides
-    @Singleton
-    fun provideNetworksCleaner(
-        networksStatusesStore: NetworksStatusesStore,
-        walletManagersFacade: WalletManagersFacade,
-        dispatchers: CoroutineDispatcherProvider,
-    ): NetworksCleaner {
-        return DefaultNetworksCleaner(
-            networksStatusesStore = networksStatusesStore,
-            walletManagersFacade = walletManagersFacade,
-            dispatchers = dispatchers,
-        )
-    }
+    @IntoSet
+    fun provideNetworksCryptoCurrencyDataCleaner(impl: DefaultNetworksCleaner): CryptoCurrencyDataCleaner = impl
+
+    @Provides
+    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
+    fun provideNetworksCleaner(impl: DefaultNetworksCleaner): NetworksCleaner = impl
 }

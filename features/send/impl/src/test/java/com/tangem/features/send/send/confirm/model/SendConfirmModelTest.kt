@@ -178,6 +178,38 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     }
 
     @Nested
+    inner class CheckFeeResultWithoutAmount {
+
+        @Test
+        fun `GIVEN no entered amount WHEN check reload succeeds THEN sending is switched off`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            val state = normalFeeState().copy(
+                amountUM = AmountState.Empty,
+                confirmUM = ConfirmUM.Content(
+                    isPrimaryButtonEnabled = true,
+                    walletName = mockk(relaxed = true),
+                    isSending = false,
+                    isShowTapHelp = false,
+                    sendingFooter = mockk(relaxed = true),
+                    notifications = persistentListOf(),
+                ),
+            )
+            val sut = createSendConfirmModel(this, confirmParams(state))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            val confirmUM = sut.uiState.value.confirmUM as ConfirmUM.Content
+            assertThat(confirmUM.isSending).isFalse()
+        }
+    }
+
+    @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class SendTransactionDispatch {
 
@@ -241,6 +273,40 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             verify(exactly = 1) { onSendTransaction.invoke() }
             verify(exactly = 1) { callback.onResult(any()) }
         }
+
+        @Test
+        fun `GIVEN success screen replaces the step WHEN send succeeds THEN success analytics are still sent`() =
+            runTest {
+                // Arrange
+                val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+                every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+                coEvery { sendTransactionUseCase(any(), any(), any()) } returns "txHash".right()
+                lateinit var model: SendConfirmModel
+                val params = MutableParamsContainer(
+                    defaultSendConfirmParams(
+                        state = normalFeeState(),
+                        cryptoCurrencyStatus = loadedFeeStatus,
+                        feeCryptoCurrencyStatus = loadedFeeStatus,
+                    ).copy(onSendTransaction = { model.onDestroy() }),
+                )
+                model = createSendConfirmModel(this, params)
+                advanceUntilIdle()
+
+                // Act
+                resultFlow.tryEmit(true)
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    sendAnalyticHelper.sendSuccessAnalytics(
+                        cryptoCurrency = any(),
+                        sendUM = any(),
+                        feeToken = any(),
+                        account = any(),
+                        jointComposition = any(),
+                    )
+                }
+            }
 
         @Test
         fun `GIVEN transaction creation fails WHEN verifyAndSend THEN show generic error and do NOT send`() = runTest {
@@ -747,7 +813,9 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             val sut = createSendConfirmModel(this, confirmParams(normalFeeState()))
             advanceUntilIdle()
             val editedAmount = mockk<AmountState.Data>(relaxed = true)
-            val editedDestination = mockk<DestinationUM.Content>(relaxed = true)
+            val editedDestination = mockk<DestinationUM.Content>(relaxed = true) {
+                every { isInitialized } returns true
+            }
 
             // Act
             sut.updateEditedState(staleParentState(editedAmount, editedDestination))
@@ -771,7 +839,9 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             sut.updateEditedState(
                 staleParentState(
                     amountUM = mockk<AmountState.Data>(relaxed = true),
-                    destinationUM = mockk<DestinationUM.Content>(relaxed = true),
+                    destinationUM = mockk<DestinationUM.Content>(relaxed = true) {
+                        every { isInitialized } returns true
+                    },
                 ),
             )
             advanceUntilIdle()
@@ -780,6 +850,26 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // parent's Empty, which would disable the confirm blocks; the fee state must survive as is
             assertThat(sut.uiState.value.confirmUM).isInstanceOf(ConfirmUM.Content::class.java)
             assertThat(sut.uiState.value.feeSelectorUM).isEqualTo(feeSelectorUMBefore)
+        }
+
+        @Test
+        fun `GIVEN parent never saw amount or recipient WHEN updateEditedState THEN confirm keeps its own`() = runTest {
+            // Arrange: an intent opens straight on Confirm, so the parent still holds its initial empty state
+            val sut = createSendConfirmModel(this, confirmParams(normalFeeState()))
+            advanceUntilIdle()
+            val amountBefore = sut.uiState.value.amountUM
+            val destinationBefore = sut.uiState.value.destinationUM
+            val uninitializedDestination = mockk<DestinationUM.Content>(relaxed = true) {
+                every { isInitialized } returns false
+            }
+
+            // Act
+            sut.updateEditedState(staleParentState(AmountState.Empty, uninitializedDestination))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sut.uiState.value.amountUM).isEqualTo(amountBefore)
+            assertThat(sut.uiState.value.destinationUM).isEqualTo(destinationBefore)
         }
 
         private fun staleParentState(amountUM: AmountState, destinationUM: DestinationUM) = SendUM(

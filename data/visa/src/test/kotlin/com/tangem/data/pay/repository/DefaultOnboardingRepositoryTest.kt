@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.pay.analytics.TangemPayUserPropertiesSender
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.pay.TangemPayProduct
@@ -16,15 +17,20 @@ import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
+import com.tangem.spend.datasource.pay.models.response.BankCredentialsListResponse
+import com.tangem.spend.datasource.pay.models.response.BankCredentialsResponse
+import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.spend.datasource.pay.models.response.FeesResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.pay.MockBankCredentials
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -39,6 +45,7 @@ internal class DefaultOnboardingRepositoryTest {
     private val requestHelper: TangemPayRequestPerformer = mockk()
     private val tangemPayStorage: TangemPayStorage = mockk(relaxed = true)
     private val cashbackSummaryStore: CashbackSummaryStore = mockk(relaxed = true)
+    private val userPropertiesSender: TangemPayUserPropertiesSender = mockk(relaxed = true)
 
     private val repository = DefaultOnboardingRepository(
         analytics = mockk(relaxed = true),
@@ -54,11 +61,12 @@ internal class DefaultOnboardingRepositoryTest {
         cashbackSummaryStore = cashbackSummaryStore,
         customerInfoStore = mockk(relaxed = true),
         derivationsRepository = mockk(relaxed = true),
+        userPropertiesSender = userPropertiesSender,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemPayApi, requestHelper, tangemPayStorage, cashbackSummaryStore)
+        clearMocks(tangemPayApi, requestHelper, tangemPayStorage, cashbackSummaryStore, userPropertiesSender)
 
         coEvery {
             requestHelper.performRequest<Any>(userWalletId = any(), requestBlock = any())
@@ -74,6 +82,49 @@ internal class DefaultOnboardingRepositoryTest {
         coEvery { tangemPayStorage.isCampaignOrder(WALLET_ADDRESS) } returns false
         coEvery { tangemPayApi.createOrder(any(), any(), any()) } returns
             ApiResponse.Success(orderResponse(NEW_ORDER_ID))
+    }
+
+    @Nested
+    inner class GetCustomerInfo {
+
+        @Test
+        fun `GIVEN customer returned WHEN getCustomerInfo THEN user properties reported from it`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.getCustomerMe(any()) } returns ApiResponse.Success(
+                CustomerMeResponse(
+                    result = CustomerMeResponse.Result(
+                        id = "customer",
+                        state = "ACTIVE",
+                        createdAt = "2026-10-29T10:00:00Z",
+                        paymentAccount = null,
+                        kyc = null,
+                        balance = null,
+                        productInstances = emptyList(),
+                        cards = emptyList(),
+                    ),
+                ),
+            )
+
+            // Act
+            val customerInfo = repository.getCustomerInfo(USER_WALLET_ID).getOrNull()
+
+            // Assert
+            assertThat(customerInfo).isNotNull()
+            verify(exactly = 1) { userPropertiesSender.onCustomerInfoFetched(USER_WALLET_ID, customerInfo!!) }
+        }
+
+        @Test
+        fun `GIVEN backend error WHEN getCustomerInfo THEN user properties untouched`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.getCustomerMe(any()) } returns
+                ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CustomerMeResponse>
+
+            // Act
+            repository.getCustomerInfo(USER_WALLET_ID)
+
+            // Assert
+            verify(exactly = 0) { userPropertiesSender.onCustomerInfoFetched(any(), any()) }
+        }
     }
 
     @Nested
@@ -516,6 +567,126 @@ internal class DefaultOnboardingRepositoryTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetAllBankCredentials {
+
+        @Test
+        fun `GIVEN fiat and onchain routes WHEN getAllBankCredentials THEN fiat routes converted in response order`() =
+            runTest {
+                // Arrange
+                val response = BankCredentialsListResponse(
+                    result = listOf(
+                        bankCredentialsResult(type = "fiat", rail = "ACH", accountNumber = "707613210122"),
+                        bankCredentialsResult(type = "onchain", rail = null, accountNumber = null),
+                        bankCredentialsResult(type = "fiat", rail = "SPEI", accountNumber = "646180157000000004"),
+                    ),
+                )
+                coEvery {
+                    tangemPayApi.getAllBankCredentials(AUTH_HEADER, PRODUCT_INSTANCE_ID, "all")
+                } returns ApiResponse.Success(response)
+
+                // Act
+                val actual = repository.getAllBankCredentials(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+
+                // Assert
+                val expected = listOf(
+                    expectedCredentials(type = "fiat", rail = "ACH", accountNumber = "707613210122"),
+                    expectedCredentials(type = "fiat", rail = "SPEI", accountNumber = "646180157000000004"),
+                )
+                assertThat(actual).isEqualTo(expected.right())
+                coVerify(exactly = 1) { tangemPayApi.getAllBankCredentials(AUTH_HEADER, PRODUCT_INSTANCE_ID, "all") }
+            }
+
+        @Test
+        fun `GIVEN uppercase type and a route without number WHEN getAllBankCredentials THEN complete route kept`() =
+            runTest {
+                // Arrange
+                val response = BankCredentialsListResponse(
+                    result = listOf(
+                        bankCredentialsResult(type = "FIAT", rail = "ACH", accountNumber = "707613210122"),
+                        bankCredentialsResult(type = "fiat", rail = "SPEI", accountNumber = " "),
+                    ),
+                )
+                coEvery { tangemPayApi.getAllBankCredentials(AUTH_HEADER, PRODUCT_INSTANCE_ID, "all") } returns
+                    ApiResponse.Success(response)
+
+                // Act
+                val actual = repository.getAllBankCredentials(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+
+                // Assert
+                val expected = listOf(expectedCredentials(type = "FIAT", rail = "ACH", accountNumber = "707613210122"))
+                assertThat(actual).isEqualTo(expected.right())
+            }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN no fiat route WHEN getAllBankCredentials THEN error`(response: BankCredentialsListResponse) =
+            runTest {
+                // Arrange
+                coEvery { tangemPayApi.getAllBankCredentials(AUTH_HEADER, PRODUCT_INSTANCE_ID, "all") } returns
+                    ApiResponse.Success(response)
+
+                // Act
+                val actual = repository.getAllBankCredentials(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+
+                // Assert
+                assertThat(actual).isEqualTo(VisaApiError.UnknownWithoutCode.left())
+            }
+
+        @Test
+        fun `GIVEN failing request WHEN getAllBankCredentials THEN api error`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.getAllBankCredentials(AUTH_HEADER, PRODUCT_INSTANCE_ID, "all") } returns
+                ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<BankCredentialsListResponse>
+
+            // Act
+            val actual = repository.getAllBankCredentials(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
+        }
+
+        private fun provideTestModels() = listOf(
+            BankCredentialsListResponse(result = null),
+            BankCredentialsListResponse(result = emptyList()),
+            BankCredentialsListResponse(
+                result = listOf(bankCredentialsResult(type = "onchain", rail = null, accountNumber = null)),
+            ),
+            BankCredentialsListResponse(
+                result = listOf(bankCredentialsResult(type = "fiat", rail = "SPEI", accountNumber = null)),
+            ),
+        )
+
+        private fun expectedCredentials(type: String, rail: String, accountNumber: String) =
+            MockBankCredentials.bankCredentials(
+                type = type,
+                beneficiaryName = "",
+                beneficiaryAddress = "",
+                beneficiaryBankName = "",
+                beneficiaryBankAddress = "",
+                accountNumber = accountNumber,
+                routingNumber = "",
+                rail = rail,
+            )
+
+        private fun bankCredentialsResult(type: String, rail: String?, accountNumber: String?) =
+            BankCredentialsResponse.Result(
+                type = type,
+                beneficiaryName = null,
+                beneficiaryAddress = null,
+                beneficiaryBankName = null,
+                beneficiaryBankAddress = null,
+                accountNumber = accountNumber,
+                routingNumber = null,
+                rail = rail,
+                transferMessage = null,
+                fee = null,
+                depositLimit = null,
+                exchangeRate = null,
+            )
+    }
+
     private fun orderResponse(
         id: String,
         status: OrderResponse.Result.Status = OrderResponse.Result.Status.NEW,
@@ -566,5 +737,6 @@ internal class DefaultOnboardingRepositoryTest {
         const val NEW_ORDER_ID = "order_new"
         const val PAYMENT_ACCOUNT_ADDRESS = "0xpayment"
         const val IDEMPOTENCY_KEY = "6f1c9e2a-0b3d-4c5e-8a7b-9d0e1f2a3b4c"
+        const val PRODUCT_INSTANCE_ID = "123e4567-e89b-12d3-a456-426614174000"
     }
 }

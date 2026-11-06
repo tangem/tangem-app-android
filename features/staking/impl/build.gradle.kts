@@ -95,6 +95,7 @@ dependencies {
     testImplementation(projects.domain.txhistory.models)
     testImplementation(projects.domain.wallets.models)
     testImplementation(projects.libs.blockchainSdk)
+    testImplementation(tangemDeps.hot.core)
     api(deps.kotlin.coroutines)
     api(projects.domain.staking.models)
 }

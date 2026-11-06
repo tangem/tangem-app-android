@@ -24,7 +24,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_16
 
-private val FeedBlockShape = RoundedCornerShape(size = 20.dp)
+internal val FeedBlockShape = RoundedCornerShape(size = 20.dp)
 
 private const val TITLE_SKELETON_WIDTH_FRACTION = 0.45f
 private const val DESCRIPTION_SKELETON_WIDTH_FRACTION = 0.6f
@@ -43,7 +43,7 @@ internal fun FeedShortcutCard(
 ) {
     TangemSurface(
         modifier = modifier,
-        color = TangemTheme.colors3.bg.transparent.primary,
+        color = TangemTheme.colors3.bg.secondary,
         shape = FeedBlockShape,
         onClick = onClick,
     ) {

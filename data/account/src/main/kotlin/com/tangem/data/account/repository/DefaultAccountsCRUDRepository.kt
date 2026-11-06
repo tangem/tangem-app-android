@@ -17,16 +17,14 @@ import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
-import com.tangem.data.account.utils.isJoint
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
-import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.isCollectibles
-import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
@@ -35,11 +33,8 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.replaceBy
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -53,20 +48,12 @@ internal class DefaultAccountsCRUDRepository(
     private val walletAccountsSaver: WalletAccountsSaver,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val archivedAccountsStoreFactory: ArchivedAccountsStoreFactory,
-    private val userTokensSaver: UserTokensSaver,
     private val archivedAccountsETagStore: RuntimeStateStore<Map<String, String?>>,
     private val convertersContainer: AccountConverterFactoryContainer,
     private val resources: Resources,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
-    private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
+    private val supportedAccountTypes: SupportedAccountTypes,
 ) : AccountsCRUDRepository {
-
-    private val WalletAccountDTO.isDisabledJoint: Boolean
-        get() = isJoint && !jointAccountFeatureToggles.isJointAccountEnabled
-
-    private val WalletAccountDTO.isDisabled: Boolean
-        get() = isDisabledJoint || isCollectibles && !collectiblesFeatureToggles.isCollectiblesEnabled
 
     override suspend fun getAccountListSync(userWalletId: UserWalletId): Option<AccountList> = option {
         val accountListResponse = getAccountsResponseSync(userWalletId = userWalletId)
@@ -139,7 +126,7 @@ internal class DefaultAccountsCRUDRepository(
             val converter = ArchivedAccountConverter(userWalletId = userWalletId)
 
             val archivedAccounts = converter.convertList(
-                input = response.accounts.filterNot { it.isCollectibles || it.isDisabledJoint },
+                input = response.accounts.filter { !it.isCollectibles && supportedAccountTypes.isSupported(it) },
             )
 
             store.store(value = archivedAccounts)
@@ -153,7 +140,9 @@ internal class DefaultAccountsCRUDRepository(
         val stored = getAccountsResponseSync(userWalletId = accountList.userWalletId)
         val response = converter.convert(accountList)
         val storedJointCounter = stored?.wallet?.totalJointAccounts
-            ?.takeIf { walletAccountsApi.isV2Enabled && !jointAccountFeatureToggles.isJointAccountEnabled }
+            ?.takeIf {
+                walletAccountsApi.isV2Enabled && !supportedAccountTypes.isSupported(WalletAccountDTO.Type.JOINT)
+            }
 
         walletAccountsSaver.store(
             userWalletId = accountList.userWalletId,
@@ -163,7 +152,7 @@ internal class DefaultAccountsCRUDRepository(
                 } else {
                     response.wallet.copy(totalJointAccounts = storedJointCounter)
                 },
-                accounts = mergeDisabledRows(
+                accounts = mergeUnsupportedRows(
                     shownRows = response.accounts,
                     storedRows = stored?.accounts.orEmpty(),
                     convertedStoredRows = stored?.accounts.orEmpty(),
@@ -184,7 +173,7 @@ internal class DefaultAccountsCRUDRepository(
         val syncedResponse = walletAccountsSaver.push(
             userWalletId = accountList.userWalletId,
             body = body.copy(
-                accounts = mergeDisabledRows(
+                accounts = mergeUnsupportedRows(
                     shownRows = body.accounts,
                     storedRows = storedRows,
                     convertedStoredRows = SaveWalletAccountsResponse(accounts = storedRows).accounts,
@@ -215,14 +204,7 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun syncTokens(userWalletId: UserWalletId) {
-        val response = getAccountsResponseSync(userWalletId = userWalletId)
-
-        if (response == null) {
-            TangemLogger.e("Can't sync tokens. No accounts response found for wallet: $userWalletId")
-            return
-        }
-
-        userTokensSaver.pushWithRetryer(userWalletId = userWalletId, response = response.toUserTokensResponse())
+        walletAccountsSaver.syncTokens(userWalletId)
     }
 
     override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {
@@ -267,21 +249,21 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     /**
-     * Walks [storedRows]: a row of a feature that is off keeps its place, every other place takes the next of
+     * Walks [storedRows]: an unsupported row keeps its place, every other place takes the next of
      * [shownRows] or drops out once they run out; the rest of [shownRows] goes to the end.
      */
-    private fun <T> mergeDisabledRows(
+    private fun <T> mergeUnsupportedRows(
         shownRows: List<T>,
         storedRows: List<WalletAccountDTO>,
         convertedStoredRows: List<T>,
     ): List<T> {
         // `v1` has no typed rows at all: one passed through would be stored as a crypto account
-        if (!walletAccountsApi.isV2Enabled || storedRows.none { it.isDisabled }) return shownRows
+        if (!walletAccountsApi.isV2Enabled || storedRows.all(supportedAccountTypes::isSupported)) return shownRows
 
         val shown = shownRows.iterator()
         val merged = storedRows.indices.mapNotNull { index ->
             when {
-                storedRows[index].isDisabled -> convertedStoredRows[index]
+                !supportedAccountTypes.isSupported(storedRows[index]) -> convertedStoredRows[index]
                 shown.hasNext() -> shown.next()
                 else -> null
             }

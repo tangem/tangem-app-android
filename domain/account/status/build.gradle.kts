@@ -20,9 +20,9 @@ dependencies {
     api(projects.domain.moneyAccount)
     api(projects.domain.models)
     api(projects.domain.networks)
-    api(projects.domain.nft)
+    api(projects.domain.nft) // AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED
     api(projects.domain.referral)
-    api(projects.domain.staking)
+    api(projects.domain.staking) // AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED
     api(projects.domain.tokens)
     api(projects.domain.tokens.models)
     api(projects.domain.visa)
@@ -42,7 +42,6 @@ dependencies {
     implementation(projects.domain.collectibles)
     implementation(projects.domain.polymarket)
     implementation(projects.features.collectibles.api) // TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED
-    implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
 
     implementation(deps.kotlin.serialization)
 

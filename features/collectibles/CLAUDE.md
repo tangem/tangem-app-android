@@ -21,8 +21,7 @@ producer) consumes it via `CollectiblesFeatureToggles`.
 
 ```
 features/collectibles/
-  api/    — CollectiblesEntryComponent, CollectiblesFeatureToggles,
-            walletblock/ (CollectiblesWalletBlockComponent + CollectiblesWalletBlockUM — the wallet screen's account row)
+  api/    — CollectiblesEntryComponent, CollectiblesFeatureToggles
   impl/
     common/ui/      — CollectiblesStatus (inline error/empty), CollectiblesLoadMoreEffect, CollectiblesBottomSheet,
                       CollectiblesPackImage
@@ -34,7 +33,6 @@ features/collectibles/
     discovery/      — The packs catalogue: tabs, search, paginated pack rows
     machinedetails/ — One machine: hero, odds, pack facts, paginated prize pool, Turbo switch, pinned CTA footer
     packopening/    — Buy + open one pack: confirm order, pack throw, reveal video, reward card
-    walletblock/    — DefaultCollectiblesWalletBlockComponent, the account row rendered in the wallet screen
 ```
 
 `packopening/` in detail:
@@ -42,7 +40,7 @@ features/collectibles/
 ```
 packopening/
   CollectiblesPackOpeningComponent  — the route; bottom-sheet slot, system back handler, reports the app theme
-  CollectiblesConfirmOrderBottomSheetConfig, sheet/CollectiblesConfirmOrderSheetComponent — PackUnopened / LowInventory
+  CollectiblesConfirmOrderBottomSheetConfig, sheet/CollectiblesConfirmOrderSheetComponent — PackUnopened / LowInventory / AutoBuyback
   PackOpeningConst                  — VIDEO_READY_TIMEOUT_MS, card-slab constants
   model/CollectiblesPackOpeningModel
   model/converter/                  — CollectiblesPackOpeningConverter (order), CollectiblesRewardCardConverter
@@ -107,8 +105,9 @@ AppRoute.Collectibles(userWalletId, startRoute) → DefaultCollectiblesEntryComp
   └─ CollectiblesRoute.ConfirmOrder(externalId, isTurboEnabled)
         → CollectiblesPackOpeningComponent → CollectiblesPackOpeningModel
         confirm order → throw → video → card, all inside the one route
-        slot: PackUnopened(txId) / LowInventory sheets
+        slot: PackUnopened(txId) / LowInventory / AutoBuyback(amount, price) sheets
         "Enable Turbo" → router.pop(); "Explore packs" → router.popTo(Main(id))
+        AutoBuyback: "Open again", close, scrim tap and back → router.pop() to MachineDetails
         "Keep card" / a completed "Sell back" → router.pop() to MachineDetails
 ```
 
@@ -130,8 +129,9 @@ draws only the active child, so a modal sheet raised inside this feature scrims 
 
 Reached from two places: the feed tile (visibility from `CollectiblesFeatureToggles.isCollectiblesEnabled`
 via `CollectiblesBlockModel.isVisible`) and the wallet screen's account row, whose click goes through
-`DefaultWalletRouter.openCollectibles` with `startRoute = Main`. The row itself is rendered by the
-api-level `CollectiblesWalletBlockComponent`.
+`DefaultWalletRouter.openCollectibles` with `startRoute = Main`. The row is one of the wallet's account rows
+(`TokensListItemUM2.Collectibles` in `features/wallet`), placed by the account order the user sets in the wallet
+settings; a new collectibles record is stored first, right below the app-only Tangem Pay and Predictions blocks.
 
 Inner navigation is an `InnerRouter<CollectiblesRoute>` — routes of that type go to the inner stack,
 everything else falls through to the app `AppRouter`. `onChildBack()` reads
@@ -184,9 +184,11 @@ cursor from the last item) and signals exhaustion with `BatchFetchResult.Error(E
 `CollectiblesPackOpeningModel` loads the machine (from memory when opened from the catalogue), watches the
 vault balance via `CollectiblesAccountStatusSupplier`, and on approve runs
 `OpenCollectiblePackUseCase(userWallet, OpenPackRequest.Buy(externalId, isTurboEnabled))`. The use case
-emits `Generating → Confirming → Opening → Opened(pack)` or an `OpenPackStep.Failed`:
+emits `Generating → Confirming → Opening → Opened(pack)`, `AutoBuybacked(amount)` when Turbo mode sold the card
+back (the `/status` or `/open-pack` answer is `auto-buybacked` with an `autoBuyback.toAmount`; once `/status` says
+so, `/open-pack` is skipped), or an `OpenPackStep.Failed`:
 `LowInventory` / `PackUnopened(txId)` open a sheet (`PackUnopened` retries with `OpenPackRequest.Reopen`),
-everything else is a snackbar.
+`AutoBuybacked` opens the payout sheet instead of a card, everything else is a snackbar.
 
 The UI beat is `CollectiblesPackOpeningUM.Stage` — `Order → Launching → Reveal → Reward`:
 
@@ -256,10 +258,10 @@ domain/collectibles/models/  — CollectibleGachaMachine (+ Odds/Stock/TierRange
                                CollectibleBuyback (offer, tx, status), BuybackError,
                                CollectibleGachaMachinesPage/Batch/ListConfig, CollectiblesError
 domain/collectibles/         — CollectiblesRepository, CollectiblesAccountRepository, GachaVaultRepository,
-                               account status supplier/fetcher/producer, hot delegate, owner deriver,
+                               account status supplier/fetcher/producer, session key, owner deriver,
                                9 use cases, the Batch* typealiases
 data/collectibles/           — DefaultCollectiblesRepository, batch fetchers, converters, CollectiblesMachineStore,
-                               account store/producer/cleaner, gacha vault, hot delegate
+                               account store/producer/cleaner, gacha vault, session key
 grow/datasource/collectibles — CollectiblesApi (Retrofit), CollectiblesAuthProvider, request/response DTOs
                                (kotlinx.serialization)
 ```
@@ -286,11 +288,11 @@ the config requires updating `CollectiblesConfigTest`, which asserts the exact h
 
 | Module | Scope | Provides |
 |---|---|---|
-| `CollectiblesComponentModule` | `SingletonComponent` | `CollectiblesEntryComponent.Factory`, `CollectiblesDiscoveryComponent.Factory`, `CollectiblesWalletBlockComponent.Factory`, `PackRevealVideoPlayer.Factory` |
+| `CollectiblesComponentModule` | `SingletonComponent` | `CollectiblesEntryComponent.Factory`, `CollectiblesDiscoveryComponent.Factory`, `PackRevealVideoPlayer.Factory` |
 | `CollectiblesModelModule` | **`ModelComponent`** | All six models `@IntoMap @ClassKey` into the model map read by `getOrCreateModel()` |
 | `CollectiblesFeatureTogglesModule` | `SingletonComponent` | `CollectiblesFeatureToggles` |
 | `CollectiblesDataModule` (in `data/collectibles/`) | `SingletonComponent` | Repositories, owner deriver, account store/supplier/fetcher, machine store, wallet data cleaner |
-| `CollectiblesDelegateModule` (in `data/collectibles/`) | `SingletonComponent` | `CollectiblesHotDelegate` |
+| `CollectiblesSessionKeyModule` (in `data/collectibles/`) | `SingletonComponent` | `CollectiblesSessionKey` |
 
 The onboarding, stories, main, machine-details and pack-opening components are **not** bound in
 `CollectiblesComponentModule` — their nested `@AssistedFactory interface Factory` types are generated by

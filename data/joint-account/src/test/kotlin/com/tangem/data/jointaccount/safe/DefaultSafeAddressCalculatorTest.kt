@@ -7,7 +7,6 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
-import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -48,16 +47,16 @@ internal class DefaultSafeAddressCalculatorTest {
     }
 
     private fun provideTestModels() = listOf(
-        VectorModel(members = 2, threshold = 2, SafeSingleton.SAFE, "0xe7411b2aB7b76a11ca0E6174697714983fC09Cb2"),
-        VectorModel(members = 2, threshold = 1, SafeSingleton.SAFE, "0xb8Ec0Febbcee24b2AAB1F04FB8E569b108A51160"),
-        VectorModel(members = 3, threshold = 2, SafeSingleton.SAFE, "0x9295a5836685C5F5f42242f9B64d23E46F8c259F"),
-        VectorModel(members = 5, threshold = 3, SafeSingleton.SAFE, "0x735F25C3e27b370a8424A8935B9B08a5569F1145"),
-        VectorModel(members = 5, threshold = 5, SafeSingleton.SAFE, "0x29502c6147A7aA296253E297F62f603aACb16429"),
-        VectorModel(members = 2, threshold = 2, SafeSingleton.SAFE_L2, "0x01460aBb9BE7084b817849e856F249e4cdD73E84"),
-        VectorModel(members = 2, threshold = 1, SafeSingleton.SAFE_L2, "0x13a6c159fbe94D29Ce337f16D810174BbDfC8368"),
-        VectorModel(members = 3, threshold = 2, SafeSingleton.SAFE_L2, "0x30bE590176A93C6Ef687F3b07421A3624deaf476"),
-        VectorModel(members = 5, threshold = 3, SafeSingleton.SAFE_L2, "0x6691785f8458a46b5f080F610f86c4a5B3B0A86b"),
-        VectorModel(members = 5, threshold = 5, SafeSingleton.SAFE_L2, "0x151bd350ec4dA327a2eF9d711E855614D57F1fb1"),
+        VectorModel(members = 2, threshold = 2, DefaultSafeAddressCalculator.SAFE_SINGLETON, "0xe7411b2aB7b76a11ca0E6174697714983fC09Cb2"),
+        VectorModel(members = 2, threshold = 1, DefaultSafeAddressCalculator.SAFE_SINGLETON, "0xb8Ec0Febbcee24b2AAB1F04FB8E569b108A51160"),
+        VectorModel(members = 3, threshold = 2, DefaultSafeAddressCalculator.SAFE_SINGLETON, "0x9295a5836685C5F5f42242f9B64d23E46F8c259F"),
+        VectorModel(members = 5, threshold = 3, DefaultSafeAddressCalculator.SAFE_SINGLETON, "0x735F25C3e27b370a8424A8935B9B08a5569F1145"),
+        VectorModel(members = 5, threshold = 5, DefaultSafeAddressCalculator.SAFE_SINGLETON, "0x29502c6147A7aA296253E297F62f603aACb16429"),
+        VectorModel(members = 2, threshold = 2, SAFE_L2_SINGLETON, "0x01460aBb9BE7084b817849e856F249e4cdD73E84"),
+        VectorModel(members = 2, threshold = 1, SAFE_L2_SINGLETON, "0x13a6c159fbe94D29Ce337f16D810174BbDfC8368"),
+        VectorModel(members = 3, threshold = 2, SAFE_L2_SINGLETON, "0x30bE590176A93C6Ef687F3b07421A3624deaf476"),
+        VectorModel(members = 5, threshold = 3, SAFE_L2_SINGLETON, "0x6691785f8458a46b5f080F610f86c4a5B3B0A86b"),
+        VectorModel(members = 5, threshold = 5, SAFE_L2_SINGLETON, "0x151bd350ec4dA327a2eF9d711E855614D57F1fb1"),
     )
 
     @Test
@@ -80,10 +79,10 @@ internal class DefaultSafeAddressCalculatorTest {
         val shuffled = OWNERS.reversed().map { it.uppercase().replace(oldValue = "0X", newValue = "0x") }
 
         // Act
-        val actual = calculator.compute(owners = shuffled, threshold = 3, singleton = SafeSingleton.SAFE)
+        val actual = calculator.compute(owners = shuffled, threshold = 3)
 
         // Assert
-        val expected = calculator.compute(owners = OWNERS, threshold = 3, singleton = SafeSingleton.SAFE)
+        val expected = calculator.compute(owners = OWNERS, threshold = 3)
         assertThat(actual).isEqualTo(expected)
     }
 
@@ -113,7 +112,7 @@ internal class DefaultSafeAddressCalculatorTest {
             val actual = calculator.compute(
                 owners = model.owners,
                 threshold = model.threshold,
-                singleton = SafeSingleton.SAFE,
+                singleton = DefaultSafeAddressCalculator.SAFE_SINGLETON,
             )
 
             // Assert
@@ -181,11 +180,14 @@ internal class DefaultSafeAddressCalculatorTest {
     internal data class VectorModel(
         val members: Int,
         val threshold: Int,
-        val singleton: SafeSingleton,
+        val singleton: String,
         val expected: String,
     )
 
     private companion object {
+        /** SafeL2 v1.5.0: kept in the vectors to show the singleton is part of the address the checks refuse */
+        const val SAFE_L2_SINGLETON = "0xEdd160fEBBD92E350D4D398fb636302fccd67C7e"
+
 
         const val KECCAK_BITS = 256
         const val NON_HEX_ADDRESS = "0xZZ36482d7d056d6f843f5C6088Ff0123b796bCC1"

@@ -38,4 +38,8 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.core.utils)
     // endregion
+
+    // region Tests
+    testImplementation(projects.test.core)
+    // endregion
 }

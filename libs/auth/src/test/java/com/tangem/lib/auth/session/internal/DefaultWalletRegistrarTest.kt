@@ -23,6 +23,7 @@ import com.tangem.lib.auth.performance.NonceRequestType
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.lib.auth.session.WalletRegistrationResult
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.SessionTokens
@@ -39,8 +40,12 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
+import app.cash.turbine.test
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -144,7 +149,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.Registered)
         coVerify { authApi.requestWalletNonce(any()) }
         coVerify { store.save(any()) }
         assertThat(registeredIds()).contains(WALLET_ID)
@@ -226,7 +231,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.AlreadyRegistered)
         coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
         coVerify(exactly = 0) { authApi.registerWallet(any()) }
         coVerify(exactly = 0) { store.save(any()) }
@@ -320,7 +325,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.AlreadyRegistered)
         assertThat(registeredIds()).contains(WALLET_ID)
         coVerify(exactly = 0) { store.save(any()) }
     }
@@ -408,6 +413,58 @@ class DefaultWalletRegistrarTest {
     }
 
     @Test
+    fun `GIVEN no registered wallets WHEN registeredWalletIds collected THEN emits empty set`() = runTest {
+        // Act
+        val actual = registrar.registeredWalletIds().first()
+
+        // Assert
+        assertThat(actual).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN registeredWalletIds collected WHEN markers change THEN re-emits every change`() = runTest {
+        // Arrange
+        preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(OTHER_WALLET_ID) }
+
+        registrar.registeredWalletIds().test {
+            assertThat(awaitItem()).containsExactly(OTHER_WALLET_ID)
+
+            // Act
+            registrar.markRegistered(WALLET_ID)
+            registrar.forgetRegistration(OTHER_WALLET_ID)
+
+            // Assert
+            assertThat(awaitItem()).containsExactly(WALLET_ID, OTHER_WALLET_ID)
+            assertThat(awaitItem()).containsExactly(WALLET_ID)
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN registeredWalletIds collected WHEN unrelated preference changes THEN does not re-emit`() = runTest {
+        registrar.registeredWalletIds().test {
+            assertThat(awaitItem()).isEmpty()
+
+            // Act
+            preferencesDataStore.edit { it[stringPreferencesKey("unrelated")] = "value" }
+
+            // Assert
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN marker store fails WHEN registeredWalletIds collected THEN completes without emitting`() = runTest {
+        // Arrange
+        preferencesDataStore.failReads(IOException("disk"))
+
+        registrar.registeredWalletIds().test {
+            // Assert
+            awaitComplete()
+        }
+    }
+
+    @Test
     fun `GIVEN a wallet registered elsewhere WHEN markRegistered THEN the next register is skipped`() = runTest {
         // Arrange
         preferencesDataStore.edit {
@@ -447,7 +504,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.submit(prepared)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.Registered)
         coVerify { store.save(any()) }
         assertThat(registeredIds()).contains(WALLET_ID)
     }
@@ -468,7 +525,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.submit(prepared)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.AlreadyRegistered)
         assertThat(registeredIds()).contains(WALLET_ID)
         coVerify(exactly = 0) { store.save(any()) }
     }
@@ -806,23 +863,30 @@ class DefaultWalletRegistrarTest {
     /** Minimal in-memory [DataStore] implementation — only the surface area used by tests. */
     private class InMemoryPreferencesDataStore : DataStore<Preferences> {
 
-        private var preferences: MutablePreferences = mutablePreferencesOf()
+        private val preferences = MutableStateFlow<Preferences>(mutablePreferencesOf())
+        private var readFailure: Throwable? = null
 
-        override val data get() = flowOf(preferences)
+        override val data: Flow<Preferences>
+            get() = readFailure?.let { failure -> flow { throw failure } } ?: preferences
 
         override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences {
-            preferences = transform(preferences).toMutablePreferences()
-            return preferences
+            preferences.value = transform(preferences.value).toMutablePreferences()
+            return preferences.value
         }
 
         fun edit(block: (MutablePreferences) -> Unit) {
-            preferences = preferences.toMutablePreferences().also(block)
+            preferences.value = preferences.value.toMutablePreferences().also(block)
         }
 
-        fun current(): Preferences = preferences
+        fun current(): Preferences = preferences.value
+
+        fun failReads(failure: Throwable) {
+            readFailure = failure
+        }
 
         fun reset() {
-            preferences = mutablePreferencesOf()
+            preferences.value = mutablePreferencesOf()
+            readFailure = null
         }
     }
 }

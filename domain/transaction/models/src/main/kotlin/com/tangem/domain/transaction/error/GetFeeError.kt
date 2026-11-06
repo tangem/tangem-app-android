@@ -35,10 +35,32 @@ sealed class GetFeeError {
          * its own attempts, otherwise the service-wide limit is reached.
          */
         data class TronActivationRateLimited(val isPerWallet: Boolean) : GaslessError()
+
+        /**
+         * The Tron gasless service refused the quote: the compensation-token allowances together with the
+         * compensation need [required] while the sender holds only [balance]. Amounts are in the compensation token.
+         *
+         * @property allowance the requested approval, or what the swap router and spender may already pull.
+         * @property allowances the swap [allowance] by router and spender address.
+         * @property reapproval set for a swap that becomes payable once the allowance is lowered by a new approval.
+         */
+        data class TronAllowanceTooHigh(
+            val balance: BigDecimal,
+            val required: BigDecimal,
+            val allowance: BigDecimal,
+            val allowances: Map<String, BigDecimal> = emptyMap(),
+            val reapproval: TronReapproval? = null,
+        ) : GaslessError()
         data object ModuleUpdateUnavailable : GaslessError()
         data object YieldBalanceUnavailable : GaslessError()
         data class DataError(val cause: Throwable?) : GaslessError()
     }
+
+    /**
+     * A new exact approval to [spenderAddress] for [amount] that leaves room for both the approval and the swap
+     * compensations.
+     */
+    data class TronReapproval(val spenderAddress: String, val amount: BigDecimal)
 
     /**
      * Error for gas estimation with state override for ethereum like networks.

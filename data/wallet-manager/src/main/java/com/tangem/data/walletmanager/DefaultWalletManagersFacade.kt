@@ -7,6 +7,9 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.solana.RentProvider
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSignedTransaction
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessTransactionSigner
 import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
@@ -561,6 +564,27 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             is Result.Success -> result.data
             is Result.Failure -> null
         }
+    }
+
+    override suspend fun signSolanaGaslessTransaction(
+        userWalletId: UserWalletId,
+        network: Network,
+        transactionData: TransactionData,
+        feePayer: String,
+        signer: TransactionSigner,
+    ): Result<SolanaGaslessSignedTransaction>? = withContext(dispatchers.io) {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        (walletManager as? SolanaGaslessTransactionSigner)?.signGaslessTransaction(transactionData, feePayer, signer)
+    }
+
+    override suspend fun simulateSolanaGaslessTransaction(
+        userWalletId: UserWalletId,
+        network: Network,
+        transactionData: TransactionData,
+        feePayer: String,
+    ): Result<SolanaGaslessSimulation>? = withContext(dispatchers.io) {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        (walletManager as? SolanaGaslessTransactionSigner)?.simulateGaslessTransaction(transactionData, feePayer)
     }
 
     override suspend fun getScaledUiAmountMultiplier(
