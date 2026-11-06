@@ -2,12 +2,14 @@ package com.tangem.features.polymarket.impl.main.addfunds
 
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.navigate
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.polymarket.impl.main.addfunds.network.PolymarketChooseNetworkComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 
 internal fun AppComponentContext.polymarketFundingSheetSlot(
@@ -24,6 +26,16 @@ internal fun AppComponentContext.polymarketFundingSheetSlot(
             PolymarketFundingSheetConfig.AddFunds -> PolymarketAddFundsComponent(
                 appComponentContext = childByContext(componentContext),
                 params = PolymarketAddFundsComponent.Params(callback = callback),
+            )
+            is PolymarketFundingSheetConfig.ChooseNetwork -> PolymarketChooseNetworkComponent(
+                appComponentContext = childByContext(componentContext),
+                params = PolymarketChooseNetworkComponent.Params(
+                    receiveConfigs = config.receiveConfigs,
+                    onNetworkClick = { receiveConfig ->
+                        navigation.activate(PolymarketFundingSheetConfig.Receive(config = receiveConfig))
+                    },
+                    onDismiss = { navigation.dismissIfShown(config) },
+                ),
             )
             is PolymarketFundingSheetConfig.Receive -> tokenReceiveComponentFactory.create(
                 context = childByContext(componentContext),
