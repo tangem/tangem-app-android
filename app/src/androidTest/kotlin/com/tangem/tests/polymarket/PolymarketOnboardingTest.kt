@@ -7,7 +7,6 @@ import com.tangem.common.utils.findWireMockRequestQueryParamValues
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.getWireMockRequestCountByQueryParam
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.scenarios.POLYMARKET_AB_TEST_ON
 import com.tangem.scenarios.POLYMARKET_AB_TEST_PROPERTY
 import com.tangem.scenarios.POLYMARKET_APPROVALS_PATH
@@ -50,10 +49,6 @@ import com.tangem.core.res.R as CoreResR
 
 @HiltAndroidTest
 class PolymarketOnboardingTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.AND_16204_POLYMARKET_ENABLED.rawName to true,
-    )
 
     @Test
     @Ignore("[REDACTED_JIRA]")

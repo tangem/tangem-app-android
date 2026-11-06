@@ -1,6 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.card.BackupValidator
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
@@ -18,7 +17,6 @@ import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.card.DefaultResetCardUseCase
-import com.tangem.tap.domain.card.FirmwareFeatureToggles
 import com.tangem.tap.domain.scanCard.DefaultScanCardProcessor
 import dagger.Module
 import dagger.Provides
@@ -33,12 +31,6 @@ internal object CardDomainModule {
     @Provides
     fun provideScanCardProcessor(scanCardProcessor: DefaultScanCardProcessor): ScanCardProcessor {
         return scanCardProcessor
-    }
-
-    @Provides
-    @Singleton
-    fun provideFirmwareFeatureToggles(featureTogglesManager: FeatureTogglesManager): FirmwareFeatureToggles {
-        return FirmwareFeatureToggles(featureTogglesManager)
     }
 
     @Provides

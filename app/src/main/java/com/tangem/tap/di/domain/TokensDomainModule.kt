@@ -29,7 +29,6 @@ import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -176,7 +175,6 @@ internal object TokensDomainModule {
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
-        polymarketFeatureToggles: PolymarketFeatureToggles,
         collectiblesFeatureToggles: CollectiblesFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletBalanceFetcher {
@@ -197,7 +195,6 @@ internal object TokensDomainModule {
             predictionAccountStatusFetcher = predictionAccountStatusFetcher,
             collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
             moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
-            polymarketFeatureToggles = polymarketFeatureToggles,
             collectiblesFeatureToggles = collectiblesFeatureToggles,
             dispatchers = dispatchers,
         )
