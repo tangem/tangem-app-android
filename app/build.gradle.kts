@@ -215,6 +215,8 @@ dependencies {
         externalImplementation(projects.spend.pushProvisioning.noOp)
         releaseImplementation(projects.spend.pushProvisioning.noOp)
     }
+    implementation(projects.store.features.cardSettings.api)
+    implementation(projects.store.features.cardSettings.impl)
     implementation(projects.store.datasource)
     implementation(projects.grow.datasource)
     implementation(projects.core.utils)
