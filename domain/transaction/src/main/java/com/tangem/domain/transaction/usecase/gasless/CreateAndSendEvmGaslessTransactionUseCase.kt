@@ -44,10 +44,8 @@ import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessTransactionData
-import com.tangem.domain.transaction.models.GaslessTransactionData.*
 import com.tangem.domain.transaction.models.GaslessYieldWithdraw
 import com.tangem.domain.transaction.models.TransactionFeeExtended
-import com.tangem.domain.transaction.usecase.gasless.CreateAndSendEvmGaslessTransactionUseCase.GaslessPayload.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigInteger
 
@@ -80,7 +78,7 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                 val context = prepareGaslessContext(userWallet, uncompiledTxDataList, fee)
                 val signedData = signGaslessTransactionByUser(userWallet, context)
                 signAndSendTransactionOnBackend(context, signedData).also {
-                    if (fee.gaslessFeePlan.upgradesYieldModule()) {
+                    if (uncompiledTxDataList.upgradesYieldModule() || fee.gaslessFeePlan.upgradesYieldModule()) {
                         walletManagersFacade.resetYieldSendUpgradeDecision(
                             userWalletId = userWallet.walletId,
                             network = context.currency.network,
@@ -156,7 +154,7 @@ class CreateAndSendEvmGaslessTransactionUseCase(
             calls = calls,
             feeObj = feeObj,
             nonce = gaslessContractNonce,
-            plan = fee.gaslessFeePlan,
+            plan = unwrapFeePlanIfNeeded(plan = fee.gaslessFeePlan, transactionDataList = transactionDataList),
             withdrawGasLimit = fee.withdrawGasLimit,
             approveGasLimit = fee.approveGasLimit,
         )
@@ -482,9 +480,31 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                 data = callData.data,
             )
 
+        /**
+         * The yield module is one per wallet: when a user call already upgrades it, the fee withdraw, which runs after
+         * the user calls, drops its own upgrade instead of upgrading the module twice in one batch.
+         */
+        internal fun unwrapFeePlanIfNeeded(
+            plan: GaslessFeePlan?,
+            transactionDataList: List<TransactionData.Uncompiled>,
+        ): GaslessFeePlan? {
+            val tokenPay = plan as? GaslessFeePlan.TokenPay ?: return plan
+            val withdraw = tokenPay.yieldWithdraw ?: return plan
+            if (!transactionDataList.upgradesYieldModule()) return plan
+
+            return tokenPay.copy(
+                yieldWithdraw = withdraw.copy(callData = withdraw.callData.unwrapYieldModuleUpgrade()),
+            )
+        }
+
         internal fun GaslessFeePlan?.upgradesYieldModule(): Boolean {
             val withdrawCallData = (this as? GaslessFeePlan.TokenPay)?.yieldWithdraw?.callData
             return withdrawCallData is EthereumYieldSupplyUpgradeToAndCallCallData
+        }
+
+        private fun List<TransactionData.Uncompiled>.upgradesYieldModule(): Boolean = any { transactionData ->
+            val callData = (transactionData.extras as? EthereumTransactionExtras)?.callData
+            callData is EthereumYieldSupplyUpgradeToAndCallCallData
         }
 
         fun BigInteger.toFormattedHex(bytes: Int): String {
