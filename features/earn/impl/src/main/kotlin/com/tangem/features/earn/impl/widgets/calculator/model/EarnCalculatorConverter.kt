@@ -21,6 +21,7 @@ import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnProjectionB
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnStepperUM
 import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnProjectionResult
+import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.MathContext
@@ -40,7 +41,9 @@ internal class EarnCalculatorConverter @Inject constructor() {
     ): EarnCalculatorUM = EarnCalculatorUM(
         incentive = incentiveBadge(incentiveRate),
         total = stringReference(result.total.format { fiat(appCurrency.code, appCurrency.symbol) }),
-        earned = stringReference(EARNED_SIGN + result.earned.format { fiat(appCurrency.code, appCurrency.symbol) }),
+        earned = stringReference(
+            StringsSigns.PLUS + result.earned.format { fiat(appCurrency.code, appCurrency.symbol) },
+        ),
         earnedLabel = EarnCalculatorTexts.earnedIn,
         horizon = horizonSelect(selected = input.horizon, onSelect = onHorizonSelect),
         bars = bars(result = result, input = input).toImmutableList(),
@@ -164,6 +167,5 @@ internal class EarnCalculatorConverter @Inject constructor() {
         const val MIN_LAYER_SHARE = 0.05f
         const val AXIS_LABELS_COUNT = 3
         const val MONTHS_IN_YEAR = 12
-        const val EARNED_SIGN = "+"
     }
 }
