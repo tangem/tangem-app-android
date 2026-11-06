@@ -1,6 +1,7 @@
 package com.tangem.features.earn.staking.impl
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.core.ui.R
@@ -89,17 +90,30 @@ internal class PooledStakingEarnProduct @Inject constructor(
     override suspend fun apyHistory(params: EarnProduct.Params, period: EarnPeriod): Either<Throwable, EarnApyHistory> =
         EarnApyHistory(points = emptyList(), average = null).right()
 
-    override suspend fun refresh(params: EarnProduct.Params): Either<Throwable, Unit> = either {
-        runSuspendCatching {
-            p2pEthPoolRepository.fetchVaults()
-            p2pEthPoolRepository.fetchVaultLimits()
-        }.fold(onSuccess = { Either.Right(Unit) }, onFailure = { Either.Left(it) }).bind()
+    /**
+     * Other currencies have nothing to refresh, so they end in `Right` without a request: the Earn refresh runs every
+     * product for the selected currency. The repository swallows the failures of the vault requests (it stores an
+     * empty list), so `Left` reports a failing balance fetch and unexpected exceptions only.
+     */
+    override suspend fun refresh(params: EarnProduct.Params): Either<Throwable, Unit> {
+        if (!params.currency.isPoolCurrency()) return Unit.right()
 
-        val stakingId = stakingIdFactory.create(params.userWalletId, params.currency)
-            .mapLeft { error -> IllegalStateException("Can't create the staking id: $error") }
-            .bind()
+        return either {
+            runSuspendCatching {
+                p2pEthPoolRepository.fetchVaults()
+                p2pEthPoolRepository.fetchVaultLimits()
+            }.fold(onSuccess = { Either.Right(Unit) }, onFailure = { Either.Left(it) }).bind()
 
-        singleStakingBalanceFetcher(SingleStakingBalanceFetcher.Params(params.userWalletId, stakingId)).bind()
+            val stakingId = stakingIdFactory.create(params.userWalletId, params.currency).getOrElse { error ->
+                when (error) {
+                    StakingIdFactory.Error.UnsupportedCurrency -> return@either
+                    is StakingIdFactory.Error.UnableToGetAddress ->
+                        raise(IllegalStateException("Can't create the staking id: $error"))
+                }
+            }
+
+            singleStakingBalanceFetcher(SingleStakingBalanceFetcher.Params(params.userWalletId, stakingId)).bind()
+        }
     }
 
     override fun actionHandler(params: EarnProduct.Params, navigator: EarnNavigator): EarnActionHandler =
@@ -125,6 +139,8 @@ internal class PooledStakingEarnProduct @Inject constructor(
             }
         }
 
-    private fun CryptoCurrencyStatus.isPoolCurrency(): Boolean =
-        currency is CryptoCurrency.Coin && StakingIntegrationID.create(currency.id) == StakingIntegrationID.P2PEthPool
+    private fun CryptoCurrencyStatus.isPoolCurrency(): Boolean = currency.isPoolCurrency()
+
+    private fun CryptoCurrency.isPoolCurrency(): Boolean =
+        this is CryptoCurrency.Coin && StakingIntegrationID.create(id) == StakingIntegrationID.P2PEthPool
 }

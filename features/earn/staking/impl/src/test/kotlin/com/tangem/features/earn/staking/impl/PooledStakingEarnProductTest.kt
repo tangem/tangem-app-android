@@ -19,6 +19,7 @@ import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -37,6 +38,7 @@ import com.tangem.features.earn.staking.impl.fixtures.currencyStatus
 import com.tangem.features.earn.staking.impl.fixtures.polygonToken
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.staking.MockStaking
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.confirmVerified
@@ -48,6 +50,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -70,6 +73,17 @@ internal class PooledStakingEarnProductTest {
         singleStakingBalanceFetcher = singleStakingBalanceFetcher,
         mapper = PooledStakingMapper(),
     )
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(
+            accountStatusListSupplier,
+            stakingRepository,
+            p2pEthPoolRepository,
+            stakingIdFactory,
+            singleStakingBalanceFetcher,
+        )
+    }
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val ethereum = coin(Blockchain.Ethereum)
@@ -337,11 +351,54 @@ internal class PooledStakingEarnProductTest {
                 (model.fetcherFailure?.left() ?: Unit.right())
         }
 
+        @Test
+        fun `GIVEN an unsupported staking id WHEN refresh THEN Right and the balance is not fetched`() = runTest {
+            // Arrange
+            arrange(RefreshModel(name = "unsupported", idFailure = StakingIdFactory.Error.UnsupportedCurrency))
+
+            // Act
+            val actual = product.refresh(params)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 0) { singleStakingBalanceFetcher(any()) }
+        }
+
         private fun provideTestModels() = listOf(
             RefreshModel(name = "fetchVaults throws", vaultsFailure = IllegalStateException("vaults")),
             RefreshModel(name = "fetchVaultLimits throws", limitsFailure = IllegalStateException("limits")),
-            RefreshModel(name = "no staking id", idFailure = StakingIdFactory.Error.UnsupportedCurrency),
+            RefreshModel(
+                name = "no address",
+                idFailure = StakingIdFactory.Error.UnableToGetAddress(StakingIntegrationID.P2PEthPool),
+            ),
             RefreshModel(name = "balance fetcher fails", fetcherFailure = IllegalStateException("balance")),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class RefreshOfOtherCurrencies {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a currency that is not a pool currency WHEN refresh THEN Right and nothing is fetched`(
+            model: CurrencyModel,
+        ) = runTest {
+            // Act
+            val actual = product.refresh(EarnProduct.Params(userWalletId, model.currency))
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 0) { p2pEthPoolRepository.fetchVaults(any()) }
+            coVerify(exactly = 0) { p2pEthPoolRepository.fetchVaultLimits() }
+            coVerify(exactly = 0) { stakingIdFactory.create(any<UserWalletId>(), any<CryptoCurrency>()) }
+            coVerify(exactly = 0) { singleStakingBalanceFetcher(any()) }
+        }
+
+        private fun provideTestModels() = listOf(
+            CurrencyModel(name = "Bitcoin coin", currency = coin(Blockchain.Bitcoin)),
+            CurrencyModel(name = "Solana coin", currency = coin(Blockchain.Solana)),
+            CurrencyModel(name = "Ethereum token", currency = polygonToken()),
         )
     }
 
@@ -362,6 +419,10 @@ internal class PooledStakingEarnProductTest {
             suffix = CryptoCurrency.ID.Suffix.RawID(rawId = requireNotNull(currency.id.rawCurrencyId).value),
         )
         return currency.copy(id = id)
+    }
+
+    internal data class CurrencyModel(val name: String, val currency: CryptoCurrency) {
+        override fun toString(): String = name
     }
 
     internal data class RefreshModel(
