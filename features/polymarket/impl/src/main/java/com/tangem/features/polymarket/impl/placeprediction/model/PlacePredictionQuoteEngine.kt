@@ -20,6 +20,8 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCa
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.features.polymarket.impl.common.funding.PredictionFundingRequisites
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
@@ -94,6 +96,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
     private val predictionBalancePoller: PredictionBalancePoller,
     refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
+    receiveSheetFactory: PolymarketReceiveSheetFactory,
 ) {
 
     private val quoteJobHolder = JobHolder()
@@ -110,8 +113,12 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         activeStatus = activeStatus,
         router = router,
         messageSender = messageSender,
-        refreshInteractor = refreshPredictionDepositRequisitesInteractor,
-        scope = scope,
+        receiveSheetFactory = receiveSheetFactory,
+        requisites = PredictionFundingRequisites(
+            refreshInteractor = refreshPredictionDepositRequisitesInteractor,
+            userWalletId = params.userWalletId,
+            scope = scope,
+        ),
     )
 
     private var isNegRiskMarket: Boolean? = null
