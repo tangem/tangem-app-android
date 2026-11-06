@@ -28,12 +28,17 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.ui.components.ForYouEarnOpportunitiesTokenList
+import com.tangem.features.foryou.impl.ui.components.ForYouEarnOpportunitiesTokenListV2
 import com.tangem.features.foryou.impl.ui.preview.ForYouEarnOpportunitiesPreviewData
 
 private const val INLINE_CONTENT_PADDING_COEF = 2.2f
 
 @Composable
-internal fun ForYouEarnOpportunities(earnOpportunitiesUM: EarnOpportunitiesUM, modifier: Modifier = Modifier) {
+internal fun ForYouEarnOpportunities(
+    earnOpportunitiesUM: EarnOpportunitiesUM,
+    modifier: Modifier = Modifier,
+    isRedesignedTokenRowsEnabled: Boolean = false,
+) {
     Column(
         modifier = modifier,
     ) {
@@ -82,10 +87,17 @@ internal fun ForYouEarnOpportunities(earnOpportunitiesUM: EarnOpportunitiesUM, m
             }
         }
 
-        ForYouEarnOpportunitiesTokenList(
-            groups = earnOpportunitiesUM.tokenList,
-            modifier = Modifier.padding(top = 16.dp),
-        )
+        if (isRedesignedTokenRowsEnabled) {
+            ForYouEarnOpportunitiesTokenListV2(
+                groups = earnOpportunitiesUM.tokenList,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+        } else {
+            ForYouEarnOpportunitiesTokenList(
+                groups = earnOpportunitiesUM.tokenList,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+        }
 
         if (earnOpportunitiesUM is EarnOpportunitiesUM.Content) {
             TangemButton(
