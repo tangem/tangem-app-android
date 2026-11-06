@@ -16,7 +16,7 @@ internal class PlacePredictionQuoteFreshness @Inject constructor(
 
     fun refuseIfStale(quote: SignableQuoteUM): Boolean {
         val ageMillis = currentTimeProvider.nowMillis() - quote.receivedAtMillis
-        if (ageMillis <= MAX_QUOTE_AGE_MILLIS) return false
+        if (ageMillis in 0..MAX_QUOTE_AGE_MILLIS) return false
 
         logger.i("Refused a quote $ageMillis ms old at the tap")
         messageSender.send(
