@@ -62,7 +62,6 @@ internal class PooledStakingMapper @Inject constructor() {
     }
 
     fun state(status: CryptoCurrencyStatus, availability: StakingAvailability): EarnProductState {
-        // A Loading status has no balances yet: a stake cannot be told from none, a full pool looks unavailable.
         if (status.value is CryptoCurrencyStatus.Loading) return EarnProductState.Loading
 
         val option = offerOf(status, availability) ?: return EarnProductState.Unavailable
@@ -84,8 +83,13 @@ internal class PooledStakingMapper @Inject constructor() {
         )
     }
 
-    /** `Full` pools are offered only to users who already stake; other kinds of integration are not this product. */
+    /**
+     * `Full` pools are offered only to users who already stake; other kinds of integration are not this product.
+     * A Loading or errored status carries no balances, so a stake cannot be told from none and nothing is offered.
+     */
     private fun offerOf(status: CryptoCurrencyStatus, availability: StakingAvailability): StakingOption.P2PEthPool? {
+        if (status.value is CryptoCurrencyStatus.Loading || status.value.isError) return null
+
         val option = availability.optionOrNull as? StakingOption.P2PEthPool ?: return null
         val hasPosition = status.value.stakingBalanceData is StakingBalance.Data.P2PEthPool
 

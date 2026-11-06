@@ -22,6 +22,7 @@ import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.staking.MockStaking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -149,6 +150,37 @@ internal class PooledStakingMapperSummaryTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StatusWithoutBalances {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a status without balances WHEN summary THEN no entry`(model: NoBalancesModel) {
+            // Arrange
+            val status = CryptoCurrencyStatus(currency = ethereum, value = model.value)
+
+            // Act
+            val actual = mapper.summary(userWalletId, status, StakingAvailability.Available(option()))
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        private fun provideTestModels() = listOf(
+            NoBalancesModel("Loading", CryptoCurrencyStatus.Loading),
+            NoBalancesModel(
+                name = "Unreachable",
+                value = CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
+            ),
+            NoBalancesModel("NoAmount", CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null)),
+            NoBalancesModel(
+                name = "MissedDerivation",
+                value = CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null),
+            ),
+        )
+    }
+
     private fun status(hasPosition: Boolean): CryptoCurrencyStatus = currencyStatus(
         currency = ethereum,
         stakingBalance = MockStaking.p2pBalance(
@@ -177,6 +209,10 @@ internal class PooledStakingMapperSummaryTest {
                 SummaryModel(availability, hasPosition = true, expectedAvailability = null),
             )
         }
+    }
+
+    internal data class NoBalancesModel(val name: String, val value: CryptoCurrencyStatus.Value) {
+        override fun toString(): String = name
     }
 
     internal data class SummaryModel(
