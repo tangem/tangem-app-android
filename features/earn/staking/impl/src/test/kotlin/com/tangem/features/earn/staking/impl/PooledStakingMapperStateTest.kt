@@ -271,6 +271,36 @@ internal class PooledStakingMapperStateTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ErroredStatus {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an errored status WHEN state THEN Unavailable`(model: ErroredStatusModel) {
+            // Arrange
+            val status = CryptoCurrencyStatus(currency = ethereum, value = model.value)
+
+            // Act
+            val actual = mapper.state(status, StakingAvailability.Available(option()))
+
+            // Assert
+            assertThat(actual).isEqualTo(EarnProductState.Unavailable)
+        }
+
+        private fun provideTestModels() = listOf(
+            ErroredStatusModel(
+                name = "Unreachable",
+                value = CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
+            ),
+            ErroredStatusModel("NoAmount", CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null)),
+            ErroredStatusModel(
+                name = "MissedDerivation",
+                value = CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null),
+            ),
+        )
+    }
+
     private fun status(position: StakingBalance? = null): CryptoCurrencyStatus =
         currencyStatus(currency = ethereum, stakingBalance = position)
 
@@ -308,6 +338,10 @@ internal class PooledStakingMapperStateTest {
     }
 
     internal data class AvailabilityModel(val name: String, val availability: StakingAvailability) {
+        override fun toString(): String = name
+    }
+
+    internal data class ErroredStatusModel(val name: String, val value: CryptoCurrencyStatus.Value) {
         override fun toString(): String = name
     }
 
