@@ -374,6 +374,24 @@ internal class YieldSupplyModelTest {
     }
 
     @Test
+    fun `GIVEN unchanged currency status WHEN pending enter saved THEN processing enter`() = runTest {
+        // Arrange
+        val pendingStatusFlow = MutableStateFlow<YieldSupplyPendingStatus?>(null)
+        every { enterStatusFlowUseCase(any(), any()) } returns pendingStatusFlow
+        val model = createModel()
+        advanceUntilIdle()
+        val pendingEnter = YieldSupplyPendingStatus.Enter(txIds = listOf("0x1"))
+        coEvery { enterStatusUseCase(any(), any()) } returns pendingEnter.right()
+
+        // Act
+        pendingStatusFlow.value = pendingEnter
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiStateLegacy.value).isEqualTo(YieldSupplyUM.Processing.Enter)
+    }
+
+    @Test
     fun `GIVEN processing state WHEN cached status emitted THEN keeps processing`() = runTest {
         // Arrange — first emission sets Processing.Enter, second (from cache) must be ignored
         val firstList: AccountStatusList = mockk()

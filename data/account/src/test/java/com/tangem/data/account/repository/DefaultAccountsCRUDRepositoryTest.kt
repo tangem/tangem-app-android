@@ -14,7 +14,6 @@ import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
@@ -52,7 +51,6 @@ class DefaultAccountsCRUDRepositoryTest {
     private val archivedAccountsInnerStore = RuntimeStateStore<List<ArchivedAccount>?>(defaultValue = null)
     private val archivedAccountsStore = ArchivedAccountsStore(runtimeStore = archivedAccountsInnerStore)
 
-    private val userTokensSaver: UserTokensSaver = mockk()
     private val archivedAccountsETagStore: RuntimeStateStore<Map<String, String?>> = mockk(relaxUnitFun = true)
 
     private val convertersContainer: AccountConverterFactoryContainer = mockk()
@@ -69,7 +67,6 @@ class DefaultAccountsCRUDRepositoryTest {
         walletAccountsSaver = walletAccountsSaver,
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         archivedAccountsStoreFactory = archivedAccountsStoreFactory,
-        userTokensSaver = userTokensSaver,
         archivedAccountsETagStore = archivedAccountsETagStore,
         convertersContainer = convertersContainer,
         resources = resources,
@@ -111,6 +108,20 @@ class DefaultAccountsCRUDRepositoryTest {
             accountListConverter,
             cryptoPortfolioConverter,
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SyncTokens {
+
+        @Test
+        fun `GIVEN wallet WHEN syncTokens THEN the owner of the accounts document syncs its tokens`() = runTest {
+            // Act
+            repository.syncTokens(userWalletId)
+
+            // Assert
+            coVerify(exactly = 1) { walletAccountsSaver.syncTokens(userWalletId) }
+        }
     }
 
     @Nested

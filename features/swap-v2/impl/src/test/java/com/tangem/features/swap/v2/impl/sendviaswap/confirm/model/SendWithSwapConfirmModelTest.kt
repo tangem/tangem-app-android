@@ -288,7 +288,9 @@ internal class SendWithSwapConfirmModelTest {
                     expressError = rejectedError,
                     onFailedTxEmailClick = any(),
                     popBack = any(),
+                    isSwapAttemptAlert = true,
                     providerName = "ChangeHero",
+                    amountCurrency = primaryCurrencyStatus.currency,
                 )
             }
             model.onDestroy()
@@ -313,7 +315,9 @@ internal class SendWithSwapConfirmModelTest {
                         expressError = rejectedError,
                         onFailedTxEmailClick = any(),
                         popBack = any(),
+                        isSwapAttemptAlert = true,
                         providerName = null,
+                        amountCurrency = primaryCurrencyStatus.currency,
                     )
                 }
                 model.onDestroy()

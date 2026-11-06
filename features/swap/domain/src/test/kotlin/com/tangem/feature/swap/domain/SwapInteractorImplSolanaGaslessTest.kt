@@ -1,7 +1,5 @@
 package com.tangem.feature.swap.domain
 
-import com.tangem.domain.swap.models.SwapPairModel
-import com.tangem.domain.models.wallet.UserWalletId
 import android.util.Base64
 import arrow.core.left
 import arrow.core.right
@@ -14,21 +12,24 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.swap.models.SwapPairModel
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.SolanaGaslessError
-import com.tangem.domain.transaction.error.SolanaGaslessSendError
+import com.tangem.domain.transaction.models.GaslessProtocolData
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
-import com.tangem.features.send.api.subcomponents.feeSelector.params.SponsoredFeeAvailability
 import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.ui.*
+import com.tangem.features.send.api.subcomponents.feeSelector.params.SponsoredFeeAvailability
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -52,6 +54,13 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
 
     private val solanaNetwork = Blockchain.Solana.toNetworkId()
     private val lastReducedBalanceBy = BigDecimal.ZERO
+    private val sponsoredFee = TransactionFeeExtended(
+        transactionFee = TransactionFee.Single(
+            normal = Fee.Common(amount = Amount(blockchain = Blockchain.Solana, value = BigDecimal.ZERO)),
+        ),
+        feeTokenId = mockk(),
+        gaslessProtocolData = GaslessProtocolData.Solana(feePayer = "FeePayer123", network = mockk()),
+    )
 
     @BeforeEach
     fun setup() {
@@ -94,8 +103,16 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
             val patched = sut.applySwapFee(state, swapFee, lastReducedBalanceBy)
 
             // Assert
+            val expectedFee = TransactionFeeExtended(
+                transactionFee = TransactionFee.Single(Fee.Common(swapFee.fee.amount.copy(value = BigDecimal.ZERO))),
+                feeTokenId = swapFee.selectedFeeToken.currency.id,
+                gaslessProtocolData = GaslessProtocolData.Solana(
+                    feePayer = "FeePayer123",
+                    network = state.fromTokenInfo.swapCurrencyStatus.currency.network,
+                ),
+            )
             assertThat(patched.preparedSwapConfigState.balanceStatus)
-                .isEqualTo(SwapBalanceStatus.SponsoredFee(feePayer = "FeePayer123"))
+                .isEqualTo(SwapBalanceStatus.SponsoredFee(expectedFee))
             coVerify {
                 solanaGaslessSwapResolver.resolveFeePayer(
                     fromSwapCurrencyStatus = state.fromTokenInfo.swapCurrencyStatus,
@@ -106,7 +123,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
         }
 
     @Test
-    fun `GIVEN sponsored fee picked AND resolver returns null WHEN applySwapFee THEN balanceStatus is Pending`() =
+    fun `GIVEN sponsored fee picked AND no sponsor WHEN applySwapFee THEN empty SOL balance reads as InsufficientFee`() =
         runTest {
             // Arrange
             coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
@@ -118,24 +135,8 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
             val patched = sut.applySwapFee(state, swapFee, lastReducedBalanceBy)
 
             // Assert
-            assertThat(patched.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
-        }
-
-    @Test
-    fun `GIVEN sponsored fee picked AND gasless suppressed WHEN applySwapFee THEN Pending and resolver not called`() =
-        runTest {
-            // Arrange
-            coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
-            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
-            val state = buildSolanaQuotesLoadedState(fromBalance = BigDecimal("10"))
-            val swapFee = buildSolanaSwapFee(feeValue = BigDecimal.ZERO, isSponsored = true)
-
-            // Act
-            val patched = sut.applySwapFee(state, swapFee, lastReducedBalanceBy, isSolanaGaslessSuppressed = true)
-
-            // Assert
-            assertThat(patched.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
-            coVerify(exactly = 0) { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) }
+            assertThat(patched.preparedSwapConfigState.balanceStatus)
+                .isInstanceOf(SwapBalanceStatus.InsufficientFee::class.java)
         }
 
     @Test
@@ -319,28 +320,33 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
     // region onSwap
 
     @Test
-    fun `GIVEN SponsoredFee WHEN onSwap THEN gasless use case called with fee payer and sendTransactionUseCase not called, result TxSent with backend signature`() =
+    fun `GIVEN SponsoredFee WHEN onSwap THEN gasless send gets the sponsored fee, result TxSent with backend signature`() =
         runTest {
             // Arrange
+            val from = solanaSwapCurrencyStatus()
+            // The fee goes out with the sponsor resolved at send, on the network of the account that signs
+            val expectedFee = sponsoredFee.copy(
+                gaslessProtocolData = GaslessProtocolData.Solana(feePayer = "FeePayer123", network = from.currency.network),
+            )
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
             mockkStatic(Base64::class)
             every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
             coEvery {
-                createAndSendSolanaGaslessTransactionUseCase(
+                createAndSendGaslessTransactionUseCase(
                     userWallet = any(),
-                    network = any(),
                     transactionData = any(),
-                    feePayer = "FeePayer123",
+                    fee = expectedFee,
                 )
             } returns "sig".right()
 
             // Act
             val result = sut.onSwap(
-                fromSwapCurrencyStatus = solanaSwapCurrencyStatus(),
+                fromSwapCurrencyStatus = from,
                 toSwapCurrencyStatus = solanaSwapCurrencyStatus(),
                 swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
                 swapData = solanaDexSwapData(),
                 amountToSwap = "1.0",
-                balanceStatus = SwapBalanceStatus.SponsoredFee(feePayer = "FeePayer123"),
+                balanceStatus = SwapBalanceStatus.SponsoredFee(sponsoredFee),
                 fee = null,
                 expressOperationType = ExpressOperationType.SWAP,
                 isTangemPayWithdrawal = false,
@@ -349,6 +355,9 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
             // Assert
             assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
             assertThat((result as SwapTransactionState.TxSent).txHash).isEqualTo("sig")
+            coVerify(exactly = 1) {
+                createAndSendGaslessTransactionUseCase(userWallet = any(), transactionData = any(), fee = expectedFee)
+            }
             coVerify(exactly = 0) {
                 sendTransactionUseCase(txData = any(), userWallet = any(), network = any())
             }
@@ -369,16 +378,16 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
     fun `GIVEN SponsoredFee AND service returns BlockhashExpired WHEN onSwap THEN Error SolanaGaslessError BlockhashExpired`() =
         runTest {
             // Arrange
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
             mockkStatic(Base64::class)
             every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
             coEvery {
-                createAndSendSolanaGaslessTransactionUseCase(
+                createAndSendGaslessTransactionUseCase(
                     userWallet = any(),
-                    network = any(),
                     transactionData = any(),
-                    feePayer = any(),
+                    fee = any(),
                 )
-            } returns SolanaGaslessSendError.Service(SolanaGaslessError.BlockhashExpired).left()
+            } returns SendTransactionError.SolanaGasless(SolanaGaslessError.BlockhashExpired).left()
 
             // Act
             val result = sut.onSwap(
@@ -387,7 +396,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
                 swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
                 swapData = solanaDexSwapData(),
                 amountToSwap = "1.0",
-                balanceStatus = SwapBalanceStatus.SponsoredFee(feePayer = "FeePayer123"),
+                balanceStatus = SwapBalanceStatus.SponsoredFee(sponsoredFee),
                 fee = null,
                 expressOperationType = ExpressOperationType.SWAP,
                 isTangemPayWithdrawal = false,
@@ -401,17 +410,17 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
     fun `GIVEN SponsoredFee AND service may have sent with signature WHEN onSwap THEN TxSent tracked`() =
         runTest {
             // Arrange
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
             mockkStatic(Base64::class)
             every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
             val from = solanaSwapCurrencyStatus()
             coEvery {
-                createAndSendSolanaGaslessTransactionUseCase(
+                createAndSendGaslessTransactionUseCase(
                     userWallet = any(),
-                    network = any(),
                     transactionData = any(),
-                    feePayer = any(),
+                    fee = any(),
                 )
-            } returns SolanaGaslessSendError.Service(SolanaGaslessError.MaybeSent(signature = "sig")).left()
+            } returns SendTransactionError.SolanaGasless(SolanaGaslessError.MaybeSent(signature = "sig")).left()
 
             // Act
             val result = sut.onSwap(
@@ -420,7 +429,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
                 swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
                 swapData = solanaDexSwapData(),
                 amountToSwap = "1.0",
-                balanceStatus = SwapBalanceStatus.SponsoredFee(feePayer = "FeePayer123"),
+                balanceStatus = SwapBalanceStatus.SponsoredFee(sponsoredFee),
                 fee = null,
                 expressOperationType = ExpressOperationType.SWAP,
                 isTangemPayWithdrawal = false,
@@ -445,17 +454,17 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
     fun `GIVEN SponsoredFee AND service may have sent without signature WHEN onSwap THEN MaybeSent error`() =
         runTest {
             // Arrange
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
             mockkStatic(Base64::class)
             every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
             val from = solanaSwapCurrencyStatus()
             coEvery {
-                createAndSendSolanaGaslessTransactionUseCase(
+                createAndSendGaslessTransactionUseCase(
                     userWallet = any(),
-                    network = any(),
                     transactionData = any(),
-                    feePayer = any(),
+                    fee = any(),
                 )
-            } returns SolanaGaslessSendError.Service(SolanaGaslessError.MaybeSent(signature = null)).left()
+            } returns SendTransactionError.SolanaGasless(SolanaGaslessError.MaybeSent(signature = null)).left()
 
             // Act
             val result = sut.onSwap(
@@ -464,7 +473,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
                 swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
                 swapData = solanaDexSwapData(),
                 amountToSwap = "1.0",
-                balanceStatus = SwapBalanceStatus.SponsoredFee(feePayer = "FeePayer123"),
+                balanceStatus = SwapBalanceStatus.SponsoredFee(sponsoredFee),
                 fee = null,
                 expressOperationType = ExpressOperationType.SWAP,
                 isTangemPayWithdrawal = false,
@@ -482,16 +491,16 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
     fun `GIVEN SponsoredFee AND signing cancelled WHEN onSwap THEN Error TransactionError UserCancelledError`() =
         runTest {
             // Arrange
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
             mockkStatic(Base64::class)
             every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
             coEvery {
-                createAndSendSolanaGaslessTransactionUseCase(
+                createAndSendGaslessTransactionUseCase(
                     userWallet = any(),
-                    network = any(),
                     transactionData = any(),
-                    feePayer = any(),
+                    fee = any(),
                 )
-            } returns SolanaGaslessSendError.Signing(SendTransactionError.UserCancelledError).left()
+            } returns SendTransactionError.UserCancelledError.left()
 
             // Act
             val result = sut.onSwap(
@@ -500,7 +509,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
                 swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
                 swapData = solanaDexSwapData(),
                 amountToSwap = "1.0",
-                balanceStatus = SwapBalanceStatus.SponsoredFee(feePayer = "FeePayer123"),
+                balanceStatus = SwapBalanceStatus.SponsoredFee(sponsoredFee),
                 fee = null,
                 expressOperationType = ExpressOperationType.SWAP,
                 isTangemPayWithdrawal = false,
@@ -510,6 +519,78 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
             assertThat(result)
                 .isEqualTo(SwapTransactionState.Error.TransactionError(SendTransactionError.UserCancelledError))
         }
+
+    @Test
+    fun `GIVEN sponsored fee picked AND quote still Pending WHEN onSwap THEN sent sponsored by the resolved payer`() =
+        runTest {
+            // Arrange
+            mockkStatic(Base64::class)
+            every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
+            coEvery {
+                createAndSendGaslessTransactionUseCase(userWallet = any(), transactionData = any(), fee = any())
+            } returns "sig".right()
+
+            // Act
+            val result = sut.onSwap(
+                fromSwapCurrencyStatus = solanaSwapCurrencyStatus(),
+                toSwapCurrencyStatus = solanaSwapCurrencyStatus(),
+                swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
+                swapData = solanaDexSwapData(),
+                amountToSwap = "1.0",
+                balanceStatus = SwapBalanceStatus.Pending,
+                fee = buildSolanaSwapFee(feeValue = BigDecimal.ZERO, isSponsored = true),
+                expressOperationType = ExpressOperationType.SWAP,
+                isTangemPayWithdrawal = false,
+            )
+
+            // Assert
+            assertThat((result as SwapTransactionState.TxSent).txHash).isEqualTo("sig")
+            coVerify(exactly = 1) {
+                createAndSendGaslessTransactionUseCase(userWallet = any(), transactionData = any(), fee = match { (it.gaslessProtocolData as? GaslessProtocolData.Solana)?.feePayer == "FeePayer123" })
+            }
+            coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
+        }
+
+    @ParameterizedTest
+    @MethodSource("provideNoSponsorModels")
+    fun `GIVEN sponsored swap AND no sponsor at send WHEN onSwap THEN not sent at all`(model: NoSponsorModel) =
+        runTest {
+            // Arrange
+            mockkStatic(Base64::class)
+            every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns null
+
+            // Act
+            val result = sut.onSwap(
+                fromSwapCurrencyStatus = solanaSwapCurrencyStatus(),
+                toSwapCurrencyStatus = solanaSwapCurrencyStatus(),
+                swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
+                swapData = solanaDexSwapData(),
+                amountToSwap = "1.0",
+                balanceStatus = model.balanceStatus,
+                fee = buildSolanaSwapFee(feeValue = BigDecimal.ZERO, isSponsored = true),
+                expressOperationType = ExpressOperationType.SWAP,
+                isTangemPayWithdrawal = false,
+            )
+
+            // Assert
+            assertThat(result).isEqualTo(
+                SwapTransactionState.Error.SolanaGaslessError(SolanaGaslessError.ServiceUnavailable(code = null)),
+            )
+            coVerify(exactly = 0) {
+                createAndSendGaslessTransactionUseCase(userWallet = any(), transactionData = any(), fee = any())
+            }
+            coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
+        }
+
+    data class NoSponsorModel(val balanceStatus: SwapBalanceStatus)
+
+    private fun provideNoSponsorModels() = listOf(
+        NoSponsorModel(balanceStatus = SwapBalanceStatus.Pending),
+        // A sponsor stored in the quote that is gone by the send
+        NoSponsorModel(balanceStatus = SwapBalanceStatus.SponsoredFee(sponsoredFee)),
+    )
 
     @Test
     fun `GIVEN InsufficientFee WHEN onSwap THEN old path sendTransactionUseCase`() = runTest {
@@ -539,16 +620,46 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
         // Assert
         assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
         coVerify(exactly = 0) {
-            createAndSendSolanaGaslessTransactionUseCase(
+            createAndSendGaslessTransactionUseCase(
                 userWallet = any(),
-                network = any(),
                 transactionData = any(),
-                feePayer = any(),
+                fee = any(),
             )
         }
         coVerify(exactly = 1) {
             sendTransactionUseCase(txData = any(), userWallet = any(), network = any())
         }
+    }
+
+    @Test
+    fun `GIVEN quote still SponsoredFee AND paid fee picked WHEN onSwap THEN sent with the paid fee`() = runTest {
+        // Arrange
+        mockkStatic(Base64::class)
+        every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
+        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
+        coEvery {
+            sendTransactionUseCase(txData = any(), userWallet = any(), network = any())
+        } returns "sig".right()
+
+        // Act
+        val result = sut.onSwap(
+            fromSwapCurrencyStatus = solanaSwapCurrencyStatus(),
+            toSwapCurrencyStatus = solanaSwapCurrencyStatus(),
+            swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
+            swapData = solanaDexSwapData(),
+            amountToSwap = "1.0",
+            balanceStatus = SwapBalanceStatus.SponsoredFee(sponsoredFee),
+            fee = buildSolanaSwapFee(feeValue = BigDecimal("0.000005"), isSponsored = false),
+            expressOperationType = ExpressOperationType.SWAP,
+            isTangemPayWithdrawal = false,
+        )
+
+        // Assert
+        assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+        coVerify(exactly = 0) {
+            createAndSendGaslessTransactionUseCase(userWallet = any(), transactionData = any(), fee = any())
+        }
+        coVerify(exactly = 1) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
     }
 
     /** Backed by an explicit plain [UserWallet] mock so the `is UserWallet.Cold` demo check is false. */

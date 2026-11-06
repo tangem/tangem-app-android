@@ -10,6 +10,8 @@ import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 
 internal class MoneyAccountStatusValueDMConverterTest {
@@ -73,6 +75,26 @@ internal class MoneyAccountStatusValueDMConverterTest {
         // Assert
         assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Failed(customerId = "customer-1"))
         assertThat(restored).isEqualTo(failed.copy(source = StatusSource.CACHE))
+    }
+
+    @ParameterizedTest
+    @EnumSource(MoneyAccountStatusValue.Onboarding.Activating.Step::class)
+    fun `GIVEN activating onboarding WHEN cached and restored THEN step kept from cache`(
+        step: MoneyAccountStatusValue.Onboarding.Activating.Step,
+    ) {
+        // Arrange
+        val activating = MoneyAccountStatusValue.Onboarding.Activating(
+            source = StatusSource.ACTUAL,
+            customerId = "customer-1",
+            step = step,
+        )
+
+        // Act
+        val cached = converter.convert(activating)
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = cached)
+
+        // Assert
+        assertThat(restored).isEqualTo(activating.copy(source = StatusSource.CACHE))
     }
 
     @Test

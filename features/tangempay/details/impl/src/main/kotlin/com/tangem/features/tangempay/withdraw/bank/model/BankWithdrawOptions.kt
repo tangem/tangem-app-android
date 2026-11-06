@@ -8,7 +8,7 @@ import java.util.Currency
 /**
  * Everything the wizard needs to price a withdrawal, prepared by the hub before the flow starts. Both lists are
  * non-empty: [sources] lists every token the account holds a balance in, at least one of them available, and
- * [destinations] every rail the off-ramp offers.
+ * [destinations] every fixed-fee ACH or wire rail the off-ramp offers.
  *
  * A withdrawal must fall within [minAmount]..[maxAmount]; inside that range the selected token's balance caps it too.
  */

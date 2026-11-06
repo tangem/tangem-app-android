@@ -380,26 +380,68 @@ internal class TangemPayDetailsModelTest {
 
         // Assert
         verify(exactly = if (case.expectedOpened) 1 else 0) {
-            analytics.send(ofType<TangemPayAnalyticsEvents.TransactionInListClicked>())
+            analytics.send(
+                TangemPayAnalyticsEvents.TransactionInListClicked(
+                    product = TangemPayAnalyticsEvents.Product.CARD,
+                    type = "payment",
+                    status = "unknown",
+                ),
+            )
         }
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN banking details error sheet WHEN retry loads credentials THEN product instance credentials returned`() =
-        runTest {
-            // Arrange
-            coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
+    fun `GIVEN account WHEN current plan clicked THEN payment account plan event sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
 
-            // Act
-            val actual = model.loadBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
+        // Act
+        model.onClickCurrentPlan(mockk())
 
-            // Assert
-            assertThat(actual).isEqualTo(BANK_CREDENTIALS.right())
-            model.onDestroy()
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Tiers.CurrentPlanClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN credentials load WHEN banking details retried THEN account details screen opens`() = runTest {
+        // Arrange
+        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        val actual = model.retryBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        verify(exactly = 1) {
+            router.push(
+                route = TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(BANK_CREDENTIALS),
+                onComplete = any(),
+            )
         }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN credentials fail WHEN banking details retried THEN error returned and nothing opened`() = runTest {
+        // Arrange
+        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns
+            VisaApiError.Unspecified.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        val actual = model.retryBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
+        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN loaded status WHEN banking details error shown THEN details error event sent`() = runTest {
@@ -1363,25 +1405,6 @@ internal class TangemPayDetailsModelTest {
                 verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
                 payModel.onDestroy()
             }
-
-        @Test
-        fun `GIVEN loaded status WHEN banking details resolved on retry THEN account details screen opens`() = runTest {
-            // Arrange
-            val payModel = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Act
-            payModel.onVaBankingDetailsResolved(BANK_CREDENTIALS)
-
-            // Assert
-            verify(exactly = 1) {
-                router.push(
-                    route = TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(BANK_CREDENTIALS),
-                    onComplete = any(),
-                )
-            }
-            payModel.onDestroy()
-        }
 
         @ParameterizedTest
         @MethodSource("provideOnboardingDeepLinks")

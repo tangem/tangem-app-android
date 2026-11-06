@@ -32,12 +32,13 @@ dependencies {
     api(projects.domain.account)
     api(projects.domain.common)
     api(projects.domain.core)
+    api(projects.domain.quotes)
     // endregion
 
     // region Domain models
-    api(projects.domain.appCurrency.models)
     api(projects.domain.models)
     api(projects.domain.visa.models)
+    implementation(projects.features.moneyAccount.details.api)
     // endregion
 
     // region Libs

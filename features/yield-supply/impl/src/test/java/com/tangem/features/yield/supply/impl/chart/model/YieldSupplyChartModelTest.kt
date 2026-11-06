@@ -12,8 +12,10 @@ import com.tangem.domain.yield.supply.usecase.GetYieldAprHistoryUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetChartUseCase
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartAxisLabel
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartScale
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -68,7 +70,7 @@ internal class YieldSupplyChartModelTest {
     }
 
     @Test
-    fun `GIVEN chart data with values above one WHEN model created THEN Data state with integer percent format`() =
+    fun `GIVEN chart data with values above one WHEN model created THEN Data state with a whole-percent grid`() =
         runTest {
             // Arrange
             coEvery { getChartUseCase(any()) } returns chartData(y = listOf(2.0, 5.0, 10.0)).right()
@@ -80,14 +82,14 @@ internal class YieldSupplyChartModelTest {
             val state = model.uiState.value
             assertThat(state).isInstanceOf(YieldSupplyChartUM.Data::class.java)
             val data = state as YieldSupplyChartUM.Data
-            assertThat(data.chartData.percentFormat).isEqualTo("%.0f")
+            assertThat(data.chartData.scale).isEqualTo(YieldSupplyChartScale(max = 15.0, step = 5.0, decimals = 0))
             verify(exactly = 1) { callback.onStartLoading() }
             verify(exactly = 1) { callback.onSuccessLoad() }
             verify(exactly = 0) { callback.onLoadFail() }
         }
 
     @Test
-    fun `GIVEN chart data with values below one WHEN model created THEN Data state with one-decimal percent format`() =
+    fun `GIVEN chart data with values below one WHEN model created THEN Data state with a one-decimal grid`() =
         runTest {
             // Arrange
             coEvery { getChartUseCase(any()) } returns chartData(y = listOf(0.2, 0.5, 0.9)).right()
@@ -97,11 +99,11 @@ internal class YieldSupplyChartModelTest {
 
             // Assert
             val data = model.uiState.value as YieldSupplyChartUM.Data
-            assertThat(data.chartData.percentFormat).isEqualTo("%.1f")
+            assertThat(data.chartData.scale).isEqualTo(YieldSupplyChartScale(max = 0.9, step = 0.3, decimals = 1))
         }
 
     @Test
-    fun `GIVEN chart data below a tenth WHEN model created THEN Data state with two-decimal percent format`() =
+    fun `GIVEN chart data below a tenth WHEN model created THEN Data state with a two-decimal grid`() =
         runTest {
             // Arrange
             coEvery { getChartUseCase(any()) } returns chartData(y = listOf(0.02, 0.05, 0.09)).right()
@@ -111,7 +113,7 @@ internal class YieldSupplyChartModelTest {
 
             // Assert
             val data = model.uiState.value as YieldSupplyChartUM.Data
-            assertThat(data.chartData.percentFormat).isEqualTo("%.2f")
+            assertThat(data.chartData.scale).isEqualTo(YieldSupplyChartScale(max = 0.09, step = 0.03, decimals = 2))
         }
 
     @Test
@@ -286,11 +288,11 @@ internal class YieldSupplyChartModelTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN dated buckets WHEN plain chart loaded THEN the first bar of each month carries its name`(
+    fun `GIVEN dated buckets WHEN plain chart loaded THEN the months are named`(
         model: MonthLabelsModel,
     ) = runTest {
         // Arrange
-        val bucketStarts = List(model.expected.size) { index ->
+        val bucketStarts = List(model.bucketCount) { index ->
             model.firstBucketStart.plus(index * BUCKET_DAYS, DAY)
         }
         coEvery { getChartUseCase(any()) } returns chartData(
@@ -303,7 +305,7 @@ internal class YieldSupplyChartModelTest {
 
         // Assert
         val labels = (chartModel.uiState.value as YieldSupplyChartUM.Data).chartData.xLabels
-        assertThat(labels).containsExactlyElementsIn(model.expected).inOrder()
+        assertThat(labels.map(YieldSupplyChartAxisLabel::text)).containsExactlyElementsIn(model.expected).inOrder()
     }
 
     @Test
@@ -331,12 +333,13 @@ internal class YieldSupplyChartModelTest {
 
         // Assert
         val labels = (model.uiState.value as YieldSupplyChartUM.Data).chartData.xLabels
-        assertThat(labels).hasSize(3)
-        assertThat(labels.none(String::isBlank)).isTrue()
+        assertThat(labels.map(YieldSupplyChartAxisLabel::position)).containsExactly(0.5, 1.5, 2.5).inOrder()
+        assertThat(labels.none { it.text.isBlank() }).isTrue()
+        assertThat(labels.all { it.anchor == YieldSupplyChartAxisLabel.Anchor.Center }).isTrue()
     }
 
     @Test
-    fun `GIVEN three months of history WHEN model created THEN only the first bar of a month is labelled`() =
+    fun `GIVEN three months of history WHEN model created THEN only months with room for a name are labelled`() =
         runTest {
             // Arrange
             coEvery { getTokenStatusUseCase(any()) } returns market(hasCampaign = true).right()
@@ -362,9 +365,9 @@ internal class YieldSupplyChartModelTest {
 
             // Assert
             val labels = (model.uiState.value as YieldSupplyChartUM.Data).chartData.xLabels
-            assertThat(labels[0]).isNotEmpty()
-            assertThat(labels[1]).isEmpty()
-            assertThat(labels[2]).isNotEmpty()
+            assertThat(labels).containsExactly(
+                YieldSupplyChartAxisLabel(text = "Oct", position = 2.0, anchor = YieldSupplyChartAxisLabel.Anchor.Start),
+            )
         }
 
     @Test
@@ -667,23 +670,25 @@ internal class YieldSupplyChartModelTest {
 
     private fun provideTestModels() = listOf(
         MonthLabelsModel(
-            name = "a year of buckets thinned to five months",
+            name = "a year of buckets thinned to every third month",
             firstBucketStart = LocalDate(year = 2025, monthNumber = 10, dayOfMonth = 30),
-            expected = labels(size = 31, 0 to "Oct", 6 to "Jan", 13 to "Apr", 21 to "Jul", 28 to "Oct"),
+            bucketCount = 31,
+            expected = listOf("Feb", "May", "Aug", "Nov"),
         ),
         MonthLabelsModel(
-            name = "five months of buckets all named",
+            name = "a leading month two buckets short of its end left unnamed",
             firstBucketStart = LocalDate(year = 2026, monthNumber = 7, dayOfMonth = 20),
-            expected = labels(size = 10, 0 to "Jul", 1 to "Aug", 4 to "Sep", 7 to "Oct", 9 to "Nov"),
+            bucketCount = 10,
+            expected = listOf("Aug", "Sep", "Oct", "Nov"),
         ),
     )
 
-    private fun labels(size: Int, vararg named: Pair<Int, String>): List<String> {
-        val byIndex = named.toMap()
-        return List(size) { byIndex[it].orEmpty() }
-    }
-
-    data class MonthLabelsModel(val name: String, val firstBucketStart: LocalDate, val expected: List<String>) {
+    data class MonthLabelsModel(
+        val name: String,
+        val firstBucketStart: LocalDate,
+        val bucketCount: Int,
+        val expected: List<String>,
+    ) {
         override fun toString(): String = name
     }
 

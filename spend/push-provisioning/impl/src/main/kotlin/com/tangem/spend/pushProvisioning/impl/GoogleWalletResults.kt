@@ -3,8 +3,11 @@ package com.tangem.spend.pushProvisioning.impl
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.tapandpay.TapAndPayStatusCodes
 import com.google.android.gms.tapandpay.issuer.TokenInfo
+import com.google.android.gms.tasks.Task
 import com.meawallet.mpp.GooglePayTokenState
 import com.meawallet.mpp.MppError
 import com.meawallet.mpp.MppErrorCode
@@ -23,6 +26,8 @@ internal data class TokenLookupFailure(
 )
 
 internal typealias TokenLookup = Either<TokenLookupFailure, List<TokenInfo>>
+
+internal data class TapAndPayFailure(val code: Int, val message: String?)
 
 private const val NO_WALLET_ERROR_CODE = 0
 
@@ -106,6 +111,19 @@ internal fun Throwable.toAddResult(): AddResult = (this as? MppException)?.mppEr
     ?: AddResult.Failed(reason = FailureReason.UNEXPECTED_ERROR, description = describe())
 
 internal fun MppError.describe(): String = toString().replace(WHITESPACE, " ")
+
+internal fun Task<*>.toTapAndPayFailure(): TapAndPayFailure? {
+    if (isSuccessful) return null
+
+    val apiException = exception as? ApiException
+    return TapAndPayFailure(
+        code = apiException?.statusCode ?: CommonStatusCodes.ERROR,
+        message = if (apiException != null) apiException.status.statusMessage else exception?.message,
+    )
+}
+
+internal fun TapAndPayFailure.describe(): String =
+    message?.takeIf(String::isNotBlank)?.let { "$code: $it" } ?: code.toString()
 
 internal fun Throwable.describe(): String =
     (this as? MppException)?.mppError?.describe() ?: "${javaClass.simpleName}: $message"

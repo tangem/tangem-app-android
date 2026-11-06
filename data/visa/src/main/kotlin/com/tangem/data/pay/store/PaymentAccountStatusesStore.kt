@@ -11,6 +11,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.flow.PaymentAccountStatusCache
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -34,7 +35,7 @@ internal class PaymentAccountStatusesStore(
     private val persistenceDataStore: DataStore<WalletIdWithPaymentStatusDM>,
     private val converter: PaymentAccountStatusValueDMConverter,
     scope: AppCoroutineScope,
-) {
+) : PaymentAccountStatusCache {
 
     private val logger = TangemLogger.withTag(TAG)
 
@@ -75,7 +76,7 @@ internal class PaymentAccountStatusesStore(
             .map { it[userWalletId.stringValue] }
     }
 
-    suspend fun getSyncOrNull(userWalletId: UserWalletId): AccountStatus.Payment? {
+    override suspend fun getSyncOrNull(userWalletId: UserWalletId): AccountStatus.Payment? {
         val result = runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)
         logger.i("getSyncOrNull($userWalletId) valueType=${result?.value?.let { it::class.simpleName } ?: "null"}")
         return result

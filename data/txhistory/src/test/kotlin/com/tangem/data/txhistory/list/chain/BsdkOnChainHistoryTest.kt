@@ -17,6 +17,7 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryListBatchFlow
 import com.tangem.domain.txhistory.model.TxHistoryListBatchingContext
+import com.tangem.domain.txhistory.model.TxHistoryListConfig
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
@@ -40,6 +41,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.plus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 /**
@@ -303,6 +306,30 @@ internal class BsdkOnChainHistoryTest {
         assertThat(actions.filterIsInstance<BatchAction.LoadMore<*>>()).isNotEmpty()
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN offline cache option WHEN loading and paginating THEN every page request carries it`(
+        shouldUseCacheWhenOffline: Boolean,
+    ) = runTest {
+        // Arrange
+        val expectedConfig = TxHistoryListConfig(
+            userWalletId = userWalletId,
+            currency = currency,
+            shouldRefresh = false,
+            shouldUseCacheWhenOffline = shouldUseCacheWhenOffline,
+        )
+
+        // Act
+        val actions = collectDispatchedActions(
+            batchState = state(items = 10, status = paginating(empty = false)),
+            shouldUseCacheWhenOffline = shouldUseCacheWhenOffline,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(actions).containsAtLeast(BatchAction.Reload(expectedConfig), BatchAction.LoadMore(expectedConfig))
+    }
+
     // endregion
 
     private fun TestScope.collect(
@@ -324,11 +351,12 @@ internal class BsdkOnChainHistoryTest {
     private fun TestScope.collectDispatchedActions(
         batchState: BatchListState<Int, PaginationWrapper<TxInfo>>,
         usdQuote: BigDecimal? = null,
+        shouldUseCacheWhenOffline: Boolean = false,
     ): List<BatchAction<*, *, *>> {
         val contextSlot = slot<TxHistoryListBatchingContext>()
         stubRepository(batchState, express = emptyList(), contextSlot = contextSlot)
 
-        val historyFlow = createSut(usdQuote).history() // captures the context synchronously
+        val historyFlow = createSut(usdQuote, shouldUseCacheWhenOffline).history() // captures the context synchronously
         val actions = getEmittedValues(contextSlot.captured.actionsFlow)
         advanceUntilIdle() // the source-side collector emits the initial Reload, then parks
         getEmittedValues(historyFlow) // triggers the auto-load check, which may dispatch a LoadMore
@@ -354,7 +382,10 @@ internal class BsdkOnChainHistoryTest {
      * leaves background work on a [kotlinx.coroutines.test.StandardTestDispatcher] unrun, which would park the history
      * flow forever on the quote it awaits.
      */
-    private fun TestScope.createSut(usdQuote: BigDecimal? = null): BsdkOnChainHistory {
+    private fun TestScope.createSut(
+        usdQuote: BigDecimal? = null,
+        shouldUseCacheWhenOffline: Boolean = false,
+    ): BsdkOnChainHistory {
         coEvery { currencyUSDQuote(rawCurrencyId) } returns usdQuote
         return BsdkOnChainHistory(
             repository = repository,
@@ -364,6 +395,7 @@ internal class BsdkOnChainHistoryTest {
                 userWalletId = userWalletId,
                 currency = currency,
                 modelScope = backgroundScope + UnconfinedTestDispatcher(testScheduler),
+                shouldUseCacheWhenOffline = shouldUseCacheWhenOffline,
             ),
         )
     }

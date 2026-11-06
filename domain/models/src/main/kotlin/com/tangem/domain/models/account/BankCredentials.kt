@@ -17,7 +17,15 @@ data class BankCredentials(
     val transferMessage: String?,
     val depositFee: DepositFee?,
     val depositLimit: DepositLimit?,
+    val exchangeRate: ExchangeRate? = null,
 ) {
+
+    val isSpei: Boolean
+        get() = rail.equals(SPEI_RAIL, ignoreCase = true)
+
+    val depositCurrencyCode: String
+        get() = if (isSpei) MXN_CURRENCY_CODE else USD_CURRENCY_CODE
+
     @Serializable
     data class DepositFee(
         val amount: SerializedBigDecimal,
@@ -32,7 +40,9 @@ data class BankCredentials(
             companion object {
                 fun fromString(value: String) = when (value.uppercase(Locale.US)) {
                     "FLAT" -> FLAT
-                    "PERCENTAGE" -> PERCENTAGE
+                    "PERCENTAGE",
+                    "VARIABLE",
+                    -> PERCENTAGE
                     else -> UNKNOWN
                 }
             }
@@ -56,5 +66,18 @@ data class BankCredentials(
                 }
             }
         }
+    }
+
+    @Serializable
+    data class ExchangeRate(
+        val rate: SerializedBigDecimal,
+        val base: String,
+        val quote: String,
+    )
+
+    private companion object {
+        const val SPEI_RAIL = "SPEI"
+        const val MXN_CURRENCY_CODE = "MXN"
+        const val USD_CURRENCY_CODE = "USD"
     }
 }

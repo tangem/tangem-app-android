@@ -2,6 +2,7 @@ package com.tangem.data.moneyaccount.flow
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
@@ -38,6 +39,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
     private val resolveMoneyAccountStatusFromSummaryUseCase: ResolveMoneyAccountStatusFromSummaryUseCase,
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
+    private val networkConnectionManager: NetworkConnectionManager,
 ) : MoneyAccountStatusFetcher {
 
     override suspend fun invoke(params: MoneyAccountStatusFetcher.Params): Either<Throwable, Unit> {
@@ -112,18 +114,23 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
             else -> MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
                 customerId = customerInfo.customerId,
+                step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
             )
         }
     }
 
     private suspend fun VisaApiError.toCachedStatusOrEmpty(userWalletId: UserWalletId): MoneyAccountStatusValue {
-        return getCachedAccountOrNull(
-            userWalletId = userWalletId,
-            error = when (this) {
-                is VisaApiError.RefreshTokenExpired -> MoneyAccountStatusValue.Error.NotSynced
-                else -> MoneyAccountStatusValue.Error.Unavailable
-            },
-        ) ?: MoneyAccountStatusValue.Empty
+        return getCachedAccountOrNull(userWalletId = userWalletId, error = toAccountError())
+            ?: MoneyAccountStatusValue.Empty
+    }
+
+    private fun VisaApiError.toAccountError(): MoneyAccountStatusValue.Error {
+        val isSessionExpired = this is VisaApiError.RefreshTokenExpired && networkConnectionManager.isOnlineSync
+        return if (isSessionExpired) {
+            MoneyAccountStatusValue.Error.NotSynced
+        } else {
+            MoneyAccountStatusValue.Error.Unavailable
+        }
     }
 
     private suspend fun getCachedAccountOrNull(

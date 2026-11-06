@@ -16,6 +16,7 @@
   <string name="access_code_create_description">Erstelle einen %s-stelliger Zugangscode, um Deine Wallet zu entsperren.</string>
   <string name="access_code_create_title">Zugangscode erstellen</string>
   <string name="access_code_navtitle">Zugangscode</string>
+  <string name="account_add_limit_badge">Vollständig</string>
   <string name="account_add_limit_dialog_description">Du kannst nicht mehr erstellen als %1$s Konto/Konten. Archiviere eines, um es neu hinzuzufügen.</string>
   <string name="account_add_limit_dialog_title">Neues Konto kann nicht hinzugefügt werden</string>
   <string name="account_archive_success_message">Konto archiviert</string>
@@ -291,6 +292,9 @@
   <string name="collectibles_account_collection_row_subtitle">Meine Sammlung</string>
   <string name="collectibles_account_reconnect_subtitle">Neuverbindung erforderlich</string>
   <string name="collectibles_account_withdraw">Auszahlung</string>
+  <string name="collectibles_auto_buyback_message">Deine Common-Karte wurde sofort zurückgekauft. %s befindet sich in deinem Guthaben.</string>
+  <string name="collectibles_auto_buyback_open_again_button">Wieder geöffnet für %s</string>
+  <string name="collectibles_auto_buyback_title">Rückkauf abgeschlossen</string>
   <string name="collectibles_confirm_order_approve_button">Genehmigen</string>
   <string name="collectibles_confirm_order_confirming_transaction_button">Transaktion wird bestätigt...</string>
   <string name="collectibles_confirm_order_generating_pack_button">Paket wird generiert...</string>
@@ -1153,6 +1157,7 @@
   <string name="hw_upgrade_start_description">Du stehst kurz vor dem Upgrade auf unsere Hardware-Wallet. Deine Vermögenswerte werden darin sicher im Offline-Speicher aufbewahrt.</string>
   <string name="hw_upgrade_start_title">Tangem Wallet</string>
   <string name="hw_upgrade_title">Upgrade auf Hardware Wallet</string>
+  <string name="hw_upgrade_to_cold_badge">Wechseln Sie zu einer Cold Wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Schütze Deine Kryptowährungen mit Tangems erstklassiger Hardware-Wallet.</string>
   <string name="hw_upgrade_to_cold_banner_title">Rüste Deine Wallet auf Hardware-Sicherheit auf.</string>
   <string name="hw_wallets_limit_alert_message">In Tangem können Sie bis zu %1$s mobile Wallets anlegen. Um eine neue Wallet anzulegen oder zu importieren, müssen Sie zunächst eine Ihrer bestehenden mobilen Wallets entfernen.</string>
@@ -1630,6 +1635,7 @@
   <string name="money_account_main_status_activating">Wird aktiviert…</string>
   <string name="money_account_main_status_active">Netzwerk %1$s</string>
   <string name="money_account_main_status_active_v2">ACH</string>
+  <string name="money_account_main_status_awaiting_deposit">Wird nach Ihrer Einzahlung freigeschaltet</string>
   <string name="money_account_main_status_dialog_activating_description">Wir richten gerade Ihr Konto ein. Das kann einen Moment dauern.</string>
   <string name="money_account_main_status_dialog_activating_title">Ein Bankkonto eröffnen</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">Wir arbeiten daran, in weitere Regionen zu expandieren. Brauchst du Hilfe?</string>
@@ -1952,6 +1958,14 @@
   <string name="prediction_balance_total">Gesamtsaldo</string>
   <string name="prediction_balance_withdraw">Abheben</string>
   <string name="prediction_cash_out">Auszahlung</string>
+  <string name="prediction_chart_empty_description">Die Tabelle wird nach den ersten Vorhersagen angezeigt.</string>
+  <string name="prediction_chart_empty_title">Noch keine Daten</string>
+  <string name="prediction_chart_period_1d">1d</string>
+  <string name="prediction_chart_period_1h">1 Stunde</string>
+  <string name="prediction_chart_period_1m">1 m</string>
+  <string name="prediction_chart_period_1w">1 Woche</string>
+  <string name="prediction_chart_period_6h">6 Std.</string>
+  <string name="prediction_chart_period_max">Max</string>
   <string name="prediction_claim_error_failed">Die Abbuchung wurde nicht ausgeführt. Es wurde kein Betrag von Ihrem Konto abgebucht, und Sie können es erneut versuchen.</string>
   <string name="prediction_claim_error_generic">Die Forderung konnte nicht gesendet werden. Bitte versuchen Sie es erneut.</string>
   <string name="prediction_claim_error_rejected">Polymarket hat die Übermittlung des Antrags abgelehnt. Aktualisieren Sie Ihre Positionen und versuchen Sie es erneut.</string>
@@ -2833,6 +2847,7 @@
   <string name="tangempay_bank_transfer_details_daily_deposits">Tägliche Einzahlungen</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">Wenn Sie mehr als %s einzahlen möchten, wenden Sie sich bitte an den Support.</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_left">Heute abgereist</string>
+  <string name="tangempay_bank_transfer_details_exchange_rate">Wechselkurs</string>
   <string name="tangempay_bank_transfer_details_fee_header">Einzahlungsmethoden und Gebühren</string>
   <string name="tangempay_bank_transfer_details_limitations">Einschränkungen</string>
   <string name="tangempay_bank_transfer_details_minimum_deposit">Mindestanzahlung</string>
@@ -3227,9 +3242,9 @@
   <string name="tangempay_status_inactive">Inaktiv</string>
   <string name="tangempay_status_replacing">Ersetzen deine Karte</string>
   <string name="tangempay_sync_needed">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
-  <string name="tangempay_sync_needed_body">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
+  <string name="tangempay_sync_needed_body">Erneuern, um Karte und Konto zu sehen</string>
   <string name="tangempay_sync_needed_button">Zugang wiederherstellen</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay sitzung abgelaufen</string>
+  <string name="tangempay_sync_needed_title">Sitzung abgelaufen</string>
   <string name="tangempay_tangem_visa_card">Krypto ganz einfach im Alltag ausgeben</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -3243,22 +3258,23 @@
   <string name="tangempay_unified_onboarding_cashback_caption">Cashback</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">Auszahlung in USDC</string>
   <string name="tangempay_unified_onboarding_cashback_title">Bis zu 2%%. %1$s</string>
-  <string name="tangempay_unified_onboarding_description">Eine Visa-Karte und ein US-Dollar-Konto in einem. Einmal verifizieren – wir richten Ihnen alle verfügbaren Angebote in Ihrer Region ein.</string>
+  <string name="tangempay_unified_onboarding_description">Visa-Karte und USD-Konto in einem. Bestätigen Sie Ihre Identität und nutzen Sie die an Ihrem Wohnort verfügbaren Angebote</string>
   <string name="tangempay_unified_onboarding_everything_header">Für alles</string>
-  <string name="tangempay_unified_onboarding_fees_caption">Zahlen Sie, was Sie sehen</string>
-  <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
-  <string name="tangempay_unified_onboarding_fees_title">Keine Kaufgebühren. %1$s</string>
+  <string name="tangempay_unified_onboarding_fees_caption">Dollar für Dollar</string>
+  <string name="tangempay_unified_onboarding_fees_subtitle">Keine Wechsel- oder Monatsgebühren</string>
+  <string name="tangempay_unified_onboarding_fees_title">1 USD wird zu 1 USDC\n%1$s</string>
   <string name="tangempay_unified_onboarding_interest_caption">Zinsen</string>
   <string name="tangempay_unified_onboarding_interest_title">Guthaben halten, bis zu 4% APY erhalten</string>
   <string name="tangempay_unified_onboarding_legal">Was Sie eröffnen können, hängt davon ab, wo Sie wohnen. Wir werden Ihnen dies unmittelbar nach der Überprüfung mitteilen.</string>
-  <string name="tangempay_unified_onboarding_money_account_caption">Ziemlich praktisch</string>
-  <string name="tangempay_unified_onboarding_money_account_header">USD-Konto</string>
+  <string name="tangempay_unified_onboarding_money_account_caption">Krypto-Kauf</string>
+  <string name="tangempay_unified_onboarding_money_account_header">Konto</string>
   <string name="tangempay_unified_onboarding_money_account_subtitle">ACH-Überweisungen von USD in USDC im Verhältnis 1:1 empfangen; Pauschalgebühr von 1 US-Dollar</string>
   <string name="tangempay_unified_onboarding_money_account_title">Ihre eigenen US-Kontodaten. %1$s</string>
-  <string name="tangempay_unified_onboarding_payment_account_caption">Zahlen Sie, wie Sie möchten</string>
+  <string name="tangempay_unified_onboarding_money_account_title_v2">Persönliche US-Kontodaten</string>
+  <string name="tangempay_unified_onboarding_payment_account_caption">Kompatibel mit</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Visa-Karte</string>
-  <string name="tangempay_unified_onboarding_payment_account_subtitle_android">mit Google Pay</string>
-  <string name="tangempay_unified_onboarding_payment_account_title">Online oder %1$s</string>
+  <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
+  <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">Zahlungen</string>
   <string name="tangempay_unified_onboarding_payments_title">ACH- und Banküberweisungen für den Alltag</string>
   <string name="tangempay_unified_onboarding_plan_caption">Ein Plan</string>
@@ -3426,6 +3442,7 @@
   <string name="transaction_history_approve_high_risk_subtitle">Sie sind verbunden. Es besteht möglicherweise ein Risiko für Ihre Geldmittel. Erwägen Sie, den Zugriff zu widerrufen.</string>
   <string name="transaction_history_approve_high_risk_title">Hohes Risiko</string>
   <string name="transaction_history_approved_amount">Genehmigter Betrag</string>
+  <string name="transaction_history_awaiting_signatures">Warten auf Unterschriften</string>
   <string name="transaction_history_claiming_incentive_rewards">Anspruch auf Prämien</string>
   <string name="transaction_history_claiming_reward">Belohnung einfordern</string>
   <string name="transaction_history_contract_address">Vertrag: %s</string>
@@ -3452,6 +3469,7 @@
   <string name="transaction_history_not_supported_description">Die Transaktionshistorie wird für diese Blockchain derzeit nicht verfügbar. Aber keine Sorge, wir arbeiten daran! In der Zwischenzeit kannst du es im Explorer überprüfen.</string>
   <string name="transaction_history_operation">Operation</string>
   <string name="transaction_history_pending">Ausstehend</string>
+  <string name="transaction_history_pending_send">Senden steht noch aus</string>
   <string name="transaction_history_rewards_restaked">Belohnungen neu stecken</string>
   <string name="transaction_history_rewards_restaking">Belohnungen</string>
   <string name="transaction_history_staking_reward">Staking-Belohnungen</string>

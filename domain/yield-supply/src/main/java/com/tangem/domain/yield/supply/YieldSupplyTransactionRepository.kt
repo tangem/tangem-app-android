@@ -3,7 +3,6 @@ package com.tangem.domain.yield.supply
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -52,8 +51,8 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
         callData: SmartContractCallData,
     ): SmartContractCallData
 
-    /** Returns the on-chain version status of the user's yield module for [network]. */
-    suspend fun getYieldModuleVersionStatus(userWalletId: UserWalletId, network: Network): YieldModuleVersionStatus
+    /** Whether the user's deployed yield module for [network] has `enterProtocolByOwner(token, amount)`. */
+    suspend fun supportsEnterWithAmount(userWalletId: UserWalletId, network: Network): Boolean
 
     /** @return null until the outcome is known: not mined yet, or the node cannot tell. */
     suspend fun getTransactionOutcome(

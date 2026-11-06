@@ -13,6 +13,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.R
 import com.tangem.features.polymarket.impl.common.PolymarketUrlBuilder
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
@@ -52,6 +53,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val regionAccess: PredictionRegionAccess,
     private val urlOpener: UrlOpener,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketEventDetailsComponent.Params>()
@@ -152,6 +154,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
             isDescriptionExpanded = isDescriptionExpanded,
             onShareClick = ::onShareClick,
             onOutcomeClick = ::onOutcomeClick,
+            isTeamAbbreviationEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
             onClosedMarketsClick = ::onClosedMarketsClick,
             onReadMoreClick = ::onReadMoreClick,
             onResolutionSourceClick = urlOpener::openUrl,

@@ -8,6 +8,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.pushZooming
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -112,6 +113,14 @@ internal class ReferralBlockModel @Inject constructor(
         override val onBack: () -> Unit = bottomSheetNavigation::dismiss
     }
 
+    /**
+     * The wallet picked in the chooser, held until the chooser has finished collapsing: the screen zooms out of
+     * the card, which the sheet still covers while it slides away. The component reports the sheet gone through
+     * [onWalletSheetClosed].
+     */
+    val walletAwaitingSheetClose: StateFlow<UserWalletId?>
+        field = MutableStateFlow<UserWalletId?>(value = null)
+
     private val walletSelectionJob = JobHolder()
 
     /** Set while the screen this card leads to is up — the only window in which a status can change. */
@@ -153,15 +162,27 @@ internal class ReferralBlockModel @Inject constructor(
             .filterNotNull()
             .onEach { walletId ->
                 bottomSheetNavigation.dismiss()
-                openReferral(walletId)
+                openWhenSheetClosed(walletId)
             }
             .launchIn(modelScope)
             .saveIn(walletSelectionJob)
     }
 
+    private fun openWhenSheetClosed(walletId: UserWalletId) {
+        walletAwaitingSheetClose.value = walletId
+    }
+
+    fun onWalletSheetClosed(walletId: UserWalletId) {
+        walletAwaitingSheetClose.value = null
+        openReferral(walletId)
+    }
+
     private fun openReferral(walletId: UserWalletId) {
         isReferralScreenOpen = true
-        router.push(AppRoute.ReferralProgram(userWalletId = walletId))
+        router.pushZooming(
+            route = AppRoute.ReferralProgram(userWalletId = walletId),
+            sourceKey = ReferralBlockComponent.SHARED_TRANSITION_KEY,
+        )
     }
 
     /**

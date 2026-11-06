@@ -15,7 +15,7 @@ internal fun createSportsEvent(
     live: Boolean = true,
     ended: Boolean? = false,
     fetchedAt: Instant? = Instant.ofEpochSecond(100),
-    teams: List<PolymarketTeam>? = emptyList(),
+    teams: List<PolymarketTeam>? = listOf(createSportsTeam("Home", "home"), createSportsTeam("Away", "away")),
 ) = PolymarketEvent(
     id = id, slug = id, title = "Match", description = "", rulesUrl = "", iconUrl = null, imageUrl = null,
     status = PolymarketStatus.ACTIVE, startDate = null, endDate = null, volume = null, volume24h = null,

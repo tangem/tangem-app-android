@@ -7,12 +7,15 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.flow.DefaultPredictionPositionsUpdater
 import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
 import com.tangem.domain.polymarket.model.PolymarketPositionsPageRequest
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
+import com.tangem.features.polymarket.impl.positions.model.createClosedPolymarketPosition
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -36,6 +39,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.params.ParameterizedTest
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -633,10 +637,117 @@ internal class PolymarketPositionsPreviewLoaderTest {
         }
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN open positions WHEN loaded THEN offers See all only beyond three`(case: ActiveCase) = runTest {
+        // Arrange
+        val loader = createLoader()
+        val positions = (1..case.openCount).map { createPolymarketPosition(assetId = "$it") }
+        coEvery { repository.getOpenPositions(addresses, FIRST_PAGE) } returns
+            PolymarketPositionsPage(positions, case.nextCursor).right()
+
+        // Act
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+
+        // Assert
+        val content = loader.state.value as PolymarketPositionsPreviewUM.Content
+        assertThat(content.positions).hasSize(minOf(case.openCount, 3))
+        assertThat(content.hasMoreActive).isEqualTo(case.hasMoreActive)
+    }
+
+    @Test
+    fun `GIVEN finished history WHEN loaded THEN offers Finished only when it is not empty`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        coEvery { repository.getOpenPositions(addresses, FIRST_PAGE) } returns page.right()
+        coEvery { repository.getClosedPositions(addresses, FINISHED_PROBE) } returnsMany listOf(
+            PolymarketPositionsPage(emptyList<PolymarketPosition.Closed>(), nextCursor = null).right(),
+            PolymarketPositionsPage(listOf(createClosedPolymarketPosition()), nextCursor = "cursor-1").right(),
+        )
+
+        // Act
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+        val empty = loader.state.value.hasFinished
+        passPollInterval()
+
+        // Assert
+        assertThat(empty).isFalse()
+        assertThat(loader.state.value.hasFinished).isTrue()
+        coVerify(exactly = 2) { repository.getClosedPositions(addresses, FINISHED_PROBE) }
+    }
+
+    @Test
+    fun `GIVEN known finished history WHEN polling again THEN does not check it again`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        coEvery { repository.getOpenPositions(addresses, FIRST_PAGE) } returnsMany listOf(
+            page.right(),
+            page.right(),
+            PolymarketPositionsError.Network.left(),
+        )
+        coEvery { repository.getClosedPositions(addresses, FINISHED_PROBE) } returns
+            PolymarketPositionsPage(listOf(createClosedPolymarketPosition()), nextCursor = null).right()
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+
+        // Act
+        passPollInterval()
+        val afterSecondPoll = loader.state.value
+        passPollInterval()
+
+        // Assert
+        assertThat(afterSecondPoll.hasFinished).isTrue()
+        assertThat(loader.state.value.hasFinished).isTrue()
+        assertThat((loader.state.value as PolymarketPositionsPreviewUM.Content).onRetry).isNotNull()
+        coVerify(exactly = 1) { repository.getClosedPositions(addresses, FINISHED_PROBE) }
+    }
+
+    @Test
+    fun `GIVEN finished check fails WHEN the next poll finds history THEN offers Finished`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        coEvery { repository.getOpenPositions(addresses, FIRST_PAGE) } returns page.right()
+        coEvery { repository.getClosedPositions(addresses, FINISHED_PROBE) } returnsMany listOf(
+            PolymarketPositionsError.Network.left(),
+            PolymarketPositionsPage(listOf(createClosedPolymarketPosition()), nextCursor = null).right(),
+        )
+
+        // Act
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+        val afterFailedCheck = loader.state.value.hasFinished
+        passPollInterval()
+
+        // Assert
+        assertThat(afterFailedCheck).isFalse()
+        assertThat(loader.state.value.hasFinished).isTrue()
+    }
+
+    @Test
+    fun `GIVEN known finished history WHEN open positions never loaded THEN the error keeps Finished`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        coEvery { repository.getOpenPositions(addresses, FIRST_PAGE) } returns PolymarketPositionsError.Network.left()
+        coEvery { repository.getClosedPositions(addresses, FINISHED_PROBE) } returns
+            PolymarketPositionsPage(listOf(createClosedPolymarketPosition()), nextCursor = null).right()
+
+        // Act
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+
+        // Assert
+        val error = loader.state.value as PolymarketPositionsPreviewUM.Error
+        assertThat(error.hasFinished).isTrue()
+    }
+
     private fun TestScope.createLoader(
         dispatchers: CoroutineDispatcherProvider = createTestingCoroutineDispatcherProvider(),
     ): PolymarketPositionsPreviewLoader {
         coEvery { deriveAddresses.stored(userWalletId) } returns addresses
+        coEvery { repository.getClosedPositions(addresses, FINISHED_PROBE) } returns
+            PolymarketPositionsPage(emptyList<PolymarketPosition.Closed>(), nextCursor = null).right()
         return PolymarketPositionsPreviewLoader(
             repository = repository,
             deriveAddresses = deriveAddresses,
@@ -652,6 +763,17 @@ internal class PolymarketPositionsPreviewLoaderTest {
 
     private companion object {
         val POLL_INTERVAL = 20.seconds
-        val FIRST_PAGE = PolymarketPositionsPageRequest.First(limit = 3)
+        val FIRST_PAGE = PolymarketPositionsPageRequest.First(limit = 4)
+        val FINISHED_PROBE = PolymarketPositionsPageRequest.First(limit = 1)
+
+        @JvmStatic
+        fun provideTestModels() = listOf(
+            ActiveCase(openCount = 1, nextCursor = null, hasMoreActive = false),
+            ActiveCase(openCount = 3, nextCursor = null, hasMoreActive = false),
+            ActiveCase(openCount = 4, nextCursor = null, hasMoreActive = true),
+            ActiveCase(openCount = 4, nextCursor = "cursor-1", hasMoreActive = true),
+        )
     }
+
+    data class ActiveCase(val openCount: Int, val nextCursor: String?, val hasMoreActive: Boolean)
 }

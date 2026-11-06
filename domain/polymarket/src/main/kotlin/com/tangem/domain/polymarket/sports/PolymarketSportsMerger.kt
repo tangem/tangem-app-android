@@ -89,18 +89,32 @@ internal class PolymarketSportsMerger(private val time: TimeSource) {
         val (home, away) = PolymarketTeamSides.resolve(event.teams.orEmpty(), score?.homeTeam, score?.awayTeam)
         return PolymarketSportsState.Game(
             gameId = requireNotNull(event.gameId),
-            score = if (isLive || isEnded) {
-                PolymarketScoreParser.parse(selected?.score ?: event.score, period)
+            score = if ((isLive || isEnded) && event.teams?.size == 2) {
+                orientedScore(raw = selected?.score ?: event.score, period = period, home = home, away = away)
             } else {
                 null
             },
             period = period,
-            isLive = isLive && !isEnded && period !in NO_LIVE_PERIODS,
+            isLive = isLive && !isEnded,
             isEnded = isEnded,
             home = home,
             away = away,
             isStale = isStale,
         )
+    }
+
+    private fun orientedScore(
+        raw: String?,
+        period: String?,
+        home: PolymarketSportsState.Team?,
+        away: PolymarketSportsState.Team?,
+    ): PolymarketSportsState.Score? {
+        val score = PolymarketScoreParser.parse(raw, period) ?: return null
+        return when {
+            home?.restIndex == 0 && away?.restIndex == 1 -> PolymarketSportsState.Score(score.first, score.second)
+            home?.restIndex == 1 && away?.restIndex == 0 -> PolymarketSportsState.Score(score.second, score.first)
+            else -> null
+        }
     }
 
     private fun keepsFinalResult(score: PolymarketLiveScore, event: PolymarketEvent): Boolean =
@@ -117,6 +131,5 @@ internal class PolymarketSportsMerger(private val time: TimeSource) {
 
     private companion object {
         val STALE_AFTER = 60.seconds
-        val NO_LIVE_PERIODS = setOf("CAN", "POST", "INT", "AB")
     }
 }

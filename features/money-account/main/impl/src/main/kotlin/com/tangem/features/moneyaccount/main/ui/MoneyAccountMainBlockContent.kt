@@ -24,8 +24,6 @@ import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.assets.il_account_safe
-import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.MoneyAccountTestTags
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
@@ -117,7 +115,9 @@ private fun MoneyAccountRow(
 @Composable
 private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
     TangemRow(
-        modifier = modifier.moneyAccountCard(),
+        modifier = modifier
+            .moneyAccountCard()
+            .testTag(MoneyAccountTestTags.MAIN_ROW),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { MoneyAccountIcon() },
@@ -141,10 +141,7 @@ private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
 @Composable
 private fun MoneyAccountIcon() {
     TangemAvatar(
-        state = TangemAvatar.UiState.Account(
-            imageVector = Icons.il_account_safe,
-            color = TangemAvatar.FillColor.Money,
-        ),
+        state = TangemAvatar.UiState.Account(kind = TangemAvatar.AccountKind.Money),
         size = TangemAvatar.Size.X40,
     )
 }
@@ -157,7 +154,9 @@ private fun MoneyAccountFiatAmount(text: String, isBalanceFlickering: Boolean, i
     ) {
         if (isBalanceFromCache) {
             Icon(
-                modifier = Modifier.size(12.dp),
+                modifier = Modifier
+                    .size(12.dp)
+                    .testTag(MoneyAccountTestTags.MAIN_ROW_CACHE_ICON),
                 painter = painterResource(CoreUiR.drawable.ic_error_sync_24),
                 tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,

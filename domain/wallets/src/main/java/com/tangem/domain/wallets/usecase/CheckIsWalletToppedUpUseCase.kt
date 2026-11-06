@@ -28,13 +28,17 @@ class CheckIsWalletToppedUpUseCase @Inject constructor(
         userWalletId: UserWalletId,
         balanceState: WalletBalanceState,
     ): Either<Throwable, Boolean> = either {
-        val storedBalanceState = getStoredBalanceState(userWalletId)
+        // A failed load says nothing about the balance, so it is neither stored nor compared
+        if (balanceState == WalletBalanceState.Error) return@either false
 
-        when {
-            storedBalanceState == WalletBalanceState.ToppedUp -> false // already topped up
-            storedBalanceState == null && balanceState == WalletBalanceState.ToppedUp -> {
+        // Older versions stored Error too; like a missing state, it does not prove the wallet was ever empty
+        val storedBalanceState = getStoredBalanceState(userWalletId)?.takeIf { it != WalletBalanceState.Error }
+
+        when (storedBalanceState) {
+            WalletBalanceState.ToppedUp -> false // already topped up
+            null -> {
                 setBalanceState(userWalletId, balanceState)
-                false // already topped up
+                false // the first known balance is not a top-up, even if the wallet was added with funds
             }
             else -> {
                 setBalanceState(userWalletId, balanceState)
