@@ -145,7 +145,7 @@
     },
     {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE_V2",
-        "version": "undefined"
+        "version": "6.8"
     },
     {
         "name": "TWI_1676_EARN_ENABLED",
