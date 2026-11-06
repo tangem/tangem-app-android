@@ -961,7 +961,7 @@
   <string name="introduction_button_buy_tangem">Acheter Tangem</string>
   <string name="introduction_button_create_wallet">Créer un wallet</string>
   <string name="introduction_button_i_have_a_wallet">J\'ai déjà un wallet</string>
-  <string name="introduction_create_wallet_hardware_description">Si vous avez déjà un Tangem Wallet</string>
+  <string name="introduction_create_wallet_hardware_description">Connectez votre Tangem Wallet ou obtenez-en un nouveau</string>
   <string name="introduction_create_wallet_hardware_title">Cartes ou Ring Tangem</string>
   <string name="introduction_create_wallet_seed_phrase_description">Commencez sans wallet matériel</string>
   <string name="introduction_create_wallet_seed_phrase_title">Créer un wallet avec phrase de récupération</string>
@@ -2448,7 +2448,7 @@
   <string name="tangempay_campaign_spend_description">Avec une carte numérique via Apple Pay ou Google Pay, sans frais supplémentaires sur les achats</string>
   <string name="tangempay_campaign_unavailable_description">Vous pouvez commander une carte classique</string>
   <string name="tangempay_campaign_unavailable_title">Impossible d’obtenir la carte spéciale</string>
-  <string name="tangempay_cancel_kyc">Masquer la vérification de l\'écran</string>
+  <string name="tangempay_cancel_kyc">Masquer le statut</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Veuillez contacter le support</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">Vous avez dépassé le nombre de tentatives d\'activation</string>
   <string name="tangempay_card_activation_description">Saisissez les 4 derniers chiffres du numéro de votre carte</string>
@@ -2652,7 +2652,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Vérification en cours pour Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Les documents sont généralement vérifiés automatiquement en moins de 5 minutes. Dans de rares cas nécessitant une vérification manuelle, le processus peut prendre jusqu’à 48 heures.</string>
   <string name="tangempay_kyc_rejected">Refusé</string>
-  <string name="tangempay_kyc_rejected_button_text">Masquer la vérification</string>
+  <string name="tangempay_kyc_rejected_button_text">Masquer le statut</string>
   <string name="tangempay_kyc_rejected_description">Désolé, nous n\'avons pas pu vérifier</string>
   <string name="tangempay_kyc_rejected_description_span">votre identité.</string>
   <string name="tangempay_main_select_plan">Sélectionner un forfait</string>
