@@ -35,9 +35,7 @@ internal class DefaultEarnRepositoryYieldOffersTest {
 
     private val tangemTechApi: TangemTechApi = mockk()
 
-    private val repository = createRepository(isMerklIncentivesEnabled = true)
-
-    private fun createRepository(isMerklIncentivesEnabled: Boolean) = DefaultEarnRepository(
+    private val repository = DefaultEarnRepository(
         tangemTechApi = tangemTechApi,
         dispatchers = TestingCoroutineDispatcherProvider(),
         userWalletsListRepository = mockk<UserWalletsListRepository>(),
@@ -47,7 +45,6 @@ internal class DefaultEarnRepositoryYieldOffersTest {
         earnFilterStore = EarnFilterStore(),
         earnErrorResolver = DefaultEarnErrorResolver(),
         excludedBlockchains = ExcludedBlockchains(),
-        isMerklIncentivesEnabled = isMerklIncentivesEnabled,
     )
 
     @BeforeEach
@@ -130,20 +127,7 @@ internal class DefaultEarnRepositoryYieldOffersTest {
         assertThat(actual).isEqualTo(Either.Left(error))
     }
 
-    @Test
-    fun `GIVEN merkl incentives disabled WHEN getYieldOffers THEN requests the base apy`() = runTest {
-        // Arrange
-        val repository = createRepository(isMerklIncentivesEnabled = false)
-        stubYieldPage(response(total = 0, items = emptyList()), apyType = null)
-
-        // Act
-        val actual = repository.getYieldOffers()
-
-        // Assert
-        assertEither(actual, Either.Right(EarnYieldOffers(total = 0, best = null)))
-    }
-
-    private fun stubYieldPage(response: ApiResponse<EarnListResponse>, apyType: String? = "gross") {
+    private fun stubYieldPage(response: ApiResponse<EarnListResponse>) {
         coEvery {
             tangemTechApi.getEarnTokens(
                 isForEarn = false,
@@ -151,7 +135,7 @@ internal class DefaultEarnRepositoryYieldOffersTest {
                 limit = 20,
                 type = "yield",
                 networks = null,
-                apyType = apyType,
+                apyType = "gross",
             )
         } returns response
     }
