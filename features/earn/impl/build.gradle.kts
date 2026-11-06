@@ -18,14 +18,18 @@ dependencies {
     /** Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.res)
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.transaction.models)
 
     /** SDK */
+    implementation(projects.libs.crypto)
     implementation(tangemDeps.blockchain)
 
     /** Kotlin */
@@ -47,5 +51,6 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Tests */
+    testImplementation(projects.common.test)
     testImplementation(projects.test.core)
 }
