@@ -49,6 +49,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.wallets.models)
+    implementation(projects.features.wallet.api)
     implementation(projects.domain.wallets)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appCurrency)
