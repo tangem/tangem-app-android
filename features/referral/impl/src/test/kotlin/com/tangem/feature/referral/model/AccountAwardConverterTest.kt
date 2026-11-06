@@ -28,10 +28,11 @@ internal class AccountAwardConverterTest {
         val converter = createConverter(awardStatus = loadedStatus(), isRedesigned = true)
 
         // Act
-        val row = converter.convert(Unit).tokenRow as TangemTokenRow.State.Content
+        val row = converter.convert(Unit).tokenRow as TangemTokenRow.State.Network
 
         // Assert
         assertThat(row.id).isEqualTo(award.id.value)
+        assertThat(row.network).isEqualTo(stringReference(award.symbol))
         assertThat(row.fiatBalance).isNotNull()
         assertThat(row.cryptoBalance).isNotNull()
     }
@@ -42,11 +43,12 @@ internal class AccountAwardConverterTest {
         val converter = createConverter(awardStatus = null, isRedesigned = true)
 
         // Act
-        val row = converter.convert(Unit).tokenRow as TangemTokenRow.State.Content
+        val row = converter.convert(Unit).tokenRow as TangemTokenRow.State.Network
 
         // Assert
         assertThat(row.id).isEqualTo(award.id.value)
         assertThat(row.title).isEqualTo(stringReference(award.name))
+        assertThat(row.network).isEqualTo(stringReference(award.symbol))
         assertThat(row.fiatBalance).isNull()
         assertThat(row.cryptoBalance).isNull()
     }
