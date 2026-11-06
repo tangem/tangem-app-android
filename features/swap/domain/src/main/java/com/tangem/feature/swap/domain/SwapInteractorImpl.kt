@@ -1198,13 +1198,27 @@ internal class SwapInteractorImpl @Inject constructor(
     ): SwapTransactionState {
         val amountDecimal = amountToSwap.parseBigDecimalOrNull() ?: return SwapTransactionState.Error.UnknownError
         val dexTransaction = swapData.transaction as ExpressTransactionModel.DEX
+        val isYieldSwap = fromSwapCurrencyStatus.isYieldSwapActive &&
+            fromSwapCurrencyStatus.currency is CryptoCurrency.Token
 
-        val swapTxData = createPlainDexTransaction(
-            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-            dexTransaction = dexTransaction,
-            swapFee = swapFee,
-            tronPayload = null,
-        ).getOrElse { error ->
+        val swapTxData = if (isYieldSwap) {
+            val spenderAddress = dexTransaction.allowanceContract ?: return SwapTransactionState.Error.UnknownError
+            createYieldSwapDexTransaction(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                swapData = swapData,
+                dexCallData = dexTransaction.txData,
+                amount = amountDecimal,
+                fee = swapFee.fee,
+                spenderAddress = spenderAddress,
+            )
+        } else {
+            createPlainDexTransaction(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                dexTransaction = dexTransaction,
+                swapFee = swapFee,
+                tronPayload = null,
+            )
+        }.getOrElse { error ->
             TangemLogger.e("Failed to create EVM gasless swap tx data", error)
             return SwapTransactionState.Error.UnknownError
         }
@@ -1223,7 +1237,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapData = swapData,
                     amount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals),
                     txHash = txHash,
-                    payInAddress = getPayoutAddress(swapTxData),
+                    payInAddress = if (isYieldSwap) dexTransaction.txTo else getPayoutAddress(swapTxData),
                 )
             },
         )
@@ -1888,11 +1902,22 @@ internal class SwapInteractorImpl @Inject constructor(
         val dexFeeResultEither = if (fromStatus.isYieldSwapActive && fromStatus.currency is CryptoCurrency.Token) {
             val network = (fromStatus.currency as CryptoCurrency.Token).network
             val yieldModuleAddress = yieldModuleAddressProvider.getOrFetch(fromStatus.userWalletId, network)
-            dexSwapFeeCalculator.calculateYield(
-                fromSwapCurrencyStatus = fromStatus,
-                transaction = transaction,
-                yieldModuleAddress = yieldModuleAddress,
-            )
+            if (isGasless) {
+                yieldModuleAddress?.let { moduleAddress ->
+                    dexSwapFeeCalculator.calculateYieldGasless(
+                        fromSwapCurrencyStatus = fromStatus,
+                        transaction = transaction,
+                        yieldModuleAddress = moduleAddress,
+                        selectedToken = selectedFeeToken,
+                    )
+                } ?: GetFeeError.UnknownError.left()
+            } else {
+                dexSwapFeeCalculator.calculateYield(
+                    fromSwapCurrencyStatus = fromStatus,
+                    transaction = transaction,
+                    yieldModuleAddress = yieldModuleAddress,
+                )
+            }
         } else {
             dexSwapFeeCalculator.calculate(
                 fromSwapCurrencyStatus = fromStatus,
