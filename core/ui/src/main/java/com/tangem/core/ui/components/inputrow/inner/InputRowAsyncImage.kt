@@ -42,7 +42,7 @@ fun InputRowAsyncImage(
             onImageError?.invoke() ?: Box(
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors.background.tertiary,
+                        color = TangemTheme.colors3.bg.primary,
                         shape = CircleShape,
                     ),
             )

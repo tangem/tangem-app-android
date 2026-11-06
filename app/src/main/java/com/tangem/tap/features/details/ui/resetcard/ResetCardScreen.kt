@@ -80,7 +80,7 @@ private fun Title() {
     Text(
         text = stringResourceSafe(id = R.string.card_settings_reset_card_to_factory),
         style = TangemTheme.typography.h1,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         modifier = Modifier.testTag(ResetCardScreenTestTags.TITLE),
     )
 }
@@ -101,7 +101,7 @@ private fun Subtitle() {
     Text(
         text = stringResourceSafe(id = R.string.common_attention),
         style = TangemTheme.typography.h3,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         modifier = Modifier.testTag(ResetCardScreenTestTags.SUBTITLE),
     )
 }
@@ -111,7 +111,7 @@ private fun Description(text: TextReference) {
     Text(
         text = text.resolveReference(),
         style = TangemTheme.typography.body1,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
         modifier = Modifier.testTag(ResetCardScreenTestTags.DESCRIPTION),
     )
 }
@@ -154,7 +154,7 @@ private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) 
                     tint = if (checked) {
                         TangemTheme.colors.control.checked
                     } else {
-                        TangemTheme.colors.icon.secondary
+                        TangemTheme.colors3.icon.secondary
                     },
                 )
             }
@@ -163,7 +163,7 @@ private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) 
         Text(
             text = description.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.testTag(ResetCardScreenTestTags.CHECKBOX_TEXT),
         )
     }
@@ -228,7 +228,7 @@ private fun CompletedResetDialog(dialog: ResetCardDialog) {
 private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         ResetCardScreen(
             state = ResetCardScreenState(

@@ -68,9 +68,24 @@ data class NFTAsset(
         @Serializable
         data class Solana(
             val tokenAddress: String,
-            val tokenStandard: Int?,
+            val tokenStandard: String?,
         ) : Identifier() {
             override val stringValue: String = tokenAddress
+
+            /** Compressed and unknown standards have no transfer path yet; a null standard is a legacy SPL NFT. */
+            val isTransferSupported: Boolean
+                get() = tokenStandard == null || tokenStandard in TRANSFERABLE_TOKEN_STANDARDS
+
+            private companion object {
+                val TRANSFERABLE_TOKEN_STANDARDS = setOf(
+                    "Metaplex",
+                    "MetaplexEdition",
+                    "Token2022",
+                    "ProgrammableNft",
+                    "ProgrammableNftEdition",
+                    "MplCore",
+                )
+            }
         }
 
         @Serializable

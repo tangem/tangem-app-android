@@ -24,13 +24,13 @@ import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.settings.CanUseBiometryUseCase
-import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.domain.wallets.usecase.NonBiometricUnlockWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
@@ -60,7 +60,7 @@ internal class WelcomeModel @Inject constructor(
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
-    hotWalletRestrictionManager: HotWalletRestrictionManager,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val scanCardProcessor: ScanCardProcessor,
     private val messageSender: UiMessageSender,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
@@ -97,8 +97,6 @@ internal class WelcomeModel @Inject constructor(
     private val walletsFetcherJobHolder = JobHolder()
     private val wallets = MutableStateFlow<ImmutableList<UserWalletItemUM>>(persistentListOf())
     private var isRoutedOut = false
-    private val isWalletCreationRestrictionEnabled: StateFlow<Boolean> =
-        hotWalletRestrictionManager.isCreationEnabled()
 
     init {
         modelScope.launch {
@@ -191,7 +189,7 @@ internal class WelcomeModel @Inject constructor(
 
     private fun addWalletClick() {
         analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.SignIn))
-        if (isWalletCreationRestrictionEnabled.value) {
+        if (!hotWalletFeatureToggles.isMultipleHotWalletsEnabled) {
             scanCard()
         } else {
             router.push(AppRoute.CreateWalletSelection)

@@ -50,7 +50,7 @@ internal fun WcSignTransactionModalBottomSheetContent(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         onBack = onBack,
         title = {
             TangemModalBottomSheetTitle(
@@ -67,7 +67,7 @@ internal fun WcSignTransactionModalBottomSheetContent(
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
-                        .background(color = TangemTheme.colors.background.action)
+                        .background(color = TangemTheme.colors3.bg.secondary)
                         .fillMaxWidth()
                         .animateContentSize(),
                 ) {
@@ -112,7 +112,7 @@ private fun WcSignTransactionItems(state: WcSignTransactionItemUM, modifier: Mod
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(color = TangemTheme.colors.background.action)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .animateContentSize(),
     ) {
@@ -154,7 +154,7 @@ private fun WcSignTransactionBottomSheetPreview(
                 onDismissRequest = {},
                 content = state,
             ),
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 TangemModalBottomSheetTitle(
                     title = resourceReference(R.string.wallet_connect_title),

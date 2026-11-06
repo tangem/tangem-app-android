@@ -65,6 +65,8 @@ dependencies {
     implementation(projects.libs.crypto)
     // endregion
 
+    implementation(projects.features.jointAccount.api)
+
     // region Tests
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)

@@ -51,6 +51,7 @@ internal fun SwapStateHolder.withAccountFlowPresentation(
             accountBalance = accountBalance,
         )
         is AccountFlow.MoneyTopUp -> titledState.withLockedReceiveCard()
+        is AccountFlow.MoneyWithdraw -> titledState.withLockedSendCard()
         is AccountFlow.TopUp -> titledState.withAccountTopUpReceiveCard()
         is AccountFlow.Withdraw -> titledState
     }
@@ -58,7 +59,7 @@ internal fun SwapStateHolder.withAccountFlowPresentation(
 
 private fun AccountFlow.titleId(): Int = when (this) {
     is AccountFlow.TopUp -> R.string.tangempay_card_details_add_funds
-    is AccountFlow.Withdraw -> R.string.tangempay_card_details_withdraw
+    is AccountFlow.Withdraw, is AccountFlow.MoneyWithdraw -> R.string.tangempay_card_details_withdraw
     is AccountFlow.PredictionWithdraw -> R.string.prediction_main_withdraw
     is AccountFlow.PredictionTopUp -> R.string.common_add_funds
     is AccountFlow.CollectiblesTopUp -> R.string.common_add_funds
@@ -81,6 +82,10 @@ private fun SwapStateHolder.withPredictionWithdrawCards(collateralBalance: BigDe
 
 private fun SwapStateHolder.withLockedReceiveCard(): SwapStateHolder = copy(
     receiveCardData = receiveCardData.withSelectionLocked(),
+)
+
+private fun SwapStateHolder.withLockedSendCard(): SwapStateHolder = copy(
+    sendCardData = sendCardData.withSelectionLocked(),
 )
 
 private fun SwapStateHolder.withAccountTopUpReceiveCard(): SwapStateHolder {

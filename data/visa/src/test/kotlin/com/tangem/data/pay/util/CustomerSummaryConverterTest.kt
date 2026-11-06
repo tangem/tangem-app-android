@@ -1,12 +1,11 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerSummary
-import com.tangem.domain.pay.model.CustomerSummary.Activation.FailureReason
-import com.tangem.domain.pay.model.CustomerSummary.Activation.Status
-import com.tangem.domain.pay.model.CustomerSummary.Activation.Step
+import com.tangem.domain.pay.model.CustomerSummary.MoneyAccount
+import com.tangem.domain.pay.model.CustomerSummary.CustomerStatus
+import com.tangem.domain.pay.model.CustomerSummary.KycStatus
+import com.tangem.domain.pay.model.CustomerSummary.PaymentAccount
 import com.tangem.spend.datasource.pay.models.response.CustomerSummaryResponse
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
@@ -35,38 +34,69 @@ internal class CustomerSummaryConverterTest {
         ConvertModel(
             name = "lowercase values -> recognised",
             response = createResponse(
-                customerStatus = "active",
-                kycStatus = "approved",
+                customerStatus = "blocked",
+                kycStatus = "in_progress",
                 paymentActivation = activation(status = "processing", step = "awaiting_deposit"),
-                bankingActivation = activation(status = "failed", failureReason = "rain_rejected"),
+                bankingActivation = activation(status = "failed", step = "issuing", failureReason = "rain_rejected"),
             ),
             expected = createExpected(
-                paymentActivation = CustomerSummary.Activation(
-                    status = Status.PROCESSING,
-                    step = Step.AWAITING_DEPOSIT,
+                customerStatus = CustomerStatus.BLOCKED,
+                kycStatus = KycStatus.IN_PROGRESS,
+                paymentActivation = PaymentAccount.Activation(
+                    status = PaymentAccount.Activation.Status.PROCESSING,
+                    step = PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
                     failureReason = null,
                 ),
-                bankingActivation = CustomerSummary.Activation(
-                    status = Status.FAILED,
-                    step = null,
-                    failureReason = FailureReason.RAIN_REJECTED,
+                bankingActivation = MoneyAccount.Activation(
+                    status = MoneyAccount.Activation.Status.FAILED,
+                    step = MoneyAccount.Activation.Step.ISSUING,
+                    failureReason = MoneyAccount.Activation.FailureReason.RAIN_REJECTED,
                 ),
             ),
         ),
         ConvertModel(
-            name = "unrecognised values -> UNKNOWN fallbacks",
+            name = "unrecognised values -> UNKNOWN",
             response = createResponse(
                 customerStatus = "SUSPENDED",
                 kycStatus = "ON_HOLD",
                 paymentActivation = activation(status = "PAUSED", step = "SHIPPING", failureReason = "LIMITS"),
+                bankingActivation = activation(status = "PAUSED", step = "SHIPPING", failureReason = "LIMITS"),
             ),
             expected = createExpected(
-                customerStatus = CustomerInfo.State.UNDEFINED,
+                customerStatus = CustomerStatus.UNKNOWN,
                 kycStatus = KycStatus.UNKNOWN,
-                paymentActivation = CustomerSummary.Activation(
-                    status = Status.UNKNOWN,
-                    step = Step.UNKNOWN,
-                    failureReason = FailureReason.UNKNOWN,
+                paymentActivation = PaymentAccount.Activation(
+                    status = PaymentAccount.Activation.Status.UNKNOWN,
+                    step = PaymentAccount.Activation.Step.UNKNOWN,
+                    failureReason = PaymentAccount.Activation.FailureReason.UNKNOWN,
+                ),
+                bankingActivation = MoneyAccount.Activation(
+                    status = MoneyAccount.Activation.Status.UNKNOWN,
+                    step = MoneyAccount.Activation.Step.UNKNOWN,
+                    failureReason = MoneyAccount.Activation.FailureReason.UNKNOWN,
+                ),
+            ),
+        ),
+        ConvertModel(
+            name = "values of the other product -> UNKNOWN",
+            response = createResponse(
+                paymentActivation = activation(status = "DEACTIVATED"),
+                bankingActivation = activation(
+                    status = "FAILED",
+                    step = "AWAITING_DEPOSIT",
+                    failureReason = "DEPOSIT_TIMEOUT",
+                ),
+            ),
+            expected = createExpected(
+                paymentActivation = PaymentAccount.Activation(
+                    status = PaymentAccount.Activation.Status.UNKNOWN,
+                    step = null,
+                    failureReason = null,
+                ),
+                bankingActivation = MoneyAccount.Activation(
+                    status = MoneyAccount.Activation.Status.FAILED,
+                    step = MoneyAccount.Activation.Step.UNKNOWN,
+                    failureReason = MoneyAccount.Activation.FailureReason.UNKNOWN,
                 ),
             ),
         ),
@@ -81,13 +111,13 @@ internal class CustomerSummaryConverterTest {
             expected = createExpected(
                 paymentAccountId = null,
                 bankingAccountId = null,
-                paymentActivation = CustomerSummary.Activation(
-                    status = Status.NOT_STARTED,
+                paymentActivation = PaymentAccount.Activation(
+                    status = PaymentAccount.Activation.Status.NOT_STARTED,
                     step = null,
                     failureReason = null,
                 ),
-                bankingActivation = CustomerSummary.Activation(
-                    status = Status.DEACTIVATED,
+                bankingActivation = MoneyAccount.Activation(
+                    status = MoneyAccount.Activation.Status.DEACTIVATED,
                     step = null,
                     failureReason = null,
                 ),
@@ -130,18 +160,18 @@ internal class CustomerSummaryConverterTest {
     )
 
     private fun createExpected(
-        customerStatus: CustomerInfo.State = CustomerInfo.State.ACTIVE,
+        customerStatus: CustomerStatus = CustomerStatus.ACTIVE,
         kycStatus: KycStatus = KycStatus.APPROVED,
         paymentAccountId: String? = PAYMENT_ACCOUNT_ID,
         bankingAccountId: String? = BANKING_ACCOUNT_ID,
-        paymentActivation: CustomerSummary.Activation = CustomerSummary.Activation(
-            status = Status.COMPLETED,
+        paymentActivation: PaymentAccount.Activation = PaymentAccount.Activation(
+            status = PaymentAccount.Activation.Status.COMPLETED,
             step = null,
             failureReason = null,
         ),
-        bankingActivation: CustomerSummary.Activation = CustomerSummary.Activation(
-            status = Status.PROCESSING,
-            step = Step.ISSUING,
+        bankingActivation: MoneyAccount.Activation = MoneyAccount.Activation(
+            status = MoneyAccount.Activation.Status.PROCESSING,
+            step = MoneyAccount.Activation.Step.ISSUING,
             failureReason = null,
         ),
     ) = CustomerSummary(
@@ -149,12 +179,12 @@ internal class CustomerSummaryConverterTest {
         customerStatus = customerStatus,
         isHidden = true,
         kycStatus = kycStatus,
-        paymentAccount = CustomerSummary.PaymentAccount(
+        paymentAccount = PaymentAccount(
             id = paymentAccountId,
             activation = paymentActivation,
             cards = CustomerSummary.Cards(active = 1, frozen = 2, pending = 3),
         ),
-        bankingAccount = CustomerSummary.BankingAccount(
+        moneyAccount = MoneyAccount(
             id = bankingAccountId,
             activation = bankingActivation,
         ),

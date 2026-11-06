@@ -69,7 +69,7 @@ internal fun FeeSelectorBlockContent(
 
     Row(
         modifier = modifier
-            .conditionalCompose(!isPlain) { Modifier.background(TangemTheme.colors.background.action) }
+            .conditionalCompose(!isPlain) { Modifier.background(TangemTheme.colors3.bg.secondary) }
             .padding(12.dp)
             .testTag(FeeSelectorBlockTestTags.SELECTOR_BLOCK),
         verticalAlignment = Alignment.CenterVertically,
@@ -81,7 +81,7 @@ internal fun FeeSelectorBlockContent(
                     .testTag(FeeSelectorBlockTestTags.ICON),
                 painter = painterResource(R.drawable.ic_fee_new_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
             )
         }
         FeeSelectorDescription(state = state, onReadMoreClick = onReadMoreClick, isPlain = isPlain)
@@ -123,15 +123,15 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, isPlain: Boolean,
                 .testTag(FeeSelectorBlockTestTags.TITLE),
             text = stringResourceSafe(R.string.common_network_fee_title),
             style = if (isPlain) TangemTheme.typography3.body.medium else TangemTheme.typography.body1,
-            color = if (isPlain) TangemTheme.colors3.text.primary else TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         val linkText = stringResourceSafe(R.string.common_read_more)
         val fullString = stringResourceSafe(R.string.common_fee_selector_footer, linkText)
         val linkTextPosition = fullString.length - linkText.length
-        val defaultStyle = TangemTheme.colors.text.primary2
-        val linkStyle = TangemTheme.colors.text.accent
+        val defaultStyle = TangemTheme.colors3.text.inverse.primary
+        val linkStyle = TangemTheme.colors3.text.accent.blue
         val annotatedString = remember(defaultStyle, linkStyle) {
             buildAnnotatedString {
                 withStyle(SpanStyle(defaultStyle)) {
@@ -163,7 +163,7 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, isPlain: Boolean,
                         .testTag(FeeSelectorBlockTestTags.TOOLTIP_ICON),
                     painter = painterResource(id = R.drawable.ic_token_info_24),
                     contentDescription = null,
-                    tint = if (isPlain) TangemTheme.colors3.icon.secondary else TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.secondary,
                 )
             },
         )
@@ -178,14 +178,14 @@ private fun RowScope.FeeError(state: FeeSelectorUM.Error) {
             // A warning sentence must wrap next to the title instead of squeezing it out of the row.
             modifier = Modifier.weight(1f),
             text = warning,
-            color = TangemTheme.colors.text.warning,
+            color = TangemTheme.colors3.text.accent.red,
             style = TangemTheme.typography.body2,
             textAlign = TextAlign.End,
         )
     } else {
         Text(
             text = EMPTY_BALANCE_SIGN,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography.body2,
         )
     }
@@ -244,7 +244,7 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
                     }
             },
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.End,
             modifier = Modifier
                 .padding(start = 4.dp)
@@ -260,7 +260,7 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
                     .testTag(FeeSelectorBlockTestTags.SELECT_FEE_ICON),
                 painter = painterResource(id = R.drawable.ic_select_18_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
     }

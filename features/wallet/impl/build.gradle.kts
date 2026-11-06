@@ -66,6 +66,7 @@ dependencies {
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)
+    implementation(projects.core.configToggles)
     implementation(projects.core.res)
 
     implementation(projects.libs.crypto)
@@ -76,7 +77,6 @@ dependencies {
     implementation(projects.domain.appsflyer)
     api(projects.domain.account.status)
     api(projects.domain.addressBook)
-    api(projects.domain.analytics)
     api(projects.domain.appCurrency)
     api(projects.domain.appTheme)
     api(projects.domain.appUpdate)

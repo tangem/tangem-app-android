@@ -2,7 +2,7 @@ package com.tangem.domain.jointaccount.model
 
 /**
  * Shared account config, immutable once the account exists — part of every signed payload: creation and joining
- * carry it as is, activation extends it with the resolved Safe address.
+ * carry it as is, confirmation extends it with the resolved Safe address.
  *
  * @property name         account name shared by all participants, 1..20 chars
  * @property icon         icon name, from the same set as crypto accounts

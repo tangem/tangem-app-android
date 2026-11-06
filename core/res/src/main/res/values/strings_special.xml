@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="common_custom_string" translatable="false">%s</string>
+    <string name="mcp_intent_host" translatable="false">mcp.tangem.org</string>
 </resources>

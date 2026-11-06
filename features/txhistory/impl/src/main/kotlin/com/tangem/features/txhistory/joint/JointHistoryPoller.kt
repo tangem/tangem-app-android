@@ -20,7 +20,8 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * The backend relays a joint transaction and drops the operation before the chain indexer serves it, so nothing on
  * screen says when it lands. While a joint token's details are on top, its history is reloaded every
- * [POLL_INTERVAL]; the providers serve no ETag, so every reload is a full request and the interval stays coarse.
+ * [POLL_INTERVAL] together with the joint operation history delta; the providers serve no ETag, so every reload is a
+ * full request and the interval stays coarse.
  * A reload starts the list over from its first page, so it waits while the user has more pages loaded — a new
  * transaction lands on top anyway.
  */

@@ -45,7 +45,7 @@ internal fun StoriesScreen(config: StoriesUM) {
 
     StoriesContainer(
         config = config,
-    ) { current, _ ->
+    ) { current ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -93,7 +93,7 @@ private fun StoriesText(current: StoriesUM.Content.Config) {
                 letterSpacing = TextUnit(value = 0.1f, type = TextUnitType.Sp),
                 lineHeight = TextUnit(value = 34f, type = TextUnitType.Sp),
             ),
-            color = TangemTheme.colors.text.constantWhite,
+            color = TangemTheme.colors3.text.staticDark.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier.testTag(SwapStoriesScreenTestTags.TITLE),
         )

@@ -5,85 +5,35 @@ import arrow.core.none
 import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.yield.supply.YieldSupplyError
-import com.tangem.domain.yield.supply.models.YieldSupplyFee
-import com.tangem.domain.yield.supply.models.YieldSupplyMaxFee
-import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetCurrentFeeUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetMaxFeeUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
-import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
+import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
-import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
-import com.tangem.features.yield.supply.impl.subcomponents.startearning.YieldSupplyStartEarningComponent
-import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class YieldSupplyStartEarningModelTest : YieldSupplyActionModelTestBase() {
-
-    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
-    private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
-    private val startEarningUseCase: YieldSupplyStartEarningUseCase = mockk()
-    private val estimateEnterFeeUseCase: YieldSupplyEstimateEnterFeeUseCase = mockk()
-    private val activateUseCase: YieldSupplyActivateUseCase = mockk()
-    private val minAmountUseCase: YieldSupplyMinAmountUseCase = mockk()
-    private val getMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase = mockk()
-    private val getCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase = mockk()
-
-    private val accountStatusList: AccountStatusList = mockk()
-    private val callback: YieldSupplyStartEarningComponent.ModelCallback = mockk(relaxed = true)
-
-    @BeforeEach
-    fun setUp() {
-        mockkObject(CryptoCurrencyStatusOperations)
-        every { getUserWalletUseCase(userWalletId) } returns userWallet.right()
-        every { accountStatusListSupplier(userWalletId) } returns flowOf(accountStatusList)
-        stubCurrencyStatusLookup(cryptoCurrencyStatus.some())
-        coEvery { minAmountUseCase(any(), any()) } returns BigDecimal("5").right()
-        coEvery { getMaxFeeUseCase(any(), any()) } returns maxFee().right()
-        coEvery { getCurrentFeeUseCase(any(), any()) } returns YieldSupplyFee(BigDecimal("0.001")).right()
-        coEvery { startEarningUseCase(any(), any(), any()) } returns listOf(uncompiledTx()).right()
-        coEvery { estimateEnterFeeUseCase(any(), any(), any()) } returns listOf(uncompiledTx()).right()
-        coEvery {
-            sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
-        } returns listOf("0xhash").right()
-        coEvery { activateUseCase(any(), any(), any()) } returns true.right()
-    }
-
-    @AfterEach
-    fun tearDown() {
-        unmockkObject(CryptoCurrencyStatusOperations)
-    }
+internal class YieldSupplyStartEarningModelTest : YieldSupplyStartEarningModelTestBase() {
 
     @Test
     fun `GIVEN successful fee load WHEN model created THEN fee content and button enabled`() = runTest {
@@ -153,7 +103,7 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyActionModelTestBase
     }
 
     @Test
-    fun `GIVEN content loaded WHEN onClick THEN tracks pending and notifies sent`() = runTest {
+    fun `GIVEN content loaded WHEN onClick THEN tracks pending reloads history and notifies sent`() = runTest {
         // Arrange
         val model = createModel()
         advanceUntilIdle()
@@ -165,7 +115,38 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyActionModelTestBase
         // Assert
         coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, any(), any()) }
         coVerify { pendingTracker.addPending(userWalletId, any(), any(), any()) }
+        verify(exactly = 1) { txHistoryUpdater.scheduleUpdates(userWalletId, any(), any()) }
         verify { callback.onTransactionSent() }
+    }
+
+    @Test
+    fun `GIVEN upgrade-wrapped enter in batch WHEN onClick THEN deposit context carries the enter hash`() = runTest {
+        // Arrange
+        val wrappedEnter = uncompiledTx().copy(
+            extras = EthereumTransactionExtras(
+                callData = EthereumYieldSupplyUpgradeToAndCallCallData(
+                    newImplementation = "0x5555555555555555555555555555555555555555",
+                    innerCallData = mockk<EthereumYieldSupplyEnterCallData>(),
+                ),
+            ),
+        )
+        coEvery { estimateEnterFeeUseCase(any(), any(), any()) } returns listOf(uncompiledTx(), wrappedEnter).right()
+        coEvery {
+            sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
+        } returns listOf("0xfirst", "0xenter").right()
+        val depositContextSlot = slot<YieldSupplyPendingTracker.DepositContext>()
+        coEvery {
+            pendingTracker.addPending(any(), any(), any(), capture(depositContextSlot))
+        } returns Unit
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(depositContextSlot.captured.enterTransactionHash).isEqualTo("0xenter")
     }
 
     @Test
@@ -235,57 +216,32 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyActionModelTestBase
         assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
     }
 
-    private fun stubCurrencyStatusLookup(result: arrow.core.Option<com.tangem.domain.models.currency.CryptoCurrencyStatus>) {
+    @Test
+    fun `GIVEN a fee load in flight WHEN the status turns loading THEN the load still delivers its fee`() = runTest {
+        // Arrange
+        val loadingAccountStatusList: AccountStatusList = mockk()
         every {
             with(CryptoCurrencyStatusOperations) {
-                accountStatusList.getCryptoCurrencyStatus(any<CryptoCurrency>())
+                loadingAccountStatusList.getCryptoCurrencyStatus(any<CryptoCurrency>())
             }
-        } returns result
+        } returns CryptoCurrencyStatus(currency = token, value = CryptoCurrencyStatus.Loading).some()
+        val accountStatusLists = MutableStateFlow(accountStatusList)
+        every { accountStatusListSupplier(userWalletId) } returns accountStatusLists
+        coEvery { estimateEnterFeeUseCase(any(), any(), any()) } coAnswers {
+            delay(1_000)
+            listOf(uncompiledTx()).right()
+        }
+        val model = createModel()
+        runCurrent()
+
+        // Act
+        accountStatusLists.value = loadingAccountStatusList
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.yieldSupplyFeeUM).isEqualTo(YieldSupplyFeeUM.Loading)
+        coVerify(exactly = 1) {
+            notificationsUpdateTrigger.triggerUpdate(match { it.feeValue == BigDecimal("0.001") && it.feeError == null })
+        }
     }
-
-    private fun maxFee(): YieldSupplyMaxFee = YieldSupplyMaxFee(
-        nativeMaxFee = BigDecimal("0.01"),
-        tokenMaxFee = BigDecimal("2"),
-        fiatMaxFee = BigDecimal("4"),
-    )
-
-    private fun TestScope.createModel(): YieldSupplyStartEarningModel = YieldSupplyStartEarningModel(
-        dispatchers = createTestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(
-            YieldSupplyStartEarningComponent.Params(
-                userWalletId = userWalletId,
-                cryptoCurrency = token,
-                yieldSupplyActionUM = actionUM(),
-                callback = callback,
-            ),
-        ),
-        analytics = analytics,
-        getUserWalletUseCase = getUserWalletUseCase,
-        singleAccountStatusListSupplier = accountStatusListSupplier,
-        getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
-        sendTransactionUseCase = sendTransactionUseCase,
-        yieldSupplyStartEarningUseCase = startEarningUseCase,
-        yieldSupplyEstimateEnterFeeUseCase = estimateEnterFeeUseCase,
-        getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-        yieldSupplyNotificationsUpdateTrigger = notificationsUpdateTrigger,
-        yieldSupplyAlertFactory = alertFactory,
-        yieldSupplyMinAmountUseCase = minAmountUseCase,
-        yieldSupplyGetMaxFeeUseCase = getMaxFeeUseCase,
-        yieldSupplyGetCurrentFeeUseCase = getCurrentFeeUseCase,
-        yieldSupplyRepository = yieldSupplyRepository,
-        yieldSupplyPendingTracker = pendingTracker,
-        appsFlyerRepository = appsFlyerRepository,
-    )
-
-    private fun actionUM(): YieldSupplyActionUM = YieldSupplyActionUM(
-        title = stringReference(""),
-        subtitle = stringReference(""),
-        footer = stringReference(""),
-        footerLink = stringReference(""),
-        currencyIconState = mockk<CurrencyIconState>(relaxed = true),
-        yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
-        isPrimaryButtonEnabled = false,
-        isTransactionSending = false,
-        isHoldToConfirmEnabled = false,
-    )
 }

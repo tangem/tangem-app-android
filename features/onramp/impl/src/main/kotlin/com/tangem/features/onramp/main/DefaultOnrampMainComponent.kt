@@ -13,8 +13,10 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
+import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.alloffers.AllOffersComponent
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
@@ -25,6 +27,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
+@Suppress("LongParameterList")
 internal class DefaultOnrampMainComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: OnrampMainComponent.Params,
@@ -32,6 +35,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
     private val selectCurrencyComponentFactory: SelectCurrencyComponent.Factory,
     private val allOffersComponentFactory: AllOffersComponent.Factory,
     private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
+    private val conciergeDemandSurveyComponentFactory: ConciergeDemandSurveyComponent.Factory,
 ) : OnrampMainComponent, AppComponentContext by appComponentContext {
 
     private val model: OnrampMainComponentModel = getOrCreateModel(params)
@@ -50,7 +54,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
     )
 
     init {
-        lifecycle.subscribe(onStop = model::onStop)
+        lifecycle.subscribe(onStart = model::onStart, onStop = model::onStop)
     }
 
     private val bottomSheetSlot = childSlot(
@@ -60,10 +64,30 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
         childFactory = ::bottomSheetChild,
     )
 
+    private val demandSurveyRouter: Router = object : Router by router {
+        override fun pop(onComplete: (isSuccess: Boolean) -> Unit) {
+            model.demandSurveyNavigation.dismiss(onComplete)
+        }
+    }
+
+    private val demandSurveySlot = childSlot(
+        source = model.demandSurveyNavigation,
+        key = "demandSurveySlot",
+        serializer = null,
+        handleBackButton = false,
+        childFactory = { surveyParams, componentContext ->
+            conciergeDemandSurveyComponentFactory.create(
+                context = childByContext(componentContext = componentContext, router = demandSurveyRouter),
+                params = surveyParams,
+            )
+        },
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsState()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
+        val demandSurvey by demandSurveySlot.subscribeAsState()
 
         OnrampMainScreen(
             modifier = modifier,
@@ -72,6 +96,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
             linkedMarketingBannerComponent = linkedMarketingBannerComponent,
         )
         bottomSheet.child?.instance?.BottomSheet()
+        demandSurvey.child?.instance?.Content(modifier = Modifier)
     }
 
     private fun bottomSheetChild(

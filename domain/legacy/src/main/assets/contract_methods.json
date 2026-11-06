@@ -212,6 +212,11 @@
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
         "name": "enterProtocolByOwner"
     },
+    "0x3e44dfd2": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "enterProtocolByOwner"
+    },
     "0xc65e6dcf": {
         "info": "yieldModule",
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
@@ -231,6 +236,11 @@
         "info": "yieldModule",
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
         "name": "yieldSend"
+    },
+    "0x4c3f521d": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "swap"
     },
     "0xb9de6a93": {
         "info": "yieldModule",

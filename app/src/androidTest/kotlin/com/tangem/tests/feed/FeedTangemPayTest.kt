@@ -2,7 +2,6 @@ package com.tangem.tests.feed
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
-import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_KYC_STATUS_SCENARIO
@@ -227,7 +226,7 @@ class FeedTangemPayTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycInProgressState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Assert Tangem Pay tile with '$kycInProgressText' is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {

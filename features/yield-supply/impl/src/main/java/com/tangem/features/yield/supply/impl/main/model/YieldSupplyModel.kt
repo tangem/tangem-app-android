@@ -137,12 +137,12 @@ internal class YieldSupplyModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = cryptoCurrency,
             ),
-        ) { maybeCryptoCurrency, _ ->
-            maybeCryptoCurrency
+        ) { maybeCryptoCurrency, pendingStatus ->
+            maybeCryptoCurrency to pendingStatus
         }
             .flowOn(dispatchers.io)
             .distinctUntilChanged()
-            .onEach { maybeCryptoCurrency ->
+            .onEach { (maybeCryptoCurrency, _) ->
                 maybeCryptoCurrency.fold(
                     ifSome = { cryptoCurrencyStatus ->
                         latestCryptoCurrencyStatus = cryptoCurrencyStatus

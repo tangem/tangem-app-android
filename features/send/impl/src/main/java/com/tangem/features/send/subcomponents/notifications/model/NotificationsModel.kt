@@ -349,7 +349,9 @@ internal class NotificationsModel @Inject constructor(
         isFeeCoverage: Boolean,
         currencyCheck: CryptoCurrencyCheck,
     ) {
-        val validationError = if (destinationAddress != null) {
+        // An NFT is checked as a zero amount of the network coin, which the SDK takes for a coin transfer and
+        // refuses for an empty recipient on Solana, though the sender itself funds the recipient's token account.
+        val validationError = if (destinationAddress != null && !notificationData.isNFTTransfer) {
             validateTransactionUseCase(
                 userWalletId = userWalletId,
                 amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),

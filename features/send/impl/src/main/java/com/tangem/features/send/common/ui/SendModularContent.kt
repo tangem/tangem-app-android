@@ -34,7 +34,7 @@ import com.tangem.features.send.common.CommonSendRoute
 internal fun SendModularContent(stackState: ChildStack<CommonSendRoute, ComposableModularContentComponent>) {
     Column(
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.tertiary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
@@ -57,7 +57,7 @@ internal fun SendModularContent(stackState: ChildStack<CommonSendRoute, Composab
 
                 if (stackState.active.configuration != CommonSendRoute.ConfirmSuccess) {
                     Fade(
-                        backgroundColor = TangemTheme.colors.background.tertiary,
+                        backgroundColor = TangemTheme.colors3.bg.primary,
                         modifier = Modifier.align(Alignment.BottomCenter),
                     )
                 }

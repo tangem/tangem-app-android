@@ -27,6 +27,7 @@ internal class ArchivedAccountConverter(
             type = when (value.type) {
                 WalletAccountDTO.Type.JOINT -> ArchivedAccount.Type.JOINT
                 WalletAccountDTO.Type.CRYPTO, null -> ArchivedAccount.Type.CRYPTO
+                WalletAccountDTO.Type.COLLECTIBLES -> error("Collectibles account ${value.id} can't be archived")
             },
         )
     }

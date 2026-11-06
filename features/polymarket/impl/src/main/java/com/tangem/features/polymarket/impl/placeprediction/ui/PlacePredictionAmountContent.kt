@@ -3,10 +3,13 @@ package com.tangem.features.polymarket.impl.placeprediction.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -31,11 +35,13 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountBlock
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountFractionsRow
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionSharesBlock
@@ -45,6 +51,7 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredi
 import java.math.BigDecimal
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.flowTitle
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun PlacePredictionAmountContent(
     state: PlacePredictionUM,
@@ -54,7 +61,7 @@ internal fun PlacePredictionAmountContent(
     var footerHeight by remember { mutableIntStateOf(0) }
 
     TangemTopBarScaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(PredictionTestTags.PLACE_PREDICTION_SCREEN),
         topBar = {
             TangemTopNavigation(
                 title = resourceReference(state.order.flowTitle()),
@@ -83,6 +90,9 @@ internal fun PlacePredictionAmountContent(
                     isEnabled = state.isPrimaryButtonEnabled,
                     onClick = intents::onNextClick,
                 )
+                if (WindowInsets.isImeVisible && state.hasFractionsToOffer()) {
+                    PredictionAmountFractionsRow(onFractionClick = intents::onFractionClick)
+                }
             }
         },
     ) { contentPadding ->
@@ -108,11 +118,15 @@ internal fun PlacePredictionAmountContent(
     }
 }
 
+private fun PlacePredictionUM.hasFractionsToOffer(): Boolean =
+    (order as? OrderSideUM.Buy)?.balance?.let { it.signum() > 0 } == true
+
 @Composable
 private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionAmountIntents) {
     when (val order = state.order) {
         is OrderSideUM.Buy -> PredictionAmountBlock(
             amountValue = state.amountValue,
+            isAmountFromFraction = state.isAmountFromFraction,
             amountCaption = state.amountCaption,
             balance = order.balance,
             isAddFundsEnabled = order.isAddFundsEnabled,

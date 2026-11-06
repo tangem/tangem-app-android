@@ -56,15 +56,15 @@ fun LazyListScope.notifications(
                     is NotificationUM.Error.TokenExceedsBalance,
                     is NotificationUM.Warning.NetworkFeeUnreachable,
                     is NotificationUM.Warning.HighFeeError,
-                    -> TangemTheme.colors.background.action
-                    else -> TangemTheme.colors.button.disabled
+                    -> TangemTheme.colors3.bg.secondary
+                    else -> TangemTheme.colors3.bg.disabled
                 },
                 iconTint = when (item) {
                     is NotificationUM.Error.TokenExceedsBalance,
                     is NotificationUM.Warning,
                     -> null
-                    is NotificationUM.Error -> TangemTheme.colors.icon.warning
-                    is NotificationUM.Info -> TangemTheme.colors.icon.accent
+                    is NotificationUM.Error -> TangemTheme.colors3.icon.accent.red
+                    is NotificationUM.Info -> TangemTheme.colors3.icon.accent.blue
                 },
                 isEnabled = !isClickDisabled,
             )
@@ -243,7 +243,7 @@ private fun StackedNotifications_Preview(
     @PreviewParameter(StackedNotificationsPreviewProvider::class) params: ImmutableList<TangemMessageUM>,
 ) {
     TangemThemePreviewRedesign {
-        val contentColor = TangemTheme.colors2.surface.level1
+        val contentColor = TangemTheme.colors3.bg.primary
         LazyColumn(
             modifier = Modifier
                 .background(contentColor)

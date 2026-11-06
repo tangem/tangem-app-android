@@ -30,8 +30,7 @@ import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
+import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
@@ -292,21 +291,18 @@ private fun IntervalSelector(
     onIntervalClick: (PriceChangeInterval) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val items = remember {
-        PriceChangeInterval.entries
-            .map { TangemSegmentUM(it.toString(), it.getText()) }.toImmutableList()
-    }
-    val selectedItem = remember(trendInterval) {
-        items.firstOrNull { it.id == trendInterval.toString() }
+    val items = remember(trendInterval, onIntervalClick) {
+        PriceChangeInterval.entries.map { interval ->
+            TangemSegmentedControl.Item(
+                id = interval.name,
+                label = interval.getText(),
+                isSelected = interval == trendInterval,
+                onClick = { onIntervalClick(interval) },
+            )
+        }.toImmutableList()
     }
 
-    TangemSegmentedPicker(
-        items = items,
-        initialSelectedItem = selectedItem,
-        isFixed = true,
-        modifier = modifier,
-        onClick = { onIntervalClick(PriceChangeInterval.valueOf(it.id)) },
-    )
+    TangemSegmentedControl(items = items, modifier = modifier)
 }
 
 @Composable
@@ -359,7 +355,7 @@ private fun MarketsTokenDetailsContent_Preview(
     TangemThemePreview {
         MarketsTokenDetailsContent(
             state = params,
-            backgroundColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = TangemTheme.colors3.bg.primary,
             portfolioFloatingBlock = null,
             marketingBanner = {},
             contentPadding = PaddingValues(),

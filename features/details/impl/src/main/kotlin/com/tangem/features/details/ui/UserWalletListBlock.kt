@@ -116,7 +116,7 @@ private fun LazyItemScope.WalletItem(
                         enabled = walletReorderUM.isDragEnabled,
                         onDragStopped = walletReorderUM.onDragStopped,
                     )
-                    .background(color = TangemTheme.colors.background.primary),
+                    .background(color = TangemTheme.colors3.bg.secondary),
             )
         }
     }
@@ -151,7 +151,7 @@ private fun AddWalletButton(
                         modifier = Modifier
                             .size(24.dp)
                             .padding(4.dp),
-                        color = TangemTheme.colors.icon.accent,
+                        color = TangemTheme.colors3.icon.accent.blue,
                     )
                 } else {
                     Box(
@@ -159,11 +159,11 @@ private fun AddWalletButton(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(TangemTheme.colors.icon.accent.copy(alpha = 0.1f)),
+                            .background(TangemTheme.colors3.bg.accent.blueSubtle),
                     ) {
                         Icon(
                             modifier = Modifier.size(18.dp),
-                            tint = TangemTheme.colors.icon.accent,
+                            tint = TangemTheme.colors3.icon.accent.blue,
                             imageVector = ImageVector.vectorResource(id = R.drawable.ic_plus_24),
                             contentDescription = null,
                         )
@@ -174,7 +174,7 @@ private fun AddWalletButton(
             Text(
                 text = text.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.accent,
+                color = TangemTheme.colors3.text.accent.blue,
             )
         }
     }

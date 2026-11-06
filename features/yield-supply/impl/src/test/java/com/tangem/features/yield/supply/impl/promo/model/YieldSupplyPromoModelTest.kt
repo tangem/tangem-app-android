@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.promo.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -72,6 +73,7 @@ internal class YieldSupplyPromoModelTest {
     }
 
     private fun createModel(currency: CryptoCurrency): YieldSupplyPromoModel = YieldSupplyPromoModel(
+        tangemBlogUrlBuilder = mockk(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(
             YieldSupplyPromoComponent.Params(

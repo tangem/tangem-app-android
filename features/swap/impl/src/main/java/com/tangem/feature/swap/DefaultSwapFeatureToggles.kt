@@ -9,18 +9,8 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : SwapFeatureToggles {
 
-    override val isYieldDexTransferEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED,
-        )
-
-    override val isTronGaslessSwapEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.TWI_1803_TRON_GASLESS_SWAP_ENABLED,
-        )
-
     override val isTronGaslessDexSwapEnabled: Boolean
-        get() = isTronGaslessSwapEnabled && featureTogglesManager.isFeatureEnabled(
+        get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.TWI_1850_TRON_GASLESS_DEX_SWAP_ENABLED,
         )
 
@@ -34,12 +24,12 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
             toggle = FeatureToggles.AND_17201_TRON_LOWER_FEE_TYPE_ENABLED,
         )
 
-    override val isCustomSlippageEnabled: Boolean
+    override val isOverallBestPriceEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.TWI_1674_SWAP_CUSTOM_SLIPPAGE_ENABLED,
+            toggle = FeatureToggles.TWI_1876_KYC_PRESCREENING_CEX_ENABLED,
         )
 
-    override val isOverallBestPriceEnabled: Boolean
+    override val isHideRejectedCexProviderEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.TWI_1876_KYC_PRESCREENING_CEX_ENABLED,
         )

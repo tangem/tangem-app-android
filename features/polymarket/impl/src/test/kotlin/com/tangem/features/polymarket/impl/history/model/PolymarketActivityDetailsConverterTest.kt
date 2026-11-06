@@ -75,7 +75,7 @@ internal class PolymarketActivityDetailsConverterTest {
         val headlines = mapOf(
             RedeemResult.WON to R.string.prediction_history_prediction_won,
             RedeemResult.LOST to R.string.prediction_history_prediction_lost,
-            RedeemResult.SPLIT to R.string.prediction_history_prediction_split,
+            RedeemResult.SPLIT to R.string.prediction_positions_split,
         )
         headlines.forEach { (status, headline) ->
             val activity = historyTrade(Type.REDEEM).copy(redeemResult = status)
@@ -88,6 +88,20 @@ internal class PolymarketActivityDetailsConverterTest {
             assertThat(result.rows).isEmpty()
             assertThat(result.amount).isEqualTo(if (status == RedeemResult.LOST) null else stringReference("$10.00"))
         }
+    }
+
+    @Test
+    fun `GIVEN a split redemption WHEN opening details THEN shows split headings and an unsigned amount`() {
+        // Arrange
+        val activity = historyTrade(Type.REDEEM).copy(redeemResult = RedeemResult.SPLIT, amount = BigDecimal("12.000000"))
+
+        // Act
+        val result = converter.convert(activity, null)
+
+        // Assert
+        assertThat(result.title).isEqualTo(resourceReference(R.string.prediction_positions_split))
+        assertThat(result.headline).isEqualTo(resourceReference(R.string.prediction_positions_split))
+        assertThat(result.amount).isEqualTo(stringReference("$12.00"))
     }
 
     @Test

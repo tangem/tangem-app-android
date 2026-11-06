@@ -32,7 +32,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                         id = "signiferumque",
                         onClick = {},
                         amount = "-4.99 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "16:41",
                         title = stringReference("StarbucksStarbucksStarbucksStarbucks"),
                         subtitle = stringReference("Food&Drinks"),
@@ -43,7 +43,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Payment(
                         id = "signiferumque",
                         amount = "-126.20 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "12:04",
                         onClick = {},
                         title = stringReference("Wallmart"),
@@ -55,7 +55,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Payment(
                         id = "signiferumque",
                         amount = "+126.20 USD",
-                        amountColor = { TangemTheme.colors.text.accent },
+                        amountColor = { TangemTheme.colors3.text.accent.blue },
                         time = "12:04",
                         onClick = {},
                         title = stringReference("Wallmart"),
@@ -67,7 +67,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Spend(
                         id = "signiferumque",
                         amount = "-126.20 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "12:04",
                         onClick = {},
                         title = stringReference("Wallmart"),
@@ -80,7 +80,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Spend(
                         id = "signiferumque",
                         amount = "-4.99 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "21:41",
                         onClick = {},
                         title = stringReference("Starbucks"),
@@ -92,7 +92,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Spend(
                         id = "signiferumque",
                         amount = "-126.20 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "10:04",
                         onClick = {},
                         title = stringReference("Wallmart"),
@@ -104,7 +104,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Spend(
                         id = "signiferumque",
                         amount = "-4.99 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "19:41",
                         onClick = {},
                         title = stringReference("Starbucks"),
@@ -116,7 +116,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Spend(
                         id = "signiferumque",
                         amount = "-126.20 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "18:04",
                         onClick = {},
                         title = stringReference("Wallmart"),
@@ -128,7 +128,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Spend(
                         id = "signiferumque",
                         amount = "-4.99 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "17:41",
                         onClick = {},
                         title = stringReference("Starbucks"),
@@ -140,7 +140,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Spend(
                         id = "signiferumque",
                         amount = "-126.20 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "16:04",
                         onClick = {},
                         title = stringReference("Wallmart"),
@@ -152,7 +152,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Spend(
                         id = "signiferumque",
                         amount = "-4.99 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "15:41",
                         onClick = {},
                         title = stringReference("Starbucks"),
@@ -164,7 +164,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     transaction = TangemPayTransactionState.Content.Spend(
                         id = "signiferumque",
                         amount = "-126.20 USD",
-                        amountColor = { TangemTheme.colors.text.primary1 },
+                        amountColor = { TangemTheme.colors3.text.primary },
                         time = "14:04",
                         onClick = {},
                         title = stringReference("Wallmart"),

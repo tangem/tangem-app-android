@@ -19,7 +19,6 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
@@ -37,7 +36,6 @@ internal class TangemPayOnboardingStarter @Inject constructor(
     private val getCustomerOffersUseCase: GetCustomerOffersUseCase,
     private val createHotWalletUseCase: CreateHotWalletUseCase,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
 
     enum class Mode { StartOnboarding, ContinueToKyc }
@@ -156,18 +154,14 @@ internal class TangemPayOnboardingStarter @Inject constructor(
             val isOrderCreated = createCampaignOrder(userWalletId, campaignKey, callbacks)
             if (!isOrderCreated) return
         }
-        if (tangemPayFeatureToggles.isResidencyStepEnabled) {
-            val eligibility = AppRoute.TangemPayEligibility(
-                product = TangemPayProduct.PAYMENT_ACCOUNT,
-                userWalletId = userWalletId,
-            )
-            if (callbacks.shouldKeepBackStack) {
-                router.replaceCurrent(eligibility)
-            } else {
-                router.replaceAll(AppRoute.Wallet, eligibility)
-            }
+        val eligibility = AppRoute.TangemPayEligibility(
+            product = TangemPayProduct.PAYMENT_ACCOUNT,
+            userWalletId = userWalletId,
+        )
+        if (callbacks.shouldKeepBackStack) {
+            router.replaceCurrent(eligibility)
         } else {
-            openKyc(userWalletId)
+            router.replaceAll(AppRoute.Wallet, eligibility)
         }
     }
 

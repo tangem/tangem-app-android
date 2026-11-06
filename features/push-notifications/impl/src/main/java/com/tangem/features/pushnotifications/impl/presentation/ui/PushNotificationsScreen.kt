@@ -86,7 +86,7 @@ internal fun PushNotificationsScreen(
             onClick = onLaterClick,
         ),
         modifier = Modifier
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .systemBarsPadding(),
     )
 

@@ -5,7 +5,6 @@ import com.tangem.plugin.configuration.utils.findPlugin
 import io.gitlab.arturbosch.detekt.CONFIGURATION_DETEKT
 import io.gitlab.arturbosch.detekt.CONFIGURATION_DETEKT_PLUGINS
 import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -62,16 +61,6 @@ private fun Project.configureDetektTask() {
             }
         }
 
-        jvmTarget = "17"
-    }
-
-    tasks.withType<DetektCreateBaselineTask>().configureEach {
-        logger.lifecycle("[Detekt Baseline] Configuring task: $name in project: ${project.path}")
-
-        source = fileTree(projectDir) {
-            include("src/main/**/*.kt")
-            exclude("**/build/**")
-        }
         jvmTarget = "17"
     }
 }

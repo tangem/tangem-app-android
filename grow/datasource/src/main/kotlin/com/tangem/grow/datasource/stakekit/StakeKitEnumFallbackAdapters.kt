@@ -32,7 +32,7 @@ fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
         map.forEach { entry ->
             val enumClass = entry.key
             val unknownValue = entry.value
-            add(enumClass, UnknownEnumMoshiAdapter.create(enumClass, unknownValue))
+            add(enumClass, UnknownEnumMoshiAdapter.create(enumClass, unknownValue).nullSafe())
         }
     }
 }

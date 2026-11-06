@@ -2,13 +2,11 @@ package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
-import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
@@ -26,7 +24,6 @@ import com.tangem.screens.onMainScreen
 import com.tangem.screens.onMainScreenTopBar
 import com.tangem.screens.tangempay.onTangemPayOnboardingScreen
 import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
-import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -46,14 +43,6 @@ class TangemPayEligibilityTest : BaseTestCase() {
     @Inject
     lateinit var paymentAccountStatusSupplier: PaymentAccountStatusSupplier
 
-    @RemoveWithToggle(
-        toggleName = "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
-        description = "Move the tests to a wallet without system cards, where the Main promo is shown",
-    )
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED.rawName to false,
-    )
-
     @AllureId("9634")
     @DisplayName("Tangem Pay: no Get Tangem Pay banner on Main for an empty eligibility channels list")
     @Test
@@ -70,7 +59,7 @@ class TangemPayEligibilityTest : BaseTestCase() {
             }
             val channelsRequestsBefore = getTangemPayEligibilityChannelsRequestCount()
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Assert eligibility channels are requested") {
                 assertTangemPayEligibilityChannelsRequested(channelsRequestsBefore)
@@ -107,7 +96,7 @@ class TangemPayEligibilityTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBannerState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Assert 'Get Tangem Pay' banner is displayed on Main") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -148,7 +137,7 @@ class TangemPayEligibilityTest : BaseTestCase() {
             }
             val channelsRequestsBefore = getTangemPayEligibilityChannelsRequestCount()
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Assert eligibility channels are requested") {
                 assertTangemPayEligibilityChannelsRequested(channelsRequestsBefore)
@@ -182,7 +171,7 @@ class TangemPayEligibilityTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBannerState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Assert 'Get Tangem Pay' banner is displayed on Main") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {

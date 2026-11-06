@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>CanBeNonNullable:FetchWalletAccountsErrorHandler.kt$FetchWalletAccountsErrorHandler$savedAccountsResponse: GetWalletAccountsResponse?</ID>
-  </CurrentIssues>
-</SmellBaseline>

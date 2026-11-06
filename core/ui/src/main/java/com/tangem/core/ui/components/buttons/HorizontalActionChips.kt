@@ -30,7 +30,7 @@ import kotlinx.collections.immutable.persistentListOf
 fun HorizontalActionChips(
     buttons: ImmutableList<ActionButtonConfig>,
     modifier: Modifier = Modifier,
-    containerColor: Color = TangemTheme.colors.background.secondary,
+    containerColor: Color = TangemTheme.colors3.bg.primary,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     LazyRow(

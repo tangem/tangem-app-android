@@ -62,8 +62,8 @@ private val TangemTextSelectionColors2: TextSelectionColors
     @Composable
     @ReadOnlyComposable
     get() = TextSelectionColors(
-        handleColor = TangemTheme.colors2.text.neutral.primary,
-        backgroundColor = TangemTheme.colors2.text.neutral.primary.copy(alpha = 0.3f),
+        handleColor = TangemTheme.colors3.text.primary,
+        backgroundColor = TangemTheme.colors3.text.primary.copy(alpha = 0.3f),
     )
 
 @Composable

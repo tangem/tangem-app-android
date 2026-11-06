@@ -20,6 +20,7 @@ import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
@@ -107,7 +108,9 @@ internal val TxHistoryInfo.copyIdLabels: CopyIdLabels
     get() = when (this) {
         is ExpressTx.Swap -> CopyIdLabels.Swap
         is ExpressTx.Onramp -> CopyIdLabels.Onramp
-        is OnChainTx -> CopyIdLabels.Transaction
+        is OnChainTx,
+        is JointOperationTx,
+        -> CopyIdLabels.Transaction
     }
 
 /**

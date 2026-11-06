@@ -26,15 +26,12 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
 import kotlinx.coroutines.delay
 
 @Composable
 internal fun OnboardingVisaAccessCode(state: OnboardingVisaAccessCodeUM, modifier: Modifier = Modifier) {
-    DisableAutofillEffect()
-
     Column(
         modifier
             .fillMaxSize()
@@ -95,7 +92,7 @@ private fun Content(
                 stringResourceSafe(R.string.onboarding_access_code_intro_title)
             },
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
 
@@ -106,7 +103,7 @@ private fun Content(
                 .padding(horizontal = 32.dp),
             text = stringResourceSafe(R.string.visa_onboarding_access_code_description),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
 
@@ -115,6 +112,7 @@ private fun Content(
         val focusRequester = remember { FocusRequester() }
 
         OutlineTextFieldWithIcon(
+            isExcludedFromAutofill = true,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .focusRequester(focusRequester)
@@ -124,7 +122,7 @@ private fun Content(
             } else {
                 R.drawable.ic_eye_off_outline_24
             },
-            iconColor = TangemTheme.colors.icon.primary1,
+            iconColor = TangemTheme.colors3.icon.primary,
             onIconClick = state.onAccessCodeHideClick,
             value = if (reEnterAccessCodeState) {
                 state.accessCodeSecond

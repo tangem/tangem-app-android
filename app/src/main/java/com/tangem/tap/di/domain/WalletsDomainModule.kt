@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.common.TangemSiteUrlBuilder
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
@@ -125,8 +126,9 @@ internal object WalletsDomainModule {
     @Singleton
     fun providesOpenBuyTangemCardUseCase(
         walletsPromoRepository: WalletsPromoRepository,
+        tangemSiteUrlBuilder: TangemSiteUrlBuilder,
     ): GenerateBuyTangemCardLinkUseCase {
-        return GenerateBuyTangemCardLinkUseCase(walletsPromoRepository)
+        return GenerateBuyTangemCardLinkUseCase(walletsPromoRepository, tangemSiteUrlBuilder)
     }
 
     @Provides
@@ -323,6 +325,18 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun providesEnableAddressesSharingUseCase(
+        walletsRepository: WalletsRepository,
+        accountsCRUDRepository: AccountsCRUDRepository,
+    ): EnableAddressesSharingUseCase {
+        return EnableAddressesSharingUseCase(
+            walletsRepository = walletsRepository,
+            accountsCRUDRepository = accountsCRUDRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun providesGetWalletNotificationsEnabledUseCase(
         walletsRepository: WalletsRepository,
     ): GetWalletNotificationsEnabledUseCase {
@@ -449,6 +463,20 @@ internal object WalletsDomainModule {
         walletCardsBackupRepository: WalletCardsBackupRepository,
     ): ReportWalletCardsBackupUseCase {
         return ReportWalletCardsBackupUseCase(walletCardsBackupRepository = walletCardsBackupRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportCardLinkedWalletsBackupUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+        reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase,
+    ): ReportCardLinkedWalletsBackupUseCase {
+        return ReportCardLinkedWalletsBackupUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            walletCardsBackupRepository = walletCardsBackupRepository,
+            reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
+        )
     }
 
     @Provides

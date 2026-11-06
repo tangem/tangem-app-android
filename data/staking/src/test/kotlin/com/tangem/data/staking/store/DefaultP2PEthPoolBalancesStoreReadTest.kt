@@ -13,8 +13,8 @@ import com.tangem.data.staking.store.P2PEthPoolBalancesStoreFixtures.p2pData
 import com.tangem.data.staking.store.P2PEthPoolBalancesStoreFixtures.response
 import com.tangem.data.staking.store.P2PEthPoolBalancesStoreFixtures.userWalletId
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore

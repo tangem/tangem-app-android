@@ -62,7 +62,7 @@ private fun DraggableImage(reorderableTokenListState: ReorderableLazyListState?)
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_drag_24),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
     }
@@ -72,7 +72,7 @@ private fun DraggableImage(reorderableTokenListState: ReorderableLazyListState?)
 private fun NonFiatContentText(@StringRes text: Int) {
     Text(
         text = stringResourceSafe(id = text),
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         style = TangemTheme.typography.body2,

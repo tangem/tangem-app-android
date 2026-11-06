@@ -6,7 +6,8 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.recents.RecentTokenTransfer
-import com.tangem.domain.pay.repository.PaymentAccountRecentsStore
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
+import com.tangem.domain.pay.repository.AccountRecentsStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -15,13 +16,13 @@ import kotlinx.coroutines.flow.map
  * entry whose account or token is no longer in the wallet is dropped rather than shown as a dead tile.
  */
 class GetRecentTokenTransfersUseCase(
-    private val recentsStore: PaymentAccountRecentsStore,
+    private val recentsStore: AccountRecentsStore,
     private val singleAccountListSupplier: SingleAccountListSupplier,
 ) {
 
-    operator fun invoke(userWalletId: UserWalletId): Flow<List<RecentTokenTransfer>> {
+    operator fun invoke(userWalletId: UserWalletId, journal: TokenTransferJournal): Flow<List<RecentTokenTransfer>> {
         return singleAccountListSupplier(userWalletId).map { accountList ->
-            join(usage = recentsStore.getUsage(userWalletId), accountList = accountList)
+            join(usage = recentsStore.getUsage(userWalletId, journal), accountList = accountList)
         }
     }
 
