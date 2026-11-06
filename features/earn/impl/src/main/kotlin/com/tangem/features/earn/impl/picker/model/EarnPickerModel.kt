@@ -229,9 +229,9 @@ internal class EarnPickerModel @Inject constructor(
             params.shouldRedirectToActive &&
             (source == StatusSource.CACHE || currencySummaries.any { it.position != null })
 
-    /** The preselected product has no card yet: showing it would draw a screen with nothing selected. */
+    /** The chosen product has no card in this frame: showing it would draw a screen with nothing selected. */
     private fun isAwaitingSelection(chosen: EarnProduct, currencySummaries: List<EarnProductSummary>): Boolean =
-        !isSelectionResolved && currencySummaries.none { it.productId == chosen.id }
+        currencySummaries.none { it.productId == chosen.id }
 
     private fun onActionClick(product: EarnProduct, action: EarnAction) {
         handlers
