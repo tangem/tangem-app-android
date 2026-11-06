@@ -28,10 +28,6 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_top_right_16
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.features.earn.api.ui.EarnRowUM
 
-/**
- * A label and a value. The ⓘ stands right after the label when the row has an explanation to open; a link value
- * (`onValueClick`) has an arrow after it.
- */
 @Composable
 internal fun EarnDetailRow(state: EarnRowUM, modifier: Modifier = Modifier, divider: Boolean = false) {
     TangemRow(

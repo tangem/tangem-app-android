@@ -22,9 +22,8 @@ import com.tangem.core.ui.res.TangemTheme
 import kotlin.math.roundToInt
 
 /**
- * The hero behind the top of the page: a gradient until the video arrives (spec §13). The frame keeps the 402 × 722
- * proportion of the design, but only its top 495 count as the page's height: the title, the cards and the description
- * lie over its lower part, which fades into the page background.
+ * A gradient stands in until the video arrives. The frame keeps the design's 402 × 722 proportion, but only its top
+ * 495 count as the page's height: the title, the cards and the description lie over its lower part.
  */
 @Composable
 internal fun EarnPickerHero(modifier: Modifier = Modifier) {
@@ -56,7 +55,6 @@ internal fun EarnPickerHero(modifier: Modifier = Modifier) {
     }
 }
 
-/** The title block: the fixed screen title and its line, 24 dp from the edges as the whole page. */
 @Composable
 internal fun EarnPickerTitle(title: TextReference, subtitle: TextReference, modifier: Modifier = Modifier) {
     Column(
@@ -83,7 +81,6 @@ internal val PAGE_MARGIN = 24.dp
 private const val HERO_FRAME_WIDTH = 402f
 private const val HERO_FRAME_HEIGHT = 722f
 
-/** Where the title block starts in the design frame: the height the hero takes in the page. */
 private const val HERO_PAGE_HEIGHT = 495f
 private const val HERO_TINT_HEIGHT = 264f
 private const val HERO_TINT_SOLID_FROM = 0.5f

@@ -11,7 +11,6 @@ import com.tangem.features.earn.product.api.session.EarnAction
 import java.math.BigDecimal
 import javax.inject.Inject
 
-/** The bottom button of the picker: one rule table, the first matching row wins. */
 internal class EarnPickerCta @Inject constructor() {
 
     fun resolve(

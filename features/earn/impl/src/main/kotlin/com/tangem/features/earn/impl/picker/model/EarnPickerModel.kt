@@ -88,7 +88,6 @@ internal class EarnPickerModel @Inject constructor(
     /** Bumped by Retry: a `state()` that failed has completed, so only a new collection can see the refreshed data. */
     private val stateRestarts = MutableStateFlow(0)
 
-    /** One collection of `state()` serves the screen and the calculator. */
     private val selection: StateFlow<Selection?> = selectedId
         .combine(stateRestarts) { id, _ -> id }
         .flatMapLatest { id ->
@@ -158,10 +157,8 @@ internal class EarnPickerModel @Inject constructor(
     }
 
     /**
-     * A selection that is still on a card stays, so later frames reorder the cards but never move it. Otherwise the
-     * first complete answer decides: a frame is usually partial at first (`CACHE`: the fastest product only), so nothing
-     * is chosen from it, and a `preselected` product that is already there is kept. The same goes for a settled frame
-     * that drops the chosen product.
+     * A frame is usually partial at first (`CACHE`: the fastest product only), so nothing is chosen from it. A selection
+     * that is still on a card stays; otherwise the first settled frame decides.
      */
     private fun resolveSelection(currencySummaries: List<EarnProductSummary>, source: StatusSource) {
         if (currencySummaries.isEmpty() || source == StatusSource.CACHE) return
@@ -179,10 +176,7 @@ internal class EarnPickerModel @Inject constructor(
         }
     }
 
-    /**
-     * The cards and the content both come from `selectedId`, so a screen never shows a product that is not the selected
-     * card. Until the chosen product's `state()` answers, its card is selected and the content is `Loading`.
-     */
+    /** Cards and content both come from `selectedId`; until its `state()` answers, the content is `Loading`. */
     private fun createUiState(
         frame: EarnProductSummaries,
         selection: Selection?,
@@ -220,7 +214,6 @@ internal class EarnPickerModel @Inject constructor(
             params.shouldRedirectToActive &&
             (source == StatusSource.CACHE || currencySummaries.any { it.position != null })
 
-    /** The chosen product has no card in this frame: showing it would draw a screen with nothing selected. */
     private fun isAwaitingSelection(chosen: EarnProduct, currencySummaries: List<EarnProductSummary>): Boolean =
         currencySummaries.none { it.productId == chosen.id }
 
