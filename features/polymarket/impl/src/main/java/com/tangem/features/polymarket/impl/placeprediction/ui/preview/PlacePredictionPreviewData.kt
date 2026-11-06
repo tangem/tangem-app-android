@@ -65,7 +65,7 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
             previewState(order = previewSell()),
             previewState(
                 amountValue = "12.80",
-                quote = QuoteUM.Loading(isAnswerExpected = false),
+                quote = QuoteUM.Loading,
                 order = previewSell(),
             ),
             previewState(amountValue = "51.23", quote = previewSellQuote(), order = previewSell()),
@@ -85,7 +85,7 @@ internal class PlacePredictionOrderPreviewProvider : PreviewParameterProvider<Pl
             previewState(amountValue = "4000", quote = previewQuote()),
             previewState(amountValue = "4000", quote = previewQuote(), balance = BigDecimal("10")),
             previewState(amountValue = "51.23", quote = previewSellQuote(), order = previewSell()),
-            previewState(amountValue = "4000", quote = QuoteUM.Loading(isAnswerExpected = false)),
+            previewState(amountValue = "4000", quote = QuoteUM.Loading),
         )
 }
 
