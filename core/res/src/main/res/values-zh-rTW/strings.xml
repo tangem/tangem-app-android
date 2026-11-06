@@ -2478,6 +2478,7 @@
   <string name="tangempay_campaign_unavailable_description">您可以申請一般卡</string>
   <string name="tangempay_campaign_unavailable_title">無法獲取專屬卡</string>
   <string name="tangempay_cancel_kyc">隱藏狀態</string>
+  <string name="tangempay_card_actions_more">操作</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">請聯絡客服</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">您已超過啟用嘗試次數</string>
   <string name="tangempay_card_activation_description">輸入您卡號的最後 4 位數字</string>
@@ -2487,11 +2488,19 @@
   <string name="tangempay_card_activation_error_not_physical">這不是實體卡</string>
   <string name="tangempay_card_activation_error_not_ready">該卡尚未準備好啟用。請在收到卡片後重試。</string>
   <string name="tangempay_card_activation_in_progress">正在啟用您的卡片</string>
+  <string name="tangempay_card_close">註銷</string>
+  <string name="tangempay_card_close_error_message">請稍後重試或聯絡支援團隊。我們會協助您註銷卡片。</string>
+  <string name="tangempay_card_close_error_title">無法註銷卡片</string>
+  <string name="tangempay_card_close_last_card_disabled">無法註銷最後一張卡片</string>
+  <string name="tangempay_card_closed_toast">卡片已註銷</string>
   <string name="tangempay_card_default_name">Tangem Pay 卡片 1</string>
+  <string name="tangempay_card_delivery_activate_after_delivery_toast">卡片送達後即可啟用</string>
   <string name="tangempay_card_delivery_banner_description">收到後請啟用</string>
   <string name="tangempay_card_delivery_banner_description_many">收到後請啟用</string>
   <string name="tangempay_card_delivery_banner_title">您的卡片正在配送中</string>
   <string name="tangempay_card_delivery_banner_title_many">您的卡片正在配送中</string>
+  <string name="tangempay_card_delivery_email_note">配送公司會向 %s 傳送配送進度電子郵件</string>
+  <string name="tangempay_card_delivery_got_card_button">我已收到卡片</string>
   <string name="tangempay_card_details_activate">啟用卡片</string>
   <string name="tangempay_card_details_add_funds">添加资金</string>
   <string name="tangempay_card_details_add_funds_subtitle">充值选项</string>
@@ -2508,7 +2517,7 @@
   <string name="tangempay_card_details_change_pin_success_description">卡片已完全准备好进行支付。</string>
   <string name="tangempay_card_details_change_pin_success_title">PIN 碼已建立</string>
   <string name="tangempay_card_details_cvc">CVC</string>
-  <string name="tangempay_card_details_delivery_description">您的卡片正在配送途中。物流公司會透過電子郵件向 %s 提供配送進度更新</string>
+  <string name="tangempay_card_details_delivery_description">您的卡片正在配送途中。物流公司會透過電子郵件向 %s 提供配送進度更新。</string>
   <string name="tangempay_card_details_error_text">無法載入資料。請稍後再試。</string>
   <string name="tangempay_card_details_expiry">有效期</string>
   <string name="tangempay_card_details_freeze_card">冻结卡片</string>
@@ -2568,6 +2577,8 @@
   <string name="tangempay_card_page_daily_limit_success_title">每日限額已設定</string>
   <string name="tangempay_card_page_daily_limit_title">每日限額</string>
   <string name="tangempay_card_page_settings_title">卡片設定</string>
+  <string name="tangempay_card_replace">換卡</string>
+  <string name="tangempay_card_support_button">支援</string>
   <plurals name="tangempay_cards_count">
     <item quantity="other">%d 張卡</item>
   </plurals>
@@ -2575,7 +2586,7 @@
   <string name="tangempay_cashback_accruals_calc_title">我們如何計算現金回饋？</string>
   <string name="tangempay_cashback_accruals_exceptions_description">暫不支援歐盟實體店消費回饋。提款、類現金交易、話費加值、政府服務等部分類別亦不適用回饋。</string>
   <string name="tangempay_cashback_accruals_exceptions_title">例外情況</string>
-  <string name="tangempay_cashback_accruals_pay_description">交易經核查符合回饋計畫規則後,於下月10日前發放</string>
+  <string name="tangempay_cashback_accruals_pay_description">交易經核查符合回饋計畫規則後,於下月11日前發放</string>
   <string name="tangempay_cashback_accruals_pay_title">我們如何支付現金回饋？</string>
   <string name="tangempay_cashback_accruals_subtitle">限額與例外情況</string>
   <string name="tangempay_cashback_accruals_title">累計</string>
@@ -2613,6 +2624,12 @@
   <string name="tangempay_choose_network_other_ways">其他方式</string>
   <string name="tangempay_choose_network_row_error">取得地址失敗，請重試</string>
   <string name="tangempay_choose_network_row_loading">正在準備地址…</string>
+  <string name="tangempay_close_card_sheet_confirm">註銷卡片</string>
+  <string name="tangempay_close_card_sheet_description">卡片將被註銷，且無法繼續使用</string>
+  <string name="tangempay_close_card_sheet_description_with_freeze_hint">卡片將被註銷，且無法繼續使用。只想暫停使用？請凍結卡片。</string>
+  <string name="tangempay_close_card_sheet_freeze_instead">改為凍結</string>
+  <string name="tangempay_close_card_sheet_keep">保留卡片</string>
+  <string name="tangempay_close_card_sheet_title">註銷 %s？</string>
   <string name="tangempay_come_back_if_forget_pin">如果忘记了，请返回应用查看。</string>
   <string name="tangempay_common_card">卡片</string>
   <string name="tangempay_common_error_list_loading">列表載入失敗。\n點一下重新載入</string>
@@ -2684,7 +2701,7 @@
   <string name="tangempay_kyc_rejected_description">抱歉，我們無法驗證</string>
   <string name="tangempay_kyc_rejected_description_span">您的身份</string>
   <string name="tangempay_main_select_plan">選擇方案</string>
-  <string name="tangempay_maximum_cards_issued_description">刪除一張即可新增卡片</string>
+  <string name="tangempay_maximum_cards_issued_description">註銷一張卡片即可新增卡片</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">升級方案以取得更多卡片</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">該方案的卡片數量已達上限</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">升級方案</string>
@@ -2778,6 +2795,7 @@
   <string name="tangempay_payment_account">付款帳戶</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay 工作階段已過期</string>
   <string name="tangempay_pin_validation_error_message">無效 PIN 碼：請避免使用連續或重複的號碼</string>
+  <string name="tangempay_plan_menu_subtitle">目前方案：%s</string>
   <string name="tangempay_region_unavailable_description">我們正在努力拓展更多地區。 \n加入候補名單，即可第一時間得知開放消息</string>
   <string name="tangempay_region_unavailable_primary_button">加入候補名單</string>
   <string name="tangempay_region_unavailable_secondary_button">選擇其他地區</string>
@@ -2829,6 +2847,7 @@
   <string name="tangempay_status_deactivated">帳戶已關閉</string>
   <string name="tangempay_status_inactive">未啟用</string>
   <string name="tangempay_status_replacing">正在更換您的卡片</string>
+  <string name="tangempay_support_copy_email_accessibility">複製 %s</string>
   <string name="tangempay_sync_needed">用卡或戒指續期會話</string>
   <string name="tangempay_sync_needed_body">請更新以查看您的卡片和帳戶</string>
   <string name="tangempay_sync_needed_button">恢復存取權限</string>
@@ -2845,14 +2864,14 @@
   <string name="tangempay_topup_swap_title">從您的 Tangem Wallet</string>
   <string name="tangempay_unified_onboarding_cashback_caption">現金回饋</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">以 USDC 支付</string>
-  <string name="tangempay_unified_onboarding_cashback_title">最高 2%%。%1$s</string>
+  <string name="tangempay_unified_onboarding_cashback_title">最高 2%%\n%1$s</string>
   <string name="tangempay_unified_onboarding_description">Visa 卡與美元帳戶合而為一。驗證身分，即可開通您所在地區可用的產品</string>
   <string name="tangempay_unified_onboarding_everything_header">全部涵蓋</string>
   <string name="tangempay_unified_onboarding_fees_caption">美元等值兌換</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">無兌換手續費及月費</string>
   <string name="tangempay_unified_onboarding_fees_title">1 USD 兌換為 1 USDC\n%1$s</string>
-  <string name="tangempay_unified_onboarding_interest_caption">利息</string>
-  <string name="tangempay_unified_onboarding_interest_title">持有即可賺取最高4%的年化收益</string>
+  <string name="tangempay_unified_onboarding_interest_caption">即將推出</string>
+  <string name="tangempay_unified_onboarding_interest_title">透過收益模式賺取最高4%的年化收益</string>
   <string name="tangempay_unified_onboarding_legal">可開通的產品取決於您所在地區。驗證完成後我們會立即確認</string>
   <string name="tangempay_unified_onboarding_money_account_caption">法幣入金</string>
   <string name="tangempay_unified_onboarding_money_account_header">帳戶</string>
@@ -3132,6 +3151,7 @@
   <string name="virtual_account_requisites_reference">參考號</string>
   <string name="virtual_account_requisites_routing_number">銀行路由號碼</string>
   <string name="virtual_account_title">美元帳戶</string>
+  <string name="virtual_account_transactions_empty">尚無交易。開始消費後，即可在此查看交易紀錄。</string>
   <string name="visa_balance_limits_details_aml_verified">AML 已驗證</string>
   <string name="visa_balance_limits_details_available">可用</string>
   <string name="visa_balance_limits_details_blocked">已封鎖</string>
