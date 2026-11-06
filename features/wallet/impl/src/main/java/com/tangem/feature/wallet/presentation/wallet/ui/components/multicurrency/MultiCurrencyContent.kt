@@ -641,6 +641,7 @@ private fun TokenRowV2(item: TokensListItemUM2.TokenV2, isBalanceHidden: Boolean
 
 private fun TangemTokenRowV2.State.withLongClick(onLongClick: () -> Unit): TangemTokenRowV2.State = when (this) {
     is TangemTokenRowV2.State.Content -> copy(onLongClick = onLongClick)
+    is TangemTokenRowV2.State.Network -> copy(onLongClick = onLongClick)
     is TangemTokenRowV2.State.Unreachable -> copy(onLongClick = onLongClick)
     is TangemTokenRowV2.State.NoAddress -> copy(onLongClick = onLongClick)
     is TangemTokenRowV2.State.Organize,

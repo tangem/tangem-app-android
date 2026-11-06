@@ -636,7 +636,7 @@ internal data class TangemTokenRowV2Story(
 ) : DsStoryBookPage {
 
     /** Which [com.tangem.core.ui.ds2.tokenrow.TangemTokenRow] variant/preset is rendered. */
-    enum class Variant { Default, Organize, Unreachable, NoAddress, Shimmer }
+    enum class Variant { Default, Network, Organize, Unreachable, NoAddress, Shimmer }
 }
 
 @Suppress("BooleanPropertyNaming")
