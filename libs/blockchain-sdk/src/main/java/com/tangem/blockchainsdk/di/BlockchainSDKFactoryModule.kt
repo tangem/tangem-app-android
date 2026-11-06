@@ -180,7 +180,6 @@ internal object BlockchainSDKFactoryModule {
             blockchainSDKLogger = blockchainSDKLogger,
             featureToggleValues = WalletManagerFactoryCreator.FeatureToggleValues(
                 isYieldModeSwapEnabled = true,
-                isMonadEnabled = true,
                 isYieldModuleV3Enabled = featureTogglesManager.isFeatureEnabled(
                     FeatureToggles.AND_18834_YIELD_MODULE_V3_ENABLED,
                 ),

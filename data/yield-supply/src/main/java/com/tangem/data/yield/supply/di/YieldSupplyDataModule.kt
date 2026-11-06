@@ -78,7 +78,6 @@ internal object YieldSupplyDataModule {
             analyticsExceptionHandler = analyticsExceptionHandler,
             appPreferencesStore = appPreferencesStore,
             growPreferencesKeys = growPreferencesKeys,
-            isMerklIncentivesEnabled = true,
         )
     }
 
