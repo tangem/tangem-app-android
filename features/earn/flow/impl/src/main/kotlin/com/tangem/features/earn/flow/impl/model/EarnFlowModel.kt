@@ -261,6 +261,7 @@ internal class EarnFlowModel @Inject constructor(
                     messageSender.send(
                         EarnFlowDialogs.sessionError(
                             error = error,
+                            currency = params.product.currency,
                             onRetry = ::loadMaxAmount,
                             onClose = { finish(EarnFlowExit.Done) },
                         ),
@@ -315,13 +316,17 @@ internal class EarnFlowModel @Inject constructor(
         }
     }
 
-    /** A minimum the field could not know beforehand is shown under the field, the way Send and Staking show it. */
+    /**
+     * A minimum the field could not know beforehand is shown under the field, the way Send and Staking show it. The
+     * field checks the entered amount, so a minimum missed only after the fee deduction goes to a dialog.
+     */
     private fun onPrepareFailed(error: EarnSessionError) {
         if (error is EarnSessionError.BelowMinimum && state.value.step == EarnFlowStep.Amount) {
             state.update { amountInput.withMinimum(it, error.min) }
-        } else {
-            showSessionError(error)
+            val field = (state.value.amountState as? AmountState.Data)?.amountTextField
+            if (field?.isError == true) return
         }
+        showSessionError(error)
     }
 
     /** The session moved the numbers: the fee block reloads, and the new fee prepares a plan to confirm again. */
@@ -416,7 +421,7 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun showSessionError(error: EarnSessionError) {
         TangemLogger.e("Earn flow: ${action.id} session error: $error")
-        messageSender.send(EarnFlowDialogs.sessionError(error))
+        messageSender.send(EarnFlowDialogs.sessionError(error, params.product.currency))
     }
 
     private fun toAmountUM(current: EarnFlowState): EarnAmountUM? = converter.amount(current, screens)
