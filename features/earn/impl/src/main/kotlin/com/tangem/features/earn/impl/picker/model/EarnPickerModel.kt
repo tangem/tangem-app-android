@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicBoolean
@@ -87,8 +88,12 @@ internal class EarnPickerModel @Inject constructor(
 
     private val summaries: Flow<EarnProductSummaries> = summarySupplier(params.userWalletId)
 
+    /** Bumped by Retry: a `state()` that failed has completed, so only a new collection can see the refreshed data. */
+    private val stateRestarts = MutableStateFlow(0)
+
     /** One collection of `state()` serves the screen and the calculator. */
     private val selection: StateFlow<Selection?> = selectedId
+        .combine(stateRestarts) { id, _ -> id }
         .flatMapLatest { id ->
             val product = id?.let(registry::find)
             if (product == null) {
@@ -239,6 +244,7 @@ internal class EarnPickerModel @Inject constructor(
             product.refresh(productParams).onLeft {
                 TangemLogger.e("Earn picker: refresh of ${product.id.value} failed", it)
             }
+            stateRestarts.update { it + 1 }
         }
     }
 

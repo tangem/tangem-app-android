@@ -1,7 +1,6 @@
 package com.tangem.features.earn.impl.picker.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -34,6 +35,7 @@ internal fun EarnProductCards(products: ImmutableList<EarnProductCardUM>, modifi
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
+            .selectableGroup()
             .padding(horizontal = PAGE_MARGIN, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -53,7 +55,7 @@ private fun EarnProductCard(card: EarnProductCardUM, modifier: Modifier = Modifi
             .width(CARD_WIDTH)
             .clip(RoundedCornerShape(24.dp))
             .background(background)
-            .clickable(role = Role.Button, onClick = card.onClick)
+            .selectable(selected = card.isSelected, role = Role.RadioButton, onClick = card.onClick)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {

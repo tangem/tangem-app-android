@@ -637,6 +637,37 @@ internal class EarnPickerModelTest {
             }
 
         @Test
+        fun `GIVEN a product whose state threw WHEN Retry THEN the state is collected again and the content recovers`() =
+            runTest {
+                // Arrange
+                var stateCalls = 0
+                val recovering = PickerProduct(
+                    delegate = createFakeEarnProduct(FakeEarnProductPreset.Lending),
+                    initialState = readyState(FakeEarnProductPreset.Lending),
+                    stateFactory = {
+                        if (stateCalls++ == 0) {
+                            flow { throw IllegalStateException("offline") }
+                        } else {
+                            flowOf(readyState(FakeEarnProductPreset.Lending))
+                        }
+                    },
+                )
+                val frames = MutableStateFlow(frame(summary(recovering), summary(vault)))
+                val model = createModel(frames = frames, products = listOf(recovering, vault), preselected = recovering.id)
+                advanceUntilIdle()
+                val before = model.uiState.value.content
+
+                // Act
+                (before as ContentUM.Unavailable).onRetryClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(recovering.refreshParams).containsExactly(EarnProduct.Params(USER_WALLET_ID, currency))
+                assertThat(model.uiState.value.content).isInstanceOf(ContentUM.Ready::class.java)
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN a product Unavailable and its refresh fails WHEN Retry THEN it is refreshed and stays Unavailable`() =
             runTest {
                 // Arrange
@@ -798,6 +829,7 @@ internal class EarnPickerModelTest {
         initialState: EarnProductState,
         private val refreshResult: Either<Throwable, Unit> = Unit.right(),
         private val customState: Flow<EarnProductState>? = null,
+        private val stateFactory: (() -> Flow<EarnProductState>)? = null,
     ) : EarnProduct by delegate {
 
         val stateFlow = MutableStateFlow(initialState)
@@ -811,7 +843,7 @@ internal class EarnPickerModelTest {
 
         fun readyState(): EarnProductState.Ready = stateFlow.value as EarnProductState.Ready
 
-        override fun state(params: EarnProduct.Params): Flow<EarnProductState> = customState ?: stateFlow
+        override fun state(params: EarnProduct.Params): Flow<EarnProductState> = stateFactory?.invoke() ?: customState ?: stateFlow
 
         override suspend fun refresh(params: EarnProduct.Params): Either<Throwable, Unit> {
             refreshParams += params

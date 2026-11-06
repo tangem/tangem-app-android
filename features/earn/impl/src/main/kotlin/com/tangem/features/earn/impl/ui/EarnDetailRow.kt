@@ -14,7 +14,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.earn.impl.R
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
@@ -46,7 +50,16 @@ internal fun EarnDetailRow(state: EarnRowUM, modifier: Modifier = Modifier, divi
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
                 )
-                state.onInfoClick?.let { onInfoClick -> InfoButton(onClick = onInfoClick) }
+                state.onInfoClick?.let { onInfoClick ->
+                    InfoButton(
+                        description = combinedReference(
+                            resourceReference(R.string.common_learn_more),
+                            stringReference(": "),
+                            state.label,
+                        ).resolveReference(),
+                        onClick = onInfoClick,
+                    )
+                }
             }
         },
         valueSlot = { Value(state = state) },
@@ -78,10 +91,10 @@ private fun Value(state: EarnRowUM) {
 }
 
 @Composable
-private fun InfoButton(onClick: () -> Unit) {
+private fun InfoButton(description: String, onClick: () -> Unit) {
     Icon(
         imageVector = Icons.ic_info_20,
-        contentDescription = null,
+        contentDescription = description,
         tint = TangemTheme.colors3.icon.tertiary,
         modifier = Modifier
             .clip(CircleShape)
