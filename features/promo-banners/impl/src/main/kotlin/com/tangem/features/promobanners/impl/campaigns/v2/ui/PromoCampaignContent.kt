@@ -32,14 +32,19 @@ import com.tangem.core.ui.components.account.*
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.row.header.TangemHeaderRow
+import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.footer.TangemFooter
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.*
+import com.tangem.utils.annotations.RemoveWithToggle
 
 private const val CAMPAIGN_IMAGE_ALPHA = 0.5f
 
@@ -177,15 +182,45 @@ private fun PromoTokenSelector(state: PromoTokenSelectorUM) {
                 .clip(RoundedCornerShape(24.dp))
                 .background(TangemTheme.colors3.bg.transparent.primary)
 
-            PromoSelectedTokenItem(
-                selectedToken = state.selectedToken,
-                selectedAccount = state.selectedAccount,
-                modifier = itemModifier.clickable(onClick = state.onClick),
-            )
+            val selectedTokenRow = state.selectedTokenRow
+            if (selectedTokenRow != null) {
+                PromoSelectedTokenRow(
+                    selectedTokenRow = selectedTokenRow,
+                    selectedAccount = state.selectedAccount,
+                    modifier = itemModifier.clickable(onClick = state.onClick),
+                )
+            } else {
+                PromoSelectedTokenItem(
+                    selectedToken = state.selectedToken,
+                    selectedAccount = state.selectedAccount,
+                    modifier = itemModifier.clickable(onClick = state.onClick),
+                )
+            }
         }
     }
 }
 
+@Composable
+private fun PromoSelectedTokenRow(
+    selectedTokenRow: TangemTokenRow.State,
+    selectedAccount: PromoSelectedAccountUM?,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        if (selectedAccount != null) {
+            TangemHeaderRow(
+                headerRowUM = TangemHeaderRowUM(
+                    id = selectedTokenRow.id,
+                    title = selectedAccount.name,
+                    startIconUM = TangemIconUM.Currency(currencyIconState = selectedAccount.iconState),
+                ),
+            )
+        }
+        TangemTokenRow(state = selectedTokenRow)
+    }
+}
+
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 @Composable
 private fun PromoSelectedTokenItem(
     selectedToken: TokenItemState,

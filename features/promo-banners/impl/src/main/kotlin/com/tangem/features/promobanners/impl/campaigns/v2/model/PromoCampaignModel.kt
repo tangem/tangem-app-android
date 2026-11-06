@@ -3,6 +3,7 @@ package com.tangem.features.promobanners.impl.campaigns.v2.model
 import com.tangem.common.ui.account.AccountIconItemStateConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.common.ui.tokens.TokenRowStateConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
@@ -49,6 +50,7 @@ import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignSt
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignUM
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoSelectedAccountUM
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -77,6 +79,7 @@ internal class PromoCampaignModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<PromoCampaignBottomSheetComponent.Params>()
@@ -339,6 +342,12 @@ internal class PromoCampaignModel @Inject constructor(
                     )
                 },
             ).convert(result.currency)
+            // TODO [REDACTED_TASK_KEY] Show the network instead of the price once TangemTokenRow supports a network subtitle
+            val selectedTokenRow = if (walletFeatureToggles.isRedesignedTokenRowsEnabled) {
+                TokenRowStateConverter(AppCurrency.Default).convert(currencyStatus = result.currency, onClick = null)
+            } else {
+                null
+            }
 
             uiState.update { state ->
                 state.copy(
@@ -346,6 +355,7 @@ internal class PromoCampaignModel @Inject constructor(
                     tokenSelector = state.tokenSelector?.copy(
                         selectedToken = selectedToken,
                         selectedAccount = selectedAccount,
+                        selectedTokenRow = selectedTokenRow,
                     ),
                 )
             }
