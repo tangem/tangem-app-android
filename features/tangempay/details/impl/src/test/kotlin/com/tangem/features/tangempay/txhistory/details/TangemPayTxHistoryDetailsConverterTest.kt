@@ -14,6 +14,7 @@ import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.collateralTransaction
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.spendTransaction
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -22,7 +23,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -47,7 +47,7 @@ internal class TangemPayTxHistoryDetailsConverterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun `GIVEN collateral type WHEN convert THEN sheet shows type title, icon, signed amount and no subtitle`(
         model: CollateralModel,
     ) {
