@@ -12,7 +12,7 @@ memory; pages change without notice. Check a page's last-edited date against the
 in the same PR as the code.
 
 - [BFF onboarding](https://app.notion.com/p/39e5d34eb6788042b112e10747b02827) — `/wallet*`, approvals, `walletId` · 10.09.2026
-- [BFF discovery](https://app.notion.com/p/3965d34eb6788015af10eed189d2f6e8) — `/categories`, `/events`, `/search` · 22.10.2026 (page updated 16.10.2026)
+- [BFF discovery](https://app.notion.com/p/3965d34eb6788015af10eed189d2f6e8) — `/categories`, `/events`, `/search` · 30.10.2026 (page updated 16.10.2026; categories/filter checked live on PROD)
 - [Order flow](https://app.notion.com/p/3ab5d34eb678803e8462c1b95681bdb6) — `/orders/quote`, CLOB order, positions · 26.08.2026
 - [Mobile order placement](https://app.notion.com/p/3c35d34eb6788044b0eed0781c44ef18) — order screen rules · 01.09.2026
 - [Deposit & withdraw guide](https://app.notion.com/p/3cd5d34eb6788087b7f2c748c6b24a46) — bridge, `/withdraw`, minimums · 17.09.2026
@@ -45,6 +45,12 @@ a snapshot. A fast reconnect may be conflated by the state flow; keep REST polli
 Discovery and open-position sports metadata was checked against `tangem-09.10.2026-api-docs.json` on
 09.10.2026. Sports fields are optional and nullable; `live` is required. Keep scores and periods as raw
 provider strings and teams in provider order. `dataFetchedAt` dates the backend's snapshot, not game end.
+
+Discovery categories checked on `api.tangem.org` on 30.10.2026 return nested `subcategories` and
+`filters` in v1, matching iOS #7571. The older MB-691 description of a flat v2 list does not match
+that response. A subcategory is requested through the same `category` parameter; All uses the parent
+id. `filter=games|props` is optional and must survive pagination. Missing/null lists remain compatible
+with old responses. Category labels may be Lokalise keys; preserve them as supplied.
 
 ## Wire-format traps (each one cost a device session)
 
