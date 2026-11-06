@@ -2938,6 +2938,7 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Too many attempts. Try again in 24 hours</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Could Not Add Card</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Google Wallet is unavailable. Check system settings</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Card added to Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancel %1$s, move to %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">To pay monthly fee for plan and start use new card</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Top-up your account on %1$s</string>
