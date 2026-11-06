@@ -70,7 +70,7 @@ internal class PooledStakingMapperStateTest {
             benefits = emptyList(),
             howItWorks = null,
             details = listOf(row("Risk", "Low"), row("Protocol", "P2P.org"), row("Performance fee", "10%")),
-            limits = EarnLimits(minDeposit = BigDecimal.ZERO, remainingCap = null),
+            limits = EarnLimits(minDeposit = BigDecimal("0.01"), remainingCap = null),
             apyPeriods = emptyList(),
             primary = EarnActionItem(PooledStakingAction(stringReference("Start earning"))),
             secondary = emptyList(),
@@ -79,6 +79,18 @@ internal class PooledStakingMapperStateTest {
         )
         assertThat(actual.copy(projection = null)).isEqualTo(expected)
         assertThat(actual.projection).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN any vaults WHEN state THEN minimum deposit is the 0_01 ETH the staking flow enforces`() {
+        // Arrange
+        val availability = StakingAvailability.Available(option())
+
+        // Act
+        val actual = mapper.state(status(), availability) as EarnProductState.Ready
+
+        // Assert
+        assertThat(actual.limits).isEqualTo(EarnLimits(minDeposit = BigDecimal("0.01"), remainingCap = null))
     }
 
     @Nested
