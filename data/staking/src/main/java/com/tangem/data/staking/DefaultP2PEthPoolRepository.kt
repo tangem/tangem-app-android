@@ -257,28 +257,27 @@ internal class DefaultP2PEthPoolRepository(
         return p2pEthPoolVaultsStore.getSync()
     }
 
-    override suspend fun fetchVaultLimits(): Either<StakingError, Unit> =
-        runSuspendCatching {
-            val response = withContext(dispatchers.io) {
-                tangemTechApi.getCoinsSettings().getOrThrow()
+    override suspend fun fetchVaultLimits(): Either<StakingError, Unit> = runSuspendCatching {
+        val response = withContext(dispatchers.io) {
+            tangemTechApi.getCoinsSettings().getOrThrow()
+        }
+        val vaults = response.staking?.vaults.orEmpty()
+        val limits = vaults
+            .mapNotNull { vault ->
+                val limit = vault.limit ?: return@mapNotNull null
+                vault.vaultAddress.lowercase() to VaultLimitInfo(
+                    limit = limit,
+                    coefficient = vault.coefficient,
+                )
             }
-            val vaults = response.staking?.vaults.orEmpty()
-            val limits = vaults
-                .mapNotNull { vault ->
-                    val limit = vault.limit ?: return@mapNotNull null
-                    vault.vaultAddress.lowercase() to VaultLimitInfo(
-                        limit = limit,
-                        coefficient = vault.coefficient,
-                    )
-                }
-                .toMap()
-            p2pVaultLimitsStore.store(limits)
-        }.onFailure { e ->
-            TangemLogger.e("Error fetching P2P vault limits: ${e.message}", e)
-        }.fold(
-            onSuccess = { Unit.right() },
-            onFailure = { StakingError.UnknownError(it).left() },
-        )
+            .toMap()
+        p2pVaultLimitsStore.store(limits)
+    }.onFailure { e ->
+        TangemLogger.e("Error fetching P2P vault limits: ${e.message}", e)
+    }.fold(
+        onSuccess = { Unit.right() },
+        onFailure = { StakingError.UnknownError(it).left() },
+    )
 
     override fun getVaultLimitsFlow(): Flow<Map<String, VaultLimitInfo>?> {
         return p2pVaultLimitsStore.get()
