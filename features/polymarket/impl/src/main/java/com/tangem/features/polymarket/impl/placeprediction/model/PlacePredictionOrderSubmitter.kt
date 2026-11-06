@@ -97,7 +97,6 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         is SubmitUM.AwaitingFill,
         -> true
         is SubmitUM.Idle,
-        is SubmitUM.AwaitingQuote,
         is SubmitUM.Result,
         -> false
     }

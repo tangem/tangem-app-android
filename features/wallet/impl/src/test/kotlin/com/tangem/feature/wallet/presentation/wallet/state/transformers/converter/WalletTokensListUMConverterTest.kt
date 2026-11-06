@@ -19,8 +19,10 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.Account.Personal.Companion.createMainAccount
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -155,6 +157,77 @@ internal class WalletTokensListUMConverterTest {
     }
 
     @Test
+    fun `GIVEN a collectibles account between portfolios WHEN convert THEN its row keeps the domain position`() {
+        // Arrange
+        val converter = createConverter(selectedWallet = mockColdWallet(false, false), isAccountsModeEnabled = true)
+        val accountList = accountListOf(personalStatus(), collectiblesStatus(), activeJointStatus())
+
+        // Act
+        val result = converter.convert(accountList)
+
+        // Assert
+        val content = result as WalletTokensListUM.Content
+        assertThat(content.tokenList.map { it::class }).containsExactly(
+            TokensListItemUM2.Portfolio::class,
+            TokensListItemUM2.Collectibles::class,
+            TokensListItemUM2.Portfolio::class,
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN a collectibles account not onboarded WHEN convert THEN it has no row`() {
+        // Arrange
+        val converter = createConverter(selectedWallet = mockColdWallet(false, false), isAccountsModeEnabled = true)
+        val accountList = accountListOf(
+            collectiblesStatus(value = CollectiblesAccountStatusValue.NotOnboarded),
+            personalStatus(),
+        )
+
+        // Act
+        val result = converter.convert(accountList)
+
+        // Assert
+        val content = result as WalletTokensListUM.Content
+        assertThat(content.tokenList.map { it::class }).containsExactly(TokensListItemUM2.Portfolio::class)
+    }
+
+    @Test
+    fun `GIVEN no tokens and a collectibles account WHEN convert THEN both account rows are shown`() {
+        // Arrange
+        val converter = createConverter(selectedWallet = mockColdWallet(false, false), isAccountsModeEnabled = true)
+        val accountList = accountListOf(
+            collectiblesStatus(),
+            personalStatus(tokenList = TokenList.Empty),
+        )
+
+        // Act
+        val result = converter.convert(accountList)
+
+        // Assert
+        val content = result as WalletTokensListUM.Content
+        assertThat(content.tokenList.map { it::class }).containsExactly(
+            TokensListItemUM2.Collectibles::class,
+            TokensListItemUM2.Portfolio::class,
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN no tokens and a collectibles account not onboarded WHEN convert THEN the wallet is empty`() {
+        // Arrange
+        val converter = createConverter(selectedWallet = mockColdWallet(false, false), isAccountsModeEnabled = true)
+        val accountList = accountListOf(
+            collectiblesStatus(value = CollectiblesAccountStatusValue.NotOnboarded),
+            personalStatus(tokenList = TokenList.Empty),
+        )
+
+        // Act
+        val result = converter.convert(accountList)
+
+        // Assert
+        assertThat(result).isInstanceOf(WalletTokensListUM.Empty::class.java)
+    }
+
+    @Test
     fun `GIVEN redesigned account rows enabled WHEN convert THEN accounts and their tokens use DS3 items`() {
         // Arrange
         val converter = createConverter(
@@ -266,6 +339,16 @@ internal class WalletTokensListUMConverterTest {
             priceChangeLce = Unit.lceError(),
         )
     }
+
+    private fun personalStatus(tokenList: TokenList = ungroupedTokenList()) = AccountStatus.Personal(
+        account = createMainAccount(userWalletId),
+        tokenList = tokenList,
+        priceChangeLce = Unit.lceError(),
+    )
+
+    private fun collectiblesStatus(
+        value: CollectiblesAccountStatusValue = CollectiblesAccountStatusValue.Loading,
+    ) = AccountStatus.Collectibles(account = Account.Collectibles(userWalletId = userWalletId), value = value)
 
     private fun ungroupedTokenList(): TokenList.Ungrouped {
         return TokenList.Ungrouped(

@@ -207,12 +207,12 @@ private fun NotificationsWarning(state: McpNotificationsWarningUM, modifier: Mod
         slotEnd = {
             Icon(
                 modifier = Modifier.size(20.dp),
-                imageVector = Icons.ic_warning_20,
+                imageVector = Icons.ic_warning_20_filled,
                 contentDescription = null,
                 tint = TangemTheme.colors3.icon.status.warning,
             )
         },
-        primaryButton = TangemMessageBanner.Button(
+        secondaryButton = TangemMessageBanner.Button(
             text = resourceReference(R.string.common_open_settings_button_title),
             onClick = state.onOpenSettingsClick,
         ),

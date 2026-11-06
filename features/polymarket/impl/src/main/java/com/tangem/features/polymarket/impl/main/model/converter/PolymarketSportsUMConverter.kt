@@ -2,6 +2,8 @@ package com.tangem.features.polymarket.impl.main.model.converter
 
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketLiveQuote
+import com.tangem.features.polymarket.impl.common.buyPrice
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.model.PolymarketTeam
 import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
@@ -29,7 +31,11 @@ internal class PolymarketSportsUMConverter(
         isLive = game.isLive && !game.isEnded && game.period?.uppercase(Locale.ROOT) !in NO_LIVE_PERIODS,
     )
 
-    fun outcomes(event: PolymarketEvent, game: PolymarketSportsState.Game?): PolymarketEventRowUM? {
+    fun outcomes(
+        event: PolymarketEvent,
+        game: PolymarketSportsState.Game?,
+        quotes: Map<String, PolymarketLiveQuote> = emptyMap(),
+    ): PolymarketEventRowUM? {
         if (game == null || !game.isLive && !game.isEnded) return null
         val home = restTeam(event, game.home) ?: return null
         val away = restTeam(event, game.away) ?: return null
@@ -53,7 +59,7 @@ internal class PolymarketSportsUMConverter(
                 PolymarketOutcomeUM(
                     assetId = choice.assetId,
                     title = stringReference(title),
-                    price = stringReference(choice.price.formatPolymarketPrice()),
+                    price = stringReference(quotes[choice.assetId].buyPrice(choice.price).formatPolymarketPrice()),
                     accent = accent,
                     onClick = { onOutcomeClick(event.id, choice.marketId, choice.assetId) },
                 )

@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -103,7 +102,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             expectedButtonEnabled = false,
         ),
         GateModel(
-            quote = QuoteUM.Loading(isAnswerExpected = false),
+            quote = QuoteUM.Loading,
             expectedNotifications = emptyList(),
             expectedButtonEnabled = false,
         ),
@@ -182,7 +181,7 @@ internal class PlacePredictionNotificationsFactoryTest {
     @Test
     fun `GIVEN the balance falls short before a quote arrives WHEN the gate runs THEN the shortfall has no payout`() {
         // Arrange
-        val state = createState(balance = BigDecimal("5"), quote = QuoteUM.Loading(isAnswerExpected = false))
+        val state = createState(balance = BigDecimal("5"), quote = QuoteUM.Loading)
 
         // Act
         val actual = state.recomputeGate()
@@ -380,7 +379,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             ),
             SellGateModel(
                 amountValue = "12.80",
-                quote = QuoteUM.Loading(isAnswerExpected = false),
+                quote = QuoteUM.Loading,
                 expectedProceeds = SharesProceedsUM.Loading,
                 expectedButtonEnabled = false,
             ),
@@ -483,21 +482,9 @@ internal class PlacePredictionNotificationsFactoryTest {
     inner class WhileQuoting {
 
         @Test
-        fun `GIVEN a covered amount awaiting its quote WHEN the gate runs THEN a tap waits for the quote`() {
+        fun `GIVEN a covered amount awaiting its quote WHEN the gate runs THEN it stays blocked`() {
             // Arrange
-            val state = createState(balance = BigDecimal("100"), quote = QuoteUM.Loading(isAnswerExpected = true))
-
-            // Act
-            val actual = state.recomputeGate()
-
-            // Assert
-            assertThat(actual.placeAction).isEqualTo(PlaceActionUM.ReadyOnceQuoted)
-        }
-
-        @Test
-        fun `GIVEN an amount above the balance awaiting its quote WHEN the gate runs THEN it stays blocked`() {
-            // Arrange
-            val state = createState(balance = BigDecimal("5"), quote = QuoteUM.Loading(isAnswerExpected = true))
+            val state = createState(balance = BigDecimal("100"), quote = QuoteUM.Loading)
 
             // Act
             val actual = state.recomputeGate()
@@ -507,9 +494,17 @@ internal class PlacePredictionNotificationsFactoryTest {
         }
 
         @Test
-        fun `GIVEN a reload of an amount already quoted WHEN the gate runs THEN it stays blocked`() {
+        fun `GIVEN a sell within the held shares awaiting its quote WHEN the gate runs THEN it stays blocked`() {
             // Arrange
-            val state = createState(balance = BigDecimal("100"), quote = QuoteUM.Loading(isAnswerExpected = false))
+            val state = createState(
+                amountValue = "5",
+                quote = QuoteUM.Loading,
+                order = OrderSideUM.Sell(
+                    position = SellPositionUM.Held(available = BigDecimal("10")),
+                    proceeds = SharesProceedsUM.Unavailable,
+                    balance = null,
+                ),
+            )
 
             // Act
             val actual = state.recomputeGate()
@@ -540,74 +535,6 @@ internal class PlacePredictionNotificationsFactoryTest {
 
             // Assert
             assertThat(actual.placeAction).isEqualTo(PlaceActionUM.Unavailable)
-        }
-
-        @Test
-        fun `GIVEN the region is restricted WHEN the gate runs while quoting THEN it stays blocked`() {
-            // Arrange
-            val state = createState(
-                quote = QuoteUM.Loading(isAnswerExpected = true),
-                tradingPermission = TradingPermissionUM.Restricted,
-            )
-
-            // Act
-            val actual = state.recomputeGate()
-
-            // Assert
-            assertThat(actual.placeAction).isEqualTo(PlaceActionUM.Unavailable)
-        }
-
-        @Test
-        fun `GIVEN an order is being signed WHEN the gate runs while quoting THEN it stays blocked`() {
-            // Arrange
-            val state = createState(quote = QuoteUM.Loading(isAnswerExpected = true), submit = SubmitUM.Signing)
-
-            // Act
-            val actual = state.recomputeGate()
-
-            // Assert
-            assertThat(actual.placeAction).isEqualTo(PlaceActionUM.Unavailable)
-        }
-
-        @Test
-        fun `GIVEN a tap waits WHEN the gate closes THEN the tap keeps waiting`() {
-            // Arrange
-            val state = createState(
-                balance = BigDecimal("5"),
-                quote = QuoteUM.Loading(isAnswerExpected = true),
-                submit = SubmitUM.AwaitingQuote,
-            )
-
-            // Act
-            val actual = state.recomputeGate()
-
-            // Assert
-            assertThat(actual.placeAction).isEqualTo(PlaceActionUM.AwaitingQuote)
-        }
-
-        @ParameterizedTest(name = "selling {0} of 10 held shares while quoting lets a tap wait: {1}")
-        @CsvSource("5, true", "10, true", "11, false")
-        fun `GIVEN a sell awaiting its quote WHEN the gate runs THEN it follows the held shares`(
-            amount: String,
-            isTapAllowed: Boolean,
-        ) {
-            // Arrange
-            val state = createState(
-                amountValue = amount,
-                quote = QuoteUM.Loading(isAnswerExpected = true),
-                order = OrderSideUM.Sell(
-                    position = SellPositionUM.Held(available = BigDecimal("10")),
-                    proceeds = SharesProceedsUM.Unavailable,
-                    balance = null,
-                ),
-            )
-            val expected = if (isTapAllowed) PlaceActionUM.ReadyOnceQuoted else PlaceActionUM.Unavailable
-
-            // Act
-            val actual = state.recomputeGate()
-
-            // Assert
-            assertThat(actual.placeAction).isEqualTo(expected)
         }
     }
 

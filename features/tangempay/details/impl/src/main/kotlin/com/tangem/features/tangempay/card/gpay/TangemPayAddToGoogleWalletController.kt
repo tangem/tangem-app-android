@@ -280,6 +280,7 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
                 Entry.Button(isLoading = isAddingCard)
             }
             status == CardStatus.Unsupported -> Entry.ManualGuide
+            status == CardStatus.Added -> Entry.Added
             else -> Entry.Hidden
         }
     }
@@ -299,6 +300,7 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
         data object Hidden : Entry
         data object ManualGuide : Entry
         data class Button(val isLoading: Boolean) : Entry
+        data object Added : Entry
     }
 
     private enum class Availability { RESOLVING, ENABLED, DISABLED }

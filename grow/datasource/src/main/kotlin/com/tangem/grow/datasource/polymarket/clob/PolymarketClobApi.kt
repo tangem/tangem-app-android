@@ -6,6 +6,7 @@ import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowa
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceHistoryResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketSessionSignersResponse
 import okhttp3.RequestBody
 import retrofit2.http.Body
@@ -48,14 +49,23 @@ interface PolymarketClobApi {
     ): ApiResponse<PolymarketPlaceOrderResponse>
 
     /**
-     * Best price on one [side] of the asset's book. Public market data — the only CLOB call that needs
-     * no auth headers. A 404 means no orderbook exists for the token, i.e. the market is closed.
+     * Best price on one [side] of the asset's book. Public market data, without auth headers.
+     * A 404 means no orderbook exists for the token, i.e. the market is closed.
      */
     @GET("price")
     suspend fun getPrice(
         @Query("token_id") tokenId: String,
         @Query("side") side: String,
     ): ApiResponse<PolymarketPriceResponse>
+
+    @GET("prices-history")
+    suspend fun getPriceHistory(
+        @Query("market") tokenId: String,
+        @Query("fidelity") fidelityMinutes: Int,
+        @Query("interval") interval: String?,
+        @Query("startTs") startSeconds: Long?,
+        @Query("endTs") endSeconds: Long?,
+    ): ApiResponse<PolymarketPriceHistoryResponse>
 
     /**
      * One placed order as the book sees it. L2-authenticated, and the signed path carries the id. Polled after
