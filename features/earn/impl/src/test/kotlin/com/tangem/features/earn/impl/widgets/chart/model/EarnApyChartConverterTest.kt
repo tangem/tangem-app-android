@@ -145,6 +145,18 @@ internal class EarnApyChartConverterTest {
     }
 
     @Test
+    fun `GIVEN a period with the id of an item but another label WHEN convert THEN that item is selected`() {
+        // Arrange
+        val sameIdOtherLabel = EarnPeriod(id = "3m", label = stringReference("Three months"))
+
+        // Act
+        val actual = convert(history, period = sameIdOtherLabel)
+
+        // Assert
+        assertThat(actual.periods.map { it.isSelected }).containsExactly(false, true, false).inOrder()
+    }
+
+    @Test
     fun `GIVEN a period item WHEN clicked THEN onPeriodClick gets that period`() {
         // Arrange
         val clicked = mutableListOf<EarnPeriod>()

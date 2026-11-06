@@ -105,7 +105,7 @@ internal class EarnApyChartConverter @Inject constructor() {
                 TangemSegmentedControl.Item(
                     id = item.id,
                     label = item.label,
-                    isSelected = item == period,
+                    isSelected = item.id == period.id,
                     onClick = { onPeriodClick(item) },
                 )
             }
