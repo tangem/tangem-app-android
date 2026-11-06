@@ -14,7 +14,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
@@ -40,6 +42,7 @@ import com.tangem.domain.promo.usecase.RegisterPromoCampaignUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
+import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent.PayoutToken
 import com.tangem.features.promobanners.impl.campaigns.model.PredefinedTokenResolver
@@ -225,7 +228,14 @@ internal class PromoCampaignModelTest {
 
             // Assert
             assertThat(model.uiState.value.tokenSelector?.selectedTokenRow).isEqualTo(
-                TokenRowStateConverter(euro).convert(currencyStatus = result.currency, onClick = null),
+                TokenRowStateConverter(euro).convert(
+                    currencyStatus = result.currency,
+                    onClick = null,
+                    subtitle = resourceReference(
+                        R.string.domain_receive_assets_onboarding_network_name,
+                        wrappedList(result.currency.currency.network.name),
+                    ),
+                ),
             )
             model.onDestroy()
         }
