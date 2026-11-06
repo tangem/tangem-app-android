@@ -54,6 +54,7 @@ internal class YieldSupplyStopEarningFeeContentTransformerTest {
                 maxNetworkFeeFiatValue = TextReference.EMPTY,
                 minTopUpFiatValue = TextReference.EMPTY,
                 feeNoteValue = TextReference.EMPTY,
+                feeCurrency = token,
             ),
         )
     }
@@ -76,6 +77,7 @@ internal class YieldSupplyStopEarningFeeContentTransformerTest {
                 maxNetworkFeeFiatValue = TextReference.EMPTY,
                 minTopUpFiatValue = TextReference.EMPTY,
                 feeNoteValue = TextReference.EMPTY,
+                feeCurrency = token,
             ),
         )
     }

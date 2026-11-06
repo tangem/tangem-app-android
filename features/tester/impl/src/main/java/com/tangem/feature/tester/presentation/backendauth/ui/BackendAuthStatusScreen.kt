@@ -19,9 +19,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -30,8 +35,10 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.findActivity
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.backendauth.state.BackendAuthStatusUM
+import kotlinx.coroutines.launch
 import com.tangem.core.ui.R as CoreUiR
 
 /**
@@ -43,7 +50,17 @@ import com.tangem.core.ui.R as CoreUiR
  */
 @Composable
 internal fun BackendAuthStatusScreen(state: BackendAuthStatusUM) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val showDisabledReason: (String) -> Unit = { reason ->
+        coroutineScope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(reason)
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AppBarWithBackButton(
                 onBackClick = state.onBackClick,
@@ -67,6 +84,7 @@ internal fun BackendAuthStatusScreen(state: BackendAuthStatusUM) {
                                 row = row,
                                 runningAction = state.runningAction,
                                 onCopyClick = { state.onCopyClick(row) },
+                                onDisabledClick = showDisabledReason,
                             )
                             if (index < section.rows.lastIndex) {
                                 DividerWithPadding(start = 16.dp, end = 16.dp)
@@ -98,7 +116,12 @@ internal fun BackendAuthStatusScreen(state: BackendAuthStatusUM) {
 }
 
 @Composable
-private fun StatusRow(row: BackendAuthStatusUM.StatusRow, runningAction: String?, onCopyClick: () -> Unit) {
+private fun StatusRow(
+    row: BackendAuthStatusUM.StatusRow,
+    runningAction: String?,
+    onCopyClick: () -> Unit,
+    onDisabledClick: (String) -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,7 +148,12 @@ private fun StatusRow(row: BackendAuthStatusUM.StatusRow, runningAction: String?
                     color = TangemTheme.colors3.text.primary,
                 )
             }
-            RowTrailingIcons(row = row, runningAction = runningAction, onCopyClick = onCopyClick)
+            RowTrailingIcons(
+                row = row,
+                runningAction = runningAction,
+                onCopyClick = onCopyClick,
+                onDisabledClick = onDisabledClick,
+            )
         }
         if (row.subtitle != null) {
             Text(
@@ -138,7 +166,43 @@ private fun StatusRow(row: BackendAuthStatusUM.StatusRow, runningAction: String?
 }
 
 @Composable
-private fun RowTrailingIcons(row: BackendAuthStatusUM.StatusRow, runningAction: String?, onCopyClick: () -> Unit) {
+private fun RowIconAction(
+    iconAction: BackendAuthStatusUM.IconAction,
+    isEnabled: Boolean,
+    onDisabledClick: (String) -> Unit,
+) {
+    val activity = LocalContext.current.findActivity()
+    val disabledReason = iconAction.disabledReason
+
+    // Stays clickable while inactive, so the click can explain why
+    IconButton(
+        onClick = {
+            when {
+                disabledReason != null -> onDisabledClick(disabledReason)
+                else -> {
+                    iconAction.onClick()
+                    if (iconAction.isClosingTester) activity.finish()
+                }
+            }
+        },
+        enabled = isEnabled,
+        modifier = Modifier.size(32.dp),
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(iconAction.iconRes),
+            contentDescription = iconAction.label,
+            tint = if (disabledReason == null) TangemTheme.colors3.icon.primary else TangemTheme.colors3.icon.tertiary,
+        )
+    }
+}
+
+@Composable
+private fun RowTrailingIcons(
+    row: BackendAuthStatusUM.StatusRow,
+    runningAction: String?,
+    onCopyClick: () -> Unit,
+    onDisabledClick: (String) -> Unit,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -165,17 +229,11 @@ private fun RowTrailingIcons(row: BackendAuthStatusUM.StatusRow, runningAction: 
                     color = TangemTheme.colors3.icon.primary,
                 )
             } else {
-                IconButton(
-                    onClick = iconAction.onClick,
-                    enabled = runningAction == null,
-                    modifier = Modifier.size(32.dp),
-                ) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(iconAction.iconRes),
-                        contentDescription = iconAction.label,
-                        tint = TangemTheme.colors3.icon.primary,
-                    )
-                }
+                RowIconAction(
+                    iconAction = iconAction,
+                    isEnabled = runningAction == null,
+                    onDisabledClick = onDisabledClick,
+                )
             }
         }
     }

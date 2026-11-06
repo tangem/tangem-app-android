@@ -116,7 +116,7 @@ internal class DefaultRouter(
                         .dropLastWhile(predicate)
                         .ifEmpty { stack }
                 },
-                onComplete = { newStack, oldStack -> complete(newStack.size < oldStack.size) },
+                onComplete = { newStack, _ -> complete(newStack.lastOrNull()?.let { !predicate(it) } == true) },
             )
         }
     }

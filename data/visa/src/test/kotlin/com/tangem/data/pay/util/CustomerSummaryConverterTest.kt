@@ -95,7 +95,7 @@ internal class CustomerSummaryConverterTest {
                 ),
                 bankingActivation = MoneyAccount.Activation(
                     status = MoneyAccount.Activation.Status.FAILED,
-                    step = MoneyAccount.Activation.Step.UNKNOWN,
+                    step = MoneyAccount.Activation.Step.AWAITING_DEPOSIT,
                     failureReason = MoneyAccount.Activation.FailureReason.UNKNOWN,
                 ),
             ),

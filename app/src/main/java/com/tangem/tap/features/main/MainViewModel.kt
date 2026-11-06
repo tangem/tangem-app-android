@@ -37,6 +37,7 @@ import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.wallets.usecase.AssociateWalletsWithApplicationIdUseCase
 import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
+import com.tangem.domain.wallets.usecase.ReportCardLinkedWalletsBackupUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -79,6 +80,7 @@ internal class MainViewModel @Inject constructor(
     private val appRouterConfig: AppRouterConfig,
     private val offrampRepository: OfframpRepository,
     private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
+    private val reportCardLinkedWalletsBackupUseCase: ReportCardLinkedWalletsBackupUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -111,6 +113,7 @@ internal class MainViewModel @Inject constructor(
         multiQuoteUpdater.subscribe()
 
         initializeOffRamp()
+        reportCardLinkedWalletsBackups()
 
         observeFlips()
         displayBalancesHidingStatusToast()
@@ -176,6 +179,10 @@ internal class MainViewModel @Inject constructor(
         viewModelScope.launch {
             offrampRepository.update()
         }
+    }
+
+    private fun reportCardLinkedWalletsBackups() {
+        viewModelScope.launch { reportCardLinkedWalletsBackupUseCase() }
     }
 
     private fun observeFlips() {

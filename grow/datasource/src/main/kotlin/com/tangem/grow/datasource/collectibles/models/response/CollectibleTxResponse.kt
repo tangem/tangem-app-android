@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  * Only the fields the app reads are declared.
  *
  * @property nftWon present once the pack is opened
- * @property autoBuyback present when Turbo mode sold the card back right on opening
+ * @property autoBuyback present when Turbo mode sold the card back right on opening and `includeAutoBuyback` is set
  */
 @Serializable
 data class CollectibleTxResponse(
@@ -23,7 +23,6 @@ data class CollectibleTxResponse(
 ) {
 
     /**
-     * @property txId null when the card was not bought through Tangem
      * @property toNetwork `solana` or `solana-dev`, by environment
      * @property toAmount the payout in base units of the token, [toDecimals] digits
      */
@@ -31,8 +30,6 @@ data class CollectibleTxResponse(
     data class AutoBuybackDTO(
         @SerialName("buybackId")
         val buybackId: String,
-        @SerialName("txId")
-        val txId: String? = null,
         @SerialName("nftAddress")
         val nftAddress: String,
         @SerialName("fromAddress")

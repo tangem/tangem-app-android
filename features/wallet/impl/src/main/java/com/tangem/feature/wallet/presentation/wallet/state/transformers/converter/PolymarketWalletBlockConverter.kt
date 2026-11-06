@@ -9,6 +9,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.utils.converter.Converter
@@ -35,7 +36,9 @@ internal class PolymarketWalletBlockConverter(
         totalFiatBalance: TotalFiatBalance,
     ): PolymarketWalletBlockUM.Balance = when {
         this is PredictionAccountStatusValue.Loading -> PolymarketWalletBlockUM.Balance.Loading
-        this is PredictionAccountStatusValue.Active && totalFiatBalance is TotalFiatBalance.Loaded ->
+        this is PredictionAccountStatusValue.Active &&
+            positions !is PredictionPositionsValue.Unavailable &&
+            totalFiatBalance is TotalFiatBalance.Loaded ->
             PolymarketWalletBlockUM.Balance.Amount(text = totalFiatBalance.amount.formatFiat())
         else -> PolymarketWalletBlockUM.Balance.Unknown
     }

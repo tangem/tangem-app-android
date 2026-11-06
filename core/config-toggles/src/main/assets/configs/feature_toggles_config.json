@@ -8,6 +8,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
         "version": "undefined"
     },
@@ -29,6 +33,10 @@
     },
     {
         "name": "AND_17201_TRON_LOWER_FEE_TYPE_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_18712_EVM_GASLESS_DEX_SWAP_ENABLED",
         "version": "undefined"
     },
     {
@@ -92,11 +100,19 @@
         "version": "undefined"
     },
     {
+        "name": "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1732_MARKETING_UID_BINDING_ENABLED",
         "version": "undefined"
     },
     {
         "name": "AND_18834_YIELD_MODULE_V3_ENABLED",
+        "version": "6.7"
+    },
+    {
+        "name": "AND_19119_YIELD_MODE_SMART_GAS_ENABLED",
         "version": "6.7"
     },
     {
@@ -126,5 +142,9 @@
     {
         "name": "AND_19037_WALLET_LINKING_ENABLED",
         "version": "6.8"
+    },
+    {
+        "name": "TWI_1676_EARN_ENABLED",
+        "version": "undefined"
     }
 ]

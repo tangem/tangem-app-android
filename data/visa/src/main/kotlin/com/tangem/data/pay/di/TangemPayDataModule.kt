@@ -39,11 +39,13 @@ import com.tangem.domain.pay.usecase.bankofframp.*
 import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSendUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.store.entity.CashbackSummaryDM
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
@@ -343,15 +345,23 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideGetTangemPayProductsAvailabilityForCustomerUseCase(
             checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
+            moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
         ): GetTangemPayProductsAvailabilityForCustomerUseCase {
-            return GetTangemPayProductsAvailabilityForCustomerUseCase(checkTangemPayEligibilityForCustomerUseCase)
+            return GetTangemPayProductsAvailabilityForCustomerUseCase(
+                checkTangemPayEligibilityForCustomerUseCase = checkTangemPayEligibilityForCustomerUseCase,
+                moneyAccountFeatureToggles = moneyAccountFeatureToggles,
+            )
         }
 
         @Provides
         fun provideGetTangemPayProductsAvailabilityForCountryUseCase(
             checkTangemPayEligibilityUseCase: CheckTangemPayEligibilityUseCase,
+            moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
         ): GetTangemPayProductsAvailabilityForCountryUseCase {
-            return GetTangemPayProductsAvailabilityForCountryUseCase(checkTangemPayEligibilityUseCase)
+            return GetTangemPayProductsAvailabilityForCountryUseCase(
+                checkTangemPayEligibilityUseCase = checkTangemPayEligibilityUseCase,
+                moneyAccountFeatureToggles = moneyAccountFeatureToggles,
+            )
         }
 
         @Provides
@@ -553,10 +563,34 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideIsTangemPayCustomerVerifiedUseCase(
+            getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
+        ): IsTangemPayCustomerVerifiedUseCase {
+            return IsTangemPayCustomerVerifiedUseCase(getCustomerSummaryUseCase = getCustomerSummaryUseCase)
+        }
+
+        @Provides
+        fun provideGetTangemPayFiatRateUseCase(
+            singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
+        ): GetTangemPayFiatRateUseCase {
+            return GetTangemPayFiatRateUseCase(singleQuoteStatusSupplier = singleQuoteStatusSupplier)
+        }
+
+        @Provides
         fun provideResolvePaymentAccountStatusFromSummaryUseCase(
             onboardingRepository: OnboardingRepository,
+            getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
+            tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+            getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase,
+            paymentAccountStatusesStore: PaymentAccountStatusesStore,
         ): ResolvePaymentAccountStatusFromSummaryUseCase {
-            return ResolvePaymentAccountStatusFromSummaryUseCase(onboardingRepository = onboardingRepository)
+            return ResolvePaymentAccountStatusFromSummaryUseCase(
+                onboardingRepository = onboardingRepository,
+                getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
+                tangemPayCurrencyFactory = tangemPayCurrencyFactory,
+                getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
+                paymentAccountStatusCache = paymentAccountStatusesStore,
+            )
         }
 
         @Provides
@@ -652,10 +686,6 @@ internal interface TangemPayDataModule {
         fun provideGetCurrentTariffUseCase(onboardingRepository: OnboardingRepository): GetCurrentTariffUseCase {
             return GetCurrentTariffUseCase(onboardingRepository = onboardingRepository)
         }
-
-        @Provides
-        @Singleton
-        fun provideBankOfframpRepository(repository: DefaultBankOfframpRepository): BankOfframpRepository = repository
 
         @Provides
         @Singleton

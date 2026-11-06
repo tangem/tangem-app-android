@@ -179,6 +179,7 @@ internal class MoneyAccountCurrenciesProviderTest {
                 value = MoneyAccountStatusValue.Onboarding.Activating(
                     source = StatusSource.ACTUAL,
                     customerId = CUSTOMER_ID,
+                    step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
                 ),
                 network = NETWORK,
             ),

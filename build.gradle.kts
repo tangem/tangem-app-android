@@ -247,6 +247,14 @@ dependencyAnalysis {
                 // provider repository). Nothing references it by type until the social login feature
                 // modules land.
                 exclude(":data:social-login")
+                // Same reason: the Earn modules are wired for Hilt only, nothing references them by type
+                // until the Earn navigation integration (AppRoute.EarnEntry and the ChildFactory branch),
+                // which must remove this exclusion.
+                exclude(
+                    ":features:earn:api",
+                    ":features:earn:impl",
+                    ":features:earn:flow:impl",
+                )
                 // CameraX is split into runtime-wired artifacts: camera-lifecycle and camera-view back
                 // the preview/ProcessCameraProvider machinery that camera2 (runtimeOnly) drives.
                 exclude(
@@ -385,10 +393,12 @@ interface Injected {
     val fs: FileSystemOperations
 }
 
-// Test task to run unit tests for debug/googleDebug variant (Android) and all JVM modules
+// Test task to run unit tests for debug/googleDebug variant (Android), all JVM modules and the convention plugin
 val unitTest by tasks.registering {
     group = "verification"
-    description = "Run unit tests for debug/googleDebug variant and all JVM modules"
+    description = "Run unit tests for debug/googleDebug variant, all JVM modules and the convention plugin"
+    // An included build is not a subproject, so the subprojects wiring below misses its tests
+    dependsOn(gradle.includedBuild("configuration").task(":test"))
 }
 
 // Implementation modules wired in only by :app (like a feature `impl`), each mapped to the hint shown on a

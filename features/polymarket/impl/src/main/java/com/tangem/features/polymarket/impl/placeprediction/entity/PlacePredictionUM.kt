@@ -33,10 +33,12 @@ internal data class PlacePredictionUM(
     val minAmount: BigDecimal? = null,
     val priceError: PriceErrorUM? = null,
     val submit: SubmitUM,
-    val isPrimaryButtonEnabled: Boolean,
+    val placeAction: PlaceActionUM,
     val isAwaitingFunds: Boolean = false,
     val lastFeeRate: BigDecimal = BigDecimal.ZERO,
     val isAmountFromFraction: Boolean = false,
+    val placeButtonStyle: PlaceButtonStyleUM = PlaceButtonStyleUM.HOLD,
+    val holdResetKey: Int = 0,
 ) {
 
     companion object {
@@ -65,7 +67,7 @@ internal data class PlacePredictionUM(
             tradingPermission = TradingPermissionUM.Unknown,
             notifications = persistentListOf(),
             submit = SubmitUM.Idle,
-            isPrimaryButtonEnabled = false,
+            placeAction = PlaceActionUM.Unavailable,
         )
     }
 }
@@ -112,6 +114,9 @@ internal fun PlacePredictionUM.canPollPrice(): Boolean = when (val order = order
         -> false
     }
 }
+
+internal val PlacePredictionUM.isReadyToPlace: Boolean
+    get() = placeAction == PlaceActionUM.Ready
 
 internal fun PlacePredictionUM.feeBreakdownQuote(): QuoteUM.Content? =
     (quote as? QuoteUM.Content)?.takeIf { submit is SubmitUM.Idle }
@@ -288,4 +293,15 @@ internal sealed interface SubmitUM {
     data object AwaitingFill : SubmitUM
 
     data class Result(val result: PlaceResultUM) : SubmitUM
+}
+
+internal val SubmitUM.canAcceptQuote: Boolean
+    get() = this is SubmitUM.Idle
+
+@Immutable
+internal sealed interface PlaceActionUM {
+
+    data object Unavailable : PlaceActionUM
+
+    data object Ready : PlaceActionUM
 }

@@ -1,5 +1,6 @@
 package com.tangem.data.pay.util
 
+import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.OfframpDestination
@@ -49,6 +50,7 @@ internal object BankOfframpOptionsConverter :
     private fun convertDestination(value: BankOfframpOptionsResponse.Destination): OfframpDestination? {
         return OfframpDestination(
             rail = convertRail(value.rail) ?: return null,
+            currency = value.currency?.takeIf(String::isNotBlank),
             fee = value.fee?.let(::convertFee) ?: return null,
             eta = value.eta?.let(::convertEta) ?: return null,
         )
@@ -57,6 +59,7 @@ internal object BankOfframpOptionsConverter :
     fun convertFee(value: BankOfframpOptionsResponse.Fee): OfframpFee? {
         return OfframpFee(
             name = value.name?.takeIf(String::isNotBlank),
+            calculationType = convertCalculationType(value.calculationType) ?: return null,
             amount = value.amount ?: return null,
             currency = value.currency?.takeIf(String::isNotBlank) ?: return null,
             description = value.description?.takeIf(String::isNotBlank),
@@ -74,6 +77,14 @@ internal object BankOfframpOptionsConverter :
     private fun convertRail(value: String?): BankRail? = when (value?.uppercase(Locale.US)) {
         BankRail.ACH.name -> BankRail.ACH
         BankRail.WIRE.name, FEDWIRE_RAIL -> BankRail.WIRE
+        BankRail.SPEI.name -> BankRail.SPEI
         else -> null
     }
+
+    private fun convertCalculationType(value: String?): AccountFee.CalculationType? =
+        when (value?.uppercase(Locale.US)) {
+            null, AccountFee.CalculationType.FIXED.name -> AccountFee.CalculationType.FIXED
+            AccountFee.CalculationType.PERCENTAGE.name -> AccountFee.CalculationType.PERCENTAGE
+            else -> null
+        }
 }

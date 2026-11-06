@@ -47,6 +47,7 @@ import com.patrykandpatrick.vico.core.cartesian.axis.AxisPosition
 import com.patrykandpatrick.vico.core.cartesian.axis.BaseAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
 import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
@@ -66,6 +67,8 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.yield.supply.impl.common.formatter.formatApy
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartAxisLabel
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartScale
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartDataUM
 import kotlinx.collections.immutable.ImmutableList
@@ -171,13 +174,14 @@ private fun YieldSupplyChartData(state: YieldSupplyChartUM.Data, modifier: Modif
         val columnsLayer = rememberColumnsLayer(
             accentColor = TangemTheme.colors3.text.accent.blue,
             isStacked = state.chartData.rewardCaps.isNotEmpty(),
+            axisMax = state.chartData.scale.max,
             columnSpacing = columnSpacing(plotWidth = maxWidth, columnCount = state.chartData.y.size),
         )
 
         val startAxis: VerticalAxis<AxisPosition.Vertical.Start> = rememberStartAxis(
             labelColor = TangemTheme.colors3.text.secondary,
             guidelineColor = TangemTheme.colors3.border.secondary,
-            percentFormat = state.chartData.percentFormat,
+            scale = state.chartData.scale,
         )
 
         val bottomAxis: HorizontalAxis<AxisPosition.Horizontal.Bottom> = rememberBottomAxis(
@@ -201,7 +205,11 @@ private fun YieldSupplyChartData(state: YieldSupplyChartUM.Data, modifier: Modif
 
         val averageLabelTopPadding = rememberAverageLabelTopPadding(state.chartData)
 
-        ColumnLabelsRow(labels = state.chartData.xLabels, modifier = Modifier.align(Alignment.BottomEnd))
+        ColumnLabelsRow(
+            labels = state.chartData.xLabels,
+            columnCount = state.chartData.y.size,
+            modifier = Modifier.align(Alignment.BottomEnd),
+        )
         CartesianChartHost(
             modifier = Modifier.padding(bottom = 4.dp),
             chart = chart,
@@ -233,7 +241,7 @@ private fun columnSpacing(plotWidth: Dp, columnCount: Int): Dp {
 
 @Composable
 private fun rememberChartModel(data: YieldSupplyMarketChartDataUM): CartesianChartModel {
-    return remember(data.y, data.rewardCaps) {
+    return remember(data.y, data.rewardCaps, data.scale) {
         CartesianChartModel(
             ColumnCartesianLayerModel.build {
                 if (data.rewardCaps.isEmpty()) {
@@ -253,21 +261,26 @@ private fun rememberChartModel(data: YieldSupplyMarketChartDataUM): CartesianCha
 
 /**
  * A transparent spacer series, as tall in data units as [COLUMN_GAP] is on screen, so the cap reads as its own
- * segment. It is sized off the tallest column, which is what the vertical axis scales to, and the base series gives
- * the room up rather than the column growing by it.
+ * segment. It is sized off the top of the vertical axis, and the base series gives the room up rather than the
+ * column growing by it.
  */
 private fun YieldSupplyMarketChartDataUM.gapSeries(): List<Double> {
-    val top = y.zip(rewardCaps) { base, cap -> base + cap }.maxOrNull() ?: return emptyList()
+    if (y.isEmpty()) return emptyList()
     // Every column gives up the same room, so the gap can be no deeper than the shallowest base: taking more than
     // a base holds would leave that column standing on the gap and top out above the APY the backend reported.
-    val gap = (top * (COLUMN_GAP.value / CHART_HEIGHT.value)).coerceAtMost(y.minOrNull() ?: 0.0)
+    val gap = (scale.max * (COLUMN_GAP.value / CHART_HEIGHT.value)).coerceAtMost(y.min())
 
     return List(y.size) { gap }
 }
 
 @Suppress("MagicNumber")
 @Composable
-private fun rememberColumnsLayer(accentColor: Color, isStacked: Boolean, columnSpacing: Dp): ColumnCartesianLayer {
+private fun rememberColumnsLayer(
+    accentColor: Color,
+    isStacked: Boolean,
+    axisMax: Double,
+    columnSpacing: Dp,
+): ColumnCartesianLayer {
     val column = rememberLineComponent(
         color = accentColor,
         thickness = COLUMN_THICKNESS,
@@ -288,6 +301,7 @@ private fun rememberColumnsLayer(accentColor: Color, isStacked: Boolean, columnS
         columnProvider = ColumnCartesianLayer.ColumnProvider.series(columns),
         columnCollectionSpacing = columnSpacing,
         mergeMode = { if (isStacked) MergeMode.stacked() else MergeMode.grouped() },
+        axisValueOverrider = remember(axisMax) { AxisValueOverrider.fixed(minY = 0.0, maxY = axisMax) },
     )
 }
 
@@ -295,13 +309,21 @@ private fun rememberColumnsLayer(accentColor: Color, isStacked: Boolean, columnS
 private fun rememberStartAxis(
     labelColor: Color,
     guidelineColor: Color,
-    percentFormat: String,
+    scale: YieldSupplyChartScale,
 ): VerticalAxis<AxisPosition.Vertical.Start> {
     return rememberCustomStartAxis(
         label = rememberAxisLabelComponent(color = labelColor),
-        valueFormatter = CartesianValueFormatter { value, _, _ ->
-            val pct = String.format(Locale.getDefault(), percentFormat, value)
-            "$pct%"
+        valueFormatter = remember(scale.decimals) {
+            CartesianValueFormatter { value, _, _ ->
+                val pct = String.format(Locale.getDefault(), "%.${scale.decimals}f", value)
+                "$pct%"
+            }
+        },
+        // Counted rather than stepped: the step placer divides the range by the step in floating point and drops
+        // the top line whenever that lands a hair under a whole number.
+        itemPlacer = remember(scale) {
+            val lineCount = (scale.max / scale.step).roundToInt() + 1
+            VerticalAxis.ItemPlacer.count(count = { lineCount })
         },
         guideline = rememberLineComponent(color = guidelineColor, thickness = 1.dp),
         tick = null,
@@ -337,7 +359,7 @@ private fun rememberReferenceLine(average: Double, color: Color, thickness: Dp):
 
 @Composable
 private fun rememberAverageLabelTopPadding(data: YieldSupplyMarketChartDataUM): Dp {
-    return remember(data.y, data.rewardCaps, data.avr) {
+    return remember(data.scale, data.avr) {
         val chartHeight = CHART_HEIGHT
         val labelHeight = 24.dp
         val referenceLineThickness = 2.dp
@@ -347,37 +369,31 @@ private fun rememberAverageLabelTopPadding(data: YieldSupplyMarketChartDataUM): 
         val gapAboveLine = desiredGap + referenceLineThickness / 2 + opticalNudge + extraPaddingAboveLine
         val chartContentBottomInset = 10.dp
 
-        // The axis scales to the tallest column, and a column is its base plus the reward stacked on it.
-        // Measuring against the bases alone would place the label above a line drawn against the real top.
-        val tallestColumn = if (data.rewardCaps.isEmpty()) {
-            data.y.maxOrNull()
-        } else {
-            data.y.zip(data.rewardCaps) { base, cap -> base + cap }.maxOrNull()
-        }
-        val maxValueInSeries = (tallestColumn ?: 0.0).coerceAtLeast(data.avr)
-        val averageRatio = if (maxValueInSeries == 0.0) {
-            0f
-        } else {
-            (data.avr / maxValueInSeries).coerceIn(0.0, 1.0).toFloat()
-        }
+        val averageRatio = (data.avr / data.scale.max).coerceIn(0.0, 1.0).toFloat()
         val computedTopPadding = (chartHeight - chartContentBottomInset) * (1f - averageRatio) -
             labelHeight - gapAboveLine
         if (computedTopPadding < 2.dp) 2.dp else computedTopPadding
     }
 }
 
-/** Fractional column centres: weighted cells round to whole pixels and the error accumulates over many columns. */
+/**
+ * Places each label at its fractional column position: weighted cells would round to whole pixels and the error
+ * accumulates over many columns. A label that would run past either end of the plot is pulled back inside.
+ */
 @Composable
-private fun ColumnLabelsRow(labels: ImmutableList<String>, modifier: Modifier = Modifier) {
-    val labelled = remember(labels) { labels.withIndex().filter { it.value.isNotBlank() } }
-
+private fun ColumnLabelsRow(
+    labels: ImmutableList<YieldSupplyChartAxisLabel>,
+    columnCount: Int,
+    modifier: Modifier = Modifier,
+) {
     Layout(
         content = {
-            labelled.forEach { label ->
+            labels.forEach { label ->
                 Text(
-                    text = label.value,
+                    text = label.text,
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors3.text.secondary,
+                    maxLines = 1,
                 )
             }
         },
@@ -386,14 +402,20 @@ private fun ColumnLabelsRow(labels: ImmutableList<String>, modifier: Modifier = 
             .fillMaxWidth()
             .heightIn(min = 16.dp),
     ) { measurables, constraints ->
-        val columnWidth = constraints.maxWidth.toFloat() / labels.size.coerceAtLeast(1)
+        val columnWidth = constraints.maxWidth.toFloat() / columnCount.coerceAtLeast(1)
         val placeables = measurables.map { it.measure(Constraints()) }
         val height = maxOf(constraints.minHeight, placeables.maxOfOrNull { it.height } ?: 0)
 
         layout(width = constraints.maxWidth, height = height) {
-            placeables.forEachIndexed { position, placeable ->
-                val columnCenter = columnWidth * labelled[position].index + columnWidth / 2
-                placeable.placeRelative(x = (columnCenter - placeable.width / 2f).roundToInt(), y = 0)
+            placeables.forEachIndexed { index, placeable ->
+                val label = labels[index]
+                val anchorX = (columnWidth * label.position).toFloat()
+                val startX = when (label.anchor) {
+                    YieldSupplyChartAxisLabel.Anchor.Start -> anchorX
+                    YieldSupplyChartAxisLabel.Anchor.Center -> anchorX - placeable.width / 2f
+                }
+                val maxStartX = (constraints.maxWidth - placeable.width).coerceAtLeast(0).toFloat()
+                placeable.placeRelative(x = startX.coerceIn(0f, maxStartX).roundToInt(), y = 0)
             }
         }
     }

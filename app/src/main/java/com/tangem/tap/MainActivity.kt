@@ -62,6 +62,7 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import com.tangem.tap.routing.utils.DeeplinkSource
+import com.tangem.tap.routing.utils.PromoPageRouter
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.Lazy
@@ -110,6 +111,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var deeplinkFactory: DeepLinkFactory
+
+    @Inject
+    internal lateinit var promoPageRouter: PromoPageRouter
 
     @Inject
     internal lateinit var deepLinkFeatureToggles: DeepLinkFeatureToggles
@@ -166,7 +170,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             intent?.flags?.and(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0
         if (isFreshLaunch && intent != null) {
             notifyIfOpenedByLinkOrPush(intent)
-            bindMarketingUid(intent)
+            handleMarketingParams(intent)
         }
 
         // We have to allow adjust_resize (can only be specified in the manifest) for Android <=10,
@@ -361,7 +365,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         notifyIfOpenedByLinkOrPush(intent)
-        bindMarketingUid(intent)
+        handleMarketingParams(intent)
         handleDeepLink(intent = intent, isFromOnNewIntent = true)
     }
 
@@ -409,9 +413,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
     }
 
-    private fun bindMarketingUid(intent: Intent) {
+    private fun handleMarketingParams(intent: Intent) {
         val deepLink = intent.data ?: PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri() ?: return
         deeplinkFactory.bindMarketingUid(deepLink)
+        promoPageRouter.savePage(deepLink)
     }
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {

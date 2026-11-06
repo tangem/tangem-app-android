@@ -33,6 +33,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.canPollPrice
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAddFundsAvailabilityTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountFractionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
@@ -74,7 +75,7 @@ import java.math.BigDecimal
 internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 internal const val QUOTE_POLL_INTERVAL_MILLIS = 3_000L
 
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     @Assisted private val params: PlacePredictionComponent.Params,
     @Assisted private val uiState: MutableStateFlow<PlacePredictionUM>,
@@ -157,7 +158,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     fun onPause() {
         isResumed = false
-        quoteJobHolder.cancel()
+        cancelQuote()
         balancePollJobHolder.cancel()
     }
 
@@ -192,15 +193,15 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
         val state = uiState.value
         val isNegRisk = isNegRiskMarket ?: return null
-        if (!state.isPrimaryButtonEnabled) return null
+        if (!state.isReadyToPlace) return null
 
-        quoteJobHolder.cancel()
+        cancelQuote()
         return PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk, positionId = positionId)
     }
 
     suspend fun <T> holdDuring(block: suspend () -> T): T {
         isHeld = true
-        quoteJobHolder.cancel()
+        cancelQuote()
         balancePollJobHolder.cancel()
         return try {
             block()
@@ -348,8 +349,12 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         }.saveIn(positionJobHolder)
     }
 
-    private fun restartQuoteLoop(withDebounce: Boolean) {
+    private fun cancelQuote() {
         quoteJobHolder.cancel()
+    }
+
+    private fun restartQuoteLoop(withDebounce: Boolean) {
+        cancelQuote()
 
         if (!isResumed || !isTradedAssetResolved || isHeld) return
         if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
@@ -408,7 +413,6 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         if (!state.isQuotable()) return
 
         uiState.update(SetQuoteLoadingTransformer)
-
         val result = withContext(dispatchers.default) {
             getPredictionOrderQuoteUseCase(
                 userWalletId = params.userWalletId,

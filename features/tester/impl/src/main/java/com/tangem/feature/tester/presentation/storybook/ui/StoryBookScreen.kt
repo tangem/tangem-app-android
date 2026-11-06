@@ -5,11 +5,15 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
+import com.tangem.feature.tester.presentation.storybook.page.polymarket.chart.PolymarketProbabilityChartStory
+import com.tangem.feature.tester.presentation.storybook.page.polymarket.chart.PolymarketEventChartStory
 import androidx.compose.ui.Modifier
 import com.tangem.feature.tester.presentation.storybook.entity.ButtonsStory
 import com.tangem.feature.tester.presentation.storybook.entity.DeviceIconStory
 import com.tangem.feature.tester.presentation.storybook.entity.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.entity.NorthernLightsStory
+import com.tangem.feature.tester.presentation.storybook.entity.PolymarketProbabilityChartStory
+import com.tangem.feature.tester.presentation.storybook.entity.PolymarketEventChartStory
 import com.tangem.feature.tester.presentation.storybook.entity.OpportunitiesBGStory
 import com.tangem.feature.tester.presentation.storybook.entity.PlaceholderStory
 import com.tangem.feature.tester.presentation.storybook.entity.ProgressIndicatorStory
@@ -30,6 +34,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.TangemSearchField
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTabStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemToggleBadgeStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTokenRowStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemTransactionRowStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTopBarStory
 import com.tangem.feature.tester.presentation.storybook.entity.TypographyStory
 import com.tangem.feature.tester.presentation.storybook.entity.*
@@ -73,12 +78,14 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.togglebadge.Tang
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.TangemTokenIconStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.TangemTokenRowMarketStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowv2.TangemTokenRowV2Story
+import com.tangem.feature.tester.presentation.storybook.page.ds.transactionrow.TangemTransactionRowStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.TangemTopNavigationStory
 import com.tangem.feature.tester.presentation.storybook.page.headerrow.TangemHeaderRowStory
 import com.tangem.feature.tester.presentation.storybook.page.message.TangemMessageStory
 import com.tangem.feature.tester.presentation.storybook.page.opportunities.OpportunitiesBGStory
 import com.tangem.feature.tester.presentation.storybook.page.pagerindicator.TangemPagerIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.page.placeholder.PlaceholderStory
+import com.tangem.feature.tester.presentation.storybook.page.polymarket.counter.PolymarketCounterStory
 import com.tangem.feature.tester.presentation.storybook.page.progress.ProgressIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.page.searchfield.TangemSearchFieldStory
 import com.tangem.feature.tester.presentation.storybook.page.storiesv2.StoriesV2Story
@@ -102,10 +109,12 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
         val isEdgeToEdgePage = storyState is TangemShtorkaStory ||
             storyState is TangemModalStory ||
             storyState is StoriesV2Story ||
-            storyState is TangemStatusScreenStory
+            storyState is TangemStatusScreenStory || storyState is PolymarketEventChartStory
         val insetsModifier = if (isEdgeToEdgePage) Modifier else Modifier.systemBarsPadding()
         Box(modifier = insetsModifier) {
             when (storyState) {
+                PolymarketEventChartStory -> PolymarketEventChartStory()
+                PolymarketProbabilityChartStory -> PolymarketProbabilityChartStory()
                 StoryList -> StoryBookListScreen(state = state)
                 StoriesV2Story -> StoriesV2Story()
                 is NorthernLightsStory -> NorthernLightsStory(state = storyState)
@@ -156,9 +165,11 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemAvatarStory -> TangemAvatarStory(state = storyState)
                 is TangemTokenRowV2Story -> TangemTokenRowV2Story(state = storyState)
                 is TangemTokenRowMarketStory -> TangemTokenRowMarketStory(state = storyState)
+                is TangemTransactionRowStory -> TangemTransactionRowStory(state = storyState)
                 is TangemFilterGroupStory -> TangemFilterGroupStory(state = storyState)
                 is TangemTabNavigationStory -> TangemTabNavigationStory(state = storyState)
                 is TangemSegmentedControlStory -> TangemSegmentedControlStory(state = storyState)
+                is PolymarketCounterStory -> PolymarketCounterStory(state = storyState)
                 is TextStyleStory -> TextStyleStory(state = storyState)
             }
 

@@ -15,8 +15,8 @@ import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
+import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.models.StatusSource
@@ -45,15 +45,15 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
 
     private val ownerDeriver: CollectiblesOwnerDeriver = mockk()
     private val gachaVaultRepository: GachaVaultRepository = mockk()
-    private val hotDelegate: CollectiblesHotDelegate = mockk()
+    private val sessionKey: CollectiblesSessionKey = mockk()
     private val walletAccountsFetcher: WalletAccountsFetcher = mockk {
         coEvery { getSaved(WALLET) } returns null
     }
 
     @BeforeEach
     fun linkToThisPhone() {
-        coEvery { gachaVaultRepository.getVaultHotDelegate(USER_WALLET) } returns DELEGATE.right()
-        coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns HotDelegatePublicKey(DELEGATE)
+        coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns SESSION_KEY.right()
+        coEvery { sessionKey.getPublicKeyOrNull(any()) } returns SessionKeyPublicKey(SESSION_KEY)
     }
 
     @Test
@@ -137,12 +137,12 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         }
 
     @Test
-    fun `GIVEN a restored account whose owner key is derived now WHEN invoke THEN it awaits the delegate update`() =
+    fun `GIVEN a restored account whose owner key is derived now WHEN invoke THEN it awaits the session key update`() =
         runTest {
             // Arrange
             coEvery { walletAccountsFetcher.getSaved(WALLET) } returns SAVED_WITH_COLLECTIBLES
             coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-            coEvery { gachaVaultRepository.getVaultHotDelegate(USER_WALLET) } returns "another".right()
+            coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns "another".right()
             coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, null) } returns READ.right()
             val store = createStore(testScope = this, recorded = null)
 
@@ -178,7 +178,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         // Arrange
         coEvery { walletAccountsFetcher.getSaved(WALLET) } returns SAVED_WITH_COLLECTIBLES
         coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-        coEvery { gachaVaultRepository.getVaultHotDelegate(USER_WALLET) } returns null.right()
+        coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns null.right()
         val store = createStore(testScope = this, recorded = null)
 
         // Act
@@ -194,7 +194,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         // Arrange
         coEvery { walletAccountsFetcher.getSaved(WALLET) } returns SAVED_WITH_COLLECTIBLES
         coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-        coEvery { gachaVaultRepository.getVaultHotDelegate(USER_WALLET) } returns UNREADABLE.left()
+        coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns UNREADABLE.left()
         val store = createStore(testScope = this, recorded = null)
 
         // Act
@@ -212,7 +212,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         coEvery { walletAccountsFetcher.getSaved(WALLET) } returns SAVED_WITH_COLLECTIBLES
         coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
         val store = createStore(testScope = this, recorded = null)
-        coEvery { gachaVaultRepository.getVaultHotDelegate(USER_WALLET) } coAnswers {
+        coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } coAnswers {
             store.store(userWalletId = WALLET, value = ONBOARDED)
             null.right()
         }
@@ -229,7 +229,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
     fun `GIVEN a record and no vault on chain WHEN invoke THEN the record is kept`() = runTest {
         // Arrange
         coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-        coEvery { gachaVaultRepository.getVaultHotDelegate(USER_WALLET) } returns null.right()
+        coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns null.right()
         coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns UNREADABLE.left()
         val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
 
@@ -243,11 +243,11 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN the vault answers to another phone WHEN invoke THEN the account awaits the delegate update`() =
+    fun `GIVEN the vault answers to another phone WHEN invoke THEN the account awaits the session key update`() =
         runTest {
             // Arrange
             coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-            coEvery { gachaVaultRepository.getVaultHotDelegate(USER_WALLET) } returns "another".right()
+            coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns "another".right()
             coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns READ.right()
             val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
 
@@ -278,11 +278,11 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN a relink still landing WHEN the vault answers to the old delegate THEN the account stays onboarded`() =
+    fun `GIVEN a relink still landing WHEN the vault answers to the old session key THEN the account stays onboarded`() =
         runTest {
             // Arrange
             coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-            coEvery { gachaVaultRepository.getVaultHotDelegate(USER_WALLET) } returns "another".right()
+            coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns "another".right()
             coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns READ.right()
             val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
             val accountRepository = createAccountRepository(store)
@@ -318,7 +318,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
     fun `GIVEN a relink finishes during the vault read WHEN invoke THEN its result is not overwritten`() = runTest {
         // Arrange
         coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-        coEvery { gachaVaultRepository.getVaultHotDelegate(USER_WALLET) } returns "another".right()
+        coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns "another".right()
         val recorded = CollectiblesAccountStatusValue.UpdateRequired(source = StatusSource.CACHE, vaultBalance = CACHED)
         val store = createStore(testScope = this, recorded = recorded)
         val accountRepository = createAccountRepository(store)
@@ -354,14 +354,14 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         assertThat(store.getSyncOrNull(WALLET)).isNull()
     }
 
-    /** Neither a read that did not answer nor a vault without a delegate says the vault moved to another phone. */
+    /** Neither a read that did not answer nor a vault without a session key says the vault moved to another phone. */
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    fun `GIVEN an onboarded account and no delegate answer WHEN invoke THEN it stays onboarded`(isReadFailed: Boolean) =
+    fun `GIVEN an onboarded account and no session key answer WHEN invoke THEN it stays onboarded`(isReadFailed: Boolean) =
         runTest {
             // Arrange
             coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-            coEvery { gachaVaultRepository.getVaultHotDelegate(USER_WALLET) } returns
+            coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns
                 if (isReadFailed) UNREADABLE.left() else null.right()
             coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns READ.right()
             val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
@@ -427,7 +427,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         },
         collectiblesOwnerDeriver = ownerDeriver,
         gachaVaultRepository = gachaVaultRepository,
-        hotDelegate = hotDelegate,
+        sessionKey = sessionKey,
         walletAccountsFetcher = walletAccountsFetcher,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -441,7 +441,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
 
     private companion object {
         const val OWNER = "8kXHqmvJ3sYVsBLnr5aXqjy6r2ZxHhCTvJH1DPDcnUXG"
-        const val DELEGATE = "delegate"
+        const val SESSION_KEY = "session key"
 
         val WALLET = UserWalletId("011")
         val PARAMS = CollectiblesAccountStatusFetcher.Params(userWalletId = WALLET)

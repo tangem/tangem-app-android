@@ -47,6 +47,7 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics)
+    implementation(projects.core.local)
     implementation(projects.store.datasource)
     implementation(projects.grow.datasource)
     api(projects.core.utils)
@@ -70,6 +71,7 @@ dependencies {
     implementation(projects.domain.moneyAccount)
     implementation(projects.domain.quotes)
     implementation(projects.domain.visa)
+    implementation(projects.domain.yieldSupply)
     // endregion
 
     // region Domain models
