@@ -53,16 +53,43 @@ internal class EarnPickerConverterTest {
         .copy(rateText = stringReference("vault rate"))
 
     private val calls = mutableListOf<Call>()
-    private val callbacks = EarnPickerConverter.Callbacks(
-        onProductClick = { calls += Call.Product(it) },
-        onActionClick = { product, action -> calls += Call.Action(product, action) },
-        onBlocked = { calls += Call.Blocked(it) },
-        onAddFunds = { calls += Call.AddFunds },
-        onRetryClick = { calls += Call.Retry(it) },
-        onInfoClick = { calls += Call.Info(it) },
-        onLinkClick = { calls += Call.Link(it) },
-        onClose = { calls += Call.Close },
-    )
+    private val intents = object : EarnPickerClickIntents {
+        override fun onProductClick(id: EarnProductId) {
+            calls += Call.Product(id)
+        }
+
+        override fun onActionClick(product: EarnProduct, action: EarnAction) {
+            calls += Call.Action(product, action)
+        }
+
+        override fun onBlockedClick(block: EarnBlock) {
+            calls += Call.Blocked(block)
+        }
+
+        override fun onAddFundsClick() {
+            calls += Call.AddFunds
+        }
+
+        override fun onRetryClick(product: EarnProduct) {
+            calls += Call.Retry(product)
+        }
+
+        override fun onOverviewRetryClick() {
+            calls += Call.OverviewRetry
+        }
+
+        override fun onInfoClick(block: EarnTextBlock) {
+            calls += Call.Info(block)
+        }
+
+        override fun onLinkClick(url: String) {
+            calls += Call.Link(url)
+        }
+
+        override fun onCloseClick() {
+            calls += Call.Close
+        }
+    }
 
     @BeforeEach
     fun resetCalls() {
@@ -90,7 +117,7 @@ internal class EarnPickerConverterTest {
         }
 
         @Test
-        fun `GIVEN a card WHEN its onClick THEN callbacks get its product id`() {
+        fun `GIVEN a card WHEN its onClick THEN intents get its product id`() {
             // Arrange
             val cards = convert().products
 
@@ -225,7 +252,7 @@ internal class EarnPickerConverterTest {
         }
 
         @Test
-        fun `GIVEN Unavailable WHEN convert THEN its onRetryClick calls callbacks with the product`() {
+        fun `GIVEN Unavailable WHEN convert THEN its onRetryClick calls intents with the product`() {
             // Arrange
             val content = convert(state = EarnProductState.Unavailable).content as ContentUM.Unavailable
 
@@ -292,7 +319,7 @@ internal class EarnPickerConverterTest {
         }
 
         @Test
-        fun `GIVEN balance below the minimum WHEN cta clicked THEN callbacks get onAddFunds and the hint is shown`() {
+        fun `GIVEN balance below the minimum WHEN cta clicked THEN intents get onAddFundsClick and the hint is shown`() {
             // Act
             val actual = convert(ethBalance = BigDecimal.ZERO)
             actual.cta.onClick()
@@ -303,7 +330,7 @@ internal class EarnPickerConverterTest {
         }
 
         @Test
-        fun `GIVEN blocked primary action WHEN cta clicked THEN callbacks get onBlocked with the block`() {
+        fun `GIVEN blocked primary action WHEN cta clicked THEN intents get onBlockedClick with the block`() {
             // Arrange
             val block = EarnBlock(reason = stringReference("blocked"))
             val state = ready.copy(primary = ready.primary.copy(block = block))
@@ -323,7 +350,7 @@ internal class EarnPickerConverterTest {
         @Test
         fun `GIVEN initial WHEN called THEN Loading content, the fixed texts, no cards and a disabled button`() {
             // Act
-            val actual = converter.initial(onClose = callbacks.onClose)
+            val actual = converter.initial(intents)
             actual.onClose()
 
             // Assert
@@ -339,9 +366,9 @@ internal class EarnPickerConverterTest {
         }
 
         @Test
-        fun `GIVEN unavailable WHEN Retry clicked THEN its lambda is called and the button is disabled`() {
+        fun `GIVEN unavailable WHEN Retry clicked THEN the overview retry intent is called and the button is disabled`() {
             // Arrange
-            val actual = converter.unavailable(onRetryClick = { calls += Call.Retry(lending) }, onClose = {})
+            val actual = converter.unavailable(intents)
 
             // Act
             (actual.content as ContentUM.Unavailable).onRetryClick()
@@ -350,7 +377,7 @@ internal class EarnPickerConverterTest {
             assertThat(actual.products).isEmpty()
             assertThat(actual.cta.text).isEqualTo(EarnPickerTexts.startEarning)
             assertThat(actual.cta.isEnabled).isFalse()
-            assertThat(calls).containsExactly(Call.Retry(lending))
+            assertThat(calls).containsExactly(Call.OverviewRetry)
         }
     }
 
@@ -365,7 +392,7 @@ internal class EarnPickerConverterTest {
         summaries = summaries,
         selectedId = selectedId,
         ethBalance = ethBalance,
-        callbacks = callbacks,
+        intents = intents,
     )
 
     private fun EarnPickerUM.readyContent(): ContentUM.Ready = content as ContentUM.Ready
@@ -386,6 +413,7 @@ internal class EarnPickerConverterTest {
         data class Blocked(val block: EarnBlock) : Call
         data object AddFunds : Call
         data class Retry(val product: EarnProduct) : Call
+        data object OverviewRetry : Call
         data class Info(val block: EarnTextBlock) : Call
         data class Link(val url: String) : Call
         data object Close : Call
