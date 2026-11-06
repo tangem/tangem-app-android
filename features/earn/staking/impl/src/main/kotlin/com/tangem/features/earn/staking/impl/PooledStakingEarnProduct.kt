@@ -92,28 +92,28 @@ internal class PooledStakingEarnProduct @Inject constructor(
 
     /**
      * Other currencies have nothing to refresh, so they end in `Right` without a request: the Earn refresh runs every
-     * product for the selected currency. The repository swallows the failures of the vault requests (it stores an
-     * empty list), so `Left` reports a failing balance fetch and unexpected exceptions only.
+     * product for the selected currency. `Left` reports a failed vault request, a failing balance fetch and an
+     * unexpected exception of the storage, because the refresh must not throw.
      */
     override suspend fun refresh(params: EarnProduct.Params): Either<Throwable, Unit> {
         if (!params.currency.isPoolCurrency()) return Unit.right()
 
-        return either {
-            runSuspendCatching {
-                p2pEthPoolRepository.fetchVaults()
-                p2pEthPoolRepository.fetchVaultLimits()
-            }.fold(onSuccess = { Either.Right(Unit) }, onFailure = { Either.Left(it) }).bind()
+        return runSuspendCatching { refreshPool(params) }.getOrElse { Either.Left(it) }
+    }
 
-            val stakingId = stakingIdFactory.create(params.userWalletId, params.currency).getOrElse { error ->
-                when (error) {
-                    StakingIdFactory.Error.UnsupportedCurrency -> return@either
-                    is StakingIdFactory.Error.UnableToGetAddress ->
-                        raise(IllegalStateException("Can't create the staking id: $error"))
-                }
+    private suspend fun refreshPool(params: EarnProduct.Params): Either<Throwable, Unit> = either {
+        p2pEthPoolRepository.fetchVaults().mapLeft { IllegalStateException("Can't fetch the vaults: $it") }.bind()
+        p2pEthPoolRepository.fetchVaultLimits().mapLeft { IllegalStateException("Can't fetch the limits: $it") }.bind()
+
+        val stakingId = stakingIdFactory.create(params.userWalletId, params.currency).getOrElse { error ->
+            when (error) {
+                StakingIdFactory.Error.UnsupportedCurrency -> return@either
+                is StakingIdFactory.Error.UnableToGetAddress ->
+                    raise(IllegalStateException("Can't create the staking id: $error"))
             }
-
-            singleStakingBalanceFetcher(SingleStakingBalanceFetcher.Params(params.userWalletId, stakingId)).bind()
         }
+
+        singleStakingBalanceFetcher(SingleStakingBalanceFetcher.Params(params.userWalletId, stakingId)).bind()
     }
 
     override fun actionHandler(params: EarnProduct.Params, navigator: EarnNavigator): EarnActionHandler =
