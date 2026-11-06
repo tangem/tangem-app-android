@@ -4,11 +4,11 @@
         "version": "undefined"
     },
     {
-        "name": "VISA_ONBOARDING_ENABLED",
+        "name": "TWI_1525_MONEY_ACCOUNTS_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "TWI_1525_MONEY_ACCOUNTS_ENABLED",
+        "name": "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED",
         "version": "undefined"
     },
     {
@@ -24,10 +24,6 @@
         "version": "undefined"
     },
     {
-        "name": "AND_16204_POLYMARKET_ENABLED",
-        "version": "6.6"
-    },
-    {
         "name": "TWI_1850_TRON_GASLESS_DEX_SWAP_ENABLED",
         "version": "undefined"
     },
@@ -40,12 +36,8 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
-        "version": "6.6"
-    },
-    {
-        "name": "TWI_1524_NEW_FIRMWARE_SUPPORT",
-        "version": "6.6"
+        "name": "AND_18712_EVM_GASLESS_DEX_SWAP_ENABLED",
+        "version": "undefined"
     },
     {
         "name": "TWI_1611_JOINT_ACCOUNT_ENABLED",
@@ -54,10 +46,6 @@
     {
         "name": "TWI_1555_SOCIAL_LOGIN_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "TWI_1520_MERKL_INCENTIVES_ENABLED",
-        "version": "6.6"
     },
     {
         "name": "TWI_1062_GOOGLE_WALLET_PUSH_PROVISIONING_ENABLED",
@@ -112,6 +100,10 @@
         "version": "undefined"
     },
     {
+        "name": "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1732_MARKETING_UID_BINDING_ENABLED",
         "version": "undefined"
     },
@@ -128,11 +120,31 @@
         "version": "6.7"
     },
     {
+        "name": "AND_18247_SOLANA_GASLESS_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1799_MULTIPLE_HOT_WALLETS_ENABLED",
         "version": "undefined"
     },
     {
         "name": "TWI_1732_PROMO_PAGE_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1906_EXPRESS_V2_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_19037_WALLET_LINKING_ENABLED",
+        "version": "6.8"
+    },
+    {
+        "name": "TWI_1676_EARN_ENABLED",
         "version": "undefined"
     }
 ]

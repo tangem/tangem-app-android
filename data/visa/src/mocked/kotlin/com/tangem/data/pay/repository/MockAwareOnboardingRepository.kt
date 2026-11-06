@@ -20,6 +20,7 @@ import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.test.mock.pay.MockBankCredentials
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -100,6 +101,15 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         userWalletId: UserWalletId,
         productInstanceId: String,
     ): Either<VisaApiError, BankCredentials> = real.getBankCredentials(userWalletId, productInstanceId)
+
+    override suspend fun getAllBankCredentials(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+    ): Either<VisaApiError, List<BankCredentials>> {
+        if (!isMockMode) return real.getAllBankCredentials(userWalletId, productInstanceId)
+        return real.getBankCredentials(userWalletId, productInstanceId)
+            .map { usdCredentials -> listOf(usdCredentials, MockBankCredentials.speiBankCredentials()) }
+    }
 
     override suspend fun getFees(
         userWalletId: UserWalletId,

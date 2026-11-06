@@ -145,6 +145,16 @@ fun BaseTestCase.openMainScreenWithTangemPayTile(accessCode: String = "") {
  * regular accounts and the Pay tile rendered. Callers set the WireMock scenarios themselves.
  */
 fun BaseTestCase.openMainScreenWithPayAndTwoAccounts() {
+    importPayWalletWithTwoSyncedAccounts()
+    // Without the tile the wallet has no Pay account, and every "Pay is absent" assertion passes vacuously.
+    step("Assert Tangem Pay tile is displayed on Main") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() }
+        }
+    }
+}
+
+fun BaseTestCase.importPayWalletWithTwoSyncedAccounts() {
     // Imported without an access code on purpose: deriving the second account's addresses would otherwise
     // stop on the unlock prompt, and Tangem Pay itself does not need the code.
     step("Import hot wallet from Tangem Pay seed phrase") {
@@ -160,13 +170,6 @@ fun BaseTestCase.openMainScreenWithPayAndTwoAccounts() {
     }
     step("Wait for addresses to be generated") {
         waitForAddressesGenerated()
-    }
-    // Without the tile the wallet has no Pay account at all, and every "Pay is absent" assertion below
-    // would pass for the wrong reason.
-    step("Assert Tangem Pay tile is displayed on Main") {
-        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() }
-        }
     }
 }
 

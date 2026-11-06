@@ -8,19 +8,29 @@ import com.tangem.feature.tester.presentation.storybook.viewmodel.storyPageFacto
 internal fun StateUpdater<TangemAvatarStory>.build(): TangemAvatarStory {
     return TangemAvatarStory(
         variant = TangemAvatarStory.Variant.Account,
+        accountVariant = TangemAvatarStory.AccountVariant.Crypto,
         fillColor = TangemAvatar.FillColor.AzureBlue,
         appearance = TangemAvatar.Appearance.Neutral,
         status = TangemAvatar.Status.Progress,
-        hasPendingIndicator = false,
-        hasUserInitial = true,
-        isShimmerRounded = false,
-        onVariantChange = { variant -> updateStory { it.copy(variant = variant) } },
+        transactionType = TangemAvatarStory.TransactionType.Send,
+        address = TangemAvatarStory.AddressSample.First,
+        hasAccountIndicator = false,
+        hasLetter = false,
+        isRemoteAsset = false,
+        isRoundedSquare = true,
+        onVariantChange = { variant ->
+            updateStory { it.copy(variant = variant, isRoundedSquare = variant == TangemAvatarStory.Variant.Account) }
+        },
+        onAccountVariantChange = { accountVariant -> updateStory { it.copy(accountVariant = accountVariant) } },
         onFillColorChange = { color -> updateStory { it.copy(fillColor = color) } },
         onAppearanceChange = { appearance -> updateStory { it.copy(appearance = appearance) } },
         onStatusChange = { status -> updateStory { it.copy(status = status) } },
-        onPendingIndicatorToggle = { updateStory { it.copy(hasPendingIndicator = !it.hasPendingIndicator) } },
-        onUserInitialToggle = { updateStory { it.copy(hasUserInitial = !it.hasUserInitial) } },
-        onShimmerRoundedToggle = { updateStory { it.copy(isShimmerRounded = !it.isShimmerRounded) } },
+        onTransactionTypeChange = { type -> updateStory { it.copy(transactionType = type) } },
+        onAddressChange = { address -> updateStory { it.copy(address = address) } },
+        onAccountIndicatorToggle = { updateStory { it.copy(hasAccountIndicator = !it.hasAccountIndicator) } },
+        onLetterToggle = { updateStory { it.copy(hasLetter = !it.hasLetter) } },
+        onRemoteAssetToggle = { updateStory { it.copy(isRemoteAsset = !it.isRemoteAsset) } },
+        onRoundedSquareToggle = { updateStory { it.copy(isRoundedSquare = !it.isRoundedSquare) } },
     )
 }
 

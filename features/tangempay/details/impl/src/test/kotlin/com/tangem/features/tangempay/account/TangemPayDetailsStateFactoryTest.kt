@@ -17,6 +17,7 @@ import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.features.tangempay.addFundsButton
 import com.tangem.features.tangempay.awaitingDepositOrder
 import com.tangem.features.tangempay.customerTariffPlan
@@ -184,6 +185,63 @@ internal class TangemPayDetailsStateFactoryTest {
 
         // Assert
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN no cards and plan awaiting deposit WHEN getLoadedState THEN ghost card shown and add card disabled`() {
+        // Arrange
+        val status = loadedStatus(
+            statusCards = emptyList(),
+            statusTariffPlan = tariffPlanState(order = awaitingDepositOrder()),
+        )
+
+        val noOpClick = {}
+
+        // Act
+        val cardsBlockState = factory.getLoadedState(status).balanceBlockState.cardsBlockState
+
+        // Assert
+        assertThat(cardsBlockState?.cards?.map { it.copy(onClick = noOpClick) }).containsExactly(
+            TangemPayDetailsBalanceBlockState.Card(
+                lastDigits = "",
+                imageUrl = null,
+                cardType = TangemPayCardType.UNDEFINED,
+                onClick = noOpClick,
+                isEnabled = false,
+                isFrozen = false,
+                state = TangemPayCardUiState.InProgress,
+            ),
+        )
+        assertThat(cardsBlockState?.isAddCardEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN no cards and no plan transition WHEN getLoadedState THEN no ghost card and add card enabled`() {
+        // Arrange
+        val status = loadedStatus(statusCards = emptyList(), statusTariffPlan = tariffPlanState())
+
+        // Act
+        val cardsBlockState = factory.getLoadedState(status).balanceBlockState.cardsBlockState
+
+        // Assert
+        assertThat(cardsBlockState?.cards).isEmpty()
+        assertThat(cardsBlockState?.isAddCardEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN active card and plan awaiting deposit WHEN getLoadedState THEN no ghost card and add card enabled`() {
+        // Arrange
+        val status = loadedStatus(
+            statusCards = listOf(activeUnfrozenCard),
+            statusTariffPlan = tariffPlanState(order = awaitingDepositOrder()),
+        )
+
+        // Act
+        val cardsBlockState = factory.getLoadedState(status).balanceBlockState.cardsBlockState
+
+        // Assert
+        assertThat(cardsBlockState?.cards?.map { it.state }).containsExactly(TangemPayCardUiState.Active)
+        assertThat(cardsBlockState?.isAddCardEnabled).isTrue()
     }
 
     @ParameterizedTest

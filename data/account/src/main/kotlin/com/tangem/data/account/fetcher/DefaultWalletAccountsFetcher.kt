@@ -5,6 +5,7 @@ import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
+import com.tangem.data.account.store.WalletAccountsSyncStatusStore
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.account.utils.assignTokens
@@ -27,6 +28,7 @@ import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
@@ -58,6 +60,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val walletAccountsETags: WalletAccountsETags,
     private val dispatchers: CoroutineDispatcherProvider,
     private val mainAccountTokensMigration: DefaultMainAccountTokensMigration,
+    private val syncStatusStore: WalletAccountsSyncStatusStore,
 ) : WalletAccountsFetcher, WalletAccountsSaver {
 
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
@@ -130,7 +133,31 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         userWalletId: UserWalletId,
         body: SaveWalletAccountsResponse,
     ): GetWalletAccountsResponse? {
+        if (!syncStatusStore.isSyncedWithRemote(userWalletId)) {
+            reconcileWithRemote(userWalletId)
+            TangemLogger.e("Accounts of $userWalletId are not pushed: the body was built from a local-only document")
+            return null
+        }
+
         return pushInternal(userWalletId = userWalletId, body = body)
+    }
+
+    override suspend fun syncTokens(userWalletId: UserWalletId) {
+        if (!syncStatusStore.isSyncedWithRemote(userWalletId)) reconcileWithRemote(userWalletId)
+
+        val response = if (syncStatusStore.isSyncedWithRemote(userWalletId)) getSaved(userWalletId) else null
+
+        if (response == null) {
+            TangemLogger.e("Can't sync tokens of $userWalletId: no document synced with the backend")
+            return
+        }
+
+        userTokensSaver.pushWithRetryer(userWalletId = userWalletId, response = response.toUserTokensResponse())
+    }
+
+    private suspend fun reconcileWithRemote(userWalletId: UserWalletId) {
+        runSuspendCatching { fetch(userWalletId) }
+            .onFailure { TangemLogger.e("Failed to reconcile local-only accounts of $userWalletId", it) }
     }
 
     private suspend fun pushInternal(
@@ -152,7 +179,10 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
                 saveETag(userWalletId, apiResponse)
 
-                apiResponse.bind().enrichByAccountId()
+                val syncedResponse = apiResponse.bind().enrichByAccountId()
+                syncStatusStore.markSyncedWithRemote(userWalletId)
+
+                syncedResponse
             },
             onError = { error ->
                 TangemLogger.e(
@@ -198,10 +228,13 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 val response = apiResponse.bind().enrichByAccountId().withoutTypedAccountsIfV2Disabled(userWalletId)
 
                 store(userWalletId = userWalletId, response = response)
+                syncStatusStore.markSyncedWithRemote(userWalletId)
 
                 FetchResult(response)
             },
             onError = { throwable ->
+                if (savedAccountsResponse == null) syncStatusStore.markLocalOnly(userWalletId)
+
                 // pushWalletAccounts and storeWalletAccounts help to avoid cyclic dependency
                 fetchWalletAccountsErrorHandler.handle(
                     error = throwable,
@@ -214,10 +247,14 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                             eTag = eTag,
                         )
                     },
-                    storeWalletAccounts = ::store,
+                    storeWalletAccounts = ::storeIfAbsent,
                 )
             },
         )
+    }
+
+    private suspend fun storeIfAbsent(userWalletId: UserWalletId, response: GetWalletAccountsResponse) {
+        update(userWalletId = userWalletId) { current -> current ?: response }
     }
 
     /** The saved document stands in for the answer until the request completes, so it is brought to shape first */
@@ -242,7 +279,9 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         val isSavedByOtherVersion = savedAccountsResponse != null &&
             savedAccountsResponse.isV2Shaped != walletAccountsApi.isV2Enabled
 
-        return if (isSavedByOtherVersion) null else getETag(userWalletId)
+        val isRevalidatable = !isSavedByOtherVersion && syncStatusStore.isSyncedWithRemote(userWalletId)
+
+        return if (isRevalidatable) getETag(userWalletId) else null
     }
 
     /**

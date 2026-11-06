@@ -130,6 +130,7 @@ internal class TokenListAnalyticsSenderTest {
         analyticsEventHandler = analyticsEventHandler,
         checkIsWalletToppedUpUseCase = checkIsWalletToppedUpUseCase,
         screenLifecycleProvider = ScreenLifecycleProvider(),
+        performanceTracer = mockk(relaxed = true),
     )
 
     private suspend fun TokenListAnalyticsSender.send(wallet: UserWallet, balance: TotalFiatBalance, tokensCount: Int) {

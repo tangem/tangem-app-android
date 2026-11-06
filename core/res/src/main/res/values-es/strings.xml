@@ -477,6 +477,7 @@
   <string name="common_retry">Reintentar</string>
   <string name="common_save">Guarde</string>
   <string name="common_save_changes">Guardar cambios</string>
+  <string name="common_scan_card">Escanear tarjeta</string>
   <string name="common_search">Buscar</string>
   <string name="common_search_tokens">Buscar tokens</string>
   <string name="common_second_no_param">seg</string>
@@ -1006,7 +1007,7 @@
   <string name="introduction_button_buy_tangem">Comprar Tangem</string>
   <string name="introduction_button_create_wallet">Crear wallet</string>
   <string name="introduction_button_i_have_a_wallet">Ya tengo una wallet</string>
-  <string name="introduction_create_wallet_hardware_description">Si ya tienes una Tangem Wallet</string>
+  <string name="introduction_create_wallet_hardware_description">Conecta o consigue una Tangem Wallet</string>
   <string name="introduction_create_wallet_hardware_title">Tangem Card o Ring</string>
   <string name="introduction_create_wallet_seed_phrase_description">Empieza sin una wallet de hardware</string>
   <string name="introduction_create_wallet_seed_phrase_title">Crear wallet con frase semilla</string>
@@ -1413,6 +1414,28 @@
   <string name="markets_tooltip_v2_title">Añadir más tokens</string>
   <string name="markets_yield_supply_banner_description">Potencie sus activos mientras los suministra con acceso inmediato. %s</string>
   <string name="markets_yield_supply_banner_title">Activar Modo Rendimiento</string>
+  <string name="mcp_connection_failed">No se pudo conectar</string>
+  <string name="mcp_connection_request_agent_can">Este agente podrá</string>
+  <string name="mcp_connection_request_can_view_balance">Ver saldos y actividad</string>
+  <string name="mcp_connection_request_notifications_description">Recibirá una notificación para aprobar cada transacción. Sin notificaciones, el agente no podrá conectarse.</string>
+  <string name="mcp_connection_success_description">%s puede ahora consultar sus saldos y solicitar la aprobación de transacciones. Puede revocar el acceso en cualquier momento en Conexiones.</string>
+  <string name="mcp_connection_success_title">Agente conectado</string>
+  <string name="mcp_intent_cant_reach_title">No se puede determinar la intención</string>
+  <string name="mcp_intent_proceed">Continuar</string>
+  <string name="mcp_intent_processed_title">Esta solicitud ya se ha tramitado</string>
+  <string name="mcp_intent_unknown_agent_name">IA</string>
+  <string name="mcp_send_intent_cant_reach_title">No se puede determinar la intención</string>
+  <string name="mcp_send_intent_offer_description">El agente solicita enviar desde su cuenta. A continuación, revisará los detalles.</string>
+  <string name="mcp_send_intent_offer_title">%1$s El agente quiere enviar %2$s</string>
+  <string name="mcp_send_intent_processed_subtitle">Enviar %1$s</string>
+  <string name="mcp_session_revoke_access">Revocar el acceso</string>
+  <string name="mcp_session_revoke_failed">No se pudo revocar el acceso.</string>
+  <string name="mcp_session_revoked">Conexión revocada</string>
+  <string name="mcp_session_title">MCP conectado</string>
+  <string name="mcp_swap_intent_cant_reach_title">No se puede determinar la intención</string>
+  <string name="mcp_swap_intent_offer_description">El agente solicita realizar un intercambio desde su cuenta. A continuación, revisará los detalles.</string>
+  <string name="mcp_swap_intent_offer_title">%1$s El agente quiere intercambiar %2$s a %3$s</string>
+  <string name="mcp_swap_intent_processed_subtitle">Intercambio %1$s a %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Debes actualizar a %1$s para crear una mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requiere %1$s o posterior</string>
   <string name="money_account_add_funds_bank_description">Reciba USD desde una cuenta bancaria por ACH/Wire o SPEI</string>
@@ -1451,6 +1474,7 @@
   <string name="money_account_onboarding_transfers_card_caption">Entra. Sale.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">con una cuenta propia con datos bancarios</string>
   <string name="money_account_onboarding_transfers_card_title">Envíe y reciba pagos en moneda fiduciaria</string>
+  <string name="money_account_send_bank_transfer_unavailable">No disponible</string>
   <string name="money_account_send_fees_footer">Las comisiones incluyen el servicio %s y la comisión de red estimada</string>
   <string name="money_account_send_network_fee_note">Las comisiones incluyen una comisión de red estimada de %s, que puede variar según la actividad de la red</string>
   <string name="money_account_send_pay_button">Pagar %s</string>
@@ -1729,15 +1753,16 @@
   <string name="prediction_add_funds_max_receive_amount_title">El importe a recibir no debe superar %s</string>
   <string name="prediction_add_funds_notification_limits_description">El importe del depósito debe ser de al menos %1$s. No se recomiendan depósitos superiores a $50,000; divide un importe mayor en varios depósitos más pequeños.</string>
   <string name="prediction_add_funds_notification_limits_title">Límites de depósito</string>
-  <string name="prediction_add_funds_receive_body" formatted="false">Envía %1s desde otra billetera, mínimo %2s</string>
+  <string name="prediction_add_funds_receive_body">Envía %1$s desde otra billetera, mínimo %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">Envía USDC en la red Polygon a tu cuenta de Polymarket</string>
   <string name="prediction_add_funds_receive_title">Desde otra billetera o exchange</string>
-  <string name="prediction_add_funds_subtitle" formatted="false">%1s en %2s</string>
+  <string name="prediction_add_funds_subtitle">%1$s en %2$s</string>
   <string name="prediction_add_funds_swap_body">Intercambia un token que ya tengas</string>
   <string name="prediction_add_funds_swap_subtitle">Usa cripto de tu billetera Tangem para recargar tu cuenta de Polymarket</string>
   <string name="prediction_add_funds_swap_title">Desde tu billetera Tangem</string>
   <string name="prediction_balance_total">Saldo total</string>
   <string name="prediction_balance_withdraw">Retirar</string>
+  <string name="prediction_cash_out">Cobrar</string>
   <string name="prediction_claim_error_failed">La reclamación no se procesó. No ha salido nada de tu cuenta y puedes intentarlo de nuevo.</string>
   <string name="prediction_claim_error_generic">No se pudo enviar la reclamación. Inténtalo de nuevo.</string>
   <string name="prediction_claim_error_rejected">Polymarket rechazó procesar la reclamación. Actualiza tus posiciones e inténtalo de nuevo.</string>
@@ -1749,7 +1774,7 @@
   <string name="prediction_close_result_partially_sold_title">Vendido parcialmente</string>
   <string name="prediction_close_result_sold_title">Vendido %s</string>
   <string name="prediction_close_result_tokens_sold">Acciones vendidas</string>
-  <string name="prediction_close_selling_of" formatted="false">Vendiendo %1s de %2s acciones</string>
+  <string name="prediction_close_selling_of">Vendiendo %1$s de %2$s acciones</string>
   <string name="prediction_close_selling_tokens">Vendiendo %s acciones</string>
   <string name="prediction_close_summary_to">A</string>
   <string name="prediction_close_title">Cerrar posición</string>
@@ -1762,17 +1787,17 @@
   <string name="prediction_details_resolution_source">Fuente de resolución</string>
   <string name="prediction_details_total_volume">Volumen total</string>
   <string name="prediction_event_live">En directo</string>
-  <plurals name="prediction_event_more_outcomes" formatted="false">
-    <item quantity="one">one: +%d resultado | other: +%d resultados</item>
-    <item quantity="other"></item>
+  <plurals name="prediction_event_more_outcomes">
+    <item quantity="one">+%d resultado</item>
+    <item quantity="other">+%d resultados</item>
   </plurals>
   <string name="prediction_event_probability">Probabilidad</string>
   <string name="prediction_event_total_volume">Volumen total:</string>
   <string name="prediction_fee_sheet_builder_fee">Comisión de Tangem</string>
-  <string name="prediction_fee_sheet_buy_description" formatted="false">Comprando %1s acciones a %2s¢ cada una. El número final de acciones (y el importe correspondiente de %3s ejecutado) puede variar dentro de tu límite de deslizamiento de %4s, según lo que este mercado pueda emparejar.</string>
+  <string name="prediction_fee_sheet_buy_description">Comprando %1$s acciones a %2$s¢ cada una. El número final de acciones (y el importe correspondiente de %3$s ejecutado) puede variar dentro de tu límite de deslizamiento de %4$s, según lo que este mercado pueda emparejar.</string>
   <string name="prediction_fee_sheet_order">Orden de predicción</string>
   <string name="prediction_fee_sheet_polymarket_fee">Comisión de Polymarket</string>
-  <string name="prediction_fee_sheet_sell_description" formatted="false">Vendiendo %1s acciones a %2s¢ cada una. El número final de acciones (y el importe correspondiente de %3s ejecutado) puede variar dentro de tu límite de deslizamiento de %4s, según lo que este mercado pueda emparejar.</string>
+  <string name="prediction_fee_sheet_sell_description">Vendiendo %1$s acciones a %2$s¢ cada una. El número final de acciones (y el importe correspondiente de %3$s ejecutado) puede variar dentro de tu límite de deslizamiento de %4$s, según lo que este mercado pueda emparejar.</string>
   <string name="prediction_fee_sheet_total">Total</string>
   <string name="prediction_history_bought">Comprado</string>
   <string name="prediction_history_csv_average_price">Precio medio</string>
@@ -1825,7 +1850,7 @@
   <string name="prediction_onboarding_faq_risks_question">¿Cuáles son los riesgos?</string>
   <string name="prediction_onboarding_faq_tap_answer">Tu tarjeta firma una vez para crear una cuenta de depósito de autocustodia en Polymarket. A partir de ahí, recargas, operas y retiras directamente desde Tangem, y solo tu tarjeta puede mover los fondos.</string>
   <string name="prediction_onboarding_faq_tap_question">¿Qué ocurre cuando acerco mi tarjeta?</string>
-  <string name="prediction_onboarding_legal" formatted="false">Al usar la función de Predicciones, aceptas los %1s y los %2s</string>
+  <string name="prediction_onboarding_legal">Al usar la función de Predicciones, aceptas los %1$s y los %2$s</string>
   <string name="prediction_onboarding_legal_polymarket_terms">Términos y condiciones de Polymarket</string>
   <string name="prediction_onboarding_legal_tangem_terms">Términos y condiciones de Tangem</string>
   <string name="prediction_onboarding_reconnect_benefit_safe_subtitle">Misma cuenta de depósito, mismos fondos. Volver a vincular nunca mueve tus fondos</string>
@@ -1835,7 +1860,7 @@
   <string name="prediction_onboarding_reconnect_button">Seguir prediciendo</string>
   <string name="prediction_onboarding_reconnect_faq_answer">Las claves de acceso se guardan solo en tu dispositivo. Se borran al reinstalar la app, cambiar de teléfono o cuando caduca la sesión. Tu cuenta reside en Polymarket y no se ve afectada.</string>
   <string name="prediction_onboarding_reconnect_faq_question">¿Por qué veo esto?</string>
-  <string name="prediction_onboarding_reconnect_legal" formatted="false">No hay nuevos términos que aceptar: tu acuerdo con %1s y %2s sigue vigente</string>
+  <string name="prediction_onboarding_reconnect_legal">No hay nuevos términos que aceptar: tu acuerdo con %1$s y %2$s sigue vigente</string>
   <string name="prediction_onboarding_reconnect_subtitle">Tu cuenta de depósito, saldo y posiciones abiertas están a salvo. Solo hay que volver a vincular este dispositivo: acerca tu tarjeta una vez para restaurar el acceso.</string>
   <string name="prediction_onboarding_reconnect_title">Reconecta tu cuenta de Polymarket</string>
   <string name="prediction_onboarding_start_button">Empezar a predecir</string>
@@ -1874,7 +1899,7 @@
   <string name="prediction_place_result_no_fill_banner_description">No hay acciones disponibles en Polymarket; tu orden no se pudo ejecutar.</string>
   <string name="prediction_place_result_no_fill_banner_title">Sin ejecución</string>
   <string name="prediction_place_result_no_fill_title">Liquidez insuficiente</string>
-  <string name="prediction_place_result_partial_amount" formatted="false">%1s de %2s</string>
+  <string name="prediction_place_result_partial_amount">%1$s de %2$s</string>
   <string name="prediction_place_result_partial_banner_description">Tu orden se completó parcialmente debido a una liquidez insuficiente en Polymarket dentro de tu tolerancia de deslizamiento.</string>
   <string name="prediction_place_result_partial_banner_title">Completada parcialmente</string>
   <string name="prediction_place_result_partial_title">Colocada parcialmente</string>
@@ -1931,7 +1956,7 @@
   <string name="prediction_positions_quantity">Acciones</string>
   <string name="prediction_positions_realized_description">Ganancia o pérdida ya consolidada. Proviene de las acciones que has vendido (parcial o totalmente) y de las posiciones resueltas como ganadas, perdidas o divididas. El P&amp;L realizado incluye todas las comisiones.</string>
   <string name="prediction_positions_realized_pnl">P&amp;L realizado</string>
-  <string name="prediction_positions_result_amount" formatted="false">%1s %2s</string>
+  <string name="prediction_positions_result_amount">%1$s %2$s</string>
   <string name="prediction_positions_split">Dividida</string>
   <string name="prediction_positions_status">Estado</string>
   <string name="prediction_positions_title">Mis posiciones</string>
@@ -1958,7 +1983,7 @@
   <string name="prediction_withdraw_error_generic">No se pudo enviar el retiro. Comprueba tu conexión e inténtalo de nuevo</string>
   <string name="prediction_withdraw_error_rejected">Polymarket rechazó el retiro. Inténtalo de nuevo</string>
   <string name="prediction_withdraw_in_progress_message">Tu retiro anterior aún se está procesando. Espera a que termine antes de iniciar uno nuevo.</string>
-  <string name="prediction_withdraw_min_amount">El retiro mínimo es de %s. Añade fondos para alcanzarlo.</string>
+  <string name="prediction_withdraw_min_amount">El retiro mínimo es de %@. Añade fondos para alcanzarlo.</string>
   <string name="prediction_withdraw_status_failed_description">Algo salió mal al procesar tu retiro. Inténtalo de nuevo o contacta con soporte.</string>
   <string name="prediction_withdraw_status_failed_notice">Error en el retiro. No se retiraron fondos.</string>
   <string name="prediction_withdraw_status_failed_title">Error en el retiro</string>
@@ -2589,7 +2614,7 @@
   <string name="tangempay_campaign_spend_description">Con tarjeta digital mediante Apple Pay o Google Pay, sin comisiones adicionales en las compras</string>
   <string name="tangempay_campaign_unavailable_description">Puedes pedir una normal</string>
   <string name="tangempay_campaign_unavailable_title">No se puede obtener la tarjeta especial</string>
-  <string name="tangempay_cancel_kyc">Ocultar verificación de la pantalla</string>
+  <string name="tangempay_cancel_kyc">Ocultar estado</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Contacta con el soporte</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">Has superado el número de intentos de activación</string>
   <string name="tangempay_card_activation_description">Introduce los últimos 4 dígitos del número de tu tarjeta</string>
@@ -2793,7 +2818,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Verificación en progreso para Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Los documentos suelen verificarse automáticamente en menos de 5 minutos. En casos excepcionales que requieran revisión manual, el proceso puede tardar hasta 48 horas.</string>
   <string name="tangempay_kyc_rejected">Rechazado</string>
-  <string name="tangempay_kyc_rejected_button_text">Ocultar verificación</string>
+  <string name="tangempay_kyc_rejected_button_text">Ocultar estado</string>
   <string name="tangempay_kyc_rejected_description">Lo sentimos, no pudimos verificar</string>
   <string name="tangempay_kyc_rejected_description_span">u identidad.</string>
   <string name="tangempay_main_select_plan">Seleccionar plan</string>
@@ -2943,9 +2968,9 @@
   <string name="tangempay_status_inactive">Inactiva</string>
   <string name="tangempay_status_replacing">Reemplazo de su tarjeta</string>
   <string name="tangempay_sync_needed">Usa la tarjeta o el anillo para renovar la sesión</string>
-  <string name="tangempay_sync_needed_body">Usa la tarjeta o el anillo para renovar la sesión</string>
+  <string name="tangempay_sync_needed_body">Renueve para ver su tarjeta y su cuenta</string>
   <string name="tangempay_sync_needed_button">Restablecer acceso</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay sesión expirada</string>
+  <string name="tangempay_sync_needed_title">La sesión ha caducado</string>
   <string name="tangempay_tangem_visa_card">Gaste sus criptos en el día a día</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay no está disponible temporalmente.</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -2955,25 +2980,27 @@
   <string name="tangempay_topup_receive_body_multichain">Envíe USDC o USDT a la dirección de su cuenta</string>
   <string name="tangempay_topup_receive_title">Desde otra billetera o exchange</string>
   <string name="tangempay_topup_swap_body">Recargue su cuenta con cualquier token de su billetera</string>
-  <string name="tangempay_topup_swap_title">Desde tu Tangem Wallet</string>
+  <string name="tangempay_topup_swap_title">Desde su Tangem Wallet</string>
   <string name="tangempay_unified_onboarding_cashback_caption">Cashback</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">Pagado en USDC</string>
   <string name="tangempay_unified_onboarding_cashback_title">Hasta un 2%%. %1$s</string>
-  <string name="tangempay_unified_onboarding_description">Una tarjeta Visa y una cuenta en USD, todo en uno. Verifícate una vez y abriremos todo lo disponible en tu región</string>
+  <string name="tangempay_unified_onboarding_description">Una tarjeta Visa y una cuenta en USD, todo en uno. Verifique su identidad y acceda a los productos disponibles donde vive</string>
   <string name="tangempay_unified_onboarding_everything_header">Para todo</string>
-  <string name="tangempay_unified_onboarding_fees_caption">Sin cargos ocultos</string>
-  <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
-  <string name="tangempay_unified_onboarding_fees_title">Sin comisiones por compras. %1$s</string>
+  <string name="tangempay_unified_onboarding_fees_caption">Dólar por dólar</string>
+  <string name="tangempay_unified_onboarding_fees_subtitle">Sin comisiones de cambio ni cuotas mensuales</string>
+  <string name="tangempay_unified_onboarding_fees_title">1 USD se convierte en 1 USDC\n%1$s</string>
   <string name="tangempay_unified_onboarding_interest_caption">Intereses</string>
   <string name="tangempay_unified_onboarding_interest_title">Mantén tus fondos y gana hasta un 4% anual</string>
   <string name="tangempay_unified_onboarding_legal">Los productos disponibles dependen de tu lugar de residencia. Lo confirmaremos tras la verificación</string>
-  <string name="tangempay_unified_onboarding_money_account_caption">Muy práctico</string>
-  <string name="tangempay_unified_onboarding_money_account_header">Cuenta en USD</string>
+  <string name="tangempay_unified_onboarding_money_account_caption">Compra de cripto</string>
+  <string name="tangempay_unified_onboarding_money_account_header">Cuenta</string>
   <string name="tangempay_unified_onboarding_money_account_subtitle">Recibe transferencias ACH, USD a USDC 1:1; comisión fija de 1 USD</string>
   <string name="tangempay_unified_onboarding_money_account_title">Tus propios datos bancarios en EE. UU. %1$s</string>
-  <string name="tangempay_unified_onboarding_payment_account_caption">Paga como quieras</string>
+  <string name="tangempay_unified_onboarding_money_account_title_v2">Datos de su cuenta en EE. UU.</string>
+  <string name="tangempay_unified_onboarding_payment_account_caption">Compatible con</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Tarjeta Visa</string>
-  <string name="tangempay_unified_onboarding_payment_account_title">Online o %1$s</string>
+  <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
+  <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">Pagos</string>
   <string name="tangempay_unified_onboarding_payments_title">Transferencias ACH y bancarias para el día a día</string>
   <string name="tangempay_unified_onboarding_plan_caption">Un solo plan</string>
@@ -3439,10 +3466,15 @@
   <string name="warning_hedera_token_association_not_enough_hbar_message">No hay suficiente %s. Recargue su cuenta de Hedera para asociar este token</string>
   <string name="warning_incomplete_backup_notification_message">Hemos detectado que el proceso de activación de la tarjeta no se ha completado correctamente debido a problemas con el módulo NFC de su dispositivo o a que no ha acercado la tarjeta al teléfono de forma adecuada. Póngase en contacto con nuestro equipo de soporte para obtener más información.</string>
   <string name="warning_incomplete_backup_notification_title">Es necesario actuar. ¡No use su billetera!</string>
+  <string name="warning_incomplete_balance_message">Esta dirección tiene más de %1$s UTXOs, por lo que la red %2$s solo muestra una parte de ellos. Tus fondos están a salvo. Para ver el saldo completo, agrupa los UTXO enviando %3$s a tu propia dirección.</string>
+  <string name="warning_incomplete_balance_title">El saldo puede estar incompleto.</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">¿Está seguro de que desea cancelar la transacción? No podrá volver a reintentarlo.</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Su transacción con un importe de %1$s %2$s no se ha completado. Puede volver a intentarlo para completarla.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Tiene una transacción sin terminar</string>
   <string name="warning_last_balance_updated_time">Última actualización hace %s</string>
+  <string name="warning_link_wallet_cold_message">Escanee su tarjeta para vincular su billetera a este dispositivo.</string>
+  <string name="warning_link_wallet_hot_message">Confirme para vincular su billetera a este dispositivo.</string>
+  <string name="warning_link_wallet_title">Vincule su billetera a este dispositivo.</string>
   <string name="warning_low_signatures_message">Solo quedan %s firmas en esta tarjeta. Debe retirar todos sus fondos.</string>
   <string name="warning_low_signatures_title">Recuento de firmas bajo</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Los tokens en diferentes redes pueden tener direcciones diferentes. Verifique que su dirección coincida con la red cuando transfieras fondos.</string>
@@ -3544,6 +3576,18 @@
   <string name="wc_connection_reqeust_would_like">Me gustaría</string>
   <string name="wc_connection_request">Solicitud de conexión</string>
   <string name="wc_connections">Conexiones</string>
+  <string name="wc_connections_agents_error_subtitle">Pulse para recargar</string>
+  <string name="wc_connections_agents_error_title">Agentes de IA no disponibles</string>
+  <string name="wc_connections_agents_title">Agentes conectados</string>
+  <string name="wc_connections_dapps_title">Conectar a dApps</string>
+  <string name="wc_connections_disconnect_all_alert_desc">Todas las dApps y los agentes de IA se desconectarán de sus billeteras.</string>
+  <string name="wc_connections_disconnect_all_alert_title">Desconectar todo</string>
+  <string name="wc_connections_disconnect_all_success">Todas las conexiones desconectadas</string>
+  <string name="wc_connections_empty_desc">Conéctese a dApps mediante WalletConnect o a agentes de IA mediante MCP. Gestione todas sus conexiones en un solo lugar.</string>
+  <string name="wc_connections_empty_title">Aún no hay conexiones</string>
+  <string name="wc_connections_no_walletconnect_wallets">Ninguna de sus billeteras es compatible con WalletConnect.</string>
+  <string name="wc_connections_qr_scan_hint">Abra la dApp o el agente de IA y escanee su código QR de conexión.</string>
+  <string name="wc_connections_subtitle">Conéctese a dApps o MCP</string>
   <string name="wc_contents">Contenido</string>
   <string name="wc_copy_data_button_text">Copiar datos</string>
   <string name="wc_custom_allowance_title">Asignación personalizada</string>
@@ -3675,6 +3719,13 @@
   <string name="yield_module_high_network_fees_notification_description">Las comisiones son más altas de lo habitual debido a la alta actividad del mercado. Puede continuar ahora o volver a consultar más tarde cuando las comisiones sean más bajas.</string>
   <string name="yield_module_high_network_fees_notification_title">Tarifas de red elevadas</string>
   <string name="yield_module_historical_returns">Rendimientos históricos</string>
+  <string name="yield_module_main_promo_button">Pruebe el Modo Rendimiento</string>
+  <string name="yield_module_main_promo_subtitle">Saque partido a las monedas que no utiliza. Sin plazos mínimos de bloqueo, retírelas cuando quiera.</string>
+  <string name="yield_module_main_promo_title">Gana con tu cripto hasta un %1$s%% APY</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="one">Más de %d token disponible</item>
+    <item quantity="other">Más de %d tokens disponibles</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">Consiga un %1$s%% APY sobre su saldo</string>
   <string name="yield_module_main_view_approve_notification_description">Se ha revocado la autorización para su token en el Modo Rendimiento. Abra el token para volver a conceder el permiso.</string>
   <string name="yield_module_main_view_approve_notification_title">Se necesita la aprobación de Token</string>

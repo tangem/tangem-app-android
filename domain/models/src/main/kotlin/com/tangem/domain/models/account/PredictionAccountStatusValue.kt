@@ -2,6 +2,7 @@ package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.serialization.SerializedBigDecimal
@@ -26,17 +27,6 @@ sealed class PredictionAccountStatusValue {
 
     abstract val source: StatusSource
 
-    /**
-     * The collateral priced in the app's currency, or `null` when it cannot be priced. The wallet total and the
-     * row on the wallet screen both read it, so neither can multiply differently from the other.
-     */
-    val fiatBalance: SerializedBigDecimal?
-        get() {
-            val active = this as? Active ?: return null
-
-            return active.fiatRate?.let(active.balance::multiply)
-        }
-
     /** The total fiat balance associated with this status. */
     val totalFiatBalance: TotalFiatBalance
         get() = when (this) {
@@ -47,8 +37,10 @@ sealed class PredictionAccountStatusValue {
             is Error,
             -> TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
             is Active -> {
-                val amount = fiatBalance ?: return TotalFiatBalance.Failed
-                TotalFiatBalance.Loaded(amount = amount, source = source)
+                val rate = fiatRate ?: return TotalFiatBalance.Failed
+                val total = totalWithPositions()
+
+                TotalFiatBalance.Loaded(amount = total.amount.multiply(rate), source = total.source)
             }
         }
 
@@ -118,7 +110,7 @@ sealed class PredictionAccountStatusValue {
      * Represents a state where the prediction deposit wallet is ready and holds a collateral balance.
      *
      * @property source The source of the status information.
-     * @property balance The collateral balance of the deposit wallet, which is what the wallet total counts.
+     * @property balance The collateral balance of the deposit wallet, without the open positions.
      * @property fiatRate Exchange rate of the collateral to the app's selected fiat currency, or `null` if the
      *                    quote has never been available. When `null`, [totalFiatBalance] resolves to
      *                    [TotalFiatBalance.Failed].
@@ -134,6 +126,7 @@ sealed class PredictionAccountStatusValue {
         val fiatRate: SerializedBigDecimal?,
         val depositCurrency: CryptoCurrency.Token,
         val depositAddress: String?,
+        val positions: PredictionPositionsValue = PredictionPositionsValue.Unknown,
     ) : PredictionAccountStatusValue() {
 
         /**
@@ -158,6 +151,17 @@ sealed class PredictionAccountStatusValue {
                 depositAddress = address,
                 source = source,
             ),
+        )
+
+        fun totalWithPositions(): PredictionTotalBalance = when (positions) {
+            is PredictionPositionsValue.Known -> PredictionTotalBalance.of(status = this, positions = positions)
+            is PredictionPositionsValue.Unknown -> collateralOnly(positionsSource = StatusSource.CACHE)
+            is PredictionPositionsValue.Unavailable -> collateralOnly(positionsSource = StatusSource.ONLY_CACHE)
+        }
+
+        private fun collateralOnly(positionsSource: StatusSource) = PredictionTotalBalance(
+            amount = balance,
+            source = listOf(source, positionsSource).getResultStatusSource(),
         )
     }
 

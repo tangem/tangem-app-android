@@ -20,7 +20,6 @@ data class ScanResponse(
     @Json(name = "productType") val productType: ProductType,
     @Json(name = "walletData") val walletData: WalletData?,
     @Json(name = "secondTwinPublicKey") val secondTwinPublicKey: String? = null,
-    // @Json(name = "visaCardActivationStatus") val visaCardActivationStatus: VisaCardActivationStatus? = null,
     @Json(name = "derivedKeys") val derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = emptyMap(),
     @Json(name = "primaryCard") val primaryCard: PrimaryCard? = null,
 )
