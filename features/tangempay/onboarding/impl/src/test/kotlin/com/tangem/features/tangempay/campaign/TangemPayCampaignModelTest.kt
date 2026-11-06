@@ -17,15 +17,15 @@ import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.model.TangemPayCampaign
-import com.tangem.domain.pay.model.TangemPayCampaignResolution
-import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
-import com.tangem.domain.pay.usecase.ResolveTangemPayCampaignUseCase
+import com.tangem.domain.tangempay.TangemPayEligibilityManager
+import com.tangem.domain.tangempay.model.Offer
+import com.tangem.domain.tangempay.model.OrderType
+import com.tangem.domain.tangempay.model.TangemPayCampaign
+import com.tangem.domain.tangempay.model.TangemPayCampaignResolution
+import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.usecase.ResolveTangemPayCampaignUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
@@ -284,7 +284,7 @@ internal class TangemPayCampaignModelTest {
             givenWallets(WALLET_ID)
             coEvery {
                 getCustomerOffersUseCase.campaignOffer(WALLET_ID, CAMPAIGN_KEY)
-            } returns VisaApiError.Unspecified.left()
+            } returns TangemPayApiError.Unspecified.left()
             val model = createModel(testScope = this)
             val children = model.trackChildren()
             advanceUntilIdle()

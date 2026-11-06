@@ -32,8 +32,8 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.*
+import com.tangem.domain.tangempay.WithdrawalSignatureResult
+import com.tangem.domain.tangempay.model.*
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.hot.sdk.android.PassphraseValidator
 import com.tangem.operations.ScanTask
@@ -49,7 +49,7 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.analytics.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.tasks.product.*
-import com.tangem.tap.domain.tasks.visa.*
+import com.tangem.tap.domain.tasks.tangempay.*
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
@@ -579,7 +579,7 @@ internal class DefaultTangemSdkManager(
 
     // endregion
 
-    // region Visa-specific
+    // region Tangem Pay
 
     override suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,

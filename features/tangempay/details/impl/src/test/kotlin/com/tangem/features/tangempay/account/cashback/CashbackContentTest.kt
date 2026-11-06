@@ -1,9 +1,9 @@
 package com.tangem.features.tangempay.account.cashback
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.pay.model.CashbackDisplayMode
-import com.tangem.domain.pay.model.CashbackSummary
-import com.tangem.domain.pay.model.TangemPayCashback
+import com.tangem.domain.tangempay.model.CashbackDisplayMode
+import com.tangem.domain.tangempay.model.CashbackSummary
+import com.tangem.domain.tangempay.model.TangemPayCashback
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested

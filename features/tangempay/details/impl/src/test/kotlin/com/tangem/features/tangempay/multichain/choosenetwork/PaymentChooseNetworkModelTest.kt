@@ -13,10 +13,10 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.usecase.CreatePaymentNetworkContractUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.usecase.CreatePaymentNetworkContractUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -91,7 +91,7 @@ internal class PaymentChooseNetworkModelTest {
     fun `GIVEN contract creation fails WHEN NotIssued row tapped THEN row shows Error and retry re-invokes use case`() =
         runTest {
             // Arrange
-            coEvery { createContractUseCase(WALLET_ID, polygon, any()) } returns VisaApiError.Unspecified.left()
+            coEvery { createContractUseCase(WALLET_ID, polygon, any()) } returns TangemPayApiError.Unspecified.left()
             val model = createModel(testScope = this)
             statusFlow.emit(paymentStatus(listOf(notIssued)))
             advanceUntilIdle()
@@ -245,7 +245,7 @@ internal class PaymentChooseNetworkModelTest {
     fun `GIVEN contract creation keeps failing WHEN row tapped and retried THEN every error display is reported`() =
         runTest {
             // Arrange
-            coEvery { createContractUseCase(WALLET_ID, polygon, any()) } returns VisaApiError.Unspecified.left()
+            coEvery { createContractUseCase(WALLET_ID, polygon, any()) } returns TangemPayApiError.Unspecified.left()
             val model = createModel(testScope = this)
             statusFlow.emit(paymentStatus(listOf(notIssued)))
             advanceUntilIdle()
@@ -267,7 +267,7 @@ internal class PaymentChooseNetworkModelTest {
 
     @ParameterizedTest
     @MethodSource(OUTCOME_UNKNOWN_ERRORS)
-    fun `GIVEN outcome unknown WHEN the row is retried THEN the same idempotency key is reused`(error: VisaApiError) =
+    fun `GIVEN outcome unknown WHEN the row is retried THEN the same idempotency key is reused`(error: TangemPayApiError) =
         runTest {
             // Arrange
             val idempotencyKeys = mutableListOf<String>()
@@ -294,7 +294,7 @@ internal class PaymentChooseNetworkModelTest {
         val idempotencyKeys = mutableListOf<String>()
         coEvery {
             createContractUseCase(WALLET_ID, polygon, capture(idempotencyKeys))
-        } returns VisaApiError.Unspecified.left()
+        } returns TangemPayApiError.Unspecified.left()
         val model = createModel(testScope = this)
         statusFlow.emit(paymentStatus(listOf(notIssued)))
         advanceUntilIdle()
@@ -339,7 +339,7 @@ internal class PaymentChooseNetworkModelTest {
         val idempotencyKeys = mutableListOf<String>()
         coEvery {
             createContractUseCase(WALLET_ID, any(), capture(idempotencyKeys))
-        } returns VisaApiError.ServerUnavailable.left()
+        } returns TangemPayApiError.ServerUnavailable.left()
         val model = createModel(testScope = this)
         statusFlow.emit(paymentStatus(listOf(notIssued, PaymentNetworkStatus.NotIssued(arbitrum, chainId = 2L))))
         advanceUntilIdle()

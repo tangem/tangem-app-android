@@ -10,9 +10,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.bankCredentials
 import com.tangem.features.tangempay.details.impl.R
@@ -93,7 +93,7 @@ internal class TangemPayAddFundsModelTest {
     @Test
     fun `GIVEN banking details fail WHEN bank transfer clicked THEN host shows the error`() = runTest {
         // Arrange
-        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns VisaApiError.Unspecified.left()
+        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID))
 
         // Act

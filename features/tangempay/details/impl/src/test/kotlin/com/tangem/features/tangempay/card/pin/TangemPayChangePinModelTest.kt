@@ -7,9 +7,9 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.model.SetPinResult
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.model.SetPinResult
+import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
 import com.tangem.features.tangempay.card.details.TangemPayCardDetailsInnerRoute
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider

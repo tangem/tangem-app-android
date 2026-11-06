@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.verified
 
 import com.tangem.core.decompose.navigation.Route
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

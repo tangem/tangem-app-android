@@ -9,7 +9,7 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_KYC_STATUS_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.tangempay.TangemPayEligibilityManager
 import com.tangem.scenarios.assertTangemPayTileNotDisplayed
 import com.tangem.scenarios.awaitNoWalletOfferedTangemPay
 import com.tangem.scenarios.awaitTangemPayRequestCountIncreased

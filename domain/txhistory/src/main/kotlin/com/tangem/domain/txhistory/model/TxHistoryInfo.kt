@@ -6,7 +6,7 @@ import com.tangem.domain.express.models.OnrampTransaction
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointOperationTransfer
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 
 /**
  * A single row of the unified transaction history shown on the token-details screen.

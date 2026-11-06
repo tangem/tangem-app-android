@@ -8,10 +8,10 @@ import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.spend.datasource.config.TangemPay
 import com.tangem.spend.datasource.config.TangemPayEnvironmentConfig
-import com.tangem.spend.datasource.pay.TangemPayApi
-import com.tangem.spend.datasource.pay.TangemPayAuthApi
-import com.tangem.spend.datasource.pay.TangemPayProvisioningApi
-import com.tangem.spend.datasource.pay.serialization.TangemPaySerializersModuleProvider
+import com.tangem.spend.datasource.tangempay.TangemPayApi
+import com.tangem.spend.datasource.tangempay.TangemPayAuthApi
+import com.tangem.spend.datasource.tangempay.TangemPayProvisioningApi
+import com.tangem.spend.datasource.tangempay.serialization.TangemPaySerializersModuleProvider
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.serialization.SerializersModuleProvider
 import dagger.Module
