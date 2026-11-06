@@ -49,10 +49,12 @@ internal class DefaultGoogleWalletProvisionerTest {
     private val sdk: MeaWalletGooglePay = mockk()
     private val activity: Activity = mockk()
     private lateinit var activityBridge: DefaultPushProvisioningActivityBridge
+    private var nowMillis = 0L
 
     @BeforeEach
     fun setUp() {
         clearMocks(sdk)
+        nowMillis = 0L
         every { sdk.isOsSupported } returns true
         every { sdk.isProdSdk } returns false
         every { sdk.isWalletAvailable() } returns true
@@ -541,6 +543,33 @@ internal class DefaultGoogleWalletProvisionerTest {
             // Assert
             assertThat(actual).isEqualTo(CardStatus.Added)
         }
+
+        @ParameterizedTest
+        @MethodSource("provideOverrideAgeModels")
+        fun `GIVEN added card never listed by wallet WHEN status checked later THEN override follows its age`(
+            model: OverrideAgeModel,
+        ) = runTest {
+            // Arrange
+            every { sdk.push(CARD, activity, any()) } answers {
+                thirdArg<MppPushCardToGooglePayListener>().onSuccess(TOKEN_ID, LAST_FOUR_DIGITS, null)
+            }
+            givenWalletTokens()
+            val provisioner = createProvisioner()
+            provisioner.addCard(CARD)
+            nowMillis = model.elapsedMillis
+
+            // Act
+            val actual = provisioner.getCardStatus(LAST_FOUR_DIGITS)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideOverrideAgeModels() = listOf(
+            OverrideAgeModel(elapsedMillis = 59_999, expected = CardStatus.Added),
+            OverrideAgeModel(elapsedMillis = 60_000, expected = CardStatus.NotAdded),
+            OverrideAgeModel(elapsedMillis = -1, expected = CardStatus.NotAdded),
+        )
 
         @Test
         fun `GIVEN added card WHEN wallet lookup fails THEN status unknown and override kept`() = runTest {
@@ -1314,10 +1343,13 @@ internal class DefaultGoogleWalletProvisionerTest {
 
     internal data class EnvironmentModel(val isProdSdk: Boolean, val expected: Environment)
 
+    internal data class OverrideAgeModel(val elapsedMillis: Long, val expected: CardStatus)
+
     private fun TestScope.createProvisioner() = DefaultGoogleWalletProvisioner(
         sdk = sdk,
         activityBridge = activityBridge,
         dispatchers = createTestingCoroutineDispatcherProvider(),
+        currentTimeProvider = { nowMillis },
     )
 
     private fun givenWalletTokens(vararg tokenStates: Int) {
