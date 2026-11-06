@@ -26,6 +26,12 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
@@ -161,7 +167,8 @@ private fun DataPlot(state: EarnApyChartUM, modifier: Modifier = Modifier) {
         CartesianChartHost(
             modifier = Modifier
                 .padding(start = AXIS_LABELS_WIDTH)
-                .height(PLOT_AREA_HEIGHT),
+                .height(PLOT_AREA_HEIGHT)
+                .semantics(properties = rememberChartSemantics(state = state)),
             chart = chart,
             model = model,
             zoomState = rememberVicoZoomState(initialZoom = Zoom.Content, zoomEnabled = false),
@@ -180,6 +187,43 @@ private fun DataPlot(state: EarnApyChartUM, modifier: Modifier = Modifier) {
         }
         MonthLabelsRow(labels = state.xLabels, modifier = Modifier.align(Alignment.BottomStart))
     }
+}
+
+/**
+ * The chart is drawn on a canvas, so a screen reader sees nothing in it. It gets a description, the rate and date of the
+ * selected bar as its state, and actions that move the selection, as the finger does for a sighted user.
+ */
+@Composable
+private fun rememberChartSemantics(state: EarnApyChartUM): SemanticsPropertyReceiver.() -> Unit {
+    val description = EarnApyChartTexts.historyChart.resolveReference()
+    val selectedDescription = state.selectedBar?.let { bar -> state.bars.getOrNull(bar) }?.tooltip?.resolveReference()
+    val previousLabel = EarnApyChartTexts.previousBar.resolveReference()
+    val nextLabel = EarnApyChartTexts.nextBar.resolveReference()
+    val clearLabel = EarnApyChartTexts.clearSelection.resolveReference()
+
+    return {
+        contentDescription = description
+        selectedDescription?.let { stateDescription = it }
+        customActions = buildList {
+            add(CustomAccessibilityAction(previousLabel) { state.stepSelection(step = -1) })
+            add(CustomAccessibilityAction(nextLabel) { state.stepSelection(step = 1) })
+            if (state.selectedBar != null) {
+                add(CustomAccessibilityAction(clearLabel) { state.clearSelection() })
+            }
+        }
+    }
+}
+
+private fun EarnApyChartUM.stepSelection(step: Int): Boolean {
+    onBarSelected(steppedBar(selected = selectedBar, barCount = bars.size, step = step))
+
+    return true
+}
+
+private fun EarnApyChartUM.clearSelection(): Boolean {
+    onBarSelected(null)
+
+    return true
 }
 
 @Composable

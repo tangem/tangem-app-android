@@ -17,4 +17,12 @@ internal object EarnApyChartTexts {
     val noData: TextReference = stringReference("No data")
 
     val calculator: TextReference = stringReference("Calculator")
+
+    val historyChart: TextReference = stringReference("Rate history chart")
+
+    val previousBar: TextReference = stringReference("Previous bar")
+
+    val nextBar: TextReference = stringReference("Next bar")
+
+    val clearSelection: TextReference = stringReference("Clear selection")
 }
