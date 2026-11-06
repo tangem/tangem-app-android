@@ -1,9 +1,12 @@
 package com.tangem.data.staking
 
 import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.left
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import arrow.core.right
 import com.tangem.data.staking.converters.ethpool.*
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
@@ -80,25 +83,23 @@ internal class DefaultP2PEthPoolRepository(
         is ApiResponse.Error -> raise(StakingError.UnknownError(response.cause))
     }
 
-    override suspend fun fetchVaults(network: P2PEthPoolNetwork) {
-        val vaults = if (stakingFeatureToggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)) {
-            getVaults(network).fold(
-                ifLeft = { error ->
-                    TangemLogger.e("Error fetching P2PEthPool vaults: $error")
-                    p2pEthPoolRegionBlockedStore.store(error.isRegionBlocked())
-                    emptyList()
-                },
-                ifRight = { fetched ->
-                    p2pEthPoolRegionBlockedStore.store(false)
-                    fetched
-                },
-            )
-        } else {
+    override suspend fun fetchVaults(network: P2PEthPoolNetwork): Either<StakingError, Unit> {
+        if (!stakingFeatureToggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)) {
             p2pEthPoolRegionBlockedStore.store(false)
-            emptyList()
+            p2pEthPoolVaultsStore.store(emptyList())
+            return Unit.right()
         }
 
-        p2pEthPoolVaultsStore.store(vaults)
+        val fetched = getVaults(network)
+            .onLeft { error ->
+                TangemLogger.e("Error fetching P2PEthPool vaults: $error")
+                p2pEthPoolRegionBlockedStore.store(error.isRegionBlocked())
+            }
+            .onRight { p2pEthPoolRegionBlockedStore.store(false) }
+
+        p2pEthPoolVaultsStore.store(fetched.getOrElse { emptyList() })
+
+        return fetched.map { }
     }
 
     private fun StakingError.isRegionBlocked(): Boolean {
@@ -256,7 +257,7 @@ internal class DefaultP2PEthPoolRepository(
         return p2pEthPoolVaultsStore.getSync()
     }
 
-    override suspend fun fetchVaultLimits() {
+    override suspend fun fetchVaultLimits(): Either<StakingError, Unit> =
         runSuspendCatching {
             val response = withContext(dispatchers.io) {
                 tangemTechApi.getCoinsSettings().getOrThrow()
@@ -274,8 +275,10 @@ internal class DefaultP2PEthPoolRepository(
             p2pVaultLimitsStore.store(limits)
         }.onFailure { e ->
             TangemLogger.e("Error fetching P2P vault limits: ${e.message}", e)
-        }
-    }
+        }.fold(
+            onSuccess = { Unit.right() },
+            onFailure = { StakingError.UnknownError(it).left() },
+        )
 
     override fun getVaultLimitsFlow(): Flow<Map<String, VaultLimitInfo>?> {
         return p2pVaultLimitsStore.get()

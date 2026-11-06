@@ -1,5 +1,6 @@
 package com.tangem.data.staking
 
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
@@ -21,6 +22,7 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Runs
@@ -37,6 +39,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -264,6 +267,68 @@ internal class DefaultP2PEthPoolRepositoryAvailabilityTest {
             )
             assertThat(vaultsStore.getSync()).containsExactly(expected)
         }
+
+        @Test
+        fun `GIVEN vaults fetched WHEN fetchVaults THEN Right`() = runTest {
+            // Arrange
+            every { featureToggles.isIntegrationEnabled(any()) } returns true
+            coEvery { api.getVaults(any()) } returns ApiResponse.Success(
+                P2PEthPoolResponse(
+                    error = null,
+                    result = P2PEthPoolVaultsResponse(
+                        network = P2PEthPoolNetworkDTO.MAINNET,
+                        vaults = listOf(vaultDTO(address = "0xABC")),
+                    ),
+                ),
+            )
+
+            // Act
+            val actual = repository.fetchVaults()
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+        }
+
+        @Test
+        fun `GIVEN integration toggle disabled WHEN fetchVaults THEN Right`() = runTest {
+            // Arrange
+            every { featureToggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool) } returns false
+
+            // Act
+            val actual = repository.fetchVaults()
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a failing provider request WHEN fetchVaults THEN Left`(model: VaultsFailureModel) = runTest {
+            // Arrange
+            every { featureToggles.isIntegrationEnabled(any()) } returns true
+            coEvery { api.getVaults(any()) } returns model.response
+
+            // Act
+            val actual = repository.fetchVaults()
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+        }
+
+        private fun provideTestModels() = listOf(
+            VaultsFailureModel("451 region blocked", regionBlockedErrorResponse()),
+            VaultsFailureModel(
+                name = "500 http error",
+                response = errorResponse(ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR),
+            ),
+            VaultsFailureModel("network error", apiError(ApiResponseError.NetworkException())),
+            VaultsFailureModel(
+                name = "envelope error",
+                response = ApiResponse.Success(
+                    P2PEthPoolResponse(error = P2PEthPoolErrorDetailsDTO(127100, "net", null), result = null),
+                ),
+            ),
+        )
     }
 
     @Nested
@@ -435,5 +500,12 @@ internal class DefaultP2PEthPoolRepositoryAvailabilityTest {
             // Assert
             assertThat(result).isEqualTo(StakingAvailability.TemporaryUnavailable)
         }
+    }
+
+    internal data class VaultsFailureModel(
+        val name: String,
+        val response: ApiResponse<P2PEthPoolResponse<P2PEthPoolVaultsResponse>>,
+    ) {
+        override fun toString(): String = name
     }
 }
