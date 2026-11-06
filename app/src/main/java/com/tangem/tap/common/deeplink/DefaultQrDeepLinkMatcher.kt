@@ -8,7 +8,6 @@ import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.common.uri.ExternalUrlValidator
 import com.tangem.domain.qrscanning.QrDeepLinkMatcher
-import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 
 /**
  * A page of a trusted Tangem host counts even without a handler: [DefaultDeeplinkLauncher] opens it in-app when the
@@ -16,12 +15,9 @@ import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
  */
 internal class DefaultQrDeepLinkMatcher(
     private val deepLinkHandlerRegistry: DeepLinkHandlerRegistry,
-    private val deepLinkFeatureToggles: DeepLinkFeatureToggles,
 ) : QrDeepLinkMatcher {
 
     override fun isDeepLink(link: String): Boolean {
-        if (!deepLinkFeatureToggles.isQrScanDeepLinksEnabled) return false
-
         val uri = link.toUri()
 
         return when (uri.scheme) {

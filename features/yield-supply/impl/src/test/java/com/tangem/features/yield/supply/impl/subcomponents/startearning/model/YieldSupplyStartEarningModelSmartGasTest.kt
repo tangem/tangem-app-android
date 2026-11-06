@@ -65,7 +65,6 @@ internal class YieldSupplyStartEarningModelSmartGasTest : YieldSupplyStartEarnin
 
     @BeforeEach
     fun setUp() {
-        every { yieldSupplyFeatureToggles.isSmartGasEnabled } returns true
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns nativeFeeStatus.right()
         coEvery { estimateEnterFeeUseCase(any(), any(), any()) } returns estimatedCalls.right()
         coEvery {
@@ -82,27 +81,7 @@ internal class YieldSupplyStartEarningModelSmartGasTest : YieldSupplyStartEarnin
     }
 
     @Test
-    fun `GIVEN toggle off WHEN fee loaded THEN Smart Gas fee is not estimated`() = runTest {
-        // Arrange
-        every { yieldSupplyFeatureToggles.isSmartGasEnabled } returns false
-
-        // Act
-        createModel()
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 0) {
-            estimateFeeForGaslessBatchUseCase(
-                userWallet = any(),
-                operationTokenStatus = any(),
-                calls = any(),
-                sameTokenRule = any(),
-            )
-        }
-    }
-
-    @Test
-    fun `GIVEN toggle on WHEN fee loaded THEN batch estimated with enter rule and estimated calls`() = runTest {
+    fun `GIVEN native fee estimate WHEN fee loaded THEN batch estimated with enter rule and estimated calls`() = runTest {
         // Arrange
         stubBatchEstimate(nativeFee().right())
 
