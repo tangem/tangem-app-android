@@ -247,6 +247,8 @@
   <string name="prediction_withdraw_status_in_progress_title">Saque em andamento</string>
   <string name="prediction_withdraw_status_sent_description">O recebimento pode levar até %1$d minutos</string>
   <string name="prediction_withdraw_status_sent_title">Saque enviado</string>
+  <string name="tangempay_cancel_kyc">Ocultar estado</string>
+  <string name="tangempay_kyc_rejected_button_text">Ocultar estado</string>
   <string name="tangempay_pay_support">Suporte</string>
   <string name="tangempay_sync_needed_body">Renove para ver o seu cartão e a sua conta</string>
   <string name="tangempay_sync_needed_button">Renovar sessão</string>

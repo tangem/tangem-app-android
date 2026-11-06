@@ -249,6 +249,8 @@
   <string name="prediction_withdraw_status_in_progress_title">Виведення триває</string>
   <string name="prediction_withdraw_status_sent_description">Зарахування може зайняти до %1$d хв</string>
   <string name="prediction_withdraw_status_sent_title">Кошти надіслано</string>
+  <string name="tangempay_cancel_kyc">Приховати статус</string>
+  <string name="tangempay_kyc_rejected_button_text">Приховати статус</string>
   <string name="tangempay_pay_support">Підтримка</string>
   <string name="tangempay_sync_needed_body">Оновіть, щоб побачити картку й рахунок</string>
   <string name="tangempay_sync_needed_button">Оновити сесію</string>
