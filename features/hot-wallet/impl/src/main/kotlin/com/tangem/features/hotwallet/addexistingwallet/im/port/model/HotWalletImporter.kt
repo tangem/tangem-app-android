@@ -31,6 +31,8 @@ import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -90,10 +92,13 @@ internal class HotWalletImporter @Inject constructor(
         creationType: AnalyticsParam.WalletCreationType = AnalyticsParam.WalletCreationType.SeedImport,
     ): Either<HotWalletImportError, UserWalletId> = either {
         val userWallet = materialize(mnemonic, passphrase, name).bind()
-        onCancel(
+        val saveResult = onCancel(
             fa = { save(scope, userWallet, isSeedPhraseBackedUp) },
             onCancel = { discardUnsavedHotWalletUseCase(userWallet.hotWalletId) },
-        ).bind()
+        )
+        // The save is not cancellable, so a caller that left meanwhile must not get a result to act on
+        currentCoroutineContext().ensureActive()
+        saveResult.bind()
         sendWalletCreatedEvents(mnemonic, passphrase, creationType)
 
         userWallet.walletId
@@ -134,7 +139,12 @@ internal class HotWalletImporter @Inject constructor(
             }
         if (isAlreadySaved) raise(HotWalletImportError.AlreadySaved)
 
-        val restriction = getHotWalletAdditionRestrictionUseCase()
+        val restriction = runSuspendCatching { getHotWalletAdditionRestrictionUseCase() }
+            .getOrElse { error ->
+                TangemLogger.e("Unable to check the hot wallets limit", error)
+                if (!hotWalletFeatureToggles.isMultipleHotWalletsEnabled) return@getOrElse null
+                raise(HotWalletImportError.Unknown(error))
+            }
         if (restriction == HotWalletAdditionRestriction.LimitReached) raise(HotWalletImportError.LimitReached)
     }
 
@@ -172,14 +182,11 @@ internal class HotWalletImporter @Inject constructor(
         if (error == null && exception == null) return@either
         TangemLogger.e("Unable to save user wallet: $error", exception)
 
-        val isListedAnyway = withContext(NonCancellable) { discardUnsavedHotWalletUseCase(userWallet.hotWalletId) }
+        withContext(NonCancellable) { discardUnsavedHotWalletUseCase(userWallet.hotWalletId) }
         when (error) {
-            // Setting the lock can fail after the wallet got listed; reporting it would make the retry hit AlreadySaved
             null,
             is SaveWalletError.DataError,
-            -> if (!isListedAnyway || !hotWalletFeatureToggles.isMultipleHotWalletsEnabled) {
-                raise(HotWalletImportError.Unknown(exception))
-            }
+            -> raise(HotWalletImportError.Unknown(exception))
             is SaveWalletError.WalletAlreadySaved -> raise(HotWalletImportError.AlreadySaved)
             is SaveWalletError.HotWalletsLimitReached -> raise(HotWalletImportError.LimitReached)
         }
