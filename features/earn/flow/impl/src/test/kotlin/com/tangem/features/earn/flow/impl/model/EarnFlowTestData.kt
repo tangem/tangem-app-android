@@ -1,5 +1,14 @@
 package com.tangem.features.earn.flow.impl.model
 
+import io.mockk.mockk
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
+import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.AmountParameters
+import com.tangem.common.ui.amountScreen.converters.field.AmountFieldSetMaxAmountTransformer
+import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -122,3 +131,19 @@ internal fun testResult(
     primary = primary,
     secondary = secondary,
 )
+
+/** An entered 0.5 ETH: the shared transformers mark it valid. */
+internal fun validAmountState(): AmountState {
+    val status = testStatus()
+    val boundary = EnterAmountBoundary(amount = BigDecimal("0.5"), fiatRate = status.value.fiatRate)
+    val initial = AmountStateConverter(
+        clickIntents = mockk(relaxed = true),
+        appCurrency = AppCurrency.Default,
+        cryptoCurrencyStatus = status,
+        maxEnterAmount = EnterAmountBoundary(amount = TEST_BALANCE, fiatRate = status.value.fiatRate),
+        iconStateConverter = CryptoCurrencyToIconStateConverter(),
+        isBalanceHidden = false,
+        accountTitleUM = AccountTitleUM.Text(TextReference.EMPTY),
+    ).convert(AmountParameters(title = TextReference.EMPTY, value = ""))
+    return AmountFieldSetMaxAmountTransformer(status, boundary, minAmount = null).transform(initial)
+}

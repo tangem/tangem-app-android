@@ -44,7 +44,7 @@ internal class DefaultEarnFlowComponent @AssistedInject constructor(
         key = "earnFlowStack",
         source = model.navigation,
         serializer = null,
-        initialConfiguration = model.initialStep,
+        initialStack = model::restoredStack,
         handleBackButton = false,
         childFactory = { step, _ -> step },
     )
