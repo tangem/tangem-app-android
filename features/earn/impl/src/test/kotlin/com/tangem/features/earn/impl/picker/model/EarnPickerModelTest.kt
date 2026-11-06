@@ -244,7 +244,7 @@ internal class EarnPickerModelTest {
             }
 
         @Test
-        fun `GIVEN resolved selection WHEN a later frame drops its product THEN the cards never show with none selected`() =
+        fun `GIVEN resolved selection WHEN a settled frame drops its product THEN the first remaining product is selected`() =
             runTest {
                 // Arrange
                 val frames = MutableStateFlow(frame(summary(lending), summary(staking), summary(vault)))
@@ -260,8 +260,28 @@ internal class EarnPickerModelTest {
                 advanceUntilIdle()
 
                 // Assert
-                val actual = model.uiState.value
-                assertThat(actual.products.isEmpty() || actual.products.count { it.isSelected } == 1).isTrue()
+                assertThat(model.uiState.value.selectedChipIds()).containsExactly("staking")
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN resolved selection WHEN a CACHE frame drops its product THEN cards are hidden until a settled frame`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(frame(summary(lending), summary(staking), summary(vault)))
+                val model = createModel(
+                    frames = frames,
+                    products = listOf(lending, staking, vault),
+                    preselected = lending.id,
+                )
+                advanceUntilIdle()
+
+                // Act
+                frames.value = frame(summary(staking), summary(vault), source = StatusSource.CACHE)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.products).isEmpty()
                 model.onDestroy()
             }
 
