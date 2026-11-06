@@ -18,6 +18,7 @@ data class EarnLimits(
  */
 data class EarnPeriod(val id: String, val label: TextReference)
 
+/** @property points in no guaranteed order: a consumer that needs the time order sorts them by [EarnApyPoint.at] */
 data class EarnApyHistory(
     val points: List<EarnApyPoint>,
     val average: BigDecimal?,
