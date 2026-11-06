@@ -25,7 +25,6 @@ internal object YieldIncentivesDataModule {
             api = api,
             cache = DefaultYieldIncentivesCache(),
             dispatchers = dispatchers,
-            isMerklIncentivesEnabled = true,
         )
     }
 }
