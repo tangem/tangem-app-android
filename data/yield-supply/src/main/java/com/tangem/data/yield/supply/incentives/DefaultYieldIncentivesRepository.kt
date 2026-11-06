@@ -32,15 +32,12 @@ internal class DefaultYieldIncentivesRepository(
     private val api: YieldIncentivesApi,
     private val cache: YieldIncentivesCache,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val isMerklIncentivesEnabled: Boolean,
 ) : YieldIncentivesRepository {
 
     override suspend fun getIncentives(
         chainId: Int,
         userAddress: String,
     ): Either<YieldIncentivesError, YieldIncentives> {
-        if (!isMerklIncentivesEnabled) return YieldIncentivesError.FeatureAbsent.left()
-
         return cache.getOrFetch(
             key = incentivesKey(chainId = chainId, userAddress = userAddress),
             window = INCENTIVES_CACHE_SECONDS.seconds,
@@ -57,8 +54,6 @@ internal class DefaultYieldIncentivesRepository(
         tokenAddress: String,
         days: Int,
     ): Either<YieldIncentivesError, YieldAprHistory> {
-        if (!isMerklIncentivesEnabled) return YieldIncentivesError.FeatureAbsent.left()
-
         val boundedDays = days.coerceIn(MIN_APR_HISTORY_DAYS, MAX_APR_HISTORY_DAYS)
         val key = "apr-history:$chainId:${tokenAddress.lowercase()}:$boundedDays"
 
@@ -74,8 +69,6 @@ internal class DefaultYieldIncentivesRepository(
         chainId: Int,
         userAddress: String,
     ): Either<YieldIncentivesError, YieldClaimCalldata> {
-        if (!isMerklIncentivesEnabled) return YieldIncentivesError.FeatureAbsent.left()
-
         return request(
             call = { api.getClaimCalldata(chainId = chainId, userAddress = userAddress) },
             convert = { YieldClaimCalldataConverter.convert(it).right() },
@@ -86,8 +79,6 @@ internal class DefaultYieldIncentivesRepository(
         chainId: Int,
         userAddress: String,
     ): Either<YieldIncentivesError, List<YieldClaimHistoryItem>> {
-        if (!isMerklIncentivesEnabled) return YieldIncentivesError.FeatureAbsent.left()
-
         return cache.getOrFetch(
             key = claimHistoryKey(chainId = chainId, userAddress = userAddress),
             window = CLAIM_HISTORY_CACHE_SECONDS.seconds,
