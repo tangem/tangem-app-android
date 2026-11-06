@@ -21,6 +21,7 @@ import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingOption
+import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
@@ -343,8 +344,14 @@ internal class PooledStakingEarnProductTest {
         }
 
         private fun arrange(model: RefreshModel) {
-            coEvery { p2pEthPoolRepository.fetchVaults(any()) } answers { model.vaultsFailure?.let { throw it } }
-            coEvery { p2pEthPoolRepository.fetchVaultLimits() } answers { model.limitsFailure?.let { throw it } }
+            coEvery { p2pEthPoolRepository.fetchVaults(any()) } answers {
+                model.vaultsFailure?.let { throw it }
+                model.vaultsError?.left() ?: Unit.right()
+            }
+            coEvery { p2pEthPoolRepository.fetchVaultLimits() } answers {
+                model.limitsFailure?.let { throw it }
+                model.limitsError?.left() ?: Unit.right()
+            }
             coEvery { stakingIdFactory.create(userWalletId, ethereum) } returns
                 (model.idFailure?.left() ?: stakingId.right())
             coEvery { singleStakingBalanceFetcher(any()) } returns
@@ -367,6 +374,8 @@ internal class PooledStakingEarnProductTest {
         private fun provideTestModels() = listOf(
             RefreshModel(name = "fetchVaults throws", vaultsFailure = IllegalStateException("vaults")),
             RefreshModel(name = "fetchVaultLimits throws", limitsFailure = IllegalStateException("limits")),
+            RefreshModel(name = "vaults request fails", vaultsError = StakingError.DomainError("vaults")),
+            RefreshModel(name = "limits request fails", limitsError = StakingError.DomainError("limits")),
             RefreshModel(
                 name = "no address",
                 idFailure = StakingIdFactory.Error.UnableToGetAddress(StakingIntegrationID.P2PEthPool),
@@ -429,6 +438,8 @@ internal class PooledStakingEarnProductTest {
         val name: String,
         val vaultsFailure: Throwable? = null,
         val limitsFailure: Throwable? = null,
+        val vaultsError: StakingError? = null,
+        val limitsError: StakingError? = null,
         val idFailure: StakingIdFactory.Error? = null,
         val fetcherFailure: Throwable? = null,
     ) {
