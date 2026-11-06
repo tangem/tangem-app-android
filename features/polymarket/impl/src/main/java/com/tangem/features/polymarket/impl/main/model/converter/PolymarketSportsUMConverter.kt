@@ -1,5 +1,7 @@
 package com.tangem.features.polymarket.impl.main.model.converter
 
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketLiveQuote
@@ -52,13 +54,13 @@ internal class PolymarketSportsUMConverter(
             probability = null,
             outcomes = ordered.map { choice ->
                 val (title, accent) = when (choice) {
-                    ordered.first() -> titles[0] to PolymarketOutcomeAccent.Info
-                    ordered.last() -> titles[1] to PolymarketOutcomeAccent.Error
-                    else -> "Draw" to PolymarketOutcomeAccent.Neutral
+                    ordered.first() -> stringReference(titles[0]) to PolymarketOutcomeAccent.Info
+                    ordered.last() -> stringReference(titles[1]) to PolymarketOutcomeAccent.Error
+                    else -> resourceReference(R.string.prediction_sports_draw) to PolymarketOutcomeAccent.Neutral
                 }
                 PolymarketOutcomeUM(
                     assetId = choice.assetId,
-                    title = stringReference(title),
+                    title = title,
                     price = stringReference(quotes[choice.assetId].buyPrice(choice.price).formatPolymarketPrice()),
                     accent = accent,
                     onClick = { onOutcomeClick(event.id, choice.marketId, choice.assetId) },
