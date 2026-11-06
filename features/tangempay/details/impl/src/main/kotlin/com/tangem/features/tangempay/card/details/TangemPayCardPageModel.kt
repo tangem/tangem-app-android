@@ -400,6 +400,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                         isLoading = button.isLoading,
                     )
                 },
+                isAddedToGoogleWallet = entry == GoogleWalletEntry.Added,
             )
         }
     }

@@ -2,14 +2,19 @@ package com.tangem.screens.moneyaccount
 
 import androidx.annotation.StringRes
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.swipeDown
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.test.EmptyTransactionBlockTestTags
 import com.tangem.core.ui.test.ModalStatusTestTags
 import com.tangem.core.ui.test.MoneyAccountTestTags
 import com.tangem.core.ui.test.NotificationTestTags
+import com.tangem.core.ui.test.TopNavigationTestTags
+import io.github.kakaocup.compose.intercept.operation.ComposeOperationType
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -38,6 +43,12 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
             }
         }
     }
+
+    // Raw Compose on purpose: polled in a pull-to-refresh loop, where a Kakao check waits out a 10 s retry.
+    fun isBalanceShown(text: String): Boolean = semanticsProvider
+        .onAllNodes(balanceMatcher and withText(text), useUnmergedTree = true)
+        .fetchSemanticsNodes(atLeastOneRootRequired = false)
+        .isNotEmpty()
 
     fun mainRowWithTextMatcher(text: String): SemanticsMatcher =
         withTestTag(MoneyAccountTestTags.MAIN_ROW) and withText(text = text, substring = true)
@@ -101,6 +112,54 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
         useUnmergedTree = true
     }
 
+    private val screenContent: KNode = child {
+        hasTestTag(MoneyAccountTestTags.DETAILS_CONTENT)
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToText(text: String) {
+        screenContent { performScrollToNode(withText(text = text, substring = true)) }
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToTop() {
+        screenContent { performScrollToIndex(0) }
+    }
+
+    val screenTitle: KNode = child {
+        hasTestTag(TopNavigationTestTags.TITLE)
+        useUnmergedTree = true
+    }
+
+    val emptyHistoryText: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.TEXT)
+        hasText(getResourceString(CoreResR.string.transaction_history_empty_transactions))
+        useUnmergedTree = true
+    }
+
+    val historyExploreButton: KNode = child {
+        hasText(getResourceString(CoreResR.string.common_explore))
+        useUnmergedTree = true
+    }
+
+    val menuButton: KNode = child {
+        hasTestTag(MoneyAccountTestTags.DETAILS_MENU_BUTTON)
+    }
+
+    fun menuItem(title: String): KNode = child {
+        hasTestTag(MoneyAccountTestTags.DETAILS_MENU_ITEM)
+        hasAnyDescendant(withText(title))
+        useUnmergedTree = true
+    }
+
+    fun menuItemTop(title: String): Float {
+        var top = 0f
+        menuItem(title).delegate.perform(MenuItemAction.READ_BOUNDS) { top = getUnclippedBoundsInRoot().top.value }
+        return top
+    }
+
+    private enum class MenuItemAction : ComposeOperationType { READ_BOUNDS }
+
     fun modalStatusTitle(title: String): KNode = child {
         hasTestTag(ModalStatusTestTags.TITLE)
         hasText(title)
@@ -111,13 +170,8 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
         hasText(description)
     }
 
-    val mainRowCacheIcon: KNode = child {
-        hasTestTag(MoneyAccountTestTags.MAIN_ROW_CACHE_ICON)
-        useUnmergedTree = true
-    }
-
     val contactSupportButton: KNode = child {
-        hasText(getResourceString(R.string.common_contact_support))
+        hasText(getResourceString(CoreResR.string.common_contact_support))
         hasClickAction()
     }
 }
