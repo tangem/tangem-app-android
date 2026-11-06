@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="money_account_balance_unavailable_description">Não foi possível carregar o seu saldo. Tente novamente mais tarde.</string>
+  <string name="money_account_balance_unavailable_title">Saldo indisponível</string>
+  <string name="money_account_main_status_active_v2">ACH</string>
+  <string name="money_account_main_status_awaiting_deposit">Abre após o seu depósito</string>
+  <string name="money_account_main_status_dialog_failed_description">Ocorreu um erro durante a ativação</string>
+  <string name="money_account_main_status_dialog_failed_title">Não foi possível ativar a sua conta</string>
+  <string name="money_account_main_status_failed">Falha</string>
   <string name="money_account_send_bank_transfer_unavailable">Indisponível</string>
+  <string name="money_account_send_unavailable_description">Tente novamente dentro de 5 minutos</string>
+  <string name="money_account_send_unavailable_title">Operação atualmente indisponível</string>
   <string name="prediction_account_open_detailed_view">Abrir visualização detalhada</string>
   <string name="prediction_account_subtitle">Adicione fundos e comece a prever</string>
   <string name="prediction_account_title">Conta de previsões</string>
@@ -248,6 +257,7 @@
   <string name="prediction_withdraw_status_sent_description">O recebimento pode levar até %1$d minutos</string>
   <string name="prediction_withdraw_status_sent_title">Saque enviado</string>
   <string name="tangempay_cancel_kyc">Ocultar estado</string>
+  <string name="tangempay_cashback_accruals_pay_description">Até ao dia 11 do mês seguinte, após verificar se as transações cumprem as regras do programa de cashback</string>
   <string name="tangempay_kyc_rejected_button_text">Ocultar estado</string>
   <string name="tangempay_pay_support">Suporte</string>
   <string name="tangempay_sync_needed_body">Renove para ver o seu cartão e a sua conta</string>
@@ -257,6 +267,7 @@
   <string name="tangempay_topup_bank_transfer_title">De uma conta bancária</string>
   <string name="tangempay_topup_receive_title">De outra carteira ou plataforma de câmbio</string>
   <string name="tangempay_topup_swap_title">Da sua Tangem Wallet</string>
+  <string name="tangempay_unified_onboarding_cashback_title">Até 2%%\n%1$s</string>
   <string name="tangempay_unified_onboarding_description">Um cartão Visa e uma conta em USD, tudo em um. Verifique a sua identidade e aceda aos produtos disponíveis na sua região</string>
   <string name="tangempay_unified_onboarding_fees_caption">Dólar por dólar</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">Sem taxas de câmbio nem mensalidades</string>
@@ -271,6 +282,7 @@
   <string name="tangempay_va_banking_details_error_description">Tente novamente ou contacte o suporte se o problema persistir</string>
   <string name="tangempay_va_banking_details_error_title">Não foi possível carregar os dados bancários</string>
   <string name="token_details_balance_total">Saldo total</string>
+  <string name="virtual_account_transactions_empty">Ainda não existem transações. Comece a gastar e consulte o histórico aqui.</string>
   <string name="yield_module_main_promo_button">Experimentar o Modo Yield</string>
   <string name="yield_module_main_promo_subtitle">Coloque suas moedas paradas para render. Sem bloqueio, saque a qualquer momento.</string>
   <string name="yield_module_main_promo_title">Ganhe com sua cripto até %1$s%% APY</string>
