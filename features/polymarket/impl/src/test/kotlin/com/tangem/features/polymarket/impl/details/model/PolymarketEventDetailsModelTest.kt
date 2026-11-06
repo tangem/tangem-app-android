@@ -531,6 +531,7 @@ internal class PolymarketEventDetailsModelTest {
             messageSender = messageSender,
             regionAccess = regionAccess,
             urlOpener = urlOpener,
+            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
         ).also { model = it }
     }
 

@@ -21,6 +21,7 @@ import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -53,7 +54,6 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.SolanaGaslessError
-import com.tangem.domain.transaction.error.SolanaGaslessSendError
 import com.tangem.domain.transaction.models.AllowanceInfo
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.GaslessProtocolData
@@ -62,7 +62,6 @@ import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.models.tron.canPayNativeFee
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
-import com.tangem.domain.transaction.usecase.gasless.CreateAndSendSolanaGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -138,7 +137,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
     private val solanaGaslessSwapResolver: SolanaGaslessSwapResolver,
-    private val createAndSendSolanaGaslessTransactionUseCase: CreateAndSendSolanaGaslessTransactionUseCase,
 ) : SwapInteractor {
 
     private val getSelectedAppCurrencyUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -964,6 +962,7 @@ internal class SwapInteractorImpl @Inject constructor(
     ): SwapTransactionState {
         val networkId = fromSwapCurrencyStatus.currency.network.rawId
         val tronGaslessFee = fee?.tronGaslessFeeOrNull()
+        val evmGaslessFee = fee?.evmGaslessFeeOrNull()
         return when {
             fee != null && tronGaslessFee != null -> onSwapTronGaslessDex(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -974,13 +973,22 @@ internal class SwapInteractorImpl @Inject constructor(
                 swapFee = fee,
                 tronGaslessFee = tronGaslessFee,
             )
+            fee != null && evmGaslessFee != null -> onSwapEvmGaslessDex(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                provider = swapProvider,
+                swapData = swapData,
+                amountToSwap = amountToSwap,
+                swapFee = fee,
+                evmGaslessFee = evmGaslessFee,
+            )
             isSolana(networkId) -> onSwapSolanaDex(
                 provider = swapProvider,
                 swapData = swapData,
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
                 amountToSwap = amountToSwap,
-                balanceStatus = balanceStatus,
+                sponsoredFeeFor = sponsoredFeeFactory(balanceStatus, fee, fromSwapCurrencyStatus.currency.network),
             )
             isPsbtSwapSupported(networkId) -> onSwapUtxoPsbt(
                 provider = swapProvider,
@@ -1178,9 +1186,56 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    @Suppress("LongParameterList")
+    private suspend fun onSwapEvmGaslessDex(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        provider: SwapProvider,
+        swapData: SwapDataModel,
+        amountToSwap: String,
+        swapFee: SwapFee,
+        evmGaslessFee: TransactionFeeExtended,
+    ): SwapTransactionState {
+        val amountDecimal = amountToSwap.parseBigDecimalOrNull() ?: return SwapTransactionState.Error.UnknownError
+        val dexTransaction = swapData.transaction as ExpressTransactionModel.DEX
+
+        val swapTxData = createPlainDexTransaction(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            dexTransaction = dexTransaction,
+            swapFee = swapFee,
+            tronPayload = null,
+        ).getOrElse { error ->
+            TangemLogger.e("Failed to create EVM gasless swap tx data", error)
+            return SwapTransactionState.Error.UnknownError
+        }
+
+        return createAndSendGaslessTransactionUseCase(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            transactionData = swapTxData,
+            fee = evmGaslessFee,
+        ).fold(
+            ifLeft = { error -> SwapTransactionState.Error.TransactionError(error) },
+            ifRight = { txHash ->
+                finalizeDexSwapSuccess(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    provider = provider,
+                    swapData = swapData,
+                    amount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals),
+                    txHash = txHash,
+                    payInAddress = getPayoutAddress(swapTxData),
+                )
+            },
+        )
+    }
+
     private fun SwapFee.tronGaslessFeeOrNull(): TransactionFeeExtended? =
         (transactionFeeResult as? TransactionFeeResult.LoadedExtended)?.fee
             ?.takeIf { it.gaslessProtocolData is GaslessProtocolData.Tron }
+
+    private fun SwapFee.evmGaslessFeeOrNull(): TransactionFeeExtended? =
+        (transactionFeeResult as? TransactionFeeResult.LoadedExtended)?.fee
+            ?.takeIf { it.gaslessProtocolData is GaslessProtocolData.Evm }
 
     /**
      * [REDACTED_TASK_KEY] — selects the approval [Fee] matching the user-picked [FeeBucket] tier. Mirrors
@@ -1453,13 +1508,17 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    /**
+     * [sponsoredFeeFor] is set when the user picked the sponsored fee: the swap then goes out sponsored or not at all.
+     * The sponsor is resolved here again: the quote may still carry its status from before the fee was applied.
+     */
     private suspend fun onSwapSolanaDex(
         provider: SwapProvider,
         swapData: SwapDataModel,
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
         amountToSwap: String,
-        balanceStatus: SwapBalanceStatus,
+        sponsoredFeeFor: ((feePayer: String) -> TransactionFeeExtended)?,
     ): SwapTransactionState {
         val dexTransaction = swapData.transaction as? ExpressTransactionModel.DEX
         val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
@@ -1469,8 +1528,8 @@ internal class SwapInteractorImpl @Inject constructor(
             value = TransactionData.Compiled.Data.Bytes(Base64.decode(txDataBase64, Base64.NO_WRAP)),
         )
 
-        val sponsored = balanceStatus as? SwapBalanceStatus.SponsoredFee
-            ?: return handleSwapResult(
+        if (sponsoredFeeFor == null) {
+            return handleSwapResult(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
                 provider = provider,
@@ -1479,6 +1538,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 txData = compiledTransaction,
                 payInAddress = swapData.transaction.txTo,
             )
+        }
 
         suspend fun finalizeSponsoredSwap(signature: String) = finalizeDexSwapSuccess(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -1490,20 +1550,59 @@ internal class SwapInteractorImpl @Inject constructor(
             payInAddress = swapData.transaction.txTo,
         )
 
-        return createAndSendSolanaGaslessTransactionUseCase(
+        val feePayer = solanaGaslessSwapResolver.resolveFeePayer(fromSwapCurrencyStatus, provider, swapData)
+        if (feePayer == null) {
+            TangemLogger.i("Solana sponsored swap is not sent: no sponsor at send")
+            return SwapTransactionState.Error.SolanaGaslessError(SolanaGaslessError.ServiceUnavailable(code = null))
+        }
+
+        return sendSponsoredSolanaDex(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            compiledTransaction = compiledTransaction,
+            fee = sponsoredFeeFor(feePayer),
+            finalizeSponsoredSwap = ::finalizeSponsoredSwap,
+        )
+    }
+
+    private fun sponsoredFeeFactory(
+        balanceStatus: SwapBalanceStatus,
+        swapFee: SwapFee?,
+        network: Network,
+    ): ((feePayer: String) -> TransactionFeeExtended)? {
+        val storedFee = (balanceStatus as? SwapBalanceStatus.SponsoredFee)?.fee
+        // The picked fee wins: the quote keeps a sponsorship until the fee patch that follows a new pick
+        return when {
+            swapFee != null -> swapFee.takeIf { it.isSponsored }?.let { sponsored ->
+                { feePayer -> sponsored.toSponsoredFee(feePayer, network) }
+            }
+            storedFee != null -> { feePayer ->
+                storedFee.copy(gaslessProtocolData = GaslessProtocolData.Solana(feePayer = feePayer, network = network))
+            }
+            else -> null
+        }
+    }
+
+    private suspend fun sendSponsoredSolanaDex(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        compiledTransaction: TransactionData.Compiled,
+        fee: TransactionFeeExtended,
+        finalizeSponsoredSwap: suspend (signature: String) -> SwapTransactionState,
+    ): SwapTransactionState {
+        return createAndSendGaslessTransactionUseCase(
             userWallet = fromSwapCurrencyStatus.userWallet,
-            network = fromSwapCurrencyStatus.currency.network,
             transactionData = compiledTransaction,
-            feePayer = sponsored.feePayer,
+            fee = fee,
         ).fold(
             ifRight = { signature -> finalizeSponsoredSwap(signature) },
             ifLeft = { error ->
-                val maybeSent = (error as? SolanaGaslessSendError.Service)?.error as? SolanaGaslessError.MaybeSent
+                val serviceError = (error as? SendTransactionError.SolanaGasless)?.error
                 // The service books the signature before sending, so a swap it may have sent is tracked by it like
                 // any sent swap
-                maybeSent?.signature?.let { signature -> finalizeSponsoredSwap(signature) } ?: when (error) {
-                    is SolanaGaslessSendError.Signing -> SwapTransactionState.Error.TransactionError(error.error)
-                    is SolanaGaslessSendError.Service -> SwapTransactionState.Error.SolanaGaslessError(error.error)
+                val maybeSentSignature = (serviceError as? SolanaGaslessError.MaybeSent)?.signature
+                when {
+                    maybeSentSignature != null -> finalizeSponsoredSwap(maybeSentSignature)
+                    serviceError != null -> SwapTransactionState.Error.SolanaGaslessError(serviceError)
+                    else -> SwapTransactionState.Error.TransactionError(error)
                 }
             },
         )
@@ -2100,7 +2199,6 @@ internal class SwapInteractorImpl @Inject constructor(
         state: SwapState.QuotesLoadedState,
         fee: SwapFee,
         lastReducedBalanceBy: BigDecimal,
-        isSolanaGaslessSuppressed: Boolean,
     ): SwapState.QuotesLoadedState {
         val fromSwapCurrencyStatus = state.fromTokenInfo.swapCurrencyStatus
         val amount = state.fromTokenInfo.tokenAmount
@@ -2127,21 +2225,19 @@ internal class SwapInteractorImpl @Inject constructor(
         // an amount that does not fit still stands
         val isFeeLeftToSponsor = computedStatus is SwapBalanceStatus.Sufficient ||
             computedStatus is SwapBalanceStatus.InsufficientFee
-        val balanceStatus = if (fee.isSponsored && isFeeLeftToSponsor) {
-            val feePayer = if (isSolanaGaslessSuppressed) {
-                null
-            } else {
-                solanaGaslessSwapResolver.resolveFeePayer(
-                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                    provider = state.swapProvider,
-                    swapData = state.swapDataModel,
-                )
-            }
-            // Without a sponsor there is no fee to send with
-            feePayer?.let(SwapBalanceStatus::SponsoredFee) ?: SwapBalanceStatus.Pending
+        val feePayer = if (fee.isSponsored && isFeeLeftToSponsor) {
+            solanaGaslessSwapResolver.resolveFeePayer(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                provider = state.swapProvider,
+                swapData = state.swapDataModel,
+            )
         } else {
-            computedStatus
+            null
         }
+        // Without a sponsor the zero fee shown cannot be sent, and an empty SOL balance reads as not enough for it
+        val balanceStatus = feePayer
+            ?.let { SwapBalanceStatus.SponsoredFee(fee.toSponsoredFee(it, fromSwapCurrencyStatus.currency.network)) }
+            ?: computedStatus
         // The sponsor pays the network fee, so the user's balance checks must not count it
         val isSponsored = balanceStatus is SwapBalanceStatus.SponsoredFee
         val userPaidFee = if (isSponsored) BigDecimal.ZERO else nativeFee
@@ -2167,6 +2263,13 @@ internal class SwapInteractorImpl @Inject constructor(
             minAdaValue = minAdaValue,
         )
     }
+
+    // The fee token stays the SOL the user would otherwise pay with; the sponsor pays it instead
+    private fun SwapFee.toSponsoredFee(feePayer: String, network: Network) = TransactionFeeExtended(
+        transactionFee = TransactionFee.Single(normal = Fee.Common(fee.amount.copy(value = BigDecimal.ZERO))),
+        feeTokenId = selectedFeeToken.currency.id,
+        gaslessProtocolData = GaslessProtocolData.Solana(feePayer = feePayer, network = network),
+    )
 
     override suspend fun getSponsoredFeeAvailability(
         state: SwapState.QuotesLoadedState,

@@ -9,6 +9,7 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionCompon
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
@@ -275,7 +277,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         engine.onResume()
         engine.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-        assertThat(uiState.value.isPrimaryButtonEnabled).isTrue()
+        assertThat(uiState.value.isReadyToPlace).isTrue()
 
         // Act
         val prepared = engine.holdDuring { engine.prepare() }
@@ -336,5 +338,9 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
             scope = CoroutineScope(dispatchers.mainImmediate + engineJob),
         )
         return engine to uiState
+    }
+
+    private companion object {
+        const val QUOTE_MILLIS = 1_000L
     }
 }

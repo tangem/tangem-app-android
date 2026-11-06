@@ -16,6 +16,7 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 class CreateAndSendGaslessTransactionUseCase(
     private val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase,
     private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
+    private val createAndSendSolanaGaslessTransactionUseCase: CreateAndSendSolanaGaslessTransactionUseCase,
 ) {
 
     /**
@@ -37,6 +38,11 @@ class CreateAndSendGaslessTransactionUseCase(
                 fee = fee,
             )
             is GaslessProtocolData.Tron -> createAndSendTronGaslessTransactionUseCase(
+                userWallet = userWallet,
+                transactionData = transactionData,
+                fee = fee,
+            )
+            is GaslessProtocolData.Solana -> createAndSendSolanaGaslessTransactionUseCase(
                 userWallet = userWallet,
                 transactionData = transactionData,
                 fee = fee,

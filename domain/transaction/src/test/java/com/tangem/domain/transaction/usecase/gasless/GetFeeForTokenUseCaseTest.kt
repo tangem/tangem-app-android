@@ -18,6 +18,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -133,5 +134,41 @@ internal class GetFeeForTokenUseCaseTest {
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(GetFeeError.DataError::class.java)
         verify { evmGaslessFeeResolver wasNot Called }
+    }
+
+    @Test
+    fun `GIVEN integrated approval WHEN invoke THEN approval is passed to the resolver`() = runTest {
+        // Arrange
+        val approval = GaslessApproval(spenderAddress = "0xspender", approvalTransaction = mockk())
+        val tokenFee = TransactionFee.Single(
+            normal = Fee.Common(amount = Amount(blockchain = Blockchain.Polygon, value = BigDecimal.ONE)),
+        )
+        val expected = TransactionFeeExtended(transactionFee = tokenFee, feeTokenId = accountUsdc.id)
+        coEvery {
+            nonPortfolioCurrenciesProvider.getStatuses(userWalletId, accountNetwork)
+        } returns listOf(accountCoinStatus, accountUsdcStatus)
+        coEvery {
+            evmGaslessFeeResolver.resolveWithSelectedFeeToken(
+                userWallet = userWallet,
+                network = accountNetwork,
+                transactionData = transactionData,
+                nativeCurrencyStatus = accountCoinStatus,
+                tokenCurrencyStatus = accountUsdcStatus,
+                nativeTransactionData = transactionData,
+                sentAmount = null,
+                approval = approval,
+            )
+        } returns expected.right()
+
+        // Act
+        val actual = sut(
+            userWallet = userWallet,
+            token = accountUsdc,
+            transactionData = transactionData,
+            approval = approval,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(expected.right())
     }
 }

@@ -16,13 +16,16 @@ import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.analytics.McpAuthorizationAnalyticsEvent
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.EnableAddressesSharingUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.mcp.impl.R
@@ -44,6 +47,8 @@ internal class McpPairModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val mcpRepository: McpRepository,
     private val enableAddressesSharingUseCase: EnableAddressesSharingUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val walletsRepository: WalletsRepository,
     private val messageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     val selectorController: PortfolioSelectorController,
@@ -56,7 +61,7 @@ internal class McpPairModel @Inject constructor(
     val stackNavigation = StackNavigation<McpPairRoutes>()
 
     val portfolioFetcher: PortfolioFetcher = portfolioFetcherFactory.create(
-        mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true, isOnlyRegistered = true),
+        mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
         scope = modelScope,
     )
 
@@ -145,11 +150,35 @@ internal class McpPairModel @Inject constructor(
     private fun onConnect(wallet: UserWallet) {
         connectState.update { it.copy(isConnecting = true) }
         verification.value?.let { analytics.send(McpAuthorizationAnalyticsEvent.ButtonApprove(it)) }
-        if (systemNotificationsStateProvider.areNotificationsEnabled()) {
-            pair(wallet.walletId)
-        } else {
-            requestPushPermissionChannel.trySend(Unit)
+        modelScope.launch {
+            when {
+                !walletsRepository.isWalletRegistered(wallet.walletId) -> {
+                    connectState.update { it.copy(isConnecting = false) }
+                    showWalletNeedsSyncAlert()
+                }
+                systemNotificationsStateProvider.areNotificationsEnabled() -> pair(wallet.walletId)
+                else -> requestPushPermissionChannel.trySend(Unit)
+            }
         }
+    }
+
+    /**
+     * A wallet the authentication service does not know yet cannot be authorized, and binding it runs on the
+     * main wallet screen. The agent is left waiting and the user is sent to do the binding themselves.
+     */
+    private fun showWalletNeedsSyncAlert() {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.mcp_connection_request_wallet_needs_sync_title),
+                message = resourceReference(R.string.mcp_connection_request_wallet_needs_sync_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_got_it),
+                        onClick = onDismissRequest,
+                    )
+                },
+            ),
+        )
     }
 
     /** The client and the scope are never chosen here, they are echoed back from the verification. */
@@ -212,9 +241,11 @@ internal class McpPairModel @Inject constructor(
     }
 
     private suspend fun selectInitialWallet(): Boolean {
-        val accountId = portfolioFetcher.data.first()
-            .balances.values.firstOrNull()
-            ?.accountsBalance?.mainAccount?.accountId
+        val selectedWallet = getSelectedWalletSyncUseCase().getOrNull()
+        val balances = portfolioFetcher.data.first().balances
+        val portfolio = selectedWallet?.let { balances[it.walletId] }
+            ?: balances.values.firstOrNull()
+        val accountId = portfolio?.accountsBalance?.mainAccount?.accountId
         if (accountId == null) {
             router.pop()
             return false
@@ -226,13 +257,20 @@ internal class McpPairModel @Inject constructor(
     private fun observeSelectedWallet() {
         combine(
             flow = portfolioFetcher.data,
-            flow2 = selectorController.selectedAccountWithData(portfolioFetcher)
+            flow2 = selectorController.selectedAccount
                 .filterNotNull()
-                // Re-selecting a wallet closes the selector and returns to the agent info screen.
                 .runningReduce { _, new ->
-                    stackNavigation.pop()
+                    val isWalletRegistered = walletsRepository
+                        .isWalletRegistered(new.userWalletId)
+                    if (!isWalletRegistered) {
+                        showWalletNeedsSyncAlert()
+                    } else {
+                        stackNavigation.pop()
+                    }
                     new
-                },
+                }
+                .flatMapLatest { selectorController.selectedAccountWithData(portfolioFetcher) }
+                .filterNotNull(),
             flow3 = connectState,
             flow4 = verification,
             transform = ::createState,

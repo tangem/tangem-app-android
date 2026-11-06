@@ -219,17 +219,41 @@ internal class CollectiblesBlockModelTest {
         }
 
     @Test
-    fun `GIVEN the selector is shown WHEN a wallet is picked THEN the sheet closes AND that wallet opens`() = runTest {
+    fun `GIVEN the selector is shown WHEN a wallet is picked THEN the sheet closes AND the wallet awaits it`() =
+        runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA, walletB)
+            val model = createModel(testScope = this)
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+            model.onClick()
+            advanceUntilIdle()
+
+            // Act
+            selection.value = walletB to accountStatus
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+            assertThat(model.walletAwaitingSheetClose.value).isEqualTo(walletBId)
+            assertThat(openedSheets)
+                .containsExactly(CollectiblesBlockComponent.WalletSelectorConfig, null)
+                .inOrder()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a picked wallet awaits the sheet WHEN the sheet has closed THEN that wallet opens`() = runTest {
         // Arrange
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA, walletB)
         every { collectiblesAccountStatusSupplier(walletBId) } returns flowOf(ONBOARDED)
         val model = createModel(testScope = this)
-        val openedSheets = model.bottomSheetNavigation.trackSlot()
         model.onClick()
+        advanceUntilIdle()
+        selection.value = walletB to accountStatus
         advanceUntilIdle()
 
         // Act
-        selection.value = walletB to accountStatus
+        model.onWalletSheetClosed(walletBId)
         advanceUntilIdle()
 
         // Assert
@@ -242,9 +266,7 @@ internal class CollectiblesBlockModelTest {
                 onComplete = any(),
             )
         }
-        assertThat(openedSheets)
-            .containsExactly(CollectiblesBlockComponent.WalletSelectorConfig, null)
-            .inOrder()
+        assertThat(model.walletAwaitingSheetClose.value).isNull()
         model.onDestroy()
     }
 
@@ -257,11 +279,15 @@ internal class CollectiblesBlockModelTest {
         advanceUntilIdle()
         selection.value = walletB to accountStatus
         advanceUntilIdle()
+        model.onWalletSheetClosed(walletBId)
+        advanceUntilIdle()
 
         // Act
         model.onClick()
         advanceUntilIdle()
         selection.value = walletB to accountStatus
+        advanceUntilIdle()
+        model.onWalletSheetClosed(walletBId)
         advanceUntilIdle()
 
         // Assert

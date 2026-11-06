@@ -514,10 +514,12 @@ internal object TransactionDomainModule {
     fun provideCreateAndSendGaslessTransactionUseCase(
         createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase,
         createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
+        createAndSendSolanaGaslessTransactionUseCase: CreateAndSendSolanaGaslessTransactionUseCase,
     ): CreateAndSendGaslessTransactionUseCase {
         return CreateAndSendGaslessTransactionUseCase(
             createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
             createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
+            createAndSendSolanaGaslessTransactionUseCase = createAndSendSolanaGaslessTransactionUseCase,
         )
     }
 
@@ -570,6 +572,29 @@ internal object TransactionDomainModule {
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
             yieldModuleFeatureToggles = yieldModuleFeatureToggles,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideEstimateFeeForGaslessBatchUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        gaslessYieldRepository: GaslessYieldRepository,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
+        currencyChecksRepository: CurrencyChecksRepository,
+        resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    ): EstimateFeeForGaslessBatchUseCase {
+        return EstimateFeeForGaslessBatchUseCase(
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig,
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            gaslessYieldRepository = gaslessYieldRepository,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+            currencyChecksRepository = currencyChecksRepository,
+            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
         )
     }
 

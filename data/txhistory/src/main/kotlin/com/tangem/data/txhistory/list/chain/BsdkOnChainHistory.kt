@@ -163,11 +163,16 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
     }
 
     private fun Action.toBatchAction(): HistoryTxBatchAction = when (this) {
-        is Action.Reload -> BatchAction.Reload(
-            TxHistoryListConfig(userWalletId, currency, shouldRefresh = shouldRefresh),
-        )
-        Action.LoadMore -> BatchAction.LoadMore(TxHistoryListConfig(userWalletId, currency, shouldRefresh = false))
+        is Action.Reload -> BatchAction.Reload(listConfig(shouldRefresh = shouldRefresh))
+        Action.LoadMore -> BatchAction.LoadMore(listConfig(shouldRefresh = false))
     }
+
+    private fun listConfig(shouldRefresh: Boolean) = TxHistoryListConfig(
+        userWalletId = userWalletId,
+        currency = currency,
+        shouldRefresh = shouldRefresh,
+        shouldUseCacheWhenOffline = env.shouldUseCacheWhenOffline,
+    )
 
     private fun oldestLoadedTimestamp(batchState: BatchListState<Int, PaginationWrapper<TxInfo>>): Long =
         batchState.data.asSequence()

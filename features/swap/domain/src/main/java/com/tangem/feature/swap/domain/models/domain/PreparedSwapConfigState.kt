@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.models.domain
 
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.feature.swap.domain.models.SwapAmount
 
 /**
@@ -57,8 +58,9 @@ sealed interface SwapBalanceStatus {
     ) : SwapBalanceStatus
 
     /**
-     * Solana DEX only: the native balance cannot cover the fee, but the gasless service pays it as [feePayer].
-     * Treated as [Sufficient] everywhere except sending, which goes through the gasless service.
+     * Solana DEX only: the gasless service pays the network fee. [fee] is zero and carries the sponsor as
+     * `GaslessProtocolData.Solana`. Treated as [Sufficient] everywhere except sending, which goes through the
+     * gasless send with [fee].
      */
-    data class SponsoredFee(val feePayer: String) : SwapBalanceStatus
+    data class SponsoredFee(val fee: TransactionFeeExtended) : SwapBalanceStatus
 }

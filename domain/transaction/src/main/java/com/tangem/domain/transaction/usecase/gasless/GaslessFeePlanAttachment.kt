@@ -10,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import java.math.BigDecimal
@@ -24,6 +25,7 @@ internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
     transactionData: TransactionData,
     isYieldActive: Boolean,
     sentAmount: BigDecimal? = null,
+    approval: GaslessApproval? = null,
 ): TransactionFeeExtended {
     val feeTokenContract = (tokenStatus.currency as? CryptoCurrency.Token)?.contractAddress
         ?: raiseIllegalStateError("gasless fee currency must be a token")
@@ -35,6 +37,7 @@ internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
         tokenFeeExtended = tokenFeeExtended,
         sendAmountInFeeToken = computeSendAmountInFeeToken(transactionData, feeTokenContract, sentAmount),
         isYieldActive = isYieldActive,
+        approval = approval,
     )
 }
 
@@ -47,6 +50,7 @@ internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
     tokenFeeExtended: TransactionFeeExtended,
     sendAmountInFeeToken: BigDecimal,
     isYieldActive: Boolean,
+    approval: GaslessApproval? = null,
 ): TransactionFeeExtended {
     val feeInTokenCurrency = tokenFeeExtended.transactionFee.normal as? Fee.Ethereum.TokenCurrency
         ?: raiseIllegalStateError("gasless token fee must be Fee.Ethereum.TokenCurrency")
@@ -57,6 +61,7 @@ internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
         tokenFee = feeInTokenCurrency,
         isYieldActive = isYieldActive,
         sendAmountInFeeToken = sendAmountInFeeToken,
+        approval = approval,
     ).bind()
 
     return tokenFeeExtended.copy(gaslessFeePlan = plan)

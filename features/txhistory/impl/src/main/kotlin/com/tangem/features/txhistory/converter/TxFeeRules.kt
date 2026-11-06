@@ -10,6 +10,7 @@ import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.StringsSigns
@@ -66,10 +67,16 @@ internal fun TxInfo.feeForAmount(): SdkAmount? = (type as? TransactionType.Netwo
 /**
  * Whether the matched on-chain leg is the one the user paid for. Only a swap viewed from its `from` token qualifies:
  * that leg is the user's own pay-in tx. A payout leg — a swap viewed from its `to` token, or any onramp — is sent by
- * the provider, so its on-chain fee is not the user's and must never surface as "Network fee".
+ * the provider, so its on-chain fee is not the user's and must never surface as "Network fee". The exception is a
+ * DEX swap within one network: it pays out inside the pay-in tx, so its `to` side is matched to the user's own tx.
  */
 internal val ExpressTx.isPayInLeg: Boolean
-    get() = this is ExpressTx.Swap && isOutgoing
+    get() = this is ExpressTx.Swap && (isOutgoing || isMatchedToPayIn())
+
+private fun ExpressTx.Swap.isMatchedToPayIn(): Boolean {
+    val payinHash = tx.payinHash ?: return false
+    return txInfo?.explorerHash.equals(payinHash, ignoreCase = true)
+}
 
 // endregion
 

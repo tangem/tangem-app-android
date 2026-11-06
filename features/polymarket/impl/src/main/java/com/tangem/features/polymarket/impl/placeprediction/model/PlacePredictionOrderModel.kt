@@ -19,22 +19,28 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFraction
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MIN_QUOTABLE_AMOUNT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.toStatusRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 @ModelScoped
 internal class PlacePredictionOrderModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -43,6 +49,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     quoteEngineFactory: PlacePredictionQuoteEngine.Factory,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
+    buttonStyleFactory: PlacePredictionButtonStyle.Factory,
 ) : Model(), PlacePredictionOrderIntents, PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -53,6 +60,12 @@ internal class PlacePredictionOrderModel @Inject constructor(
     private val quoteEngine = quoteEngineFactory.create(params = params, uiState = uiState, scope = modelScope)
 
     private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
+
+    private val buttonStyle = buttonStyleFactory.create(
+        userWalletId = params.userWalletId,
+        uiState = uiState,
+        scope = modelScope,
+    )
 
     val feeSheet = PlacePredictionFeeSheet(
         uiState = uiState,
@@ -70,6 +83,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     fun onResume() {
         quoteEngine.onResume()
+        buttonStyle.checkSessionKey()
     }
 
     fun onPause() {
@@ -79,7 +93,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     fun isSubmitting(): Boolean = orderSubmitter.isSubmitting()
 
     override fun onAmountChange(value: String) {
-        if (isSubmitting() || value == uiState.value.amountValue) return
+        if (orderSubmitter.isSubmitting() || value == uiState.value.amountValue) return
 
         quoteEngine.onAmountChange(value = value)
     }
@@ -98,7 +112,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     private fun enterAmount(value: String) {
         val amount = value.parseBigDecimalOrNull() ?: return
         val current = uiState.value.amountValue.parseBigDecimalOrNull()
-        if (isSubmitting() || current != null && current.compareTo(amount) == 0) return
+        if (orderSubmitter.isSubmitting() || current != null && current.compareTo(amount) == 0) return
 
         quoteEngine.onAmountChange(value = value, isPicked = true)
     }
@@ -144,12 +158,39 @@ internal class PlacePredictionOrderModel @Inject constructor(
         quoteEngine.retryQuote()
     }
 
-    override fun onPlaceClick() {
-        val prepared = quoteEngine.prepare() ?: return
+    override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) {
+        when (uiState.value.placeAction) {
+            PlaceActionUM.Ready -> quoteEngine.prepare()?.let { place(it, confirmedWith) } ?: settleButtonIfIdle()
+            PlaceActionUM.Unavailable -> settleButtonIfIdle()
+        }
+    }
 
+    private fun settleButtonIfIdle() {
+        if (!uiState.value.isIdle()) return
+
+        resetHold()
+        buttonStyle.applyIfIdle()
+    }
+
+    private fun PlacePredictionUM.isIdle(): Boolean = submit is SubmitUM.Idle
+
+    private fun resetHold() {
+        uiState.update { it.copy(holdResetKey = it.holdResetKey + 1) }
+    }
+
+    private fun place(prepared: PreparedPrediction, confirmedWith: PlaceButtonStyleUM) {
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             quoteEngine.holdDuring {
-                val result = orderSubmitter.submit(prepared = prepared) ?: return@holdDuring
+                val result = orderSubmitter.submit(
+                    prepared = prepared,
+                    confirmedWith = confirmedWith,
+                    onKeyLost = buttonStyle::onSessionKeyLost,
+                )
+                if (result == null) {
+                    buttonStyle.onPlacementFailed()
+                    settleButtonIfIdle()
+                    return@holdDuring
+                }
                 router.replaceAll(prepared.toStatusRoute(result = result))
             }
         }

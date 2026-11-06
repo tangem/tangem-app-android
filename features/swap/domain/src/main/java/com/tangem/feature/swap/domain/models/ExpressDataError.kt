@@ -32,7 +32,11 @@ sealed class ExpressDataError : Throwable() {
         val currentAllowance: BigDecimal,
     ) : ExpressDataError()
 
+    data class ExchangeInvalidAmountError(override val code: Int) : ExpressDataError()
+
     data class ExchangeNotEnoughBalanceError(override val code: Int) : ExpressDataError()
+
+    data class ExchangeNotEnoughBalanceForGasFeeError(override val code: Int) : ExpressDataError()
 
     data class ExchangeInvalidAddressError(override val code: Int) : ExpressDataError()
 

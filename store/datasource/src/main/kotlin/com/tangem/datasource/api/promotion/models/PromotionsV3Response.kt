@@ -44,6 +44,8 @@ data class PromotionsV3Response(
         @Json(name = "publicImage") val publicImage: String,
         @Json(name = "tncLink") val tncLink: Link,
         @Json(name = "actionButtonName") val actionButtonName: String,
+        @Json(name = "payoutButtonName") val payoutButtonName: String?,
+        @Json(name = "payoutAccountTitle") val payoutAccountTitle: String?,
     )
 
     /** One flat shape for every block [type], so a type unknown to this app version parses as [BlockType.UNKNOWN]. */

@@ -37,6 +37,7 @@ import com.tangem.domain.polymarket.signing.PolymarketSigningSession
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
+import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCase
@@ -313,6 +314,12 @@ internal object PolymarketDomainModule {
         tradingStore = tradingStore,
         sessionCredentialsProvider = sessionCredentialsProvider,
     )
+
+    @Provides
+    @Singleton
+    fun provideCanSignPredictionOrderWithSessionKeyUseCase(
+        router: PolymarketOrderSigningRouter,
+    ): CanSignPredictionOrderWithSessionKeyUseCase = CanSignPredictionOrderWithSessionKeyUseCase(router = router)
 
     @Provides
     @Singleton

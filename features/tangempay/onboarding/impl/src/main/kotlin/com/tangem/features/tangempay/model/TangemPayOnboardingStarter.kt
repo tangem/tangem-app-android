@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.model
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -18,6 +19,8 @@ import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
+import com.tangem.domain.wallets.models.CreateHotWalletError
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.hot.sdk.model.HotAuth
@@ -36,6 +39,7 @@ internal class TangemPayOnboardingStarter @Inject constructor(
     private val getCustomerOffersUseCase: GetCustomerOffersUseCase,
     private val createHotWalletUseCase: CreateHotWalletUseCase,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     enum class Mode { StartOnboarding, ContinueToKyc }
@@ -129,15 +133,26 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         TangemLogger.i("[TangemPay][HWO]Creating hot wallet")
         return createHotWalletUseCase(auth = HotAuth.NoAuth, mnemonicType = MnemonicType.Words12)
             .onRight { TangemLogger.i("[TangemPay][HWO]Hot wallet created") }
-            .getOrElse {
-                TangemLogger.e("[TangemPay][HWO] Failed to create hot wallet")
+            .getOrElse { error ->
+                val cause = (error as? CreateHotWalletError.Failed)?.cause
+                TangemLogger.e("[TangemPay][HWO] Failed to create hot wallet: $error", cause)
                 onLoadingChange(false)
-                uiMessageSender.send(
-                    DialogMessage(
+                val message = when (error) {
+                    CreateHotWalletError.LimitReached -> {
+                        analyticsEventHandler.send(
+                            NoticeMobileWalletLimit(
+                                type = NoticeMobileWalletLimit.Type.Create,
+                                limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                            ),
+                        )
+                        Dialogs.hotWalletsLimitReachedDialog()
+                    }
+                    is CreateHotWalletError.Failed -> DialogMessage(
                         title = resourceReference(R.string.common_something_went_wrong),
                         message = resourceReference(R.string.common_unknown_error),
-                    ),
-                )
+                    )
+                }
+                uiMessageSender.send(message)
                 null
             }
     }

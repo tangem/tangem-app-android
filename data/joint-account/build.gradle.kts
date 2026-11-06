@@ -23,14 +23,11 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.moshi)
     implementation(deps.web3j.core)
+    implementation(deps.bouncycastle.bcprov)
     // endregion
 
     // region Tangem SDK
     implementation(tangemDeps.card.core)
-    // AndroidSecureStorageV2 for the joint account invites (see com.tangem.data.jointaccount.store).
-    implementation(tangemDeps.card.android) {
-        exclude(module = "joda-time")
-    }
     // endregion
 
     // region DI

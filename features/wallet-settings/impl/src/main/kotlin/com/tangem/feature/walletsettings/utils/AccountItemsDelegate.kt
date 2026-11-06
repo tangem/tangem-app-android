@@ -1,6 +1,7 @@
 package com.tangem.feature.walletsettings.utils
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.account.AccountCollectiblesItemUMConverter
 import com.tangem.common.ui.account.AccountJointItemUMConverter
 import com.tangem.common.ui.account.AccountPortfolioItemUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -23,6 +24,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
+import com.tangem.domain.models.account.isShown
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.extension.isAccountsSupported
@@ -119,6 +121,15 @@ internal class AccountItemsDelegate @Inject constructor(
             return WalletSettingsAccountsUM.JointAccount(state = accountItemUM)
         }
 
+        fun AccountStatus.Collectibles.mapCollectibles(): WalletSettingsAccountsUM {
+            val accountItemUM = AccountCollectiblesItemUMConverter(
+                appCurrency = appCurrency,
+                isBalanceHidden = isBalanceHidden,
+            ).convert(this)
+
+            return WalletSettingsAccountsUM.CollectiblesAccount(state = accountItemUM)
+        }
+
         val accounts = accountStatusList.accountStatuses.filterIsInstance<AccountStatus.Personal>()
         val jointAccounts = accountStatusList.accountStatuses.filterIsInstance<AccountStatus.Joint>()
 
@@ -131,6 +142,7 @@ internal class AccountItemsDelegate @Inject constructor(
             when (status) {
                 is AccountStatus.Personal -> status.mapCryptoPortfolio()
                 is AccountStatus.Joint -> status.mapJoint()
+                is AccountStatus.Collectibles -> status.takeIf { it.value.isShown }?.mapCollectibles()
                 else -> null
             }
         }

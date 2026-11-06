@@ -22,6 +22,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.registration.WalletLinkError
 import com.tangem.domain.wallets.usecase.DeriveCurrencyAndOwnerKeysUseCase
 import com.tangem.domain.wallets.usecase.LinkWalletToDeviceUseCase
+import com.tangem.feature.wallet.link.WalletLinkAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLinkProgressHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -256,13 +257,14 @@ internal class WalletWarningsClickIntentsTest {
 
             // Assert
             coVerify(exactly = 1) { linkWalletToDeviceUseCase(userWallet) }
+            verify(exactly = 1) { analyticsEventHandler.send(WalletLinkAnalyticsEvent.ButtonLinkWallet()) }
             pendingLink.complete(Unit)
             advanceUntilIdle()
         }
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN link fails WHEN link wallet click THEN linking ends and error shown unless cancelled`(
+        fun `GIVEN link fails WHEN link wallet click THEN linking ends and error or cancel is reported`(
             model: LinkFailureModel,
         ) = runTest {
             // Arrange
@@ -275,16 +277,28 @@ internal class WalletWarningsClickIntentsTest {
             // Assert
             assertThat(walletLinkProgressHolder.isLinking(userWalletId).first()).isFalse()
             verify(exactly = if (model.isErrorShown) 1 else 0) { uiMessageSender.send(any<DialogMessage>()) }
+            verify(exactly = if (model.isCanceledReported) 1 else 0) {
+                analyticsEventHandler.send(WalletLinkAnalyticsEvent.Canceled())
+            }
         }
 
         private fun provideTestModels() = listOf(
-            LinkFailureModel(error = WalletLinkError.Cancelled, isErrorShown = false),
-            LinkFailureModel(error = WalletLinkError.Failed(reason = "api"), isErrorShown = true),
-            LinkFailureModel(error = WalletLinkError.NotSupported, isErrorShown = true),
+            LinkFailureModel(error = WalletLinkError.Cancelled, isErrorShown = false, isCanceledReported = true),
+            LinkFailureModel(error = WalletLinkError.WrongCard, isErrorShown = false, isCanceledReported = false),
+            LinkFailureModel(
+                error = WalletLinkError.Failed(reason = "api"),
+                isErrorShown = true,
+                isCanceledReported = false,
+            ),
+            LinkFailureModel(error = WalletLinkError.NotSupported, isErrorShown = true, isCanceledReported = false),
         )
     }
 
-    data class LinkFailureModel(val error: WalletLinkError, val isErrorShown: Boolean)
+    data class LinkFailureModel(
+        val error: WalletLinkError,
+        val isErrorShown: Boolean,
+        val isCanceledReported: Boolean,
+    )
 
     private fun createImplementor(
         scope: TestScope,

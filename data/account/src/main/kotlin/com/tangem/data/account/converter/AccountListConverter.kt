@@ -1,8 +1,6 @@
 package com.tangem.data.account.converter
 
 import arrow.core.getOrElse
-import com.tangem.data.account.utils.isJoint
-import com.tangem.data.account.utils.isPersonal
 import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
@@ -33,15 +31,10 @@ internal class AccountListConverter @AssistedInject constructor(
 
     private val cryptoPortfolioConverter: CryptoPortfolioConverter = cryptoPortfolioConverterFactory.create(userWallet)
 
-    /** `api/v2` is also used for collectibles, so joint rows can arrive while joint accounts are off */
-    private val WalletAccountDTO.isShownPortfolio: Boolean
-        get() = (isPersonal || isJoint) && supportedAccountTypes.isSupported(this)
-
     override fun convert(value: GetWalletAccountsResponse): AccountList {
         val sortType = value.wallet.sort?.let(TokensSortTypeConverter::convert) ?: TokensSortType.NONE
         val groupType = value.wallet.group?.let(TokensGroupTypeConverter::convert) ?: TokensGroupType.NONE
-        val (portfolioRows, otherRows) = value.accounts.partition { it.isShownPortfolio }
-        val accounts = portfolioRows.map(::convertAccount) + convertNonPortfolioAccounts(otherRows)
+        val accounts = value.accounts.mapNotNull(::convertRow)
 
         return AccountList(
             userWalletId = userWallet.walletId,
@@ -72,19 +65,17 @@ internal class AccountListConverter @AssistedInject constructor(
         return cryptoPortfolioConverter.convert(value.copy(tokens = value.tokens.orEmpty()))
     }
 
-    private fun convertNonPortfolioAccounts(rows: List<WalletAccountDTO>): List<Account> =
-        rows.mapNotNull { accountDTO ->
-            when (accountDTO.type) {
-                WalletAccountDTO.Type.COLLECTIBLES -> {
-                    Account.Collectibles(userWalletId = userWallet.walletId)
-                        .takeIf { supportedAccountTypes.isSupported(accountDTO) }
-                }
-                WalletAccountDTO.Type.CRYPTO,
-                WalletAccountDTO.Type.JOINT,
-                null,
-                -> null
-            }
+    private fun convertRow(accountDTO: WalletAccountDTO): Account? {
+        if (!supportedAccountTypes.isSupported(accountDTO)) return null
+
+        return when (accountDTO.type) {
+            WalletAccountDTO.Type.CRYPTO,
+            WalletAccountDTO.Type.JOINT,
+            null,
+            -> convertAccount(accountDTO)
+            WalletAccountDTO.Type.COLLECTIBLES -> Account.Collectibles(userWalletId = userWallet.walletId)
         }
+    }
 
     @AssistedFactory
     interface Factory {

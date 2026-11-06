@@ -402,10 +402,11 @@ internal class TangemPayDetailsModel @Inject constructor(
         )
     }
 
-    suspend fun loadBankCredentials(productInstanceId: String): Either<VisaApiError, BankCredentials> =
+    suspend fun retryBankCredentials(productInstanceId: String): Either<VisaApiError, Unit> =
         getBankCredentialsUseCase(userWalletId = userWalletId, productInstanceId = productInstanceId)
+            .map(::onVaBankingDetailsResolved)
 
-    fun onVaBankingDetailsResolved(bankCredentials: BankCredentials) {
+    private fun onVaBankingDetailsResolved(bankCredentials: BankCredentials) {
         // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
         // instead of the intro deposit sheet that would need another "Show details" tap.
         onShowVirtualAccountRequisites(bankCredentials)
@@ -478,7 +479,13 @@ internal class TangemPayDetailsModel @Inject constructor(
             is TangemPayTxHistoryItem.Payment -> "payment" to "unknown"
             is TangemPayTxHistoryItem.Spend -> "spend" to item.status.name.lowercase()
         }
-        analytics.send(TangemPayAnalyticsEvents.TransactionInListClicked(type = type, status = status))
+        analytics.send(
+            TangemPayAnalyticsEvents.TransactionInListClicked(
+                product = TangemPayAnalyticsEvents.Product.CARD,
+                type = type,
+                status = status,
+            ),
+        )
         bottomSheetNavigation.activate(
             configuration = TangemPayDetailsNavigation.TransactionDetails(
                 transaction = item,

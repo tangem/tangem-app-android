@@ -7,12 +7,12 @@ sealed interface CollectiblesAccountError {
     /** The feature is off, or there is no wallet to use. */
     data object Unsupported : CollectiblesAccountError
 
-    /** No delegate yet — call `CollectiblesHotDelegate.provision` first. */
-    data object DelegateNotProvisioned : CollectiblesAccountError
+    /** No session key yet — call `CollectiblesSessionKey.provision` first. */
+    data object SessionKeyNotProvisioned : CollectiblesAccountError
 
-    data class DelegateKeyCreationFailed(val cause: Throwable) : CollectiblesAccountError
+    data class SessionKeyCreationFailed(val cause: Throwable) : CollectiblesAccountError
 
-    data class DelegateSigningFailed(val cause: Throwable) : CollectiblesAccountError
+    data class SessionKeySigningFailed(val cause: Throwable) : CollectiblesAccountError
 
     /** The user dismissed the card session or the access code prompt. */
     data object Cancelled : CollectiblesAccountError
