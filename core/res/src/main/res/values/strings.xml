@@ -170,6 +170,7 @@
   <string name="alert_manage_tokens_unsupported_message">Tokens in %1$s network are not supported by this card or ring due to firmware limitation.</string>
   <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card or ring?</string>
   <string name="alert_unsupported_card">This card is not designed to work with this app</string>
+  <string name="all_services_title">Services</string>
   <string name="app_settings_access_code_warning">Set an access code to enable biometrics</string>
   <string name="app_settings_biometrics_footer">Use %1$s to unlock your wallet and approve sensitive actions, like signing transactions. For hardware wallets, a card or ring is still required to sign.</string>
   <string name="app_settings_default_fee">Default Fee</string>
@@ -1162,8 +1163,8 @@
   <string name="hw_upgrade_to_cold_badge">Upgrade to a cold wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Keep your crypto safe with Tangem\'s top-tier hardware wallet.</string>
   <string name="hw_upgrade_to_cold_banner_title">Upgrade your wallet to hardware security</string>
-  <string name="hw_wallets_limit_alert_message">You can have up to %1$s mobile wallets in Tangem. To create or import a new one, remove one of your existing mobile wallets first.</string>
-  <string name="hw_wallets_limit_alert_title">You’ve reached the mobile wallet limit</string>
+  <string name="hw_wallets_limit_alert_message">You can have up to %1$s mobile wallets in Tangem. To add another one, remove one of your current mobile wallets first.</string>
+  <string name="hw_wallets_limit_alert_title">Mobile wallet limit reached</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -1179,7 +1180,7 @@
   <string name="introduction_button_buy_tangem">Buy Tangem</string>
   <string name="introduction_button_create_wallet">Create wallet</string>
   <string name="introduction_button_i_have_a_wallet">I have a wallet</string>
-  <string name="introduction_create_wallet_hardware_description">If you already have a Tangem Wallet</string>
+  <string name="introduction_create_wallet_hardware_description">Connect yours or get a new Tangem Wallet</string>
   <string name="introduction_create_wallet_hardware_title">Tangem Card or Ring</string>
   <string name="introduction_create_wallet_seed_phrase_description">Start without a hardware wallet</string>
   <string name="introduction_create_wallet_seed_phrase_title">Create seed phrase wallet</string>
@@ -2511,7 +2512,7 @@
   <string name="social_login_error_cloud_access_description">Make sure Tangem has access to your %s account, then try again</string>
   <string name="social_login_error_cloud_access_title">Couldn\'t restore wallet</string>
   <string name="social_login_error_generic">Something went wrong. Please try again</string>
-  <string name="social_login_error_generic_v2">Please check your internet connection and try again.</string>
+  <string name="social_login_error_generic_v2">Please try again. If the problem persists, check your internet connection.</string>
   <string name="social_login_error_network_description">Check your connection and try again.</string>
   <string name="social_login_error_network_title">No internet connection</string>
   <string name="social_login_error_no_account">Add your %s account to this device to continue.</string>
@@ -2915,7 +2916,7 @@
   <string name="tangempay_campaign_spend_description">With a digital card via Apple Pay or Google Pay, no additional fees for purchases</string>
   <string name="tangempay_campaign_unavailable_description">You can order a regular one</string>
   <string name="tangempay_campaign_unavailable_title">Unable to get special card</string>
-  <string name="tangempay_cancel_kyc">Hide verification from the main screen</string>
+  <string name="tangempay_cancel_kyc">Hide status</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Please contact support</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">You have exceeded your attempts for activation</string>
   <string name="tangempay_card_activation_description">Enter last 4 digits of your card number</string>
@@ -3120,7 +3121,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Verification in progress for Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Documents are usually verified automatically within 5 minutes. In rare cases, if manual review is required, it may take up to 48 hours.</string>
   <string name="tangempay_kyc_rejected">Rejected</string>
-  <string name="tangempay_kyc_rejected_button_text">Hide verification</string>
+  <string name="tangempay_kyc_rejected_button_text">Hide status</string>
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
   <string name="tangempay_kyc_rejected_description_span">your profile.</string>
   <string name="tangempay_main_select_plan">Select plan</string>
@@ -3514,12 +3515,14 @@
   <string name="transaction_history_status_rewards_claim_failed">Rewards claim failed</string>
   <string name="transaction_history_status_rewards_claimed">Rewards claimed</string>
   <string name="transaction_history_status_rewards_restake_failed">Rewards restake failed</string>
+  <string name="transaction_history_status_send_cancelled">Send cancelled</string>
   <string name="transaction_history_status_send_failed">Send failed</string>
   <string name="transaction_history_status_stake_failed">Stake failed</string>
   <string name="transaction_history_status_supply_failed">Supply failed</string>
   <string name="transaction_history_status_swap_failed">Swap failed</string>
   <string name="transaction_history_status_top_up_failed">Top-up failed</string>
   <string name="transaction_history_status_topping_up">Topping up</string>
+  <string name="transaction_history_status_transfer_cancelled">Transfer cancelled</string>
   <string name="transaction_history_status_transfer_failed">Transfer failed</string>
   <string name="transaction_history_status_transferring">Transferring</string>
   <string name="transaction_history_status_unstake_failed">Unstake failed</string>

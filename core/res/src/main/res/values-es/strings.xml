@@ -1007,7 +1007,7 @@
   <string name="introduction_button_buy_tangem">Comprar Tangem</string>
   <string name="introduction_button_create_wallet">Crear wallet</string>
   <string name="introduction_button_i_have_a_wallet">Ya tengo una wallet</string>
-  <string name="introduction_create_wallet_hardware_description">Si ya tienes una Tangem Wallet</string>
+  <string name="introduction_create_wallet_hardware_description">Conecta o consigue una Tangem Wallet</string>
   <string name="introduction_create_wallet_hardware_title">Tangem Card o Ring</string>
   <string name="introduction_create_wallet_seed_phrase_description">Empieza sin una wallet de hardware</string>
   <string name="introduction_create_wallet_seed_phrase_title">Crear wallet con frase semilla</string>
@@ -2614,7 +2614,7 @@
   <string name="tangempay_campaign_spend_description">Con tarjeta digital mediante Apple Pay o Google Pay, sin comisiones adicionales en las compras</string>
   <string name="tangempay_campaign_unavailable_description">Puedes pedir una normal</string>
   <string name="tangempay_campaign_unavailable_title">No se puede obtener la tarjeta especial</string>
-  <string name="tangempay_cancel_kyc">Ocultar verificación de la pantalla</string>
+  <string name="tangempay_cancel_kyc">Ocultar estado</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Contacta con el soporte</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">Has superado el número de intentos de activación</string>
   <string name="tangempay_card_activation_description">Introduce los últimos 4 dígitos del número de tu tarjeta</string>
@@ -2818,7 +2818,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Verificación en progreso para Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Los documentos suelen verificarse automáticamente en menos de 5 minutos. En casos excepcionales que requieran revisión manual, el proceso puede tardar hasta 48 horas.</string>
   <string name="tangempay_kyc_rejected">Rechazado</string>
-  <string name="tangempay_kyc_rejected_button_text">Ocultar verificación</string>
+  <string name="tangempay_kyc_rejected_button_text">Ocultar estado</string>
   <string name="tangempay_kyc_rejected_description">Lo sentimos, no pudimos verificar</string>
   <string name="tangempay_kyc_rejected_description_span">u identidad.</string>
   <string name="tangempay_main_select_plan">Seleccionar plan</string>
