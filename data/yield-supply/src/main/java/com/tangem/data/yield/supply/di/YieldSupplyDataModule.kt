@@ -1,8 +1,6 @@
 package com.tangem.data.yield.supply.di
 
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.yield.supply.DefaultYieldModuleAddressProvider
 import com.tangem.data.yield.supply.DefaultYieldSupplyRepository
 import com.tangem.data.yield.supply.DefaultYieldSupplyErrorResolver
@@ -70,7 +68,6 @@ internal object YieldSupplyDataModule {
         analyticsExceptionHandler: AnalyticsExceptionHandler,
         appPreferencesStore: AppPreferencesStore,
         growPreferencesKeys: GrowPreferencesKeys,
-        featureTogglesManager: FeatureTogglesManager,
     ): YieldSupplyRepository {
         return DefaultYieldSupplyRepository(
             yieldSupplyApi = yieldSupplyApi,
@@ -81,9 +78,6 @@ internal object YieldSupplyDataModule {
             analyticsExceptionHandler = analyticsExceptionHandler,
             appPreferencesStore = appPreferencesStore,
             growPreferencesKeys = growPreferencesKeys,
-            isMerklIncentivesEnabled = featureTogglesManager.isFeatureEnabled(
-                FeatureToggles.TWI_1520_MERKL_INCENTIVES_ENABLED,
-            ),
         )
     }
 
