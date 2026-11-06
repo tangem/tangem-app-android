@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingIntegrationID

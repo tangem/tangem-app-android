@@ -30,7 +30,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
-import com.appsflyer.AppsFlyerLib
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -169,7 +168,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         // A restored or Recents launch gets the original intent again, which is not a new opening
         val isFreshLaunch = savedInstanceState == null &&
             intent?.flags?.and(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0
-        if (isFreshLaunch) intent?.let(::notifyIfOpenedByLinkOrPush)
+        if (isFreshLaunch && intent != null) {
+            notifyIfOpenedByLinkOrPush(intent)
+            bindMarketingUid(intent)
+        }
 
         // We have to allow adjust_resize (can only be specified in the manifest) for Android <=10,
         // in order for imePadding to work correctly
@@ -357,15 +359,13 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         super.onNewIntent(intent)
         TangemLogger.i("onNewIntent: data=${intent.data}, extras=${intent.extras?.keySet()}")
 
-        // Warm start: let the AppsFlyer SDK resolve a OneLink delivered while the app is already running.
-        AppsFlyerLib.getInstance().performOnDeepLinking(intent, this)
-
         val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
         if (isFromPush) {
             analyticsEventsHandler.send(Push.PushNotificationOpened())
         }
 
         notifyIfOpenedByLinkOrPush(intent)
+        bindMarketingUid(intent)
         handleDeepLink(intent = intent, isFromOnNewIntent = true)
     }
 
@@ -411,6 +411,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         if (isDeepLink || isFromPush || PayloadToDeeplinkConverter.convertBundle(intent.extras) != null) {
             walletDeepLinkActionTrigger.onOpenedByLinkOrPush()
         }
+    }
+
+    private fun bindMarketingUid(intent: Intent) {
+        val deepLink = intent.data ?: PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri() ?: return
+        deeplinkFactory.bindMarketingUid(deepLink)
     }
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {

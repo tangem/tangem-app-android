@@ -43,10 +43,19 @@ internal class WcRouterTest {
         router.popToMatching(OuterRoute::class, predicate = { true })
         router.navigate(transformer = { it })
         router.contains(OuterRoute)
+        router.defaultCompletionHandler(isSuccess = false, errorMessage = "Unable to push OuterRoute")
 
         // Assert
         assertThat(fallBackRouter.calls).containsExactly(
-            "push", "replaceCurrent", "replaceAll", "popTo", "popToClass", "popToMatching", "navigate", "contains",
+            "push",
+            "replaceCurrent",
+            "replaceAll",
+            "popTo",
+            "popToClass",
+            "popToMatching",
+            "navigate",
+            "contains",
+            "defaultCompletionHandler",
         ).inOrder()
     }
 
@@ -111,6 +120,10 @@ internal class WcRouterTest {
         override suspend fun contains(route: Route): Boolean {
             calls += "contains"
             return false
+        }
+
+        override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
+            calls += "defaultCompletionHandler"
         }
     }
 }

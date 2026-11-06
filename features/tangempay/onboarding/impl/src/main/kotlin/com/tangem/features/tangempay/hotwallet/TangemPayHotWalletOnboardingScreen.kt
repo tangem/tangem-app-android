@@ -5,22 +5,30 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.media.VideoSurfaceState
 import com.tangem.core.ui.components.legal.LegalCaption
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.tangempay.ui.TangemPayBundleIntroductionLayout
 import com.tangem.features.tangempay.ui.TangemPayOnboardingLayout
+import com.tangem.features.tangempay.ui.TangemPayUnifiedOnboardingLayout
 
 @Composable
-internal fun TangemPayHotWalletOnboardingScreen(state: TangemPayHotWalletOnboardingUM, modifier: Modifier = Modifier) {
-    if (state.isPayBundleIntroductionEnabled) {
-        TangemPayBundleIntroductionLayout(
+internal fun TangemPayHotWalletOnboardingScreen(
+    state: TangemPayHotWalletOnboardingUM,
+    video: VideoSurfaceState?,
+    modifier: Modifier = Modifier,
+) {
+    if (state.isUnifiedOnboarding) {
+        TangemPayUnifiedOnboardingLayout(
             modifier = modifier,
-            isGetCardLoading = state.isLoading,
-            onGetCardClick = state.onGetCardClick,
+            video = video,
+            isGetStartedLoading = state.isLoading,
+            onGetStartedClick = state.onGetCardClick,
             onTermsClick = state.onTermsClick,
-            onTermsOfServiceClick = state.onTermsOfServiceClick,
-            onPrivacyPolicyClick = state.onPrivacyPolicyClick,
+            onCloseClick = null,
         )
+    } else if (state.isPayBundleIntroductionEnabled) {
+        TangemPayBundleIntroductionLayout(state = state, video = video, modifier = modifier)
     } else {
         TangemPayOnboardingLayout(
             modifier = modifier,
@@ -44,12 +52,14 @@ private fun TangemPayHotWalletOnboardingScreenPreview() {
         TangemPayHotWalletOnboardingScreen(
             state = TangemPayHotWalletOnboardingUM(
                 isPayBundleIntroductionEnabled = false,
+                isUnifiedOnboarding = false,
                 isLoading = false,
                 onGetCardClick = {},
                 onTermsClick = {},
                 onTermsOfServiceClick = {},
                 onPrivacyPolicyClick = {},
             ),
+            video = null,
             modifier = Modifier.fillMaxSize(),
         )
     }

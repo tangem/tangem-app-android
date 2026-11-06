@@ -81,7 +81,7 @@ internal fun PortfolioSelectorContent(
                 val portfolioShape = RoundedCornerShape(14.dp)
                 val border = BorderStroke(
                     width = 1.dp,
-                    color = TangemTheme.colors.text.accent,
+                    color = TangemTheme.colors3.text.accent.blue,
                 )
 
                 when (item) {
@@ -91,7 +91,7 @@ internal fun PortfolioSelectorContent(
                             .fillMaxWidth()
                             .heightIn(min = 68.dp)
                             .clip(portfolioShape)
-                            .background(TangemTheme.colors.background.action)
+                            .background(TangemTheme.colors3.bg.secondary)
                             .conditional(item.isSelected) { border(border, portfolioShape) }
                             .clickable(enabled = item.item.isEnabled, onClick = item.item.onClick)
                             .padding(all = 12.dp)
@@ -115,7 +115,7 @@ private fun WalletNameRow(model: PortfolioSelectorItemUM.GroupTitle, modifier: M
         modifier = modifier,
         text = model.name.resolveReference(),
         style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
@@ -128,7 +128,7 @@ private fun Preview(@PreviewParameter(PortfolioSelectorPreviewStateProvider::cla
     TangemThemePreview {
         PortfolioSelectorContent(
             state = params,
-            modifier = Modifier.background(color = TangemTheme.colors.background.tertiary),
+            modifier = Modifier.background(color = TangemTheme.colors3.bg.primary),
         )
     }
 }

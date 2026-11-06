@@ -182,7 +182,6 @@ sealed class AppRoute(val path: String) : Route {
          * ManageTokens screen launched from Onboarding by another route. See `OnboardingRoute.ManageTokens`.
          */
         enum class Source {
-            STORIES,
             SETTINGS,
             ACCOUNT,
             WALLET,
@@ -277,6 +276,8 @@ sealed class AppRoute(val path: String) : Route {
          * PredictionTopUp anchors the prediction account as the concrete TO — its deposit token at the bridge
          * address — and is the only way the app funds that account through the swap screen.
          * MoneyTopUp anchors the Money account's USDC as the concrete TO at its deposit address.
+         * MoneyWithdraw anchors the Money account's USDC as the concrete FROM, spent with the wallet's key at the
+         * account's derivation path.
          */
         @Serializable
         sealed interface AccountFlow {
@@ -291,6 +292,8 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable data object CollectiblesTopUp : AccountFlow
 
             @Serializable data object MoneyTopUp : AccountFlow
+
+            @Serializable data object MoneyWithdraw : AccountFlow
         }
     }
 
@@ -310,7 +313,7 @@ sealed class AppRoute(val path: String) : Route {
         val nextRoute: AppRoute? = null,
     ) : AppRoute(path = "/push_notification") {
         enum class Source {
-            /** Launch-time ask, before any wallet exists: the legacy onboarding and the ToS screen. */
+            /** Launch-time ask after accepting the ToS on the Disclaimer screen, before any wallet exists. */
             Stories,
 
             /** Bottom sheet on the wallet screen. */
@@ -467,14 +470,7 @@ sealed class AppRoute(val path: String) : Route {
     object CreateWalletSelection : AppRoute(path = "/create_wallet_selection")
 
     @Serializable
-    data class CreateWalletStart(
-        val mode: Mode,
-    ) : AppRoute(path = "/create_wallet_start") {
-        enum class Mode {
-            ColdWallet,
-            HotWallet,
-        }
-    }
+    data object CreateWalletStart : AppRoute(path = "/create_wallet_start")
 
     @Serializable
     data class CreateHardwareWallet(
@@ -657,24 +653,6 @@ sealed class AppRoute(val path: String) : Route {
         val product: TangemPayProduct,
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/tangem_pay_eligibility")
-
-    @Serializable
-    data class MoneyAccountOnboarding(
-        val mode: Mode,
-    ) : AppRoute(path = "/money_account_onboarding/$mode") {
-
-        @Serializable
-        sealed class Mode {
-            @Serializable
-            data class Deeplink(val deeplink: String) : Mode()
-
-            @Serializable
-            data object FromMain : Mode()
-
-            @Serializable
-            data object FromDetailsScreen : Mode()
-        }
-    }
 
     @Serializable
     data class MoneyAccountDetails(

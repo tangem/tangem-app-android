@@ -12,6 +12,8 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.polymarket.model.PolymarketActivity
+import com.tangem.domain.polymarket.model.PolymarketActivity.RedeemResult
+import com.tangem.domain.polymarket.model.PolymarketActivity.Type
 import com.tangem.domain.polymarket.model.PolymarketActivityFilter
 import com.tangem.domain.polymarket.model.PolymarketActivityState
 import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCase
@@ -132,15 +134,17 @@ internal class PolymarketHistoryModel @Inject constructor(
     }
 
     private fun tabs(selected: PolymarketActivityFilter) = listOf(
-        null to R.string.common_all,
-        PolymarketActivity.Type.BUY to R.string.prediction_history_bought,
-        PolymarketActivity.Type.SELL to R.string.prediction_history_sold,
-        PolymarketActivity.Type.DEPOSIT to R.string.prediction_history_funds_added,
-        PolymarketActivity.Type.WITHDRAW to R.string.transaction_history_withdrawn,
-    ).map { (type, title) ->
-        val filter = PolymarketActivityFilter(type)
+        PolymarketActivityFilter() to R.string.common_all,
+        PolymarketActivityFilter(Type.BUY) to R.string.prediction_history_bought,
+        PolymarketActivityFilter(Type.SELL) to R.string.prediction_history_sold,
+        PolymarketActivityFilter(Type.DEPOSIT) to R.string.prediction_history_funds_added,
+        PolymarketActivityFilter(Type.WITHDRAW) to R.string.transaction_history_withdrawn,
+        PolymarketActivityFilter(Type.REDEEM, RedeemResult.WON) to R.string.prediction_history_redeemed,
+        PolymarketActivityFilter(Type.REDEEM, RedeemResult.LOST) to R.string.prediction_positions_lost,
+        PolymarketActivityFilter(Type.REDEEM, RedeemResult.SPLIT) to R.string.prediction_positions_split,
+    ).map { (filter, title) ->
         TangemTabItemUM.Content(
-            id = type?.name ?: "ALL",
+            id = filter.redeemResult?.name ?: filter.type?.name ?: "ALL",
             label = resourceReference(title),
             isSelected = selected == filter,
             onClick = { session.selectFilter(filter) },

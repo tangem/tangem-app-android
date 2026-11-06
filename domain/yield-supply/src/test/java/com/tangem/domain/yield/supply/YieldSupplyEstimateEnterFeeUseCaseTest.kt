@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderF
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -100,10 +101,47 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val txs = (result as Either.Right).value
         val deployFee = txs.first().fee as Fee.Ethereum.Legacy
         val enterFee = txs.last().fee as Fee.Ethereum.Legacy
-        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
+        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(29_400))
         Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(700_000))
         Truth.assertThat(enterFee.amount.value).isEqualToIgnoringScale(BigDecimal("0.07"))
     }
+
+    @Test
+    fun `GIVEN upgrade-wrapped enter WHEN invoke without estimation THEN it is treated as enter and gets constant gas limit`() =
+        runTest {
+            // Arrange
+            val fee = TransactionFee.Single(ethLegacyFee())
+            val deployTx = getDeployTx()
+            val wrappedEnterTx = getEnterTx().let { tx ->
+                val enterCallData = (tx.extras as EthereumTransactionExtras).callData!!
+                tx.copy(
+                    extras = EthereumTransactionExtras(
+                        EthereumYieldSupplyUpgradeToAndCallCallData(
+                            newImplementation = "0x5555555555555555555555555555555555555555",
+                            innerCallData = enterCallData,
+                        ),
+                    ),
+                )
+            }
+            coEvery {
+                blockAidGasEstimate.getGasEstimation(any(), any())
+            } returns GasEstimationResult(emptyList()).right()
+            coEvery { feeRepository.calculateFee(any(), any(), any()) } returns fee
+
+            // Act
+            val result = useCase(
+                userWallet = userWallet,
+                cryptoCurrency = cryptoCurrency,
+                transactionDataList = listOf(deployTx, wrappedEnterTx),
+            )
+
+            // Assert
+            val txs = (result as Either.Right).value
+            Truth.assertThat(txs.map { (it.fee as Fee.Ethereum.Legacy).gasLimit })
+                .containsExactly(BigInteger.valueOf(29_400), BigInteger.valueOf(700_000))
+                .inOrder()
+            coVerify(exactly = 0) { feeRepository.calculateFee(any(), any(), wrappedEnterTx) }
+        }
 
     @Test
     fun `test not enter transaction uses gas limit Legacy`() = runTest {
@@ -130,8 +168,8 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val txs = (result as Either.Right).value
         val deployFee = txs.first().fee as Fee.Ethereum.Legacy
         val approveFee = txs.last().fee as Fee.Ethereum.Legacy
-        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
-        Truth.assertThat(approveFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
+        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(29_400))
+        Truth.assertThat(approveFee.gasLimit).isEqualTo(BigInteger.valueOf(29_400))
     }
 
     @Test
@@ -161,7 +199,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val txs = (result as Either.Right).value
         val deployFee = txs.first().fee as Fee.Ethereum.Legacy
         val enterFee = txs.last().fee as Fee.Ethereum.Legacy
-        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
+        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(29_400))
         Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(700_000))
     }
 
@@ -192,7 +230,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val txs = (result as Either.Right).value
         val deployFee = txs.first().fee as Fee.Ethereum.EIP1559
         val enterFee = txs.last().fee as Fee.Ethereum.EIP1559
-        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
+        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(29_400))
         Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(700_000))
         Truth.assertThat(enterFee.amount.value).isEqualToIgnoringScale(BigDecimal("0.07"))
     }
@@ -222,8 +260,8 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val txs = (result as Either.Right).value
         val deployFee = txs.first().fee as Fee.Ethereum.EIP1559
         val approveFee = txs.last().fee as Fee.Ethereum.EIP1559
-        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
-        Truth.assertThat(approveFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
+        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(29_400))
+        Truth.assertThat(approveFee.gasLimit).isEqualTo(BigInteger.valueOf(29_400))
     }
 
     @Test
@@ -253,7 +291,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val txs = (result as Either.Right).value
         val deployFee = txs.first().fee as Fee.Ethereum.EIP1559
         val enterFee = txs.last().fee as Fee.Ethereum.EIP1559
-        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
+        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(29_400))
         Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(700_000))
     }
 
@@ -281,7 +319,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
 
         val txs = (result as Either.Right).value
         val enterFee = txs.first().fee as Fee.Ethereum.Legacy
-        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
+        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(29_400))
     }
 
     @Test

@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>UnreachableCode:OnboardingNoteCreateWalletModel.kt$OnboardingNoteCreateWalletModel$params.childParams.commonState.value.scanResponse ?: return@launch</ID>
-  </CurrentIssues>
-</SmellBaseline>

@@ -14,6 +14,7 @@ import com.tangem.blockchain.network.ResultChecker
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
@@ -172,7 +173,7 @@ class SendTransactionUseCase(
             val extras = tx.extras
             when (extras) {
                 is EthereumTransactionExtras -> {
-                    val txType = when (extras.callData) {
+                    val txType = when (extras.callData?.unwrapYieldModuleUpgrade()) {
                         is EthereumYieldSupplyEnterCallData -> EventTransactionTypeDto.DEPOSIT
                         is EthereumYieldSupplySendCallData -> EventTransactionTypeDto.SEND
                         is EthereumYieldSupplyExitCallData -> EventTransactionTypeDto.WITHDRAW

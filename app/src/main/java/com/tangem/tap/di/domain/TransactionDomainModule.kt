@@ -14,6 +14,7 @@ import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.usecase.gasless.ResolveGaslessFeePlanUseCase
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.nft.NFTFeatureToggles
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -290,6 +291,7 @@ internal object TransactionDomainModule {
         getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
         dynamicAddressesRepository: DynamicAddressesRepository,
         userWalletsListRepository: UserWalletsListRepository,
+        nftFeatureToggles: NFTFeatureToggles,
     ): ReceiveAddressesFactory {
         return ReceiveAddressesFactory(
             getEnsNameUseCase = getEnsNameUseCase,
@@ -297,6 +299,7 @@ internal object TransactionDomainModule {
             getDynamicReceiveAddressUseCase = getDynamicReceiveAddressUseCase,
             dynamicAddressesRepository = dynamicAddressesRepository,
             userWalletsListRepository = userWalletsListRepository,
+            nftFeatureToggles = nftFeatureToggles,
         )
     }
 
@@ -322,11 +325,13 @@ internal object TransactionDomainModule {
     fun provideGetAvailableFeeTokensUseCase(
         gaslessTransactionRepository: GaslessTransactionRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         currencyChecksRepository: CurrencyChecksRepository,
         isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
     ): GetAvailableFeeTokensUseCase {
         return GetAvailableFeeTokensUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             gaslessTransactionRepository = gaslessTransactionRepository,
             currencyChecksRepository = currencyChecksRepository,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
@@ -436,12 +441,14 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideGetFeeForTokenUseCase(
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         currencyChecksRepository: CurrencyChecksRepository,
         evmGaslessFeeResolver: EvmGaslessFeeResolver,
         tronGaslessFeeResolver: TronGaslessFeeResolver,
     ): GetFeeForTokenUseCase {
         return GetFeeForTokenUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             currencyChecksRepository = currencyChecksRepository,
             evmGaslessFeeResolver = evmGaslessFeeResolver,
             tronGaslessFeeResolver = tronGaslessFeeResolver,
@@ -474,11 +481,13 @@ internal object TransactionDomainModule {
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
         singleAccountListSupplier: SingleAccountListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         gaslessSignerProvider: GaslessSignerProvider,
     ): CreateAndSendEvmGaslessTransactionUseCase {
         return CreateAndSendEvmGaslessTransactionUseCase(
             walletManagersFacade = walletManagersFacade,
             singleAccountListSupplier = singleAccountListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             gaslessTransactionRepository = gaslessTransactionRepository,
             gaslessSignerProvider = gaslessSignerProvider,
         )
@@ -503,8 +512,10 @@ internal object TransactionDomainModule {
         gaslessTransactionRepository: GaslessTransactionRepository,
         gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+        yieldModuleFeatureToggles: YieldModuleFeatureToggles,
     ): EstimateFeeForTokenUseCase {
         return EstimateFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -512,8 +523,10 @@ internal object TransactionDomainModule {
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            yieldModuleFeatureToggles = yieldModuleFeatureToggles,
         )
     }
 
@@ -524,9 +537,11 @@ internal object TransactionDomainModule {
         gaslessTransactionRepository: GaslessTransactionRepository,
         gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         estimateFeeUseCase: EstimateFeeUseCase,
         currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+        yieldModuleFeatureToggles: YieldModuleFeatureToggles,
     ): EstimateFeeForGaslessTxUseCase {
         return EstimateFeeForGaslessTxUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -534,7 +549,32 @@ internal object TransactionDomainModule {
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             estimateFeeUseCase = estimateFeeUseCase,
+            currencyChecksRepository = currencyChecksRepository,
+            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            yieldModuleFeatureToggles = yieldModuleFeatureToggles,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideEstimateFeeForGaslessBatchUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        gaslessYieldRepository: GaslessYieldRepository,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
+        currencyChecksRepository: CurrencyChecksRepository,
+        resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    ): EstimateFeeForGaslessBatchUseCase {
+        return EstimateFeeForGaslessBatchUseCase(
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig,
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            gaslessYieldRepository = gaslessYieldRepository,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
         )

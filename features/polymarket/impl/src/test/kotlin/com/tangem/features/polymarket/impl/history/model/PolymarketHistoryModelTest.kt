@@ -3,8 +3,10 @@ package com.tangem.features.polymarket.impl.history.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.res.R
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketActivity
 import com.tangem.domain.polymarket.model.PolymarketActivityFilter
@@ -32,6 +34,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -84,6 +88,51 @@ internal class PolymarketHistoryModelTest {
         assertThat(model.uiState.value.content).isEqualTo(Content.NoResults)
         assertThat(tabs.single { it.isSelected }.id).isEqualTo("BUY")
         verify(exactly = 1) { session.selectFilter(PolymarketActivityFilter()) }
+    }
+
+    @Test
+    fun `GIVEN history WHEN opening THEN shows all eight filters in order`() = runTest {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        runCurrent()
+        val tabs = model.uiState.value.tabs.filterIsInstance<TangemTabItemUM.Content>()
+
+        // Assert
+        assertThat(tabs.map { it.label }).containsExactly(
+            resourceReference(R.string.common_all),
+            resourceReference(R.string.prediction_history_bought),
+            resourceReference(R.string.prediction_history_sold),
+            resourceReference(R.string.prediction_history_funds_added),
+            resourceReference(R.string.transaction_history_withdrawn),
+            resourceReference(R.string.prediction_history_redeemed),
+            resourceReference(R.string.prediction_positions_lost),
+            resourceReference(R.string.prediction_positions_split),
+        ).inOrder()
+        assertThat(tabs.map { it.id }.distinct()).hasSize(8)
+    }
+
+    @ParameterizedTest
+    @EnumSource(PolymarketActivity.RedeemResult::class)
+    fun `GIVEN a redemption tab WHEN selected THEN requests its result and selects only that tab`(
+        result: PolymarketActivity.RedeemResult,
+    ) = runTest {
+        // Arrange
+        val model = createModel()
+        val filter = PolymarketActivityFilter(PolymarketActivity.Type.REDEEM, result)
+        runCurrent()
+
+        // Act
+        model.uiState.value.tabs.filterIsInstance<TangemTabItemUM.Content>().single { it.id == result.name }.onClick()
+        state.value = PolymarketActivityState(filter = filter, status = PaginationStatus.EndOfPagination)
+        runCurrent()
+
+        // Assert
+        verify(exactly = 1) { session.selectFilter(filter) }
+        val tabs = model.uiState.value.tabs.filterIsInstance<TangemTabItemUM.Content>()
+        assertThat(tabs.single { it.isSelected }.id).isEqualTo(result.name)
+        assertThat(model.uiState.value.content).isEqualTo(Content.NoResults)
     }
 
     @Test

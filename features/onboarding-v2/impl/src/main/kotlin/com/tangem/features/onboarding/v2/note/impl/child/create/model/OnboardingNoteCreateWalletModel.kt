@@ -48,7 +48,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
     init {
         analyticsEventHandler.send(OnboardingAnalyticsEvent.CreateWallet.ScreenOpened())
         modelScope.launch {
-            val scanResponse = params.childParams.commonState.value.scanResponse ?: return@launch
+            val scanResponse = params.childParams.commonState.value.scanResponse
             if (!cardRepository.isActivationStarted(scanResponse.card.cardId)) {
                 analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Started())
             }
@@ -63,7 +63,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
             _uiState.update {
                 it.copy(isCreateWalletInProgress = true)
             }
-            val scanResponse = params.childParams.commonState.value.scanResponse ?: return@launch
+            val scanResponse = params.childParams.commonState.value.scanResponse
             when (val result = tangemSdkManager.createProductWallet(scanResponse)) {
                 is CompletionResult.Success -> {
                     analyticsEventHandler.send(

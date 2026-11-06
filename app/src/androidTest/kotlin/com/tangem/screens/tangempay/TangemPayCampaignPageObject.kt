@@ -29,11 +29,6 @@ class TangemPayCampaignPageObject(semanticsProvider: SemanticsNodeInteractionsPr
 
     val spendBlockDescription: KNode = textNode(CoreResR.string.tangempay_campaign_spend_description)
 
-    val legalCaption: KNode = child {
-        hasText(getResourceString(CoreResR.string.common_privacy_policy), substring = true)
-        useUnmergedTree = true
-    }
-
     val getCardButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(CoreResR.string.tangempay_onboarding_get_card_button_text))

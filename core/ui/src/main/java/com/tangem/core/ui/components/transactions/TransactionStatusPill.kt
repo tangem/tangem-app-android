@@ -364,7 +364,6 @@ private fun previewPill(
     amount = amount?.let { stringReference(it) },
     currencySymbol = currencySymbol,
     subtitle = subtitle,
-    timestamp = 0L,
     onClick = {},
     isSuccess = isSuccess,
 )

@@ -39,12 +39,6 @@ dependencies {
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
-    // region Firebase
-    implementation(platform(deps.firebase.bom))
-    implementation(deps.firebase.analytics)
-    implementation(deps.firebase.crashlytics)
-    // endregion
-
     // region Tangem
     api(tangemDeps.blockchain) { exclude(module = "joda-time") }
     implementation(tangemDeps.card.core)

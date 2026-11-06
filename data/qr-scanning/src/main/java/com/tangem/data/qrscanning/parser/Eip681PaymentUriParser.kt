@@ -90,7 +90,7 @@ internal class Eip681PaymentUriParser(
         matchingCoins: List<CryptoCurrency.Coin>,
         allCurrencies: List<CryptoCurrency>,
     ): ClassifiedQrContent.PaymentUri? {
-        val valueWei = parsed.params[Param.VALUE.key]?.toBigDecimalOrNull()
+        val valueWei = parsed.params[Param.VALUE.key]?.toBigDecimalOrNull()?.takeIf { it.signum() > 0 }
 
         if (matchingCoins.isEmpty()) return null
 
@@ -132,7 +132,7 @@ internal class Eip681PaymentUriParser(
 
         if (matchingTokens.isEmpty()) return null
 
-        val rawAmount = parsed.params[Param.UINT256.key]?.toBigDecimalOrNull()
+        val rawAmount = parsed.params[Param.UINT256.key]?.toBigDecimalOrNull()?.takeIf { it.signum() > 0 }
         val amount = rawAmount?.fromSmallestUnit(matchingTokens.first().decimals)
 
         return ClassifiedQrContent.PaymentUri(

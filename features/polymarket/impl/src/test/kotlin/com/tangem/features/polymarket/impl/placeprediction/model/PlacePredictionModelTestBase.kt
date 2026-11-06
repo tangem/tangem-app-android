@@ -16,6 +16,9 @@ import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.interactor.SubmitPredictionOrderInteractor
+import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
@@ -54,6 +57,7 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionCompon
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -67,6 +71,8 @@ import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import kotlinx.coroutines.CoroutineScope
 
 internal abstract class PlacePredictionModelTestBase {
 
@@ -84,6 +90,8 @@ internal abstract class PlacePredictionModelTestBase {
     protected val signOrderInteractor: SignPredictionOrderInteractor = mockk()
     protected val placeOrderUseCase: PlacePredictionOrderUseCase = mockk()
     protected val awaitDelayedOrderUseCase: AwaitDelayedPredictionOrderUseCase = mockk()
+    protected val signingRouter: PolymarketOrderSigningRouter = mockk(relaxUnitFun = true)
+    protected val featureToggles: PolymarketFeatureToggles = mockk()
     protected val positionsRepository: PolymarketPositionsRepository = mockk()
     protected val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
     protected val positionsUpdateEmitter: PredictionPositionsUpdateEmitter = mockk(relaxed = true)
@@ -113,6 +121,8 @@ internal abstract class PlacePredictionModelTestBase {
             signOrderInteractor,
             placeOrderUseCase,
             awaitDelayedOrderUseCase,
+            signingRouter,
+            featureToggles,
             positionsRepository,
             fundingWindow,
             positionsUpdateEmitter,
@@ -128,15 +138,16 @@ internal abstract class PlacePredictionModelTestBase {
         every { fundingWindow.isOpen(USER_WALLET_ID) } returns isFundingOpen
         coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES.right()
 
-        coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent().right()
         coEvery { deriveAddressesUseCase.stored(userWalletId = USER_WALLET_ID) } returns ADDRESSES
         coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns
             PolymarketBalanceAllowance(balance = BigDecimal("100"), allowances = mapOf("0xspender" to BigDecimal("1000"))).right()
-        coEvery { getQuoteUseCase(request = any()) } returns createQuote().right()
+        coEvery { getQuoteUseCase(any(), request = any()) } returns createQuote().right()
         coEvery { getPriceUseCase(assetId = any(), side = any()) } returns BigDecimal("0.48").right()
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
+        every { featureToggles.isPolymarketSessionKeysEnabled } returns false
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
             createPosition().right()
     }
@@ -156,23 +167,42 @@ internal abstract class PlacePredictionModelTestBase {
             assetId = ASSET_ID,
         ),
         router: Router = this.router,
-    ): PlacePredictionAmountModel = PlacePredictionAmountModel(
-        paramsContainer = MutableParamsContainer(value = params),
-        router = router,
-        messageSender = messageSender,
-        dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-        getPolymarketEventUseCase = getEventUseCase,
-        getPolymarketCollateralCurrencyUseCase = getCollateralCurrencyUseCase,
-        derivePolymarketAddressesUseCase = deriveAddressesUseCase,
-        getPredictionOrderQuoteUseCase = getQuoteUseCase,
-        getPredictionPriceUseCase = getPriceUseCase,
-        checkPolymarketGeoblockUseCase = checkGeoblockUseCase,
-        positionsRepository = positionsRepository,
-        predictionFundingWindow = fundingWindow,
-        predictionAccountStatusSupplier = statusSupplier,
-        predictionBalancePoller = balancePoller,
-        refreshPredictionDepositRequisitesInteractor = refreshRequisites,
-    ).also(models::add)
+    ): PlacePredictionAmountModel {
+        val dispatchers = testScope.createTestingCoroutineDispatcherProvider()
+        return PlacePredictionAmountModel(
+            paramsContainer = MutableParamsContainer(value = params),
+            router = router,
+            dispatchers = dispatchers,
+            quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
+        ).also(models::add)
+    }
+
+    protected fun createQuoteEngineFactory(dispatchers: CoroutineDispatcherProvider, router: Router = this.router) =
+        object : PlacePredictionQuoteEngine.Factory {
+            override fun create(
+                params: PlacePredictionComponent.Params,
+                uiState: MutableStateFlow<PlacePredictionUM>,
+                scope: CoroutineScope,
+            ) = PlacePredictionQuoteEngine(
+                params = params,
+                uiState = uiState,
+                scope = scope,
+                router = router,
+                messageSender = messageSender,
+                dispatchers = dispatchers,
+                getPolymarketEventUseCase = getEventUseCase,
+                getPolymarketCollateralCurrencyUseCase = getCollateralCurrencyUseCase,
+                derivePolymarketAddressesUseCase = deriveAddressesUseCase,
+                getPredictionOrderQuoteUseCase = getQuoteUseCase,
+                getPredictionPriceUseCase = getPriceUseCase,
+                checkPolymarketGeoblockUseCase = checkGeoblockUseCase,
+                positionsRepository = positionsRepository,
+                predictionFundingWindow = fundingWindow,
+                predictionAccountStatusSupplier = statusSupplier,
+                predictionBalancePoller = balancePoller,
+                refreshPredictionDepositRequisitesInteractor = refreshRequisites,
+            )
+        }
 
     protected fun activeStatus(
         balance: BigDecimal = BigDecimal("100"),
@@ -208,19 +238,38 @@ internal abstract class PlacePredictionModelTestBase {
             paramsContainer = MutableParamsContainer(value = order),
             router = router,
             urlOpener = urlOpener,
+            dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+            orderSubmitterFactory = createOrderSubmitterFactory(testScope),
+        ).also(models::add)
+
+    private fun createOrderSubmitterFactory(testScope: TestScope) = object : PlacePredictionOrderSubmitter.Factory {
+        override fun create(
+            params: PlacePredictionComponent.Params,
+            uiState: MutableStateFlow<PlacePredictionUM>,
+            scope: CoroutineScope,
+        ) = PlacePredictionOrderSubmitter(
+            params = params,
+            uiState = uiState,
+            scope = scope,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             messageSender = messageSender,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             derivePolymarketAddressesUseCase = deriveAddressesUseCase,
             getPolymarketBalanceInteractor = getBalanceInteractor,
-            signPredictionOrderInteractor = signOrderInteractor,
-            placePredictionOrderUseCase = placeOrderUseCase,
+            submitPredictionOrderInteractor = SubmitPredictionOrderInteractor(
+                signOrder = signOrderInteractor,
+                placeOrder = placeOrderUseCase,
+                router = signingRouter,
+                reconciliationScope = testScope.backgroundScope,
+            ),
+            featureToggles = featureToggles,
             awaitDelayedPredictionOrderUseCase = awaitDelayedOrderUseCase,
             positionsRepository = positionsRepository,
             predictionFundingWindow = fundingWindow,
             positionsUpdateEmitter = positionsUpdateEmitter,
-        ).also(models::add)
+        )
+    }
 
     protected fun createStatusModel(
         testScope: TestScope,

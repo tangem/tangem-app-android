@@ -24,13 +24,16 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.mcp.repository.McpRepository
+import com.tangem.domain.mcp.repository.McpSessionsLce
 import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
+import com.tangem.domain.walletconnect.ConnectionsAnalyticEvents
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
@@ -69,7 +72,7 @@ internal class WcConnectionsModel @Inject constructor(
     private val mcpFeatureToggles: McpFeatureToggles,
     private val mcpRepository: McpRepository,
     override val dispatchers: CoroutineDispatcherProvider,
-    analytics: AnalyticsEventHandler,
+    private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -80,15 +83,24 @@ internal class WcConnectionsModel @Inject constructor(
 
     private val selectedWalletId = MutableStateFlow<String?>(value = null)
 
+    /** The owner's retry, which keeps the failed section in place and spins its button while it runs. */
+    private val isAgentsReloading = MutableStateFlow(value = false)
+
     /** The repository keeps the list hot, so the screen only has to collect it. */
-    private val mcpSessions: Flow<List<McpSession>> = if (mcpFeatureToggles.isMcpEnabled) {
+    private val mcpSessions: Flow<McpSessionsLce> = if (mcpFeatureToggles.isMcpEnabled) {
         mcpRepository.getSessions()
     } else {
-        flowOf(emptyList())
+        flowOf(emptyList<McpSession>().lceContent())
     }
 
     init {
-        analytics.send(WcAnalyticEvents.ScreenOpened())
+        analytics.send(
+            if (mcpFeatureToggles.isMcpEnabled) {
+                ConnectionsAnalyticEvents.ScreenOpened()
+            } else {
+                WcAnalyticEvents.ScreenOpened()
+            },
+        )
         listenQrUpdates()
         listenWcSessions()
     }
@@ -139,18 +151,23 @@ internal class WcConnectionsModel @Inject constructor(
             flow = combine(getWalletsUseCase(), wcSessionsUseCase.invoke().distinctUntilChanged(), ::Pair),
             flow2 = isAccountsModeEnabledUseCase(),
             flow3 = multiAccountListSupplier(Unit),
-            flow4 = mcpSessions,
+            flow4 = combine(mcpSessions, isAgentsReloading, ::Pair),
             flow5 = selectedWalletId,
-            transform = { (wallets, sessionsMap), isAccountMode, accountLists, agentSessions, selectedWalletId ->
+            transform = { (wallets, sessionsMap), isAccountMode, accountLists, agents, selectedWalletId ->
+                val (agentSessions, isAgentsReloading) = agents
+
                 uiState.update(
                     WcConnectionsTransformer(
                         wallets = wallets,
                         sessionsMap = sessionsMap,
                         accountLists = accountLists,
                         mcpSessions = agentSessions,
+                        isAgentsReloading = isAgentsReloading,
                         isAccountMode = isAccountMode,
+                        currentWalletId = params.userWalletId,
                         selectedWalletId = selectedWalletId,
                         onWalletSelect = { walletId -> this.selectedWalletId.value = walletId },
+                        onAgentsReloadClick = ::reloadAgents,
                         openAppInfoModal = ::openAppInfoModal,
                         openMcpSessionModal = ::openMcpSessionModal,
                     ),
@@ -158,6 +175,17 @@ internal class WcConnectionsModel @Inject constructor(
             },
         )
             .launchIn(modelScope)
+    }
+
+    /** Guarded by [isAgentsReloading] so a second tap doesn't start a read while the first is running. */
+    private fun reloadAgents() {
+        if (isAgentsReloading.value) return
+
+        modelScope.launch {
+            isAgentsReloading.value = true
+            mcpRepository.reloadSessions()
+            isAgentsReloading.value = false
+        }
     }
 
     private fun openMcpSessionModal(session: McpSession, walletName: String) {
@@ -190,6 +218,13 @@ internal class WcConnectionsModel @Inject constructor(
     }
 
     private fun disconnectAllSessions() {
+        analytics.send(
+            if (mcpFeatureToggles.isMcpEnabled) {
+                ConnectionsAnalyticEvents.ButtonDisconnectAll()
+            } else {
+                WcAnalyticEvents.ButtonDisconnectAll()
+            },
+        )
         modelScope.launch {
             coroutineScope {
                 if (mcpFeatureToggles.isMcpEnabled) launch { mcpRepository.revokeAllSessions() }
@@ -209,7 +244,7 @@ internal class WcConnectionsModel @Inject constructor(
                 ),
                 disconnectAllItem = TangemDropdownMenuItem(
                     title = resourceReference(R.string.wc_disconnect_all),
-                    textColor = themedColor { TangemTheme.colors.text.warning },
+                    textColor = themedColor { TangemTheme.colors3.text.accent.red },
                     onClick = ::showDisconnectAllDialog,
                 ),
             ),

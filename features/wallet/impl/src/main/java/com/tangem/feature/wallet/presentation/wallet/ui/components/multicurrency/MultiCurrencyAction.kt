@@ -44,6 +44,6 @@ internal fun MultiCurrencyAction(config: ActionButtonConfig, modifier: Modifier 
             )
         },
         modifier = modifier,
-        color = TangemTheme.colors.button.secondary,
+        color = TangemTheme.colors3.bg.transparent.secondary,
     )
 }

@@ -242,6 +242,34 @@ internal class UserWalletItemUMConverterTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsSocialLogin {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun isSocialLogin(model: IsSocialLoginModel) {
+            // Arrange
+            val converter = UserWalletItemUMConverter(onClick = {})
+
+            // Act
+            val actual = converter.convert(model.userWallet)
+
+            // Assert
+            assertThat(actual.isSocialLogin).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            IsSocialLoginModel(userWallet = hotWallet(isSocialBackupCompleted = true), expected = true),
+            IsSocialLoginModel(
+                userWallet = hotWallet(isSocialBackupCompleted = true, isLocked = true),
+                expected = true,
+            ),
+            IsSocialLoginModel(userWallet = hotWallet(isSocialBackupCompleted = false), expected = false),
+            IsSocialLoginModel(userWallet = coldWallet, expected = false),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Passthrough {
 
         @Test
@@ -292,6 +320,8 @@ internal class UserWalletItemUMConverterTest {
             assertThat(clicked).containsExactly(userWallet.walletId)
         }
     }
+
+    internal data class IsSocialLoginModel(val userWallet: UserWallet, val expected: Boolean)
 
     internal data class TitleBadgeModel(val userWallet: UserWallet, val expected: TangemBadgeUM?)
 
@@ -352,12 +382,17 @@ internal class UserWalletItemUMConverterTest {
             ),
         )
 
-        fun hotWallet(backedUp: Boolean = false, isLocked: Boolean = false) = UserWallet.Hot(
+        fun hotWallet(
+            backedUp: Boolean = false,
+            isLocked: Boolean = false,
+            isSocialBackupCompleted: Boolean = false,
+        ) = UserWallet.Hot(
             name = "Mobile wallet",
             walletId = UserWalletId(stringValue = "011"),
             hotWalletId = HotWalletId(value = "hot", authType = HotWalletId.AuthType.NoPassword),
             wallets = if (isLocked) null else emptyList(),
             isBackedUp = backedUp,
+            isSocialBackupCompleted = isSocialBackupCompleted,
         )
     }
 }

@@ -7,9 +7,11 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.amount.model.AmountSelection
 import com.tangem.features.tangempay.withdraw.bank.amount.model.AmountSheet
 import com.tangem.features.tangempay.withdraw.bank.amount.model.BankWithdrawAmountValidator.Result
+import com.tangem.features.tangempay.withdraw.bank.amount.model.NetworkFeeState
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.AmountFieldUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.RouteItemUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.RouteRowUM
@@ -17,6 +19,7 @@ import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWit
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SourceRowUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.TokenItemUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.model.isRailLocked
@@ -26,35 +29,62 @@ import java.util.Currency
 
 internal class TangemPayBankWithdrawAmountUMFactory(
     private val step: TangemPayBankWithdrawInnerRoute,
+    private val sourceAccount: BankWithdrawSourceAccount,
     private val callbacks: Callbacks,
 ) {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter(shouldGrayscaleTestnet = false)
 
+    private val from = BankWithdrawFromFactory.create(sourceAccount)
+
+    private val isTokenSelectable = when (sourceAccount) {
+        is BankWithdrawSourceAccount.Payment -> true
+        is BankWithdrawSourceAccount.Money -> false
+    }
+
+    private val isNetworkFeeCharged = when (sourceAccount) {
+        is BankWithdrawSourceAccount.Payment -> false
+        is BankWithdrawSourceAccount.Money -> true
+    }
+
     fun create(
         draft: BankWithdrawDraft,
         selection: AmountSelection,
         sheet: AmountSheet?,
+        networkFee: NetworkFeeState,
         isBalanceHidden: Boolean,
     ): TangemPayBankWithdrawAmountUM {
-        return TangemPayBankWithdrawAmountUM(
-            header = BankWithdrawHeaderFactory.create(
-                draft = draft,
-                step = step,
-                onCloseClick = callbacks.onCloseClick,
-            ),
-            amount = createAmountField(selection = selection),
-            source = createSourceRow(
-                source = selection.source,
-                currency = selection.currency,
-                isBalanceHidden = isBalanceHidden,
-            ),
-            route = createRouteRow(selection = selection, isRailLocked = draft.isRailLocked),
-            isContinueEnabled = selection.isContinueEnabled,
-            sheet = createSheet(sheet = sheet, selection = selection, isBalanceHidden = isBalanceHidden),
-            onBackClick = callbacks.onBackClick,
-            onContinueClick = callbacks.onContinueClick,
-        )
+        val header = BankWithdrawHeaderFactory.create(draft = draft, step = step, onCloseClick = callbacks.onCloseClick)
+        return when (networkFee) {
+            NetworkFeeState.Loading -> TangemPayBankWithdrawAmountUM.Loading(
+                header = header,
+                from = from,
+                currencySymbol = selection.currency.symbol,
+                onBackClick = callbacks.onBackClick,
+            )
+            NetworkFeeState.Unreachable -> TangemPayBankWithdrawAmountUM.FeeUnreachable(
+                header = header,
+                onRetryClick = callbacks.onRetryFeeClick,
+                onBackClick = callbacks.onBackClick,
+            )
+            NetworkFeeState.NotEnoughFunds,
+            is NetworkFeeState.Loaded,
+            -> TangemPayBankWithdrawAmountUM.Content(
+                header = header,
+                from = from,
+                amount = createAmountField(selection = selection),
+                source = createSourceRow(
+                    source = selection.source,
+                    currency = selection.currency,
+                    isBalanceHidden = isBalanceHidden,
+                ),
+                route = createRouteRow(selection = selection, isRailLocked = draft.isRailLocked),
+                isContinueEnabled = selection.isContinueEnabled,
+                sheet = createSheet(sheet = sheet, selection = selection, isBalanceHidden = isBalanceHidden),
+                onBackClick = callbacks.onBackClick,
+                onContinueClick = callbacks.onContinueClick,
+            )
+        }
     }
 
     private fun createAmountField(selection: AmountSelection): AmountFieldUM = AmountFieldUM(
@@ -89,7 +119,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         symbol = source.token.symbol,
         subtitle = createSourceSubtitle(source = source, currency = currency, isBalanceHidden = isBalanceHidden),
         onMaxClick = callbacks.onMaxClick,
-        onClick = callbacks.onSourceClick,
+        onClick = callbacks.onSourceClick.takeIf { isTokenSelectable },
     )
 
     private fun createSourceSubtitle(
@@ -112,7 +142,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         rail = selection.destination.rail,
         title = selection.destination.toTitleReference(),
         eta = selection.destination.eta.toTextReference(),
-        fee = selection.destination.fee.toText(),
+        fee = selection.destination.totalFeeText(selection.networkFee),
         onClick = callbacks.onRouteClick.takeIf { selection.destinations.size > 1 && !isRailLocked },
     )
 
@@ -143,13 +173,24 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                         rail = destination.rail,
                         title = destination.toTitleReference(),
                         eta = destination.eta.toTextReference(),
-                        fee = destination.fee.toText(),
+                        fee = destination.totalFeeText(selection.networkFee),
                         isSelected = destination.rail == selection.destination.rail,
                         onClick = { callbacks.onRouteSelected(destination.rail) },
                     )
                 }.toImmutableList(),
+                networkFeeNote = createNetworkFeeNote(selection),
                 onDismiss = callbacks.onSheetDismiss,
             )
+        }
+
+    private fun createNetworkFeeNote(selection: AmountSelection): TextReference? =
+        if (isNetworkFeeCharged && selection.isNetworkFeeQuoted) {
+            resourceReference(
+                R.string.money_account_send_network_fee_note,
+                wrappedList(selection.networkFee.formatFiat(selection.currency)),
+            )
+        } else {
+            null
         }
 
     data class Callbacks(
@@ -163,5 +204,6 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         val onRouteSelected: (BankRail) -> Unit,
         val onSheetDismiss: () -> Unit,
         val onContinueClick: () -> Unit,
+        val onRetryFeeClick: () -> Unit,
     )
 }

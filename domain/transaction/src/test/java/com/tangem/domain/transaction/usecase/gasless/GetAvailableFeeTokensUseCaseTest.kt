@@ -3,6 +3,7 @@ package com.tangem.domain.transaction.usecase.gasless
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
@@ -166,6 +167,59 @@ internal class GetAvailableFeeTokensUseCaseTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class NonPortfolioAccountNetwork {
+
+        private val accountPath = Network.DerivationPath.Custom(value = "m/44'/60'/999998'/0/0")
+        private val accountNetwork = network.copy(
+            id = network.id.copy(derivationPath = accountPath),
+            derivationPath = accountPath,
+        )
+        private val accountCoin = nativeCoin.copy(network = accountNetwork)
+        private val accountUsdc = usdc.copy(network = accountNetwork)
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(
+                singleAccountStatusListSupplier,
+                nonPortfolioCurrenciesProvider,
+                gaslessTransactionRepository,
+                currencyChecksRepository,
+            )
+
+            coEvery { currencyChecksRepository.isNetworkSupportedForGaslessTx(any()) } returns true
+            coEvery { gaslessTransactionRepository.getSupportedTokens(network = any()) } returns setOf(usdc)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN network of a non-portfolio account WHEN invoke THEN only its token is offered`(
+            coinBalance: BigDecimal,
+        ) = runTest {
+            // Arrange
+            givenAccountStatusList(nativeBalance = NATIVE_FEE, tokenBalance = BigDecimal("20"))
+            coEvery { nonPortfolioCurrenciesProvider.getStatuses(userWalletId, accountNetwork) } returns listOf(
+                accountCoin.status(balance = coinBalance),
+                accountUsdc.status(balance = BigDecimal("25")),
+            )
+
+            // Act
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = accountNetwork,
+                sentCurrencyStatus = accountUsdc.status(),
+                nativeFeeAmount = NATIVE_FEE,
+            )
+
+            // Assert
+            assertThat(actual.offeredCurrencies()).containsExactly(accountUsdc)
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
+        }
+
+        private fun provideTestModels(): List<BigDecimal> = listOf(BigDecimal.ZERO, NATIVE_FEE)
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class NativeCoinAvailability {
 
         @BeforeEach
@@ -301,6 +355,49 @@ internal class GetAvailableFeeTokensUseCaseTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EnteringYieldToken {
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(singleAccountStatusListSupplier, gaslessTransactionRepository, currencyChecksRepository)
+
+            coEvery { currencyChecksRepository.isNetworkSupportedForGaslessTx(any()) } returns true
+            coEvery { gaslessTransactionRepository.getSupportedTokens(network = any()) } returns setOf(usdc)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN token with inactive yield module WHEN invoke THEN offered only while entering yield`(
+            model: EnteringYieldTokenModel,
+        ) = runTest {
+            // Arrange
+            val usdcInactiveYield = CryptoCurrencyStatus(
+                currency = usdc,
+                value = loadedValue(BigDecimal("20")).copy(yieldSupplyStatus = INACTIVE_YIELD),
+            )
+            val statuses = listOf(nativeCoin.status(), usdcInactiveYield)
+            coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList(statuses)
+
+            // Act
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = network,
+                sentCurrencyStatus = usdcInactiveYield,
+                enteringYieldTokenId = model.enteringYieldTokenId,
+            )
+
+            // Assert
+            assertThat(actual.offeredCurrencies()).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            EnteringYieldTokenModel(enteringYieldTokenId = usdc.id, expected = listOf(nativeCoin, usdc)),
+            EnteringYieldTokenModel(enteringYieldTokenId = null, expected = listOf(nativeCoin)),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class TronGasless {
 
         @BeforeEach
@@ -398,12 +495,14 @@ internal class GetAvailableFeeTokensUseCaseTest {
     // region Fixtures
 
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk()
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository = mockk()
     private val currencyChecksRepository: CurrencyChecksRepository = mockk()
 
     private fun createUseCase() = GetAvailableFeeTokensUseCase(
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         gaslessTransactionRepository = gaslessTransactionRepository,
         currencyChecksRepository = currencyChecksRepository,
         isTronGaslessSupportedUseCase = IsTronGaslessSupportedUseCase(repository = tronGaslessTransactionRepository),
@@ -559,6 +658,11 @@ internal class GetAvailableFeeTokensUseCaseTest {
         ),
         network = tronNetwork,
         contractAddress = USDC_TRON_CONTRACT,
+    )
+
+    internal data class EnteringYieldTokenModel(
+        val enteringYieldTokenId: CryptoCurrency.ID?,
+        val expected: List<CryptoCurrency>,
     )
 
     internal data class EligibilityModel(

@@ -1,26 +1,31 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.state
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.model.NewRecipientDraft
 import com.tangem.features.tangempay.withdraw.bank.model.toFormValues
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.personalFormValues
+import com.tangem.features.tangempay.withdraw.bank.preview.completion.CompletionState
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewState
-import com.tangem.features.tangempay.withdraw.bank.preview.model.SendState
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.DetailRowUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Failed
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.RecipientCardUM
@@ -35,6 +40,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 private const val FORM_VALUES_KT = "com.tangem.features.tangempay.withdraw.bank.model.BankAccountDetailsFormValuesKt"
@@ -42,6 +48,7 @@ private const val FORM_VALUES_KT = "com.tangem.features.tangempay.withdraw.bank.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayBankWithdrawPreviewUMFactoryTest {
 
+    private val userWalletId = UserWalletId("011")
     private val edited = mutableListOf<BankWithdrawEditTarget>()
     private var railClicks = 0
     private val callbacks = TangemPayBankWithdrawPreviewUMFactory.Callbacks(
@@ -52,7 +59,10 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         onEditClick = { edited += it },
         onRailClick = { railClicks++ },
     )
-    private val factory = TangemPayBankWithdrawPreviewUMFactory(callbacks)
+    private val factory = TangemPayBankWithdrawPreviewUMFactory(
+        sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+        callbacks = callbacks,
+    )
 
     @BeforeEach
     fun resetState() {
@@ -243,18 +253,27 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
 
     @Test
     fun `GIVEN sending WHEN create THEN summary is sending and send still enabled`() {
+        // Arrange
+        val state = PreviewState(completion = CompletionState.Sending)
+
         // Act
-        val actual = factory.create(draft = savedDraft(), state = PreviewState(send = SendState.CreatingOrder)) as Summary
+        val actual = factory.create(draft = savedDraft(), state = state) as Summary
 
         // Assert
         assertThat(actual.isSending).isTrue()
         assertThat(actual.isSendEnabled).isTrue()
     }
 
-    @Test
-    fun `GIVEN general failure WHEN create THEN error result with retry`() {
+    @ParameterizedTest
+    @MethodSource("provideGeneralFailureModels")
+    fun `GIVEN general failure WHEN create THEN error result with retry only when it can help`(
+        model: GeneralFailureModel,
+    ) {
+        // Arrange
+        val state = PreviewState(completion = CompletionState.Failed(model.failure))
+
         // Act
-        val actual = factory.create(draft = savedDraft(), state = PreviewState(failure = PreviewFailure.General))
+        val actual = factory.create(draft = savedDraft(), state = state)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -262,16 +281,26 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
                 title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
                 icon = TangemStatusIcon.Kind.Warning,
                 onCloseClick = callbacks.onCloseClick,
-                onRetryClick = callbacks.onRetryClick,
+                onRetryClick = model.onRetryClick,
             ),
         )
     }
 
+    private fun provideGeneralFailureModels() = listOf(
+        GeneralFailureModel(failure = PreviewFailure.General, onRetryClick = callbacks.onRetryClick),
+        GeneralFailureModel(failure = PreviewFailure.TransferOutcomeUnknown, onRetryClick = null),
+    )
+
+    internal data class GeneralFailureModel(val failure: PreviewFailure, val onRetryClick: (() -> Unit)?)
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN unsupported failure WHEN create THEN unavailable result without retry`(model: UnavailableModel) {
+        // Arrange
+        val state = PreviewState(completion = CompletionState.Failed(model.failure))
+
         // Act
-        val actual = factory.create(draft = savedDraft(), state = PreviewState(failure = model.failure))
+        val actual = factory.create(draft = savedDraft(), state = state)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -295,6 +324,90 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     )
 
     internal data class UnavailableModel(val failure: PreviewFailure, val titleRes: Int)
+
+    @ParameterizedTest
+    @MethodSource("provideFromModels")
+    fun `GIVEN source account WHEN create THEN amount card is from that account`(model: FromModel) {
+        // Arrange
+        val accountFactory = TangemPayBankWithdrawPreviewUMFactory(sourceAccount = model.account, callbacks = callbacks)
+
+        // Act
+        val actual = accountFactory.create(draft = savedDraft(), state = PreviewState()) as Summary
+
+        // Assert
+        assertThat(actual.transfer?.amount?.from).isEqualTo(model.expected)
+    }
+
+    private fun provideFromModels() = listOf(
+        FromModel(
+            account = BankWithdrawSourceAccount.Payment(userWalletId),
+            expected = BankWithdrawFromUM(
+                title = resourceReference(R.string.tangempay_payment_account),
+                icon = AccountIconUM.Payment,
+            ),
+        ),
+        FromModel(
+            account = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1"),
+            expected = BankWithdrawFromUM(
+                title = resourceReference(R.string.money_account_main_name),
+                icon = AccountIconUM.Money,
+            ),
+        ),
+    )
+
+    internal data class FromModel(val account: BankWithdrawSourceAccount, val expected: BankWithdrawFromUM)
+
+    @ParameterizedTest
+    @MethodSource("provideFooterModels")
+    fun `GIVEN source account and network fee WHEN create THEN rail fee footer and button follow the account`(
+        model: FooterModel,
+    ) {
+        // Arrange
+        val accountFactory = TangemPayBankWithdrawPreviewUMFactory(sourceAccount = model.account, callbacks = callbacks)
+
+        // Act
+        val actual = accountFactory.create(
+            draft = savedDraft().copy(networkFee = model.networkFee),
+            state = PreviewState(),
+        ) as Summary
+
+        // Assert
+        val transfer = requireNotNull(actual.transfer)
+        assertThat(transfer.route.fee).isEqualTo(model.expectedRailFee)
+        assertThat(transfer.sendingSummary).isEqualTo(model.expectedSummary)
+        assertThat(actual.sendText).isEqualTo(model.expectedSendText)
+    }
+
+    private fun provideFooterModels() = listOf(
+        FooterModel(
+            account = BankWithdrawSourceAccount.Payment(userWalletId),
+            networkFee = BigDecimal.ZERO,
+            expectedRailFee = "$1",
+            expectedSummary = resourceReference(
+                R.string.tangempay_withdraw_bank_sending_summary,
+                wrappedList("$501", resourceReference(R.string.tangempay_bank_transfer_fee_ach), "$1"),
+            ),
+            expectedSendText = resourceReference(R.string.common_send),
+        ),
+        FooterModel(
+            account = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1"),
+            networkFee = BigDecimal("0.03"),
+            expectedRailFee = "$1.03",
+            expectedSummary = resourceReference(
+                R.string.money_account_send_fees_footer,
+                wrappedList(resourceReference(R.string.tangempay_bank_transfer_fee_ach)),
+            ),
+            expectedSendText = resourceReference(R.string.money_account_send_pay_button, wrappedList("$501.03")),
+        ),
+    )
+
+    internal data class FooterModel(
+        val account: BankWithdrawSourceAccount,
+        val networkFee: BigDecimal,
+        val expectedRailFee: String,
+        val expectedSummary: TextReference,
+        val expectedSendText: TextReference,
+    )
 
     @Test
     fun `GIVEN new recipient WHEN create THEN amount and every recipient card is tappable`() {
@@ -340,7 +453,7 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     @Test
     fun `GIVEN sending WHEN create THEN the rail row is read-only`() {
         // Arrange
-        val state = PreviewState(send = SendState.CreatingOrder)
+        val state = PreviewState(completion = CompletionState.Sending)
 
         // Act
         val actual = factory.create(draft = newRecipientDraft(), state = state) as Summary
@@ -370,8 +483,11 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
 
     @Test
     fun `GIVEN sending WHEN create THEN amount and every recipient card is read-only`() {
+        // Arrange
+        val state = PreviewState(completion = CompletionState.Sending)
+
         // Act
-        val actual = factory.create(draft = newRecipientDraft(), state = PreviewState(send = SendState.CreatingOrder)) as Summary
+        val actual = factory.create(draft = newRecipientDraft(), state = state) as Summary
 
         // Assert
         assertThat(actual.transfer?.amount?.onClick).isNull()

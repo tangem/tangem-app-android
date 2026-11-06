@@ -24,8 +24,10 @@ internal class SendIntentErrorConverter @Inject constructor() :
         val code = (value.cause as? ApiResponseError.HttpException)?.readCode()
 
         return when (code) {
-            TransactionIntentErrorCode.INTENT_NOT_FOUND -> SendIntentError.NotFound(intentId = value.intentId)
-            TransactionIntentErrorCode.INTENT_ALREADY_COMPLETED -> SendIntentError.AlreadyCompleted(value.intentId)
+            TransactionIntentErrorCode.INTENT_NOT_FOUND -> SendIntentError.NotFound(value.intentId, code.name)
+            TransactionIntentErrorCode.INTENT_ALREADY_COMPLETED -> {
+                SendIntentError.AlreadyCompleted(value.intentId, code.name)
+            }
             TransactionIntentErrorCode.UNKNOWN,
             null,
             -> value.cause

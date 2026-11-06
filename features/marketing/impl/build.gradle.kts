@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -17,6 +18,7 @@ dependencies {
     /** Domain */
     implementation(projects.domain.marketing)
     implementation(projects.domain.marketing.models)
+    implementation(projects.domain.models)
 
     /** Core */
     implementation(projects.core.decompose)
@@ -36,12 +38,14 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
 
     /** DI */
     implementation(deps.hilt.android)
     implementation(deps.androidx.appCompat)
     implementation(deps.compose.material3)
     implementation(deps.decompose)
+    implementation(deps.decompose.ext.compose)
     kapt(deps.hilt.kapt)
 
     /** Tests */

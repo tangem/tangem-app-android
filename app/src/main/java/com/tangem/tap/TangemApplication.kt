@@ -12,18 +12,20 @@ import coil.ImageLoaderFactory
 import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuard
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuardPreferences
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.config.managers.ApiConfigsManager
+import com.tangem.core.res.StringResourceErrorReporter
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
-import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLoggingInitializer
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
@@ -132,6 +134,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             appVersion = BuildConfig.VERSION_CODE,
         )
         registerActivityLifecycleCallbacks(entryPoint.getForegroundActivityObserver().callbacks)
+        StringResourceErrorReporter.install { exception ->
+            entryPoint.getAnalyticsExceptionHandler().sendException(ExceptionAnalyticsEvent(exception = exception))
+        }
     }
 
     fun init() {

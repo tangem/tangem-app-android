@@ -14,6 +14,7 @@ import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
 import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
+import com.tangem.domain.jointaccount.verifier.JointOperationDisplayGate
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -37,6 +38,7 @@ internal class GetPendingJointOperationsUseCaseTest {
     private val supplier: SingleJointAccountListSupplier = mockk()
     private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
     private val networkReader: JointNetworkReader = mockk()
+    private val displayGate: JointOperationDisplayGate = mockk()
     private val network: Network = mockk()
     private val coin: CryptoCurrency.Coin = mockk {
         every { network } returns this@GetPendingJointOperationsUseCaseTest.network
@@ -48,6 +50,7 @@ internal class GetPendingJointOperationsUseCaseTest {
         signersResolver = JointOperationSignersResolver(),
         ownerAddressResolver = ownerAddressResolver,
         networkReader = networkReader,
+        displayGate = displayGate,
     )
 
     private val account: Account.Joint = MockAccounts
@@ -55,7 +58,8 @@ internal class GetPendingJointOperationsUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(supplier, ownerAddressResolver, networkReader)
+        clearMocks(supplier, ownerAddressResolver, networkReader, displayGate)
+        coEvery { displayGate.isShown(any(), any(), any(), any(), any()) } returns true
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount()))
         coEvery { networkReader.getChainId(network) } returns CHAIN_ID.right()
         coEvery { ownerAddressResolver.resolve(any(), any()) } returns BOB.right()

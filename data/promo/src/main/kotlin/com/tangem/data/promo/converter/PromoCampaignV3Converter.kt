@@ -50,6 +50,8 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
         imageUrl = content.publicImage,
         tncLink = content.tncLink.convert(),
         actionButtonName = content.actionButtonName,
+        payoutButtonName = content.payoutButtonName?.takeIf(String::isNotBlank),
+        payoutAccountTitle = content.payoutAccountTitle?.takeIf(String::isNotBlank),
     )
 
     private fun Link.convert() = PromoLink(text = text, url = url)

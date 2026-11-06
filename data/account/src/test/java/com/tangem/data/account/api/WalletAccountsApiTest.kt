@@ -6,22 +6,27 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.*
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class WalletAccountsApiTest {
 
     private val tangemTechApi: TangemTechApi = mockk()
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles = mockk()
 
     private val walletAccountsApi = WalletAccountsApi(
         tangemTechApi = tangemTechApi,
         jointAccountFeatureToggles = jointAccountFeatureToggles,
+        collectiblesFeatureToggles = collectiblesFeatureToggles,
     )
 
     private val walletId = "011"
@@ -44,7 +49,7 @@ internal class WalletAccountsApiTest {
 
     @AfterEach
     fun tearDown() {
-        clearMocks(tangemTechApi, jointAccountFeatureToggles)
+        clearMocks(tangemTechApi, jointAccountFeatureToggles, collectiblesFeatureToggles)
     }
 
     private val v2Response = GetWalletAccountsV2Response(
@@ -180,6 +185,24 @@ internal class WalletAccountsApiTest {
         coVerify(exactly = 0) { tangemTechApi.saveWalletAccountsV1(walletId = any(), eTag = any(), body = any()) }
     }
 
+    @ParameterizedTest
+    @CsvSource("false, false, false", "true, false, true", "false, true, true", "true, true, true")
+    fun `GIVEN joint and collectibles toggles WHEN isV2Enabled THEN either one enables v2`(
+        isJointEnabled: Boolean,
+        isCollectiblesEnabled: Boolean,
+        expected: Boolean,
+    ) {
+        // Arrange
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns isJointEnabled
+        every { collectiblesFeatureToggles.isCollectiblesEnabled } returns isCollectiblesEnabled
+
+        // Act
+        val actual = walletAccountsApi.isV2Enabled
+
+        // Assert
+        assertThat(actual).isEqualTo(expected)
+    }
+
     @Test
     fun `GIVEN toggle is off WHEN getArchivedAccounts THEN v1 is requested`() = runTest {
         // Arrange
@@ -214,5 +237,6 @@ internal class WalletAccountsApiTest {
 
     private fun toggle(enabled: Boolean) {
         every { jointAccountFeatureToggles.isJointAccountEnabled } returns enabled
+        every { collectiblesFeatureToggles.isCollectiblesEnabled } returns false
     }
 }

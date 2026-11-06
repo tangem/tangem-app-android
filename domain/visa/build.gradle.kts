@@ -18,7 +18,6 @@ dependencies {
     api(deps.arrow.core)
     api(deps.jodatime)
     implementation(deps.kotlin.datetime)
-    implementation(deps.androidx.paging.runtime)
     runtimeOnly(deps.spongecastle.core)
     // endregion
 
@@ -39,6 +38,7 @@ dependencies {
     api(projects.domain.appCurrency.models)
     api(projects.domain.models)
     api(projects.domain.visa.models)
+    implementation(projects.features.moneyAccount.details.api)
     // endregion
 
     // region Libs

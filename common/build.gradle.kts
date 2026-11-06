@@ -16,16 +16,17 @@ dependencies {
 
     // region Firebase libraries
     implementation(platform(deps.firebase.bom))
-    implementation(deps.firebase.analytics)
     implementation(deps.firebase.messaging)
     // endregion
 
     // region Core modules
+    implementation(projects.core.analytics)
     implementation(projects.core.utils)
     // endregion
 
     // region Domain
     api(projects.domain.models)
+    api(projects.domain.staking.models)
     // endregion
 
     // region Libs

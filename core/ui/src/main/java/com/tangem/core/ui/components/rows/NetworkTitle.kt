@@ -90,7 +90,7 @@ private fun NetworkTitlePreview(@PreviewParameter(NetworkTitleIconVisibilityProv
                 if (isIconVisible) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_group_drop_24),
-                        tint = TangemTheme.colors.icon.informative,
+                        tint = TangemTheme.colors3.icon.secondary,
                         contentDescription = null,
                     )
                 }

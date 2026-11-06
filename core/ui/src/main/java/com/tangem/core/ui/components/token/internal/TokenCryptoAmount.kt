@@ -68,7 +68,7 @@ private fun CryptoAmountText(amount: String, modifier: Modifier = Modifier, isFl
         overflow = TextOverflow.Ellipsis,
         style = TangemTheme.typography.caption2.applyBladeBrush(
             isEnabled = isFlickering,
-            textColor = TangemTheme.colors.text.tertiary,
+            textColor = TangemTheme.colors3.text.secondary,
         ),
     )
 }

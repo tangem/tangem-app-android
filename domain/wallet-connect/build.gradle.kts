@@ -37,4 +37,6 @@ dependencies {
     api(projects.domain.transaction.models)
     api(projects.domain.walletConnect.models)
     // endregion
+
+    testImplementation(projects.test.core)
 }

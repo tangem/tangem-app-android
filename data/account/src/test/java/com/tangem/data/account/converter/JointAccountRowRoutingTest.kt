@@ -47,6 +47,8 @@ internal class JointAccountRowRoutingTest {
     private val listConverter = AccountListConverter(
         userWallet = userWallet,
         cryptoPortfolioConverterFactory = cryptoPortfolioConverterFactory,
+        collectiblesFeatureToggles = mockk { every { isCollectiblesEnabled } returns false },
+        jointAccountFeatureToggles = mockk { every { isJointAccountEnabled } returns true },
     )
 
     @ParameterizedTest

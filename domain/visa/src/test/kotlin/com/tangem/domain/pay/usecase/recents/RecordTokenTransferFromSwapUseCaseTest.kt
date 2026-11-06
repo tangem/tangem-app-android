@@ -3,7 +3,8 @@ package com.tangem.domain.pay.usecase.recents
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.repository.PaymentAccountRecentsStore
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
+import com.tangem.domain.pay.repository.AccountRecentsStore
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coVerify
@@ -12,10 +13,12 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 internal class RecordTokenTransferFromSwapUseCaseTest {
 
-    private val recentsStore: PaymentAccountRecentsStore = mockk(relaxed = true)
+    private val recentsStore: AccountRecentsStore = mockk(relaxed = true)
 
     private val useCase = RecordTokenTransferFromSwapUseCase(recentsStore = recentsStore)
 
@@ -24,8 +27,11 @@ internal class RecordTokenTransferFromSwapUseCaseTest {
         clearMocks(recentsStore)
     }
 
-    @Test
-    fun `GIVEN payment account as FROM WHEN invoke THEN the TO side is recorded`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideJournalAccounts")
+    fun `GIVEN a journal account as FROM WHEN invoke THEN the TO side is recorded in its journal`(
+        journalAccount: JournalAccount,
+    ) = runTest {
         // Arrange
         val portfolio = MockAccounts.createAccount(derivationIndex = 1, userWalletId = WALLET)
         val toCurrency = currency()
@@ -34,7 +40,7 @@ internal class RecordTokenTransferFromSwapUseCaseTest {
         // Act
         useCase(
             fromUserWalletId = WALLET,
-            fromAccount = Account.Payment(WALLET),
+            fromAccount = journalAccount.account,
             fromCurrency = currency(),
             toUserWalletId = WALLET,
             toAccount = portfolio,
@@ -45,14 +51,18 @@ internal class RecordTokenTransferFromSwapUseCaseTest {
         coVerify(exactly = 1) {
             recentsStore.markUsed(
                 userWalletId = WALLET,
+                journal = journalAccount.journal,
                 accountId = portfolio.accountId,
                 currencyId = toCurrencyId,
             )
         }
     }
 
-    @Test
-    fun `GIVEN payment account as TO WHEN invoke THEN the FROM side is recorded`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideJournalAccounts")
+    fun `GIVEN a journal account as TO WHEN invoke THEN the FROM side is recorded in its journal`(
+        journalAccount: JournalAccount,
+    ) = runTest {
         // Arrange
         val portfolio = MockAccounts.createAccount(derivationIndex = 1, userWalletId = WALLET)
         val fromCurrency = currency()
@@ -64,7 +74,7 @@ internal class RecordTokenTransferFromSwapUseCaseTest {
             fromAccount = portfolio,
             fromCurrency = fromCurrency,
             toUserWalletId = WALLET,
-            toAccount = Account.Payment(WALLET),
+            toAccount = journalAccount.account,
             toCurrency = currency(),
         )
 
@@ -72,6 +82,7 @@ internal class RecordTokenTransferFromSwapUseCaseTest {
         coVerify(exactly = 1) {
             recentsStore.markUsed(
                 userWalletId = WALLET,
+                journal = journalAccount.journal,
                 accountId = portfolio.accountId,
                 currencyId = fromCurrencyId,
             )
@@ -79,7 +90,7 @@ internal class RecordTokenTransferFromSwapUseCaseTest {
     }
 
     @Test
-    fun `GIVEN no payment account on either side WHEN invoke THEN nothing is recorded`() = runTest {
+    fun `GIVEN no journal account on either side WHEN invoke THEN nothing is recorded`() = runTest {
         // Act
         useCase(
             fromUserWalletId = WALLET,
@@ -91,7 +102,7 @@ internal class RecordTokenTransferFromSwapUseCaseTest {
         )
 
         // Assert
-        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any()) }
+        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any(), any()) }
     }
 
     @Test
@@ -107,23 +118,26 @@ internal class RecordTokenTransferFromSwapUseCaseTest {
         )
 
         // Assert
-        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any()) }
+        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any(), any()) }
     }
 
-    @Test
-    fun `GIVEN payment account paired with a special account WHEN invoke THEN nothing is recorded`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideJournalAccountPairsWithoutPortfolio")
+    fun `GIVEN a journal account paired with a special account WHEN invoke THEN nothing is recorded`(
+        pair: Pair<Account, Account>,
+    ) = runTest {
         // Act
         useCase(
             fromUserWalletId = WALLET,
-            fromAccount = Account.Payment(WALLET),
+            fromAccount = pair.first,
             fromCurrency = currency(),
             toUserWalletId = WALLET,
-            toAccount = Account.Prediction(WALLET),
+            toAccount = pair.second,
             toCurrency = currency(),
         )
 
         // Assert
-        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any()) }
+        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any(), any()) }
     }
 
     private fun currency(): CryptoCurrency {
@@ -131,8 +145,25 @@ internal class RecordTokenTransferFromSwapUseCaseTest {
         return mockk(relaxed = true) { every { this@mockk.id } returns id }
     }
 
+    class JournalAccount(val account: Account, val journal: TokenTransferJournal) {
+        override fun toString(): String = journal.toString()
+    }
+
     private companion object {
         val WALLET = UserWalletId("0123456789abcdef")
         val OTHER_WALLET = UserWalletId("fedcba9876543210")
+
+        @JvmStatic
+        fun provideJournalAccounts() = listOf(
+            JournalAccount(account = Account.Payment(WALLET), journal = TokenTransferJournal.PAYMENT_ACCOUNT),
+            JournalAccount(account = Account.Money(WALLET), journal = TokenTransferJournal.MONEY_ACCOUNT),
+        )
+
+        @JvmStatic
+        fun provideJournalAccountPairsWithoutPortfolio() = listOf(
+            Account.Payment(WALLET) to Account.Prediction(WALLET),
+            Account.Money(WALLET) to Account.Payment(WALLET),
+            Account.Payment(WALLET) to Account.Money(WALLET),
+        )
     }
 }

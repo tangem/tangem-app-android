@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.resolveReference
@@ -81,11 +83,7 @@ private fun DetailRow(row: RowUM, divider: Boolean) {
             )
         },
         valueSlot = {
-            Text(
-                text = row.value,
-                style = TangemTheme.typography3.body.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
+            TangemRowText(text = row.value, role = TangemRowTextRole.Value, maxLines = Int.MAX_VALUE)
         },
     )
 }

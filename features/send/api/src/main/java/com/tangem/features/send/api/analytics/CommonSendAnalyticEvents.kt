@@ -249,5 +249,6 @@ sealed class CommonSendAnalyticEvents(
         WalletConnect("WalletConnect"),
         NFT("NFT"),
         Approve("Approve"),
+        Earning("Earning"),
     }
 }

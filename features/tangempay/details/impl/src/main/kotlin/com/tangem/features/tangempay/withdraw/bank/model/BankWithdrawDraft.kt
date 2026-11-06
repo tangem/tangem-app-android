@@ -17,6 +17,7 @@ internal data class BankWithdrawDraft(
     val amount: BigDecimal? = null,
     val source: BankWithdrawSource? = null,
     val destination: OfframpDestination? = null,
+    val networkFee: BigDecimal = BigDecimal.ZERO,
     val order: BankOfframpOrderResult? = null,
 )
 

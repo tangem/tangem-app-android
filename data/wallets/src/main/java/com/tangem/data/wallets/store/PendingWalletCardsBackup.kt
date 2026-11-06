@@ -27,7 +27,7 @@ internal data class PendingWalletCardsBackup(
     internal data class Card(
         val cardId: String,
         val cardPublicKey: String,
-        val role: WalletCardDTO.Role,
+        val role: WalletCardDTO.Role? = null,
         val backupStatus: WalletCardDTO.BackupStatus,
         val curves: List<String>,
         val errorCode: String? = null,

@@ -9,9 +9,10 @@ import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -24,6 +25,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,7 +36,11 @@ import javax.inject.Inject
  * The wallet is settled before the route is pushed: one unlocked wallet is picked silently, several go
  * through the portfolio selector. The picker lives here rather than in the feature because
  * collectibles are a full-screen entry of the root stack, so a sheet raised inside it would scrim an
- * empty screen. An [Account.Collectibles] in the wallet's account list chooses main over onboarding.
+ * empty screen. A wallet whose account is not onboarded opens onboarding, any other opens main.
+ *
+ * A wallet whose collectibles account waits for the address sync ([CollectiblesAccountStatusValue.MissedDerivation])
+ * cannot be entered: the owner key is not on this device yet. The block hides when every wallet is in that state,
+ * and the chooser shows such wallets disabled.
  */
 @Stable
 @ModelScoped
@@ -43,13 +49,17 @@ internal class CollectiblesBlockModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
     val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
     featureToggles: CollectiblesFeatureToggles,
 ) : Model() {
 
-    val isVisible: StateFlow<Boolean> = MutableStateFlow(featureToggles.isCollectiblesEnabled)
+    val isVisible: StateFlow<Boolean> = if (featureToggles.isCollectiblesEnabled) {
+        observeEnterableWallet()
+    } else {
+        MutableStateFlow(false)
+    }
 
     /** Read by the block's component, which owns the slot the chooser is shown in. */
     val bottomSheetNavigation = SlotNavigation<CollectiblesBlockComponent.WalletSelectorConfig>()
@@ -71,19 +81,41 @@ internal class CollectiblesBlockModel @Inject constructor(
 
     fun onClick() {
         modelScope.launch {
-            val eligibleWallets = userWalletsListRepository.userWalletsSync()
-                .filter { !it.isLocked && it.isMultiCurrency }
+            val eligibleWallets = userWalletsListRepository.userWalletsSync().filter(::isEligible)
+            val enterableWallets = eligibleWallets.filterNot { wallet -> missedDerivation(wallet.walletId) }
 
             when {
-                eligibleWallets.isEmpty() -> TangemLogger.i("Collectibles: no eligible wallets; staying on the feed")
-                eligibleWallets.size == 1 -> openCollectibles(eligibleWallets.single().walletId)
-                else -> showWalletSelector()
+                enterableWallets.isEmpty() -> TangemLogger.i("Collectibles: no enterable wallets; staying on the feed")
+                eligibleWallets.size == 1 -> openCollectibles(enterableWallets.single().walletId)
+                else -> showWalletSelector(enterable = enterableWallets.mapTo(hashSetOf(), UserWallet::walletId))
             }
         }
     }
 
-    private fun showWalletSelector() {
-        portfolioSelectorController.isEnabled.value = { wallet, _ -> wallet.isMultiCurrency }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeEnterableWallet(): StateFlow<Boolean> = userWalletsListRepository.userWallets
+        .map { wallets -> wallets.orEmpty().filter(::isEligible).map(UserWallet::walletId) }
+        .distinctUntilChanged()
+        .flatMapLatest { walletIds ->
+            if (walletIds.isEmpty()) return@flatMapLatest flowOf(true)
+
+            combine(walletIds.map(collectiblesAccountStatusSupplier::invoke)) { statuses ->
+                statuses.any { it !is CollectiblesAccountStatusValue.MissedDerivation }
+            }
+        }
+        .distinctUntilChanged()
+        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = true)
+
+    private fun isEligible(wallet: UserWallet): Boolean = !wallet.isLocked && wallet.isMultiCurrency
+
+    private suspend fun missedDerivation(userWalletId: UserWalletId): Boolean {
+        val status = collectiblesAccountStatusSupplier(userWalletId).first()
+
+        return status is CollectiblesAccountStatusValue.MissedDerivation
+    }
+
+    private fun showWalletSelector(enterable: Set<UserWalletId>) {
+        portfolioSelectorController.isEnabled.value = { wallet, _ -> wallet.walletId in enterable }
         portfolioSelectorController.selectAccount(accountId = null)
         observeWalletSelection()
         bottomSheetNavigation.activate(CollectiblesBlockComponent.WalletSelectorConfig)
@@ -103,9 +135,12 @@ internal class CollectiblesBlockModel @Inject constructor(
     }
 
     private suspend fun openCollectibles(userWalletId: UserWalletId) {
-        val accountList = singleAccountListSupplier.getSyncOrNull(userWalletId = userWalletId)
-        val hasAccount = accountList?.accounts?.any { it is Account.Collectibles } == true
-        val startRoute = if (hasAccount) CollectiblesStartRoute.Main else CollectiblesStartRoute.Onboarding
+        val status = collectiblesAccountStatusSupplier(userWalletId).first()
+        val startRoute = if (status is CollectiblesAccountStatusValue.NotOnboarded) {
+            CollectiblesStartRoute.Onboarding
+        } else {
+            CollectiblesStartRoute.Main
+        }
 
         router.push(AppRoute.Collectibles(userWalletId = userWalletId, startRoute = startRoute))
     }

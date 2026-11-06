@@ -1,5 +1,7 @@
 package com.tangem.features.send.mcp
 
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.send.impl.R
 import android.os.SystemClock
 import arrow.core.Either
 import arrow.core.right
@@ -17,8 +19,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
-import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.repository.McpRepository
@@ -34,8 +34,12 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.loadedStatus
+import com.tangem.features.send.mcp.model.SendIntentAmountTextConverter
+import com.tangem.features.send.mcp.model.SendIntentCantReachConverter
 import com.tangem.features.send.mcp.model.SendIntentModel
 import com.tangem.features.send.mcp.model.SendIntentOfferConverter
+import com.tangem.features.send.mcp.model.SendIntentProcessedConverter
+import com.tangem.features.send.mcp.model.SendIntentUM
 import com.tangem.features.send.send.SendModelTestBase
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.send.ui.state.SendUM
@@ -63,7 +67,6 @@ import java.math.BigDecimal
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SendIntentNavigationTest : SendModelTestBase() {
 
-    private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val getSendIntentUseCase: GetSendIntentUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val sourceResolver: SendIntentSourceResolver = mockk()
@@ -172,16 +175,19 @@ internal class SendIntentNavigationTest : SendModelTestBase() {
             )
         }
         lifecycle.resume()
+        val amountTextConverter = SendIntentAmountTextConverter()
         val model = SendIntentModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
             router = router,
-            messageSender = messageSender,
             getSendIntentUseCase = getSendIntentUseCase,
             userWalletsListRepository = userWalletsListRepository,
             sourceResolver = sourceResolver,
             mcpRepository = mcpRepository,
-            offerConverter = SendIntentOfferConverter(),
+            offerConverter = SendIntentOfferConverter(amountTextConverter),
+            processedConverter = SendIntentProcessedConverter(amountTextConverter),
+            cantReachConverter = SendIntentCantReachConverter(),
             sendRouteConverter = SendIntentSendRouteConverter(),
+            analyticsEventHandler = mockk(relaxed = true),
             paramsContainer = MutableParamsContainer(SendIntentComponent.Params(intent.id)),
         )
         advanceUntilIdle()
@@ -190,7 +196,7 @@ internal class SendIntentNavigationTest : SendModelTestBase() {
         coVerify(exactly = 1) { sendTransactionUseCase(any(), wallet, any()) }
 
         // Act
-        checkNotNull(model.offer.value).primaryButton.onClick()
+        (model.sheet.value as SendIntentUM.Offer).primaryButton.onClick()
         advanceUntilIdle()
         val wasBroadcastActive = broadcastJob.isActive
         response.complete("tx-hash".right())
@@ -201,8 +207,11 @@ internal class SendIntentNavigationTest : SendModelTestBase() {
         assertThat(stack.value.items.map { it.configuration }).containsExactlyElementsIn(expectedRoutes).inOrder()
         assertThat(wasBroadcastActive).isTrue()
         verify(exactly = 1) { onSendTransaction() }
-        verify(exactly = 1) { router.pop(any()) }
-        verify(exactly = if (isDuplicateBelow) 1 else 0) { messageSender.send(any<ToastMessage>()) }
+        verify(exactly = if (isDuplicateBelow) 0 else 1) { router.pop(any()) }
+        if (isDuplicateBelow) {
+            assertThat((model.sheet.value as SendIntentUM.Status).title)
+                .isEqualTo(resourceReference(R.string.mcp_send_intent_cant_reach_title))
+        }
         assertThat(sendingModel.uiState.value.confirmUM).isInstanceOf(ConfirmUM.Success::class.java)
         model.onDestroy()
     }

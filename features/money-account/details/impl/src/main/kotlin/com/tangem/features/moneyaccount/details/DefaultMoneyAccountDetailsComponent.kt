@@ -19,6 +19,8 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
+import com.tangem.features.tangempay.components.TangemPayWithdrawHubComponent
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import dagger.assisted.Assisted
@@ -33,6 +35,7 @@ internal class DefaultMoneyAccountDetailsComponent @AssistedInject constructor(
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val bankingDetailsErrorComponentFactory: TangemPayBankingDetailsErrorComponent.Factory,
     private val bankTransferOnrampDetailsComponentFactory: TangemPayBankTransferOnrampDetailsComponent.Factory,
+    private val withdrawHubComponentFactory: TangemPayWithdrawHubComponent.Factory,
     private val bankDetailsAnalytics: MoneyAccountBankDetailsAnalytics,
 ) : MoneyAccountDetailsComponent, AppComponentContext by appComponentContext {
 
@@ -77,7 +80,17 @@ internal class DefaultMoneyAccountDetailsComponent @AssistedInject constructor(
             params = TangemPayBankTransferOnrampDetailsComponent.Params(
                 userWalletId = params.userWalletId,
                 bankCredentials = config.bankCredentials,
+                feeSource = TangemPayBankTransferOnrampDetailsComponent.FeeSource.Route,
                 analytics = bankDetailsAnalytics,
+            ),
+        )
+        is MoneyAccountDetailsRoute.WithdrawHub -> withdrawHubComponentFactory.create(
+            context = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayWithdrawHubComponent.Params(
+                sourceAccount = BankWithdrawSourceAccount.Money(
+                    userWalletId = params.userWalletId,
+                    productInstanceId = config.productInstanceId,
+                ),
             ),
         )
     }

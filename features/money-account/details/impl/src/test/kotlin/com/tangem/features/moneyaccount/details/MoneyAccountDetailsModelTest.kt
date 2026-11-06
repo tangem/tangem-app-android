@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -21,10 +22,12 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.pay.MockBankCredentials
@@ -35,8 +38,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestScope
@@ -65,11 +70,13 @@ internal class MoneyAccountDetailsModelTest {
     private val getExploreUrlUseCase: GetExploreUrlUseCase = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase = mockk()
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(moneyAccountStatusSupplier, router, sendFeedbackEmailUseCase, urlOpener, analytics)
-        clearMocks(getMoneyAccountBankCredentialsUseCase)
+        clearMocks(getMoneyAccountBankCredentialsUseCase, moneyAccountStatusFetcher, txHistoryContentUpdateEmitter)
     }
 
     @ParameterizedTest
@@ -218,7 +225,7 @@ internal class MoneyAccountDetailsModelTest {
             verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsErrorSupportTapped>()) }
             coVerify(exactly = 1) {
                 sendFeedbackEmailUseCase(
-                    FeedbackEmailType.Visa.DirectUserRequest(
+                    FeedbackEmailType.Visa.MoneyAccountRequest(
                         walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                         customerId = CUSTOMER_ID,
                     ),
@@ -267,13 +274,13 @@ internal class MoneyAccountDetailsModelTest {
 
     @ParameterizedTest
     @MethodSource("provideSendClickModels")
-    fun `GIVEN account WHEN send clicked THEN send opens for the account token only with a balance`(
+    fun `GIVEN account WHEN send clicked THEN withdraw hub offers bank transfer only with the bank off-ramp channel`(
         model: SendClickModel,
     ) = runTest {
         // Arrange
         val pushedRoutes = mutableListOf<Route>()
         every { router.push(capture(pushedRoutes), any()) } returns Unit
-        val detailsModel = createModel(activeAccount(balance = model.balance))
+        val detailsModel = createModel(model.status)
         advanceUntilIdle()
 
         // Act
@@ -281,6 +288,24 @@ internal class MoneyAccountDetailsModelTest {
 
         // Assert
         assertThat(pushedRoutes).containsExactlyElementsIn(listOfNotNull(model.expectedRoute))
+        detailsModel.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideSendClickModels")
+    fun `GIVEN account WHEN send clicked THEN send button tap reported only when the hub opens`(
+        model: SendClickModel,
+    ) = runTest {
+        // Arrange
+        val detailsModel = createModel(model.status)
+        advanceUntilIdle()
+
+        // Act
+        detailsModel.uiState.value.onSendClick()
+
+        // Assert
+        val expectedTaps = if (model.expectedRoute == null) 0 else 1
+        verify(exactly = expectedTaps) { analytics.send(MoneyAccountAnalyticsEvents.SendClicked()) }
         detailsModel.onDestroy()
     }
 
@@ -316,6 +341,108 @@ internal class MoneyAccountDetailsModelTest {
             model.onDestroy()
         }
 
+    @Test
+    fun `GIVEN account status WHEN model created THEN tx history currency is the account token`() = runTest {
+        // Act
+        val model = createModel(activeAccount(balance = null))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.txHistoryCurrency).isEqualTo(token)
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNonAccountStatuses")
+    fun `GIVEN non account status WHEN model created THEN tx history currency is absent`(
+        status: MoneyAccountStatusValue,
+    ) = runTest {
+        // Act
+        val model = createModel(status)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.txHistoryCurrency).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN account shown WHEN pulled to refresh THEN status fetched tx history reloaded and indicator hidden`() =
+        runTest {
+            // Arrange
+            coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Act
+            model.pullToRefresh()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+            coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN status fetch in progress WHEN account status updated THEN refresh indicator stays`() = runTest {
+        // Arrange
+        coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
+        val statuses = MutableStateFlow<MoneyAccountStatusValue>(activeAccount(balance = null))
+        val model = createModel(statuses)
+        advanceUntilIdle()
+        model.pullToRefresh()
+
+        // Act
+        statuses.value = activeAccount(balance = balance())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isTrue()
+        assertThat(model.uiState.value.balance).isInstanceOf(MoneyAccountBalanceBlockState.Content::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN refresh in progress WHEN pulled again THEN status fetched once`() = runTest {
+        // Arrange
+        coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
+        val model = createModel(activeAccount(balance = balance()))
+        advanceUntilIdle()
+        model.pullToRefresh()
+        advanceUntilIdle()
+
+        // Act
+        model.pullToRefresh()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN account not loaded WHEN pulled to refresh THEN status fetched without tx history reload`() = runTest {
+        // Arrange
+        coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
+        val model = createModel(emptyFlow())
+        advanceUntilIdle()
+
+        // Act
+        model.pullToRefresh()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+        coVerify(exactly = 0) { txHistoryContentUpdateEmitter.triggerUpdate() }
+        model.onDestroy()
+    }
+
+    private fun MoneyAccountDetailsModel.pullToRefresh() {
+        uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+    }
+
     private fun TestScope.createModel(status: MoneyAccountStatusValue) = createModel(flowOf(status))
 
     private fun TestScope.createModel(statuses: Flow<MoneyAccountStatusValue>): MoneyAccountDetailsModel {
@@ -332,6 +459,8 @@ internal class MoneyAccountDetailsModelTest {
             getExploreUrlUseCase = getExploreUrlUseCase,
             analytics = analytics,
             getMoneyAccountBankCredentialsUseCase = getMoneyAccountBankCredentialsUseCase,
+            moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+            txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
         )
     }
 
@@ -360,28 +489,54 @@ internal class MoneyAccountDetailsModelTest {
 
     private fun provideSendClickModels() = listOf(
         SendClickModel(
-            balance = balance(),
-            expectedRoute = AppRoute.Send(userWalletId = userWalletId, currency = token),
+            status = activeAccount(balance(), isBankOfframpAvailable = true),
+            expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = PRODUCT_INSTANCE_ID),
         ),
-        SendClickModel(balance = null, expectedRoute = null),
+        SendClickModel(
+            status = activeAccount(balance(), isBankOfframpAvailable = false),
+            expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
+        ),
+        SendClickModel(
+            status = activeAccount(balance(), isBankOfframpAvailable = null),
+            expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
+        ),
+        SendClickModel(
+            status = MoneyAccountStatusValue.Account.Deactivated(
+                source = StatusSource.ACTUAL,
+                cryptoCurrency = token,
+                balance = balance(),
+                customerId = CUSTOMER_ID,
+            ),
+            expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
+        ),
+        SendClickModel(
+            status = activeAccount(balance = null, isBankOfframpAvailable = true),
+        ),
     )
 
-    data class SendClickModel(val balance: MoneyAccountStatusValue.Balance?, val expectedRoute: AppRoute.Send?)
+    data class SendClickModel(
+        val status: MoneyAccountStatusValue.Account,
+        val expectedRoute: MoneyAccountDetailsRoute? = null,
+    )
 
     private fun provideNonAccountStatuses() = listOf(
         MoneyAccountStatusValue.Error.Unavailable,
-        MoneyAccountStatusValue.Error.NotSynced,
         MoneyAccountStatusValue.Error.ExposedDevice,
         MoneyAccountStatusValue.Empty,
         MoneyAccountStatusValue.NotCreated,
         MoneyAccountStatusValue.Onboarding.Activating(source = StatusSource.ACTUAL, customerId = CUSTOMER_ID),
     )
 
-    private fun activeAccount(balance: MoneyAccountStatusValue.Balance?) = MoneyAccountStatusValue.Account.Active(
+    private fun activeAccount(
+        balance: MoneyAccountStatusValue.Balance?,
+        isBankOfframpAvailable: Boolean? = null,
+    ) = MoneyAccountStatusValue.Account.Active(
         source = StatusSource.ACTUAL,
         cryptoCurrency = token,
         balance = balance,
         customerId = CUSTOMER_ID,
+        productInstanceId = PRODUCT_INSTANCE_ID,
+        isBankOfframpAvailable = isBankOfframpAvailable,
     )
 
     private fun balance() = MoneyAccountStatusValue.Balance(
@@ -410,6 +565,7 @@ internal class MoneyAccountDetailsModelTest {
     private companion object {
         const val CUSTOMER_ID = "customer"
         const val DEPOSIT_ADDRESS = "0xdeposit"
+        const val PRODUCT_INSTANCE_ID = "instance-1"
 
         val CREDENTIALS = MockBankCredentials.bankCredentials()
     }

@@ -188,7 +188,7 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
 
         setupHooks().run {
             step("Set WireMock scenarios for a Tangem Pay bank transfer") { setTangemPayBankOfframpTransferScenarios() }
-            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
+            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub(accessCode = TANGEM_PAY_ACCESS_CODE) }
             step("Click on 'To personal account' button") { openTangemPayBankWithdrawToPersonalAccount() }
             step("Assert the default source and route") { assertTangemPayBankWithdrawDefaults() }
             step("Enter amount '$amount'") { enterTangemPayBankWithdrawAmount(amount) }
@@ -226,7 +226,7 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
 
         setupHooks().run {
             step("Set WireMock scenarios for a Tangem Pay bank transfer") { setTangemPayBankOfframpTransferScenarios() }
-            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
+            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub(accessCode = TANGEM_PAY_ACCESS_CODE) }
             step("Click on 'To personal account' button") { openTangemPayBankWithdrawToPersonalAccount() }
             step("Assert the default source and route") { assertTangemPayBankWithdrawDefaults() }
             step("Choose '${WIRE.title}' route") { chooseTangemPayBankWithdrawRoute(WIRE) }
@@ -265,7 +265,7 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
 
         setupHooks().run {
             step("Set WireMock scenarios for a Tangem Pay bank transfer") { setTangemPayBankOfframpTransferScenarios() }
-            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
+            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub(accessCode = TANGEM_PAY_ACCESS_CODE) }
             step("Click on 'To business account' button") { openTangemPayBankWithdrawToBusinessAccount() }
             step("Assert the default source and route") { assertTangemPayBankWithdrawDefaults() }
             step("Enter amount '$amount'") { enterTangemPayBankWithdrawAmount(amount) }
@@ -303,7 +303,7 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
 
         setupHooks().run {
             step("Set WireMock scenarios for a Tangem Pay bank transfer") { setTangemPayBankOfframpTransferScenarios() }
-            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
+            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub(accessCode = TANGEM_PAY_ACCESS_CODE) }
             step("Click on 'To business account' button") { openTangemPayBankWithdrawToBusinessAccount() }
             step("Assert the default source and route") { assertTangemPayBankWithdrawDefaults() }
             step("Choose '${WIRE.title}' route") { chooseTangemPayBankWithdrawRoute(WIRE) }
@@ -389,7 +389,7 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
 
         setupHooks().run {
             step("Set WireMock scenarios for a Tangem Pay bank transfer") { setTangemPayBankOfframpTransferScenarios() }
-            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
+            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub(accessCode = TANGEM_PAY_ACCESS_CODE) }
             step("Click on 'To personal account' button") { openTangemPayBankWithdrawToPersonalAccount() }
             step("Assert the default source and route") { assertTangemPayBankWithdrawDefaults() }
             step("Enter amount '$amount'") { enterTangemPayBankWithdrawAmount(amount) }
@@ -429,7 +429,7 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
             step("Set WireMock scenario '$bankAccountsScenario' to '$twoAccountsState'") {
                 setWireMockScenarioState(bankAccountsScenario, twoAccountsState)
             }
-            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
+            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub(accessCode = TANGEM_PAY_ACCESS_CODE) }
             step("Assert recent recipient '${JOHN.shortName}' is displayed") {
                 assertTangemPayRecentRecipientDisplayed(JOHN)
             }
@@ -684,7 +684,7 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
             step("Set WireMock scenario '$orderScenario' to '$orderPollingState'") {
                 setWireMockScenarioState(orderScenario, orderPollingState)
             }
-            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
+            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub(accessCode = TANGEM_PAY_ACCESS_CODE) }
             step("Click on 'To business account' button") { openTangemPayBankWithdrawToBusinessAccount() }
             step("Assert the default source and route") { assertTangemPayBankWithdrawDefaults() }
             step("Enter amount '$amount'") { enterTangemPayBankWithdrawAmount(amount) }

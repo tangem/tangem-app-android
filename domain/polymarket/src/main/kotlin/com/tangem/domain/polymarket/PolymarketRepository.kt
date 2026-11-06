@@ -2,9 +2,11 @@ package com.tangem.domain.polymarket
 
 import arrow.core.Either
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketCategory
@@ -36,7 +38,7 @@ interface PolymarketRepository {
     /**
      * Fetch the BFF-owned UI categories shown as Discovery feed tabs.
      */
-    suspend fun getCategories(): Either<DataError, List<PolymarketCategory>>
+    suspend fun getCategories(userWalletId: UserWalletId): Either<DataError, List<PolymarketCategory>>
 
     /**
      * Serve the Discovery feed as a paginated batch flow, page size [batchSize].
@@ -44,7 +46,11 @@ interface PolymarketRepository {
      * A page that fails — or, for the very first page, comes back empty — is retried once silently before the
      * flow reports the failure, so a single hiccup doesn't surface as an error state (see the Discovery contract).
      */
-    fun getEventsBatchFlow(context: PolymarketEventsBatchingContext, batchSize: Int): PolymarketEventsBatchFlow
+    fun getEventsBatchFlow(
+        userWalletId: UserWalletId,
+        context: PolymarketEventsBatchingContext,
+        batchSize: Int,
+    ): PolymarketEventsBatchFlow
 
     /**
      * Serve full-text search over discoverable events as a paginated batch flow, page size [batchSize].
@@ -53,13 +59,17 @@ interface PolymarketRepository {
      * and a failed page is not retried silently: a search-as-you-type user is better served by a fast error
      * (or the next keystroke) than by a hidden retry.
      */
-    fun searchEventsBatchFlow(context: PolymarketSearchBatchingContext, batchSize: Int): PolymarketSearchBatchFlow
+    fun searchEventsBatchFlow(
+        userWalletId: UserWalletId,
+        context: PolymarketSearchBatchingContext,
+        batchSize: Int,
+    ): PolymarketSearchBatchFlow
 
     /**
      * Fetch the details of a single prediction event, carrying all of its markets
      * (unlike the feed, which carries only the top active ones).
      */
-    suspend fun getEvent(eventId: String): Either<PolymarketEventError, PolymarketEvent>
+    suspend fun getEvent(userWalletId: UserWalletId, eventId: String): Either<PolymarketEventError, PolymarketEvent>
 
     /**
      * Preview a fill-and-kill order against the live book (BFF `POST /orders/quote`). Places nothing.
@@ -68,12 +78,12 @@ interface PolymarketRepository {
      * timer rather than caching it.
      */
     suspend fun placeOrder(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        identity: PolymarketClobIdentity,
         signedOrder: PredictionSignedOrder,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult>
 
     suspend fun getOrderQuote(
+        userWalletId: UserWalletId,
         request: PredictionOrderQuoteRequest,
     ): Either<PredictionOrderQuoteError, PredictionOrderQuote>
 
@@ -82,8 +92,7 @@ interface PolymarketRepository {
      * its matching window, so a transport failure is reported as such rather than folded into unknown.
      */
     suspend fun getOrder(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        identity: PolymarketClobIdentity,
         orderId: String,
     ): Either<PredictionOrderStateError, PredictionOrderState>
 
@@ -97,7 +106,10 @@ interface PolymarketRepository {
      * Read the owner's deposit-wallet address and onboarding status (BFF `GET /wallet`).
      * This is the endpoint the onboarding flow polls to observe progress.
      */
-    suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState>
+    suspend fun getWalletStatus(
+        userWalletId: UserWalletId,
+        ownerAddress: String,
+    ): Either<PolymarketWalletError, PolymarketWalletState>
 
     /**
      * The same read, keyed by the Tangem wallet id. Serves a wallet whose owner address this device has never
@@ -124,7 +136,10 @@ interface PolymarketRepository {
      * Relay the fully-signed 17-approval [batch] (BFF `POST /wallet/approvals`). The deposit wallet must
      * be deployed first (otherwise the BFF responds 409).
      */
-    suspend fun submitApprovals(batch: PolymarketApprovalsBatch): Either<PolymarketWalletError, PolymarketWalletStatus>
+    suspend fun submitApprovals(
+        userWalletId: UserWalletId,
+        batch: PolymarketApprovalsBatch,
+    ): Either<PolymarketWalletError, PolymarketWalletStatus>
 
     suspend fun getBuilderCode(walletId: String): Either<DataError, String>
 

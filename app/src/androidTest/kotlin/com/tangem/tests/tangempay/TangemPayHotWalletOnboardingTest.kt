@@ -4,14 +4,15 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_KYC_STATUS_SCENARIO
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.scenarios.exitTangemPayKycScreen
 import com.tangem.scenarios.openMainScreenWithNewHotWallet
 import com.tangem.scenarios.selectTangemPayResidency
@@ -20,7 +21,6 @@ import com.tangem.screens.onIntroductionScreen
 import com.tangem.screens.tangempay.onTangemPayHotWalletOnboardingScreen
 import com.tangem.screens.tangempay.onTangemPayMainScreen
 import com.tangem.screens.tangempay.onTangemPayOnboardingScreen
-import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -32,17 +32,11 @@ import javax.inject.Inject
 @HiltAndroidTest
 class TangemPayHotWalletOnboardingTest : BaseTestCase() {
 
-    // These tests cover Tangem Pay onboarding: under TWI_1841 the Main promo gives way to the wallet's system cards
-    @RemoveWithToggle(
-        toggleName = "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
-        description = "Move the test to a wallet without system cards, where the Main promo is shown",
-    )
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED.rawName to false,
-    )
-
     @Inject
     lateinit var appsFlyerRepository: AppsFlyerRepository
+
+    @Inject
+    lateinit var moneyAccountFeatureToggles: MoneyAccountFeatureToggles
 
     private val kycInProgressText = getResourceString(CoreResR.string.tangempay_kyc_in_progress)
     private val residencyCountry = "United States"
@@ -56,6 +50,11 @@ class TangemPayHotWalletOnboardingTest : BaseTestCase() {
         val eligibilityPaeraCustomerState = "PaeraCustomer"
         val channelsBannerState = "Banner"
         val kycInProgressState = "InProgress"
+        val zeroBalanceTokensState = "TOTAL_BALANCE_TOKENS_ZERO"
+        val ethBalanceScenario = "eth_network_balance"
+        val ethCallScenario = "eth_call_api"
+        val rippleAccountInfoScenario = "ripple_account_info"
+        val emptyState = "Empty"
 
         setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityStartedState'") {
@@ -66,6 +65,13 @@ class TangemPayHotWalletOnboardingTest : BaseTestCase() {
             }
             step("Set WireMock scenario '$TANGEM_PAY_KYC_STATUS_SCENARIO' to '$kycInProgressState'") {
                 setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycInProgressState)
+            }
+            // A funded wallet without a backup gets the 'Finalize wallet setup' card, which hides the Pay promo.
+            step("Set WireMock scenarios for a wallet with zero balance") {
+                setWireMockScenarioState(USER_TOKENS_API_SCENARIO, zeroBalanceTokensState)
+                setWireMockScenarioState(ethBalanceScenario, emptyState)
+                setWireMockScenarioState(ethCallScenario, emptyState)
+                setWireMockScenarioState(rippleAccountInfoScenario, emptyState)
             }
             step("Create a new mobile wallet and open 'Main' screen") {
                 openMainScreenWithNewHotWallet()
@@ -133,7 +139,7 @@ class TangemPayHotWalletOnboardingTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayHotWalletOnboardingScreen {
                         title.assertIsDisplayed()
-                        legalCaption.assertIsDisplayed()
+                        if (!moneyAccountFeatureToggles.isMoneyAccountsEnabled) legalCaption.assertIsDisplayed()
                     }
                 }
             }

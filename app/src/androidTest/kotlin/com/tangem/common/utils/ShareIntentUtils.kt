@@ -17,6 +17,20 @@ fun stubShareChooserIntent() {
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 }
 
+/**
+ * Returns the text the most recent share chooser carried (the `EXTRA_TEXT` of its wrapped `ACTION_SEND`), or null
+ * if no share chooser was recorded. Pair with [stubShareChooserIntent] so the chooser is swallowed and recorded
+ * rather than handed to another app. Use when the shared text is produced at runtime (e.g. a transaction explorer
+ * URL) and so can't be matched up-front with [assertTextSharedViaChooser].
+ */
+@Suppress("DEPRECATION")
+fun lastSharedChooserText(): String? {
+    return Intents.getIntents()
+        .lastOrNull { it.action == Intent.ACTION_CHOOSER }
+        ?.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
+        ?.getStringExtra(Intent.EXTRA_TEXT)
+}
+
 /** Asserts the share chooser was opened [times] times in total, each carrying [text] as the shared text. */
 fun assertTextSharedViaChooser(text: String, times: Int) {
     Intents.intended(

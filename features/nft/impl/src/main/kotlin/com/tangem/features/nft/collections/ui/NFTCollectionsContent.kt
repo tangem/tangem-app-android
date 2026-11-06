@@ -53,7 +53,7 @@ internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(
                 start = 16.dp,
                 end = 16.dp,
@@ -79,7 +79,7 @@ internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: 
                             .align(Alignment.Center),
                         text = stringResourceSafe(id = R.string.nft_empty_search),
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -102,7 +102,7 @@ internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: 
                         )
                         .testTag(NFTCollectionsScreenTestTags.LAZY_LIST),
                     // .clip(TangemTheme.shapes.roundedCornersXMedium)
-                    // .background(TangemTheme.colors.background.primary),
+                    // .background(TangemTheme.colors3.bg.secondary),
                     state = listState,
                 ) {
                     content.collections.fastForEachIndexed { index, item ->
@@ -156,14 +156,14 @@ private fun getRoundShape(
 private fun LazyListScope.nftPortfolioItem(item: NFTCollectionPortfolioUM, shape: RoundedCornerShape) {
     item(item.id) {
         AccountTitle(
-            textColor = TangemTheme.colors.text.primary1,
+            textColor = TangemTheme.colors3.text.primary,
             textStyle = TangemTheme.typography.caption1,
             accountTitleUM = item.title,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 12.dp)
                 .clip(shape)
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
         )
     }
@@ -183,7 +183,7 @@ private fun LazyListScope.nftCollectionItem(
         NFTCollection(
             modifier = Modifier
                 .clip(itemShape)
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .fillMaxWidth(),
             state = collection,
         )
@@ -244,7 +244,7 @@ private fun LazyListScope.assetsListLoading(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(assetsShape(isNextItemNFTCollection))
-                        .background(TangemTheme.colors.background.action)
+                        .background(TangemTheme.colors3.bg.secondary)
                         .padding(6.dp),
                 ) {
                     NFTCollectionAssetLoading(
@@ -289,7 +289,7 @@ private fun LazyListScope.assetsListFailed(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(assetsShape(isNextItemNFTCollection))
-                    .background(TangemTheme.colors.background.action)
+                    .background(TangemTheme.colors3.bg.secondary)
                     .height(142.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -332,7 +332,7 @@ private fun LazyListScope.assetsListContent(
                         .conditional(rowIndex.inc() == rowCount) {
                             clip(assetsShape(isNextItemNFTCollection))
                         }
-                        .background(TangemTheme.colors.background.action)
+                        .background(TangemTheme.colors3.bg.secondary)
                         .fillMaxWidth()
                         .padding(6.dp),
                 ) {

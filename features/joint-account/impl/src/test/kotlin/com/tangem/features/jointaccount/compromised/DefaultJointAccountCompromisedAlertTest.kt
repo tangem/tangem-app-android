@@ -151,7 +151,12 @@ internal class DefaultJointAccountCompromisedAlertTest {
         tokensCount = 0,
         fiatBalance = TotalFiatBalance.Loading,
     )
-    private val active = JointAccountStatusValue.Active(StatusSource.ACTUAL, totalMembers = 2, safeAddress = "0x1")
+    private val active = JointAccountStatusValue.Active(
+        StatusSource.ACTUAL,
+        totalMembers = 2,
+        safeAddress = "0x1",
+        threshold = 2,
+    )
 
     private fun jointStatus(value: JointAccountStatusValue) = AccountStatus.Joint(
         account = jointAccount,

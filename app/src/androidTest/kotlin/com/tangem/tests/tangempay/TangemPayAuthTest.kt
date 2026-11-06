@@ -123,7 +123,9 @@ class TangemPayAuthTest : BaseTestCase() {
                 setWireMockScenarioState(challengeScenario, challengeErrorState)
             }
             step("Enable real Tangem Pay authorization") { enableTangemPayRealAuth() }
-            step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+            step("Open Main screen with the Tangem Pay tile") {
+                openMainScreenWithTangemPayTile(accessCode = TANGEM_PAY_ACCESS_CODE)
+            }
             step("Assert session expired banner is displayed") { assertTangemPaySessionExpiredBanner() }
             step("Renew Tangem Pay session") { renewTangemPaySession(TANGEM_PAY_ACCESS_CODE) }
             step("Assert '$challengeEndpoint' was requested") {
@@ -170,7 +172,9 @@ class TangemPayAuthTest : BaseTestCase() {
                 setWireMockScenarioState(tokenScenario, tokenInvalidSignatureState)
             }
             step("Enable real Tangem Pay authorization") { enableTangemPayRealAuth() }
-            step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+            step("Open Main screen with the Tangem Pay tile") {
+                openMainScreenWithTangemPayTile(accessCode = TANGEM_PAY_ACCESS_CODE)
+            }
             step("Assert session expired banner is displayed") { assertTangemPaySessionExpiredBanner() }
             step("Renew Tangem Pay session") { renewTangemPaySession(TANGEM_PAY_ACCESS_CODE) }
             step("Assert '$challengeEndpoint' and '$tokenEndpoint' were requested") {

@@ -110,6 +110,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
         isEnabled = true,
         onClick = { },
         imageState = ImageState.MobileWallet,
+        isSocialLogin = true,
     )
 
     @Composable

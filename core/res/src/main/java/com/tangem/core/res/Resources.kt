@@ -4,7 +4,6 @@ import android.content.res.Resources
 import androidx.annotation.ArrayRes
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.logging.TangemLogger
 
@@ -103,5 +102,5 @@ private fun reportIssue(throwable: Throwable, resources: Resources, id: Int, var
 
     TangemLogger.withTag("Resources").e("Error", exception)
 
-    FirebaseCrashlytics.getInstance().recordException(exception)
+    StringResourceErrorReporter.instance?.report(exception)
 }

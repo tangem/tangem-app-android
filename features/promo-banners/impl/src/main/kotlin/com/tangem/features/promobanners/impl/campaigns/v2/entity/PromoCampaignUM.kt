@@ -23,6 +23,7 @@ internal data class PromoCampaignUM(
 internal data class PromoTokenSelectorUM(
     val selectedToken: TokenItemState?,
     val selectedAccount: PromoSelectedAccountUM?,
+    val accountTitle: TextReference,
     val onClick: () -> Unit,
 )
 

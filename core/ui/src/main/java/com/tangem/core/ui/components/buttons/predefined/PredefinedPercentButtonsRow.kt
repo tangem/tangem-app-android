@@ -47,7 +47,7 @@ fun PredefinedPercentButtonsRow(items: ImmutableList<PredefinedPercentButtonUM>,
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors.button.secondary)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
     ) {
         items.fastForEach { item ->
@@ -66,13 +66,13 @@ private fun PercentPill(item: PredefinedPercentButtonUM, modifier: Modifier = Mo
     Text(
         text = item.label.resolveReference(),
         style = TangemTheme.typography.caption1,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         textAlign = TextAlign.Center,
         modifier = modifier
             .testTag(item.id)
             .clip(RoundedCornerShape(16.dp))
             .height(24.dp)
-            .background(TangemTheme.colors.field.primary)
+            .background(TangemTheme.colors3.bg.tertiary)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),

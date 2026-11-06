@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -34,7 +35,7 @@ class YieldSupplyEstimateEnterFeeUseCase(
                         userWallet = userWallet,
                         cryptoCurrency = cryptoCurrency,
                         transactionData = transaction,
-                    ).normal,
+                    ).normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
                 )
             }
         } else {
@@ -82,28 +83,27 @@ class YieldSupplyEstimateEnterFeeUseCase(
         }
     }
 
+    private fun TransactionData.Uncompiled.isEnter(): Boolean =
+        (extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade() is EthereumYieldSupplyEnterCallData
+
     private suspend fun estimateFeeWithStatic(
         userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
         transactionDataList: List<TransactionData.Uncompiled>,
     ): List<TransactionData.Uncompiled> {
-        val withCalculatedFees = transactionDataList.filter {
-            (it.extras as? EthereumTransactionExtras)?.callData !is EthereumYieldSupplyEnterCallData
-        }.map { transaction ->
+        val withCalculatedFees = transactionDataList.filterNot { it.isEnter() }.map { transaction ->
             transaction.copy(
                 fee = feeRepository.calculateFee(
                     userWallet = userWallet,
                     cryptoCurrency = cryptoCurrency,
                     transactionData = transaction,
-                ).normal,
+                ).normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
             )
         }
 
         val calculatedFee = withCalculatedFees.firstOrNull()?.fee ?: error("Must be any calculated fee")
 
-        val withEstimatedFees = transactionDataList.filter {
-            (it.extras as? EthereumTransactionExtras)?.callData is EthereumYieldSupplyEnterCallData
-        }.map { transaction ->
+        val withEstimatedFees = transactionDataList.filter { it.isEnter() }.map { transaction ->
             transaction.copy(
                 fee = calculatedFee.fixFee(cryptoCurrency, ETHEREUM_CONSTANT_GAS_LIMIT)
                     .increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),

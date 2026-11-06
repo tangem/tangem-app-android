@@ -2,7 +2,6 @@ package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
-import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHECK_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_GEO_COUNTRIES_SCENARIO
@@ -77,7 +76,7 @@ class TangemPayRegionUnavailableTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHECK_SCENARIO, eligibilityCheckUnavailableState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
             val countryChecksBefore = getTangemPayEligibilityCheckRequestCountByCountry(kazakhstanCode)
@@ -146,7 +145,7 @@ class TangemPayRegionUnavailableTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHECK_SCENARIO, eligibilityCheckUnavailableState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
             step("Click on country: '$kazakhstan'") { clickTangemPayResidencyItem(kazakhstan) }
@@ -206,7 +205,7 @@ class TangemPayRegionUnavailableTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHECK_SCENARIO, eligibilityCheckUnavailableState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityPaeraCustomerState'") {
@@ -240,7 +239,7 @@ class TangemPayRegionUnavailableTest : BaseTestCase() {
                 onTangemPayWaitlistSheet { saveButton.clickWithAssertion() }
             }
             step("Assert waitlist request carries the email, the US state and the marketing consent") {
-                val body = awaitTangemPayWaitlistRequestBody(waitlistRequestsBefore)
+                val body = awaitTangemPayWaitlistRequestBody(waitlistRequestsBefore, productPaymentAccount)
                 assertEquals(validEmail, body.getString("email"))
                 assertEquals(true, body.getBoolean("marketing_consent"))
                 assertEquals(unitedStatesCode, body.getString("country_code"))
@@ -278,7 +277,7 @@ class TangemPayRegionUnavailableTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHECK_SCENARIO, eligibilityCheckUnavailableState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityPaeraCustomerState'") {
@@ -299,7 +298,7 @@ class TangemPayRegionUnavailableTest : BaseTestCase() {
                 onTangemPayWaitlistSheet { saveButton.clickWithAssertion() }
             }
             step("Assert waitlist request carries the email and the country without a region and consent") {
-                val body = awaitTangemPayWaitlistRequestBody(waitlistRequestsBefore)
+                val body = awaitTangemPayWaitlistRequestBody(waitlistRequestsBefore, productPaymentAccount)
                 assertEquals(validEmail, body.getString("email"))
                 assertEquals(false, body.getBoolean("marketing_consent"))
                 assertEquals(kazakhstanCode, body.getString("country_code"))
@@ -337,7 +336,7 @@ class TangemPayRegionUnavailableTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHECK_SCENARIO, eligibilityCheckUnavailableState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityPaeraCustomerState'") {
@@ -405,7 +404,7 @@ class TangemPayRegionUnavailableTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHECK_SCENARIO, eligibilityCheckUnavailableState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityPaeraCustomerState'") {

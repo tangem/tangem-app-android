@@ -54,6 +54,7 @@ dependencies {
 
     // region Data
     implementation(projects.data.common)
+    implementation(projects.store.datasource)
     implementation(projects.data.wallets)
     // endregion
 

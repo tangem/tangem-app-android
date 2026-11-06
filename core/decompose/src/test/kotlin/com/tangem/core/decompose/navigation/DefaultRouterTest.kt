@@ -2,6 +2,7 @@ package com.tangem.core.decompose.navigation
 
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.google.common.truth.Truth.assertThat
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.logging.Severity
 import com.tangem.utils.logging.TangemLogger
@@ -14,12 +15,16 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 internal class DefaultRouterTest {
 
     private val navigation: StackNavigation<Route> = mockk()
     private val navigationProvider: AppNavigationProvider = mockk()
+    private val navigationFailureHandler: NavigationFailureHandler = mockk(relaxed = true)
 
     /** Stack the mocked [navigation] holds; every navigate call applies its transformer to it. */
     private var stack: List<Route> = emptyList()
@@ -27,7 +32,7 @@ internal class DefaultRouterTest {
     private val results = mutableListOf<Boolean>()
     private val onComplete: (Boolean) -> Unit = { results += it }
 
-    private val router = DefaultRouter(navigationProvider, TestingCoroutineDispatcherProvider())
+    private val router = DefaultRouter(navigationProvider, TestingCoroutineDispatcherProvider(), navigationFailureHandler)
 
     private val logs = mutableListOf<String>()
     private val logWriter = object : TangemLogger.LogWriter {
@@ -44,7 +49,7 @@ internal class DefaultRouterTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(navigation, navigationProvider)
+        clearMocks(navigation, navigationProvider, navigationFailureHandler)
         results.clear()
         logs.clear()
         TangemLogger.setLogWriters(listOf(logWriter))
@@ -127,6 +132,58 @@ internal class DefaultRouterTest {
         assertThat(results).containsExactly(true)
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PopTo {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN stack WHEN popTo route THEN completion tells whether the route ended up on top`(model: PopToModel) {
+            // Arrange
+            stack = model.stack
+
+            // Act
+            router.popTo(RouteA, onComplete)
+
+            // Assert
+            assertThat(stack).containsExactlyElementsIn(model.expectedStack).inOrder()
+            assertThat(results).containsExactly(model.expectedIsSuccess)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN stack WHEN popTo route class THEN completion tells whether the route ended up on top`(
+            model: PopToModel,
+        ) {
+            // Arrange
+            stack = model.stack
+
+            // Act
+            router.popTo(RouteA::class, onComplete)
+
+            // Assert
+            assertThat(stack).containsExactlyElementsIn(model.expectedStack).inOrder()
+            assertThat(results).containsExactly(model.expectedIsSuccess)
+        }
+
+        private fun provideTestModels() = listOf(
+            PopToModel(stack = listOf(RouteA, RouteB), expectedStack = listOf(RouteA), expectedIsSuccess = true),
+            PopToModel(stack = listOf(RouteA), expectedStack = listOf(RouteA), expectedIsSuccess = true),
+            PopToModel(
+                stack = listOf(RouteB, RouteA),
+                expectedStack = listOf(RouteB, RouteA),
+                expectedIsSuccess = true,
+            ),
+            PopToModel(
+                stack = listOf(RouteB, RouteC),
+                expectedStack = listOf(RouteB, RouteC),
+                expectedIsSuccess = false,
+            ),
+        )
+    }
+
+    data class PopToModel(val stack: List<Route>, val expectedStack: List<Route>, val expectedIsSuccess: Boolean)
+
     @Test
     fun `GIVEN navigation throws WHEN push THEN failure is reported as unsuccessful completion`() {
         // Arrange
@@ -182,6 +239,7 @@ internal class DefaultRouterTest {
         val router = DefaultRouter(
             navigationProvider = navigationProvider,
             dispatchers = TestingCoroutineDispatcherProvider(main = mainDispatcher, mainImmediate = mainDispatcher),
+            navigationFailureHandler = navigationFailureHandler,
         )
 
         // Act
@@ -288,6 +346,81 @@ internal class DefaultRouterTest {
             "Info Router Pop to the last matching ${RouteA::class}",
             "Info Router Rebuild the stack to [RouteA, RouteC]",
         ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN no completion callback WHEN push fails THEN failure handler is told what failed`() {
+        // Arrange
+        stack = listOf(RouteA, RouteB)
+
+        // Act
+        router.push(RouteB)
+
+        // Assert
+        verify(exactly = 1) { navigationFailureHandler.onNavigationFailed("Unable to push RouteB") }
+    }
+
+    @Test
+    fun `GIVEN no completion callback WHEN pop has nothing to pop THEN failure handler is not used`() {
+        // Arrange
+        stack = listOf(RouteA)
+
+        // Act
+        router.pop()
+        router.popTo(RouteC)
+        router.popToMatching(RouteC::class, predicate = { true })
+
+        // Assert
+        verify(exactly = 0) { navigationFailureHandler.onNavigationFailed(any()) }
+    }
+
+    @Test
+    fun `GIVEN no completion callback WHEN pop throws THEN failure handler is told`() {
+        // Arrange
+        every { navigation.navigate(any(), any()) } throws IllegalStateException("Broken stack")
+
+        // Act
+        router.pop()
+
+        // Assert
+        verify(exactly = 1) { navigationFailureHandler.onNavigationFailed(match { it.startsWith("Navigation failed") }) }
+    }
+
+    @Test
+    fun `GIVEN own completion callback WHEN navigation fails THEN failure handler is not used`() {
+        // Arrange
+        stack = listOf(RouteA)
+
+        // Act
+        router.pop(onComplete)
+
+        // Assert
+        assertThat(results).containsExactly(false)
+        verify(exactly = 0) { navigationFailureHandler.onNavigationFailed(any()) }
+    }
+
+    @Test
+    fun `GIVEN no completion callback WHEN navigation succeeds THEN failure handler is not used`() {
+        // Arrange
+        stack = listOf(RouteA)
+
+        // Act
+        router.push(RouteB)
+
+        // Assert
+        verify(exactly = 0) { navigationFailureHandler.onNavigationFailed(any()) }
+    }
+
+    @Test
+    fun `GIVEN navigation throws WHEN called without completion callback THEN failure handler is told what failed`() {
+        // Arrange
+        every { navigation.navigate(any(), any()) } throws IllegalStateException("Configurations must be unique")
+
+        // Act
+        router.push(RouteB)
+
+        // Assert
+        verify(exactly = 1) { navigationFailureHandler.onNavigationFailed("Unable to push RouteB") }
     }
 
     private data object RouteA : Route

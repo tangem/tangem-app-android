@@ -18,5 +18,6 @@ data class YieldTokenChartResponse(
     data class DataPoint(
         @Json(name = "bucketIndex") val bucketIndex: Int,
         @Json(name = "avgApy") val avgApy: BigDecimal,
+        @Json(name = "start") val start: String? = null,
     )
 }

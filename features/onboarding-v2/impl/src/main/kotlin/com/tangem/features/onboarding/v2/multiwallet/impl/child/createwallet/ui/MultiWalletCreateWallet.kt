@@ -55,7 +55,7 @@ internal fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier:
             Text(
                 text = state.title.resolveReference(),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(top = 16.dp)
@@ -65,7 +65,7 @@ internal fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier:
             Text(
                 text = state.bodyText.resolveReference(),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(top = 12.dp)
@@ -75,7 +75,7 @@ internal fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier:
 
         val termsTemplate = stringResourceSafe(CoreUiR.string.onboarding_create_wallet_term_of_conditions_text)
         val termsLinkText = stringResourceSafe(CoreUiR.string.disclaimer_title)
-        val termsLinkColor = TangemTheme.colors.text.accent
+        val termsLinkColor = TangemTheme.colors3.text.accent.blue
         Text(
             text = buildAnnotatedString {
                 appendWithStyledPlaceholder(template = termsTemplate) {
@@ -93,7 +93,7 @@ internal fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier:
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth(),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
 

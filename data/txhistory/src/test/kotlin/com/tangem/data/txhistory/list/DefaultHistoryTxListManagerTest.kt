@@ -23,6 +23,9 @@ import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCas
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistorySources
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryState
 import com.tangem.domain.txhistory.list.HistoryTxListManager.OnChainSource
+import com.tangem.domain.txhistory.model.JointOperationTx
+import com.tangem.domain.txhistory.model.OnChainTx
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
@@ -144,13 +147,13 @@ internal class DefaultHistoryTxListManagerTest {
         ResolutionModel(
             name = "crypto portfolio with empty tx history",
             isCryptoPortfolio = true,
-            itemsCount = Either.Left(TxHistoryStateError.EmptyTxHistories),
+            itemsCount = Either.Left(TxHistoryStateError.EmptyTxHistories()),
             expected = OnChainSource.BSDK,
         ),
         ResolutionModel(
             name = "crypto portfolio without tx history support",
             isCryptoPortfolio = true,
-            itemsCount = Either.Left(TxHistoryStateError.TxHistoryNotImplemented),
+            itemsCount = Either.Left(TxHistoryStateError.TxHistoryNotImplemented()),
             expected = OnChainSource.IndexTable,
         ),
         ResolutionModel(
@@ -164,14 +167,14 @@ internal class DefaultHistoryTxListManagerTest {
             name = "money account with empty tx history",
             isCryptoPortfolio = false,
             isMoneyAccount = true,
-            itemsCount = Either.Left(TxHistoryStateError.EmptyTxHistories),
+            itemsCount = Either.Left(TxHistoryStateError.EmptyTxHistories()),
             expected = OnChainSource.BSDK,
         ),
         ResolutionModel(
             name = "money account without tx history support",
             isCryptoPortfolio = false,
             isMoneyAccount = true,
-            itemsCount = Either.Left(TxHistoryStateError.TxHistoryNotImplemented),
+            itemsCount = Either.Left(TxHistoryStateError.TxHistoryNotImplemented()),
             expected = OnChainSource.IndexTable,
         ),
         ResolutionModel(
@@ -390,6 +393,39 @@ internal class DefaultHistoryTxListManagerTest {
 
     // endregion
 
+    // region tx by id
+
+    @Test
+    fun `GIVEN opened on-chain row WHEN a joint operation claims it THEN the joint row is emitted`() = runTest {
+        // Arrange
+        coEvery { getAccountCurrencyStatusUseCase.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns
+            mockk<AccountCryptoCurrencyStatus>().some()
+        val leg = mockk<OnChainTx.BSDK> { every { txId } returns "leg" }
+        val joint = JointOperationTx(
+            operation = mockk { every { operationId } returns "op" },
+            transfer = mockk(),
+            txInfo = leg,
+        )
+        val history = MutableStateFlow<HistoryState>(content(leg))
+        every { bsdk.history() } returns history
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler))
+        val manager = createManager(scope)
+        getEmittedValues(manager.state)
+        advanceUntilIdle()
+        val emitted = getEmittedValues(manager.txHistoryItemFlow(txId = "leg"))
+        advanceUntilIdle()
+
+        // Act
+        history.value = content(joint)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(emitted).containsExactly(leg, joint).inOrder()
+        scope.cancel()
+    }
+
+    // endregion
+
     private fun TestScope.runManager(): CoroutineScope {
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler))
         val manager = createManager(scope)
@@ -426,7 +462,7 @@ internal class DefaultHistoryTxListManagerTest {
         }
     }
 
-    private fun content() = HistoryState.Content(items = emptyList(), isLoadingMore = false, hasMore = false)
+    private fun content(vararg items: TxHistoryInfo) = HistoryState.Content(items = items.toList(), isLoadingMore = false, hasMore = false)
 
     private fun asset(exchange: Boolean, onramp: Boolean) = ExpressAsset(
         id = ExpressAsset.ID(networkId = "eth", contractAddress = "0"),

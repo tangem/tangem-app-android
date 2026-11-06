@@ -3,6 +3,7 @@ package com.tangem.domain.transaction.usecase.gasless
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -19,6 +20,7 @@ import java.math.BigDecimal
 
 class GetAvailableFeeTokensUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
@@ -35,6 +37,9 @@ class GetAvailableFeeTokensUseCase(
      * native balance cannot cover it, the native coin is reported as not enough for the fee — paying with
      * it would fail anyway. It is still offered normally when no token can pay the fee either.
      *
+     * @param enteringYieldTokenId token being put into Yield Mode by this transaction. Its module is not active yet,
+     * which otherwise hides it, but the enter can leave the fee on the wallet — pass it only when the module can.
+     *
      * @return the offered currencies, the native one first, along with those that cannot cover the fee
      */
     suspend operator fun invoke(
@@ -42,6 +47,7 @@ class GetAvailableFeeTokensUseCase(
         network: Network,
         sentCurrencyStatus: CryptoCurrencyStatus,
         nativeFeeAmount: BigDecimal? = null,
+        enteringYieldTokenId: CryptoCurrency.ID? = null,
     ): Either<GetFeeError, AvailableFeeTokens> {
         return either {
             catch(
@@ -57,11 +63,18 @@ class GetAvailableFeeTokensUseCase(
                         accountStatusList.flattenPersonalCurrencies()
                     }
 
-                    val nativeCurrencyStatus = if (isJointNetwork) {
-                        userCurrenciesStatuses.firstOrNull { it.currency is CryptoCurrency.Coin }
-                    } else {
-                        accountStatusList.getCoinStatus(network).getOrNull()
-                    } ?: raiseIllegalStateError("No native currency found: ${network.id}")
+                    val feeCurrencies = resolveNetworkFeeCurrencies(
+                        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+                        userWalletId = userWallet.walletId,
+                        network = network,
+                        portfolioCoinStatus = if (isJointNetwork) {
+                            userCurrenciesStatuses.firstOrNull { it.currency is CryptoCurrency.Coin }
+                        } else {
+                            accountStatusList.getCoinStatus(network).getOrNull()
+                        },
+                    )
+                    val nativeCurrencyStatus = feeCurrencies.nativeCurrencyStatus
+                    val nonPortfolioStatuses = feeCurrencies.nonPortfolioStatuses
 
                     // Tron gasless is a parallel path: its supported fee tokens come from the Tron
                     // gasless backend, not the EVM gasless service. Its fee is a backend compensation
@@ -87,10 +100,14 @@ class GetAvailableFeeTokensUseCase(
                         return@either AvailableFeeTokens(tokens = listOf(nativeCurrencyStatus))
                     }
 
+                    if (nonPortfolioStatuses.isNotEmpty()) {
+                        return@either AvailableFeeTokens(tokens = getGaslessTokens(network, nonPortfolioStatuses))
+                    }
+
                     buildFeeTokens(
                         nativeCurrencyStatus = nativeCurrencyStatus,
                         nativeFeeAmount = nativeFeeAmount,
-                        tokens = getGaslessTokens(network, userCurrenciesStatuses),
+                        tokens = getGaslessTokens(network, userCurrenciesStatuses, enteringYieldTokenId),
                     )
                 },
                 catch = {
@@ -120,6 +137,7 @@ class GetAvailableFeeTokensUseCase(
     private suspend fun getGaslessTokens(
         network: Network,
         userCurrenciesStatuses: List<CryptoCurrencyStatus>,
+        enteringYieldTokenId: CryptoCurrency.ID? = null,
     ): List<CryptoCurrencyStatus> {
         val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens(network)
             .mapNotNull {
@@ -127,7 +145,7 @@ class GetAvailableFeeTokensUseCase(
             }.toSet()
         return userCurrenciesStatuses
             .asSequence()
-            .filter { isEligibleFeeToken(it) }
+            .filter { isEligibleFeeToken(it) || it.currency.id == enteringYieldTokenId }
             .filter { it.currency.network.id == network.id }
             .filter { currencyStatus ->
                 val token = currencyStatus.currency

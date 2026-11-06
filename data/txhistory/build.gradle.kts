@@ -70,10 +70,12 @@ dependencies {
     implementation(projects.domain.moneyAccount)
     implementation(projects.domain.quotes)
     implementation(projects.domain.visa)
+    implementation(projects.domain.yieldSupply)
     // endregion
 
     // region Domain models
     implementation(projects.domain.express.models)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)

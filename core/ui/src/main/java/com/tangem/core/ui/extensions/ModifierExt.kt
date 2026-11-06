@@ -99,7 +99,7 @@ fun Modifier.conditionalCompose(
 fun Modifier.selectedBorder(
     isSelected: Boolean,
     width: Dp = 2.5.dp,
-    color: Color = TangemTheme.colors.text.accent,
+    color: Color = TangemTheme.colors3.text.accent.blue,
     radius: Dp = 16.dp,
 ) = conditionalCompose(
     condition = isSelected,

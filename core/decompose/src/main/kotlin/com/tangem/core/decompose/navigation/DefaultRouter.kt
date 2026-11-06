@@ -21,6 +21,7 @@ import kotlin.reflect.safeCast
 internal class DefaultRouter(
     private val navigationProvider: AppNavigationProvider,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val navigationFailureHandler: NavigationFailureHandler,
 ) : Router, InstanceKeeper.Instance {
 
     private val logger = TangemLogger.withTag("Router")
@@ -30,19 +31,23 @@ internal class DefaultRouter(
 
     override fun push(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         logger.i("Push $route")
-        navigateSafely(onComplete) { complete -> pushNew(route, complete) }
+        navigateSafely(withDefaultCompletion(onComplete) { "Unable to push $route" }) { complete ->
+            pushNew(route, complete)
+        }
     }
 
     override fun replaceCurrent(route: Route, onComplete: (Boolean) -> Unit) {
         logger.i("Replace a current route with $route")
-        navigateSafely(onComplete) { complete -> this.replaceCurrent(route, { complete(true) }) }
+        val onCompleteOrReport = withDefaultCompletion(onComplete) { "Unable to replace a current route with $route" }
+
+        navigateSafely(onCompleteOrReport) { complete -> this.replaceCurrent(route, { complete(true) }) }
     }
 
     override fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         val newRoutes = routes.toList()
         logger.i("Replace all routes with ${newRoutes.ifEmpty { "<empty>" }}")
 
-        navigateSafely(onComplete) { complete ->
+        navigateSafely(withDefaultCompletion(onComplete) { "Unable to replace routes with $newRoutes" }) { complete ->
             navigate(
                 transformer = { newRoutes },
                 onComplete = { newStack, _ -> complete(newStack == newRoutes) },
@@ -78,7 +83,6 @@ internal class DefaultRouter(
     ) {
         logger.i("Pop to the last matching $routeClass")
         val matches: (Route) -> Boolean = { route -> routeClass.safeCast(route)?.let(predicate) == true }
-
         navigateSafely(onComplete) { complete ->
             navigate(
                 transformer = { stack -> stack.dropLastWhile { !matches(it) }.ifEmpty { stack } },
@@ -88,12 +92,16 @@ internal class DefaultRouter(
     }
 
     override fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (isSuccess: Boolean) -> Unit) {
-        navigateSafely(onComplete) { complete ->
+        navigateSafely(withDefaultCompletion(onComplete) { "Unable to rebuild the stack" }) { complete ->
             navigate(
                 transformer = { stack -> transformer(stack).also { logger.i("Rebuild the stack to $it") } },
                 onComplete = { _, _ -> complete(true) },
             )
         }
+    }
+
+    override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
+        if (!isSuccess) navigationFailureHandler.onNavigationFailed(errorMessage)
     }
 
     override suspend fun contains(route: Route): Boolean = withContext(dispatchers.mainImmediate) {
@@ -108,7 +116,7 @@ internal class DefaultRouter(
                         .dropLastWhile(predicate)
                         .ifEmpty { stack }
                 },
-                onComplete = { newStack, oldStack -> complete(newStack.size < oldStack.size) },
+                onComplete = { newStack, _ -> complete(newStack.lastOrNull()?.let { !predicate(it) } == true) },
             )
         }
     }
@@ -132,7 +140,11 @@ internal class DefaultRouter(
 
             runCatching { navigation.block(complete) }.onFailure { throwable ->
                 logger.e(messageString = "Navigation failed", throwable = throwable)
-                if (!isCompleted) complete(false)
+                if (isCompleted) return@onFailure
+
+                complete(false)
+                // Popping onto a stack it can't shrink is no failure, but a throw always is
+                if (onComplete === Router.NoCompletion) defaultCompletionHandler(false, "Navigation failed: $throwable")
             }
         }
 

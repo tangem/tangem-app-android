@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -45,6 +46,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.polymarket.impl.common.ui.PolymarketResolutionSourceRow
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
@@ -132,6 +134,7 @@ private fun PositionDetailsFooter(
             orientation = TangemButtonGroup.Orientation.Horizontal,
         ) {
             TangemButton(
+                modifier = Modifier.testTag(PredictionTestTags.POSITION_CLOSE_BUTTON),
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(R.string.common_close),
@@ -139,6 +142,7 @@ private fun PositionDetailsFooter(
                 onClick = { onClosePositionClick?.invoke() },
             )
             TangemButton(
+                modifier = Modifier.testTag(PredictionTestTags.POSITION_BUY_BUTTON),
                 variant = TangemButton.Variant.Primary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(R.string.common_buy),

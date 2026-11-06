@@ -156,7 +156,7 @@ internal class SendConfirmComponent(
                 router.pop()
             },
             backIconRes = R.drawable.ic_back_24,
-            backgroundColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = TangemTheme.colors3.bg.primary,
             modifier = Modifier.height(56.dp),
         )
     }
@@ -219,7 +219,18 @@ internal class SendConfirmComponent(
         val onSendTransaction: () -> Unit,
         /** Closes the whole flow, not just the current step. */
         val onCloseFlow: () -> Unit,
-        val intentId: String?,
+        val intent: Intent?,
+    )
+
+    /**
+     * The MCP send intent this transfer fulfils, with the values it prefilled, so the sent transfer can be told apart
+     * from the one the agent asked for. [amount] is the text Send was opened with.
+     */
+    data class Intent(
+        val id: String,
+        val amount: String?,
+        val destinationAddress: String?,
+        val memo: String?,
     )
 
     interface ModelCallback {

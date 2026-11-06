@@ -30,16 +30,16 @@ import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Ite
 internal fun SettingsSwitchItem(item: Item.Switch, modifier: Modifier = Modifier) {
     val titleTextColor by rememberUpdatedState(
         newValue = if (item.isEnabled) {
-            TangemTheme.colors.text.primary1
+            TangemTheme.colors3.text.primary
         } else {
-            TangemTheme.colors.text.secondary
+            TangemTheme.colors3.text.secondary
         },
     )
     val descriptionTextColor by rememberUpdatedState(
         newValue = if (item.isEnabled) {
-            TangemTheme.colors.text.secondary
+            TangemTheme.colors3.text.secondary
         } else {
-            TangemTheme.colors.text.tertiary
+            TangemTheme.colors3.text.tertiary
         },
     )
 
@@ -69,8 +69,6 @@ internal fun SettingsSwitchItem(item: Item.Switch, modifier: Modifier = Modifier
                 checked = item.isChecked,
                 enabled = item.isEnabled,
                 onCheckedChange = item.onCheckedChange,
-                checkedColor = TangemTheme.colors.control.checked,
-                uncheckedColor = TangemTheme.colors.icon.inactive,
             )
         }
 

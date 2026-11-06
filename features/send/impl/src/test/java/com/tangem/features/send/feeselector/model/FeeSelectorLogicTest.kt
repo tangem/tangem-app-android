@@ -260,6 +260,30 @@ internal class FeeSelectorLogicTest {
             }
 
         @Test
+        fun `GIVEN fee quoted in the sent token outside the portfolio WHEN load fee THEN the sent token pays`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                val feeExtended = TransactionFeeExtended(
+                    transactionFee = singleFee(),
+                    feeTokenId = tokenStatus.currency.id,
+                )
+                coEvery { onLoadFeeExtended(any()) } returns feeExtended.right()
+                coEvery { singleAccountStatusListSupplier.getSyncOrNull(any<UserWalletId>()) } returns null
+                every { getUserWalletUseCase(any<UserWalletId>()) } returns mockk<UserWallet>(relaxed = true).right()
+                coEvery { getAvailableFeeTokensUseCase(any(), any(), any(), any(), any()) } returns AvailableFeeTokens(
+                    tokens = listOf(coinStatus, tokenStatus),
+                ).right()
+
+                // Act
+                val sut = buildModel(gaslessEnabled = true, nativeFeeCurrency = true)
+                advanceUntilIdle()
+
+                // Assert
+                val state = sut.uiState.value as FeeSelectorUM.Content
+                assertThat(state.feeExtraInfo.feeCryptoCurrencyStatus).isEqualTo(tokenStatus)
+            }
+
+        @Test
         fun `GIVEN an offered token cannot cover the fee WHEN load fee THEN it is reported as not enough`() =
             runTest(UnconfinedTestDispatcher()) {
                 // Arrange
@@ -269,7 +293,7 @@ internal class FeeSelectorLogicTest {
                 )
                 coEvery { onLoadFeeExtended(any()) } returns feeExtended.right()
                 every { getUserWalletUseCase(any<UserWalletId>()) } returns mockk<UserWallet>(relaxed = true).right()
-                coEvery { getAvailableFeeTokensUseCase(any(), any(), any(), any()) } returns AvailableFeeTokens(
+                coEvery { getAvailableFeeTokensUseCase(any(), any(), any(), any(), any()) } returns AvailableFeeTokens(
                     tokens = listOf(coinStatus, tokenStatus),
                     notEnoughForFeeIds = setOf(coinStatus.currency.id),
                 ).right()
@@ -284,6 +308,49 @@ internal class FeeSelectorLogicTest {
                     .containsExactly(coinStatus, tokenStatus)
                     .inOrder()
                 assertThat(state.feeExtraInfo.notEnoughForFeeCurrencies).containsExactly(coinStatus.currency.id)
+            }
+
+        @Test
+        fun `GIVEN token entering yield WHEN load fee THEN fee tokens are asked to offer it`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                val feeExtended = TransactionFeeExtended(transactionFee = singleFee(), feeTokenId = tokenStatus.currency.id)
+                coEvery { onLoadFeeExtended(any()) } returns feeExtended.right()
+                every { getUserWalletUseCase(any<UserWalletId>()) } returns mockk<UserWallet>(relaxed = true).right()
+                every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
+                coEvery { singleAccountStatusListSupplier.getSyncOrNull(any<UserWalletId>()) } returns null
+                coEvery { getAvailableFeeTokensUseCase(any(), any(), any(), any(), any()) } returns AvailableFeeTokens(
+                    tokens = listOf(coinStatus, tokenStatus),
+                ).right()
+                val params = FeeSelectorParams.FeeSelectorDetailsParams(
+                    state = FeeSelectorUM.Loading,
+                    userWalletId = testUserWalletId,
+                    onLoadFeeExtended = onLoadFeeExtended,
+                    onLoadFee = onLoadFee,
+                    cryptoCurrencyStatus = tokenStatus,
+                    feeCryptoCurrencyStatus = coinStatus,
+                    feeStateConfiguration = FeeStateConfiguration.None,
+                    feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
+                    analyticsCategoryName = "test_fee",
+                    analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Earning,
+                    callback = mockk(),
+                    enteringYieldTokenId = tokenStatus.currency.id,
+                )
+
+                // Act
+                createLogic(params)
+                advanceUntilIdle()
+
+                // Assert
+                coVerify {
+                    getAvailableFeeTokensUseCase(
+                        userWallet = any(),
+                        network = any(),
+                        sentCurrencyStatus = any(),
+                        nativeFeeAmount = any(),
+                        enteringYieldTokenId = tokenStatus.currency.id,
+                    )
+                }
             }
     }
 

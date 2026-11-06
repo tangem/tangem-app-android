@@ -78,7 +78,7 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(TX_HASH.right())
-        coVerify(exactly = 0) { evmUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) { evmUseCase(any(), any<TransactionData>(), any()) }
     }
 
     @Test
@@ -114,9 +114,27 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(SendTransactionError.DataError("Gasless send called with a native fee").left())
-        coVerify(exactly = 0) { evmUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) { evmUseCase(any(), any<TransactionData>(), any()) }
         coVerify(exactly = 0) { tronUseCase(any(), any(), any()) }
     }
+
+    @Test
+    fun `GIVEN upgrade-wrapped yield send and EVM gasless fee WHEN invoke THEN EVM flow gets bare yield send`() =
+        runTest {
+            // Arrange
+            val fee = TransactionFeeExtended(
+                transactionFee = TransactionFee.Single(normal = mockk<Fee.Ethereum.TokenCurrency>()),
+                feeTokenId = usdtCurrency.id,
+                gaslessProtocolData = GaslessProtocolData.Evm,
+            )
+            coEvery { evmUseCase(userWallet, bareYieldSendTransaction(), fee) } returns TX_HASH.right()
+
+            // Act
+            val actual = useCase(userWallet = userWallet, transactionData = wrappedYieldSendTransaction(), fee = fee)
+
+            // Assert
+            assertThat(actual).isEqualTo(TX_HASH.right())
+        }
 
     private companion object {
         const val TX_HASH = "0xhash"

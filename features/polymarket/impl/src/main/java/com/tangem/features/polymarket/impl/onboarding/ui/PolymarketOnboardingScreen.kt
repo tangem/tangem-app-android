@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
@@ -27,6 +28,7 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.features.polymarket.impl.regionrestrictions.ui.RegionRestrictionsBottomSheet
 
@@ -88,7 +90,7 @@ private fun WelcomeScreen(
     val isTopBarScrimShown by remember(scrollState) { derivedStateOf { scrollState.value > 0 } }
 
     TangemTopBarScaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(PredictionTestTags.WELCOME_SCREEN),
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TangemTopNavigation(
@@ -132,7 +134,7 @@ private fun ReconnectScreen(
     val isTopBarScrimShown by remember(scrollState) { derivedStateOf { scrollState.value > 0 } }
 
     TangemTopBarScaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(PredictionTestTags.RECONNECT_SCREEN),
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TangemTopNavigation(

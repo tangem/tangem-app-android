@@ -13,9 +13,12 @@ import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
+import com.tangem.features.send.feeselector.model.transformers.FeeSelectorTokenSelectedTransformer
 import com.tangem.features.send.feeselector.route.FeeSelectorRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isSingleItem
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -57,6 +60,11 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     override fun onTokenSelected(status: CryptoCurrencyStatus) {
+        if (params.shouldShowOnlyTokenOption) {
+            // The host quotes the fee in the picked token itself, so the pick goes back without a reload
+            params.callback.onFeeResult(FeeSelectorTokenSelectedTransformer(status).transform(uiState.value))
+            return
+        }
         feeSelectorLogic.onTokenSelected(status)
         stackNavigation.pop()
     }
@@ -103,23 +111,21 @@ internal class FeeSelectorModel @Inject constructor(
         )
     }
 
+    /** Opened as the first screen, the list is still loading, so the event waits for the tokens it reports. */
     fun onChooseTokenScreenOpened() {
-        analyticsEventHandler.send(
-            CommonSendAnalyticEvents.FeeTokenScreenOpened(
-                categoryName = params.analyticsCategoryName,
-                source = params.analyticsSendSource,
-                availableTokens = getAvailableTokensString(),
-                blockchain = params.cryptoCurrencyStatus.currency.network.name,
-            ),
-        )
-    }
-
-    private fun getAvailableTokensString(): String {
-        return (uiState.value as? FeeSelectorUM.Content)
-            ?.feeExtraInfo
-            ?.availableFeeCurrencies
-            ?.joinToString(", ") { it.currency.symbol }
-            .orEmpty()
+        modelScope.launch {
+            val content = uiState.filterIsInstance<FeeSelectorUM.Content>().first()
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.FeeTokenScreenOpened(
+                    categoryName = params.analyticsCategoryName,
+                    source = params.analyticsSendSource,
+                    availableTokens = content.feeExtraInfo.availableFeeCurrencies
+                        ?.joinToString(", ") { it.currency.symbol }
+                        .orEmpty(),
+                    blockchain = params.cryptoCurrencyStatus.currency.network.name,
+                ),
+            )
+        }
     }
 
     private fun contentState(): FeeSelectorUM.Content {
@@ -131,6 +137,7 @@ internal class FeeSelectorModel @Inject constructor(
     fun getInitialRoute(): FeeSelectorRoute {
         return when {
             params.shouldShowOnlySpeedOption -> FeeSelectorRoute.ChooseSpeed
+            params.shouldShowOnlyTokenOption && feeSelectorLogic.isGaslessEnabled -> FeeSelectorRoute.ChooseToken
             feeSelectorLogic.isGaslessEnabled -> FeeSelectorRoute.NetworkFee
             else -> FeeSelectorRoute.ChooseSpeed
         }

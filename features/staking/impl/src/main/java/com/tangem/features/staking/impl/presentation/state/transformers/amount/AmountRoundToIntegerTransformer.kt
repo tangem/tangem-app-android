@@ -20,7 +20,7 @@ internal class AmountRoundToIntegerTransformer(
         val fiatDecimals = fiatAmount.decimals
 
         val roundedDownCrypto = cryptoAmount.value?.setScale(0, RoundingMode.DOWN)
-        val roundedDownFiat = roundedDownCrypto?.multiply(cryptoCurrencyStatus.value.fiatRate)
+        val roundedDownFiat = cryptoCurrencyStatus.value.fiatRate?.let { roundedDownCrypto?.multiply(it) }
 
         val value = roundedDownCrypto?.parseBigDecimal(0).orEmpty()
         val fiatValue = roundedDownFiat?.parseBigDecimal(fiatDecimals, RoundingMode.HALF_UP).orEmpty()

@@ -9,6 +9,7 @@ import com.tangem.domain.express.models.OnrampTransaction
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
@@ -24,7 +25,8 @@ import kotlin.math.abs
  * Per express op:
  *  1. deterministic hash match (its [ExpressTx.matchHash] — `payin_hash`/`payout_hash` — against an on-chain hash);
  *  2. if that fails, a [heuristic fallback][matchesOnChainHeuristically] by direction + address + amount + time,
- *     scoped to the open [currency].
+ *     scoped to the open [currency];
+ *  3. as a last resort, the pay-in tx of a swap that pays out inside it ([sameTxPayoutHash]).
  *
  * The heuristic exists because the on-chain hash is not always returned by the provider — the payout leg's hash
  * is filled by status polling and may never arrive. Without it an incoming swap/onramp would surface twice: once
@@ -37,6 +39,11 @@ import kotlin.math.abs
  *                leg whose on-chain credit never arrived, which is hidden (see [isHiddenWhenUnmatched]) so it does not
  *                surface as a phantom incoming row. A successful (finished) incoming swap, the outgoing / refund side,
  *                and every onramp purchase are always kept so the user still sees their deals.
+ *
+ * Finished joint operations ([joint]) claim their relayer transaction by hash before any express op, and stay standalone
+ * when it is not in the loaded page — a cancelled one never has it. A failed one carries it too, for the refund the Safe
+ * paid. Only the transfer row is claimed: a hash holding nothing but the refund passes through as the fee row it is,
+ * rather than standing for the transfer.
  *
  * On-chain transactions no express op claimed pass through as [OnChainTx]. Claiming is per *tx identity*
  * ([identityKey]), not per hash: one on-chain hash can surface as several rows — the deal's payload and the events
@@ -51,6 +58,7 @@ internal fun mergeTxHistoryInfos(
     onChain: List<TxInfo>,
     express: List<ExpressTx>,
     currency: CryptoCurrency,
+    joint: List<JointOperationTx> = emptyList(),
 ): List<TxHistoryInfo> {
     val currencyAssetId: ExpressAsset.ID = ExpressAsset.ID(currency)
     val isUtxoNetwork: Boolean = currency.network.toBlockchain().isUTXO
@@ -58,10 +66,20 @@ internal fun mergeTxHistoryInfos(
     val claimedKeys = mutableSetOf<String>()
     val result = mutableListOf<TxHistoryInfo>()
 
+    // Phase 0 — a finished joint operation claims its relayer transaction by hash.
+    joint.forEach { op ->
+        val leg = op.operation.txHash
+            ?.asHashKey()
+            ?.let(onChainByHash::get)
+            ?.firstOrNull { it.type.isDealPayload() }
+            ?.takeIf { claimedKeys.add(it.identityKey()) }
+        result += if (leg != null) op.copy(txInfo = OnChainTx.BSDK(leg)) else op
+    }
+
     // Phase 1 — deterministic hash match takes priority (payin_hash / payout_hash via ExpressTx.matchHash).
     val unmatched = mutableListOf<ExpressTx>()
     express.forEach { op ->
-        val byHash = op.matchHash?.asHashKey()?.let(onChainByHash::get)?.expressLeg()
+        val byHash = op.matchHash?.asHashKey()?.let(onChainByHash::get)?.expressLeg(op)
         if (byHash != null) {
             result += op.withMatchedOnChain(OnChainTx.BSDK(byHash))
             claimedKeys += byHash.identityKey()
@@ -71,24 +89,41 @@ internal fun mergeTxHistoryInfos(
     }
 
     // Phase 2 — heuristic fallback for ops whose on-chain hash the provider never returned. On ties, the on-chain
-    // tx closest in time to the deal creation wins (collision resolution). An op that still finds no leg is emitted
-    // standalone, unless it must be hidden (a terminal swap payout that never landed on-chain).
+    // tx closest in time to the deal creation wins (collision resolution).
+    val unmatchedByHeuristic = mutableListOf<ExpressTx>()
     unmatched.forEach { op ->
         val candidate = onChain
             .filter { tx ->
                 tx.identityKey() !in claimedKeys && op.matchesOnChainHeuristically(tx, currencyAssetId, isUtxoNetwork)
             }
             .minByOrNull { abs(it.timestampInMillis - op.createdAtMillis) }
+        if (candidate != null) {
+            result += op.withMatchedOnChain(OnChainTx.BSDK(candidate))
+            claimedKeys += candidate.identityKey()
+        } else {
+            unmatchedByHeuristic += op
+        }
+    }
+
+    // Phase 3 — a swap paid out inside its pay-in tx takes that tx, once nothing else could. Running after the
+    // heuristic keeps a swap whose payout arrived in a tx of its own on that payout. An op that still finds no leg is
+    // emitted standalone, unless it must be hidden (a terminal swap payout that never landed on-chain).
+    unmatchedByHeuristic.forEach { op ->
+        val leg = (op as? ExpressTx.Swap)?.sameTxPayoutHash()
+            ?.asHashKey()
+            ?.let(onChainByHash::get)
+            ?.filter { it.identityKey() !in claimedKeys }
+            ?.expressLeg(op)
         when {
-            candidate != null -> {
-                result += op.withMatchedOnChain(OnChainTx.BSDK(candidate))
-                claimedKeys += candidate.identityKey()
+            leg != null -> {
+                result += op.withMatchedOnChain(OnChainTx.BSDK(leg))
+                claimedKeys += leg.identityKey()
             }
             !op.isHiddenWhenUnmatched() -> result += op
         }
     }
 
-    // Phase 3 — on-chain txs no express op claimed pass through, each row of a shared hash on its own.
+    // Phase 4 — on-chain txs no express op claimed pass through, each row of a shared hash on its own.
     onChain.forEach { tx ->
         if (tx.identityKey() !in claimedKeys) result += OnChainTx.BSDK(tx)
     }
@@ -140,9 +175,29 @@ internal fun mergeTangemPay(onChain: List<OnChainTx.TangemPay>, express: List<Ex
  * payload is the deal's leg; claiming a kept-apart row instead would swallow it into the express row and lose it from
  * the history. A group carrying nothing but the fee event (the payload is not part of the loaded page) falls back to
  * it — otherwise the op would lose its on-chain leg and surface as a standalone live row next to the fee it paid.
+ * The incoming side of a swap prefers the credit over the call in the same hash that paid for it.
  */
-private fun List<TxInfo>.expressLeg(): TxInfo? = firstOrNull { it.type.isDealPayload() }
-    ?: firstOrNull { it.type is TxInfo.TransactionType.GaslessFee }
+private fun List<TxInfo>.expressLeg(op: ExpressTx): TxInfo? {
+    val isIncomingSwap = op is ExpressTx.Swap && !op.isOutgoing
+    val credit = if (isIncomingSwap) firstOrNull { !it.isOutgoing && it.type.isDealPayload() } else null
+    return credit
+        ?: firstOrNull { it.type.isDealPayload() }
+        ?: firstOrNull { it.type is TxInfo.TransactionType.GaslessFee }
+}
+
+/**
+ * Pay-in hash of the incoming side of a DEX swap within one network: it credits the `to` asset inside the tx that paid
+ * in, and express returns no payout hash for it — a known payout hash names the payout tx, even one not loaded yet,
+ * so the pay-in must not stand in for it. A DEX provider routed as a send (a transfer to its deposit address)
+ * pays out in a tx of its own and carries a provider-side id, so it has none. A swap that ended unsuccessfully has none
+ * either, so it is hidden as before.
+ */
+private fun ExpressTx.Swap.sameTxPayoutHash(): String? {
+    val isDexProvider = provider?.type?.isDex() == true
+    val isSameNetwork = tx.fromAsset.id.networkId.equals(tx.toAsset.id.networkId, ignoreCase = true)
+    val isAtomic = isDexProvider && isSameNetwork && tx.externalTxId == null && tx.payoutHash == null
+    return tx.payinHash.takeIf { !isOutgoing && isAtomic && !isHiddenWhenUnmatched() }
+}
 
 private fun TxInfo.TransactionType.isDealPayload(): Boolean = when (this) {
     is TxInfo.TransactionType.GaslessFee,

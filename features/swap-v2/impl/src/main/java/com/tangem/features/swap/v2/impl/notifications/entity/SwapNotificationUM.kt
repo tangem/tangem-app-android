@@ -89,6 +89,11 @@ internal object SwapNotificationUM {
             ),
         )
 
+        data object UnsupportedPair : Warning(
+            title = resourceReference(R.string.warning_express_unsupported_pair_title),
+            subtitle = resourceReference(R.string.warning_express_unsupported_pair_description),
+        )
+
         data object HighPriceImpact : Warning(
             title = resourceReference(R.string.swapping_high_price_impact_title),
             subtitle = resourceReference(R.string.swapping_high_price_impact_text),

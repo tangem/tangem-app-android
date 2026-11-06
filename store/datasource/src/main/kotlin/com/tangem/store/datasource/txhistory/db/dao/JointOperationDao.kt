@@ -30,6 +30,18 @@ interface JointOperationDao {
     @Query("DELETE FROM joint_operation_vote WHERE user_wallet_id = :userWalletId AND operation_id IN (:operationIds)")
     suspend fun deleteVotes(userWalletId: String, operationIds: List<String>)
 
+    @Transaction
+    suspend fun delete(userWalletIds: List<String>) {
+        deleteOperations(userWalletIds)
+        deleteVotes(userWalletIds)
+    }
+
+    @Query("DELETE FROM joint_operation WHERE user_wallet_id IN (:userWalletIds)")
+    suspend fun deleteOperations(userWalletIds: List<String>)
+
+    @Query("DELETE FROM joint_operation_vote WHERE user_wallet_id IN (:userWalletIds)")
+    suspend fun deleteVotes(userWalletIds: List<String>)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertVotes(items: List<JointOperationVoteEntity>)
 
@@ -62,7 +74,7 @@ interface JointOperationDao {
           AND operation.chain_id = :chainId
           AND operation.status IN (:statuses)
           AND operation.finished_at >= :fromFinishedAtIso
-        ORDER BY operation.finished_at DESC
+        ORDER BY operation.finished_at DESC, operation.operation_id
         """,
     )
     fun observeWithVotes(
@@ -82,6 +94,25 @@ interface JointOperationDao {
         """,
     )
     fun observeIds(userWalletId: String, statuses: List<String>): Flow<List<String>>
+
+    fun observeById(userWalletId: String, operationId: String): Flow<JointOperationWithVotes?> =
+        observeByIdWithVotes(userWalletId = userWalletId, operationId = operationId)
+            .map { rows -> toOperationsWithVotes(rows).firstOrNull() }
+
+    @Query(
+        """
+        SELECT *
+        FROM joint_operation AS operation
+        LEFT JOIN joint_operation_vote AS vote
+          ON vote.user_wallet_id = operation.user_wallet_id AND vote.operation_id = operation.operation_id
+        WHERE operation.user_wallet_id = :userWalletId
+          AND operation.operation_id = :operationId
+        """,
+    )
+    fun observeByIdWithVotes(
+        userWalletId: String,
+        operationId: String,
+    ): Flow<Map<JointOperationEntity, List<JointOperationVoteEntity>>>
 }
 
 private fun toOperationsWithVotes(

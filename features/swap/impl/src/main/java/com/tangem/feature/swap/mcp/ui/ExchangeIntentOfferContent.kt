@@ -7,12 +7,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.feature.swap.mcp.model.ExchangeIntentAgentUM
 import com.tangem.feature.swap.mcp.model.ExchangeIntentButtonUM
 import com.tangem.feature.swap.mcp.model.ExchangeIntentUM
+import com.tangem.feature.swap.presentation.R
 
 /**
  * What an agent asks the owner to do, before anything is opened: the two currencies over the request, with the agent
@@ -21,7 +24,7 @@ import com.tangem.feature.swap.mcp.model.ExchangeIntentUM
  * [Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=25973-248232)
  */
 @Composable
-internal fun ExchangeIntentOfferContent(state: ExchangeIntentUM, modifier: Modifier = Modifier) {
+internal fun ExchangeIntentOfferContent(state: ExchangeIntentUM.Offer, modifier: Modifier = Modifier) {
     TangemModalStatus(
         modifier = modifier,
         variant = TangemModalStatus.Variant.Info,
@@ -37,15 +40,19 @@ internal fun ExchangeIntentOfferContent(state: ExchangeIntentUM, modifier: Modif
 private fun ExchangeIntentOfferContentPreview() {
     TangemThemePreviewRedesign {
         ExchangeIntentOfferContent(
-            state = ExchangeIntentUM(
+            state = ExchangeIntentUM.Offer(
                 fromToken = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = null)),
                 toToken = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = null)),
-                title = stringReference("mcp.claude.com Agent wants to swap 42.00 USDT to POL"),
-                agent = ExchangeIntentAgentUM.Verified(iconUrl = null, label = stringReference("mcp.claude.com")),
-                description = stringReference(
-                    "The agent is asking to swap from your account. You’ll review the details next.",
+                title = resourceReference(
+                    R.string.mcp_swap_intent_offer_title,
+                    wrappedList("mcp.claude.com", "42.00 USDT", "POL"),
                 ),
-                primaryButton = ExchangeIntentButtonUM(text = stringReference("Proceed"), onClick = {}),
+                agent = ExchangeIntentAgentUM.Verified(iconUrl = null, label = stringReference("mcp.claude.com")),
+                description = resourceReference(R.string.mcp_swap_intent_offer_description),
+                primaryButton = ExchangeIntentButtonUM(
+                    text = resourceReference(R.string.mcp_intent_proceed),
+                    onClick = {},
+                ),
             ),
             modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )

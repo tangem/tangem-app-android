@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LocalPinnableContainer
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,6 +44,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -50,6 +52,7 @@ import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeleton
@@ -145,7 +148,7 @@ internal fun PolymarketMainScreen(
     ProvideTangemShimmer {
         // The feature lives in its own window: a local haze provider keeps the source and the glass together.
         ProvideHaze {
-            Box(modifier = modifier.fillMaxSize()) {
+            Box(modifier = modifier.fillMaxSize().testTag(PredictionTestTags.MAIN_SCREEN)) {
                 PolymarketMainScaffold(
                     state = state,
                     positions = positions,
@@ -258,7 +261,9 @@ private fun FeedList(
     BoxWithConstraints(modifier = modifier) {
         val skeletonCount = ceil(maxHeight / (PolymarketEventCardSkeletonHeight + FeedItemSpacing)).toInt()
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag(PredictionTestTags.FEED_LIST),
             state = listState,
             contentPadding = PaddingValues(top = topPadding, bottom = bottomPadding),
             verticalArrangement = Arrangement.spacedBy(FeedItemSpacing),
@@ -421,6 +426,7 @@ private fun CategoryTabBar(
     TangemTabNavigation(
         tabs = tabs,
         scrollState = state,
+        variant = if (isShown) TangemTabItem.Variant.Material else TangemTabItem.Variant.Transparent,
         contentPadding = TabBandPadding,
         modifier = modifier
             .placedOnlyWhen(isShown)

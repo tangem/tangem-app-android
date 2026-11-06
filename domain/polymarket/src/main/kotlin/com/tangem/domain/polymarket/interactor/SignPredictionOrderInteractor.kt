@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.signing.PredictionOrderPayload
@@ -33,16 +34,23 @@ class SignPredictionOrderInteractor(
             .mapLeft(PredictionOrderFailure::Draft)
             .bind()
 
-        val timestampMillis = System.currentTimeMillis()
-        val signedOrder = signer.signOrder(
-            userWalletId = addresses.userWalletId,
-            payload = PredictionOrderPayload(
-                draft = draft,
-                depositWalletAddress = addresses.depositWalletAddress,
-                salt = newSalt(),
-                timestampMillis = timestampMillis,
-            ),
+        val payload = PredictionOrderPayload(
+            draft = draft,
+            depositWalletAddress = addresses.depositWalletAddress,
+            salt = newSalt(),
+            timestampMillis = System.currentTimeMillis(),
         )
+        val signedOrder = when (val route = request.route) {
+            PredictionOrderSigningRoute.Owner -> signer.signOrder(
+                userWalletId = addresses.userWalletId,
+                payload = payload,
+            )
+            is PredictionOrderSigningRoute.Session -> signer.signOrderWithSessionKey(
+                userWalletId = addresses.userWalletId,
+                sessionKeyAddress = route.identity.address,
+                payload = payload,
+            )
+        }
             .mapLeft(PredictionOrderFailure::Signing)
             .bind()
 
@@ -55,6 +63,7 @@ class SignPredictionOrderInteractor(
             isNegRisk = request.isNegRisk,
             quoteReceivedAtMillis = request.quoteReceivedAtMillis,
             nowMillis = System.currentTimeMillis(),
+            route = request.route,
         )
             .mapLeft(PredictionOrderFailure::Invalid)
             .bind()
@@ -79,4 +88,5 @@ data class PredictionSignRequest(
     val side: PredictionOrderSide,
     val isNegRisk: Boolean,
     val quoteReceivedAtMillis: Long,
+    val route: PredictionOrderSigningRoute = PredictionOrderSigningRoute.Owner,
 )

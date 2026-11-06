@@ -163,11 +163,7 @@ private fun PromoTokenSelector(state: PromoTokenSelectorUM) {
     if (state.selectedToken != null) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = if (state.selectedAccount != null) {
-                    stringResourceSafe(R.string.promo_campaign_selected_cashback_account)
-                } else {
-                    stringResourceSafe(R.string.promo_campaign_selected_token)
-                },
+                text = state.accountTitle.resolveReference(),
                 style = TangemTheme.typography3.heading.small,
                 color = TangemTheme.colors3.text.primary,
                 modifier = Modifier
@@ -233,7 +229,7 @@ private fun PromoSelectedTokenItem(
                         .padding(vertical = 2.dp)
                         .alignByBaseline(),
                     text = selectedAccount.name.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     style = TangemTheme.typography.caption1,

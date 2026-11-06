@@ -8,6 +8,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.decodeBase58
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
@@ -16,6 +17,7 @@ import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Compani
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod.*
@@ -32,7 +34,10 @@ internal class WcSolanaNetwork(
     private val networksConverter: WcNetworksConverter,
 ) : WcRequestToUseCaseConverter {
 
+    override val namespaceKey: NamespaceKey = NamespaceKey(SOLANA_NAMESPACE_KEY)
+
     override fun toWcMethodName(request: WcSdkSessionRequest): WcSolanaMethodName? {
+        if (!isOwnNamespace(request)) return null
         val methodKey = request.request.method
         val name = WcSolanaMethodName.entries.find { it.raw == methodKey } ?: return null
         return name
@@ -66,6 +71,7 @@ internal class WcSolanaNetwork(
             .findWalletNetworkForRequest(request, session, accountAddress)
             ?: anyExistNetwork()
             ?: return error("Failed to find walletNetwork for accountAddress $accountAddress")
+        if (!walletNetwork.isSolana()) return error("Resolved non-Solana network ${walletNetwork.rawId}")
 
         val networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, account).size
         val context = WcMethodUseCaseContext(
@@ -87,7 +93,7 @@ internal class WcSolanaNetwork(
         override val excludedBlockchains: ExcludedBlockchains,
     ) : WcNamespaceConverter {
 
-        override val namespaceKey: NamespaceKey = NamespaceKey("solana")
+        override val namespaceKey: NamespaceKey = NamespaceKey(SOLANA_NAMESPACE_KEY)
 
         override fun toBlockchain(chainId: CAIP2): Blockchain? {
             val isMainNet = MAINNET_CHAIN_ID.any { it.equals(chainId.reference, ignoreCase = true) }
@@ -135,7 +141,13 @@ internal class WcSolanaNetwork(
     )
 
     companion object {
+        private const val SOLANA_NAMESPACE_KEY = "solana"
         private val MAINNET_CHAIN_ID = listOf("5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ")
         private const val TESTNET_CHAIN_ID = "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
     }
+}
+
+internal fun Network.isSolana(): Boolean {
+    val blockchain = toBlockchain()
+    return blockchain == Blockchain.Solana || blockchain == Blockchain.SolanaTestnet
 }

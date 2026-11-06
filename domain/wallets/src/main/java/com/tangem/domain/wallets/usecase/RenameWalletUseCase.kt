@@ -7,6 +7,7 @@ import com.tangem.domain.wallets.models.UpdateWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.utils.coroutines.runSuspendCatching
 
 class RenameWalletUseCase(
     private val walletsRepository: WalletsRepository,
@@ -15,7 +16,7 @@ class RenameWalletUseCase(
 
     suspend operator fun invoke(userWalletId: UserWalletId, name: String): Either<UpdateWalletError, UserWallet> =
         either {
-            runCatching {
+            runSuspendCatching {
                 walletsRepository.setWalletName(userWalletId, name)
             }
 

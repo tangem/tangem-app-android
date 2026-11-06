@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -18,15 +17,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.account.AccountIcon
-import com.tangem.common.ui.account.AccountIconUM
-import com.tangem.core.ui.components.CircleShimmer
-import com.tangem.core.ui.components.TextShimmer
-import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.text.applyBladeBrush
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.assets.il_account_safe
+import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.features.moneyaccount.main.impl.R
@@ -41,15 +38,8 @@ internal fun MoneyAccountMainBlockContent(
 ) {
     when (state) {
         is MoneyAccountMainUM.Empty -> Unit
-        is MoneyAccountMainUM.Loading -> MoneyAccountMainLoading(modifier)
         is MoneyAccountMainUM.Onboarding -> MoneyAccountRow(
             subtitle = state.subtitle,
-            modifier = modifier,
-            onClick = state.onClick,
-        )
-        is MoneyAccountMainUM.ActionRequired -> MoneyAccountRow(
-            subtitle = resourceReference(R.string.money_account_main_status_action_required),
-            subtitleColor = TangemTheme.colors3.text.status.warning,
             modifier = modifier,
             onClick = state.onClick,
         )
@@ -69,7 +59,6 @@ private fun MoneyAccountRow(
     subtitle: TextReference,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    subtitleColor: Color = TangemTheme.colors3.text.secondary,
     balance: MoneyAccountMainUM.BalanceUM? = null,
     isBalanceHidden: Boolean = false,
 ) {
@@ -89,7 +78,7 @@ private fun MoneyAccountRow(
             {
                 Text(
                     text = subtitle.resolveReference(),
-                    color = subtitleColor,
+                    color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography3.caption.medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -139,10 +128,12 @@ private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
 
 @Composable
 private fun MoneyAccountIcon() {
-    AccountIcon(
-        name = TextReference.EMPTY,
-        icon = AccountIconUM.Money,
-        size = AccountIconSize.Default,
+    TangemAvatar(
+        state = TangemAvatar.UiState.Account(
+            imageVector = Icons.il_account_safe,
+            color = TangemAvatar.FillColor.Money,
+        ),
+        size = TangemAvatar.Size.X40,
     )
 }
 
@@ -174,37 +165,6 @@ private fun MoneyAccountFiatAmount(text: String, isBalanceFlickering: Boolean, i
 }
 
 @Composable
-private fun MoneyAccountMainLoading(modifier: Modifier = Modifier) {
-    TangemRow(
-        modifier = modifier.moneyAccountCard(),
-        contentLead = TangemRowContentLead.Start,
-        verticalAlignment = TangemRowVerticalAlignment.Center,
-        startSlot = { CircleShimmer(modifier = Modifier.size(40.dp)) },
-        titleSlot = {
-            TextShimmer(
-                style = TangemTheme.typography3.body.medium,
-                radius = 10.dp,
-                modifier = Modifier.width(100.dp),
-            )
-        },
-        subtitleSlot = {
-            TextShimmer(
-                style = TangemTheme.typography3.caption.medium,
-                radius = 10.dp,
-                modifier = Modifier.width(44.dp),
-            )
-        },
-        valueSlot = {
-            TextShimmer(
-                style = TangemTheme.typography3.body.medium,
-                radius = 10.dp,
-                modifier = Modifier.width(80.dp),
-            )
-        },
-    )
-}
-
-@Composable
 private fun Modifier.moneyAccountCard(): Modifier = this
     .clip(RoundedCornerShape(24.dp))
     .background(TangemTheme.colors3.bg.secondary)
@@ -231,11 +191,8 @@ private fun MoneyAccountMainBlockContent_Preview(
 private class MoneyAccountMainBlockContentPreviewParameterProvider :
     CollectionPreviewParameterProvider<MoneyAccountMainUM>(
         collection = listOf(
-            MoneyAccountMainUM.Loading,
             MoneyAccountMainUM.Unavailable,
             MoneyAccountMainUM.Onboarding(subtitle = TextReference.Str("Activating…"), onClick = {}),
-            MoneyAccountMainUM.Onboarding(subtitle = TextReference.Str("Verification in progress…"), onClick = {}),
-            MoneyAccountMainUM.ActionRequired(onClick = {}),
             MoneyAccountMainUM.Content(
                 subtitle = TextReference.Str("Polygon network"),
                 balance = previewBalance.copy(isFlickering = true, isFromCache = true),

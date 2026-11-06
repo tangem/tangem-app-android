@@ -50,7 +50,7 @@ internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .background(TangemTheme.colors.background.tertiary)
+                    .background(TangemTheme.colors3.bg.primary)
                     .testTag(TransactionSuccessScreenTestTags.CONTAINER),
             ) {
                 SuccessContent(
@@ -60,7 +60,7 @@ internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent
                 )
                 Fade(
                     modifier = Modifier.align(Alignment.BottomCenter),
-                    backgroundColor = TangemTheme.colors.background.tertiary,
+                    backgroundColor = TangemTheme.colors3.bg.primary,
                 )
             }
         }

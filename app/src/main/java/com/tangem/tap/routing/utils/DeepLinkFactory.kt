@@ -10,6 +10,8 @@ import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.uri.ExternalUrlValidator
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
+import com.tangem.domain.marketing.MarketingFeatureToggles
+import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.feature.usedesk.api.deeplink.SupportDeepLinkHandler
@@ -36,12 +38,12 @@ import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
-import com.tangem.features.moneyaccount.onboarding.deeplink.OnboardMoneyAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.uriValidate
@@ -53,6 +55,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -73,7 +76,6 @@ internal class DeepLinkFactory @Inject constructor(
     private val swapDeepLink: SwapDeepLinkHandler.Factory,
     private val promoDeepLink: PromoDeeplinkHandler.Factory,
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
-    private val onboardMoneyAccountDeepLink: OnboardMoneyAccountDeepLinkHandler.Factory,
     private val marketsTokenExchangesDeepLink: MarketsTokenExchangesDeepLinkHandler.Factory,
     private val tangemPayMainDeepLink: TangemPayMainDeepLinkHandler.Factory,
     private val tangemPayAccountDeepLink: TangemPayAccountDeepLinkHandler.Factory,
@@ -93,6 +95,9 @@ internal class DeepLinkFactory @Inject constructor(
     private val mcpFeatureToggles: McpFeatureToggles,
     private val urlOpener: UrlOpener,
     private val deepLinkFeatureToggles: DeepLinkFeatureToggles,
+    private val marketingFeatureToggles: MarketingFeatureToggles,
+    private val marketingUidBindingRepository: MarketingUidBindingRepository,
+    private val appCoroutineScope: AppCoroutineScope,
     deepLinkHandlers: Map<String, @JvmSuppressWildcards DeepLinkHandler>,
 ) {
     private val deepLinkHandlerRegistry = DeepLinkHandlerRegistry(deepLinkHandlers)
@@ -114,6 +119,11 @@ internal class DeepLinkFactory @Inject constructor(
         isFromOnNewIntent: Boolean,
         source: DeeplinkSource = DeeplinkSource.External,
     ) {
+        if (source == DeeplinkSource.External && deeplinkUri.isTangemPayMainLink()) {
+            TangemLogger.i("Tangem Pay main deep link is openable only from push")
+            return
+        }
+
         parkedDeeplink = ParkedDeeplink(uri = deeplinkUri, source = source)
 
         TangemLogger.i(
@@ -147,6 +157,16 @@ internal class DeepLinkFactory @Inject constructor(
         }
             .launchIn(coroutineScope)
             .saveIn(deepLinkHandlerJobHolder)
+    }
+
+    fun bindMarketingUid(deeplinkUri: Uri) {
+        // `wc:` and other opaque links have no query: getQueryParameters throws for them
+        if (!marketingFeatureToggles.isUidBindingEnabled || deeplinkUri.isOpaque) return
+
+        val uid = deeplinkUri.getQueryParameters(MARKETING_UID_PARAM).firstOrNull(String::isNotEmpty) ?: return
+        if (deepLinkHandlerRegistry.find(deeplinkUri) == null) return
+
+        appCoroutineScope.launch { marketingUidBindingRepository.bind(uid) }
     }
 
     /**
@@ -265,7 +285,7 @@ internal class DeepLinkFactory @Inject constructor(
         val path = deeplinkUri.path.orEmpty()
 
         return when {
-            path.matchesPathSegment("/pay-app-main") -> {
+            path.matchesPathSegment(PAY_APP_MAIN_PATH) -> {
                 tangemPayMainDeepLink.create(coroutineScope, getQueryParams(deeplinkUri))
                 true
             }
@@ -300,6 +320,17 @@ internal class DeepLinkFactory @Inject constructor(
      */
     private fun String.matchesPathSegment(segment: String): Boolean = this == segment || startsWith("$segment/")
 
+    private fun Uri.isTangemPayMainLink(): Boolean = when (scheme) {
+        DeepLinkScheme.Tangem.scheme -> host == DeepLinkRoute.PayAppMain.host
+        DeepLinkScheme.Https.scheme -> host == DeepLinkRoute.PayApp.host && isPayAppMainPath()
+        else -> false
+    }
+
+    private fun Uri.isPayAppMainPath(): Boolean {
+        return path.orEmpty().matchesPathSegment(PAY_APP_MAIN_PATH) ||
+            pathSegments.firstOrNull() == PAY_APP_MAIN_SEGMENT
+    }
+
     @Suppress("CyclomaticComplexMethod")
     private fun handleTangemDeepLinks(
         deeplinkUri: Uri,
@@ -328,7 +359,6 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.WalletConnect.host -> walletConnectDeepLink.create(deeplinkUri)
             DeepLinkRoute.Promo.host -> promoDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.OnboardVisa.host -> onboardVisaDeepLink.create(deeplinkUri)
-            DeepLinkRoute.OnboardMoneyAccount.host -> onboardMoneyAccountDeepLink.create(deeplinkUri)
             DeepLinkRoute.News.host -> newsDeepLink.create(queryParams)
             DeepLinkRoute.Earn.host -> earnDeepLink.create(queryParams)
             DeepLinkRoute.Yield.host -> yieldDeepLink.create(coroutineScope, queryParams)
@@ -391,10 +421,15 @@ internal class DeepLinkFactory @Inject constructor(
 
     private companion object {
 
+        const val MARKETING_UID_PARAM = "uid"
+
         /**
          * AppsFlyer OneLink domains, mirroring the `autoVerify` App Link filters in the manifest. They are not in
          * [ExternalUrlValidator]'s trusted hosts because they serve attribution redirects rather than content.
          */
         val APPSFLYER_ONELINK_HOSTS = setOf("tangem.onelink.me", "join.tangem.com")
+
+        const val PAY_APP_MAIN_SEGMENT = "pay-app-main"
+        const val PAY_APP_MAIN_PATH = "/$PAY_APP_MAIN_SEGMENT"
     }
 }

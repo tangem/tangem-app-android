@@ -33,9 +33,6 @@ internal sealed class TangemPayAccountDetailsInnerRoute : Route {
     ) : TangemPayAccountDetailsInnerRoute()
 
     @Serializable
-    data object VirtualAccountDepositSuccess : TangemPayAccountDetailsInnerRoute()
-
-    @Serializable
     data object BankTransferOnrampOnboarding : TangemPayAccountDetailsInnerRoute()
 
     @Serializable

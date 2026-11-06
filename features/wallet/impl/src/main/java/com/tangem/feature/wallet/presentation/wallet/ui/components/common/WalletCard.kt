@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -35,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.*
+import com.tangem.common.ui.userwallet.SocialLoginWalletIcon
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.TextReference
@@ -109,7 +111,7 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(horizontal = 12.dp),
         ) {
             CardContainer(
@@ -146,10 +148,16 @@ private fun CardContainer(state: WalletCardState, isBalanceHidden: Boolean, item
                 .weight(1f)
                 .padding(vertical = 12.dp),
         ) {
-            TitleText(
-                text = state.title,
-                modifier = Modifier,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                TitleText(
+                    text = state.title,
+                    modifier = Modifier.weight(weight = 1f, fill = false),
+                )
+                if (state.additionalInfo?.isSocialLogin == true) SocialLoginWalletIcon()
+            }
             Balance(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
@@ -194,7 +202,7 @@ private fun ManageWalletContextMenu(
     DropdownMenu(
         expanded = isMenuVisible,
         onDismissRequest = onDismissRequest,
-        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+        modifier = Modifier.background(color = TangemTheme.colors3.bg.primary),
         offset = pressOffset.copy(y = pressOffset.y - itemHeight),
     ) {
         dropDownItems.fastForEach { item ->
@@ -215,13 +223,13 @@ private fun MenuItem(text: TextReference, imageVector: ImageVector, onClick: () 
     DropdownMenuItem(
         text = { Text(text = text.resolveReference(), style = TangemTheme.typography.subtitle2) },
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.secondary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .testTag(MainScreenTestTags.TOTAL_BALANCE_MENU_ITEM),
         trailingIcon = { Icon(imageVector = imageVector, contentDescription = null) },
         onClick = onClick,
         colors = MenuDefaults.itemColors(
-            textColor = TangemTheme.colors.text.primary1,
-            trailingIconColor = TangemTheme.colors.icon.primary1,
+            textColor = TangemTheme.colors3.text.primary,
+            trailingIconColor = TangemTheme.colors3.icon.primary,
         ),
     )
 }
@@ -231,7 +239,7 @@ private fun TitleText(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         modifier = modifier.testTag(MainScreenTestTags.CARD_TITLE),
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         style = TangemTheme.typography.button,
@@ -263,7 +271,7 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
                     style = TangemTheme.typography.h2
                         .applyBladeBrush(
                             isEnabled = state.isBalanceFlickering,
-                            textColor = TangemTheme.colors.text.primary1,
+                            textColor = TangemTheme.colors3.text.primary,
                         ),
                 )
             }
@@ -284,7 +292,7 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
 private fun NonContentBalanceText(text: TextReference) {
     Text(
         text = text.resolveReference(),
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         style = TangemTheme.typography.h2,
     )
 }
@@ -340,7 +348,7 @@ private fun AdditionalInfo(
                         )
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
-                            color = TangemTheme.colors.icon.accent,
+                            color = TangemTheme.colors3.icon.accent.blue,
                             strokeWidth = 2.dp,
                         )
                     }
@@ -356,7 +364,7 @@ private fun AdditionalInfo(
 private fun AdditionalInfoText(text: TextReference, testTag: String = MainScreenTestTags.DEVICES_COUNT) {
     Text(
         text = text.resolveReference(),
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         style = TangemTheme.typography.caption2,
@@ -372,7 +380,7 @@ private fun Modifier.nonContentAdditionalInfoSize(): Modifier {
 private fun LockedContent(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.field.primary,
+            color = TangemTheme.colors3.bg.tertiary,
             shape = RoundedCornerShape(6.dp),
         ),
     )
@@ -423,6 +431,14 @@ private class WalletCardStateProvider : CollectionPreviewParameterProvider<Walle
         ),
         WalletPreviewDataLegacy.walletCardContentState.copy(
             isBalanceFlickering = true,
+        ),
+        WalletPreviewDataLegacy.walletCardContentState.copy(
+            title = "Google wallet",
+            additionalInfo = WalletAdditionalInfo(
+                isHideable = false,
+                content = WalletAdditionalInfo.Content.Text(TextReference.Str("Mobile wallet")),
+                isSocialLogin = true,
+            ),
         ),
         WalletPreviewDataLegacy.walletCardLoadingState,
         WalletPreviewDataLegacy.walletCardErrorState,

@@ -2,7 +2,6 @@ package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
-import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_GEO_COUNTRIES_SCENARIO
@@ -10,7 +9,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_KYC_STATUS_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.scenarios.assertTangemPayTileNotDisplayed
 import com.tangem.scenarios.awaitNoWalletOfferedTangemPay
@@ -36,7 +34,6 @@ import com.tangem.screens.tangempay.onTangemPayMainScreen
 import com.tangem.screens.tangempay.onTangemPayOnboardingScreen
 import com.tangem.screens.tangempay.onTangemPayResidencyScreen
 import com.tangem.core.res.R as CoreResR
-import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -56,14 +53,6 @@ class TangemPayChooseCountryTest : BaseTestCase() {
     private val germany = "Germany"
     private val unitedStatesCode = "US"
 
-    @RemoveWithToggle(
-        toggleName = "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
-        description = "Move the tests to a wallet without system cards, where the Main promo is shown",
-    )
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED.rawName to false,
-    )
-
     @AllureId("12752")
     @DisplayName("Tangem Pay: Get Tangem Pay in Details is hidden after KYC starts and is back once the account is hidden")
     @Test
@@ -82,7 +71,7 @@ class TangemPayChooseCountryTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycInProgressState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityPaeraCustomerState'") {
@@ -156,7 +145,7 @@ class TangemPayChooseCountryTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycRequiredState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
             step("Click on 'Close' button") {
@@ -189,7 +178,7 @@ class TangemPayChooseCountryTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycRequiredState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Assert 'Get Tangem Pay' banner is displayed on Main") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onMainScreen { getTangemPayBanner.assertIsDisplayed() } }
@@ -246,7 +235,7 @@ class TangemPayChooseCountryTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_GEO_COUNTRIES_SCENARIO, geoFullListState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             val countriesRequestsBefore = getTangemPayCountriesRequestCount()
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
@@ -323,7 +312,7 @@ class TangemPayChooseCountryTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_GEO_COUNTRIES_SCENARIO, geoNoSuggestedState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             val countriesRequestsBefore = getTangemPayCountriesRequestCount()
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
@@ -384,7 +373,7 @@ class TangemPayChooseCountryTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_GEO_COUNTRIES_SCENARIO, geoFullListState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }
             step("Type '$countryQuery' into search field") { searchTangemPayResidency(countryQuery) }
@@ -471,7 +460,7 @@ class TangemPayChooseCountryTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_GEO_COUNTRIES_SCENARIO, geoFullListState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             val countriesRequestsBefore = getTangemPayCountriesRequestCount()
             step("Open 'Country of residence' screen from app Details") { openTangemPayCountryStepFromDetails() }

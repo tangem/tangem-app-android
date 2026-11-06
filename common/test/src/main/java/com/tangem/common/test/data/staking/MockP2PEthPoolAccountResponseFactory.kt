@@ -3,7 +3,7 @@ package com.tangem.common.test.data.staking
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolExitQueueDTO
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolStakeDTO
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import java.math.BigDecimal
 

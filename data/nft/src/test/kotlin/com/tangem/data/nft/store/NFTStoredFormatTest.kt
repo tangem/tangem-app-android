@@ -6,12 +6,14 @@ import com.squareup.moshi.adapter
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.data.nft.custom.NFTPriceId
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.datastore.legacyDataStoreMoshi
 import com.tangem.test.core.datastore.readStoredJson
 import com.tangem.test.core.datastore.writeStoredJson
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -43,7 +45,10 @@ internal class NFTStoredFormatTest {
                 .withSubtype(NFTAsset.Identifier.Solana::class.java, "sol")
                 .withDefaultValue(NFTAsset.Identifier.Unknown),
         )
+        .add(SolanaIdentifierJsonAdapterFactory)
         .build()
+
+    private val json: Json = NetworkJsonFactory.create()
 
     private val collectionsSerializer = ListSerializer(NFTCollectionSerializer)
 
@@ -181,7 +186,55 @@ internal class NFTStoredFormatTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LegacySolanaTokenStandard {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN legacy token standard WHEN decoded by kotlinx THEN standard is normalized`(
+            model: LegacyTokenStandardModel,
+        ) {
+            // Arrange
+            val legacyJson = """{"bc":"sol","tokenAddress":"SoLtoken","tokenStandard":${model.rawJson}}"""
+
+            // Act
+            val decoded = json.decodeFromString(NFTAssetIdentifierSerializer, legacyJson)
+
+            // Assert
+            assertThat(decoded).isEqualTo(
+                NFTAsset.Identifier.Solana(tokenAddress = "SoLtoken", tokenStandard = model.expected),
+            )
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN legacy token standard WHEN decoded by Moshi THEN standard is normalized`(
+            model: LegacyTokenStandardModel,
+        ) {
+            // Arrange
+            val legacyJson = """{"bc":"sol","tokenAddress":"SoLtoken","tokenStandard":${model.rawJson}}"""
+
+            // Act
+            val decoded = moshi.adapter(NFTAsset.Identifier::class.java).fromJson(legacyJson)
+
+            // Assert
+            assertThat(decoded).isEqualTo(
+                NFTAsset.Identifier.Solana(tokenAddress = "SoLtoken", tokenStandard = model.expected),
+            )
+        }
+
+        private fun provideTestModels() = listOf(
+            LegacyTokenStandardModel(rawJson = "4", expected = "ProgrammableNft"),
+            LegacyTokenStandardModel(rawJson = "\"ProgrammableNft\"", expected = "ProgrammableNft"),
+            LegacyTokenStandardModel(rawJson = "null", expected = null),
+            LegacyTokenStandardModel(rawJson = "\"garbage\"", expected = "garbage"),
+        )
+    }
+
     data class CollectionsModel(val value: List<NFTCollection>, val json: String)
+
+    data class LegacyTokenStandardModel(val rawJson: String, val expected: String?)
 
     data class PricesModel(val value: List<NFTPriceId>, val json: String)
 
@@ -222,7 +275,7 @@ internal class NFTStoredFormatTest {
             traits = emptyList(),
         )
         val SOLANA_ASSET = TON_ASSET.copy(
-            identifier = NFTAsset.Identifier.Solana(tokenAddress = "SoLtoken", tokenStandard = 4),
+            identifier = NFTAsset.Identifier.Solana(tokenAddress = "SoLtoken", tokenStandard = "ProgrammableNft"),
             collectionIdentifier = NFTCollection.Identifier.Solana(collectionAddress = "SoLcollection"),
             blockchainId = "solana",
         )
@@ -253,7 +306,7 @@ internal class NFTStoredFormatTest {
         const val SALE_PRICE_JSON = """{"value":"1E-8","symbol":"ETH","decimals":18}"""
         const val EVM_ASSET_ID_JSON = """{"bc":"evm","tokenId":"123456789012345678901234567890",""" +
             """"tokenAddress":"0xcollection","contractType":"ERC1155"}"""
-        const val SOLANA_ASSET_ID_JSON = """{"bc":"sol","tokenAddress":"SoLtoken","tokenStandard":4}"""
+        const val SOLANA_ASSET_ID_JSON = """{"bc":"sol","tokenAddress":"SoLtoken","tokenStandard":"ProgrammableNft"}"""
         const val EVM_COLLECTION_JSON = """{"identifier":{"bc":"evm","tokenAddress":"0xcollection"},""" +
             """"blockchainId":"ethereum","name":"Apes","description":"Collection","logoUrl":"https://logo",""" +
             """"count":1,"assets":[{"identifier":$EVM_ASSET_ID_JSON,""" +

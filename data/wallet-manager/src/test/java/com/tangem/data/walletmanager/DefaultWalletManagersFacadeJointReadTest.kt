@@ -68,6 +68,8 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
         jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = blockchainSDKFactory,
+        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns false },
+        yieldSendUpgradeDecisions = YieldSendUpgradeDecisions(),
     )
 
     private val cryptoCurrencyFactory = MockCryptoCurrencyFactory()

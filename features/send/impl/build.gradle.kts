@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.analytics)
     implementation(projects.core.navigation)
+    implementation(projects.core.remote)
     implementation(projects.data.nft)
     implementation(projects.core.utils)
 

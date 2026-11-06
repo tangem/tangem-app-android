@@ -55,7 +55,7 @@ internal fun WalletsList(
     val itemWidth by remember(screenWidth) { derivedStateOf { screenWidth - horizontalCardPadding * 2 } }
 
     LazyRow(
-        modifier = modifier.background(color = TangemTheme.colors.background.secondary),
+        modifier = modifier.background(color = TangemTheme.colors3.bg.primary),
         state = lazyListState,
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),

@@ -20,7 +20,7 @@ internal object WalletBalancePreview {
             stringReference("1,234"),
             styledStringReference(
                 ".56",
-                { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                { SpanStyle(color = TangemTheme.colors3.text.secondary) },
             ),
             stringReference(" $"),
         ),
@@ -46,7 +46,7 @@ internal object WalletBalancePreview {
             stringReference("1,234"),
             styledStringReference(
                 ".56",
-                { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                { SpanStyle(color = TangemTheme.colors3.text.secondary) },
             ),
             stringReference(" $"),
         ),
@@ -70,6 +70,16 @@ internal object WalletBalancePreview {
     )
 
     val hiddenBalanceContent = content.copy(balance = content.balance.orMaskWithStars(true))
+
+    val socialLoginContent = content.copy(
+        name = "Google wallet",
+        deviceIcon = DeviceIconUM.Mobile,
+        additionalInfo = WalletAdditionalInfo(
+            isHideable = false,
+            content = WalletAdditionalInfo.Content.Text(stringReference("Mobile wallet")),
+            isSocialLogin = true,
+        ),
+    )
 
     val loading: WalletBalanceUM.Loading = WalletBalanceUM.Loading(
         id = UserWalletId("1"),

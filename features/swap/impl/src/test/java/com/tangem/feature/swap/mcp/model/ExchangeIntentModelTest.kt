@@ -5,18 +5,23 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.message.ToastMessage
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.core.error.DataError
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.ExchangeIntent
+import com.tangem.domain.swap.models.ExchangeIntentError
 import com.tangem.domain.swap.usecase.GetExchangeIntentUseCase
 import com.tangem.feature.swap.mcp.createCoin
 import com.tangem.feature.swap.mcp.createExchangeIntent
@@ -26,11 +31,13 @@ import com.tangem.feature.swap.mcp.holdings.ExchangeIntentHoldings
 import com.tangem.feature.swap.mcp.holdings.ExchangeIntentHoldingsResolver
 import com.tangem.feature.swap.mcp.ExchangeIntentAmountConverter
 import com.tangem.feature.swap.mcp.ExchangeIntentSwapRouteConverter
+import com.tangem.feature.swap.presentation.R
 import com.tangem.features.swap.mcp.ExchangeIntentComponent
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -44,25 +51,33 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.parallel.ResourceLock
+import org.junit.jupiter.api.parallel.Resources
 import org.junit.jupiter.params.ParameterizedTest
+import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@ResourceLock(Resources.LOCALE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ExchangeIntentModelTest {
 
     private val router: Router = mockk(relaxed = true)
-    private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val getExchangeIntentUseCase: GetExchangeIntentUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val holdingsResolver: ExchangeIntentHoldingsResolver = mockk()
     private val mcpRepository: McpRepository = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val amountConverter = ExchangeIntentAmountConverter()
     private val swapRouteConverter = ExchangeIntentSwapRouteConverter(amountConverter)
-    private val offerConverter = ExchangeIntentOfferConverter(amountConverter)
+    private val swapTextConverter = ExchangeIntentSwapTextConverter(amountConverter)
+    private val offerConverter = ExchangeIntentOfferConverter(swapTextConverter)
+    private val processedConverter = ExchangeIntentProcessedConverter(swapTextConverter)
+    private val cantReachConverter = ExchangeIntentCantReachConverter()
 
     private val walletId = UserWalletId("011")
     private val intent = createExchangeIntent()
@@ -79,15 +94,19 @@ internal class ExchangeIntentModelTest {
     /** Root stack the [router] falls back to; the model navigates it only through [Router.navigate]. */
     private var rootStack: List<Route> = emptyList()
 
+    private lateinit var originalLocale: Locale
+
     @BeforeEach
     fun resetMocks() {
+        originalLocale = Locale.getDefault()
+        Locale.setDefault(Locale.US)
         clearMocks(
             router,
-            messageSender,
             getExchangeIntentUseCase,
             userWalletsListRepository,
             holdingsResolver,
             mcpRepository,
+            analyticsEventHandler,
         )
         rootStack = emptyList()
         every { router.navigate(any(), any()) } answers {
@@ -101,6 +120,11 @@ internal class ExchangeIntentModelTest {
         coEvery { mcpRepository.getAgent(any()) } returns claude
     }
 
+    @AfterEach
+    fun restoreLocale() {
+        Locale.setDefault(originalLocale)
+    }
+
     @Test
     fun `GIVEN intent request in flight WHEN model created THEN nothing is shown yet`() = runTest {
         // Arrange
@@ -112,7 +136,7 @@ internal class ExchangeIntentModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.offer.value).isNull()
+        assertThat(model.sheet.value).isNull()
         model.onDestroy()
     }
 
@@ -135,7 +159,12 @@ internal class ExchangeIntentModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.shownOffer().title.toString()).contains("${claude.origin} Agent")
+        assertThat(model.shownOffer().title).isEqualTo(
+            resourceReference(
+                R.string.mcp_swap_intent_offer_title,
+                wrappedList(stringReference("mcp.claude.com"), "42.00\u00a0USDT", "POL"),
+            ),
+        )
         model.onDestroy()
     }
 
@@ -150,14 +179,19 @@ internal class ExchangeIntentModelTest {
         runCurrent()
 
         // Assert
-        assertThat(model.shownOffer().title.toString()).contains("Unknown Agent")
+        assertThat(model.shownOffer().title).isEqualTo(
+            resourceReference(
+                R.string.mcp_swap_intent_offer_title,
+                wrappedList(resourceReference(R.string.mcp_intent_unknown_agent_name), "42.00\u00a0USDT", "POL"),
+            ),
+        )
         model.onDestroy()
     }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN intent that cannot be offered WHEN model created THEN toast is sent and sheet closes`(
-        model: CloseModel,
+    fun `GIVEN intent that cannot be reached WHEN model created THEN can't reach sheet is shown and closes once`(
+        model: CantReachModel,
     ) = runTest {
         // Arrange
         model.arrange()
@@ -165,42 +199,193 @@ internal class ExchangeIntentModelTest {
         // Act
         val exchangeIntentModel = createModel(testScope = this)
         advanceUntilIdle()
-        exchangeIntentModel.onClose()
-        exchangeIntentModel.onClose()
+        val status = exchangeIntentModel.shownStatus()
+        status.primaryButton.onClick()
+        status.primaryButton.onClick()
 
         // Assert
-        verify(exactly = 1) { messageSender.send(any<ToastMessage>()) }
+        assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Warning)
+        assertThat(status.title).isEqualTo(resourceReference(R.string.mcp_swap_intent_cant_reach_title))
+        assertThat(status.subtitle).isNull()
+        assertThat(status.primaryButton.text).isEqualTo(resourceReference(R.string.common_got_it))
         verify(exactly = 1) { router.pop(any()) }
-        assertThat(exchangeIntentModel.offer.value).isNull()
         exchangeIntentModel.onDestroy()
     }
 
-    data class CloseModel(val description: String, val arrange: () -> Unit) {
+    data class CantReachModel(val description: String, val arrange: () -> Unit) {
         override fun toString() = description
     }
 
     @Suppress("unused")
     private fun provideTestModels() = listOf(
-        CloseModel(description = "no wallet is selected") {
-            coEvery { userWalletsListRepository.selectedUserWalletSync() } returns null
-        },
-        CloseModel(description = "intent belongs to another wallet") {
+        CantReachModel(description = "intent belongs to another wallet") {
             coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
-                DataError.UserWalletError.WrongUserWallet("another wallet").left()
+                ExchangeIntentError.OtherWallet(INTENT_ID, code = 2610).left()
         },
-        CloseModel(description = "intent was already carried out") {
-            coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns intent.copy(isHandled = true).right()
+        CantReachModel(description = "intent is not found") {
+            coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                ExchangeIntentError.NotFound(INTENT_ID, code = 2600).left()
         },
-        CloseModel(description = "wallet lacks the token to swap to") {
+        CantReachModel(description = "intent cannot be read for an unknown reason") {
+            coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns IllegalStateException("no network").left()
+        },
+        CantReachModel(description = "wallet lacks the token to swap to") {
             coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.MissingTo(from = usdt)
         },
-        CloseModel(description = "accounts of the wallet cannot be read") {
+        CantReachModel(description = "accounts of the wallet cannot be read") {
             coEvery { holdingsResolver.resolve(walletId, any()) } returns null
         },
-        CloseModel(description = "amount of the intent is malformed") {
+        CantReachModel(description = "amount of the intent is malformed") {
             coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns intent.copy(amount = "many").right()
         },
     )
+
+    @Test
+    fun `GIVEN no wallet is selected WHEN model created THEN no sheet is shown and the slot is released once`() =
+        runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.selectedUserWalletSync() } returns null
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onClose()
+
+            // Assert
+            assertThat(model.sheet.value).isNull()
+            verify(exactly = 1) { router.pop(any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN intent already carried out WHEN model created THEN processed sheet names the swap and closes once`() =
+        runTest {
+            // Arrange
+            val processedIntent = intent.copy(isHandled = true)
+            coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns processedIntent.right()
+            val model = createModel(testScope = this)
+            val expected = processedConverter.convert(
+                ExchangeIntentProcessedConverter.Input(
+                    intent = processedIntent,
+                    from = usdt,
+                    to = pol,
+                    onClose = model::onClose,
+                ),
+            )
+
+            // Act
+            advanceUntilIdle()
+            val status = model.shownStatus()
+            status.primaryButton.onClick()
+            status.primaryButton.onClick()
+
+            // Assert
+            assertThat(status).isEqualTo(expected)
+            verify(exactly = 1) { router.pop(any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN intent already carried out and tokens not held WHEN model created THEN processed sheet has no subtitle`() =
+        runTest {
+            // Arrange
+            coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns intent.copy(isHandled = true).right()
+            coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.MissingBoth
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.shownStatus().subtitle).isNull()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN no connection WHEN model created THEN can't reach sheet offers to try again`() = runTest {
+        // Arrange
+        coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+            ExchangeIntentError.Unreachable(INTENT_ID).left()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val status = model.shownStatus()
+        assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Warning)
+        assertThat(status.primaryButton.text).isEqualTo(resourceReference(R.string.alert_button_try_again))
+        verify(exactly = 0) { router.pop(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no connection WHEN try again and the intent is read THEN the offer replaces the status`() = runTest {
+        // Arrange
+        coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returnsMany listOf(
+            ExchangeIntentError.Unreachable(INTENT_ID).left(),
+            intent.right(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.shownStatus().primaryButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.shownOffer().title.toString()).contains("POL")
+        coVerify(exactly = 2) { getExchangeIntentUseCase(walletId, INTENT_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no connection WHEN try again is tapped while reading THEN the sheet stays and reading is not repeated`() =
+        runTest {
+            // Arrange
+            val response = CompletableDeferred<Either<Throwable, ExchangeIntent>>()
+            val unreachable: Either<Throwable, ExchangeIntent> =
+                ExchangeIntentError.Unreachable(INTENT_ID).left()
+            var calls = 0
+            coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } coAnswers {
+                if (calls++ == 0) unreachable else response.await()
+            }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val status = model.shownStatus()
+
+            // Act
+            status.primaryButton.onClick()
+            status.primaryButton.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.sheet.value).isSameInstanceAs(status)
+            coVerify(exactly = 2) { getExchangeIntentUseCase(walletId, INTENT_ID) }
+            response.complete(intent.right())
+            advanceUntilIdle()
+            assertThat(model.shownOffer().title.toString()).contains("POL")
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN no connection WHEN try again and it fails again THEN the can't reach sheet is shown again`() = runTest {
+        // Arrange
+        coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+            ExchangeIntentError.Unreachable(INTENT_ID).left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.shownStatus().primaryButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.shownStatus().primaryButton.text).isEqualTo(resourceReference(R.string.alert_button_try_again))
+        coVerify(exactly = 2) { getExchangeIntentUseCase(walletId, INTENT_ID) }
+        verify(exactly = 0) { router.pop(any()) }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN offer WHEN proceed THEN swap opens bound to the intent and sheet closes`() = runTest {
@@ -215,7 +400,7 @@ internal class ExchangeIntentModelTest {
         // Assert
         assertThat(rootStack).containsExactly(expectedSwapRoute())
         verify(exactly = 1) { router.pop(any()) }
-        assertThat(model.offer.value).isEqualTo(offer)
+        assertThat(model.sheet.value).isEqualTo(offer)
         model.onDestroy()
     }
 
@@ -292,10 +477,10 @@ internal class ExchangeIntentModelTest {
             model.onClose()
 
             // Assert
-            assertThat(model.offer.value).isEqualTo(offer)
+            assertThat(model.sheet.value).isEqualTo(offer)
             verify(exactly = 1) { router.pop(any()) }
             verify(exactly = 0) { router.navigate(any(), any()) }
-            verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
+            assertThat(sentEvents().map { it.first }).containsExactly("[MCP Intent] Intent Screen Opened")
             model.onDestroy()
         }
 
@@ -314,8 +499,8 @@ internal class ExchangeIntentModelTest {
 
         // Assert
         verify(exactly = 1) { router.pop(any()) }
-        verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
-        assertThat(model.offer.value).isNull()
+        assertThat(model.sheet.value).isNull()
+        assertThat(sentEvents()).isEmpty()
         model.onDestroy()
     }
 
@@ -345,7 +530,6 @@ internal class ExchangeIntentModelTest {
             // Assert
             verify(exactly = testModel.expectedPops) { router.pop(any()) }
             verify(exactly = testModel.expectedNavigations) { router.navigate(any(), any()) }
-            verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
             model.onDestroy()
         }
 
@@ -400,10 +584,10 @@ internal class ExchangeIntentModelTest {
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.offer.value).isNull()
+            assertThat(model.sheet.value).isNull()
             verify(exactly = 1) { router.pop(any()) }
             verify(exactly = 0) { router.navigate(any(), any()) }
-            verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
+            assertThat(sentEvents()).isEmpty()
             model.onDestroy()
         }
 
@@ -432,11 +616,172 @@ internal class ExchangeIntentModelTest {
 
             // Assert
             assertThat(lookupCancelled).isTrue()
-            assertThat(model.offer.value).isNull()
+            assertThat(model.sheet.value).isNull()
             verify(exactly = 1) { router.pop(any()) }
-            verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
+            assertThat(sentEvents()).isEmpty()
             model.onDestroy()
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN open intent WHEN offer is shown THEN screen opened names the agent and the FROM token`() = runTest {
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentEvents()).containsExactly(
+                "[MCP Intent] Intent Screen Opened" to mapOf(
+                    "Intent Type" to "exchange",
+                    "Agent Name" to "mcp.claude.com",
+                    "Blockchain" to usdt.network.name,
+                    "Token" to usdt.symbol,
+                    "Intent Id" to INTENT_ID,
+                ),
+            )
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN intent that is not offered WHEN its sheet is shown THEN load failed carries the reason`(
+            testModel: LoadFailedModel,
+        ) = runTest {
+            // Arrange
+            testModel.arrange()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentEvents()).containsExactly(
+                "[MCP Intent] Intent Load Failed" to buildMap {
+                    put("Intent Type", "exchange")
+                    put("Reason", testModel.expectedReason)
+                    testModel.expectedErrorCode?.let { put("Error Code", it) }
+                    put("Intent Id", INTENT_ID)
+                },
+            )
+            model.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            LoadFailedModel("intent of another wallet", "Wrong Wallet", "2610") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                    ExchangeIntentError.OtherWallet(INTENT_ID, code = 2610).left()
+            },
+            LoadFailedModel("intent not found", "Not Found", "2600") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                    ExchangeIntentError.NotFound(INTENT_ID, code = 2600).left()
+            },
+            LoadFailedModel("no connection", "Unreachable") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                    ExchangeIntentError.Unreachable(INTENT_ID).left()
+            },
+            LoadFailedModel("amount of both sides", "Invalid Amount") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                    ExchangeIntentError.AmbiguousAmountSide(INTENT_ID).left()
+            },
+            LoadFailedModel("server error", "Unknown", "502") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns ApiResponseError.HttpException(
+                    code = ApiResponseError.HttpException.Code.BAD_GATEWAY,
+                    message = null,
+                    errorBody = null,
+                ).left()
+            },
+            LoadFailedModel("unknown read error", "Unknown") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                    IllegalStateException("boom").left()
+            },
+            LoadFailedModel("already carried out", "Already Processed") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns intent.copy(isHandled = true).right()
+            },
+            LoadFailedModel("token to swap to missing", "Token Missing") {
+                coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.MissingTo(usdt)
+            },
+            LoadFailedModel("token to swap from missing", "Token Missing") {
+                coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.MissingFrom(pol)
+            },
+            LoadFailedModel("both tokens missing", "Token Missing") {
+                coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.MissingBoth
+            },
+            LoadFailedModel("accounts unreadable", "Unknown") {
+                coEvery { holdingsResolver.resolve(walletId, any()) } returns null
+            },
+            LoadFailedModel("malformed amount", "Invalid Amount") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns intent.copy(amount = "many").right()
+            },
+        )
+
+        @Test
+        fun `GIVEN offer WHEN proceed is tapped twice THEN continue is sent once`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val proceed = model.shownOffer().primaryButton.onClick
+
+            // Act
+            proceed()
+            proceed()
+
+            // Assert
+            assertThat(sentEvents().last()).isEqualTo(
+                "[MCP Intent] Button - Continue" to mapOf("Intent Type" to "exchange", "Intent Id" to INTENT_ID),
+            )
+            assertThat(sentEvents().count { it.first == "[MCP Intent] Button - Continue" }).isEqualTo(1)
+            verify(exactly = 0) { router.defaultCompletionHandler(any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN offer WHEN swap cannot be opened THEN continue is not sent`() = runTest {
+            // Arrange
+            every { router.navigate(any(), any()) } answers { secondArg<(Boolean) -> Unit>().invoke(false) }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.shownOffer().primaryButton.onClick()
+
+            // Assert
+            assertThat(sentEvents().map { it.first }).doesNotContain("[MCP Intent] Button - Continue")
+            verify(exactly = 1) { router.defaultCompletionHandler(isSuccess = false, errorMessage = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no wallet is selected WHEN model created THEN no analytics is sent`() = runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.selectedUserWalletSync() } returns null
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentEvents()).isEmpty()
+            model.onDestroy()
+        }
+    }
+
+    data class LoadFailedModel(
+        val description: String,
+        val expectedReason: String,
+        val expectedErrorCode: String? = null,
+        val arrange: () -> Unit,
+    ) {
+        override fun toString() = description
+    }
+
+    private fun sentEvents(): List<Pair<String, Map<String, String>>> {
+        val events = mutableListOf<AnalyticsEvent>()
+        verify(atLeast = 0) { analyticsEventHandler.send(capture(events)) }
+        return events.map { it.id to it.params }
     }
 
     enum class CompletionAction { Close, Proceed, Destroy }
@@ -451,7 +796,9 @@ internal class ExchangeIntentModelTest {
         override fun toString() = description
     }
 
-    private fun ExchangeIntentModel.shownOffer(): ExchangeIntentUM = checkNotNull(offer.value)
+    private fun ExchangeIntentModel.shownOffer(): ExchangeIntentUM.Offer = sheet.value as ExchangeIntentUM.Offer
+
+    private fun ExchangeIntentModel.shownStatus(): ExchangeIntentUM.Status = sheet.value as ExchangeIntentUM.Status
 
     private fun expectedSwapRoute() = swapRouteConverter.convert(
         ExchangeIntentSwapRouteConverter.Input(intent = intent, userWalletId = walletId, from = usdt, to = pol),
@@ -460,13 +807,15 @@ internal class ExchangeIntentModelTest {
     private fun createModel(testScope: TestScope): ExchangeIntentModel = ExchangeIntentModel(
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
-        messageSender = messageSender,
         getExchangeIntentUseCase = getExchangeIntentUseCase,
         userWalletsListRepository = userWalletsListRepository,
         holdingsResolver = holdingsResolver,
         mcpRepository = mcpRepository,
         offerConverter = offerConverter,
+        processedConverter = processedConverter,
+        cantReachConverter = cantReachConverter,
         swapRouteConverter = swapRouteConverter,
+        analyticsEventHandler = analyticsEventHandler,
         paramsContainer = MutableParamsContainer(value = ExchangeIntentComponent.Params(intentId = INTENT_ID)),
     )
 

@@ -45,4 +45,10 @@ data class BannerDto(
     @Json(name = "bgColor") val bgColor: String? = null,
     @Json(name = "deeplink") val deeplink: String? = null,
     @SerialName("dismissible") @Json(name = "dismissible") val isDismissible: Boolean = false,
+    @Json(name = "categoryLabel") val categoryLabel: String? = null,
+    @Json(name = "subtitle") val subtitle: String? = null,
+    @Json(name = "etaLabel") val etaLabel: String? = null,
+    @Json(name = "partnerLabel") val partnerLabel: String? = null,
+    @Json(name = "buttonText") val buttonText: String? = null,
+    @SerialName("glow") @Json(name = "glow") val hasGlow: Boolean = false,
 )

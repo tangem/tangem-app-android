@@ -8,7 +8,7 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.balance.BalanceContribution
-import com.tangem.domain.models.staking.*
+import com.tangem.domain.staking.model.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.MemoValidatorFacade

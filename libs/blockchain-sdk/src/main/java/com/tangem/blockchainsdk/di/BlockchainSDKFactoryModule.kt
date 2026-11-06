@@ -180,6 +180,12 @@ internal object BlockchainSDKFactoryModule {
                 isMonadEnabled = featureTogglesManager.isFeatureEnabled(
                     FeatureToggles.TWI_1520_MERKL_INCENTIVES_ENABLED,
                 ),
+                isYieldModuleV3Enabled = featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.AND_18834_YIELD_MODULE_V3_ENABLED,
+                ),
+                isSolanaCoreNftEnabled = featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.TWI_1822_SOLANA_PNFT_AND_METAPLEX_CORE_ENABLED,
+                ),
             ),
         )
     }

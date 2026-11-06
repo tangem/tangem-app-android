@@ -63,7 +63,6 @@ dependencies {
     api(deps.kotlin.immutable.collections)
     implementation(deps.arrow.core)
     implementation(deps.kotlin.serialization)
-    implementation(deps.firebase.crashlytics)
 
     /** DI */
     implementation(deps.hilt.android)

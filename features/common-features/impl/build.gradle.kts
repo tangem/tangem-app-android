@@ -79,7 +79,6 @@ dependencies {
     implementation(deps.haze)
     implementation(deps.kotlin.serialization)
     implementation(deps.lifecycle.compose)
-    implementation(deps.firebase.crashlytics)
 
     /** DI */
     implementation(deps.hilt.android)

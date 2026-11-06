@@ -43,10 +43,6 @@ internal class DefaultCardRepository(
         return getUsedCardSync(cardId)?.isActivationStarted == true
     }
 
-    override suspend fun isActivationFinished(cardId: String): Boolean {
-        return getUsedCardSync(cardId)?.isActivationFinished == true
-    }
-
     override suspend fun isActivationInProgress(cardId: String): Boolean {
         val card = getUsedCardSync(cardId) ?: return false
 

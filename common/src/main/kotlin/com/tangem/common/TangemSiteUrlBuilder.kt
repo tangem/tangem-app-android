@@ -1,26 +1,19 @@
 package com.tangem.common
 
 import android.content.res.Resources
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.ktx.Firebase
+import com.tangem.core.analytics.AppInstanceIdProvider
 import java.util.Locale
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+import javax.inject.Inject
 
-object TangemSiteUrlBuilder {
-
-    const val NOTE_MIGRATION_URL = "https://tangem.com/en/?promocode=Note10"
-
-    const val HELP_CENTER_SWAP_URL =
-        "https://tangem.com/en/help-center/tangem-wallet-core-functionality/how-to-swap-coins-and-tokens/"
-
-    const val YIELD_MODE_TERMS_URL = "https://tangem.com/docs/en/yield-mode-terms.pdf"
+class TangemSiteUrlBuilder @Inject constructor(
+    private val appInstanceIdProvider: AppInstanceIdProvider,
+) {
 
     suspend fun getUtmTags(campaign: String?): String {
         val langCode = Locale.getDefault().language
         val utmCampaignPart = campaign?.let { "&utm_campaign=$it-$langCode" }.orEmpty()
         val utmContent = deviceLang()?.let { "&utm_content=devicelang-$it" }.orEmpty()
-        val appInstanceIdPart = getAppInstanceId()?.let { "&app_instance_id=$it" }.orEmpty()
+        val appInstanceIdPart = appInstanceIdProvider.getAppInstanceId()?.let { "&app_instance_id=$it" }.orEmpty()
         return "utm_source=tangem-app&utm_medium=app$utmCampaignPart$utmContent$appInstanceIdPart"
     }
 
@@ -39,15 +32,13 @@ object TangemSiteUrlBuilder {
         }.getOrNull()
     }
 
-    private suspend fun getAppInstanceId(): String? {
-        return suspendCoroutine { cont ->
-            Firebase.analytics.appInstanceId
-                .addOnSuccessListener { id ->
-                    cont.resume(id)
-                }
-                .addOnFailureListener {
-                    cont.resume(null)
-                }
-        }
+    companion object {
+
+        const val NOTE_MIGRATION_URL = "https://tangem.com/en/?promocode=Note10"
+
+        const val HELP_CENTER_SWAP_URL =
+            "https://tangem.com/en/help-center/tangem-wallet-core-functionality/how-to-swap-coins-and-tokens/"
+
+        const val YIELD_MODE_TERMS_URL = "https://tangem.com/docs/en/yield-mode-terms.pdf"
     }
 }

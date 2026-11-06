@@ -18,8 +18,8 @@ import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.PendingAction
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingActionSelectionBottomSheetConfig
 import com.tangem.features.staking.impl.presentation.state.utils.getPendingActionTitle
@@ -32,7 +32,7 @@ internal fun StakingActionSelectorBottomSheet(config: TangemBottomSheetConfig) {
         title = { content ->
             TangemBottomSheetTitle(title = content.title)
         },
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { content ->
         Column(
             modifier = Modifier
@@ -42,12 +42,12 @@ internal fun StakingActionSelectorBottomSheet(config: TangemBottomSheetConfig) {
                     bottom = 32.dp,
                 )
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
-                .background(TangemTheme.colors.background.action),
+                .background(TangemTheme.colors3.bg.secondary),
         ) {
             content.actions.forEachIndexed { index, action ->
                 InputRowDefault(
                     text = action.type.getPendingActionTitle(),
-                    textColor = TangemTheme.colors.text.primary1,
+                    textColor = TangemTheme.colors3.text.primary,
                     showDivider = index != content.actions.lastIndex,
                     modifier = Modifier
                         .fillMaxWidth()

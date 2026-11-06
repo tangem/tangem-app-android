@@ -45,7 +45,6 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
-    implementation(deps.firebase.crashlytics)
 
     /** DI */
     implementation(deps.hilt.android)

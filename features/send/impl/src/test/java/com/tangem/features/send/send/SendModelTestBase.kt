@@ -307,6 +307,6 @@ internal abstract class SendModelTestBase {
         onLoadFeeExtended = { Either.Right(mockk(relaxed = true)) },
         onSendTransaction = {},
         onCloseFlow = {},
-        intentId = null,
+        intent = null,
     )
 }

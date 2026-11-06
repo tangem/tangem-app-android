@@ -2,10 +2,9 @@ package com.tangem.domain.models.currency
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -52,10 +51,7 @@ internal class CryptoCurrencyStatusSerializationTest {
     @Test
     fun `GIVEN loaded status with contributions WHEN json round-trip THEN contributions are excluded`() {
         // Arrange
-        val contribution = StakingBalance.Empty(
-            stakingId = StakingID(integrationId = "polygon-pol-native-staking", address = "0xADDRESS"),
-            source = StatusSource.CACHE,
-        )
+        val contribution = FakeContribution(source = StatusSource.CACHE)
         val loaded = CryptoCurrencyStatus.Loaded(
             amount = BigDecimal.ONE,
             fiatAmount = BigDecimal.TEN,
@@ -77,5 +73,12 @@ internal class CryptoCurrencyStatusSerializationTest {
 
         // Assert
         assertThat(restored).isEqualTo(status.copy(value = loaded.copy(contributions = emptyList())))
+    }
+
+    private data class FakeContribution(override val source: StatusSource) : BalanceContribution {
+
+        override val kind: String = "fake"
+
+        override fun totalDeltaCryptoAmount(): BigDecimal = BigDecimal.ONE
     }
 }

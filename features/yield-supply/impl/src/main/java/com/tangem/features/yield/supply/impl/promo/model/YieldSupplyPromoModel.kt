@@ -27,6 +27,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 @ModelScoped
 internal class YieldSupplyPromoModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val analytics: AnalyticsEventHandler,
@@ -72,7 +73,7 @@ internal class YieldSupplyPromoModel @Inject constructor(
 
     override fun onHowItWorksClick() {
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowYieldModeWorks))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowYieldModeWorks))
         }
     }
 

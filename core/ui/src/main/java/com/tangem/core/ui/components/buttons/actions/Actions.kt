@@ -16,6 +16,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
@@ -51,7 +52,7 @@ import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 fun RoundedActionButton(
     config: ActionButtonConfig,
     modifier: Modifier = Modifier,
-    color: Color = TangemTheme.colors.button.secondary,
+    color: Color = TangemTheme.colors3.bg.transparent.secondary,
 ) {
     ActionBaseButton(
         config = config,
@@ -85,8 +86,8 @@ fun RoundedActionButton(
 fun ActionButton(
     config: ActionButtonConfig,
     modifier: Modifier = Modifier,
-    color: Color = TangemTheme.colors.button.secondary,
-    containerColor: Color = TangemTheme.colors.background.secondary,
+    color: Color = TangemTheme.colors3.bg.transparent.secondary,
+    containerColor: Color = TangemTheme.colors3.bg.primary,
 ) {
     ActionBaseButton(
         config = config,
@@ -113,13 +114,13 @@ fun ActionBaseButton(
     config: ActionButtonConfig,
     shape: RoundedCornerShape,
     modifier: Modifier = Modifier,
-    color: Color = TangemTheme.colors.button.secondary,
-    containerColor: Color = TangemTheme.colors.background.secondary,
+    color: Color = TangemTheme.colors3.bg.transparent.secondary,
+    containerColor: Color = TangemTheme.colors3.bg.primary,
     content: @Composable (modifier: Modifier) -> Unit,
 ) {
     val context = LocalContext.current
     val backgroundColor by animateColorAsState(
-        targetValue = if (config.isEnabled) color else TangemTheme.colors.button.disabled,
+        targetValue = if (config.isEnabled) color else TangemTheme.colors3.bg.disabled,
         label = "Update background color",
     )
 
@@ -157,14 +158,17 @@ fun ActionBaseButton(
             .background(color = backgroundColor)
             .testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON),
     ) {
-        content(Modifier.align(Alignment.Center))
+        content(
+            Modifier
+                .align(Alignment.Center)
+                .alpha(if (config.isInProgress) 0f else 1f),
+        )
 
         if (config.isInProgress) {
             Loading(
                 modifier = Modifier
                     .align(alignment = Alignment.Center)
                     .matchParentSize(),
-                backgroundColor = backgroundColor,
             )
         }
     }
@@ -184,9 +188,9 @@ fun ActionButtonContent(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val iconTint = when {
-            !config.isEnabled -> TangemTheme.colors.icon.informative
-            config.shouldDimContent -> TangemTheme.colors.icon.informative
-            else -> TangemTheme.colors.icon.primary1
+            !config.isEnabled -> TangemTheme.colors3.icon.secondary
+            config.shouldDimContent -> TangemTheme.colors3.icon.secondary
+            else -> TangemTheme.colors3.icon.primary
         }
         Icon(
             modifier = Modifier.size(size = 20.dp),
@@ -213,14 +217,14 @@ private fun Text(text: TextReference, textColor: Color) {
 }
 
 @Composable
-private fun Loading(backgroundColor: Color, modifier: Modifier = Modifier) {
+private fun Loading(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.background(color = backgroundColor),
+        modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(
             modifier = Modifier.size(24.dp),
-            color = TangemTheme.colors.icon.accent,
+            color = TangemTheme.colors3.icon.accent.blue,
         )
     }
 }
@@ -229,9 +233,9 @@ private fun Loading(backgroundColor: Color, modifier: Modifier = Modifier) {
 @ReadOnlyComposable
 fun getTextColor(config: ActionButtonConfig): Color {
     return when {
-        !config.isEnabled -> TangemTheme.colors.text.disabled
-        config.shouldDimContent -> TangemTheme.colors.text.tertiary
-        else -> TangemTheme.colors.text.primary1
+        !config.isEnabled -> TangemTheme.colors3.text.tertiary
+        config.shouldDimContent -> TangemTheme.colors3.text.secondary
+        else -> TangemTheme.colors3.text.primary
     }
 }
 

@@ -13,4 +13,8 @@ dependencies {
     // region Domain models
     api(projects.domain.models)
     // endregion
+
+    // region Tests
+    testImplementation(projects.test.core)
+    // endregion
 }

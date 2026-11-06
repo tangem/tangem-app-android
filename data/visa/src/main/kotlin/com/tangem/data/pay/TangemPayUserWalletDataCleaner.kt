@@ -4,18 +4,21 @@ import com.tangem.data.pay.repository.TangemPayRequestPerformer
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
+import com.tangem.data.pay.store.TangemPayCustomerSummaryStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.spend.datasource.pay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.models.wallet.UserWalletId
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class TangemPayUserWalletDataCleaner @Inject constructor(
     private val paymentAccountStatusesStore: PaymentAccountStatusesStore,
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
     private val cashbackSummaryStore: CashbackSummaryStore,
     private val tangemPayStorage: TangemPayStorage,
     private val customerInfoStore: TangemPayCustomerInfoStore,
+    private val customerSummaryStore: TangemPayCustomerSummaryStore,
     private val requestPerformer: TangemPayRequestPerformer,
 ) : UserWalletDataCleaner {
 
@@ -26,6 +29,7 @@ internal class TangemPayUserWalletDataCleaner @Inject constructor(
         txHistoryItemsStore.remove(userWalletIds.map { it.stringValue })
         cashbackSummaryStore.remove(userWalletIds)
         customerInfoStore.update { cache -> cache - userWalletIds }
+        customerSummaryStore.update { cache -> cache - userWalletIds }
         requestPerformer.removeCachedCustomerWalletAddresses(userWalletIds)
     }
 

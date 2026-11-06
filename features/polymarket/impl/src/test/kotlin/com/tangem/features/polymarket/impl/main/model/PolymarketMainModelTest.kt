@@ -153,7 +153,7 @@ internal class PolymarketMainModelTest {
     }
 
     init {
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         coEvery { refreshRequisites(any()) } returns REQUISITES.right()
     }
 
@@ -170,7 +170,7 @@ internal class PolymarketMainModelTest {
     fun `GIVEN categories pending WHEN model created THEN category loading ends before event loading`() = runTest {
         // Arrange
         val categoriesReady = CompletableDeferred<Unit>()
-        coEvery { getCategoriesUseCase() } coAnswers {
+        coEvery { getCategoriesUseCase(any()) } coAnswers {
             categoriesReady.await()
             categories().right()
         }
@@ -194,7 +194,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN categories load WHEN model created THEN tabs are built with the first one selected`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
 
         // Act
         val model = createModel(testScope = this)
@@ -212,7 +212,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN categories fail WHEN model created THEN the reload prompt is shown and no feed is requested`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
+        coEvery { getCategoriesUseCase(any()) } returns DataError.NetworkError.NoInternetConnection().left()
 
         // Act
         val model = createModel(testScope = this)
@@ -223,14 +223,14 @@ internal class PolymarketMainModelTest {
         assertThat(model.uiState.value.isCategoriesLoading).isFalse()
         assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
         assertThat(dispatchedActions).isEmpty()
-        verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any()) }
+        verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any(), any()) }
     }
 
     @Test
     fun `GIVEN no categories served WHEN model created THEN the reload prompt is shown and no feed is requested`() =
         runTest {
             // Arrange
-            coEvery { getCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
+            coEvery { getCategoriesUseCase(any()) } returns emptyList<PolymarketCategory>().right()
 
             // Act
             val model = createModel(testScope = this)
@@ -240,13 +240,13 @@ internal class PolymarketMainModelTest {
             assertThat(model.uiState.value.categories).isEmpty()
             assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
             assertThat(dispatchedActions).isEmpty()
-            verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any()) }
+            verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any(), any()) }
         }
 
     @Test
     fun `GIVEN an empty category WHEN its feed ends without events THEN the empty prompt is shown`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -261,7 +261,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN pages loaded WHEN paginating THEN events of every page are shown`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -284,7 +284,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN the next page is on its way WHEN paginating THEN the footer loader is shown`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -303,7 +303,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN the next page failed WHEN the footer retry is tapped THEN the page is requested again`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
@@ -325,7 +325,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN the first page fails WHEN model created THEN the reload prompt is shown`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -343,7 +343,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN the feed failed WHEN reload tapped THEN the same category is requested again`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
@@ -369,8 +369,8 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN categories failed WHEN reload tapped THEN they are requested again and the first one's feed`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returnsMany listOf(
-            DataError.NetworkError.NoInternetConnection.left(),
+        coEvery { getCategoriesUseCase(any()) } returnsMany listOf(
+            DataError.NetworkError.NoInternetConnection().left(),
             categories().right(),
         )
         val model = createModel(testScope = this)
@@ -392,11 +392,11 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN categories failed WHEN retry is awaiting categories THEN loading is shown immediately`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
+        coEvery { getCategoriesUseCase(any()) } returns DataError.NetworkError.NoInternetConnection().left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         val categoriesReady = CompletableDeferred<Unit>()
-        coEvery { getCategoriesUseCase() } coAnswers {
+        coEvery { getCategoriesUseCase(any()) } coAnswers {
             categoriesReady.await()
             categories().right()
         }
@@ -424,7 +424,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN tabs WHEN another category tapped THEN the feed reloads for it`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         dispatchedActions.clear()
@@ -445,7 +445,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN the selected category WHEN tapped again THEN nothing is requested`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         dispatchedActions.clear()
@@ -461,7 +461,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a category visited before WHEN it is selected again THEN its feed is not reloaded`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.uiState.value.categories.single { it.id == 2 }.onClick()
@@ -481,7 +481,7 @@ internal class PolymarketMainModelTest {
     fun `GIVEN two categories with pages of their own WHEN switching back THEN that category's events are shown`() =
         runTest {
             // Arrange
-            coEvery { getCategoriesUseCase() } returns categories().right()
+            coEvery { getCategoriesUseCase(any()) } returns categories().right()
             val model = createModel(testScope = this)
             advanceUntilIdle()
             statePerFeed[0].value = loadedState(eventId = "event-of-first")
@@ -503,7 +503,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN the categories keep failing WHEN reload tapped THEN the prompt stays and no feed is requested`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
+        coEvery { getCategoriesUseCase(any()) } returns DataError.NetworkError.NoInternetConnection().left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -514,13 +514,13 @@ internal class PolymarketMainModelTest {
         // Assert
         assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
         assertThat(dispatchedActions).isEmpty()
-        coVerify(exactly = 2) { getCategoriesUseCase() }
+        coVerify(exactly = 2) { getCategoriesUseCase(any()) }
     }
 
     @Test
     fun `GIVEN a scrolled category WHEN it is returned to THEN the list is put back where it was left`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.onScrollIdle(index = 7, offset = 24)
@@ -539,7 +539,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a restored position WHEN the screen reports it applied THEN it is not offered again`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.onScrollIdle(index = 7, offset = 24)
@@ -558,7 +558,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a category never opened WHEN it is selected THEN there is nothing to put back`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.onScrollIdle(index = 7, offset = 24)
@@ -574,7 +574,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN more pages ahead WHEN scrolled near the end THEN the next page is requested`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
@@ -595,7 +595,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN the last page WHEN scrolled near the end THEN nothing is requested`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
@@ -616,7 +616,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN content WHEN event card clicked THEN details route carries the selected category`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
@@ -644,7 +644,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN content WHEN outcome clicked THEN place prediction route pushed with selected outcome`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
@@ -677,7 +677,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `WHEN back clicked THEN router pops`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -691,7 +691,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN wallet meta info WHEN support chat clicked THEN chat opens for Predictions`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val metaInfo = WalletMetaInfo(userWalletId = USER_WALLET_ID)
         coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } returns metaInfo.right()
         val route = slot<AppRoute.Usedesk>()
@@ -712,7 +712,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN wallet meta info fails WHEN support chat clicked THEN nothing opens`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } returns IllegalStateException("No wallet").left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -1159,7 +1159,7 @@ internal class PolymarketMainModelTest {
     fun `GIVEN a blocked region WHEN outcome clicked THEN the restriction is explained AND no order opens`() = runTest {
         // Arrange
         coEvery { checkGeoblock() } returns true.right()
-        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
@@ -1695,7 +1695,7 @@ internal class PolymarketMainModelTest {
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns statusFlow
         every { positionsValueSupplier(any<UserWalletId>()) } returns positionsFlow
 
-        every { getEventsBatchFlowUseCase(capture(contextSlot), any()) } answers {
+        every { getEventsBatchFlowUseCase(any(), capture(contextSlot), any()) } answers {
             val feedActions = mutableListOf<BatchAction<Int, PolymarketEventsListConfig,
                 PolymarketEventsUpdateRequest>>()
             actionsPerFeed += feedActions

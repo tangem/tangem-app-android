@@ -13,9 +13,9 @@ import com.tangem.core.ui.extensions.TextReference
 /**
  * UI model for the redesigned transaction list item ([REDACTED_TASK_KEY]).
  *
- * Mirrors the field set of the legacy [TransactionState] but splits the formatted amount string
- * into a numeric [Content.amount] (with sign) and a separate [Content.currencySymbol], so the
- * redesigned `TransactionItem` composable can render them on independent lines without parsing.
+ * The formatted amount is split into a numeric [Content.amount] (with sign) and a separate
+ * [Content.currencySymbol], so the redesigned `TransactionItem` composable can render them on
+ * independent lines without parsing.
  */
 @Immutable
 sealed interface TransactionItemUM {
@@ -34,14 +34,11 @@ sealed interface TransactionItemUM {
         override val txHash: String,
         val amount: String?,
         val currencySymbol: String,
-        val time: String,
         val status: Status,
-        val direction: Direction,
         val onClick: () -> Unit,
         val icon: TxIcon,
         val title: TextReference,
         val subtitle: ContentSubtitle,
-        val timestamp: Long,
         val warning: TextReference? = null,
     ) : TransactionItemUM {
 
@@ -51,11 +48,6 @@ sealed interface TransactionItemUM {
             data object Confirmed : Status()
             data object Unconfirmed : Status()
             data object PendingSignature : Status()
-        }
-
-        enum class Direction {
-            INCOMING,
-            OUTGOING,
         }
     }
 
@@ -142,14 +134,17 @@ sealed interface TransactionItemUM {
 
         /**
          * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>", optionally followed by the counterparty
-         * portfolio it settled in ("… in <owner>"). Used for express rows (swap counterparty currency / onramp fiat),
-         * e.g. "to: ◎ POL", "from: 🇸🇪 SEK", or the cross-portfolio "to: ◎ POL in 🟦 Main".
+         * it settled with. Used for express rows (swap counterparty currency / onramp fiat), e.g. "to: ◎ POL",
+         * "from: 🇸🇪 SEK", the cross-portfolio "to: ◎ POL in 🟦 Main" or the foreign "to: ◎ POL for 👤 Dan".
+         *
+         * One of the user's own portfolios reads as the "in <owner>" tail, a foreign recipient as "for <owner>"
+         * (outgoing) / "from <owner>" (incoming) — it is a counterparty, not the place the leg landed in.
          *
          * @property icon resolved counterparty currency icon, rendered via `CurrencyIcon`. `null` when no icon
          *   is available (e.g. onramp fiat carries no `CryptoCurrency`) — the ticker then renders without a leading icon.
-         * @property owner counterparty portfolio the leg settled in — a different own account (accounts mode) or wallet
-         *   (wallet mode) than the viewed token. `null` when there is nothing to disambiguate: a swap within one
-         *   portfolio, an external address, or a single-wallet own leg — the ticker then renders without the "in …" tail.
+         * @property owner counterparty the leg settled with — a different own account (accounts mode) or wallet
+         *   (wallet mode) than the viewed token, or the foreign recipient. `null` when there is nothing to name: a swap
+         *   within one portfolio or a single-wallet own leg — the ticker then renders without a tail.
          */
         data class Asset(
             val direction: Direction,
@@ -159,10 +154,11 @@ sealed interface TransactionItemUM {
         ) : ContentSubtitle
 
         /**
-         * The counterparty a swap leg settled with, shown as the "in <owner>" tail of an [Asset] subtitle — one of the
-         * user's own portfolios, or the [Contact] a foreign payout address is saved as. Mirrors the icon placement of
-         * the standalone owner subtitles: [Account] / [PaymentAccount] / [Contact] render the icon before the name,
-         * [Wallet] renders the name before its device icon.
+         * The counterparty a swap leg settled with, shown as the tail of an [Asset] subtitle — one of the user's own
+         * portfolios ([Account] / [PaymentAccount] / [Wallet]), or the foreign recipient it paid out to ([Contact]
+         * when the address is saved in an address book, [Address] otherwise). Mirrors the icon placement of the
+         * standalone owner subtitles: everything but [Wallet] renders the icon before the name, [Wallet] renders the
+         * name before its device icon.
          */
         @Immutable
         sealed interface AssetOwner {
@@ -177,6 +173,14 @@ sealed interface TransactionItemUM {
 
             /** Payout address saved in an address book — its [avatar] is drawn as a circle, as contacts are. */
             data class Contact(val name: String, val avatar: PortfolioAvatar) : AssetOwner
+
+            /**
+             * Foreign payout address with no address-book entry — drawn as an identicon followed by the address.
+             *
+             * The address is kept raw here; the row shortens it from the middle to the width the subtitle leaves it,
+             * as [ExternalAddress] does.
+             */
+            data class Address(val rawAddress: String) : AssetOwner
         }
 
         /**
@@ -226,7 +230,6 @@ sealed interface TransactionItemUM {
         val amount: TextReference?,
         val currencySymbol: String?,
         val subtitle: PillSubtitle?,
-        val timestamp: Long,
         val onClick: () -> Unit,
         val isSuccess: Boolean = false,
     ) : TransactionItemUM
@@ -259,10 +262,6 @@ sealed interface TransactionItemUM {
             @DrawableRes val iconResId: Int,
         ) : PillSubtitle
     }
-
-    data class Loading(override val txHash: String) : TransactionItemUM
-
-    data class Locked(override val txHash: String) : TransactionItemUM
 }
 
 /**

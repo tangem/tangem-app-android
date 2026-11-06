@@ -11,6 +11,9 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
 internal class DefaultWalletServerBinder(
@@ -19,6 +22,8 @@ internal class DefaultWalletServerBinder(
     private val tangemTechApi: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletServerBinder {
+
+    private val boundWalletIds = MutableStateFlow<Set<UserWalletId>>(emptySet())
 
     override suspend fun bind(userWalletId: UserWalletId): ApiResponse<Unit>? {
         val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId)
@@ -39,11 +44,20 @@ internal class DefaultWalletServerBinder(
                 body = WalletIdBodyConverter.convert(userWallet, conversionData),
             )
         }.also { response ->
+            if (response is ApiResponse.Success) boundWalletIds.update { it + userWallet.walletId }
+
             val eTag = response.headers[ETAG_HEADER]?.firstOrNull()
             TangemLogger.i(
                 "bind wallet=${userWallet.walletId}: createWallet code=${(response as? ApiResponse.Success)?.code}, " +
                     "hasETag=${eTag != null}, eTagNotEmpty=${!eTag.isNullOrEmpty()}",
             )
         }
+    }
+
+    override suspend fun awaitBound(userWalletId: UserWalletId) {
+        val response = withContext(dispatchers.io) { tangemTechApi.getWalletById(userWalletId.stringValue) }
+        if (response is ApiResponse.Success) return
+
+        boundWalletIds.first { userWalletId in it }
     }
 }

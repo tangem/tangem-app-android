@@ -2,6 +2,7 @@ package com.tangem.features.yield.supply.impl.common.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ internal fun YieldSupplyActionContent(
     yieldSupplyNotificationsComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
     enableFooterClick: Boolean = true,
+    onFeeClick: () -> Unit = {},
     iconContent: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -50,13 +52,13 @@ internal fun YieldSupplyActionContent(
         Text(
             text = yieldSupplyActionUM.title.resolveReference(),
             style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerH8()
         Text(
             text = yieldSupplyActionUM.subtitle.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
@@ -70,13 +72,13 @@ internal fun YieldSupplyActionContent(
                         withLink(link = LinkAnnotation.Clickable("LINK_TAG") { onFooterClick() }) {
                             appendColored(
                                 text = yieldSupplyActionUM.footerLink.resolveReference(),
-                                color = TangemTheme.colors.icon.accent,
+                                color = TangemTheme.colors3.icon.accent.blue,
                             )
                         }
                     } else {
                         appendColored(
                             text = yieldSupplyActionUM.footerLink.resolveReference(),
-                            color = TangemTheme.colors.text.disabled,
+                            color = TangemTheme.colors3.text.tertiary,
                         )
                     }
                 },
@@ -86,24 +88,37 @@ internal fun YieldSupplyActionContent(
                     top = 8.dp,
                 ),
             ) {
-                val fee = when (val yieldSupplyFeeUM = yieldSupplyActionUM.yieldSupplyFeeUM) {
-                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.feeFiatValue
-                    YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
-                    YieldSupplyFeeUM.Loading -> null
-                }
-                YieldSupplyFeeRow(
-                    title = resourceReference(R.string.common_network_fee_title),
-                    value = fee,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(TangemTheme.colors.background.action)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                )
+                YieldSupplyActionFeeRow(yieldSupplyActionUM = yieldSupplyActionUM, onFeeClick = onFeeClick)
             }
         }
         yieldSupplyNotificationsComponent.Content(Modifier)
     }
+}
+
+@Composable
+private fun YieldSupplyActionFeeRow(yieldSupplyActionUM: YieldSupplyActionUM, onFeeClick: () -> Unit) {
+    val yieldSupplyFeeUM = yieldSupplyActionUM.yieldSupplyFeeUM
+    val fee = when (yieldSupplyFeeUM) {
+        is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.feeFiatValue
+        YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
+        YieldSupplyFeeUM.Loading -> null
+    }
+    val isFeeClickable = yieldSupplyActionUM.isFeeCurrencySelectable &&
+        yieldSupplyFeeUM != YieldSupplyFeeUM.Loading &&
+        !yieldSupplyActionUM.isTransactionSending
+    val feeCurrencySymbol = (yieldSupplyFeeUM as? YieldSupplyFeeUM.Content)?.feeCurrency?.symbol
+    YieldSupplyFeeRow(
+        title = resourceReference(R.string.common_network_fee_title),
+        value = fee,
+        badge = feeCurrencySymbol?.let(::stringReference),
+        isSelectable = isFeeClickable,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(TangemTheme.colors3.bg.secondary)
+            .clickable(enabled = isFeeClickable, onClick = onFeeClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    )
 }
 
 // region Preview
@@ -119,7 +134,7 @@ private fun YieldSupplyActionContent_Preview(
             onFooterClick = {},
             yieldSupplyNotificationsComponent = ComposableContentComponent.EMPTY,
             enableFooterClick = false,
-            modifier = Modifier.background(TangemTheme.colors.background.tertiary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         ) {
             CurrencyIcon(
                 state = CurrencyIconState.Loading,
