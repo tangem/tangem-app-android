@@ -288,14 +288,6 @@ dependencyAnalysis {
                 )
             }
         }
-        // :common:ui no longer uses :domain:staking itself, but its `api` still hands the module to every dependent
-        // that reads it transitively. The step that moves those dependents to an explicit dependency removes the
-        // `api` line and this exclusion.
-        project(":common:ui") {
-            onUnusedDependencies {
-                exclude(":domain:staking")
-            }
-        }
         project(":core:analytics:impl") {
             onUnusedDependencies {
                 // OAID collection is a drop-in runtime add-on for the AppsFlyer SDK; it has no API.

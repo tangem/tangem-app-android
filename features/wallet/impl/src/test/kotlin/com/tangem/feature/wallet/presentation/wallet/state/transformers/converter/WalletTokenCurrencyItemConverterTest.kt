@@ -109,20 +109,42 @@ internal class WalletTokenCurrencyItemConverterTest {
             // Assert
             assertThat(actual.contentTitle().badge).isNull()
         }
+    }
 
-        @Test
-        fun `GIVEN a headline AND a status without balance WHEN convert THEN there is no badge`() {
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StatusesWithoutBalance {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a headline AND a status without balance WHEN convert THEN there is no badge`(
+            model: NoBalanceStatusModel,
+        ) {
             // Arrange
             val converter = createConverter(earnOverviews = earnOverviewsOf(coin, earnHeadline(isActive = true)))
-            val status = CryptoCurrencyStatus(coin, CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null))
 
             // Act
-            val actual = converter.convert(status)
+            val actual = converter.convert(CryptoCurrencyStatus(coin, model.value))
 
             // Assert
-            assertThat(actual.titleUM).isInstanceOf(TangemTokenRowUM.TitleUM.Content::class.java)
             assertThat(actual.contentTitle().badge).isNull()
         }
+
+        private fun provideTestModels() = listOf(
+            NoBalanceStatusModel(description = "Loading", value = CryptoCurrencyStatus.Loading),
+            NoBalanceStatusModel(
+                description = "Unreachable",
+                value = CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
+            ),
+            NoBalanceStatusModel(
+                description = "NoAmount",
+                value = CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null),
+            ),
+            NoBalanceStatusModel(
+                description = "MissedDerivation",
+                value = CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null),
+            ),
+        )
     }
 
     @Nested
@@ -230,6 +252,10 @@ internal class WalletTokenCurrencyItemConverterTest {
         ),
         sources = CryptoCurrencyStatus.Sources(),
     )
+
+    internal data class NoBalanceStatusModel(val description: String, val value: CryptoCurrencyStatus.Value) {
+        override fun toString(): String = description
+    }
 
     internal data class BadgeColorModel(
         val isActive: Boolean,
