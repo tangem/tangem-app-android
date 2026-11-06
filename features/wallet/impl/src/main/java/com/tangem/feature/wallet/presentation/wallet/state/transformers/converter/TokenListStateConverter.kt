@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
 import com.tangem.common.ui.account.TokensListPortfolioItemConverter
+import com.tangem.common.ui.tokens.EarnBadge
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.ui.components.tokenlist.state.PortfolioItemContentUM
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
@@ -14,17 +15,16 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.common.ui.tokens.TokenConverterParams
 import com.tangem.common.ui.tokens.TokenItemGrouping.toGroupedItems
 import com.tangem.common.ui.tokens.TokenItemGrouping.toUngroupedItems
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
@@ -37,7 +37,7 @@ internal class TokenListStateConverter(
     private val selectedWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
     private val yieldModuleApyMap: Map<String, BigDecimal>,
-    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+    private val earnOverviews: EarnOverviews,
     shouldShowMainPromo: Boolean,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
@@ -60,7 +60,7 @@ internal class TokenListStateConverter(
         appCurrency = appCurrency,
         yieldModuleApyMap = yieldModuleApyMap,
         promoCryptoCurrencyStatus = yieldSupplyPromoBannerConverter.convert(params),
-        stakingApyMap = stakingAvailabilityMap,
+        earnBadgeProvider = { id -> earnOverviews[id]?.headline?.let { EarnBadge(it.badge, it.isActive) } },
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
         onYieldPromoCloseClick = clickIntents::onYieldPromoCloseClick,
