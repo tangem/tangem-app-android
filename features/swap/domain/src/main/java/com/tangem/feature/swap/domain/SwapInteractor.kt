@@ -14,6 +14,7 @@ import com.tangem.feature.swap.domain.models.ui.IntegratedApprovalData
 import com.tangem.feature.swap.domain.models.ui.SwapFee
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.SwapTransactionState
+import com.tangem.features.send.api.subcomponents.feeSelector.params.SponsoredFeeAvailability
 import java.math.BigDecimal
 
 interface SwapInteractor {
@@ -69,7 +70,9 @@ interface SwapInteractor {
      *  - CEX, gasless / token fee (`fee.transactionFeeResult is LoadedExtended` and
      *    `fee.selectedFeeToken.currency is CryptoCurrency.Token`) → `createAndSendGaslessTransactionUseCase`
 
-     *  - DEX (Solana) → compiled tx signed as-is. `fee` is carried for analytics / UI only.
+     *  - DEX (Solana) → compiled tx signed as-is, or, when `fee.isSponsored` (or, without [fee],
+     *    [SwapBalanceStatus.SponsoredFee]), sent by `createAndSendGaslessTransactionUseCase` with a sponsored fee
+     *    built for the sponsor resolved at send.
      *
      * @param fee the user-selected fee for the transaction. Required for DEX (non-Solana) and CEX;
      *   may be `null` for Solana DEX and the Tangem Pay withdrawal short-circuit.
@@ -107,6 +110,16 @@ interface SwapInteractor {
         fee: SwapFee,
         lastReducedBalanceBy: BigDecimal,
     ): SwapState.QuotesLoadedState
+
+    /**
+     * Whether Tangem can pay the network fee of the quoted swap, and whether it should by default: the user cannot
+     * pay [userPaidFee] themselves.
+     */
+    suspend fun getSponsoredFeeAvailability(
+        state: SwapState.QuotesLoadedState,
+        userPaidFee: BigDecimal,
+        lastReducedBalanceBy: BigDecimal,
+    ): SponsoredFeeAvailability
 
     /**
      * Returns token in wallet balance
@@ -166,6 +179,20 @@ interface SwapInteractor {
     ): Either<GetFeeError, SwapFee>
 
     fun integratedApprovalFallback(fromSwapCurrencyStatus: SwapCurrencyStatus, spenderAddress: String)
+
+    /**
+     * Asks for a new Tron approval to [spenderAddress] while the on-chain allowance is above [maxAllowance], even
+     * though it covers the amount: the gasless service refuses a swap whose allowance leaves no room for the
+     * compensation, and only an approval can lower it.
+     */
+    fun requireTronReapproval(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        spenderAddress: String,
+        maxAllowance: BigDecimal,
+    )
+
+    /** Drops the [requireTronReapproval] ceilings whose approval was not sent, so they do not outlive the swap. */
+    fun clearTronReapprovals()
 
     /**
      * Builds the on-chain ERC-20 approval transaction for [fromStatus] / [spenderAddress]

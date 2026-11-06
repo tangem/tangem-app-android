@@ -485,6 +485,37 @@ internal class PolymarketFeedPollerTest {
             assertThat(refreshedKeys()).containsExactly(0, 0).inOrder()
         }
 
+    @Test
+    fun `GIVEN fresh loaded pages WHEN socket recovers THEN all pages refresh once including offscreen`() = runTest {
+        // Arrange
+        val poller = pollFeed(
+            pages = arrayOf(page(0, arrayOf("event-1")), page(1, arrayOf("event-2"))),
+            visibleEventIds = setOf("event-1"),
+        )
+
+        // Act
+        poller.refreshLoadedPages()
+        poller.refreshLoadedPages()
+        runCurrent()
+
+        // Assert
+        assertThat(refreshedKeys()).containsExactly(0, 1)
+    }
+
+    @Test
+    fun `GIVEN paused feed WHEN a queued reconnect arrives THEN no pages are refreshed`() = runTest {
+        // Arrange
+        val poller = pollFeed(pages = arrayOf(page(0, arrayOf("event-1"))))
+
+        // Act
+        poller.refreshLoadedPages()
+        poller.pause()
+        runCurrent()
+
+        // Assert
+        assertThat(refreshedKeys()).isEmpty()
+    }
+
     private fun TestScope.startPoller(): PolymarketFeedPoller {
         val poller = PolymarketFeedPoller(
             scope = backgroundScope,

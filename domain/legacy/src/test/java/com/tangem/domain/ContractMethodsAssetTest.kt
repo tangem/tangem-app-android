@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import java.io.File
 
@@ -32,5 +33,31 @@ internal class ContractMethodsAssetTest {
 
         assertThat(entry).isNotNull()
         assertThat(entry?.get("name")).isEqualTo("gaslessTransaction")
+    }
+
+    /**
+     * The `yieldModule` info is what lets `SdkTransactionTypeConverter` unwrap these calls from `upgradeToAndCall`.
+     */
+    @ParameterizedTest
+    @CsvSource(
+        "0x0921ecd4, enterProtocolByOwnerWithNative",
+        "0x84276d81, withdrawNative",
+        "0x4423380d, withdrawAndDeactivateNative",
+    )
+    fun `GIVEN native yield module selector WHEN asset parsed THEN maps to yield module method`(
+        selector: String,
+        name: String,
+    ) {
+        // Act
+        val entry = methods[selector]
+
+        // Assert
+        assertThat(entry).isEqualTo(
+            mapOf(
+                "info" to "yieldModule",
+                "source" to "https://github.com/tangem/tangem-yield-module-contracts/",
+                "name" to name,
+            ),
+        )
     }
 }

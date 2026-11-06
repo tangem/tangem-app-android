@@ -22,6 +22,7 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.button.TangemButtonStack
 import com.tangem.core.ui.ds2.checkbox.TangemCheckbox
+import com.tangem.core.ui.ds2.toggle.TangemSwitch
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.draggable.TangemDraggable
 import com.tangem.core.ui.ds2.fade.TangemFade
@@ -30,6 +31,8 @@ import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.ds2.menu.TangemMenu
+import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.search.TangemSearch
@@ -38,10 +41,12 @@ import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.shtorka.TangemShtorka
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
+import com.tangem.core.ui.ds2.togglebadge.TangemToggleBadge
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.transactionrow.TangemTransactionRow
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.accountrow.tangemAccountRowStoryFactory
@@ -52,6 +57,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemBut
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttongroup.tangemButtonGroupStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttonstack.tangemButtonStackStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.tangemCheckboxV2StoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.toggle.tangemSwitchStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.tangemCheckmarkStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.draggable.tangemDraggableStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
@@ -60,6 +66,8 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.footer.tangemFoo
 import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.tangemGlowRingStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.tangemMessageBannerStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.menu.tangemMenuStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.messagebubble.tangemMessageBubbleStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.actionmessage.tangemActionMessageStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.modal.tangemModalStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.row.tangemRowStoryFactory
@@ -70,10 +78,12 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.shtorka.tangemSh
 import com.tangem.feature.tester.presentation.storybook.page.ds.statusscreen.tangemStatusScreenStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tabnavigation.tangemTabNavigationStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.textStyleStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.togglebadge.tangemToggleBadgeStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.tangemTokenIconStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.tangemTokenRowMarketStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowv2.tangemTokenRowV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.tangemTopNavigationStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.transactionrow.tangemTransactionRowStoryFactory
 
 /** [version] is `null` for entries that showcase tokens rather than a versioned DS component. */
 private data class DsStoryItem(val title: String, val version: DsVersion?, val factory: StoryPageFactory)
@@ -84,12 +94,15 @@ private fun buildDsStories() = listOf(
     DsStoryItem("🔘 TangemButtonGroup", TangemButtonGroup.version, tangemButtonGroupStoryFactory),
     DsStoryItem("🔘 TangemButtonStack", TangemButtonStack.version, tangemButtonStackStoryFactory),
     DsStoryItem("🏷️ TangemBadge", TangemBadge.version, tangemBadgeV2StoryFactory),
+    DsStoryItem("🏷️ TangemToggleBadge", TangemToggleBadge.version, tangemToggleBadgeStoryFactory),
     DsStoryItem("☑️ TangemCheckbox", TangemCheckbox.version, tangemCheckboxV2StoryFactory),
+    DsStoryItem("🎚️ TangemSwitch", TangemSwitch.version, tangemSwitchStoryFactory),
     DsStoryItem("⭕ TangemCheckmark", TangemCheckmark.version, tangemCheckmarkStoryFactory),
     DsStoryItem("🎨 TangemTokenIcon", TangemTokenIcon.version, tangemTokenIconStoryFactory),
     DsStoryItem("📋 TangemRow", TangemRow.version, tangemRowStoryFactory),
     DsStoryItem("🪙 TangemTokenRow", TangemTokenRow.version, tangemTokenRowV2StoryFactory),
     DsStoryItem("📈 TangemTokenRowMarket", TangemTokenRowMarket.version, tangemTokenRowMarketStoryFactory),
+    DsStoryItem("🧾 TangemTransactionRow", TangemTransactionRow.version, tangemTransactionRowStoryFactory),
     DsStoryItem("🗃️ TangemAccountRow", TangemAccountRow.version, tangemAccountRowStoryFactory),
     DsStoryItem("📂 TangemExpandableRow", TangemExpandableRow.version, tangemExpandableRowStoryFactory),
     DsStoryItem("✋ TangemDraggable", TangemDraggable.version, tangemDraggableStoryFactory),
@@ -104,6 +117,8 @@ private fun buildDsStories() = listOf(
     DsStoryItem("💫 TangemGlowRing", TangemGlowRing.version, tangemGlowRingStoryFactory),
     DsStoryItem("🚥 TangemStatusScreen", TangemStatusScreen.version, tangemStatusScreenStoryFactory),
     DsStoryItem("📢 TangemMessageBanner", TangemMessageBanner.version, tangemMessageBannerStoryFactory),
+    DsStoryItem("💬 TangemMessageBubble", TangemMessageBubble.version, tangemMessageBubbleStoryFactory),
+    DsStoryItem("☰ TangemMenu", TangemMenu.version, tangemMenuStoryFactory),
     DsStoryItem("👉 TangemActionMessage", TangemActionMessage.version, tangemActionMessageStoryFactory),
     DsStoryItem("🎛️ TangemFilterGroup", TangemFilterGroup.version, tangemFilterGroupStoryFactory),
     DsStoryItem("📑 TangemTabNavigation", TangemTabNavigation.version, tangemTabNavigationStoryFactory),

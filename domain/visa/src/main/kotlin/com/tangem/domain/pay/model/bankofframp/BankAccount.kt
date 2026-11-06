@@ -48,6 +48,6 @@ data class PostalAddress(
     val countryCode: String,
 )
 
-enum class BankRail { ACH, WIRE }
+enum class BankRail { ACH, WIRE, SPEI }
 
 enum class BankAccountType { CHECKING, SAVINGS }

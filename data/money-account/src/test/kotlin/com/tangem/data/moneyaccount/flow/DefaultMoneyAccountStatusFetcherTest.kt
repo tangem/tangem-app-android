@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -51,6 +53,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private val resolveMoneyAccountStatusFromSummaryUseCase: ResolveMoneyAccountStatusFromSummaryUseCase = mockk()
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
     private val summary: CustomerSummary = mockk()
+    private val networkConnectionManager: NetworkConnectionManager = mockk()
 
     private val fetcher = DefaultMoneyAccountStatusFetcher(
         moneyAccountStatusesStore = moneyAccountStatusesStore,
@@ -61,6 +64,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         moneyAccountCurrencyFactory = moneyAccountCurrencyFactory,
         resolveMoneyAccountStatusFromSummaryUseCase = resolveMoneyAccountStatusFromSummaryUseCase,
         getCustomerSummaryUseCase = getCustomerSummaryUseCase,
+        networkConnectionManager = networkConnectionManager,
     )
 
     @BeforeEach
@@ -72,8 +76,11 @@ internal class DefaultMoneyAccountStatusFetcherTest {
             moneyAccountCurrencyFactory,
             resolveMoneyAccountStatusFromSummaryUseCase,
             getCustomerSummaryUseCase,
+            networkConnectionManager,
         )
+        every { networkConnectionManager.isOnlineSync } returns true
         every { deviceSecurity.isRooted } returns false
+        coEvery { moneyAccountStatusesStore.getSyncOrNull(USER_WALLET_ID) } returns null
         every { moneyAccountCurrencyFactory.create(USER_WALLET_ID) } returns cryptoCurrency
         coEvery { getMoneyAccountBalanceUseCase(USER_WALLET_ID, cryptoCurrency) } returns IllegalStateException().left()
         coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.REFRESH) } returns summary.right()
@@ -90,6 +97,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         val resolved = MoneyAccountStatusValue.Onboarding.Activating(
             source = StatusSource.ACTUAL,
             customerId = CUSTOMER_ID,
+            step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
         )
         every { resolveMoneyAccountStatusFromSummaryUseCase(summary) } returns resolved
 
@@ -121,6 +129,74 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         coEvery {
             onboardingRepository.getCustomerInfo(USER_WALLET_ID)
         } returns VisaApiError.ServerUnavailable.left()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(MoneyAccountStatusValue.Empty)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideCachedAccountErrorModels")
+    fun `GIVEN cached account AND summary request fails WHEN invoke THEN cached account with error is stored`(
+        model: CachedAccountErrorModel,
+    ) = runTest {
+        // Arrange
+        mockCachedAccount(model.cached)
+        every { networkConnectionManager.isOnlineSync } returns model.isOnline
+        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.REFRESH) } returns model.error.left()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(model.expected)
+        coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideCachedAccountErrorModels")
+    fun `GIVEN cached account AND customer info fails WHEN invoke THEN cached account with error is stored`(
+        model: CachedAccountErrorModel,
+    ) = runTest {
+        // Arrange
+        mockCachedAccount(model.cached)
+        every { networkConnectionManager.isOnlineSync } returns model.isOnline
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns model.error.left()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(model.expected)
+    }
+
+    @Test
+    fun `GIVEN cached account AND fetch throws WHEN invoke THEN cached account with unavailable error is stored`() =
+        runTest {
+            // Arrange
+            mockCachedAccount(active())
+            coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } throws IllegalStateException()
+
+            // Act
+            val actual = fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+            verifyStored(
+                active().copy(
+                    source = StatusSource.ONLY_CACHE,
+                    error = MoneyAccountStatusValue.Error.Unavailable,
+                ),
+            )
+        }
+
+    @Test
+    fun `GIVEN cached onboarding status AND summary request fails WHEN invoke THEN empty is stored`() = runTest {
+        // Arrange
+        mockCachedAccount(activating())
+        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.REFRESH) } returns VisaApiError.Unspecified.left()
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
@@ -181,6 +257,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                 balance = balance,
                 customerId = CUSTOMER_ID,
                 productInstanceId = PRODUCT_INSTANCE_ID,
+                error = null,
             ),
         )
     }
@@ -204,6 +281,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                     balance = null,
                     customerId = CUSTOMER_ID,
                     productInstanceId = PRODUCT_INSTANCE_ID,
+                    error = null,
                 ),
             )
         }
@@ -238,12 +316,13 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                 customerId = CUSTOMER_ID,
                 productInstanceId = PRODUCT_INSTANCE_ID,
                 isBankOfframpAvailable = model.expected,
+                error = null,
             ),
         )
     }
 
     @Test
-    fun `GIVEN deactivated product instance WHEN invoke THEN deactivated account is stored`() = runTest {
+    fun `GIVEN deactivated product instance WHEN invoke THEN empty is stored`() = runTest {
         // Arrange
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
             accountStatus = CustomerInfo.ProductInstance.Status.DEACTIVATED,
@@ -253,11 +332,11 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
 
         // Assert
-        verifyStored(deactivated())
+        verifyStored(MoneyAccountStatusValue.Empty)
     }
 
     @Test
-    fun `GIVEN former customer with active account WHEN invoke THEN deactivated account is stored`() = runTest {
+    fun `GIVEN former customer with active account WHEN invoke THEN empty is stored`() = runTest {
         // Arrange
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
             accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
@@ -268,7 +347,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
 
         // Assert
-        verifyStored(deactivated())
+        verifyStored(MoneyAccountStatusValue.Empty)
     }
 
     @Test
@@ -318,16 +397,26 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         }
     }
 
-    private fun deactivated() = MoneyAccountStatusValue.Account.Deactivated(
+    private fun mockCachedAccount(value: MoneyAccountStatusValue) {
+        coEvery { moneyAccountStatusesStore.getSyncOrNull(USER_WALLET_ID) } returns AccountStatus.Money(
+            account = Account.Money(userWalletId = USER_WALLET_ID),
+            value = value,
+        )
+    }
+
+    private fun active() = MoneyAccountStatusValue.Account.Active(
         source = StatusSource.ACTUAL,
         cryptoCurrency = cryptoCurrency,
         balance = null,
         customerId = CUSTOMER_ID,
+        productInstanceId = PRODUCT_INSTANCE_ID,
+        error = null,
     )
 
     private fun activating() = MoneyAccountStatusValue.Onboarding.Activating(
         source = StatusSource.ACTUAL,
         customerId = CUSTOMER_ID,
+        step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
     )
 
     private fun createCustomerInfo(
@@ -366,6 +455,49 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         ),
         ChannelsModel(channels = listOf(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT).right(), expected = false),
         ChannelsModel(channels = VisaApiError.ServerUnavailable.left(), expected = null),
+    )
+
+    private fun provideCachedAccountErrorModels() = listOf(
+        CachedAccountErrorModel(
+            cached = active(),
+            error = VisaApiError.RefreshTokenExpired,
+            expected = active().copy(
+                source = StatusSource.ONLY_CACHE,
+                error = MoneyAccountStatusValue.Error.NotSynced,
+            ),
+        ),
+        CachedAccountErrorModel(
+            cached = active(),
+            error = VisaApiError.RefreshTokenExpired,
+            isOnline = false,
+            expected = active().copy(
+                source = StatusSource.ONLY_CACHE,
+                error = MoneyAccountStatusValue.Error.Unavailable,
+            ),
+        ),
+        CachedAccountErrorModel(
+            cached = active(),
+            error = VisaApiError.ServerUnavailable,
+            expected = active().copy(
+                source = StatusSource.ONLY_CACHE,
+                error = MoneyAccountStatusValue.Error.Unavailable,
+            ),
+        ),
+        CachedAccountErrorModel(
+            cached = active(),
+            error = VisaApiError.Unspecified,
+            expected = active().copy(
+                source = StatusSource.ONLY_CACHE,
+                error = MoneyAccountStatusValue.Error.Unavailable,
+            ),
+        ),
+    )
+
+    data class CachedAccountErrorModel(
+        val cached: MoneyAccountStatusValue.Account,
+        val error: VisaApiError,
+        val isOnline: Boolean = true,
+        val expected: MoneyAccountStatusValue.Account,
     )
 
     data class ChannelsModel(

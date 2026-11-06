@@ -19,6 +19,8 @@ internal sealed class BackendAuthAnalyticsEvent(
      * Wallet binding never surfaces to the user, and failures that don't reach the server are invisible
      * on the backend — so this event is the only production signal of how often binding fails.
      */
+    class WalletLinked : BackendAuthAnalyticsEvent(event = "Wallet Linked")
+
     class WalletRegistrationFailed(walletType: WalletType, stage: Stage, reason: String) : BackendAuthAnalyticsEvent(
         event = "Wallet Registration Failed",
         params = mapOf(

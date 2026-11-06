@@ -2,16 +2,18 @@ package com.tangem.screens
 
 import androidx.annotation.StringRes
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasAnyDescendant
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.TransactionHistoryItemTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 import com.tangem.core.res.R as CoreResR
 
-class TxHistoryPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+class TxHistoryPageObject(private val semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<TxHistoryPageObject>(semanticsProvider = semanticsProvider) {
 
     fun transactionItem(title: String): KNode = child {
@@ -20,7 +22,34 @@ class TxHistoryPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    fun transactionItemWithText(title: String, text: String): KNode = child {
+        hasTestTag(TransactionHistoryItemTestTags.ITEM)
+        hasAnyDescendant(withText(title))
+        hasAnyDescendant(withText(text = text, substring = true))
+        useUnmergedTree = true
+    }
+
+    // Raw Compose on purpose: polled in a pull-to-refresh loop, where a Kakao check waits out a 10 s retry.
+    fun isTransactionItemShown(title: String): Boolean = semanticsProvider
+        .onAllNodes(
+            matcher = withTestTag(TransactionHistoryItemTestTags.ITEM) and hasAnyDescendant(withText(title)),
+            useUnmergedTree = true,
+        )
+        .fetchSemanticsNodes(atLeastOneRootRequired = false)
+        .isNotEmpty()
+
     /** A settled yield row is a pill whose label and end state read as one text node: "Yield mode Enabled". */
+    // Raw Compose on purpose: read once right after a pull, so a skeleton flash is not hidden by a retry.
+    fun isTransactionItemWithTextShown(title: String, text: String): Boolean = semanticsProvider
+        .onAllNodes(
+            matcher = withTestTag(TransactionHistoryItemTestTags.ITEM) and
+                hasAnyDescendant(withText(title)) and
+                hasAnyDescendant(withText(text = text, substring = true)),
+            useUnmergedTree = true,
+        )
+        .fetchSemanticsNodes(atLeastOneRootRequired = false)
+        .isNotEmpty()
+
     fun yieldModePill(@StringRes state: Int): KNode = transactionItem(
         title = "${getResourceString(CoreResR.string.common_yield_mode_inline)} ${getResourceString(state)}",
     )

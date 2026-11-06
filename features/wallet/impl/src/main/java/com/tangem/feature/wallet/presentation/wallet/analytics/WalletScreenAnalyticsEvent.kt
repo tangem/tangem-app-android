@@ -101,6 +101,8 @@ sealed class WalletScreenAnalyticsEvent {
 
         class MissingAddresses : MainScreen(event = "Notice - Missing Addresses")
 
+        class NoticeLinkWallet : MainScreen(event = "Notice - Link Wallet")
+
         class CardSignedTransactions : MainScreen(event = "Notice - Card Signed Transactions")
 
         class HowDoYouLikeTangem : MainScreen(event = "Notice - How Do You Like Tangem")

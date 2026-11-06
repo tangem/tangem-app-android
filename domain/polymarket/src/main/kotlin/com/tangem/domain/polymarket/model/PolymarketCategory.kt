@@ -11,4 +11,6 @@ data class PolymarketCategory(
     val id: Int,
     val label: String,
     val icon: PolymarketCategoryIcon?,
+    val subcategories: List<PolymarketCategory> = emptyList(),
+    val filters: List<PolymarketCategoryFilter> = emptyList(),
 )

@@ -470,6 +470,7 @@
   <string name="common_retry">リトライ</string>
   <string name="common_save">保存</string>
   <string name="common_save_changes">変更内容を保存</string>
+  <string name="common_scan_card">カードをスキャン</string>
   <string name="common_search">検索</string>
   <string name="common_search_tokens">トークンを検索</string>
   <string name="common_second_no_param">秒</string>
@@ -889,6 +890,7 @@
   <string name="hw_cloud_backup_permissions_title_v2">%1$sへのフルアクセスを許可</string>
   <string name="hw_cloud_backup_remove_title">%1$s%2$sのバックアップ</string>
   <string name="hw_cloud_backup_removed">バックアップを削除しました</string>
+  <string name="hw_cloud_backup_restore_all_added_hint">この%1$sアカウントのバックアップはすべてTangemに追加済みです</string>
   <string name="hw_cloud_backup_restore_error_title">問題が発生しました</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">しばらくしてからもう一度お試しいただくか、リカバリーフレーズをインポートしてください。</string>
   <string name="hw_cloud_backup_restore_navtitle_v2">%1$sのバックアップ</string>
@@ -978,6 +980,8 @@
   <string name="hw_upgrade_title">ハードウェアウォレットにアップグレード</string>
   <string name="hw_upgrade_to_cold_banner_description">Tangemの業界最高クラスのハードウェアウォレットで、暗号資産を安全に保管しましょう。</string>
   <string name="hw_upgrade_to_cold_banner_title">ウォレットをハードウェアセキュリティにアップグレードする</string>
+  <string name="hw_wallets_limit_alert_message">Tangemに追加できるモバイルウォレットは最大%1$s個です。新しいウォレットを追加するには、既存のモバイルウォレットを1つ削除してください。</string>
+  <string name="hw_wallets_limit_alert_title">モバイルウォレットの上限に達しました</string>
   <string name="information_generated_with_ai">この情報はAIで生成されました。\nエラーが見つかった場合は、ここをタップしてください。</string>
   <string name="initial_message_change_access_code_body">アクセスコードを変更するには、上図のようにカードまたはリングをタップし、操作が終了するまで取り外さないでください。</string>
   <string name="initial_message_change_passcode_body">パスコードを変更するには、上記のようにカードをタップし、操作が終了するまで取り外さないでください。</string>
@@ -993,7 +997,7 @@
   <string name="introduction_button_buy_tangem">Tangemを購入</string>
   <string name="introduction_button_create_wallet">ウォレットを作成</string>
   <string name="introduction_button_i_have_a_wallet">ウォレットを持っている</string>
-  <string name="introduction_create_wallet_hardware_description">Tangemウォレットをお持ちの場合</string>
+  <string name="introduction_create_wallet_hardware_description">接続または新しいTangemウォレットを入手</string>
   <string name="introduction_create_wallet_hardware_title">TangemカードまたはRing</string>
   <string name="introduction_create_wallet_seed_phrase_description">ハードウェアウォレットなしで始める</string>
   <string name="introduction_create_wallet_seed_phrase_title">シードフレーズでウォレットを作成</string>
@@ -1348,6 +1352,24 @@
   <string name="markets_tooltip_v2_title">トークンを追加</string>
   <string name="markets_yield_supply_banner_description">資産を常時アクセス可能な状態に保ったまま、パワーアップさせよう。%s</string>
   <string name="markets_yield_supply_banner_title">利息モードを有効にする</string>
+  <string name="mcp_connection_request_agent_can">このエージェントは以下の操作ができます</string>
+  <string name="mcp_connection_request_can_view_balance">残高と取引履歴を表示する</string>
+  <string name="mcp_connection_request_notifications_description">各取引を承認するための通知が届きます。通知が無効になっている場合、エージェントは接続できません。</string>
+  <string name="mcp_connection_success_description">%sは残高の確認と取引の承認リクエストができるようになりました。「接続」からいつでもアクセス権を取り消せます。</string>
+  <string name="mcp_connection_success_title">エージェントが接続されました</string>
+  <string name="mcp_intent_proceed">続行</string>
+  <string name="mcp_intent_processed_title">このリクエストはすでに処理されています</string>
+  <string name="mcp_intent_unknown_agent_name">AI</string>
+  <string name="mcp_send_intent_cant_reach_title">リクエストにアクセスできません</string>
+  <string name="mcp_send_intent_offer_description">エージェントがあなたのアカウントからの送金をリクエストしています。次の画面で詳細を確認できます。</string>
+  <string name="mcp_send_intent_offer_title">%1$sエージェントが%2$sを送金しようとしています</string>
+  <string name="mcp_send_intent_processed_subtitle">%1$sを送金</string>
+  <string name="mcp_session_revoke_access">アクセス権を取り消す</string>
+  <string name="mcp_session_title">接続済みのMCP</string>
+  <string name="mcp_swap_intent_cant_reach_title">リクエストにアクセスできません</string>
+  <string name="mcp_swap_intent_offer_description">エージェントがあなたのアカウントからのスワップをリクエストしています。次の画面で詳細を確認できます。</string>
+  <string name="mcp_swap_intent_offer_title">%1$sエージェントが%2$sを%3$sにスワップしようとしています</string>
+  <string name="mcp_swap_intent_processed_subtitle">%1$sを%2$sにスワップ</string>
   <string name="mobile_wallet_requires_min_os_warning_body">モバイルウォレットを作成するには、%1$sにアップデートする必要があります</string>
   <string name="mobile_wallet_requires_min_os_warning_title">モバイルウォレットを使用するには、%1$s以降が必要です</string>
   <string name="money_account_add_funds_bank_description">銀行口座から ACH/Wire または SPEI で USD を受け取る</string>
@@ -1386,6 +1408,7 @@
   <string name="money_account_onboarding_transfers_card_caption">入金も、出金も。</string>
   <string name="money_account_onboarding_transfers_card_subtitle">銀行口座情報付きの専用口座で</string>
   <string name="money_account_onboarding_transfers_card_title">法定通貨の送金と受け取り</string>
+  <string name="money_account_send_bank_transfer_unavailable">利用不可</string>
   <string name="money_account_send_fees_footer">手数料には%sのサービス料と推定ネットワーク手数料が含まれます</string>
   <string name="money_account_send_network_fee_note">手数料には推定ネットワーク手数料%sが含まれ、ネットワークの混雑状況により変動します</string>
   <string name="money_account_send_pay_button">%sを支払う</string>
@@ -1654,15 +1677,16 @@
   <string name="prediction_add_funds_max_receive_amount_title">受取額は%sを超えることはできません</string>
   <string name="prediction_add_funds_notification_limits_description">入金額は最低%1$sである必要があります。$50,000を超える入金は推奨されません。大きな金額は複数回に分けて入金してください。</string>
   <string name="prediction_add_funds_notification_limits_title">入金限度額</string>
-  <string name="prediction_add_funds_receive_body" formatted="false">別のウォレットから%1sを送金（最低%2s）</string>
+  <string name="prediction_add_funds_receive_body">別のウォレットから%1$sを送金（最低%2$s）</string>
   <string name="prediction_add_funds_receive_subtitle">Polygonネットワーク上のUSDCをPolymarketアカウントに送金</string>
   <string name="prediction_add_funds_receive_title">別のウォレットまたは取引所から</string>
-  <string name="prediction_add_funds_subtitle" formatted="false">%2s上の%1s</string>
+  <string name="prediction_add_funds_subtitle">%2$s上の%1$s</string>
   <string name="prediction_add_funds_swap_body">保有しているトークンを交換</string>
   <string name="prediction_add_funds_swap_subtitle">Tangemウォレット内の暗号資産を使ってPolymarketアカウントにチャージ</string>
   <string name="prediction_add_funds_swap_title">Tangemウォレットから</string>
   <string name="prediction_balance_total">総残高</string>
   <string name="prediction_balance_withdraw">出金</string>
+  <string name="prediction_cash_out">キャッシュアウト</string>
   <string name="prediction_claim_error_failed">請求は完了しませんでした。アカウントから資産は移動しておらず、再試行できます。</string>
   <string name="prediction_claim_error_generic">請求を送信できませんでした。もう一度お試しください。</string>
   <string name="prediction_claim_error_rejected">Polymarketが請求の中継を拒否しました。ポジションを更新して再試行してください。</string>
@@ -1674,7 +1698,7 @@
   <string name="prediction_close_result_partially_sold_title">一部売却完了</string>
   <string name="prediction_close_result_sold_title">%sを売却しました</string>
   <string name="prediction_close_result_tokens_sold">売却シェア数</string>
-  <string name="prediction_close_selling_of" formatted="false">%2sシェアのうち%1sを売却中</string>
+  <string name="prediction_close_selling_of">%2$sシェアのうち%1$sを売却中</string>
   <string name="prediction_close_selling_tokens">%sシェアを売却中</string>
   <string name="prediction_close_summary_to">受取先</string>
   <string name="prediction_close_title">ポジションを決済</string>
@@ -1693,10 +1717,10 @@
   <string name="prediction_event_probability">確率</string>
   <string name="prediction_event_total_volume">総取引高:</string>
   <string name="prediction_fee_sheet_builder_fee">Tangemビルダー手数料</string>
-  <string name="prediction_fee_sheet_buy_description" formatted="false">%1sシェアを1シェアあたり%2s¢で購入します。最終的なシェア数（および約定する%3sの金額）は、マーケットの流動性に応じて%4sのスリッページ許容範囲内で変動する場合があります。</string>
+  <string name="prediction_fee_sheet_buy_description">%1$sシェアを1シェアあたり%2$s¢で購入します。最終的なシェア数（および約定する%3$sの金額）は、マーケットの流動性に応じて%4$sのスリッページ許容範囲内で変動する場合があります。</string>
   <string name="prediction_fee_sheet_order">予測注文</string>
   <string name="prediction_fee_sheet_polymarket_fee">Polymarket手数料</string>
-  <string name="prediction_fee_sheet_sell_description" formatted="false">%1sシェアを1シェアあたり%2s¢で売却します。最終的なシェア数（および約定する%3sの金額）は、マーケットの流動性に応じて%4sのスリッページ許容範囲内で変動する場合があります。</string>
+  <string name="prediction_fee_sheet_sell_description">%1$sシェアを1シェアあたり%2$s¢で売却します。最終的なシェア数（および約定する%3$sの金額）は、マーケットの流動性に応じて%4$sのスリッページ許容範囲内で変動する場合があります。</string>
   <string name="prediction_fee_sheet_total">合計</string>
   <string name="prediction_history_bought">購入済み</string>
   <string name="prediction_history_csv_average_price">平均価格</string>
@@ -1759,7 +1783,7 @@
   <string name="prediction_onboarding_reconnect_button">予測を続ける</string>
   <string name="prediction_onboarding_reconnect_faq_answer">アクセスキーはお使いの端末にのみ保存されます。アプリの再インストールや機種変更、またはセッションが無効になった際に消去されますが、Polymarket上のアカウント自体は影響を受けません。</string>
   <string name="prediction_onboarding_reconnect_faq_question">なぜこれが表示されるのですか？</string>
-  <string name="prediction_onboarding_reconnect_legal" formatted="false">新たな規約への同意は不要です。%1sおよび%2sとの既存の同意がそのまま適用されます</string>
+  <string name="prediction_onboarding_reconnect_legal">新たな規約への同意は不要です。%1$sおよび%2$sとの既存の同意がそのまま適用されます</string>
   <string name="prediction_onboarding_reconnect_subtitle">入金アカウント、残高、保有ポジションは安全です。この端末を再連携するだけでアクセスを復元できます。カードを1回タップしてください。</string>
   <string name="prediction_onboarding_reconnect_title">Polymarketアカウントを再接続</string>
   <string name="prediction_onboarding_start_button">予測を始める</string>
@@ -1798,7 +1822,7 @@
   <string name="prediction_place_result_no_fill_banner_description">Polymarket上に利用可能なシェアがないため、注文を約定できませんでした。</string>
   <string name="prediction_place_result_no_fill_banner_title">未約定</string>
   <string name="prediction_place_result_no_fill_title">流動性が不足しています</string>
-  <string name="prediction_place_result_partial_amount" formatted="false">%2sのうち%1s</string>
+  <string name="prediction_place_result_partial_amount">%2$sのうち%1$s</string>
   <string name="prediction_place_result_partial_banner_description">スリッページ許容範囲内でのPolymarket上の流動性が不足していたため、注文は一部のみ約定しました。</string>
   <string name="prediction_place_result_partial_banner_title">一部約定</string>
   <string name="prediction_place_result_partial_title">一部注文完了</string>
@@ -1855,7 +1879,7 @@
   <string name="prediction_positions_quantity">シェア数</string>
   <string name="prediction_positions_realized_description">すでに確定した損益です。（一部または全部）売却したシェアや、的中・外れ・分割決済として確定したポジションから算出されます。実現損益にはすべての手数料が含まれます。</string>
   <string name="prediction_positions_realized_pnl">実現損益</string>
-  <string name="prediction_positions_result_amount" formatted="false">%1s %2s</string>
+  <string name="prediction_positions_result_amount">%1$s %2$s</string>
   <string name="prediction_positions_split">分割決済</string>
   <string name="prediction_positions_status">ステータス</string>
   <string name="prediction_positions_title">マイポジション</string>
@@ -1882,7 +1906,7 @@
   <string name="prediction_withdraw_error_generic">出金を送信できませんでした。通信環境を確認して再試行してください</string>
   <string name="prediction_withdraw_error_rejected">Polymarketが出金を拒否しました。再試行してください</string>
   <string name="prediction_withdraw_in_progress_message">前回の出金がまだ処理中です。完了するまで待ってから新しい出金を開始してください。</string>
-  <string name="prediction_withdraw_min_amount">最小出金額は%sです。達するまで資金を追加してください。</string>
+  <string name="prediction_withdraw_min_amount">最小出金額は%@です。達するまで資金を追加してください。</string>
   <string name="prediction_withdraw_status_failed_description">出金の処理中に問題が発生しました。再試行するか、サポートにお問い合わせください。</string>
   <string name="prediction_withdraw_status_failed_notice">出金に失敗しました。資金は引き出されていません。</string>
   <string name="prediction_withdraw_status_failed_title">出金失敗</string>
@@ -2155,10 +2179,16 @@
   <string name="social_login_creating_wallet">ウォレットを作成しています</string>
   <string name="social_login_creating_wallet_description">数秒で完了します</string>
   <string name="social_login_error_backup_not_saved">バックアップを保存できませんでした。クラウドストレージが利用できることを確認してから、もう一度お試しください</string>
+  <string name="social_login_error_backup_not_saved_description">クラウドストレージが利用可能であることを確認し、もう一度お試しください。</string>
+  <string name="social_login_error_backup_not_saved_title">バックアップを保存できませんでした</string>
   <string name="social_login_error_cloud_access_description">Tangemが%sアカウントにアクセスできることを確認してから、もう一度お試しください</string>
   <string name="social_login_error_cloud_access_title">ウォレットを復元できませんでした</string>
   <string name="social_login_error_generic">問題が発生しました。もう一度お試しください</string>
+  <string name="social_login_error_generic_v2">もう一度お試しください。問題が解決しない場合は、インターネット接続を確認してください。</string>
+  <string name="social_login_error_network_description">インターネット接続を確認し、もう一度お試しください。</string>
+  <string name="social_login_error_network_title">インターネットに接続されていません</string>
   <string name="social_login_error_no_account">続行するには、このデバイスに%sアカウントを追加してください。</string>
+  <string name="social_login_error_no_account_title">このデバイスに%1$sのアカウントがありません</string>
   <string name="social_login_error_restore_failed_description">このアカウントのウォレットを復元できませんでした。もう一度お試しいただくか、サポートにお問い合わせください</string>
   <string name="social_login_error_session_expired">セッションの有効期限が切れました。もう一度お試しください</string>
   <string name="social_login_error_support">サポートに問い合わせる</string>
@@ -2167,6 +2197,8 @@
   <string name="social_login_restoring_wallet_description">トークンを復元しています</string>
   <string name="social_login_toast_wallet_added">ウォレットを追加しました</string>
   <string name="social_login_toast_wallet_created">ウォレットを作成しました</string>
+  <string name="social_wallet_already_added_alert_message">このデバイスで%1$sを使ってサインインできるウォレットは1つだけです。別のアカウントを使用するには、先に現在のアカウントからサインアウトしてください。</string>
+  <string name="social_wallet_already_added_alert_title">すでに%1$sでサインインしています</string>
   <string name="social_wallet_delete_anyway">それでも削除する</string>
   <string name="social_wallet_delete_attention_acknowledge">リカバリーフレーズをバックアップしていない場合、このウォレットに永久にアクセスできなくなることを理解しています。</string>
   <string name="social_wallet_delete_attention_description">この操作により、このデバイスからウォレットが削除され、%1$sアカウントとの連携が解除され、暗号化された鍵がクラウドから削除されます。%1$sでサインインしても、ウォレットは復元できなくなります。</string>
@@ -2507,7 +2539,7 @@
   <string name="tangempay_campaign_spend_description">デジタルカードをApple PayまたはGoogle Payで利用でき、お買い物に追加手数料はかかりません</string>
   <string name="tangempay_campaign_unavailable_description">通常のカードをお申し込みいただけます</string>
   <string name="tangempay_campaign_unavailable_title">特別なカードを取得できません</string>
-  <string name="tangempay_cancel_kyc">メイン画面から本人確認を非表示にする</string>
+  <string name="tangempay_cancel_kyc">ステータスを非表示</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">サポートにお問い合わせください</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">カードの有効化を試行できる回数を超えました</string>
   <string name="tangempay_card_activation_description">カード番号の下4桁を入力してください</string>
@@ -2710,7 +2742,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Tangem Payの本人確認手続き進行中</string>
   <string name="tangempay_kyc_in_progress_popup_description">書類は通常、5分以内に自動で確認されます。手動での審査が必要な稀な場合は、最大48時間かかることがあります。</string>
   <string name="tangempay_kyc_rejected">拒否されました</string>
-  <string name="tangempay_kyc_rejected_button_text">本人確認を隠す</string>
+  <string name="tangempay_kyc_rejected_button_text">ステータスを非表示</string>
   <string name="tangempay_kyc_rejected_description">申し訳ございませんが、</string>
   <string name="tangempay_kyc_rejected_description_span">本人確認ができませんでした。</string>
   <string name="tangempay_main_select_plan">プランを選択</string>
@@ -2858,9 +2890,9 @@
   <string name="tangempay_status_inactive">無効</string>
   <string name="tangempay_status_replacing">カードを交換中</string>
   <string name="tangempay_sync_needed">カードまたはリングでセッションを更新してください</string>
-  <string name="tangempay_sync_needed_body">カードまたはリングでセッションを更新してください</string>
+  <string name="tangempay_sync_needed_body">更新してカードと口座をご確認ください</string>
   <string name="tangempay_sync_needed_button">セッションを更新</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay セッションの有効期限が切れました</string>
+  <string name="tangempay_sync_needed_title">セッションの有効期限が切れました</string>
   <string name="tangempay_tangem_visa_card">暗号資産をいつもの毎日で使える</string>
   <string name="tangempay_temporarily_unavailable">Tangem Payは一時的に利用できません</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -2870,25 +2902,27 @@
   <string name="tangempay_topup_receive_body_multichain">USDCまたはUSDTをアカウントのアドレスに送金してください</string>
   <string name="tangempay_topup_receive_title">別のウォレットまたは取引所から</string>
   <string name="tangempay_topup_swap_body">ウォレットの暗号資産を使って、決済アカウントにチャージできます</string>
-  <string name="tangempay_topup_swap_title">Tangemウォレットから</string>
+  <string name="tangempay_topup_swap_title">Tangem Walletから</string>
   <string name="tangempay_unified_onboarding_cashback_caption">キャッシュバック</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">USDCで支払い</string>
   <string name="tangempay_unified_onboarding_cashback_title">最大2%%。%1$s</string>
-  <string name="tangempay_unified_onboarding_description">Visaカードと米ドル口座をひとつに。本人確認は一度だけ。お住まいの地域で利用できる商品をすべてご用意します</string>
+  <string name="tangempay_unified_onboarding_description">Visaカードと米ドル口座をひとつに。本人確認を済ませると、お住まいの地域で利用可能なサービスが使えます</string>
   <string name="tangempay_unified_onboarding_everything_header">すべてをカバー</string>
-  <string name="tangempay_unified_onboarding_fees_caption">見たままの価格で</string>
-  <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
-  <string name="tangempay_unified_onboarding_fees_title">購入手数料なし。%1$s</string>
+  <string name="tangempay_unified_onboarding_fees_caption">ドルを等価交換</string>
+  <string name="tangempay_unified_onboarding_fees_subtitle">両替手数料・月額料金なし</string>
+  <string name="tangempay_unified_onboarding_fees_title">1 USDが1 USDCに\n%1$s</string>
   <string name="tangempay_unified_onboarding_interest_caption">利息</string>
   <string name="tangempay_unified_onboarding_interest_title">保有するだけで最大4%の年利</string>
   <string name="tangempay_unified_onboarding_legal">開設できるものはお住まいの地域によって異なります。本人確認の直後にご案内します</string>
-  <string name="tangempay_unified_onboarding_money_account_caption">とても便利</string>
-  <string name="tangempay_unified_onboarding_money_account_header">USD口座</string>
+  <string name="tangempay_unified_onboarding_money_account_caption">暗号資産の購入</string>
+  <string name="tangempay_unified_onboarding_money_account_header">口座</string>
   <string name="tangempay_unified_onboarding_money_account_subtitle">ACH送金を受け取り、USD を USDC に1:1で変換。手数料は一律$1</string>
   <string name="tangempay_unified_onboarding_money_account_title">あなた専用の米国口座情報。%1$s</string>
-  <string name="tangempay_unified_onboarding_payment_account_caption">好きな方法で支払い</string>
+  <string name="tangempay_unified_onboarding_money_account_title_v2">米国口座の専用情報</string>
+  <string name="tangempay_unified_onboarding_payment_account_caption">対応サービス</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Visaカード</string>
-  <string name="tangempay_unified_onboarding_payment_account_title">オンラインまたは%1$s</string>
+  <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
+  <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">支払い</string>
   <string name="tangempay_unified_onboarding_payments_title">毎日の支払いにACH送金と電信送金</string>
   <string name="tangempay_unified_onboarding_plan_caption">ひとつのプラン</string>
@@ -3115,12 +3149,14 @@
   <string name="user_wallet_add_hardware_title">ハードウェアウォレットを追加</string>
   <string name="user_wallet_add_mobile_description">このデバイスで新しいウォレットを作成</string>
   <string name="user_wallet_add_mobile_title">モバイルウォレットを追加</string>
+  <string name="user_wallet_add_wallet">ウォレットを追加</string>
   <string name="user_wallet_coming_soon_dialog_description">複数のモバイルウォレットを作成できる機能を開発中です。</string>
   <string name="user_wallet_list_add_button">ウォレットを追加</string>
   <string name="user_wallet_list_delete_hw_prompt">バックアップせずにこのウォレットを削除すると、資金に永久にアクセスできなくなります。</string>
   <string name="user_wallet_list_delete_prompt">このウォレットを忘れてもよろしいですか？</string>
   <string name="user_wallet_list_error_unable_to_unlock">エラーが発生しました。カードまたはリングをスキャンしてログインしてください。</string>
   <string name="user_wallet_list_error_wallet_already_saved">このウォレットはすでに保存されています。別のウォレットを追加できます。</string>
+  <string name="user_wallet_list_error_wallet_already_saved_title">ウォレットはすでに追加されています</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">%sという名前のウォレットはすでに存在します。</string>
   <string name="user_wallet_list_rename_popup_placeholder">ウォレット名</string>
   <string name="user_wallet_list_rename_popup_title">ウォレット名の変更</string>
@@ -3362,6 +3398,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">%1$s %2$sの取引が完了しませんでした。もう一度試して完了してください。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">未完了の取引があります</string>
   <string name="warning_last_balance_updated_time">最終更新日は%sです</string>
+  <string name="warning_link_wallet_cold_message">カードをスキャンして、ウォレットをこのデバイスに接続してください。</string>
+  <string name="warning_link_wallet_hot_message">ウォレットをこのデバイスに接続することを確認してください。</string>
+  <string name="warning_link_wallet_title">このデバイスにウォレットを接続</string>
   <string name="warning_low_signatures_message">このカードには%sの署名のみが残っています。資金をすべて引き出す必要があります。</string>
   <string name="warning_low_signatures_title">署名数が少ないです</string>
   <string name="warning_manage_tokens_legacy_derivation_message">異なるネットワーク上のトークンは、異なるアドレスを持つ場合があります。資金を送金する際には、アドレスがネットワークと一致していることを再確認してください。</string>
@@ -3461,6 +3500,18 @@
   <string name="wc_connection_reqeust_would_like">したい</string>
   <string name="wc_connection_request">接続リクエスト</string>
   <string name="wc_connections">接続</string>
+  <string name="wc_connections_agents_error_subtitle">タップして再読み込み</string>
+  <string name="wc_connections_agents_error_title">AIエージェントを利用できません</string>
+  <string name="wc_connections_agents_title">接続済みのエージェント</string>
+  <string name="wc_connections_dapps_title">接続済みのdApp</string>
+  <string name="wc_connections_disconnect_all_alert_desc">すべてのdAppとAIエージェントのウォレットへの接続が解除されます。</string>
+  <string name="wc_connections_disconnect_all_alert_title">すべての接続を解除</string>
+  <string name="wc_connections_disconnect_all_success">すべての接続を解除しました</string>
+  <string name="wc_connections_empty_desc">WalletConnectを使ってdAppに、MCPを使ってAIエージェントに接続できます。すべての接続をここでまとめて管理できます。</string>
+  <string name="wc_connections_empty_title">まだ接続がありません</string>
+  <string name="wc_connections_no_walletconnect_wallets">WalletConnectに対応しているウォレットがありません</string>
+  <string name="wc_connections_qr_scan_hint">dAppまたはAIエージェントを開き、接続用QRコードをスキャンしてください。</string>
+  <string name="wc_connections_subtitle">dAppまたはMCPに接続</string>
   <string name="wc_contents">内容</string>
   <string name="wc_copy_data_button_text">データをコピー</string>
   <string name="wc_custom_allowance_title">使用可能量の設定</string>
@@ -3592,6 +3643,12 @@
   <string name="yield_module_high_network_fees_notification_description">市場が非常に活発なため、現在の手数料は通常よりも高くなっています。今すぐ続行するか、手数料が下がるのを待って後で再確認することもできます。</string>
   <string name="yield_module_high_network_fees_notification_title">ネットワーク手数料が高額です</string>
   <string name="yield_module_historical_returns">過去のリターン</string>
+  <string name="yield_module_main_promo_button">利息モードを試す</string>
+  <string name="yield_module_main_promo_subtitle">眠っている資産を活用。ロックなし、いつでも引き出し可能。</string>
+  <string name="yield_module_main_promo_title">暗号資産で最大%1$s%% APYを獲得</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="other">%d種類以上のトークンが利用可能</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">保有資産に年利%1$s%%を適用</string>
   <string name="yield_module_main_view_approve_notification_description">利息モードでのトークンの承認が取り消されました。トークンを開いて再度許可してください。</string>
   <string name="yield_module_main_view_approve_notification_title">トークンの承認が必要です</string>

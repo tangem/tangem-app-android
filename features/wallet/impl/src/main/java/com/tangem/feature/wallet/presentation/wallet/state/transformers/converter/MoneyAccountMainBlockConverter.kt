@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.common.ui.R
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -23,24 +22,38 @@ internal class MoneyAccountMainBlockConverter(
         val userWalletId = value.account.userWalletId
         return when (val statusValue = value.value) {
             is MoneyAccountStatusValue.Empty,
-            is MoneyAccountStatusValue.NotCreated,
             is MoneyAccountStatusValue.Error.ExposedDevice,
             -> MoneyAccountMainUM.Empty
             is MoneyAccountStatusValue.Onboarding.Activating -> MoneyAccountMainUM.Onboarding(
-                subtitle = resourceReference(R.string.money_account_main_status_activating),
+                subtitle = resourceReference(statusValue.step.subtitleRes()),
                 onClick = moneyAccountIntents::onMoneyAccountActivatingClicked,
             )
-            is MoneyAccountStatusValue.Account -> when (statusValue) {
-                is MoneyAccountStatusValue.Account.Active -> statusValue.toUM(userWalletId)
-                is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountMainUM.Empty
-            }
-            is MoneyAccountStatusValue.Error.Unavailable -> MoneyAccountMainUM.Unavailable
+            is MoneyAccountStatusValue.Onboarding.Failed -> MoneyAccountMainUM.Failed(
+                subtitle = resourceReference(R.string.money_account_main_status_failed),
+                onClick = {
+                    moneyAccountIntents.onMoneyAccountFailedClicked(
+                        userWalletId = userWalletId,
+                        customerId = statusValue.customerId,
+                    )
+                },
+            )
+            is MoneyAccountStatusValue.Account.Active -> statusValue.toUM(userWalletId)
+            is MoneyAccountStatusValue.Error.Unavailable,
+            is MoneyAccountStatusValue.Error.NotSynced,
+            -> MoneyAccountMainUM.Unavailable
+        }
+    }
+
+    private fun MoneyAccountStatusValue.Onboarding.Activating.Step.subtitleRes(): Int = when (this) {
+        MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING -> R.string.money_account_main_status_activating
+        MoneyAccountStatusValue.Onboarding.Activating.Step.AWAITING_DEPOSIT -> {
+            R.string.money_account_main_status_awaiting_deposit
         }
     }
 
     private fun MoneyAccountStatusValue.Account.toUM(userWalletId: UserWalletId): MoneyAccountMainUM {
         return MoneyAccountMainUM.Content(
-            subtitle = TextReference.EMPTY,
+            subtitle = resourceReference(R.string.money_account_main_status_active_v2),
             balance = balance?.toUM(source),
             onClick = { moneyAccountIntents.onMoneyAccountClicked(userWalletId) },
         )

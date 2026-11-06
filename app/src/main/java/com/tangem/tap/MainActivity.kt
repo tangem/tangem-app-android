@@ -46,7 +46,6 @@ import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import com.tangem.google.GoogleServicesHelper
@@ -63,6 +62,7 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import com.tangem.tap.routing.utils.DeeplinkSource
+import com.tangem.tap.routing.utils.PromoPageRouter
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.Lazy
@@ -113,6 +113,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var deeplinkFactory: DeepLinkFactory
 
     @Inject
+    internal lateinit var promoPageRouter: PromoPageRouter
+
+    @Inject
     internal lateinit var deepLinkFeatureToggles: DeepLinkFeatureToggles
 
     @Inject
@@ -129,9 +132,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
-
-    @Inject
-    internal lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
 
     @Inject
     internal lateinit var walletCardsBackupDeliveryScheduler: WalletCardsBackupDeliveryScheduler
@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             intent?.flags?.and(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0
         if (isFreshLaunch && intent != null) {
             notifyIfOpenedByLinkOrPush(intent)
-            bindMarketingUid(intent)
+            handleMarketingParams(intent)
         }
 
         // We have to allow adjust_resize (can only be specified in the manifest) for Android <=10,
@@ -365,7 +365,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         notifyIfOpenedByLinkOrPush(intent)
-        bindMarketingUid(intent)
+        handleMarketingParams(intent)
         handleDeepLink(intent = intent, isFromOnNewIntent = true)
     }
 
@@ -413,9 +413,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
     }
 
-    private fun bindMarketingUid(intent: Intent) {
+    private fun handleMarketingParams(intent: Intent) {
         val deepLink = intent.data ?: PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri() ?: return
         deeplinkFactory.bindMarketingUid(deepLink)
+        promoPageRouter.savePage(deepLink)
     }
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
@@ -457,8 +458,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun sendPendingWalletCardsBackups() {
-        if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
-
         walletCardsBackupDeliveryScheduler.schedule()
     }
 

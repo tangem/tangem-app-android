@@ -83,14 +83,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CardImage(state.imageState)
-        NameAndInfo(
-            modifier = Modifier.weight(1f),
-            name = state.name,
-            titleBadge = state.titleBadge,
-            isSocialLogin = state.isSocialLogin,
-            information = state.information,
-            balance = state.balance,
-        )
+        NameAndInfo(state = state, modifier = Modifier.weight(1f))
 
         when (state.endIcon) {
             UserWalletItemUM.EndIcon.None -> Unit
@@ -120,14 +113,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun NameAndInfo(
-    name: TextReference,
-    titleBadge: TangemBadgeUM?,
-    isSocialLogin: Boolean,
-    information: UserWalletItemUM.Information,
-    balance: UserWalletItemUM.Balance,
-    modifier: Modifier = Modifier,
-) {
+private fun NameAndInfo(state: UserWalletItemUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.heightIn(min = 40.dp),
         horizontalAlignment = Alignment.Start,
@@ -139,14 +125,14 @@ private fun NameAndInfo(
         ) {
             Text(
                 modifier = Modifier.weight(weight = 1f, fill = false),
-                text = name.resolveReference(),
+                text = state.name.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors3.text.primary,
+                color = if (state.isDimmed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (isSocialLogin) SocialLoginWalletIcon()
-            titleBadge?.let { badge ->
+            if (state.isSocialLogin) SocialLoginWalletIcon()
+            state.titleBadge?.let { badge ->
                 TangemBadge(
                     text = badge.text,
                     variant = badge.variant,
@@ -162,34 +148,43 @@ private fun NameAndInfo(
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AnimatedContent(
-                targetState = information,
-                label = "Information content",
-            ) { information ->
-                val informationValue = getInformationValue(information)
+            if (state.information !is UserWalletItemUM.Information.None) {
+                AnimatedContent(
+                    targetState = state.information,
+                    label = "Information content",
+                ) { information ->
+                    val informationValue = getInformationValue(information)
 
-                if (informationValue == null) {
-                    TextShimmer(
-                        style = TangemTheme.typography.caption2,
-                        text = "aaaaa",
-                    )
-                } else {
-                    Text(
-                        text = informationValue,
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors3.text.secondary,
-                        maxLines = 1,
-                    )
+                    if (informationValue == null) {
+                        TextShimmer(
+                            style = TangemTheme.typography.caption2,
+                            text = "aaaaa",
+                        )
+                    } else {
+                        Text(
+                            text = informationValue,
+                            style = TangemTheme.typography.caption2,
+                            color = TangemTheme.colors3.text.secondary,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
 
-            BalanceContent(balance)
+            BalanceContent(
+                balance = state.balance,
+                isSeparatorShown = state.information !is UserWalletItemUM.Information.None,
+            )
         }
     }
 }
 
 @Composable
-private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier = Modifier) {
+private fun BalanceContent(
+    balance: UserWalletItemUM.Balance,
+    isSeparatorShown: Boolean,
+    modifier: Modifier = Modifier,
+) {
     AnimatedContent(
         modifier = modifier,
         targetState = balance,
@@ -211,12 +206,14 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
             }
             else -> {
                 Row {
-                    Text(
-                        text = " $DOT ",
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors3.text.secondary,
-                        maxLines = 1,
-                    )
+                    if (isSeparatorShown) {
+                        Text(
+                            text = " $DOT ",
+                            style = TangemTheme.typography.caption2,
+                            color = TangemTheme.colors3.text.secondary,
+                            maxLines = 1,
+                        )
+                    }
 
                     val (balanceValue, isFlickering) = getBalanceValueAndFlickerState(targetBalance)
 
@@ -328,6 +325,7 @@ fun getBalanceValueAndFlickerState(balance: UserWalletItemUM.Balance): Pair<Stri
 @Composable
 fun getInformationValue(information: UserWalletItemUM.Information): String? {
     return when (information) {
+        UserWalletItemUM.Information.None -> ""
         UserWalletItemUM.Information.Failed -> DASH_SIGN
         UserWalletItemUM.Information.Loading -> null
         is UserWalletItemUM.Information.Loaded -> information.value.resolveReference()

@@ -1,11 +1,13 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.ExpressServiceFetcher
+import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
@@ -27,7 +29,6 @@ import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -50,7 +51,9 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideTokensFeatureToggles(): TokensFeatureToggles = DefaultTokensFeatureToggles()
+    fun provideTokensFeatureToggles(featureTogglesManager: FeatureTogglesManager): TokensFeatureToggles {
+        return DefaultTokensFeatureToggles(featureTogglesManager)
+    }
 
     @Provides
     @Singleton
@@ -163,15 +166,16 @@ internal object TokensDomainModule {
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
+        balanceContributionFetchers: Set<@JvmSuppressWildcards BalanceContributionFetcher>,
+        tokensFeatureToggles: TokensFeatureToggles,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
+        stakingIdFactory: StakingIdFactory,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
-        polymarketFeatureToggles: PolymarketFeatureToggles,
         collectiblesFeatureToggles: CollectiblesFeatureToggles,
-        stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletBalanceFetcher {
         return WalletBalanceFetcher(
@@ -182,15 +186,16 @@ internal object TokensDomainModule {
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
+            balanceContributionFetchers = balanceContributionFetchers,
+            tokensFeatureToggles = tokensFeatureToggles,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+            stakingIdFactory = stakingIdFactory,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             predictionAccountStatusFetcher = predictionAccountStatusFetcher,
             collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
             moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
-            polymarketFeatureToggles = polymarketFeatureToggles,
             collectiblesFeatureToggles = collectiblesFeatureToggles,
-            stakingIdFactory = stakingIdFactory,
             dispatchers = dispatchers,
         )
     }

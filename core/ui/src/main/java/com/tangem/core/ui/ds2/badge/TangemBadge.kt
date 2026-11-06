@@ -2,6 +2,8 @@ package com.tangem.core.ui.ds2.badge
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +45,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * Design-system v2 badge: a compact pill displaying a short label with optional leading / trailing
  * icons.
  *
- * Version: 1.0.0
+ * Version: 1.1.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=2002-213)
  *
@@ -52,11 +55,12 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  *   is overridden. Other [TangemIconUM] subtypes (e.g. currency / image / url) pass through with
  *   their own colors intact.
  * - The badge is non-interactive by default. Pass [onClick] to make it clickable.
+ * - A focused clickable badge draws the brand focus ring in place of its border.
  *
  * @param text Badge label.
  * @param modifier Modifier applied to the badge container.
  * @param variant Visual style. See [TangemBadge.Variant].
- * @param status Status color scheme (Neutral / Info / Error / Success / Warning).
+ * @param status Status color scheme (Neutral / Info / Error / Success / Warning / Violet).
  * @param size Token-driven size preset controlling height, padding, icon size and text style.
  *   See [TangemBadge.Size].
  * @param iconStart Optional leading icon.
@@ -64,6 +68,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param contentDescription Accessibility label announced by TalkBack. When non-null it overrides
  *   the label text for screen readers.
  * @param onClick Optional click handler. `null` makes the badge non-interactive.
+
  */
 @Suppress("LongParameterList")
 @Composable
@@ -77,9 +82,12 @@ fun TangemBadge(
     iconEnd: TangemIconUM? = null,
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null,
+    interactionSource: MutableInteractionSource? = null,
 ) {
     val colorTokens = resolveColorTokens(variant = variant, status = status)
     val sizeTokens = size.tokens()
+    val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val isFocused by resolvedInteractionSource.collectIsFocusedAsState()
 
     TangemSurface(
         modifier = modifier
@@ -89,8 +97,9 @@ fun TangemBadge(
             }
             .heightIn(min = sizeTokens.minHeight),
         onClick = onClick,
+        interactionSource = resolvedInteractionSource,
         color = colorTokens.backgroundColor,
-        border = colorTokens.borderColor?.let { BorderStroke(1.dp, it) },
+        border = if (isFocused) focusRingBorder() else colorTokens.borderColor?.let { BorderStroke(1.dp, it) },
         shape = RoundedCornerShape(999.dp),
     ) {
         BadgeContent(
@@ -104,7 +113,7 @@ fun TangemBadge(
 }
 
 @Composable
-private fun BadgeContent(
+internal fun BadgeContent(
     iconStart: TangemIconUM?,
     iconEnd: TangemIconUM?,
     text: TextReference,
@@ -155,7 +164,7 @@ private fun TangemIconUM.applyTint(tint: Color): TangemIconUM = when (this) {
 
 object TangemBadge {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 1, patch = 1)
 
     /**
      * Visual style of the badge.
@@ -163,14 +172,13 @@ object TangemBadge {
      * - [Tinted] — soft tinted fill (subtle status color or opaque neutral), no border.
      * - [Outline] — tinted fill with a matching border.
      * - [Solid] — saturated status color fill with static-dark content.
-     * - [Inverse] — inverted surface: the badge reads as the one picked out of a row. It carries no
-     *   status colors, so [Status] is ignored for it.
+     *
+     * For a selectable badge use [com.tangem.core.ui.ds2.togglebadge.TangemToggleBadge].
      */
     enum class Variant {
         Tinted,
         Outline,
         Solid,
-        Inverse,
     }
 
     /** Status color scheme of the badge. */
@@ -180,6 +188,7 @@ object TangemBadge {
         Error,
         Success,
         Warning,
+        Violet,
     }
 
     /**
@@ -193,8 +202,15 @@ object TangemBadge {
     }
 }
 
+@Composable
+@ReadOnlyComposable
+internal fun focusRingBorder(): BorderStroke = BorderStroke(
+    width = 2.dp,
+    color = TangemTheme.colors3.interaction.focusRing.brand,
+)
+
 /** Resolved colors for a (variant, status) pair. */
-private data class BadgeColorTokens(
+internal data class BadgeColorTokens(
     val backgroundColor: Color,
     val textColor: Color,
     val iconTint: Color,
@@ -202,7 +218,7 @@ private data class BadgeColorTokens(
 )
 
 /** Resolved per-size dimensions used by [TangemBadge]. */
-private data class BadgeSizeTokens(
+internal data class BadgeSizeTokens(
     val minHeight: Dp,
     val containerHorizontalPadding: Dp,
     val containerVerticalPadding: Dp,
@@ -213,7 +229,7 @@ private data class BadgeSizeTokens(
 
 @Composable
 @ReadOnlyComposable
-private fun TangemBadge.Size.tokens(): BadgeSizeTokens {
+internal fun TangemBadge.Size.tokens(): BadgeSizeTokens {
     val typography = TangemTheme.typography3
     return when (this) {
         TangemBadge.Size.X9 -> BadgeSizeTokens(
@@ -275,6 +291,11 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
                 textColor = colors.text.status.warning,
                 iconTint = colors.icon.status.warning,
             )
+            TangemBadge.Status.Violet -> BadgeColorTokens(
+                backgroundColor = colors.bg.accent.violetSubtle,
+                textColor = colors.text.accent.violet,
+                iconTint = colors.icon.accent.violet,
+            )
         }
         TangemBadge.Variant.Outline -> when (status) {
             TangemBadge.Status.Neutral -> BadgeColorTokens(
@@ -307,6 +328,12 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
                 iconTint = colors.icon.status.warning,
                 borderColor = colors.border.status.warningSubtle,
             )
+            TangemBadge.Status.Violet -> BadgeColorTokens(
+                backgroundColor = colors.bg.accent.violetSubtle,
+                textColor = colors.text.accent.violet,
+                iconTint = colors.icon.accent.violet,
+                borderColor = colors.border.accent.violetSubtle,
+            )
         }
         TangemBadge.Variant.Solid -> when (status) {
             TangemBadge.Status.Neutral -> BadgeColorTokens(
@@ -334,14 +361,12 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
                 textColor = colors.text.staticDark.primary,
                 iconTint = colors.icon.staticDark,
             )
+            TangemBadge.Status.Violet -> BadgeColorTokens(
+                backgroundColor = colors.bg.accent.violet,
+                textColor = colors.text.staticDark.primary,
+                iconTint = colors.icon.staticDark,
+            )
         }
-        // the inverted surface flips with the theme, so its content has to flip with it — a static
-        // color would be unreadable in one of the two themes
-        TangemBadge.Variant.Inverse -> BadgeColorTokens(
-            backgroundColor = colors.bg.inverse,
-            textColor = colors.text.inverse.primary,
-            iconTint = colors.icon.inverse,
-        )
     }
 }
 

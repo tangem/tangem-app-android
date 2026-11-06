@@ -34,6 +34,12 @@ class TxHistoryDetailsBottomSheetPageObject(semanticsProvider: SemanticsNodeInte
         useUnmergedTree = true
     }
 
+    fun valueNextToLabel(label: String, value: String): KNode = child {
+        hasText(text = value, substring = true)
+        hasAnySibling(withText(label))
+        useUnmergedTree = true
+    }
+
     /** The clickable info row (e.g. the provider row that opens the provider page) whose value contains [value]. */
     fun clickableRowContaining(value: String): KNode = child {
         hasClickAction()
@@ -77,6 +83,11 @@ class TxHistoryDetailsBottomSheetPageObject(semanticsProvider: SemanticsNodeInte
 
     fun message(text: String): KNode = child {
         hasText(text)
+        useUnmergedTree = true
+    }
+
+    val amount: KNode = child {
+        hasTestTag(TxHistoryDetailsTestTags.AMOUNT)
         useUnmergedTree = true
     }
 }

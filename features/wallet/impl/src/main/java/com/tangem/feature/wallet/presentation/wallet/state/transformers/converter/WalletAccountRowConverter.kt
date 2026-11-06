@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import com.tangem.common.ui.account.AccountRowStateConverter
 import com.tangem.common.ui.account.toAvatarState
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
@@ -15,6 +16,7 @@ internal class WalletAccountRowConverter(
     private val onAccountCollapseClick: (account: Account) -> Unit,
     private val onAccountExpandClick: (account: Account) -> Unit,
     private val onManageTokensClick: (accountId: AccountId) -> Unit,
+    private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
 ) {
 
     private val accountRowStateConverter = AccountRowStateConverter(appCurrency)
@@ -31,7 +33,9 @@ internal class WalletAccountRowConverter(
                 value = value,
                 onClick = { if (isExpanded) onAccountCollapseClick(account) else onAccountExpandClick(account) },
             ),
-            avatar = account.toAvatarState(),
+            avatar = account.toAvatarState(
+                hasPendingOperation = jointPendingOperations.any { it.account.accountId == account.accountId },
+            ),
             isExpanded = isExpanded,
             shouldShowCompactBalance = account.tokensCount > 0,
             onEmptyClick = { onManageTokensClick(account.accountId) },

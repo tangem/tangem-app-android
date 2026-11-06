@@ -11,6 +11,7 @@ data class UserWalletItemUM(
     val id: String,
     val name: TextReference,
     val titleBadge: TangemBadgeUM? = null,
+    val isDimmed: Boolean = false,
     val isSocialLogin: Boolean = false,
     val information: Information,
     val balance: Balance,
@@ -49,6 +50,8 @@ data class UserWalletItemUM(
     @Immutable
     sealed class Information {
 
+        data object None : Information()
+
         data object Failed : Information()
 
         data object Loading : Information()
@@ -67,7 +70,7 @@ data class UserWalletItemUM(
 
         data class Account(
             val name: TextReference,
-            val icon: AccountIconUM.CryptoPortfolio,
+            val icon: AccountIconUM,
         ) : ImageState()
 
         data class Image(

@@ -10,14 +10,11 @@ import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.biometric.BiometricAuthError
-import com.tangem.core.biometric.BiometricAuthManager
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -83,7 +80,6 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -111,8 +107,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
-    private val biometricAuthManager: BiometricAuthManager,
-    private val settingsManager: SettingsManager,
+    private val cardAuthenticator: TangemPayCardAuthenticator,
     private val onboardingRepository: OnboardingRepository,
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
     googleWalletControllerFactory: TangemPayAddToGoogleWalletController.Factory,
@@ -164,10 +159,10 @@ internal class TangemPayCardPageModel @Inject constructor(
                 settings = persistentListOf(),
                 menuItems = buildMenuItems(
                     isLastCard = params.initialStatus.ifLoadedOrNull { it.cards.isLastCard() } ?: false,
-                    isReissueAvailable = params.initialStatus
+                    isAwaitingActivation = params.initialStatus
                         .ifLoadedOrNull { it.findCardWithId(params.cardId) }
                         ?.state
-                        ?.isAwaitingActivation != true,
+                        ?.isAwaitingActivation == true,
                 ),
             ),
         )
@@ -312,7 +307,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                     settings = status.buildSettings(card.frozenState, isDetailsShown),
                     menuItems = buildMenuItems(
                         isLastCard = status.cards.isLastCard(),
-                        isReissueAvailable = !card.state.isAwaitingActivation,
+                        isAwaitingActivation = card.state.isAwaitingActivation,
                     ),
                     cardState = card.state,
                     delivery = buildDeliveryState(cardState = card.state, email = email),
@@ -405,6 +400,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                         isLoading = button.isLoading,
                     )
                 },
+                isAddedToGoogleWallet = entry == GoogleWalletEntry.Added,
             )
         }
     }
@@ -450,50 +446,45 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun buildMenuItems(
         isLastCard: Boolean,
-        isReissueAvailable: Boolean,
+        isAwaitingActivation: Boolean,
     ): ImmutableList<TangemPayDropDownItemUM> {
-        return buildList {
-            if (isReissueAvailable) {
-                add(
-                    TangemPayDropDownItemUM(
-                        title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
-                        onClick = ::onClickReissueCard,
-                        icon = TangemIconUM.Icon(
-                            imageVector = Icons.ic_arrow_refresh_20,
-                            tintReference = {
-                                TangemTheme.colors3.icon.primary
-                            },
-                        ),
-                    ),
-                )
-            }
-            add(
-                TangemPayDropDownItemUM(
-                    title = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title),
-                    onClick = ::onClickCloseCard,
-                    icon = TangemIconUM.Icon(
-                        iconRes = CoreUiR.drawable.ic_trash_24,
-                        tintReference = {
-                            if (isLastCard) {
-                                TangemTheme.colors3.icon.tertiary
-                            } else {
-                                TangemTheme.colors3.icon.primary
-                            }
-                        },
-                    ),
-                    subtitle = if (isLastCard) {
-                        TextReference.Res(R.string.tangem_pay_close_card_disabled_last_card)
-                    } else {
-                        null
+        if (isAwaitingActivation) return persistentListOf()
+        return persistentListOf(
+            TangemPayDropDownItemUM(
+                title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
+                onClick = ::onClickReissueCard,
+                icon = TangemIconUM.Icon(
+                    imageVector = Icons.ic_arrow_refresh_20,
+                    tintReference = {
+                        TangemTheme.colors3.icon.primary
                     },
-                    isEnabled = !isLastCard,
                 ),
-            )
-        }.toImmutableList()
+            ),
+            TangemPayDropDownItemUM(
+                title = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title),
+                onClick = ::onClickCloseCard,
+                icon = TangemIconUM.Icon(
+                    iconRes = CoreUiR.drawable.ic_trash_24,
+                    tintReference = {
+                        if (isLastCard) {
+                            TangemTheme.colors3.icon.tertiary
+                        } else {
+                            TangemTheme.colors3.icon.primary
+                        }
+                    },
+                ),
+                subtitle = if (isLastCard) {
+                    TextReference.Res(R.string.tangem_pay_close_card_disabled_last_card)
+                } else {
+                    null
+                },
+                isEnabled = !isLastCard,
+            ),
+        )
     }
 
     private fun onClickViewDetails() {
-        cardDetailsEventListener.send(CardDetailsEvent.Show(selectedCardId.value))
+        cardControllers[selectedCardId.value]?.requestReveal()
     }
 
     private fun onClickReloadLimits() {
@@ -523,17 +514,10 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun viewPinCodeWithBiometry(card: TangemPayCard) {
         if (viewPinAuthJobHolder.isActive) return
         modelScope.launch {
-            val result = biometricAuthManager.authenticate(
-                BiometricAuthManager.Config(
-                    title = resourceReference(R.string.tangempay_card_details_view_pin_code_title),
-                    subtitle = null,
-                ),
+            val isAuthenticated = cardAuthenticator.authenticate(
+                title = resourceReference(R.string.tangempay_card_details_view_pin_code_title),
             )
-            when (result) {
-                is BiometricAuthManager.Result.Success -> showPinCode(cardId = card.id)
-                is BiometricAuthManager.Result.Cancelled -> Unit
-                is BiometricAuthManager.Result.Failure -> onViewPinAuthFailure(result)
-            }
+            if (isAuthenticated) showPinCode(cardId = card.id)
         }.saveIn(viewPinAuthJobHolder)
     }
 
@@ -544,46 +528,6 @@ internal class TangemPayCardPageModel @Inject constructor(
                 cardId = cardId,
             ),
         )
-    }
-
-    private fun onViewPinAuthFailure(failure: BiometricAuthManager.Result.Failure) {
-        when (failure.error) {
-            BiometricAuthError.NoBiometricEnrolled,
-            BiometricAuthError.NoDeviceCredential,
-            -> {
-                uiMessageSender.send(
-                    message = TangemPayMessagesFactory.createProtectionNotSetMessage(
-                        onOpenSettingsClick = settingsManager::openScreenLockSettings,
-                    ),
-                )
-            }
-            BiometricAuthError.HardwareUnavailable,
-            BiometricAuthError.NoForegroundActivity,
-            BiometricAuthError.Unknown,
-            -> {
-                uiMessageSender.send(
-                    message = SnackbarMessage(resourceReference(CoreUiR.string.common_unknown_error)),
-                )
-            }
-            BiometricAuthError.LockedOutPermanently -> {
-                uiMessageSender.send(
-                    message = SnackbarMessage(
-                        resourceReference(CoreUiR.string.biometric_lockout_permanent_warning_title),
-                    ),
-                )
-            }
-            BiometricAuthError.SecurityUpdateRequired -> {
-                uiMessageSender.send(
-                    message = SnackbarMessage(
-                        resourceReference(CoreUiR.string.alert_authentication_error_message),
-                    ),
-                )
-            }
-            BiometricAuthError.LockedOut,
-            BiometricAuthError.SystemCancelled,
-            BiometricAuthError.Timeout,
-            -> Unit
-        }
     }
 
     private fun onClickFreezeOrUnfreezeCard(isFrozen: Boolean) {
@@ -714,10 +658,11 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
-    suspend fun loadBankCredentials(productInstanceId: String): Either<VisaApiError, BankCredentials> =
+    suspend fun retryBankCredentials(productInstanceId: String): Either<VisaApiError, Unit> =
         getBankCredentialsUseCase(userWalletId = userWalletId, productInstanceId = productInstanceId)
+            .map(::onVaBankingDetailsResolved)
 
-    fun onVaBankingDetailsResolved(bankCredentials: BankCredentials) {
+    private fun onVaBankingDetailsResolved(bankCredentials: BankCredentials) {
         // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
         // instead of the intro deposit sheet that would need another "Show details" tap.
         onShowVirtualAccountRequisites(bankCredentials)
