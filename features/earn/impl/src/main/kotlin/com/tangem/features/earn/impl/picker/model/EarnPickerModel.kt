@@ -81,9 +81,6 @@ internal class EarnPickerModel @Inject constructor(
 
     private val isRedirected = AtomicBoolean(false)
 
-    @Volatile
-    private var isSelectionResolved = false
-
     private val selectedId = MutableStateFlow(params.preselected)
 
     private val summaries: Flow<EarnProductSummaries> = summarySupplier(params.userWalletId)
@@ -161,22 +158,16 @@ internal class EarnPickerModel @Inject constructor(
     }
 
     /**
-     * The first complete answer decides: later frames reorder the cards but never move the selection. A frame is
-     * usually partial at first (`CACHE`: the fastest product only), so nothing is chosen from it, and a `preselected`
-     * product that is already there is kept.
+     * A selection that is still on a card stays, so later frames reorder the cards but never move it. Otherwise the
+     * first complete answer decides: a frame is usually partial at first (`CACHE`: the fastest product only), so nothing
+     * is chosen from it, and a `preselected` product that is already there is kept. The same goes for a settled frame
+     * that drops the chosen product.
      */
     private fun resolveSelection(currencySummaries: List<EarnProductSummary>, source: StatusSource) {
-        if (isSelectionResolved || currencySummaries.isEmpty()) return
+        if (currencySummaries.isEmpty() || source == StatusSource.CACHE) return
 
-        val current = selectedId.value
-        when {
-            current != null && currencySummaries.any { it.productId == current } -> isSelectionResolved = true
-            source == StatusSource.CACHE -> Unit
-            else -> {
-                isSelectionResolved = true
-                selectedId.value = currencySummaries.first().productId
-            }
-        }
+        val isChosenPresent = currencySummaries.any { it.productId == selectedId.value }
+        if (!isChosenPresent) selectedId.value = currencySummaries.first().productId
     }
 
     private fun redirectToActive(currencySummaries: List<EarnProductSummary>) {
