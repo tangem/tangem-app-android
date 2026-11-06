@@ -55,6 +55,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.core.ui.R as CoreUiR
 
@@ -126,13 +127,18 @@ internal class TangemPayAddToGoogleWalletControllerTest {
         private fun provideTestModels() = listOf(
             EntryModel(walletStatus = CardStatus.NotAdded, expected = BUTTON),
             EntryModel(walletStatus = CardStatus.Incomplete, expected = BUTTON),
-            EntryModel(walletStatus = CardStatus.Added, expected = Entry.Hidden),
+            EntryModel(walletStatus = CardStatus.Added, expected = Entry.Added),
             EntryModel(walletStatus = CardStatus.Unknown, expected = Entry.Hidden),
             EntryModel(walletStatus = CardStatus.Unsupported, expected = Entry.ManualGuide),
             EntryModel(frozenState = TangemPayCardFrozenState.Frozen, expected = Entry.Hidden),
             EntryModel(frozenState = TangemPayCardFrozenState.Pending, expected = Entry.Hidden),
             EntryModel(
                 walletStatus = CardStatus.Unsupported,
+                frozenState = TangemPayCardFrozenState.Frozen,
+                expected = Entry.Hidden,
+            ),
+            EntryModel(
+                walletStatus = CardStatus.Added,
                 frozenState = TangemPayCardFrozenState.Frozen,
                 expected = Entry.Hidden,
             ),
@@ -379,6 +385,30 @@ internal class TangemPayAddToGoogleWalletControllerTest {
 
             // Assert
             coVerify(exactly = 1) { provisioner.getCardStatus(LAST_FOUR_DIGITS) }
+        }
+
+        @ParameterizedTest
+        @EnumSource(StatusRecheck::class)
+        fun `GIVEN card in wallet WHEN it is removed and status re-checked THEN button shown again`(
+            recheck: StatusRecheck,
+        ) = runTest {
+            // Arrange
+            coEvery { provisioner.getCardStatus(any()) } returns CardStatus.Added
+            val controller = createStartedController()
+            coEvery { provisioner.getCardStatus(any()) } returns CardStatus.NotAdded
+
+            // Act
+            when (recheck) {
+                StatusRecheck.WALLET_CHANGED -> walletChanges.tryEmit(Unit)
+                StatusRecheck.SCREEN_RESTARTED -> {
+                    controller.onStop()
+                    controller.onStart()
+                }
+            }
+            runCurrent()
+
+            // Assert
+            assertThat(controller.entry.value).isEqualTo(BUTTON)
         }
 
         @Test
@@ -686,7 +716,7 @@ internal class TangemPayAddToGoogleWalletControllerTest {
         )
 
         @Test
-        fun `GIVEN card added WHEN wallet has not confirmed it yet THEN button hidden`() = runTest {
+        fun `GIVEN card added WHEN wallet has not confirmed it yet THEN added status shown`() = runTest {
             // Arrange
             var statusChecks = 0
             coEvery { provisioner.getCardStatus(any()) } coAnswers {
@@ -699,7 +729,7 @@ internal class TangemPayAddToGoogleWalletControllerTest {
             runCurrent()
 
             // Assert
-            assertThat(controller.entry.value).isEqualTo(Entry.Hidden)
+            assertThat(controller.entry.value).isEqualTo(Entry.Added)
         }
 
         @Test
@@ -725,7 +755,7 @@ internal class TangemPayAddToGoogleWalletControllerTest {
             runCurrent()
 
             // Assert
-            assertThat(controller.entry.value).isEqualTo(Entry.Hidden)
+            assertThat(controller.entry.value).isEqualTo(Entry.Added)
             coVerify(exactly = 3) { provisioner.getCardStatus(any()) }
         }
 
@@ -799,6 +829,8 @@ internal class TangemPayAddToGoogleWalletControllerTest {
         val isButtonAlwaysShown: Boolean = false,
         val expected: Entry,
     )
+
+    internal enum class StatusRecheck { WALLET_CHANGED, SCREEN_RESTARTED }
 
     internal data class ExperimentModel(val variant: String, val expected: Entry, val expectedStatusChecks: Int)
 

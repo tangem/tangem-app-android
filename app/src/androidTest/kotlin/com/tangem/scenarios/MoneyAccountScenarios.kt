@@ -8,13 +8,17 @@ import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.res.R as CoreResR
 import com.tangem.screens.VirtualAccountRequisitesBottomSheetPageObject
 import com.tangem.screens.moneyaccount.onMoneyAccountAddFundsSheet
 import com.tangem.screens.moneyaccount.onMoneyAccountScreen
+import com.tangem.screens.onSwapSuccessScreen
+import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTxHistoryScreen
 import com.tangem.screens.tangempay.onTangemPayWithdrawHubScreen
 import com.tangem.screens.onVirtualAccountRequisitesBottomSheet
 import io.qameta.allure.kotlin.Allure.step
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 
@@ -54,6 +58,24 @@ fun BaseTestCase.openMoneyAccountAddFunds() {
     step("Assert 'Add funds' sheet is displayed") {
         awaitSuccess { onMoneyAccountAddFundsSheet { bankTransferOption.assertIsDisplayed() } }
     }
+}
+
+fun BaseTestCase.topUpMoneyAccountFromWallet(amount: String) {
+    openMoneyAccountAddFunds()
+    step("Click on 'From your Tangem Wallet' option") {
+        onMoneyAccountAddFundsSheet { swapOption.performClick() }
+    }
+    step("Assert 'Add funds' Swap screen is displayed") {
+        awaitSuccess(WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { addFundsTitle.assertIsDisplayed() } }
+    }
+    step("Enter amount '$amount'") { inputAmount(amount) }
+    step("Assert Transfer mode is ready without a provider") { assertTransferReady() }
+    step("Assert network fee is displayed") { waitForFeeDisplayed() }
+    step("Hold to confirm the transfer") { holdToConfirmTransferUntilInProgress() }
+    step("Assert 'Transfer in progress' screen is displayed") {
+        awaitSuccess(WAIT_UNTIL_TIMEOUT_LONG) { onSwapSuccessScreen { transferInProgressTitle.assertIsDisplayed() } }
+    }
+    step("Click on 'Close' button") { onSwapSuccessScreen { closeButton.performClick() } }
 }
 
 fun BaseTestCase.openMoneyAccountSendHub() {
@@ -215,17 +237,31 @@ private fun BaseTestCase.assertForWholeWindow(durationMillis: Long, assertion: (
 
 fun BaseTestCase.refreshMoneyAccountUntilTransaction(title: String) {
     step("Refresh 'Money account' screen until the '$title' transaction is displayed") {
-        // Reopening the account shows the cached history; only a pull re-reads it, and a pull can land too early.
-        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            onMoneyAccountScreen { swipeDownToRefresh() }
-            runCatching {
-                composeTestRule.waitUntil(timeoutMillis = BALANCE_RELOAD_TIMEOUT_MILLIS) {
-                    var isShown = false
-                    onTxHistoryScreen { isShown = isTransactionItemShown(title) }
-                    isShown
-                }
-            }.isSuccess
+        refreshMoneyAccountUntil {
+            var isShown = false
+            onTxHistoryScreen { isShown = isTransactionItemShown(title) }
+            isShown
         }
+    }
+}
+
+fun BaseTestCase.refreshMoneyAccountUntilBalance(expectedBalance: String) {
+    step("Refresh 'Money account' screen until the balance is '$expectedBalance'") {
+        refreshMoneyAccountUntil {
+            var isShown = false
+            onMoneyAccountScreen { isShown = isBalanceShown(expectedBalance) }
+            isShown
+        }
+    }
+}
+
+// A pull can land before the throttled reload or the switched mock reaches the app, so pull until it shows.
+private fun BaseTestCase.refreshMoneyAccountUntil(isChanged: () -> Boolean) {
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        onMoneyAccountScreen { swipeDownToRefresh() }
+        runCatching {
+            composeTestRule.waitUntil(timeoutMillis = BALANCE_RELOAD_TIMEOUT_MILLIS) { isChanged() }
+        }.isSuccess
     }
 }
 
@@ -271,6 +307,29 @@ fun BaseTestCase.openMainWithMoneyAccountAndTwoAccounts() {
         waitForMoneyAccountRowWithText(activeAccountBalance)
     }
     step("Close 'Finalize wallet setup' sheet if shown") { closeFinishWalletActivationSheetIfShown() }
+}
+
+fun BaseTestCase.assertMoneyAccountMenuHasTermsAndSupportOnly(termsTitle: String) {
+    val supportTitle = getResourceString(CoreResR.string.tangempay_pay_support)
+    val currentPlanTitle = getResourceString(CoreResR.string.tangempay_current_plan_title)
+    val closeAccountTitle = getResourceString(CoreResR.string.money_account_close_account)
+    onMoneyAccountScreen {
+        step("Assert '$termsTitle' menu item is displayed") {
+            awaitSuccess { menuItem(termsTitle).assertIsDisplayed() }
+        }
+        step("Assert '$supportTitle' menu item is displayed") { menuItem(supportTitle).assertIsDisplayed() }
+        step("Assert '$termsTitle' menu item is above '$supportTitle'") {
+            val termsTop = menuItemTop(termsTitle)
+            val supportTop = menuItemTop(supportTitle)
+            assertTrue("'$termsTitle' top $termsTop is not above '$supportTitle' top $supportTop", termsTop < supportTop)
+        }
+        step("Assert '$currentPlanTitle' menu item is not displayed") {
+            menuItem(currentPlanTitle).assertDoesNotExist()
+        }
+        step("Assert '$closeAccountTitle' menu item is not displayed") {
+            menuItem(closeAccountTitle).assertDoesNotExist()
+        }
+    }
 }
 
 private const val DETAILS_OPEN_TIMEOUT_MILLIS = 3_000L

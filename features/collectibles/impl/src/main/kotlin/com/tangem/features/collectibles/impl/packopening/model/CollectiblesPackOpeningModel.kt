@@ -256,7 +256,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
             return
         }
 
-        runOpenPack(OpenPackRequest.Buy(machineId = params.externalId, isTurboEnabled = params.isTurboEnabled))
+        runOpenPack(OpenPackRequest.Buy(machineId = params.externalId))
     }
 
     private fun runOpenPack(request: OpenPackRequest) {
@@ -275,7 +275,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         }
 
         modelScope.launch {
-            openCollectiblePackUseCase(userWallet, request).collect { step ->
+            openCollectiblePackUseCase(userWallet, request, params.isTurboEnabled).collect { step ->
                 openPackStep.value = step
 
                 when (step) {
