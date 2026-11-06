@@ -7,6 +7,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.balance.contributionOrNull
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.staking.model.P2PEthPoolIntegration
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingOption
@@ -79,7 +80,7 @@ internal class PooledStakingMapper @Inject constructor() {
                 row(PROTOCOL_LABEL, PROTOCOL_VALUE),
                 row(FEE_LABEL, "${bestVault.feePercent.stripTrailingZeros().toPlainString()}%"),
             ),
-            limits = EarnLimits(minDeposit = BigDecimal.ZERO, remainingCap = null),
+            limits = EarnLimits(minDeposit = P2PEthPoolIntegration.DEFAULT_MINIMUM_STAKE, remainingCap = null),
             apyPeriods = emptyList(),
             primary = EarnActionItem(PooledStakingAction(buttonLabel(status.hasPossibleStake()))),
             freshness = null,
