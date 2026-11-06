@@ -1,16 +1,20 @@
 package com.tangem.data.txhistory.di
 
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
+import com.tangem.data.txhistory.cleaner.JointOperationHistoryUserWalletDataCleaner
 import com.tangem.data.txhistory.fetcher.DefaultAppTxHistoryFetcher
 import com.tangem.data.txhistory.fetcher.DefaultTxHistoryFetcherUtils
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils
 import com.tangem.data.txhistory.list.DefaultHistoryTxListManager
 import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
+import com.tangem.data.txhistory.repository.DefaultJointOperationHistoryRepository
 import com.tangem.data.txhistory.repository.DefaultTxHistoryRepository
 import com.tangem.data.txhistory.repository.RefactoredTxHistoryRepository
 import com.tangem.data.txhistory.repository.factory.DefaultTokenInfoRepository
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.domain.txhistory.list.HistoryTxListManager
+import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
 import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
@@ -18,6 +22,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -45,7 +50,19 @@ internal interface TxHistoryDataModule {
 
     @Binds
     @Singleton
+    fun provideJointOperationHistoryRepository(
+        default: DefaultJointOperationHistoryRepository,
+    ): JointOperationHistoryRepository
+
+    @Binds
+    @Singleton
     fun provideTokenInfoRepository(default: DefaultTokenInfoRepository): TokenInfoRepository
+
+    @Binds
+    @IntoSet
+    fun bindJointOperationHistoryUserWalletDataCleaner(
+        impl: JointOperationHistoryUserWalletDataCleaner,
+    ): UserWalletDataCleaner
 
     @Binds
     fun provideHistoryTxListManagerFactory(default: DefaultHistoryTxListManager.Factory): HistoryTxListManager.Factory

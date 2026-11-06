@@ -55,7 +55,7 @@ internal fun TestPushScreen(testPushUM: TestPushUM, testPushClickIntents: TestPu
                 onClick = testPushClickIntents::onSendPush,
             )
         },
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) {
         Column {
             LazyColumn(
@@ -79,14 +79,14 @@ private fun LazyListScope.tokenData(fcmToken: String) {
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(16.dp)
                 .animateItem(),
         ) {
             Text(
                 text = "FCM Token",
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.fillMaxWidth(),
             )
             Row(
@@ -95,7 +95,7 @@ private fun LazyListScope.tokenData(fcmToken: String) {
                     .padding(top = 8.dp)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .background(TangemTheme.colors.background.tertiary)
+                    .background(TangemTheme.colors3.bg.primary)
                     .clickable {
                         clipboard.setText(AnnotatedString(fcmToken))
                     }
@@ -104,7 +104,7 @@ private fun LazyListScope.tokenData(fcmToken: String) {
                 Text(
                     text = fcmToken,
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     modifier = Modifier
                         .padding(end = 8.dp)
                         .weight(1f),
@@ -113,7 +113,7 @@ private fun LazyListScope.tokenData(fcmToken: String) {
                     painter = rememberVectorPainter(
                         ImageVector.vectorResource(R.drawable.ic_copy_24),
                     ),
-                    tint = TangemTheme.colors.icon.secondary,
+                    tint = TangemTheme.colors3.icon.secondary,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
                 )
@@ -128,14 +128,14 @@ private fun LazyListScope.payloadData(testPushUM: TestPushUM, testPushClickInten
             modifier = Modifier
                 .padding(top = 8.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(16.dp)
                 .animateItem(),
         ) {
             Text(
                 text = "Payload (JSON)",
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.fillMaxWidth(),
             )
             val value = testPushUM.payload
@@ -161,9 +161,9 @@ private fun LazyListScope.payloadData(testPushUM: TestPushUM, testPushClickInten
                 text = testPushUM.payloadError ?: PAYLOAD_HINT,
                 style = TangemTheme.typography.caption2,
                 color = if (testPushUM.payloadError != null) {
-                    TangemTheme.colors.text.warning
+                    TangemTheme.colors3.text.accent.red
                 } else {
-                    TangemTheme.colors.text.tertiary
+                    TangemTheme.colors3.text.secondary
                 },
                 modifier = Modifier.padding(top = 8.dp),
             )
@@ -177,14 +177,14 @@ private fun LazyListScope.contentData(testPushUM: TestPushUM, testPushClickInten
             modifier = Modifier
                 .padding(top = 8.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(16.dp)
                 .animateItem(),
         ) {
             Text(
                 text = "Content",
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlineTextField(
@@ -208,12 +208,12 @@ private fun LazyListScope.extraData(testPushUM: TestPushUM, testPushClickIntents
         Text(
             text = "Data",
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier
                 .padding(top = 8.dp)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp))
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(16.dp)
                 .animateItem(),
         )
@@ -230,7 +230,7 @@ private fun LazyListScope.extraData(testPushUM: TestPushUM, testPushClickIntents
             index = index,
             testPushClickIntents = testPushClickIntents,
             modifier = Modifier
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(horizontal = 16.dp)
                 .animateItem(),
         )
@@ -241,7 +241,7 @@ private fun LazyListScope.extraData(testPushUM: TestPushUM, testPushClickIntents
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(top = 8.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
                 .animateItem(),
         ) {
@@ -292,7 +292,7 @@ private fun EnterPushData(
                 Text(
                     text = "Remove",
                     style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors.text.constantWhite,
+                    color = TangemTheme.colors3.text.staticDark.primary,
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                         .padding(8.dp),
@@ -301,7 +301,7 @@ private fun EnterPushData(
         },
     ) {
         Column(
-            modifier = Modifier.background(TangemTheme.colors.background.action),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         ) {
             if (index != 0) {
                 HorizontalDivider(

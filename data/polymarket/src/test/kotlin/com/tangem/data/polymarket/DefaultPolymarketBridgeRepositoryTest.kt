@@ -73,7 +73,7 @@ internal class DefaultPolymarketBridgeRepositoryTest {
         runTest {
             // Arrange
             coEvery { polymarketRepository.getBuilderCode(any()) } returns Either.Left(
-                DataError.NetworkError.NoInternetConnection,
+                DataError.NetworkError.NoInternetConnection(),
             )
 
             // Act

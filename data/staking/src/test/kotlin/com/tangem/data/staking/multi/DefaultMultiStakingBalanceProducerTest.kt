@@ -8,7 +8,7 @@ import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.toDomain
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.*
+import com.tangem.domain.staking.model.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer

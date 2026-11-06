@@ -1,6 +1,8 @@
 package com.tangem.features.yield.supply.impl.subcomponents.stopearning
 
 import androidx.compose.foundation.background
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
+import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeCurrencySelector
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -56,6 +58,13 @@ internal class YieldSupplyStopEarningComponent(
         ),
     )
 
+    private val feeCurrencySelector = YieldSupplyFeeCurrencySelector(
+        context = this,
+        feeSelectorComponentFactory = params.feeSelectorComponentFactory,
+        createParams = model::createFeeSelectorParams,
+        onPicked = model::onFeeCurrencyPicked,
+    )
+
     override fun dismiss() {
         params.callback.onDismissClick()
     }
@@ -73,7 +82,7 @@ internal class YieldSupplyStopEarningComponent(
 
         TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
             config = config,
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 TangemModalBottomSheetTitle(
                     endIconRes = R.drawable.ic_close_24,
@@ -110,16 +119,17 @@ internal class YieldSupplyStopEarningComponent(
                     yieldSupplyActionUM = state,
                     onFooterClick = model::onReadMoreClick,
                     yieldSupplyNotificationsComponent = yieldSupplyNotificationsComponent,
+                    onFeeClick = feeCurrencySelector::show,
                 ) {
                     Box(
                         modifier = Modifier
                             .size(56.dp)
-                            .background(TangemTheme.colors.icon.attention.copy(0.1f), CircleShape),
+                            .background(TangemTheme.colors3.bg.accent.yellow.copy(0.1f), CircleShape),
                     ) {
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.ic_alert_triangle_20),
                             contentDescription = null,
-                            tint = TangemTheme.colors.icon.attention,
+                            tint = TangemTheme.colors3.icon.accent.yellow,
                             modifier = Modifier
                                 .padding(12.dp)
                                 .size(32.dp),
@@ -128,12 +138,14 @@ internal class YieldSupplyStopEarningComponent(
                 }
             },
         )
+        feeCurrencySelector.BottomSheet()
     }
 
     data class Params(
         val userWallet: UserWallet,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val callback: ModelCallback,
+        val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
     )
 
     interface ModelCallback {

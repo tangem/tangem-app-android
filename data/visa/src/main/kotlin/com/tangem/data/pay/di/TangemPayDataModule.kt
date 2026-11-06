@@ -15,7 +15,7 @@ import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.store.CashbackSummaryStore
-import com.tangem.data.pay.store.DefaultPaymentAccountRecentsStore
+import com.tangem.data.pay.store.DefaultAccountRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
@@ -27,8 +27,6 @@ import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
-import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
@@ -46,6 +44,7 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.store.entity.CashbackSummaryDM
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
@@ -86,10 +85,6 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindMoneyAccountOrderRepository(repository: DefaultMoneyAccountOrderRepository): MoneyAccountOrderRepository
-
-    @Binds
-    @Singleton
     fun bindTangemPayCryptoCurrencyFactory(factory: DefaultTangemPayCurrencyFactory): TangemPayCurrencyFactory
 
     @Binds
@@ -125,6 +120,10 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindPaymentAccountStatusFetcher(impl: DefaultPaymentAccountStatusFetcher): PaymentAccountStatusFetcher
+
+    @Binds
+    @Singleton
+    fun bindCustomerSummaryRepository(impl: DefaultCustomerSummaryRepository): CustomerSummaryRepository
 
     @Binds
     @IntoSet
@@ -347,17 +346,25 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetTangemPayProductsAvailabilityUseCase(
+        fun provideGetTangemPayProductsAvailabilityForCustomerUseCase(
             checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
-        ): GetTangemPayProductsAvailabilityUseCase {
-            return GetTangemPayProductsAvailabilityUseCase(checkTangemPayEligibilityForCustomerUseCase)
+            moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
+        ): GetTangemPayProductsAvailabilityForCustomerUseCase {
+            return GetTangemPayProductsAvailabilityForCustomerUseCase(
+                checkTangemPayEligibilityForCustomerUseCase = checkTangemPayEligibilityForCustomerUseCase,
+                moneyAccountFeatureToggles = moneyAccountFeatureToggles,
+            )
         }
 
         @Provides
         fun provideGetTangemPayProductsAvailabilityForCountryUseCase(
             checkTangemPayEligibilityUseCase: CheckTangemPayEligibilityUseCase,
+            moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
         ): GetTangemPayProductsAvailabilityForCountryUseCase {
-            return GetTangemPayProductsAvailabilityForCountryUseCase(checkTangemPayEligibilityUseCase)
+            return GetTangemPayProductsAvailabilityForCountryUseCase(
+                checkTangemPayEligibilityUseCase = checkTangemPayEligibilityUseCase,
+                moneyAccountFeatureToggles = moneyAccountFeatureToggles,
+            )
         }
 
         @Provides
@@ -552,8 +559,22 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetCustomerSummaryUseCase(onboardingRepository: OnboardingRepository): GetCustomerSummaryUseCase {
-            return GetCustomerSummaryUseCase(onboardingRepository = onboardingRepository)
+        fun provideGetCustomerSummaryUseCase(
+            customerSummaryRepository: CustomerSummaryRepository,
+        ): GetCustomerSummaryUseCase {
+            return GetCustomerSummaryUseCase(customerSummaryRepository = customerSummaryRepository)
+        }
+
+        @Provides
+        fun provideResolvePaymentAccountStatusFromSummaryUseCase(
+            onboardingRepository: OnboardingRepository,
+        ): ResolvePaymentAccountStatusFromSummaryUseCase {
+            return ResolvePaymentAccountStatusFromSummaryUseCase(onboardingRepository = onboardingRepository)
+        }
+
+        @Provides
+        fun provideResolveMoneyAccountStatusFromSummaryUseCase(): ResolveMoneyAccountStatusFromSummaryUseCase {
+            return ResolveMoneyAccountStatusFromSummaryUseCase()
         }
 
         @Provides
@@ -651,12 +672,6 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun provideMoneyAccountFeesRepository(repository: DefaultMoneyAccountRepository): MoneyAccountRepository {
-            return repository
-        }
-
-        @Provides
-        @Singleton
         fun provideTangemPayResidencyRepository(
             repository: DefaultTangemPayResidencyRepository,
         ): TangemPayResidencyRepository = CachingTangemPayResidencyRepository(origin = repository)
@@ -690,12 +705,12 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun providePaymentAccountRecentsStore(
+        fun provideAccountRecentsStore(
             prefs: AppPreferencesStore,
             spendPreferencesKeys: SpendPreferencesKeys,
             @NetworkJson json: Json,
-        ): PaymentAccountRecentsStore {
-            return DefaultPaymentAccountRecentsStore(
+        ): AccountRecentsStore {
+            return DefaultAccountRecentsStore(
                 prefs = prefs,
                 spendPreferencesKeys = spendPreferencesKeys,
                 json = json,
@@ -704,7 +719,7 @@ internal interface TangemPayDataModule {
 
         @Provides
         fun provideGetRecentTokenTransfersUseCase(
-            recentsStore: PaymentAccountRecentsStore,
+            recentsStore: AccountRecentsStore,
             singleAccountListSupplier: SingleAccountListSupplier,
         ): GetRecentTokenTransfersUseCase {
             return GetRecentTokenTransfersUseCase(
@@ -715,14 +730,14 @@ internal interface TangemPayDataModule {
 
         @Provides
         fun provideRecordTokenTransferFromSwapUseCase(
-            recentsStore: PaymentAccountRecentsStore,
+            recentsStore: AccountRecentsStore,
         ): RecordTokenTransferFromSwapUseCase {
             return RecordTokenTransferFromSwapUseCase(recentsStore = recentsStore)
         }
 
         @Provides
         fun provideRecordTokenTransferFromSendUseCase(
-            recentsStore: PaymentAccountRecentsStore,
+            recentsStore: AccountRecentsStore,
             paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
         ): RecordTokenTransferFromSendUseCase {
             return RecordTokenTransferFromSendUseCase(

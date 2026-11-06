@@ -6,7 +6,6 @@ import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.domain.walletconnect.WC_TAG
-import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.walletconnect.model.WcPairError
@@ -24,7 +23,6 @@ internal class WcPairSdkDelegate(
     private val scope: AppCoroutineScope,
     private val store: WalletConnectStore,
     private val wcSdk: WcSdk,
-    private val featureToggles: WalletConnectFeatureToggles,
 ) : WcSdkObserver {
 
     private val onSessionProposal = Channel<Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>>()
@@ -107,8 +105,6 @@ internal class WcPairSdkDelegate(
         // Reown opens the relay socket only on an outgoing call or an activity resume, and with on-demand init the
         // SDK starts after MainActivity has already resumed. Without a session to extend, nothing else would open
         // it, and the settle of a pending approval would wait for the next resume.
-        if (!featureToggles.isOnDemandInitEnabled) return
-
         scope.launch {
             store.pendingApproval.first().forEach { pending ->
                 wcSdk.subscribe(pending.pairingTopic)

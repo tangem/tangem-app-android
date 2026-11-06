@@ -1,10 +1,10 @@
 package com.tangem.data.staking.converters.ethpool
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.staking.P2PEthPoolExitQueue
-import com.tangem.domain.models.staking.P2PEthPoolExitRequest
-import com.tangem.domain.models.staking.P2PEthPoolStake
-import com.tangem.domain.models.staking.P2PEthPoolStakingAccount
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolExitQueue
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolExitRequest
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStake
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingAccount
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolExitQueueDTO
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolExitRequestDTO

@@ -116,7 +116,7 @@ private fun PriceText(
             overflow = TextOverflow.Ellipsis,
             style = TangemTheme.typography.caption2.applyBladeBrush(
                 isEnabled = isFlickering,
-                textColor = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
+                textColor = if (isAvailable) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
             ),
         )
     }
@@ -138,9 +138,9 @@ private fun PriceChangeIcon(type: PriceChangeType, modifier: Modifier = Modifier
                 },
             ),
             tint = when (animatedType) {
-                PriceChangeType.UP -> TangemTheme.colors.icon.accent
-                PriceChangeType.DOWN -> TangemTheme.colors.icon.warning
-                PriceChangeType.NEUTRAL -> TangemTheme.colors.icon.inactive
+                PriceChangeType.UP -> TangemTheme.colors3.icon.accent.blue
+                PriceChangeType.DOWN -> TangemTheme.colors3.icon.accent.red
+                PriceChangeType.NEUTRAL -> TangemTheme.colors3.icon.tertiary
             },
             contentDescription = null,
         )
@@ -162,10 +162,10 @@ private fun PriceChangeText(
             style = TangemTheme.typography.caption2.applyBladeBrush(
                 isEnabled = isFlickering,
                 textColor = when (type) {
-                    PriceChangeType.UP -> TangemTheme.colors.text.accent
-                    PriceChangeType.DOWN -> TangemTheme.colors.text.warning
-                    PriceChangeType.NEUTRAL -> TangemTheme.colors.text.disabled
-                    null -> TangemTheme.colors.text.tertiary
+                    PriceChangeType.UP -> TangemTheme.colors3.text.accent.blue
+                    PriceChangeType.DOWN -> TangemTheme.colors3.text.accent.red
+                    PriceChangeType.NEUTRAL -> TangemTheme.colors3.text.tertiary
+                    null -> TangemTheme.colors3.text.secondary
                 },
             ),
         )

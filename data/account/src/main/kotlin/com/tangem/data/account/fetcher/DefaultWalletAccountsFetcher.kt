@@ -9,6 +9,7 @@ import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.account.utils.assignTokens
 import com.tangem.data.account.utils.isJoint
+import com.tangem.data.account.utils.isPersonal
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
@@ -20,11 +21,11 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.isCollectibles
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
@@ -57,14 +58,13 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val walletAccountsETags: WalletAccountsETags,
     private val dispatchers: CoroutineDispatcherProvider,
     private val mainAccountTokensMigration: DefaultMainAccountTokensMigration,
-    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
 ) : WalletAccountsFetcher, WalletAccountsSaver {
 
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
 
     /** `v1` has neither the joint counter nor typed records; a document written locally has the records but no counter */
-    private val GetWalletAccountsResponse.isJointAware: Boolean
-        get() = wallet.totalJointAccounts != null || accounts.any(WalletAccountDTO::isJoint)
+    private val GetWalletAccountsResponse.isV2Shaped: Boolean
+        get() = wallet.totalJointAccounts != null || accounts.any { it.isJoint || it.isCollectibles }
 
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
@@ -195,7 +195,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
                 saveETag(userWalletId, apiResponse)
 
-                val response = apiResponse.bind().enrichByAccountId().withoutJointAccountsIfDisabled(userWalletId)
+                val response = apiResponse.bind().enrichByAccountId().withoutTypedAccountsIfV2Disabled(userWalletId)
 
                 store(userWalletId = userWalletId, response = response)
 
@@ -225,7 +225,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         userWalletId: UserWalletId,
         savedAccountsResponse: GetWalletAccountsResponse,
     ): GetWalletAccountsResponse {
-        val normalized = savedAccountsResponse.withoutJointAccountsIfDisabled(userWalletId)
+        val normalized = savedAccountsResponse.withoutTypedAccountsIfV2Disabled(userWalletId)
         if (normalized != savedAccountsResponse) store(userWalletId = userWalletId, response = normalized)
 
         return normalized
@@ -240,24 +240,25 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         savedAccountsResponse: GetWalletAccountsResponse?,
     ): String? {
         val isSavedByOtherVersion = savedAccountsResponse != null &&
-            savedAccountsResponse.isJointAware != jointAccountFeatureToggles.isJointAccountEnabled
+            savedAccountsResponse.isV2Shaped != walletAccountsApi.isV2Enabled
 
         return if (isSavedByOtherVersion) null else getETag(userWalletId)
     }
 
     /**
-     * With the toggle off the document is brought to the `v1` shape: no joint record reaches the store, so nothing
-     * downstream has to tell the two kinds apart, and no joint counter survives to be compared with them
+     * With `v1` in use the document is brought to its shape: no joint or collectibles record reaches the
+     * store, so nothing downstream has to tell the kinds apart, no joint counter survives to be compared with them,
+     * and no typed record is pushed to `v1`, which would store it as a crypto account
      */
-    private fun GetWalletAccountsResponse.withoutJointAccountsIfDisabled(
+    private fun GetWalletAccountsResponse.withoutTypedAccountsIfV2Disabled(
         userWalletId: UserWalletId,
     ): GetWalletAccountsResponse {
-        if (jointAccountFeatureToggles.isJointAccountEnabled || !isJointAware) return this
+        if (walletAccountsApi.isV2Enabled || !isV2Shaped) return this
 
-        val ownAccounts = accounts.filterNot(WalletAccountDTO::isJoint)
+        val ownAccounts = accounts.filter(WalletAccountDTO::isPersonal)
         if (ownAccounts.size != accounts.size) {
             TangemLogger.i(
-                "Joint account feature is off: dropped ${accounts.size - ownAccounts.size} joint account(s) " +
+                "Accounts API v2 is off: dropped ${accounts.size - ownAccounts.size} typed account(s) " +
                     "of $userWalletId from the accounts response",
             )
         }

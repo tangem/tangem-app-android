@@ -51,7 +51,7 @@ import com.tangem.core.ui.utils.rememberScreenCornerRadius
  * description and optional detail rows pinned above the footer. The header block is vertically centered
  * in the space the details and footer leave free.
  *
- * Version: 1.1.0
+ * Version: 1.2.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9267-11586)
  *
@@ -211,7 +211,7 @@ private fun Header(
                                 (1f - entrance.segment(startMs = 400, endMs = 700, easing = SpringEase))
                         },
                     text = description.resolveReference(),
-                    style = TangemTheme.typography3.caption.medium,
+                    style = TangemTheme.typography3.subheading.medium,
                     color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.Center,
                 )
@@ -231,7 +231,7 @@ private fun Header(
 
 object TangemStatusScreen {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 0)
+    val version = DsVersion(major = 1, minor = 2, patch = 0)
 
     /** Color mood of the screen — picks the ambient light's hue and the glow ring's variant. */
     enum class Variant(

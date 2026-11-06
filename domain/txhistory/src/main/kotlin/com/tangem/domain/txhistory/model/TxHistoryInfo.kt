@@ -3,16 +3,19 @@ package com.tangem.domain.txhistory.model
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.OnrampTransaction
+import com.tangem.domain.jointaccount.model.FinishedJointOperation
+import com.tangem.domain.jointaccount.model.JointOperationTransfer
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 
 /**
  * A single row of the unified transaction history shown on the token-details screen.
  *
- * Two origins are merged into one timeline:
+ * Three origins are merged into one timeline:
  *  - [OnChainTx] — a blockchain transaction (the pagination backbone).
  *  - [ExpressTx] — an exchange (swap) or onramp operation persisted by the express sync. It may be a
  *    standalone live row (no on-chain leg loaded yet) or enriched with its matched on-chain leg.
+ *  - [JointOperationTx] — a finished joint account transfer, standalone or enriched the same way.
  */
 sealed interface TxHistoryInfo {
 
@@ -82,6 +85,7 @@ val TxHistoryInfo.explorerHash: String?
             -> null
         }
         is ExpressTx -> txInfo?.explorerHash ?: matchHash
+        is JointOperationTx -> txInfo?.explorerHash ?: operation.txHash
     }
 
 /**
@@ -89,13 +93,15 @@ val TxHistoryInfo.explorerHash: String?
  * [ExpressTx.externalTxId] otherwise — regardless of whether the deal is already matched to an on-chain leg. It is the
  * id the user quotes to the provider's support desk, which is why the express row names it after its operation
  * ("Swap ID" / "Onramp ID") instead of "Transaction ID". A DEX deal has no provider-side id, so the Tangem-side
- * [ExpressTx.txId] stands in — support finds the deal and every on-chain leg tied to it by that one.
+ * [ExpressTx.txId] stands in — support finds the deal and every on-chain leg tied to it by that one. A
+ * [JointOperationTx] that never reached the chain has no id to copy: its operation id is backend-internal.
  */
 val TxHistoryInfo.idToCopy: String
     get() = when (this) {
         is OnChainTx.BSDK -> txInfo.txHash
         is OnChainTx.TangemPay -> explorerHash ?: txId
         is ExpressTx -> externalTxId?.takeIf(String::isNotBlank) ?: txId
+        is JointOperationTx -> explorerHash.orEmpty()
     }
 
 /**
@@ -168,4 +174,22 @@ sealed interface ExpressTx : TxHistoryInfo {
         override val externalTxId: String? get() = tx.externalTxId
         override val isTerminal: Boolean get() = tx.status.isTerminal
     }
+}
+
+/**
+ * A history row backed by a finished joint account transfer of the viewed currency. Its votes live only on the
+ * backend, so the row exists even when the chain has nothing to show: a cancelled operation, or a failure before the
+ * chain. Once the relayer transaction is in the loaded page it is matched by [FinishedJointOperation.txHash] and
+ * carried as [txInfo] for the block time and fee only: a mined relayer transaction does not mean the transfer went
+ * through, [FinishedJointOperation.status] does.
+ *
+ * @property transfer what the operation moved, decoded from its Safe transaction
+ */
+data class JointOperationTx(
+    val operation: FinishedJointOperation,
+    val transfer: JointOperationTransfer,
+    val txInfo: OnChainTx?,
+) : TxHistoryInfo {
+    override val txId: String get() = operation.operationId
+    override val timestampMillis: Long get() = txInfo?.timestampMillis ?: operation.finishedAtMillis
 }

@@ -144,7 +144,7 @@ Skip if `--no-secrets-audit` in arguments. Run sequentially after the parallel b
 For each significant error found above:
 1. Note the error's line number from Grep output (`-n: true`)
 2. Use Read with `offset: ERROR_LINE - 100, limit: 200` to get ~200 lines of context
-3. In that context, look for navigation events, API calls, and redux actions
+3. In that context, look for navigation events and API calls
 
 ## Key Tags Reference
 

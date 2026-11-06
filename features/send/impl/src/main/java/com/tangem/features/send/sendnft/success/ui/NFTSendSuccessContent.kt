@@ -54,7 +54,7 @@ internal fun NFTSendSuccessContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             SuccessContent(
                 nftSendUM = nftSendUM,
@@ -64,7 +64,7 @@ internal fun NFTSendSuccessContent(
             )
             Fade(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                backgroundColor = TangemTheme.colors.background.tertiary,
+                backgroundColor = TangemTheme.colors3.bg.primary,
             )
         }
     }

@@ -34,7 +34,6 @@ import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
 import com.tangem.features.feed.model.earn.EarnModel
-import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.earn.EarnContent
 import kotlinx.serialization.Serializable
 
@@ -58,16 +57,12 @@ internal class DefaultEarnComponent(
         val state by earnModel.state.collectAsStateWithLifecycle()
         TangemTopBar(
             title = resourceReference(R.string.earn_title),
-            type = if (LocalIsOpenedInBottomSheet.current) {
-                TangemTopBarType.BottomSheet
-            } else {
-                TangemTopBarType.Default
-            },
+            type = TangemTopBarType.Default,
             startContent = {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
                     contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.primary,
+                    tint = TangemTheme.colors3.icon.primary,
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)

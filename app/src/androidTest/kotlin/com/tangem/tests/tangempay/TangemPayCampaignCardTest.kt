@@ -48,7 +48,7 @@ class TangemPayCampaignCardTest : BaseTestCase() {
     private val campaignKey = "tpay_for_unical1"
     private val validatedCampaignLink = "tangem://marketing/$campaignKey"
     private val kycInProgressText = getResourceString(CoreResR.string.tangempay_kyc_in_progress)
-    private val issuingYourCardText = getResourceString(CoreResR.string.tangempay_issuing_your_card)
+    private val activatingText = getResourceString(CoreResR.string.money_account_main_status_activating)
     private val residencyCountry = "United States"
     private val residencyRegion = "California"
 
@@ -92,9 +92,6 @@ class TangemPayCampaignCardTest : BaseTestCase() {
             step("Assert 'Close' button is not displayed") {
                 onTangemPayCampaignScreen { closeButton.assertIsNotDisplayed() }
             }
-            step("Assert Terms of Service and Privacy Policy caption is displayed") {
-                onTangemPayCampaignScreen { legalCaption.assertIsDisplayed() }
-            }
             step("Assert the campaign link '$validatedCampaignLink' is validated once") {
                 assertEquals(1, countTangemPayDeeplinkValidations(validatedCampaignLink) - validationsBefore)
             }
@@ -124,7 +121,7 @@ class TangemPayCampaignCardTest : BaseTestCase() {
                 setWireMockScenarioState(campaignCardScenario, kycApprovedIssuingState)
             }
             step("Wait for the card issuing status on Main") {
-                refreshMainUntilTangemPayTileSubtitle(issuingYourCardText)
+                refreshMainUntilTangemPayTileSubtitle(activatingText)
             }
             step("Close 'Finalize wallet setup' sheet if it is displayed") { closeFinishWalletActivationSheetIfShown() }
             step("Click on Tangem Pay tile") {
@@ -177,9 +174,6 @@ class TangemPayCampaignCardTest : BaseTestCase() {
             step("Assert campaign landing content") { assertTangemPayCampaignLandingContent() }
             step("Assert 'Close' button is displayed") {
                 onTangemPayCampaignScreen { closeButton.assertIsDisplayed() }
-            }
-            step("Assert Terms of Service and Privacy Policy caption is not displayed") {
-                onTangemPayCampaignScreen { legalCaption.assertIsNotDisplayed() }
             }
             step("Assert the campaign link '$validatedCampaignLink' is validated once") {
                 assertEquals(1, countTangemPayDeeplinkValidations(validatedCampaignLink) - validationsBefore)

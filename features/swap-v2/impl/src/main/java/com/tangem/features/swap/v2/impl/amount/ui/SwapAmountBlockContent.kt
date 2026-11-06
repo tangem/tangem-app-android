@@ -63,7 +63,7 @@ internal fun SwapAmountBlockContent(
     ConstraintLayout(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(
                 indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() },
@@ -102,6 +102,7 @@ internal fun SwapAmountBlockContent(
                 end.linkTo(parent.end)
             },
             showFCAWarning = amountUM.isShowFCAWarning,
+            isProviderUnavailable = amountUM.selectedQuote is SwapQuoteUM.Empty,
         )
     }
 }
@@ -151,9 +152,9 @@ private fun ConstraintLayoutScope.SwapAmountBlock(
 @Composable
 private fun SwapPriceImpact(priceImpact: PriceImpact?, onInfoClick: () -> Unit) {
     val iconColor = when (priceImpact?.type) {
-        PriceImpact.Type.MEDIUM -> TangemTheme.colors.icon.attention
-        PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
-        else -> TangemTheme.colors.icon.informative
+        PriceImpact.Type.MEDIUM -> TangemTheme.colors3.icon.accent.yellow
+        PriceImpact.Type.HIGH -> TangemTheme.colors3.text.accent.red
+        else -> TangemTheme.colors3.icon.secondary
     }
 
     if (priceImpact != null && priceImpact.type.ordinal > PriceImpact.Type.LOW.ordinal) {
@@ -161,9 +162,9 @@ private fun SwapPriceImpact(priceImpact: PriceImpact?, onInfoClick: () -> Unit) 
             text = priceImpact.value.resolveReference(),
             style = TangemTheme.typography.body2,
             color = when (priceImpact.type) {
-                PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
-                PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
-                else -> TangemTheme.colors.text.tertiary
+                PriceImpact.Type.HIGH -> TangemTheme.colors3.text.accent.red
+                PriceImpact.Type.MEDIUM -> TangemTheme.colors3.text.accent.yellow
+                else -> TangemTheme.colors3.text.secondary
             },
             modifier = Modifier.testTag(SwapAmountTestTags.PRICE_IMPACT_PERCENT),
         )
@@ -192,9 +193,9 @@ private fun SwapAmountDivider(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.swap_via_provider),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier
-                .background(TangemTheme.colors.button.secondary, RoundedCornerShape(32.dp))
+                .background(TangemTheme.colors3.bg.tertiary, RoundedCornerShape(32.dp))
                 .padding(horizontal = 11.dp, vertical = 5.dp)
                 .align(Alignment.Center),
         )
@@ -204,7 +205,7 @@ private fun SwapAmountDivider(modifier: Modifier = Modifier) {
 @Suppress("MagicNumber")
 @Composable
 private fun BoxScope.SwapDivider() {
-    val color = TangemTheme.colors.background.tertiary
+    val color = TangemTheme.colors3.bg.primary
     Canvas(
         Modifier
             .fillMaxWidth()

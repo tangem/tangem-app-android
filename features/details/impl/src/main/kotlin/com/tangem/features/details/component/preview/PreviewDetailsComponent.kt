@@ -2,20 +2,19 @@ package com.tangem.features.details.component.preview
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.core.analytics.DummyAnalyticsEventHandler
 import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.core.navigation.url.DummyUrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.ui.DetailsScreen
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.mcp.api.McpFeatureToggles
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 
 internal class PreviewDetailsComponent : DetailsComponent {
@@ -23,14 +22,14 @@ internal class PreviewDetailsComponent : DetailsComponent {
     private val previewBlocks = runBlocking {
         ItemsBuilder(
             router = DummyRouter(),
-            hotWalletRestrictionManager = object : HotWalletRestrictionManager {
-                override fun isCreationEnabled(): StateFlow<Boolean> = MutableStateFlow(true)
-                override fun isCreationEnabledSync(): Boolean = true
-                override suspend fun toggleCreationEnabled() = Unit
+            hotWalletFeatureToggles = object : HotWalletFeatureToggles {
+                override val isGoogleDriveBackupEnabled: Boolean = true
+                override val isMultipleHotWalletsEnabled: Boolean = false
             },
             mcpFeatureToggles = object : McpFeatureToggles {
                 override val isMcpEnabled: Boolean = true
             },
+            analyticsEventHandler = DummyAnalyticsEventHandler(),
         ).buildAll(
             isWalletConnectAvailable = true,
             hasAnyMobileWallet = true,

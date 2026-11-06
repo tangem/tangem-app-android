@@ -36,7 +36,7 @@ internal class RegionUnavailableComponent(
                 context = childByContext(componentContext),
                 params = TangemPayWaitlistComponent.Params(
                     userWalletId = params.userWalletId,
-                    product = params.product,
+                    products = TangemPayProduct.entries,
                     countryCode = params.countryCode,
                     regionCode = params.regionCode,
                     onDismiss = waitlistNavigation::dismiss,
@@ -71,7 +71,6 @@ internal class RegionUnavailableComponent(
 
     data class Params(
         val userWalletId: UserWalletId?,
-        val product: TangemPayProduct,
         val countryCode: String,
         val regionCode: String?,
         val onSelectAnotherRegionClick: () -> Unit,

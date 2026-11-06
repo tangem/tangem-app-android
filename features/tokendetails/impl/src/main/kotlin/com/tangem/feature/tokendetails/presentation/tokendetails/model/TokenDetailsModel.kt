@@ -86,6 +86,7 @@ import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Compan
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.DetailsScreenOpened.TokenBalance
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.OpenTrustlineError
@@ -212,7 +213,6 @@ internal class TokenDetailsModel @Inject constructor(
 
     private val marketPriceJobHolder = JobHolder()
     private val refreshStateJobHolder = JobHolder()
-    private val warningsJobHolder = JobHolder()
     private val buttonsJobHolder = JobHolder()
     private val stakingJobHolder = JobHolder()
     private val yieldSupplyBalanceJobHolder = JobHolder()
@@ -223,6 +223,7 @@ internal class TokenDetailsModel @Inject constructor(
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var account: Account.CryptoPortfolio? = null
     private var isBalanceLoadedEventSent = false
+    private val warningsStatus = MutableStateFlow<CryptoCurrencyStatus?>(null)
     private var latestTokenActions: List<TokenActionsState.ActionState> = emptyList()
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
@@ -308,6 +309,7 @@ internal class TokenDetailsModel @Inject constructor(
         initRedesign()
         updateTopBarMenu()
         initButtons()
+        subscribeOnWarnings()
         updateContent()
         handleBalanceHiding()
         handleNavigationParam()
@@ -414,33 +416,80 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun updateWarnings(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        modelScope.launch(dispatchers.main) {
-            getCurrencyWarningsUseCase(
-                userWalletId = userWalletId,
-                currencyStatus = cryptoCurrencyStatus,
-                derivationPath = cryptoCurrency.network.derivationPath,
-            )
-                .distinctUntilChanged()
-                .onEach { warnings ->
-                    val updatedState = stateFactory.getStateWithNotifications(warnings)
-                    notificationsAnalyticsSender.send(
-                        displayedUiState = uiState.value,
-                        newNotifications = updatedState.notifications,
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    )
-                    uiState.value = updatedState
+        warningsStatus.value = cryptoCurrencyStatus
+    }
 
-                    redesignStateController.update(
-                        UpdateNotificationsTransformer(
-                            warnings = warnings,
-                            clickIntents = this@TokenDetailsModel,
-                            walletInteractionIcon = walletInterationIcon(userWallet),
-                        ),
-                    )
-                }
-                .launchIn(modelScope)
-                .saveIn(warningsJobHolder)
+    private fun subscribeOnWarnings() {
+        warningsStatus
+            .filterNotNull()
+            .flatMapLatest(::getStatusWarnings)
+            .runningFold(initial = null, operation = ::reduceDisplayedWarnings)
+            .filterNotNull()
+            .onEach(::applyDisplayedWarnings)
+            .launchIn(modelScope)
+    }
+
+    private fun getStatusWarnings(status: CryptoCurrencyStatus): Flow<StatusWarnings> = flow {
+        val warnings = getCurrencyWarningsUseCase(
+            userWalletId = userWalletId,
+            currencyStatus = status,
+            derivationPath = cryptoCurrency.network.derivationPath,
+        )
+
+        emitAll(
+            warnings
+                .distinctUntilChanged()
+                .map { StatusWarnings(status = status, warnings = it) },
+        )
+    }
+
+    private fun reduceDisplayedWarnings(previous: DisplayedWarnings?, current: StatusWarnings): DisplayedWarnings {
+        val isOutdatedDataShown = nextOutdatedDataShown(
+            hasOutdatedDataWarning = CryptoCurrencyWarning.UsedOutdatedDataWarning in current.warnings,
+            source = current.status.value.sources.total,
+            wasShown = previous?.isOutdatedDataShown == true,
+        )
+        val warnings = if (isOutdatedDataShown) {
+            setOf<CryptoCurrencyWarning>(CryptoCurrencyWarning.UsedOutdatedDataWarning) + current.warnings
+        } else {
+            current.warnings
         }
+
+        return DisplayedWarnings(
+            status = current.status,
+            warnings = warnings,
+            isOutdatedDataShown = isOutdatedDataShown,
+        )
+    }
+
+    /** A refresh resets the source from cache-only to cache, so the banner is kept until the data is actual */
+    private fun nextOutdatedDataShown(
+        hasOutdatedDataWarning: Boolean,
+        source: StatusSource,
+        wasShown: Boolean,
+    ): Boolean = when {
+        hasOutdatedDataWarning -> true
+        source == StatusSource.ACTUAL -> false
+        else -> wasShown
+    }
+
+    private fun applyDisplayedWarnings(displayed: DisplayedWarnings) {
+        val updatedState = stateFactory.getStateWithNotifications(displayed.warnings)
+
+        notificationsAnalyticsSender.send(
+            displayedUiState = uiState.value,
+            newNotifications = updatedState.notifications,
+            cryptoCurrencyStatus = displayed.status,
+        )
+        uiState.value = updatedState
+
+        redesignStateController.update(
+            UpdateNotificationsTransformer(
+                warnings = displayed.warnings,
+                clickIntents = this@TokenDetailsModel,
+                walletInteractionIcon = walletInterationIcon(userWallet),
+            ),
+        )
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -1681,5 +1730,16 @@ internal class TokenDetailsModel @Inject constructor(
         val walletName: String,
         val deviceIconUM: DeviceIconUM,
         val account: Account.CryptoPortfolio?,
+    )
+
+    private data class StatusWarnings(
+        val status: CryptoCurrencyStatus,
+        val warnings: Set<CryptoCurrencyWarning>,
+    )
+
+    private data class DisplayedWarnings(
+        val status: CryptoCurrencyStatus,
+        val warnings: Set<CryptoCurrencyWarning>,
+        val isOutdatedDataShown: Boolean,
     )
 }

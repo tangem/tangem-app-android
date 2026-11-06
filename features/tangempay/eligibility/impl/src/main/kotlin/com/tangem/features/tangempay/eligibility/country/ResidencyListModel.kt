@@ -15,13 +15,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCountry
-import com.tangem.domain.models.pay.TangemPayEligibility
 import com.tangem.domain.models.pay.TangemPayRegion
 import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.CheckTangemPayEligibilityUseCase
 import com.tangem.domain.pay.usecase.ClearTangemPayCustomerResidencyUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
+import com.tangem.domain.pay.usecase.GetTangemPayProductsAvailabilityForCountryUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.StoreTangemPayCustomerResidencyUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -42,7 +41,7 @@ internal class ResidencyListModel @Inject constructor(
     private val router: Router,
     private val getCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getRegionsUseCase: GetTangemPayRegionsUseCase,
-    private val checkEligibilityUseCase: CheckTangemPayEligibilityUseCase,
+    private val getProductsAvailabilityUseCase: GetTangemPayProductsAvailabilityForCountryUseCase,
     private val storeCustomerResidencyUseCase: StoreTangemPayCustomerResidencyUseCase,
     private val clearCustomerResidencyUseCase: ClearTangemPayCustomerResidencyUseCase,
     private val onboardingRepository: OnboardingRepository,
@@ -98,17 +97,17 @@ internal class ResidencyListModel @Inject constructor(
                 isSuggested = fromSuggested,
             ),
         )
-        checkEligibility(itemId = country.code, countryCode = country.code, regionCode = null) { eligibility ->
+        checkAvailability(itemId = country.code, countryCode = country.code, regionCode = null) { isAvailable ->
             when {
-                !eligibility.isAvailable -> {
-                    sendAnalyticsEventEligibilityCheckResult(eligibility = eligibility, countryName = country.name)
-                    openRegionUnavailableScreen(itemId = country.code, eligibility = eligibility)
+                !isAvailable -> {
+                    sendAnalyticsEventEligibilityCheckResult(isAvailable = false, countryName = country.name)
+                    openRegionUnavailableScreen(itemId = country.code, countryCode = country.code, regionCode = null)
                 }
                 country.hasRegions -> {
                     openRegionsScreen(country)
                 }
                 else -> {
-                    sendAnalyticsEventEligibilityCheckResult(eligibility = eligibility, countryName = country.name)
+                    sendAnalyticsEventEligibilityCheckResult(isAvailable = true, countryName = country.name)
                     continueOnboarding(itemId = country.code)
                 }
             }
@@ -122,53 +121,53 @@ internal class ResidencyListModel @Inject constructor(
                 isSuggested = fromSuggested,
             ),
         )
-        checkEligibility(
+        checkAvailability(
             itemId = region.code,
             countryCode = country.countryCode,
             regionCode = region.code,
-        ) { eligibility ->
+        ) { isAvailable ->
             sendAnalyticsEventEligibilityCheckResult(
-                eligibility = eligibility,
+                isAvailable = isAvailable,
                 countryName = country.countryName,
                 region = region,
             )
-            if (eligibility.isAvailable) {
+            if (isAvailable) {
                 continueOnboarding(itemId = region.code)
             } else {
-                openRegionUnavailableScreen(itemId = region.code, eligibility = eligibility)
+                openRegionUnavailableScreen(
+                    itemId = region.code,
+                    countryCode = country.countryCode,
+                    regionCode = region.code,
+                )
             }
         }
     }
 
     private fun sendAnalyticsEventEligibilityCheckResult(
-        eligibility: TangemPayEligibility,
+        isAvailable: Boolean,
         countryName: String,
         region: TangemPayRegion? = null,
     ) {
         analytics.send(
             TangemPayAnalyticsEvents.Eligibility.EligibilityCheckResult(
-                isEligible = eligibility.isAvailable,
+                isEligible = isAvailable,
                 country = countryName,
                 state = region?.name,
             ),
         )
     }
 
-    private fun checkEligibility(
+    private fun checkAvailability(
         itemId: String,
         countryCode: String,
         regionCode: String?,
-        onChecked: suspend (TangemPayEligibility) -> Unit,
+        onChecked: suspend (isAvailable: Boolean) -> Unit,
     ) {
         if (isBusy()) return
         checkingItemId = itemId
         updateContent()
         modelScope.launch {
-            val result = checkEligibilityUseCase(
-                product = params.product,
-                countryCode = countryCode,
-                regionCode = regionCode,
-            )
+            val result = getProductsAvailabilityUseCase(countryCode = countryCode, regionCode = regionCode)
 
             checkingItemId = null
 
@@ -177,7 +176,7 @@ internal class ResidencyListModel @Inject constructor(
                     showError()
                     updateContent()
                 },
-                ifRight = { eligibility -> onChecked(eligibility) },
+                ifRight = { availableProducts -> onChecked(availableProducts.isNotEmpty()) },
             )
         }
     }
@@ -222,21 +221,18 @@ internal class ResidencyListModel @Inject constructor(
         router.push(EligibilityInnerRoute.Regions(countryCode = country.code, countryName = country.name))
     }
 
-    private suspend fun openRegionUnavailableScreen(itemId: String, eligibility: TangemPayEligibility) {
+    private suspend fun openRegionUnavailableScreen(itemId: String, countryCode: String, regionCode: String?) {
         continuingItemId = itemId
         updateContent()
         storeCustomerResidencyUseCase(
             userWalletId = params.userWalletId,
-            residency = TangemPayCustomerResidency(countryCode = eligibility.country, regionCode = eligibility.region),
+            residency = TangemPayCustomerResidency(countryCode = countryCode, regionCode = regionCode),
         )
         continuingItemId = null
         analytics.send(TangemPayAnalyticsEvents.Eligibility.RegionNotAvailableScreenOpened())
         updateContent()
         router.push(
-            EligibilityInnerRoute.RegionUnavailable(
-                countryCode = eligibility.country,
-                regionCode = eligibility.region,
-            ),
+            EligibilityInnerRoute.RegionUnavailable(countryCode = countryCode, regionCode = regionCode),
         )
     }
 

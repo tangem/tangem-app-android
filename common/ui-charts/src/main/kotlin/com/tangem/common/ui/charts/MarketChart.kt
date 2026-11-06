@@ -395,7 +395,7 @@ private fun MarketChartPreview(
 
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .fillMaxWidth(),
         ) {
             Text(text = "Point: ${markerPoint.first}, ${markerPoint.second}")
@@ -403,7 +403,7 @@ private fun MarketChartPreview(
             MarketChart(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TangemTheme.colors.background.tertiary)
+                    .background(TangemTheme.colors3.bg.primary)
                     .height(173.dp),
                 state = chartState,
                 splitChartSegmentColor = TangemTheme.colors3.icon.accent.neutral,

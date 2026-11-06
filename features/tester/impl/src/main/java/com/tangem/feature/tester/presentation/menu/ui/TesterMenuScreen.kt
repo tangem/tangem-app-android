@@ -37,13 +37,13 @@ internal fun TesterMenuScreen(state: TesterMenuUM, modifier: Modifier = Modifier
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         stickyHeader {
             AppBarWithBackButton(
                 onBackClick = state.onBackClick,
                 text = stringResourceSafe(id = R.string.tester_menu),
-                containerColor = TangemTheme.colors.background.primary,
+                containerColor = TangemTheme.colors3.bg.primary,
             )
         }
 

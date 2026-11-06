@@ -29,7 +29,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
     config: TangemBottomSheetConfig,
     titleText: TextReference,
     titleAction: TopAppBarButtonUM? = null,
-    containerColor: Color = TangemTheme.colors.background.primary,
+    containerColor: Color = TangemTheme.colors3.bg.primary,
     addBottomInsets: Boolean = true,
     skipPartiallyExpanded: Boolean = true,
     noinline onBack: (() -> Unit)? = null,
@@ -52,7 +52,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
 @Composable
 inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
     config: TangemBottomSheetConfig,
-    containerColor: Color = TangemTheme.colors.background.primary,
+    containerColor: Color = TangemTheme.colors3.bg.primary,
     addBottomInsets: Boolean = true,
     skipPartiallyExpanded: Boolean = true,
     noinline onBack: (() -> Unit)? = null,
@@ -190,7 +190,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         dragHandle = { TangemBottomSheetDraggableHeaderLegacy(color = containerColor) },
         onBack = onBack,
         content = bsContent,
-        scrimColor = TangemTheme.colors.overlay.secondary,
+        scrimColor = TangemTheme.colors3.overlay.modal,
         peekHeightDp = Dp.Unspecified,
     )
 }

@@ -953,7 +953,7 @@ private fun PreviewTokenRow(shape: Shape = RectangleShape) {
 private fun PreviewContainer(content: @Composable (avatar: TangemAvatar.UiState) -> Unit) {
     val avatar = TangemAvatar.UiState.Account(
         imageVector = Icons.il_account_airplane,
-        color = TangemAvatar.FillColor.DarkBlue,
+        color = TangemAvatar.FillColor.AzureBlue,
     )
     TangemThemePreviewRedesign {
         Column(

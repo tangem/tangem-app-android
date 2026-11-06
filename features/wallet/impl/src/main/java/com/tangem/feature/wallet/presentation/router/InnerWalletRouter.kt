@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Offset
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
@@ -109,6 +110,7 @@ internal interface InnerWalletRouter {
         tokenActionList: ImmutableList<TokenActionButtonUM>,
         offset: Offset,
         tokenRowUM: TangemTokenRowUM?,
+        tokenRowState: TangemTokenRow.State? = null,
     )
 
     /** Open QR scanner screen */

@@ -125,6 +125,7 @@ internal class GetMoneyAccountCryptoCurrencyStatusUseCaseTest {
         cryptoCurrency = ACCOUNT_TOKEN,
         balance = balance,
         customerId = CUSTOMER_ID,
+        productInstanceId = "instance",
     )
 
     private fun moneyAccountStatus(value: MoneyAccountStatusValue) = AccountStatus.Money(

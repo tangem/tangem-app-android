@@ -56,10 +56,6 @@ internal class JointAccountCompromiseWatcher @Inject constructor(
             .firstOrNull()
             ?: return false
 
-        return compositionVerifier.isVerified(
-            userWalletId = userWalletId,
-            ownerKeyIndex = account.ownerKeyIndex,
-            jointAccount = jointAccount,
-        )
+        return compositionVerifier.isVerified(account = account, jointAccount = jointAccount)
     }
 }

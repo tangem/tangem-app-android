@@ -103,7 +103,7 @@ fun ShowcaseButtons(
             Text(
                 text = hint.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -139,7 +139,7 @@ private fun Showcase_Preview() {
             ),
             primaryButton = ShowcaseButtonModel(resourceReference(R.string.common_allow), {}),
             secondaryButton = ShowcaseButtonModel(resourceReference(R.string.common_later), {}),
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
     }
 }

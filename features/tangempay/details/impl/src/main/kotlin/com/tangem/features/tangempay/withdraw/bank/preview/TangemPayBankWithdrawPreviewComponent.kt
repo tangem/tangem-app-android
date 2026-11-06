@@ -10,10 +10,13 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.pay.model.bankofframp.OfframpDestination
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.preview.model.TangemPayBankWithdrawPreviewModel
 import com.tangem.features.tangempay.withdraw.bank.preview.ui.TangemPayBankWithdrawPreviewScreen
 import kotlinx.coroutines.flow.StateFlow
+import java.math.BigDecimal
 
 internal class TangemPayBankWithdrawPreviewComponent(
     appComponentContext: AppComponentContext,
@@ -30,9 +33,15 @@ internal class TangemPayBankWithdrawPreviewComponent(
     }
 
     data class Params(
-        val userWalletId: UserWalletId,
+        val sourceAccount: BankWithdrawSourceAccount,
         val draft: StateFlow<BankWithdrawDraft>,
         val onOrderCreated: (BankOfframpOrderResult) -> Unit,
-        val onOrderSigned: () -> Unit,
-    )
+        val onDestinationChanged: (OfframpDestination) -> Unit,
+        val onNetworkFeeChanged: (BigDecimal) -> Unit,
+        val onCompleted: () -> Unit,
+        val onTransferOutcomeUnknown: () -> Unit,
+        val onCloseFlow: () -> Unit,
+    ) {
+        val userWalletId: UserWalletId get() = sourceAccount.userWalletId
+    }
 }

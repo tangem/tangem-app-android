@@ -19,6 +19,7 @@ import com.tangem.domain.wallets.models.backup.CardBackupStatus
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.models.errors.WalletCardsBackupError
 import com.tangem.test.core.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -27,6 +28,7 @@ import io.mockk.every
 import io.mockk.verify
 import io.mockk.mockk
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -48,12 +50,17 @@ internal class DefaultWalletCardsBackupRepositoryTest {
 
     private val pendingStore = PendingWalletCardsBackupStore(dataStore = dataStore)
 
+    private val preferencesDataStore = MockStateDataStore(default = emptyPreferences())
+
     private val repository = createRepository(pendingStore)
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(tangemTechApi, deliveryScheduler)
-        runBlocking { dataStore.updateData { emptyList() } }
+        runBlocking {
+            dataStore.updateData { emptyList() }
+            preferencesDataStore.updateData { emptyPreferences() }
+        }
     }
 
     @Nested
@@ -84,6 +91,30 @@ internal class DefaultWalletCardsBackupRepositoryTest {
                 )
             }
             assertThat(pendingStore.getAll()).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN card without role WHEN saveWalletCards THEN body is sent without role`() = runTest {
+            // Arrange
+            coEvery { tangemTechApi.saveWalletCards(any(), any()) } returns ApiResponse.Success(Unit)
+
+            // Act
+            repository.saveWalletCards(
+                userWalletId = WALLET_ID,
+                cards = listOf(domainCard(CardBackupStatus.CARD_LINKED).copy(role = null)),
+                usedSeed = false,
+            )
+
+            // Assert
+            coVerify(exactly = 1) {
+                tangemTechApi.saveWalletCards(
+                    walletId = WALLET_ID.stringValue,
+                    body = WalletCardsBody(
+                        cards = listOf(dtoCard(WalletCardDTO.BackupStatus.CARD_LINKED).copy(role = null)),
+                        usedSeed = false,
+                    ),
+                )
+            }
         }
 
         @Test
@@ -417,6 +448,10 @@ internal class DefaultWalletCardsBackupRepositoryTest {
     private fun createRepository(store: PendingWalletCardsBackupStore) = DefaultWalletCardsBackupRepository(
         tangemTechApi = tangemTechApi,
         pendingStore = store,
+        appPreferencesStore = createAppPreferencesStore(
+            dispatchers = TestingCoroutineDispatcherProvider(),
+            preferencesDataStore = preferencesDataStore,
+        ),
         deliveryScheduler = deliveryScheduler,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )

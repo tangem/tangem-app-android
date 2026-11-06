@@ -2,16 +2,10 @@ package com.tangem.features.foryou.impl
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -21,17 +15,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
@@ -84,30 +69,6 @@ internal class DefaultForYouComponent @AssistedInject constructor(
             }
         },
     )
-
-    @Composable
-    override fun Title(bottomSheetState: State<BottomSheetState>) {
-        TangemTopBar(
-            title = resourceReference(R.string.for_you_title),
-            type = TangemTopBarType.BottomSheet,
-            startContent = {
-                Icon(
-                    imageVector = Icons.ic_chevron_left_20,
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.primary,
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .hazeEffectTangem { blurRadius = 8.dp }
-                        .clickableSingle(
-                            onClick = router::pop,
-                            enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
-                        )
-                        .padding(8.dp),
-                )
-            },
-        )
-    }
 
     @Composable
     override fun Content(

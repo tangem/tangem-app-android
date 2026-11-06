@@ -46,7 +46,7 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
         TangemIcon(
             tangemIconUM = TangemIconUM.Icon(
                 iconRes = state.iconRes,
-                tintReference = { TangemTheme.colors2.graphic.neutral.tertiary },
+                tintReference = { TangemTheme.colors3.icon.secondary },
             ),
             modifier = Modifier
                 .size(64.dp)
@@ -62,7 +62,7 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
             textAlign = TextAlign.Center,
             text = state.text.resolveReference(),
             style = TangemTheme.typography2.calloutRegular15,
-            color = TangemTheme.colors2.text.neutral.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
 
         Spacer(modifier = Modifier.height(32.dp))

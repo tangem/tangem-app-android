@@ -64,6 +64,16 @@ internal class JointOperationSignersUMConverterTest {
     }
 
     @Test
+    fun `GIVEN a member who never answered a finished operation WHEN converted THEN the status stays empty`() {
+        // Act
+        val actual = convert(signer(answer = Answer.WAITING, at = null), isFinished = true)
+
+        // Assert
+        assertThat(actual.statusText).isEqualTo(TextReference.EMPTY)
+        assertThat(actual.mark).isNull()
+    }
+
+    @Test
     fun `GIVEN an answer the backend reported without a time WHEN converted THEN the status stays empty`() {
         // Act
         val actual = convert(signer(answer = Answer.SIGNED, at = null))
@@ -92,11 +102,15 @@ internal class JointOperationSignersUMConverterTest {
         assertThat(actual.signers.map { it.avatar.monogram }).containsExactly("I", "D").inOrder()
     }
 
-    private fun convert(signer: JointOperationSignerState): JointOperationSignersUM.SignerUM {
+    private fun convert(
+        signer: JointOperationSignerState,
+        isFinished: Boolean = false,
+    ): JointOperationSignersUM.SignerUM {
         return converter.convert(
             value = JointOperationSignersUMConverter.Input(
                 membersCount = 1,
                 signers = listOf(signer),
+                isFinished = isFinished,
             ),
         ).signers.first()
     }

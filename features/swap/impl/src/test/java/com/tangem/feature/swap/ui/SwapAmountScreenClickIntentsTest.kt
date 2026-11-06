@@ -33,7 +33,6 @@ internal class SwapAmountScreenClickIntentsTest {
         onSelectTokenClick = {},
         onSuccess = {},
         onLinkClick = {},
-        onReceiveCardWarningClick = {},
         onSwapUIModeChange = {},
         onSwapTypeMenuOpened = {},
         onTronBannerShown = {},

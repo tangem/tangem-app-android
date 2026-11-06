@@ -32,7 +32,7 @@ internal fun TangemTopBarStory(state: TangemTopBarStory, modifier: Modifier = Mo
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         stickyHeader("type_toggle") {
             TypeToggle(
@@ -40,7 +40,7 @@ internal fun TangemTopBarStory(state: TangemTopBarStory, modifier: Modifier = Mo
                 onSelect = state.onTypeChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TangemTheme.colors2.surface.level1)
+                    .background(TangemTheme.colors3.bg.primary)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
@@ -202,8 +202,8 @@ private fun TypeToggle(
     Row(
         modifier = modifier
             .clip(shape)
-            .background(TangemTheme.colors2.surface.level2)
-            .border(width = 1.dp, color = TangemTheme.colors2.border.neutral.secondary, shape = shape)
+            .background(TangemTheme.colors3.bg.primary)
+            .border(width = 1.dp, color = TangemTheme.colors3.border.tertiary, shape = shape)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -225,14 +225,14 @@ private fun TypeChip(label: String, selected: Boolean, onClick: () -> Unit, modi
         contentAlignment = Alignment.Center,
         modifier = modifier
             .clip(chipShape)
-            .background(if (selected) TangemTheme.colors2.surface.level3 else TangemTheme.colors2.surface.level2)
+            .background(if (selected) TangemTheme.colors3.bg.secondary else TangemTheme.colors3.bg.primary)
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp, horizontal = 4.dp),
     ) {
         Text(
             text = label,
             style = TangemTheme.typography.caption2,
-            color = if (selected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+            color = if (selected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -248,12 +248,12 @@ private fun TopBarVariant(label: String, content: @Composable () -> Unit) {
         Text(
             text = label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         content()
     }
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }

@@ -47,7 +47,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.security.DisableAutofillEffect
+import com.tangem.core.ui.security.excludeFromAutofill
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.pay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
 import com.tangem.features.tangempay.details.impl.R
@@ -66,8 +66,6 @@ private val NumberGroupGap = 16.dp
 
 @Composable
 internal fun TangemPayCardActivationScreen(state: TangemPayCardActivationUM, modifier: Modifier = Modifier) {
-    DisableAutofillEffect()
-
     TangemTopBarScaffold(
         modifier = modifier,
         topBar = {
@@ -157,6 +155,7 @@ private fun CardNumberField(state: TangemPayCardActivationUM, numberStyle: TextS
         value = state.lastDigits,
         onValueChange = state.onLastDigitsChange,
         modifier = modifier
+            .excludeFromAutofill()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,

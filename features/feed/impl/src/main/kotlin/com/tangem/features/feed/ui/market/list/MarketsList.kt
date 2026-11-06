@@ -189,7 +189,6 @@ private fun Preview() {
                             isActive = false,
                             onActiveChange = { },
                         ),
-                        shouldAlwaysShowSearchBar = true,
                     ),
                     selectedSortBy = SortByTypeUM.Rating,
                     selectedInterval = MarketsListUM.TrendInterval.H24,

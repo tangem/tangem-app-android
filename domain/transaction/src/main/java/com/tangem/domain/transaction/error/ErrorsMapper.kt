@@ -65,6 +65,7 @@ fun parseWrappedError(error: BlockchainSdkError.WrappedTangemError): SendTransac
  * (and the support request) sees it instead of an empty error.
  */
 fun Throwable.mapToGaslessSendError(): SendTransactionError = when (this) {
+    is TangemSdkError.UserCancelled -> SendTransactionError.UserCancelledError
     is GaslessServiceException -> SendTransactionError.NetworkError(
         message = message,
         code = httpCode?.toString(),

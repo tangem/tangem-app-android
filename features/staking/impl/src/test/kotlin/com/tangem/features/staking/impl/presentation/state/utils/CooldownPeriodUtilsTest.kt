@@ -16,25 +16,22 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
-/**
- * Tests for [CooldownPeriod.toTextReference] extension function.
- */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CooldownPeriodUtilsTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class `Fixed with Days` {
+    inner class FixedDays {
 
         @Test
-        fun `should return plural days reference for Fixed Period Days`() {
-            // given
+        fun `GIVEN fixed 7 days WHEN toTextReference THEN plural days reference`() {
+            // Arrange
             val cooldown = CooldownPeriod.Fixed(Period.Days(7))
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             val expected = pluralReference(
                 id = R.plurals.common_days,
                 count = 7,
@@ -44,14 +41,14 @@ internal class CooldownPeriodUtilsTest {
         }
 
         @Test
-        fun `should return plural days with zero for Fixed Period Days zero`() {
-            // given
+        fun `GIVEN fixed 0 days WHEN toTextReference THEN plural days with zero`() {
+            // Arrange
             val cooldown = CooldownPeriod.Fixed(Period.Days(0))
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             val expected = pluralReference(
                 id = R.plurals.common_days,
                 count = 0,
@@ -61,15 +58,15 @@ internal class CooldownPeriodUtilsTest {
         }
 
         @Test
-        fun `should pass day count as both count and format arg`() {
-            // given
+        fun `GIVEN fixed 14 days WHEN toTextReference THEN count and format arg are days`() {
+            // Arrange
             val days = 14
             val cooldown = CooldownPeriod.Fixed(Period.Days(days))
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             assertThat(result).isInstanceOf(TextReference.PluralRes::class.java)
             val plural = result as TextReference.PluralRes
             assertThat(plural.count).isEqualTo(days)
@@ -79,17 +76,17 @@ internal class CooldownPeriodUtilsTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class `Fixed with Seconds` {
+    inner class FixedSeconds {
 
         @Test
-        fun `should return plural hours reference for Fixed Period Seconds`() {
-            // given — 2 hours worth of seconds
+        fun `GIVEN fixed two hours of seconds WHEN toTextReference THEN plural hours reference`() {
+            // Arrange
             val cooldown = CooldownPeriod.Fixed(Period.Seconds(2 * SECONDS_IN_HOUR))
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             val expectedHours = 2
             val expected = pluralReference(
                 id = R.plurals.common_hours,
@@ -100,14 +97,14 @@ internal class CooldownPeriodUtilsTest {
         }
 
         @Test
-        fun `should convert exactly one hour worth of seconds to 1 hour`() {
-            // given
+        fun `GIVEN fixed one hour of seconds WHEN toTextReference THEN one hour`() {
+            // Arrange
             val cooldown = CooldownPeriod.Fixed(Period.Seconds(SECONDS_IN_HOUR))
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             assertThat(result).isInstanceOf(TextReference.PluralRes::class.java)
             val plural = result as TextReference.PluralRes
             assertThat(plural.count).isEqualTo(1)
@@ -115,28 +112,28 @@ internal class CooldownPeriodUtilsTest {
         }
 
         @Test
-        fun `should floor to 1 hour when seconds are not divisible evenly`() {
-            // given — 5000 seconds = 1.388... hours → integer division → 1
+        fun `GIVEN 5000 seconds WHEN toTextReference THEN floored to one hour`() {
+            // Arrange
             val cooldown = CooldownPeriod.Fixed(Period.Seconds(5000))
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             assertThat(result).isInstanceOf(TextReference.PluralRes::class.java)
             val plural = result as TextReference.PluralRes
             assertThat(plural.count).isEqualTo(1)
         }
 
         @Test
-        fun `should return 0 hours for zero seconds`() {
-            // given
+        fun `GIVEN zero seconds WHEN toTextReference THEN zero hours`() {
+            // Arrange
             val cooldown = CooldownPeriod.Fixed(Period.Seconds(0))
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             assertThat(result).isInstanceOf(TextReference.PluralRes::class.java)
             val plural = result as TextReference.PluralRes
             assertThat(plural.count).isEqualTo(0)
@@ -144,14 +141,14 @@ internal class CooldownPeriodUtilsTest {
         }
 
         @Test
-        fun `should use R plurals common_hours resource id`() {
-            // given
+        fun `GIVEN fixed seconds WHEN toTextReference THEN common hours plural id`() {
+            // Arrange
             val cooldown = CooldownPeriod.Fixed(Period.Seconds(SECONDS_IN_HOUR))
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             assertThat(result).isInstanceOf(TextReference.PluralRes::class.java)
             assertThat((result as TextReference.PluralRes).id).isEqualTo(R.plurals.common_hours)
         }
@@ -162,16 +159,16 @@ internal class CooldownPeriodUtilsTest {
     inner class Range {
 
         @Test
-        fun `should return combined reference for Range`() {
-            // given
+        fun `GIVEN range WHEN toTextReference THEN combined range reference`() {
+            // Arrange
             val minDays = 2
             val maxDays = 5
             val cooldown = CooldownPeriod.Range(minDays = minDays, maxDays = maxDays)
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             val expected = combinedReference(
                 stringReference("$minDays$MINUS$maxDays$NON_BREAKING_SPACE"),
                 pluralReference(
@@ -183,15 +180,15 @@ internal class CooldownPeriodUtilsTest {
         }
 
         @Test
-        fun `should use maxDays as count for plural in Range`() {
-            // given
+        fun `GIVEN range WHEN toTextReference THEN max days used as plural count`() {
+            // Arrange
             val maxDays = 10
             val cooldown = CooldownPeriod.Range(minDays = 3, maxDays = maxDays)
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             assertThat(result).isInstanceOf(TextReference.Combined::class.java)
             val combined = result as TextReference.Combined
             val pluralPart = combined.refs[1]
@@ -200,16 +197,16 @@ internal class CooldownPeriodUtilsTest {
         }
 
         @Test
-        fun `should include minDays and maxDays with minus and non-breaking-space in string part`() {
-            // given
+        fun `GIVEN range WHEN toTextReference THEN string part has min minus max and nbsp`() {
+            // Arrange
             val minDays = 1
             val maxDays = 7
             val cooldown = CooldownPeriod.Range(minDays = minDays, maxDays = maxDays)
 
-            // when
+            // Act
             val result = cooldown.toTextReference()
 
-            // then
+            // Assert
             assertThat(result).isInstanceOf(TextReference.Combined::class.java)
             val combined = result as TextReference.Combined
             val stringPart = combined.refs[0]

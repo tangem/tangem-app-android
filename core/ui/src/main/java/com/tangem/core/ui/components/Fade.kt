@@ -27,7 +27,7 @@ import dev.chrisbanes.haze.HazeTint
 @Composable
 fun BottomFade(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TangemTheme.colors.background.secondary,
+    backgroundColor: Color = TangemTheme.colors3.bg.primary,
     height: Dp = 100.dp,
 ) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
@@ -148,11 +148,7 @@ fun HorizontalFadeWithBlur(backgroundColor: Color, modifier: Modifier = Modifier
  * elements and floating button at the bottom of the screen.
  */
 @Composable
-fun Fade(
-    modifier: Modifier = Modifier,
-    backgroundColor: Color = TangemTheme.colors.background.secondary,
-    height: Dp = 32.dp,
-) {
+fun Fade(modifier: Modifier = Modifier, backgroundColor: Color = TangemTheme.colors3.bg.primary, height: Dp = 32.dp) {
     Box(
         modifier = modifier
             .fillMaxWidth()

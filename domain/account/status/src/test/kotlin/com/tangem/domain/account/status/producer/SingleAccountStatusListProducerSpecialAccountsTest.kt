@@ -51,7 +51,7 @@ import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 internal class SingleAccountStatusListProducerSpecialAccountsTest {
 
     private val jointAccountCompositionVerifier: JointAccountCompositionVerifier = mockk {
-        coEvery { isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any()) } returns true
+        coEvery { isVerified(account = any(), jointAccount = any()) } returns true
     }
 
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().cardano

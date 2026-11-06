@@ -1,10 +1,6 @@
 package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,32 +9,30 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.ds.row.TangemRowContainer
-import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
+import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.assets.il_account_visa
+import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.tangempay.main.impl.R
 import com.tangem.utils.StringsSigns.DASH_SIGN
-
-private const val DISABLED_ALPHA = 0.5F
 
 @Composable
 internal fun TangemPayMainBlockContent(
@@ -49,45 +43,43 @@ internal fun TangemPayMainBlockContent(
     when (state) {
         is TangemPayMainUM.Empty -> Unit
         is TangemPayMainUM.Loading -> TangemPayMainLoading(modifier)
-        is TangemPayMainUM.SelectPlan -> TangemPayStateRow(
+        is TangemPayMainUM.SelectPlan -> TangemPayRow(
             subtitle = resourceReference(R.string.tangempay_main_select_plan),
             modifier = modifier,
             onClick = state.onClick,
         )
-        is TangemPayMainUM.UnderReview -> TangemPayStateRow(
+        is TangemPayMainUM.UnderReview -> TangemPayRow(
             subtitle = state.subtitle,
             modifier = modifier,
             onClick = state.onClick,
         )
-        is TangemPayMainUM.ActionRequired -> TangemPayStateRow(
+        is TangemPayMainUM.ActionRequired -> TangemPayRow(
             subtitle = resourceReference(R.string.tangempay_action_required_title),
-            modifier = modifier,
-            isSubtitleWarning = true,
-            onClick = state.onClick,
-        )
-        is TangemPayMainUM.IssuingCard -> TangemPayStateRow(
-            subtitle = resourceReference(R.string.tangempay_issuing_your_card),
+            subtitleColor = TangemTheme.colors3.text.status.warning,
             modifier = modifier,
             onClick = state.onClick,
         )
-        is TangemPayMainUM.FailedToIssue -> TangemPayStateRow(
+        is TangemPayMainUM.IssuingCard -> TangemPayRow(
+            subtitle = resourceReference(R.string.money_account_main_status_activating),
+            modifier = modifier,
+            onClick = state.onClick,
+        )
+        is TangemPayMainUM.FailedToIssue -> TangemPayRow(
             subtitle = resourceReference(R.string.tangempay_failed_to_issue_card),
             modifier = modifier,
             showError = true,
             onClick = state.onClick,
         )
         is TangemPayMainUM.Content -> TangemPayMainContent(state, isBalanceHidden, modifier)
-        is TangemPayMainUM.TemporaryUnavailable -> TangemPayStateRow(
+        is TangemPayMainUM.TemporaryUnavailable -> TangemPayUnavailable(
             subtitle = stringReference(DASH_SIGN),
             modifier = modifier,
-            isEnabled = false,
         )
-        is TangemPayMainUM.SyncNeeded -> TangemPayStateRow(
+        is TangemPayMainUM.SyncNeeded -> TangemPayUnavailable(
             subtitle = resourceReference(R.string.tangempay_payment_account_sync_needed),
             modifier = modifier,
-            isEnabled = false,
         )
-        is TangemPayMainUM.ExposedDevice -> TangemPayStateRow(
+        is TangemPayMainUM.ExposedDevice -> TangemPayRow(
             subtitle = resourceReference(R.string.tangem_pay_rooted_device_subtitle),
             modifier = modifier,
         )
@@ -100,148 +92,150 @@ private fun TangemPayMainContent(
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    TangemRowContainer(
-        modifier = modifier
-            .clip(RoundedCornerShape(size = 18.dp))
-            .background(TangemTheme.colors2.surface.level3)
-            .clickableSingle(onClick = payMainUM.onClick)
-            .testTag(TangemPayTestTags.MAIN_SCREEN_TILE),
-    ) {
-        Image(
-            painter = getVisaIconPainter(),
-            contentDescription = null,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.HEAD)
-                .size(40.dp)
-                .padding(end = 8.dp),
-        )
-        Text(
-            text = stringResourceSafe(R.string.tangempay_payment_account),
-            color = TangemTheme.colors2.text.neutral.primary,
-            style = TangemTheme.typography2.bodySemibold16,
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
-        )
-        Text(
-            text = payMainUM.subtitle.resolveReference(),
-            color = TangemTheme.colors2.text.neutral.secondary,
-            style = TangemTheme.typography2.captionSemibold12,
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
-        )
-        TangemPayFiatAmount(
-            text = payMainUM.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-            isBalanceFlickering = payMainUM.isBalanceFlickering,
-            isBalanceFromCache = payMainUM.shouldShowOnlyCacheWarning,
-            modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
-        )
-        Text(
-            text = payMainUM.balanceSubtitle.orMaskWithStars(isBalanceHidden).resolveReference(),
-            color = TangemTheme.colors2.text.neutral.secondary,
-            style = TangemTheme.typography2.captionSemibold12,
-            modifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM),
-        )
-    }
+    TangemRow(
+        modifier = modifier.tangemPayCard(),
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        onClick = payMainUM.onClick,
+        startSlot = { TangemPayIssuedIcon() },
+        titleSlot = { TangemPayTitle() },
+        subtitleSlot = { TangemPaySubtitle(text = payMainUM.subtitle) },
+        valueSlot = {
+            TangemPayFiatAmount(
+                text = payMainUM.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+                isBalanceFlickering = payMainUM.isBalanceFlickering,
+                isBalanceFromCache = payMainUM.shouldShowOnlyCacheWarning,
+            )
+        },
+        subvalueSlot = {
+            TangemRowText(
+                text = payMainUM.balanceSubtitle.orMaskWithStars(isBalanceHidden),
+                role = TangemRowTextRole.Subvalue,
+            )
+        },
+    )
 }
 
 @Composable
-private fun TangemPayStateRow(
+private fun TangemPayRow(
     subtitle: TextReference,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    subtitleColor: Color = TangemTheme.colors3.text.secondary,
     showError: Boolean = false,
-    isEnabled: Boolean = true,
-    isSubtitleWarning: Boolean = false,
 ) {
-    TangemRowContainer(
-        modifier = modifier
-            .clip(RoundedCornerShape(size = 18.dp))
-            .background(TangemTheme.colors2.surface.level3)
-            .conditional(onClick != null && isEnabled) { clickableSingle(onClick = requireNotNull(onClick)) }
-            .testTag(TangemPayTestTags.MAIN_SCREEN_TILE),
-    ) {
-        Image(
-            painter = getVisaIconPainter(),
-            contentDescription = null,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.HEAD)
-                .size(40.dp)
-                .padding(end = 8.dp)
-                .conditionalCompose(!isEnabled) {
-                    alpha(DISABLED_ALPHA)
-                },
-        )
-        Text(
-            text = stringResourceSafe(R.string.tangempay_payment_account),
-            color = if (isEnabled) {
-                TangemTheme.colors2.text.neutral.primary
-            } else {
-                TangemTheme.colors2.text.status.disabled
-            },
-            style = TangemTheme.typography2.bodySemibold16,
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
-        )
-        Text(
-            text = subtitle.resolveReference(),
-            color = when {
-                !isEnabled -> TangemTheme.colors2.text.status.disabled
-                isSubtitleWarning -> TangemTheme.colors3.text.status.warning
-                else -> TangemTheme.colors2.text.neutral.secondary
-            },
-            style = TangemTheme.typography2.captionSemibold12,
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
-        )
-        AnimatedVisibility(
-            visible = showError,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            label = "Error Icon Animation",
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.TAIL)
-                .size(16.dp),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_alert_24),
-                tint = TangemTheme.colors2.graphic.status.warning,
-                contentDescription = null,
+    TangemRow(
+        modifier = modifier.tangemPayCard(),
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        onClick = onClick,
+        startSlot = { TangemPayIcon() },
+        titleSlot = { TangemPayTitle() },
+        subtitleSlot = {
+            TangemPaySubtitle(
+                text = subtitle,
+                color = subtitleColor,
             )
-        }
-    }
+        },
+        endSlot = if (showError) {
+            {
+                Icon(
+                    painter = painterResource(R.drawable.ic_alert_24),
+                    tint = TangemTheme.colors3.icon.status.warning,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        } else {
+            null
+        },
+    )
 }
 
 @Composable
-private fun TangemPayFiatAmount(
-    text: AnnotatedString,
-    isBalanceFlickering: Boolean,
-    isBalanceFromCache: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        AnimatedVisibility(isBalanceFromCache) {
-            Row(
-                modifier = Modifier.padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .testTag(TangemPayTestTags.MAIN_SCREEN_TILE_CACHE_ICON),
-                    painter = painterResource(R.drawable.ic_error_sync_24),
-                    tint = TangemTheme.colors2.graphic.neutral.secondary,
-                    contentDescription = null,
-                )
-            }
-        }
+private fun TangemPayUnavailable(subtitle: TextReference, modifier: Modifier = Modifier) {
+    TangemRow(
+        modifier = modifier.tangemPayCard(),
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        startSlot = { TangemPayIcon() },
+        titleSlot = {
+            Text(
+                text = stringResourceSafe(R.string.tangempay_title),
+                color = TangemTheme.colors3.text.tertiary,
+                style = TangemTheme.typography3.body.medium,
+            )
+        },
+        subtitleSlot = { TangemPaySubtitle(text = subtitle, color = TangemTheme.colors3.text.tertiary) },
+    )
+}
 
+@Composable
+private fun TangemPayIcon() {
+    TangemAvatar(
+        state = TangemAvatar.UiState.Account(
+            imageVector = Icons.il_account_visa,
+            color = TangemAvatar.FillColor.PayVisa,
+        ),
+        size = TangemAvatar.Size.X40,
+    )
+}
+
+@Composable
+private fun TangemPayIssuedIcon() {
+    TangemAvatar(
+        state = TangemAvatar.UiState.Account(
+            imageVector = Icons.il_account_visa,
+            color = TangemAvatar.FillColor.PayVisa,
+        ),
+        size = TangemAvatar.Size.X40,
+    )
+}
+
+@Composable
+private fun TangemPayTitle() {
+    TangemRowText(
+        text = resourceReference(R.string.tangempay_title),
+        role = TangemRowTextRole.Title,
+    )
+}
+
+@Composable
+private fun TangemPaySubtitle(text: TextReference, color: Color = TangemTheme.colors3.text.secondary) {
+    Text(
+        text = text.resolveReference(),
+        color = color,
+        style = TangemTheme.typography3.caption.medium,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun TangemPayFiatAmount(text: AnnotatedString, isBalanceFlickering: Boolean, isBalanceFromCache: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (isBalanceFromCache) {
+            Icon(
+                modifier = Modifier
+                    .size(12.dp)
+                    .testTag(TangemPayTestTags.MAIN_SCREEN_TILE_CACHE_ICON),
+                painter = painterResource(R.drawable.ic_error_sync_24),
+                tint = TangemTheme.colors3.icon.secondary,
+                contentDescription = null,
+            )
+        }
         Text(
             text = text,
-            style = TangemTheme.typography2.bodySemibold16.applyBladeBrush(
+            style = TangemTheme.typography3.body.medium.applyBladeBrush(
                 isEnabled = isBalanceFlickering,
-                textColor = TangemTheme.colors2.text.neutral.primary,
+                textColor = TangemTheme.colors3.text.primary,
             ),
             textAlign = TextAlign.End,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.testTag(TangemPayTestTags.MAIN_SCREEN_TILE_BALANCE),
         )
     }
@@ -249,52 +243,45 @@ private fun TangemPayFiatAmount(
 
 @Composable
 private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
-    TangemRowContainer(
-        modifier = modifier
-            .clip(RoundedCornerShape(size = 18.dp))
-            .background(TangemTheme.colors2.surface.level3),
-    ) {
-        CircleShimmer(
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.HEAD)
-                .padding(end = 8.dp)
-                .size(40.dp),
-        )
-        TextShimmer(
-            style = TangemTheme.typography2.bodySemibold16,
-            radius = 100.dp,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.START_TOP)
-                .width(100.dp),
-        )
-        TextShimmer(
-            style = TangemTheme.typography2.captionSemibold12,
-            radius = 100.dp,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.START_BOTTOM)
-                .width(44.dp),
-        )
-        TextShimmer(
-            style = TangemTheme.typography2.bodyRegular16,
-            radius = 100.dp,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.END_TOP)
-                .width(80.dp),
-        )
-        TextShimmer(
-            style = TangemTheme.typography2.bodyRegular16,
-            radius = 100.dp,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.END_BOTTOM)
-                .width(44.dp),
-        )
-    }
+    TangemRow(
+        modifier = modifier.tangemPayCard(),
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        startSlot = {
+            TangemAvatar(
+                state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.UiState.Shimmer.Shape.RoundedSquare),
+                size = TangemAvatar.Size.X40,
+            )
+        },
+        titleSlot = {
+            TextShimmer(
+                style = TangemTheme.typography3.body.medium,
+                radius = 10.dp,
+                modifier = Modifier.width(100.dp),
+            )
+        },
+        subtitleSlot = {
+            TextShimmer(
+                style = TangemTheme.typography3.caption.medium,
+                radius = 10.dp,
+                modifier = Modifier.width(44.dp),
+            )
+        },
+        valueSlot = {
+            TextShimmer(
+                style = TangemTheme.typography3.body.medium,
+                radius = 10.dp,
+                modifier = Modifier.width(80.dp),
+            )
+        },
+    )
 }
 
 @Composable
-private fun getVisaIconPainter(): Painter {
-    return painterResource(R.drawable.ic_visa_in_banner)
-}
+private fun Modifier.tangemPayCard(): Modifier = this
+    .clip(RoundedCornerShape(24.dp))
+    .background(TangemTheme.colors3.bg.secondary)
+    .testTag(TangemPayTestTags.MAIN_SCREEN_TILE)
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
@@ -305,7 +292,13 @@ private fun TangemPayMainBlockContent_Preview(
     state: TangemPayMainUM,
 ) {
     TangemThemePreviewRedesign {
-        TangemPayMainBlockContent(state = state, isBalanceHidden = false)
+        TangemPayMainBlockContent(
+            state = state,
+            isBalanceHidden = false,
+            modifier = Modifier
+                .background(TangemTheme.colors3.bg.primary)
+                .padding(16.dp),
+        )
     }
 }
 

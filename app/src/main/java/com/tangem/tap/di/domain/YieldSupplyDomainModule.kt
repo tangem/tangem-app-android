@@ -80,6 +80,16 @@ internal object YieldSupplyDomainModule {
 
     @Provides
     @Singleton
+    fun provideYieldSupplyApplyEnterAmountUseCase(
+        yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+    ): YieldSupplyApplyEnterAmountUseCase {
+        return YieldSupplyApplyEnterAmountUseCase(
+            yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideWrapYieldSwapCallDataWithUpgradeUseCase(
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
     ): WrapYieldSwapCallDataWithUpgradeUseCase {

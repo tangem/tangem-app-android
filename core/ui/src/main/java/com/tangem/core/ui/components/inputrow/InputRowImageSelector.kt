@@ -54,8 +54,8 @@ fun InputRowImageSelector(
     imageUrl: String,
     onSelect: () -> Unit,
     modifier: Modifier = Modifier,
-    subtitleColor: Color = TangemTheme.colors.text.primary1,
-    captionColor: Color = TangemTheme.colors.text.tertiary,
+    subtitleColor: Color = TangemTheme.colors3.text.primary,
+    captionColor: Color = TangemTheme.colors3.text.secondary,
     isSelected: Boolean = false,
     onImageError: (@Composable () -> Unit)? = null,
     subtitleExtraContent: (@Composable RowScope.() -> Unit)? = null,
@@ -91,14 +91,14 @@ private fun InputRowImageSelectorPreview(
 ) {
     TangemThemePreview {
         InputRowImageSelector(
-            modifier = Modifier.background(TangemTheme.colors.background.action),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
             subtitle = data.subtitle,
             caption = combinedReference(
                 resourceReference(R.string.staking_details_apr),
                 annotatedReference(
                     buildAnnotatedString {
                         append(" ")
-                        withStyle(style = SpanStyle(color = TangemTheme.colors.text.accent)) {
+                        withStyle(style = SpanStyle(color = TangemTheme.colors3.text.accent.blue)) {
                             append(
                                 BigDecimal.ZERO.format { percent() },
                             )

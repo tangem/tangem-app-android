@@ -34,11 +34,11 @@ fun ItemWithIconAndSubtext(icon: Int, name: String, symbol: String, modifier: Mo
             modifier = Modifier.weight(1f, fill = false),
             text = name,
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(text = symbol, style = TangemTheme.typography.caption1, color = TangemTheme.colors.text.tertiary)
+        Text(text = symbol, style = TangemTheme.typography.caption1, color = TangemTheme.colors3.text.secondary)
     }
 }
 
