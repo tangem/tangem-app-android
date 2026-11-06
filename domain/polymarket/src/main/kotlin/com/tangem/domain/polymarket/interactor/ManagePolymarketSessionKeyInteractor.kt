@@ -160,7 +160,7 @@ class ManagePolymarketSessionKeyInteractor(
             val signed = sign(userWalletId, batches)
             signed to send { relay.revoke(userWalletId, revocationOf(signed)) }
         }
-        awaitRevoked(userWalletId, revoking)
+        emit(PolymarketSessionKeyProgress.Revoked(awaitRevoked(userWalletId, revoking)))
         val (sent, pending) = depositWalletLock.withLock(userWalletId) {
             sendAuthorization(
                 userWalletId = userWalletId,
