@@ -8,6 +8,8 @@ sealed interface PolymarketSessionKeyProgress {
 
     data class Revoking(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyProgress
 
+    data class Revoked(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyProgress
+
     data class Authorizing(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyProgress
 
     data class CheckingReadiness(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyProgress
