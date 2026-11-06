@@ -1,5 +1,6 @@
 package com.tangem.features.hotwallet.addexistingwallet.im.port.model
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -30,7 +31,12 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -194,6 +200,33 @@ internal class HotWalletImporterTest {
         }
 
         @Test
+        fun `GIVEN the limit check throws WHEN materialize THEN Unknown without sdk import`() = runTest {
+            // Arrange
+            val cause = IllegalStateException("wallets not loaded")
+            coEvery { getHotWalletAdditionRestrictionUseCase() } throws cause
+
+            // Act
+            val actual = importer.materialize(mnemonic, passphrase = null)
+
+            // Assert
+            assertThat(actual).isEqualTo(HotWalletImportError.Unknown(cause).left())
+            coVerify(exactly = 0) { tangemHotSdk.importWallet(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN toggle off AND the limit check throws WHEN materialize THEN import goes on`() = runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+            coEvery { getHotWalletAdditionRestrictionUseCase() } throws IllegalStateException("wallets not loaded")
+
+            // Act
+            val actual = importer.materialize(mnemonic, passphrase = null)
+
+            // Assert
+            assertThat(actual).isEqualTo(USER_WALLET.right())
+        }
+
+        @Test
         fun `GIVEN new wallet below limit WHEN materialize THEN returns built wallet`() = runTest {
             // Act
             val actual = importer.materialize(mnemonic, passphrase = null, name = WALLET_NAME)
@@ -255,23 +288,8 @@ internal class HotWalletImporterTest {
         }
 
         @Test
-        fun `GIVEN DataError after wallet got listed WHEN save THEN success AND remote sync started`() = runTest {
+        fun `GIVEN DataError after wallet got listed WHEN save THEN Unknown AND no remote sync`() = runTest {
             // Arrange
-            coEvery { saveUserWalletUseCase(any(), any(), any()) } returns SaveWalletError.DataError(null).left()
-            coEvery { discardUnsavedHotWalletUseCase(HOT_WALLET_ID) } returns true
-
-            // Act
-            val actual = importer.save(backgroundScope, USER_WALLET, isSeedPhraseBackedUp = true)
-
-            // Assert
-            assertThat(actual).isEqualTo(Unit.right())
-            coVerify(exactly = 1) { syncWalletWithRemoteUseCase(USER_WALLET.walletId) }
-        }
-
-        @Test
-        fun `GIVEN toggle off AND DataError after wallet got listed WHEN save THEN Unknown`() = runTest {
-            // Arrange
-            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
             coEvery { saveUserWalletUseCase(any(), any(), any()) } returns SaveWalletError.DataError(null).left()
             coEvery { discardUnsavedHotWalletUseCase(HOT_WALLET_ID) } returns true
 
@@ -318,6 +336,31 @@ internal class HotWalletImporterTest {
             coVerify(exactly = 1) { discardUnsavedHotWalletUseCase(HOT_WALLET_ID) }
             coVerify(exactly = 0) { syncWalletWithRemoteUseCase(any()) }
         }
+
+        @Test
+        fun `GIVEN the caller leaves during a save WHEN the save completes THEN wallet kept AND synced AND no result`() =
+            runTest {
+                // Arrange
+                coEvery { saveUserWalletUseCase(any(), any(), any()) } coAnswers {
+                    delay(SAVE_DURATION_MS)
+                    Unit.right()
+                }
+                var result: Either<HotWalletImportError, UserWalletId>? = null
+                val job = launch {
+                    result = importer.import(backgroundScope, mnemonic, passphrase = null, isSeedPhraseBackedUp = true)
+                }
+                runCurrent()
+
+                // Act
+                job.cancel()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(result).isNull()
+                coVerify(exactly = 1) { syncWalletWithRemoteUseCase(USER_WALLET.walletId) }
+                coVerify(exactly = 0) { discardUnsavedHotWalletUseCase(any()) }
+                verify(exactly = 0) { analyticsEventHandler.send(any()) }
+            }
     }
 
     data class SaveErrorModel(val saveError: SaveWalletError, val expected: HotWalletImportError)
@@ -325,6 +368,7 @@ internal class HotWalletImporterTest {
     private companion object {
         const val MAX_PASSPHRASE_BYTES = 256
         const val WALLET_NAME = "Imported"
+        const val SAVE_DURATION_MS = 1_000L
         val HOT_WALLET_ID = HotWalletId(value = "hot", authType = HotWalletId.AuthType.NoPassword)
         val USER_WALLET = UserWallet.Hot(
             name = WALLET_NAME,
