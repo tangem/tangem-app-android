@@ -60,7 +60,8 @@ internal class EarnAmountInput(
     /** Revalidates the entered value, e.g. after the session reported a minimum. */
     fun revalidate(state: EarnFlowState): AmountState? {
         val data = state.amountState as? AmountState.Data ?: return null
-        return change(state, data.amountTextField.value)
+        val field = data.amountTextField
+        return change(state, if (field.isFiatValue) field.fiatValue else field.value)
     }
 
     fun percent(state: EarnFlowState, percent: Int): AmountState? {

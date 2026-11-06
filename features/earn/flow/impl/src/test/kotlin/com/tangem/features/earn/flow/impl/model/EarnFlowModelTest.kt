@@ -237,6 +237,54 @@ internal class EarnFlowModelTest {
         }
 
         @Test
+        fun `GIVEN fiat input WHEN session reports minimum THEN entered fiat value is kept`() = runTest {
+            // Arrange
+            coEvery {
+                session.prepare(action = any(), amount = any(), fee = any())
+            } returns EarnSessionError.BelowMinimum(BigDecimal("1")).left()
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onCurrencyChangeClick(isFiat = true)
+            model.onAmountValueChange("2000")
+            model.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+
+            // Act
+            model.onSubmit()
+            advanceUntilIdle()
+
+            // Assert
+            val field = (model.state.value.amountState as AmountState.Data).amountTextField
+            assertThat(field.fiatValue).isEqualTo("2000")
+            assertThat(field.cryptoAmount.value).isEqualTo(BigDecimal("0.5"))
+            assertThat(field.isError).isTrue()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN entered amount passes minimum but deducted does not WHEN submit THEN dialog shown`() = runTest {
+            // Arrange
+            coEvery {
+                session.prepare(action = any(), amount = any(), fee = any())
+            } returns EarnSessionError.BelowMinimum(BigDecimal("0.5")).left()
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onAmountValueChange("0.5")
+            model.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+
+            // Act
+            model.onSubmit()
+            advanceUntilIdle()
+
+            // Assert
+            val field = (model.state.value.amountState as AmountState.Data).amountTextField
+            assertThat(field.isError).isFalse()
+            verify(exactly = 1) { messageSender.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN max with more decimals than the currency WHEN 25 percent THEN share is cut to currency decimals`() =
             runTest {
                 // Arrange
@@ -436,6 +484,28 @@ internal class EarnFlowModelTest {
             coVerify(exactly = 1) {
                 session.prepare(action = any(), amount = EarnAmount.Exact(BigDecimal("2.00999")), fee = any())
             }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Max WHEN fee on confirm exceeds balance THEN confirm is blocked`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onAmountValueChange(TEST_BALANCE.toPlainString())
+            model.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+            model.onSubmit()
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeResult(testFeeContent("2.02"))
+            advanceUntilIdle()
+
+            // Assert
+            val confirm = model.confirm.value
+            assertThat(confirm?.notifications?.filterIsInstance<NotificationUM.Error.TotalExceedsBalance>()).hasSize(1)
+            assertThat(confirm?.primary?.isEnabled).isFalse()
             model.onDestroy()
         }
 

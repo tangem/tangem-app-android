@@ -19,6 +19,7 @@ internal object EarnFlowNotifications {
 
     fun confirm(state: EarnFlowState, onFeeReload: () -> Unit): ImmutableList<NotificationUM> = buildList {
         addFeeError(state, onFeeReload)
+        addExceedBalance(state)
         addFeeCoverage(state)
     }.toImmutableList()
 
