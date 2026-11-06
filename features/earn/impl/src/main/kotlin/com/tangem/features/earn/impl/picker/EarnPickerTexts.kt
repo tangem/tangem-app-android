@@ -12,9 +12,19 @@ internal object EarnPickerTexts {
 
     val subtitle: TextReference = stringReference("Choose type of product for gaining your balance")
 
+    val calculatorSection: TextReference = stringReference("Calculate your earnings")
+
+    val benefitsSection: TextReference = stringReference("Benefits")
+
+    val detailsSection: TextReference = stringReference("More details")
+
     val startEarning: TextReference = stringReference("Start earning")
 
     val addFunds: TextReference = stringReference("Add funds")
+
+    val unavailable: TextReference = stringReference("Failed to load the product")
+
+    val retry: TextReference = stringReference("Retry")
 
     fun minDepositHint(minDeposit: BigDecimal): TextReference = stringReference(
         "You don't have any funds on this token – add funds to continue. " +
