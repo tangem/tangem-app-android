@@ -31,7 +31,6 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
-import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
@@ -60,7 +59,6 @@ import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
-import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import com.tangem.tap.routing.utils.DeeplinkSource
 import com.tangem.tap.routing.utils.PromoPageRouter
 import com.tangem.utils.logging.TangemLogger
@@ -114,9 +112,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var promoPageRouter: PromoPageRouter
-
-    @Inject
-    internal lateinit var deepLinkFeatureToggles: DeepLinkFeatureToggles
 
     @Inject
     internal lateinit var testerMenuLauncher: TesterMenuLauncher
@@ -428,15 +423,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             // External deep links (browser / universal links) arrive via intent.data — never gated.
             externalDeepLink != null ->
                 launchDeepLink(externalDeepLink, isFromOnNewIntent, DeeplinkSource.External)
-            // A deep link reconstructed from a notification payload must pass the push policy. If it is
-            // present but blocked, stop — there is deliberately no second chance for the same payload.
-            // With the handler registry the policy is applied by the handlers themselves.
-            extrasDeepLink != null ->
-                if (deepLinkFeatureToggles.isHandlerRegistryEnabled ||
-                    PushDeeplinkPolicy.isOpenableFromPush(scheme = extrasDeepLink.scheme, host = extrasDeepLink.host)
-                ) {
-                    launchDeepLink(extrasDeepLink, isFromOnNewIntent, DeeplinkSource.Push)
-                }
+            // A deep link reconstructed from a notification payload: the push policy is applied by the handlers.
+            extrasDeepLink != null -> launchDeepLink(extrasDeepLink, isFromOnNewIntent, DeeplinkSource.Push)
         }
     }
 

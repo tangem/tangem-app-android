@@ -89,7 +89,6 @@ class DefaultYieldSupplyTransactionRepositoryTest {
     private val outcomeRepository = DefaultYieldSupplyTransactionRepository(
         walletManagersFacade = outcomeWalletManagersFacade,
         dispatchers = TestingCoroutineDispatcherProvider(),
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns false },
     )
 
     @BeforeEach
@@ -98,11 +97,11 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             objToCopy = DefaultYieldSupplyTransactionRepository(
                 walletManagersFacade = walletManagersFacade,
                 dispatchers = TestingCoroutineDispatcherProvider(),
-                yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns false },
             ),
             recordPrivateCalls = true,
         )
         every { mockk<Token>().contractAddress } returns mockedContractAddress
+        coEvery { walletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
         clearMocks(receiptWalletManager, outcomeWalletManagersFacade)
     }
 
@@ -538,11 +537,6 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             currentImplementation = OLD_IMPLEMENTATION,
             latestImplementation = LATEST_IMPLEMENTATION,
         )
-        private val v3Repository = DefaultYieldSupplyTransactionRepository(
-            walletManagersFacade = walletManagersFacade,
-            dispatchers = TestingCoroutineDispatcherProvider(),
-            yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns true },
-        )
 
         @Test
         fun `GIVEN no fee WHEN createClaimRewardsTransaction THEN builds a zero amount call to the module`() = runTest {
@@ -596,7 +590,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             }
 
         @Test
-        fun `GIVEN V3 disabled and UpgradeAvailable WHEN createClaimRewardsTransaction THEN claim is not wrapped`() =
+        fun `GIVEN UpgradeAvailable WHEN createClaimRewardsTransaction THEN claim is wrapped`() =
             runTest {
                 // Arrange
                 coEvery { walletManager.checkModuleVersionStatus() } returns upgradeAvailable
@@ -611,37 +605,18 @@ class DefaultYieldSupplyTransactionRepositoryTest {
                 )
 
                 // Assert
-                Truth.assertThat((result.extras as EthereumTransactionExtras).callData).isSameInstanceAs(claimCallData)
-            }
-
-        @Test
-        fun `GIVEN V3 enabled and UpgradeAvailable WHEN createClaimRewardsTransaction THEN claim is wrapped`() =
-            runTest {
-                // Arrange
-                coEvery { walletManager.checkModuleVersionStatus() } returns upgradeAvailable
-
-                // Act
-                val result = v3Repository.createClaimRewardsTransaction(
-                    userWalletId = userWalletId,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    destinationAddress = MODULE_ADDRESS,
-                    callData = claimCallData,
-                    fee = null,
-                )
-
-                // Assert
                 val actual = (result.extras as EthereumTransactionExtras).callData
                 Truth.assertThat(actual).isInstanceOf(EthereumYieldSupplyUpgradeToAndCallCallData::class.java)
                 Truth.assertThat(actual?.unwrapYieldModuleUpgrade()).isSameInstanceAs(claimCallData)
             }
 
         @Test
-        fun `GIVEN V3 enabled and UpToDate WHEN createClaimRewardsTransaction THEN claim is not wrapped`() = runTest {
+        fun `GIVEN UpToDate WHEN createClaimRewardsTransaction THEN claim is not wrapped`() = runTest {
             // Arrange
             coEvery { walletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
 
             // Act
-            val result = v3Repository.createClaimRewardsTransaction(
+            val result = repository.createClaimRewardsTransaction(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 destinationAddress = MODULE_ADDRESS,
@@ -654,7 +629,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         }
 
         @Test
-        fun `GIVEN V3 enabled and UpgradeUnavailable WHEN createClaimRewardsTransaction THEN throws`() = runTest {
+        fun `GIVEN UpgradeUnavailable WHEN createClaimRewardsTransaction THEN throws`() = runTest {
             // Arrange
             coEvery { walletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpgradeUnavailable(
                 currentImplementation = OLD_IMPLEMENTATION,
@@ -662,7 +637,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
             // Act
             val actual = runCatching {
-                v3Repository.createClaimRewardsTransaction(
+                repository.createClaimRewardsTransaction(
                     userWalletId = userWalletId,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     destinationAddress = MODULE_ADDRESS,
@@ -684,11 +659,6 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             currentImplementation = OLD_IMPLEMENTATION,
             latestImplementation = LATEST_IMPLEMENTATION,
         )
-        private val v3Repository = DefaultYieldSupplyTransactionRepository(
-            walletManagersFacade = walletManagersFacade,
-            dispatchers = TestingCoroutineDispatcherProvider(),
-            yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns true },
-        )
 
         @BeforeEach
         fun clearWalletManagerCalls() {
@@ -703,7 +673,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             coEvery { walletManager.checkModuleVersionStatus() } returns model.moduleStatus
 
             // Act
-            val result = v3Repository.createEnterTransactions(
+            val result = repository.createEnterTransactions(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 maxNetworkFee = BigDecimal.TEN,
@@ -723,33 +693,13 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         }
 
         @Test
-        fun `GIVEN V3 disabled and UpgradeAvailable WHEN createEnterTransactions THEN no wrap and no check`() =
-            runTest {
-                // Arrange
-                arrangeWalletManager(TokenState.NOT_INITIALIZED)
-                coEvery { walletManager.checkModuleVersionStatus() } returns upgradeAvailable
-
-                // Act
-                val result = repository.createEnterTransactions(
-                    userWalletId = userWalletId,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    maxNetworkFee = BigDecimal.TEN,
-                )
-
-                // Assert
-                val actual = result.map { (it.extras as EthereumTransactionExtras).callData }
-                Truth.assertThat(actual.none { it is EthereumYieldSupplyUpgradeToAndCallCallData }).isTrue()
-                coVerify(exactly = 0) { walletManager.checkModuleVersionStatus() }
-            }
-
-        @Test
         fun `GIVEN version check throws WHEN createEnterTransactions THEN batch is not wrapped`() = runTest {
             // Arrange
             arrangeWalletManager(TokenState.NOT_INITIALIZED)
             coEvery { walletManager.checkModuleVersionStatus() } throws IllegalStateException("rpc failed")
 
             // Act
-            val result = v3Repository.createEnterTransactions(
+            val result = repository.createEnterTransactions(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 maxNetworkFee = BigDecimal.TEN,
@@ -940,7 +890,6 @@ class DefaultYieldSupplyTransactionRepositoryTest {
     private val nativeRepository = DefaultYieldSupplyTransactionRepository(
         walletManagersFacade = nativeWalletManagersFacade,
         dispatchers = TestingCoroutineDispatcherProvider(),
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns false },
     )
     private val ethereum = mockk<Network> {
         every { id } returns Network.ID(

@@ -2,7 +2,6 @@ package com.tangem.feature.usedesk.deeplink.di
 
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkKey
-import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.feature.usedesk.api.deeplink.SupportDeepLinkHandler
 import com.tangem.feature.usedesk.deeplink.DefaultSupportDeepLinkHandler
 import dagger.Binds
@@ -28,12 +27,7 @@ internal interface SupportDeepLinkModule {
         @Provides
         @IntoMap
         @DeepLinkKey(DefaultSupportDeepLinkHandler.DEEPLINK_KEY)
-        fun provideSupportDeepLinkHandler(
-            factory: SupportDeepLinkHandler.Factory,
-            useDeskFeatureToggles: UseDeskFeatureToggles,
-        ): DeepLinkHandler = DeepLinkHandler(
-            isEnabled = { useDeskFeatureToggles.isSupportChatDeepLinkEnabled },
-            handle = { request -> factory.create(coroutineScope = request.scope) },
-        )
+        fun provideSupportDeepLinkHandler(factory: SupportDeepLinkHandler.Factory): DeepLinkHandler =
+            DeepLinkHandler { request -> factory.create(coroutineScope = request.scope) }
     }
 }

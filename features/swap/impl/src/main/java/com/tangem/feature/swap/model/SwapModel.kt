@@ -1715,10 +1715,7 @@ internal class SwapModel @Inject constructor(
 
         return if (consideredProviders.isNotEmpty()) {
             val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
-            val bestQuotesProvider = SwapProviderResolver.findBest(
-                states = successLoadedData,
-                isOverallBestPriceEnabled = swapFeatureToggles.isOverallBestPriceEnabled,
-            )
+            val bestQuotesProvider = SwapProviderResolver.findBest(states = successLoadedData)
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
                 // logic for always choose best if already selected provider
@@ -1877,23 +1874,14 @@ internal class SwapModel @Inject constructor(
                             messageString = "onSwapClick: swap transaction error: $swapTransactionState",
                             shouldSanitize = false,
                         )
-                        if (swapFeatureToggles.isHideRejectedCexProviderEnabled) {
-                            hideProviderIfRejected(provider = provider, error = swapTransactionState)
-                            startLoadingQuotesFromLastState()
-                            showTransactionErrorAlert(
-                                error = swapTransactionState,
-                                isSwapAttemptAlert = true,
-                                providerName = provider.name,
-                                amountCurrency = fromSwapCurrencyStatus.currency,
-                            )
-                        } else {
-                            startLoadingQuotesFromLastState()
-                            showTransactionErrorAlert(
-                                error = swapTransactionState,
-                                isSwapAttemptAlert = true,
-                                amountCurrency = fromSwapCurrencyStatus.currency,
-                            )
-                        }
+                        hideProviderIfRejected(provider = provider, error = swapTransactionState)
+                        startLoadingQuotesFromLastState()
+                        showTransactionErrorAlert(
+                            error = swapTransactionState,
+                            isSwapAttemptAlert = true,
+                            providerName = provider.name,
+                            amountCurrency = fromSwapCurrencyStatus.currency,
+                        )
                     }
                     is SwapTransactionState.TangemPayWithdrawalData -> {
                         processTangemPayWithdrawal(

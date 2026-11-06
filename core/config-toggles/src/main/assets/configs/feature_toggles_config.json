@@ -60,10 +60,6 @@
         "version": "undefined"
     },
     {
-        "name": "AND_18183_DEEPLINK_HANDLER_REGISTRY_ENABLED",
-        "version": "6.7"
-    },
-    {
         "name": "AND_18288_KOTLINX_DATASTORE_ENABLED",
         "version": "undefined"
     },
@@ -76,26 +72,6 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1760_SUPPORT_CHAT_DEEPLINK_ENABLED",
-        "version": "6.7"
-    },
-    {
-        "name": "TWI_1762_YIELD_MODE_PROMO_ENABLED",
-        "version": "6.7"
-    },
-    {
-        "name": "TWI_1690_QR_SCAN_DEEPLINKS_ENABLED",
-        "version": "6.7"
-    },
-    {
-        "name": "TWI_1876_KYC_PRESCREENING_CEX_ENABLED",
-        "version": "6.7"
-    },
-    {
-        "name": "TWI_1728_PAY_BUNDLE_INTRODUCTION_ENABLED",
-        "version": "6.7"
-    },
-    {
         "name": "AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED",
         "version": "undefined"
     },
@@ -106,18 +82,6 @@
     {
         "name": "TWI_1732_MARKETING_UID_BINDING_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "AND_18834_YIELD_MODULE_V3_ENABLED",
-        "version": "6.7"
-    },
-    {
-        "name": "AND_19119_YIELD_MODE_SMART_GAS_ENABLED",
-        "version": "6.7"
-    },
-    {
-        "name": "TWI_1822_SOLANA_PNFT_AND_METAPLEX_CORE_ENABLED",
-        "version": "6.7"
     },
     {
         "name": "AND_18247_SOLANA_GASLESS_ENABLED",

@@ -5,7 +5,5 @@ interface SwapFeatureToggles {
     val isEvmGaslessDexSwapEnabled: Boolean
     val isTronClientEnergyEnabled: Boolean
     val isTronLowerFeeTypeEnabled: Boolean
-    val isOverallBestPriceEnabled: Boolean
-    val isHideRejectedCexProviderEnabled: Boolean
     val isSolanaGaslessEnabled: Boolean
 }
