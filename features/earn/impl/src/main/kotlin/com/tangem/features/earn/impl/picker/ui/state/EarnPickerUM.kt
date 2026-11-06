@@ -9,10 +9,8 @@ import com.tangem.features.earn.api.ui.EarnRowUM
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * @property title the fixed screen title over the hero, the same for every product
- * @property barTitle the title of the collapsed top bar: the selected product, the screen title while nothing is loaded
- * @property products the products of the currency, shown only when there are several
- * @property ctaHint the line above the button, `null` when there is nothing to explain
+ * @property barTitle the selected product, the screen title while nothing is loaded
+ * @property products shown only when the currency has several
  */
 @Immutable
 internal data class EarnPickerUM(
@@ -33,10 +31,6 @@ internal data class EarnPickerUM(
 
         data class Unavailable(val onRetryClick: () -> Unit) : ContentUM
 
-        /**
-         * @property incentive the Incentivised badge above the description, `null` without a campaign
-         * @property sections the sections of the page in their order; the tabs are anchors to them
-         */
         data class Ready(
             val description: TextReference,
             val incentive: TangemBadgeUM?,

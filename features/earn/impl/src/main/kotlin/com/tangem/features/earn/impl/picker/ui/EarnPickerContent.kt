@@ -76,15 +76,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
-/**
- * One scrolling page, laid out by the Figma frame "Aave": the hero, the title block over it, the product cards, the
- * description and then the sections one after another. When the hero is gone a top bar with the product title takes
- * its place and the tabs stay pinned under it. The tabs are anchors (a click scrolls to the section, the lit tab
- * follows the scroll). The page is the haze source: the calculator's horizon menu blurs what is behind it and has
- * nothing to blur without one.
- *
- * @param calculator the calculator of the selected product, a slot of the component
- */
+/** The page is the haze source: the calculator's horizon menu blurs what is behind it. */
 @Composable
 internal fun EarnPickerContent(state: EarnPickerUM, modifier: Modifier = Modifier, calculator: @Composable () -> Unit) {
     val listState = rememberLazyListState()
@@ -201,7 +193,6 @@ private fun LazyListScope.pageItem(key: String, bottom: Dp = SECTION_GAP, conten
     }
 }
 
-/** The tabs of the sections: a click scrolls the section just below the pinned header, the lit one follows the page. */
 @Composable
 private fun rememberSectionTabs(
     listState: LazyListState,
@@ -233,12 +224,6 @@ private fun rememberSectionTabs(
     }
 }
 
-/**
- * The close button is always there. The backdrop of the bar (and of the tabs when they are pinned) fades in with the
- * scroll ([barProgress]) and the title follows a little later, rising into place. The backdrop is the design's Fade:
- * 95% of the page background, except its last 40 dp, which fade out; with the tabs it ends 2 dp under them, so the
- * gradient starts inside the tab block.
- */
 @Suppress("LongParameterList")
 @Composable
 private fun PinnedHeader(
@@ -303,7 +288,6 @@ private fun PinnedHeader(
     }
 }
 
-/** The header's Fade: [FADE_ALPHA] of the page color, the last [FADE_GRADIENT_HEIGHT] fading to transparent. */
 private fun DrawScope.drawHeaderFade(color: Color, alpha: Float, overshoot: Dp) {
     val total = size.height + overshoot.toPx()
     val solid = color.copy(alpha = FADE_ALPHA * alpha)
@@ -321,7 +305,7 @@ private fun DrawScope.drawHeaderFade(color: Color, alpha: Float, overshoot: Dp) 
     )
 }
 
-/** 0 while the hero fills the top, 1 once it is under the bar; the bar fades in over the last bar-height of the scroll. */
+/** 0 while the hero fills the top, 1 once it is under the bar. */
 private fun LazyListState.barProgress(heroHeightPx: Float, barHeightPx: Float): Float {
     if (firstVisibleItemIndex > 0) return 1f
     if (heroHeightPx <= 0f) return 0f
@@ -330,7 +314,6 @@ private fun LazyListState.barProgress(heroHeightPx: Float, barHeightPx: Float): 
     return ((firstVisibleItemScrollOffset - start) / (end - start)).coerceIn(0f, 1f)
 }
 
-/** Whether the item has reached [limitPx] from the top of the list or is already scrolled above it. */
 private fun LazyListState.isItemAbove(key: String, index: Int, limitPx: Float): Boolean {
     val info = layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }
     return if (info != null) info.offset <= limitPx else firstVisibleItemIndex > index
@@ -465,10 +448,6 @@ private fun UnavailableBody(onRetryClick: () -> Unit) {
     }
 }
 
-/**
- * The hint and the button over the footer's Fade: it starts 16 dp above them with a 24 dp ramp and then stays at 95% of
- * the page color, so the page scrolls under it.
- */
 @Composable
 private fun Footer(cta: TangemButtonUM, hint: TextReference?, modifier: Modifier = Modifier) {
     val pageColor = TangemTheme.colors3.bg.primary
@@ -524,7 +503,6 @@ private fun DrawScope.drawFooterFade(color: Color) {
 
 private val LOADING_BODY_HEIGHT = 240.dp
 
-/** The toolbar of the design: a 44 dp button and 16 dp under it, below the status bar. */
 private val BAR_HEIGHT = 44.dp
 private val BAR_BOTTOM_PADDING = 16.dp
 
@@ -538,13 +516,8 @@ private const val FOOTER_RAMP_STOP_2 = 0.697f
 private const val FOOTER_RAMP_ALPHA_1 = 0.4f
 private const val FOOTER_RAMP_ALPHA_2 = 0.85f
 
-/** Between the sections of the page. */
 private val SECTION_GAP = 24.dp
-
-/** Above and below the tab row, the 60 dp block of the design. */
 private val TABS_VERTICAL_PADDING = 12.dp
-
-/** The calculator's own content starts with the badge, 40 dp under the top of its card in the design. */
 private val CALCULATOR_TOP_PADDING = 40.dp
 private val TITLE_SHIFT = 8.dp
 private const val TITLE_FADE_START = 0.4f

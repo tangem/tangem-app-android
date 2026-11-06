@@ -18,10 +18,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-/**
- * The Earn product picker of one currency: chips, description and the Calculator / Benefits / Details tabs of the
- * selected product.
- */
 internal class EarnYieldPickerComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: Params,

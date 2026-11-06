@@ -17,7 +17,6 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
 
-/** An icon and one paragraph: the bold title leads, the description follows it. */
 @Composable
 internal fun EarnBenefitRow(benefit: EarnBenefitUM, modifier: Modifier = Modifier) {
     val titleColor = TangemTheme.colors3.text.primary
