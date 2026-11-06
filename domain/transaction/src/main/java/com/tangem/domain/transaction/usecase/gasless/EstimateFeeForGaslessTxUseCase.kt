@@ -20,7 +20,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
-import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -40,7 +39,6 @@ class EstimateFeeForGaslessTxUseCase(
     private val estimateFeeUseCase: EstimateFeeUseCase,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -93,7 +91,6 @@ class EstimateFeeForGaslessTxUseCase(
                         amount = amount,
                         txTokenCurrencyStatus = sendingTokenCurrencyStatus,
                         initialFee = initialFee,
-                        isYieldModuleV3Enabled = yieldModuleFeatureToggles.isYieldModuleV3Enabled,
                     ).bind()
 
                     val nonPortfolioFeeToken = feeCurrencies.nonPortfolioFeeToken

@@ -344,39 +344,6 @@ internal class EstimateFeeForTokenUseCaseTest {
         }
     }
 
-    @Test
-    fun `GIVEN yield send and module V3 toggle off WHEN estimate THEN fee is estimated once`() = runTest {
-        // Arrange
-        val bareFee = ethereumFee(gasLimit = 100_000L, value = "0.000004")
-        givenEstimates(bare = bareFee, wrappedAllowed = ethereumFee(gasLimit = 160_000L, value = "0.000006"))
-        val feeTokenStatus = tokenStatus(balance = TOKEN_BALANCE, yieldSupplyStatus = null)
-        coEvery {
-            walletManager.getGasLimit(any(), FEE_RECEIVER, any())
-        } returns Result.Success(BigInteger("60000"))
-
-        // Act
-        val result = createUseCase(isToggleEnabled = false).invoke(
-            userWallet = userWallet,
-            feeTokenCurrencyStatus = feeTokenStatus,
-            sendingTokenCurrencyStatus = tokenStatus(
-                balance = TOKEN_BALANCE,
-                yieldSupplyStatus = activeYieldStatus(effectiveProtocolBalance = TOKEN_BALANCE),
-            ),
-            amount = SWAP_AMOUNT,
-        )
-
-        // Assert
-        assertThat(result.getOrNull()?.nativeFee).isEqualTo(bareFee)
-        coVerify(exactly = 1) {
-            walletManagersFacade.estimateFee(
-                amount = any(),
-                userWalletId = any(),
-                network = any(),
-                isYieldModuleUpgradeAllowed = any(),
-            )
-        }
-    }
-
     // region Fixtures
 
     private fun givenEstimates(bare: TransactionFee, wrappedAllowed: TransactionFee) {
@@ -407,7 +374,7 @@ internal class EstimateFeeForTokenUseCaseTest {
         ),
     )
 
-    private fun createUseCase(isToggleEnabled: Boolean = true) = EstimateFeeForTokenUseCase(
+    private fun createUseCase() = EstimateFeeForTokenUseCase(
         gaslessTransactionRepository = gaslessTransactionRepository,
         gaslessYieldRepository = gaslessYieldRepository,
         walletManagersFacade = walletManagersFacade,
@@ -416,7 +383,6 @@ internal class EstimateFeeForTokenUseCaseTest {
         nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         currencyChecksRepository = currencyChecksRepository,
         resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns isToggleEnabled },
     )
 
     private fun accountStatusList(
