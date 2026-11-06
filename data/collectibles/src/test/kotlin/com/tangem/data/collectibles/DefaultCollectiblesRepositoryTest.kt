@@ -8,6 +8,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchAction
 import com.tangem.data.collectibles.error.CollectiblesErrorResolver
 import com.tangem.data.collectibles.store.CollectiblesMachineStore
+import com.tangem.domain.collectibles.models.CollectibleActiveTx
 import com.tangem.domain.collectibles.models.CollectibleBuybackOffer
 import com.tangem.domain.collectibles.models.CollectibleBuybackStatus
 import com.tangem.domain.collectibles.models.CollectibleBuybackTx
@@ -29,6 +30,7 @@ import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequ
 import com.tangem.grow.datasource.collectibles.models.response.BuybackAvailabilityResponse
 import com.tangem.grow.datasource.collectibles.models.response.BuybackStatusResponse
 import com.tangem.grow.datasource.collectibles.models.response.BuybackStatusResponse.BuybackStatusDTO
+import com.tangem.grow.datasource.collectibles.models.response.ActiveTxsResponse
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse.CollectibleTxStatusDTO
 import com.tangem.grow.datasource.collectibles.models.response.GenerateBuybackDataResponse
@@ -338,13 +340,13 @@ internal class DefaultCollectiblesRepositoryTest {
             runTest {
                 // Arrange
                 coEvery { collectiblesApi.purchaseTxSent(any(), any()) } returns
-                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PURCHASE_TX_HASH))
+                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PURCHASE_TX_SENT))
 
                 // Act
                 val actual = repository.reportPurchaseTxSent(userWalletId, txId = "tx-id", txHash = "hash")
 
                 // Assert
-                assertThat(actual).isEqualTo(CollectibleTxStatus.PURCHASE_TX_HASH)
+                assertThat(actual).isEqualTo(CollectibleTxStatus.PURCHASE_TX_SENT)
                 coVerify(exactly = 1) {
                     collectiblesApi.purchaseTxSent(
                         userWalletId = userWalletId.stringValue,
@@ -529,6 +531,84 @@ internal class DefaultCollectiblesRepositoryTest {
         val body: String?,
         val expected: Class<out Throwable>,
     )
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetActiveTxs {
+
+        @Test
+        fun `GIVEN active purchases WHEN getActiveTxs THEN they come in order with their machine and turbo flag`() =
+            runTest {
+                // Arrange
+                val response = NetworkJsonFactory.create().decodeFromString<ActiveTxsResponse>(
+                    """
+                    {"activeTxs":[
+                      {"txId":"tx-1","status":"pack-opening-error","packOpeningErrorCode":"3999",
+                       "machine":{"externalId":"pokemon_50","name":"Elite Pack"},"turboModeEnabled":false},
+                      {"txId":"tx-2","status":"pack-purchased",
+                       "machine":{"externalId":"pokemon_25","name":"Pack","shortName":"PKMN"},"turboModeEnabled":true},
+                      {"txId":"tx-3","status":"waiting-for-payment","turboModeEnabled":false}
+                    ]}
+                    """.trimIndent(),
+                )
+                coEvery { collectiblesApi.getActiveTxs(any(), any()) } returns ApiResponse.Success(response)
+
+                // Act
+                val actual = repository.getActiveTxs(userWalletId)
+
+                // Assert
+                assertThat(actual).containsExactly(
+                    activeTx(txId = "tx-1", status = CollectibleTxStatus.REFUNDING, machineId = "pokemon_50"),
+                    activeTx(txId = "tx-2", status = CollectibleTxStatus.PACK_PURCHASED, machineId = "pokemon_25")
+                        .copy(isTurboModeEnabled = true),
+                    activeTx(txId = "tx-3", status = CollectibleTxStatus.WAITING_FOR_PAYMENT, machineId = null),
+                ).inOrder()
+                coVerify(exactly = 1) {
+                    collectiblesApi.getActiveTxs(userWalletId = userWalletId.stringValue, includeMachine = true)
+                }
+            }
+
+        @Test
+        fun `GIVEN nothing read yet WHEN the request fails THEN getActiveTxs throws`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getActiveTxs(any(), any()) } returns networkError()
+
+            // Act
+            val actual = runCatching { repository.getActiveTxs(userWalletId) }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(ApiResponseError.NetworkException::class.java)
+        }
+
+        @Test
+        fun `GIVEN a read succeeded WHEN the next one fails THEN the last answer is returned`() = runTest {
+            // Arrange
+            val response = NetworkJsonFactory.create().decodeFromString<ActiveTxsResponse>(
+                """{"activeTxs":[{"txId":"tx-1","status":"pack-purchased","turboModeEnabled":false}]}""",
+            )
+            coEvery { collectiblesApi.getActiveTxs(any(), any()) } returnsMany listOf(
+                ApiResponse.Success(response),
+                networkError(),
+            )
+            repository.getActiveTxs(userWalletId)
+
+            // Act
+            val actual = repository.getActiveTxs(userWalletId)
+
+            // Assert
+            assertThat(actual).containsExactly(
+                activeTx(txId = "tx-1", status = CollectibleTxStatus.PACK_PURCHASED, machineId = null),
+            )
+            coVerify(exactly = 2) { collectiblesApi.getActiveTxs(any(), any()) }
+        }
+
+        private fun activeTx(txId: String, status: CollectibleTxStatus, machineId: String?) = CollectibleActiveTx(
+            txId = txId,
+            status = status,
+            machineId = machineId,
+            isTurboModeEnabled = false,
+        )
+    }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
