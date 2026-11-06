@@ -46,7 +46,6 @@ import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import com.tangem.google.GoogleServicesHelper
@@ -133,9 +132,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
-
-    @Inject
-    internal lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
 
     @Inject
     internal lateinit var walletCardsBackupDeliveryScheduler: WalletCardsBackupDeliveryScheduler
@@ -462,8 +458,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun sendPendingWalletCardsBackups() {
-        if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
-
         walletCardsBackupDeliveryScheduler.schedule()
     }
 

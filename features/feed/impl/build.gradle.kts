@@ -25,7 +25,6 @@ dependencies {
     api(projects.features.feed.search.api)
     api(projects.features.forYou.api)
     api(projects.features.marketing.api)
-    implementation(projects.features.polymarket.api)
     implementation(projects.features.collectibles.api)
     implementation(projects.features.jointAccount.api)
     implementation(projects.features.walletSettings.api)

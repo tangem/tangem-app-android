@@ -7,7 +7,6 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.scenarios.POLYMARKET_AB_TEST_ON
 import com.tangem.scenarios.POLYMARKET_AB_TEST_PROPERTY
 import com.tangem.scenarios.POLYMARKET_BRIDGE_DEPOSIT_PATH
@@ -37,10 +36,6 @@ import org.junit.Test
 
 @HiltAndroidTest
 class PolymarketGeoblockTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.AND_16204_POLYMARKET_ENABLED.rawName to true,
-    )
 
     @Test
     @AllureId("12903")

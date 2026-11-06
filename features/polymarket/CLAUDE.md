@@ -5,9 +5,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 ## Gating and wiring
 
-- `AND_16204_POLYMARKET_ENABLED` gates everything (dev builds only until release). The feed's Predictions
-  block additionally needs Amplitude `twi_1576_polymarket = on`, read once per model and only while the
-  toggle is on; accounts, balances and the wallet-screen row follow the toggle alone.
+- The feed's Predictions block is gated by Amplitude `twi_1576_polymarket = on`, read once per model.
+  Accounts, balances and the wallet-screen row are not gated.
 - Add funds (swap) and Withdraw are not screens of this module: they are `AppRoute.Swap` with
   `AccountFlow.PredictionTopUp` / `PredictionWithdraw`, and the Polymarket branches live in
   `features/swap/impl`. Withdraw ends on swap's success screen with the tracker polling in the background —
