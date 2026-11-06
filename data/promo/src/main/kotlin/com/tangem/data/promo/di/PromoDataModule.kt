@@ -5,7 +5,6 @@ import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.promo.DefaultPromoRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.datasource.local.promotion.PromotionsSupplier
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -21,13 +20,11 @@ object PromoDataModule {
     @Provides
     @Singleton
     fun providePromoRepository(
-        promotionsSupplier: PromotionsSupplier,
         tangemApi: TangemTechApi,
         @NetworkMoshi moshi: Moshi,
         dispatchers: CoroutineDispatcherProvider,
     ): PromoRepository {
         return DefaultPromoRepository(
-            promotionsSupplier = promotionsSupplier,
             tangemApi = tangemApi,
             moshi = moshi,
             campaignsStore = RuntimeSharedStore(),

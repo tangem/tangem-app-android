@@ -21,9 +21,16 @@ in the same PR as the code.
 - [Polymarket V2 client migration](https://app.notion.com/p/8805d34eb67882d98db581e4245436a6) — Data API `/v2/value` (v1 is off from 24.10.2026), cursor-paged `/positions` and `/positions/closed` · 13.10.2026
 - [Positions & rewards](https://app.notion.com/p/3c15d34eb67880859ea2f883ac086d02) — positions, claim · 22.10.2026 (page updated 16.09.2026)
 - [Close position](https://app.notion.com/p/3dd5d34eb6788087a944c0d8a60af953) — sell rules · 17.09.2026 (cases 5/7/8 not implemented)
+- [Session keys](https://app.notion.com/p/3ea5d34eb67880bcbbf9c4fc82ae4260) — `/wallet/session-keys*`, `sessionKeys`, `reason`, CLOB `session-signers` · 21.10.2026 (checked against the service openapi of the same day)
 
 Activity history (`/activity`, `/activity/deposits/reconcile`) was checked against an OpenAPI export on
 28.09.2026.
+
+Live quote rules were checked against [Live data on Predictions feed](https://app.notion.com/p/3fb5d34eb67881a9b682d77162585dfd)
+on 19.10.2026 (page edited 16.10.2026). The repository overlays prices only; callers keep BFF polling
+for metadata and for quotes whose status is not LIVE. After 60 seconds without a book update it requests
+a fresh subscription snapshot, allowing 5 seconds for a response before marking the quote STALE.
+The grace period is a client policy; the spec only fixes the 60-second watchdog threshold.
 
 Discovery and open-position sports metadata was checked against `tangem-09.10.2026-api-docs.json` on
 09.10.2026. Sports fields are optional and nullable; `live` is required. Keep scores and periods as raw
@@ -47,7 +54,8 @@ provider strings and teams in provider order. `dataFetchedAt` dates the backend'
 - **`chainId` in bridge `/supported-assets` is a string**; `minCheckoutUsd` arrives as either string or number.
 - **L2 HMAC** signs `timestamp + method + requestPath [+ body]` with the base64url-decoded secret
   (mirrors `py-clob-client`). `requestPath` is verbatim — leading slash, no query string. The passphrase
-  travels in the clear and is not part of the HMAC. `GET price` is public: send no auth headers.
+  travels in the clear and is not part of the HMAC. `POLY_ADDRESS` is the address the API key belongs to — for
+  session credentials the session key's, lower-case as iOS sends it. `GET price` is public: send no auth headers.
 - **`ClobAuth` EIP-712 domain has no `verifyingContract`; the `DepositWallet` batch domain does.** The CTF
   and neg-risk exchanges share name and version `"2"` and differ only in `verifyingContract`; ExchangeV3 (V2
   markets) keeps the name with version `"3"`. Its separator is what the contract answers to `domainSeparator()`.
@@ -55,8 +63,12 @@ provider strings and teams in provider order. `dataFetchedAt` dates the backend'
   followed by the exchange domain separator, the order struct hash, the type description and its 2-byte
   length. A byte-level mistake surfaces only as a CLOB rejection, so change the builders vector-first: the
   known-answer tests are read off the chain.
-- **Errors are RFC-7807 problem details with no machine-readable code.** `422` sub-cases (relayer
-  rejections) are matched on the `detail` text; unknown text must fall back to `Other`, never fail.
+- **Errors are RFC-7807 problem details.** The session-key endpoints add a machine-readable `reason`
+  (`PolymarketSessionKeyErrorResolver` branches on it; a `401` carries none). Elsewhere the `422` sub-cases
+  (relayer rejections) are matched on the `detail` text; unknown text must fall back to `Other`, never fail.
+- **`sessionKeys` in `GET /wallet` is filled only on the lookup by `walletId`.** An element that does not
+  decode is dropped, not the wallet status. CLOB `session-signers` sends `valid_until` as a number or a
+  string; Moshi's `Long` adapter reads both.
 - **Activity amounts and prices are decimal strings**; market / order / redemption metadata may be absent.
   `reconcile` answers `202 {state: SCANNING, retryAfterSeconds}` — it starts or joins a scan, it does not
   report completion. Cursors are opaque: keep them across retries, reset on filter change, reject cycles.

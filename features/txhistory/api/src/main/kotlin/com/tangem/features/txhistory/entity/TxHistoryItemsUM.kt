@@ -3,7 +3,6 @@ package com.tangem.features.txhistory.entity
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Transaction history state for Token Details. Uses [TransactionItemUM] for transaction items so the
@@ -18,12 +17,11 @@ sealed interface TxHistoryItemsUM {
         override val isBalanceHidden: Boolean,
         val onExploreClick: () -> Unit,
     ) : TxHistoryItemsUM {
-        val items = persistentListOf(
-            TxHistoryItemUM.Transaction(TransactionItemUM.Loading("LOADING_TX_HASH_1")),
-            TxHistoryItemUM.Transaction(TransactionItemUM.Loading("LOADING_TX_HASH_2")),
-            TxHistoryItemUM.Transaction(TransactionItemUM.Loading("LOADING_TX_HASH_3")),
-            TxHistoryItemUM.Transaction(TransactionItemUM.Loading("LOADING_TX_HASH_4")),
-        )
+
+        companion object {
+            /** How many shimmer rows the loading block draws, fading out towards the last one. */
+            const val SHIMMER_ROW_COUNT = 4
+        }
     }
 
     data class Content(

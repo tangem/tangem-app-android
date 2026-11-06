@@ -28,13 +28,7 @@ internal fun AddExistingWalletContent(
 
     Column(
         modifier = Modifier
-            .background(
-                color = if (isRedesignedChild) {
-                    TangemTheme.colors3.bg.primary
-                } else {
-                    TangemTheme.colors.background.primary
-                },
-            )
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .then(if (isRedesignedChild) Modifier else Modifier.imePadding().systemBarsPadding()),
     ) {

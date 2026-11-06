@@ -17,7 +17,7 @@ import com.tangem.features.send.mcp.model.SendIntentButtonUM
 import com.tangem.features.send.mcp.model.SendIntentUM
 
 /**
- * Sheet of the intent flow: the offer in [state] and the one action it carries. It is shown for as long as it stays
+ * Sheet of the intent flow: the offer or the status in [state] and the one action it carries. It is shown for as long as it stays
  * in composition, so the caller opens and closes it by adding it to and removing it from composition.
  *
  * [Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=23363-122221)
@@ -35,7 +35,10 @@ internal fun SendIntentModal(state: SendIntentUM, onDismiss: () -> Unit) {
         title = { TangemModal.TopNavigation(endButton = { TangemButton.Close(onClick = onDismiss) }) },
     ) {
         Column(modifier = Modifier.weight(weight = 1f, fill = false).verticalScroll(rememberScrollState())) {
-            SendIntentOfferContent(state = state)
+            when (state) {
+                is SendIntentUM.Offer -> SendIntentOfferContent(state = state)
+                is SendIntentUM.Status -> SendIntentStatusContent(state = state)
+            }
         }
         SendIntentFooter(button = state.primaryButton)
     }

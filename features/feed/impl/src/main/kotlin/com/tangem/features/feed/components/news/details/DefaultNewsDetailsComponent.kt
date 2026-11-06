@@ -28,7 +28,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.model.news.details.NewsDetailsModel
-import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.news.details.NewsDetailsContent
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
 import com.tangem.features.feed.ui.news.details.state.NewsDetailsUM
@@ -48,16 +47,12 @@ internal class DefaultNewsDetailsComponent(
     override fun Title(bottomSheetState: State<BottomSheetState>) {
         val state by newsDetailsModel.state.collectAsStateWithLifecycle()
         TangemTopBar(
-            type = if (LocalIsOpenedInBottomSheet.current) {
-                TangemTopBarType.BottomSheet
-            } else {
-                TangemTopBarType.Default
-            },
+            type = TangemTopBarType.Default,
             startContent = {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
                     contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.primary,
+                    tint = TangemTheme.colors3.icon.primary,
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
@@ -73,7 +68,7 @@ internal class DefaultNewsDetailsComponent(
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_share_new_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.primary,
+                    tint = TangemTheme.colors3.icon.primary,
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)

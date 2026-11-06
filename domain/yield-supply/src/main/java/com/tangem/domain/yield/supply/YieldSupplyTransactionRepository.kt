@@ -3,7 +3,6 @@ package com.tangem.domain.yield.supply
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -31,7 +30,8 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
      * Builds the owner-signed transaction that claims Merkl rewards.
      *
      * [callData] is built by the backend and carries the cumulative proof, so it is passed through untouched; the
-     * transaction moves no tokens of its own and its amount is always zero.
+     * transaction moves no tokens of its own and its amount is always zero. An outdated module has no claim function,
+     * so with the yield module V3 toggle on the claim is sent inside the module upgrade.
      */
     suspend fun createClaimRewardsTransaction(
         userWalletId: UserWalletId,
@@ -51,8 +51,8 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
         callData: SmartContractCallData,
     ): SmartContractCallData
 
-    /** Returns the on-chain version status of the user's yield module for [network]. */
-    suspend fun getYieldModuleVersionStatus(userWalletId: UserWalletId, network: Network): YieldModuleVersionStatus
+    /** Whether the user's deployed yield module for [network] has `enterProtocolByOwner(token, amount)`. */
+    suspend fun supportsEnterWithAmount(userWalletId: UserWalletId, network: Network): Boolean
 
     /** @return null until the outcome is known: not mined yet, or the node cannot tell. */
     suspend fun getTransactionOutcome(

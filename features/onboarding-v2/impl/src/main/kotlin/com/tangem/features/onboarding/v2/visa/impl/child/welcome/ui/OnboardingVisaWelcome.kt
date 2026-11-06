@@ -54,7 +54,7 @@ internal fun OnboardingVisaWelcome(state: OnboardingVisaWelcomeUM, modifier: Mod
                         stringResourceSafe(R.string.visa_onboarding_welcome_back_title)
                 },
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
 
             SpacerH12()
@@ -67,7 +67,7 @@ internal fun OnboardingVisaWelcome(state: OnboardingVisaWelcomeUM, modifier: Mod
                         stringResourceSafe(R.string.visa_onboarding_welcome_back_description)
                 },
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
 
@@ -100,7 +100,7 @@ internal fun OnboardingVisaWelcome(state: OnboardingVisaWelcomeUM, modifier: Mod
 @Composable
 fun Artwork(modifier: Modifier = Modifier) {
     Box(modifier) {
-        val circleColor = TangemTheme.colors.background.secondary
+        val circleColor = TangemTheme.colors3.bg.primary
         var cardHeightPx by remember { mutableIntStateOf(0) }
         val circleRadiusPx = cardHeightPx / 2 + cardHeightPx / 8f
         val circleSize = with(LocalDensity.current) { (circleRadiusPx * 2).toDp() }

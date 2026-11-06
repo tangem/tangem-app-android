@@ -40,7 +40,13 @@ internal class PromoCampaignUMConverter(
             subtitle = content.summary?.let(::stringReference),
             blocks = content.description.map(::convertBlock).toImmutableList(),
             tokenSelector = if (value.payout.isNeeded) {
-                PromoTokenSelectorUM(selectedToken = null, selectedAccount = null, onClick = onChooseTokenClick)
+                PromoTokenSelectorUM(
+                    selectedToken = null,
+                    selectedAccount = null,
+                    accountTitle = content.payoutAccountTitle?.let(::stringReference)
+                        ?: resourceReference(R.string.promo_campaign_selected_cashback_account),
+                    onClick = onChooseTokenClick,
+                )
             } else {
                 null
             },
@@ -53,7 +59,8 @@ internal class PromoCampaignUMConverter(
         return if (isPayoutTokenPending) {
             PromoCampaignFooterUM(
                 terms = null,
-                buttonText = resourceReference(R.string.promo_campaign_select_token),
+                buttonText = campaign.content.payoutButtonName?.let(::stringReference)
+                    ?: resourceReference(R.string.promo_campaign_select_token),
                 onButtonClick = onActionClick,
             )
         } else {

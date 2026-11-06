@@ -49,7 +49,7 @@ internal class TangemPayWaitlistModelTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(router, uiMessageSender, urlOpener, joinWaitlistUseCase, analytics, onDismiss)
-        coEvery { joinWaitlistUseCase(any(), any(), any()) } returns Unit.right()
+        coEvery { joinWaitlistUseCase(any(), any(), any(), any()) } returns Unit.right()
     }
 
     @Test
@@ -176,7 +176,7 @@ internal class TangemPayWaitlistModelTest {
             val state = model.uiState.value
             assertThat(state.emailError).isEqualTo(resourceReference(R.string.common_error_email_incorrect_format))
             assertThat(state.isSaveInProgress).isFalse()
-            coVerify(exactly = 0) { joinWaitlistUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) { joinWaitlistUseCase(any(), any(), any(), any()) }
             model.onDestroy()
         }
 
@@ -195,12 +195,11 @@ internal class TangemPayWaitlistModelTest {
             // Assert
             val expectedEntry = TangemPayWaitlistEntry(
                 email = VALID_EMAIL,
-                product = PRODUCT,
                 countryCode = COUNTRY_CODE,
                 regionCode = REGION_CODE,
                 isMarketingConsentGiven = true,
             )
-            coVerify(exactly = 1) { joinWaitlistUseCase(USER_WALLET_ID, expectedEntry, any()) }
+            coVerify(exactly = 1) { joinWaitlistUseCase(USER_WALLET_ID, PRODUCTS, expectedEntry, any()) }
             model.onDestroy()
         }
 
@@ -223,7 +222,7 @@ internal class TangemPayWaitlistModelTest {
         assertThat(state.email).isEqualTo(VALID_EMAIL)
         assertThat(state.isMarketingConsentGiven).isFalse()
         advanceUntilIdle()
-        coVerify(exactly = 1) { joinWaitlistUseCase(any(), any(), any()) }
+        coVerify(exactly = 1) { joinWaitlistUseCase(any(), any(), any(), any()) }
         model.onDestroy()
     }
 
@@ -252,7 +251,7 @@ internal class TangemPayWaitlistModelTest {
     @Test
     fun `GIVEN join fails with invalid email WHEN save clicked THEN format error shown and save unlocked`() = runTest {
         // Arrange
-        coEvery { joinWaitlistUseCase(any(), any(), any()) } returns VisaApiError.WaitlistInvalidEmail.left()
+        coEvery { joinWaitlistUseCase(any(), any(), any(), any()) } returns VisaApiError.WaitlistInvalidEmail.left()
         val model = createModel(testScope = this)
         model.uiState.value.onEmailChange(VALID_EMAIL)
 
@@ -274,7 +273,7 @@ internal class TangemPayWaitlistModelTest {
     @Test
     fun `GIVEN join fails with other error WHEN save clicked THEN error dialog shown and save unlocked`() = runTest {
         // Arrange
-        coEvery { joinWaitlistUseCase(any(), any(), any()) } returns VisaApiError.Unspecified.left()
+        coEvery { joinWaitlistUseCase(any(), any(), any(), any()) } returns VisaApiError.Unspecified.left()
         val model = createModel(testScope = this)
         model.uiState.value.onEmailChange(VALID_EMAIL)
         val message = slot<DialogMessage>()
@@ -300,7 +299,7 @@ internal class TangemPayWaitlistModelTest {
     fun `GIVEN join failed WHEN save retried THEN same idempotency key used`() = runTest {
         // Arrange
         val keys = mutableListOf<String>()
-        coEvery { joinWaitlistUseCase(any(), any(), capture(keys)) } returnsMany listOf(
+        coEvery { joinWaitlistUseCase(any(), any(), any(), capture(keys)) } returnsMany listOf(
             VisaApiError.Unspecified.left(),
             Unit.right(),
         )
@@ -341,7 +340,7 @@ internal class TangemPayWaitlistModelTest {
         paramsContainer = MutableParamsContainer(
             TangemPayWaitlistComponent.Params(
                 userWalletId = USER_WALLET_ID,
-                product = PRODUCT,
+                products = PRODUCTS,
                 countryCode = COUNTRY_CODE,
                 regionCode = REGION_CODE,
                 onDismiss = onDismiss,
@@ -351,7 +350,7 @@ internal class TangemPayWaitlistModelTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
-        val PRODUCT = TangemPayProduct.PAYMENT_ACCOUNT
+        val PRODUCTS = TangemPayProduct.entries
         const val COUNTRY_CODE = "US"
         const val REGION_CODE = "CA"
         const val VALID_EMAIL = "user@tangem.com"

@@ -8,11 +8,23 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAmountResul
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
+import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 import java.util.Currency
 
 internal enum class AmountSheet { TOKENS, ROUTES }
+
+internal sealed interface NetworkFeeState {
+
+    data object Loading : NetworkFeeState
+
+    data object Unreachable : NetworkFeeState
+
+    data object NotEnoughFunds : NetworkFeeState
+
+    data class Loaded(val fee: BigDecimal) : NetworkFeeState
+}
 
 /** Raw inputs of the Amount step; [resolve] turns them into the selection the UI and the Continue action work with. */
 internal data class AmountState(
@@ -20,6 +32,7 @@ internal data class AmountState(
     val selectedSourceId: String? = null,
     val selectedRail: BankRail? = null,
     val sheet: AmountSheet? = null,
+    val networkFee: NetworkFeeState = NetworkFeeState.Loading,
 ) {
 
     fun resolve(draft: BankWithdrawDraft, options: BankWithdrawOptions): AmountSelection {
@@ -30,6 +43,8 @@ internal data class AmountState(
             ?: options.sources.first(BankWithdrawSource::isAvailable)
         val displayValue = displayValue(draft = draft, currency = options.currency)
         val amount = displayValue.parseBigDecimalOrNull()
+        val networkFee = (networkFee as? NetworkFeeState.Loaded)?.fee.orZero()
+        val fees = destination.fee.amount + networkFee
         return AmountSelection(
             currency = options.currency,
             minAmount = options.minAmount,
@@ -37,12 +52,14 @@ internal data class AmountState(
             maxInputAmount = BankWithdrawAmountValidator.maxInputAmount(
                 maxAmount = options.maxAmount,
                 balance = source.fiatBalance,
-                fee = destination.fee.amount,
+                fee = fees,
             ),
             sources = options.sources,
             destinations = options.destinations,
             source = source,
             destination = destination,
+            networkFee = networkFee,
+            isNetworkFeeQuoted = this.networkFee is NetworkFeeState.Loaded,
             displayValue = displayValue,
             amount = amount,
             validation = BankWithdrawAmountValidator.validate(
@@ -50,10 +67,17 @@ internal data class AmountState(
                 minAmount = options.minAmount,
                 maxAmount = options.maxAmount,
                 balance = source.fiatBalance,
-                fee = destination.fee.amount,
-            ),
+                fee = fees,
+            ).withNetworkFeeCoverage(),
         )
     }
+
+    private fun BankWithdrawAmountValidator.Result.withNetworkFeeCoverage(): BankWithdrawAmountValidator.Result =
+        if (this == BankWithdrawAmountValidator.Result.Valid && networkFee == NetworkFeeState.NotEnoughFunds) {
+            BankWithdrawAmountValidator.Result.NotEnoughFunds
+        } else {
+            this
+        }
 
     /**
      * The user's own typing on this screen — even once cleared back to blank — or, before they have typed
@@ -73,6 +97,8 @@ internal data class AmountSelection(
     val destinations: ImmutableList<OfframpDestination>,
     val source: BankWithdrawSource,
     val destination: OfframpDestination,
+    val networkFee: BigDecimal,
+    val isNetworkFeeQuoted: Boolean,
     val displayValue: String,
     val amount: BigDecimal?,
     val validation: BankWithdrawAmountValidator.Result,
@@ -83,6 +109,12 @@ internal data class AmountSelection(
 
     fun toResult(): BankWithdrawAmountResult? {
         val amount = amount ?: return null
-        return if (isContinueEnabled) BankWithdrawAmountResult(amount, source, destination) else null
+        if (!isContinueEnabled) return null
+        return BankWithdrawAmountResult(
+            amount = amount,
+            source = source,
+            destination = destination,
+            networkFee = networkFee,
+        )
     }
 }

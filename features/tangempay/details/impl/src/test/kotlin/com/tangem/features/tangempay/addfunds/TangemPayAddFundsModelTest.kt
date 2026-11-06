@@ -13,7 +13,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.bankCredentials
 import com.tangem.features.tangempay.details.impl.R
@@ -23,7 +22,6 @@ import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
@@ -45,20 +43,18 @@ internal class TangemPayAddFundsModelTest {
 
     private val listener: AddFundsListener = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
-    private val featureToggles: TangemPayFeatureToggles = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(listener, router, featureToggles, analytics, getBankCredentialsUseCase)
+        clearMocks(listener, router, analytics, getBankCredentialsUseCase)
     }
 
     @Test
-    fun `GIVEN v2 enabled and banking details load WHEN bank transfer clicked THEN account details screen opens`() =
+    fun `GIVEN banking details load WHEN bank transfer clicked THEN account details screen opens`() =
         runTest {
             // Arrange
-            every { featureToggles.isVisaOnrampV2Enabled } returns true
             coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns bankCredentials().right()
             val model = createModel(VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID))
 
@@ -71,14 +67,12 @@ internal class TangemPayAddFundsModelTest {
                 listener.onDismissAddFunds()
                 router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(bankCredentials()), any())
             }
-            verify(exactly = 0) { listener.onClickBankTransfer() }
             verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaTopupButtonClicked>()) }
         }
 
     @Test
-    fun `GIVEN v2 enabled WHEN bank transfer clicked THEN the row loads until banking details arrive`() = runTest {
+    fun `GIVEN banking details pending WHEN bank transfer clicked THEN the row loads until they arrive`() = runTest {
         // Arrange
-        every { featureToggles.isVisaOnrampV2Enabled } returns true
         val pending = CompletableDeferred<BankCredentials>()
         coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } coAnswers { pending.await().right() }
         val model = createModel(VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID))
@@ -97,9 +91,8 @@ internal class TangemPayAddFundsModelTest {
     }
 
     @Test
-    fun `GIVEN v2 enabled and banking details fail WHEN bank transfer clicked THEN host shows the error`() = runTest {
+    fun `GIVEN banking details fail WHEN bank transfer clicked THEN host shows the error`() = runTest {
         // Arrange
-        every { featureToggles.isVisaOnrampV2Enabled } returns true
         coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns VisaApiError.Unspecified.left()
         val model = createModel(VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID))
 
@@ -117,7 +110,6 @@ internal class TangemPayAddFundsModelTest {
     @Test
     fun `GIVEN banking details pending WHEN model destroyed THEN nothing is routed`() = runTest {
         // Arrange
-        every { featureToggles.isVisaOnrampV2Enabled } returns true
         val pending = CompletableDeferred<BankCredentials>()
         coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } coAnswers { pending.await().right() }
         val model = createModel(VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID))
@@ -140,11 +132,10 @@ internal class TangemPayAddFundsModelTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN v2 enabled and no banking details WHEN bank transfer clicked THEN onboarding screen opens`(
+        fun `GIVEN no banking details WHEN bank transfer clicked THEN onboarding screen opens`(
             onramp: VirtualAccountOnramp,
         ) = runTest {
             // Arrange
-            every { featureToggles.isVisaOnrampV2Enabled } returns true
             val model = createModel(onramp)
 
             // Act
@@ -156,7 +147,6 @@ internal class TangemPayAddFundsModelTest {
                 listener.onDismissAddFunds()
                 router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding, any())
             }
-            verify(exactly = 0) { listener.onClickBankTransfer() }
             verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaTopupButtonClicked>()) }
             coVerify(exactly = 0) { getBankCredentialsUseCase(any(), any()) }
         }
@@ -168,11 +158,8 @@ internal class TangemPayAddFundsModelTest {
     }
 
     @Test
-    fun `GIVEN v2 enabled and banking details being created WHEN add funds shown THEN bank transfer row inert`() =
+    fun `GIVEN banking details being created WHEN add funds shown THEN bank transfer row inert`() =
         runTest {
-            // Arrange
-            every { featureToggles.isVisaOnrampV2Enabled } returns true
-
             // Act
             val model = createModel(VirtualAccountOnramp.Processing)
 
@@ -181,26 +168,6 @@ internal class TangemPayAddFundsModelTest {
             assertThat(model.bankTransferRow().accent).isEqualTo(TangemPayAddFundsItemUM.Accent.Warning)
             verify(exactly = 0) { router.push(any(), any()) }
         }
-
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN v2 disabled WHEN bank transfer clicked THEN host flow handles the click`(
-        onramp: VirtualAccountOnramp,
-    ) = runTest {
-        // Arrange
-        every { featureToggles.isVisaOnrampV2Enabled } returns false
-        val addFundsModel = createModel(onramp)
-
-        // Act
-        addFundsModel.clickBankTransfer()
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { listener.onClickBankTransfer() }
-        verify(exactly = 0) { router.push(any(), any()) }
-        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.VaTopupButtonClicked>()) }
-        coVerify(exactly = 0) { getBankCredentialsUseCase(any(), any()) }
-    }
 
     private fun TangemPayAddFundsModel.bankTransferRow(): TangemPayAddFundsItemUM = uiState.value.items.first {
         it.title == resourceReference(R.string.tangempay_topup_bank_transfer_title)
@@ -225,15 +192,7 @@ internal class TangemPayAddFundsModelTest {
         dispatchers = createTestingCoroutineDispatcherProvider(),
         analytics = analytics,
         router = router,
-        tangemPayFeatureToggles = featureToggles,
         getBankCredentialsUseCase = getBankCredentialsUseCase,
-    )
-
-    private fun provideTestModels() = listOf(
-        VirtualAccountOnramp.Available(PRODUCT_INSTANCE_ID),
-        VirtualAccountOnramp.Eligible,
-        VirtualAccountOnramp.Failed,
-        VirtualAccountOnramp.Processing,
     )
 
     private companion object {

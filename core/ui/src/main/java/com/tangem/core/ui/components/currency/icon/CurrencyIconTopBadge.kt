@@ -22,7 +22,7 @@ fun CurrencyIconTopBadge(
     alpha: Float,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
-    background: Color = TangemTheme.colors.background.primary,
+    background: Color = TangemTheme.colors3.bg.secondary,
     size: Dp = 14.dp,
 ) {
     val innerSpacing = 2.dp

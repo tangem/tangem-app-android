@@ -7,9 +7,9 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.BalanceItem
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.BalanceItem
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.stakingBalanceData

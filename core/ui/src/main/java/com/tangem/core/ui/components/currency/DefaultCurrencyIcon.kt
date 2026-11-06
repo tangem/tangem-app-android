@@ -29,7 +29,7 @@ internal inline fun DefaultCurrencyIcon(
 ) {
     var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
     var isBackgroundColorDefined by remember { mutableStateOf(false) }
-    val itemBackgroundColor = TangemTheme.colors.background.primary.toArgb()
+    val itemBackgroundColor = TangemTheme.colors3.bg.secondary.toArgb()
     val isDarkTheme = isSystemInDarkTheme()
     val coroutineScope = rememberCoroutineScope()
 

@@ -389,7 +389,7 @@ internal class DefaultOnrampRepository(
                 val dataJson = requireNotNull(onrampDataAdapter.fromJson(data.dataJson)) {
                     "Can not parse dataJson. ${data.dataJson}"
                 }
-                if (requestId != dataJson.requestId) throw OnrampRedirectError.WrongRequestId
+                if (requestId != dataJson.requestId) throw OnrampRedirectError.WrongRequestId()
 
                 createOnrampTransaction(
                     txId = data.txId,
@@ -401,7 +401,7 @@ internal class DefaultOnrampRepository(
                     residency = country.name,
                 )
             } else {
-                throw OnrampRedirectError.VerificationFailed
+                throw OnrampRedirectError.VerificationFailed()
             }
         } catch (e: Exception) {
             TangemLogger.e("Error", e)
@@ -423,7 +423,7 @@ internal class DefaultOnrampRepository(
     }
 
     private suspend fun storeOnrampPairs(pairs: List<OnrampPairDTO>, providers: List<ExchangeProvider>) {
-        if (pairs.isEmpty() || providers.isEmpty()) throw OnrampPairsError.PairsNotFound
+        if (pairs.isEmpty() || providers.isEmpty()) throw OnrampPairsError.PairsNotFound()
         val onrampPaymentMethods = getPaymentMethods()
         val onrampPairs = pairs.map { pair ->
             val onrampProviders = pair.providers.mapNotNull { onrampProviderDTO ->
@@ -445,7 +445,7 @@ internal class DefaultOnrampRepository(
                 )
             }
 
-            if (onrampProviders.isEmpty()) throw OnrampPairsError.PairsNotFound
+            if (onrampProviders.isEmpty()) throw OnrampPairsError.PairsNotFound()
 
             OnrampPair(onrampProviders)
         }

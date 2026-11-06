@@ -60,15 +60,15 @@ import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsSta
 fun Notification(
     config: NotificationConfig,
     modifier: Modifier = Modifier,
-    titleColor: Color = TangemTheme.colors.text.primary1,
-    subtitleColor: Color = TangemTheme.colors.text.tertiary,
+    titleColor: Color = TangemTheme.colors3.text.primary,
+    subtitleColor: Color = TangemTheme.colors3.text.secondary,
     containerColor: Color? = null,
     borderColor: Color? = null,
     iconTint: Color? = when (config.iconTint) {
         NotificationConfig.IconTint.Unspecified -> null
-        NotificationConfig.IconTint.Accent -> TangemTheme.colors.icon.accent
-        NotificationConfig.IconTint.Attention -> TangemTheme.colors.icon.attention
-        NotificationConfig.IconTint.Warning -> TangemTheme.colors.icon.warning
+        NotificationConfig.IconTint.Accent -> TangemTheme.colors3.icon.accent.blue
+        NotificationConfig.IconTint.Attention -> TangemTheme.colors3.icon.accent.yellow
+        NotificationConfig.IconTint.Warning -> TangemTheme.colors3.icon.accent.red
     },
     isEnabled: Boolean = true,
 ) {
@@ -109,9 +109,9 @@ internal fun NotificationBaseContainer(
 ) {
     val tempContainerColor by rememberUpdatedState(
         newValue = if (buttonsState != null || onClick != null) {
-            TangemTheme.colors.background.primary
+            TangemTheme.colors3.bg.secondary
         } else {
-            TangemTheme.colors.button.disabled
+            TangemTheme.colors3.bg.disabled
         },
     )
 
@@ -209,7 +209,7 @@ private fun MainContent(
                 modifier = Modifier
                     .size(size = 20.dp)
                     .align(alignment = Alignment.CenterVertically),
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
     }
@@ -263,7 +263,7 @@ internal fun TextsBlock(
     subtitle: TextReference,
     subtitleColor: Color,
     modifier: Modifier = Modifier,
-    titleColor: Color = TangemTheme.colors.text.primary1,
+    titleColor: Color = TangemTheme.colors3.text.primary,
 ) {
     Column(modifier = modifier) {
         val titleText = title?.let { ref ->
@@ -407,7 +407,7 @@ fun CloseableIconButton(
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
-    iconTint: Color = TangemTheme.colors.icon.inactive,
+    iconTint: Color = TangemTheme.colors3.icon.tertiary,
 ) {
     AnimatedVisibility(visible = onClick != null, modifier = modifier) {
         onClick ?: return@AnimatedVisibility

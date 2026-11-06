@@ -24,7 +24,7 @@ internal fun YieldSupplyStartEarningBottomSheet(
             dismissOnClickOutside = dismissOnClickOutside,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             AnimatedContent(
                 stackState.active.instance,

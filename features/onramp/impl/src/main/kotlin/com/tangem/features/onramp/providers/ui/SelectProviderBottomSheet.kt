@@ -54,14 +54,14 @@ internal fun SelectProviderBottomSheet(config: TangemBottomSheetConfig, content:
 internal fun SelectProviderBottomSheetContent(state: SelectPaymentAndProviderUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = stringResourceSafe(id = R.string.onramp_choose_provider_title_hint),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
         PaymentMethodBlock(
@@ -89,7 +89,7 @@ private fun PaymentMethodBlock(
             .clip(RoundedCornerShape(16.dp))
             .border(
                 width = 1.dp,
-                color = TangemTheme.colors.stroke.secondary,
+                color = TangemTheme.colors3.border.tertiary,
                 shape = RoundedCornerShape(16.dp),
             )
             .clickable(enabled = isClickEnabled, onClick = onPaymentMethodClick)
@@ -102,13 +102,13 @@ private fun PaymentMethodBlock(
             Text(
                 text = stringResourceSafe(id = R.string.onramp_pay_with),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.testTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_TITLE),
             )
             Text(
                 text = state.name,
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.testTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_NAME),
             )
         }
@@ -118,7 +118,7 @@ private fun PaymentMethodBlock(
                 .testTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_EXPAND_BUTTON),
             painter = painterResource(id = R.drawable.ic_chevron_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
         )
     }
 }
@@ -179,7 +179,7 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, m
                 .testTag(SelectProviderBottomSheetTestTags.TOKEN_AMOUNT),
             text = state.name,
             style = TangemTheme.typography.subtitle2,
-            color = if (state.isSelected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+            color = if (state.isSelected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         )
         Column(
             horizontalAlignment = Alignment.End,
@@ -188,17 +188,17 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, m
             Text(
                 text = state.rate,
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             when {
                 state.isBestRate -> {
                     Text(
                         text = stringResourceSafe(R.string.express_provider_best_rate),
                         style = TangemTheme.typography.caption1,
-                        color = TangemTheme.colors.text.constantWhite,
+                        color = TangemTheme.colors3.text.staticDark.primary,
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
-                            .background(TangemTheme.colors.icon.accent)
+                            .background(TangemTheme.colors3.bg.accent.blue)
                             .padding(vertical = 1.dp, horizontal = 6.dp)
                             .testTag(SelectProviderBottomSheetTestTags.BEST_RATE_LABEL),
                     )
@@ -207,7 +207,7 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, m
                     Text(
                         text = state.diffRate.resolveReference(),
                         style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.warning,
+                        color = TangemTheme.colors3.text.accent.red,
                         modifier = Modifier.padding(vertical = 1.dp),
                     )
                 }
@@ -251,13 +251,13 @@ private fun UnavailableProviderItem(
             Text(
                 text = providerName,
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.testTag(SelectProviderBottomSheetTestTags.UNAVAILABLE_PROVIDER_NAME),
             )
             Text(
                 text = subtitle.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.testTag(SelectProviderBottomSheetTestTags.UNAVAILABLE_PROVIDER_SUBTITLE),
             )
         }
@@ -271,7 +271,7 @@ private fun OnrampMoreProviders() {
             ImageVector.vectorResource(R.drawable.ic_lightning_16),
         ),
         contentDescription = null,
-        tint = TangemTheme.colors.icon.informative,
+        tint = TangemTheme.colors3.icon.secondary,
         modifier = Modifier
             .padding(top = 16.dp)
             .testTag(SelectProviderBottomSheetTestTags.MORE_PROVIDERS_ICON),
@@ -279,7 +279,7 @@ private fun OnrampMoreProviders() {
     Text(
         text = stringResourceSafe(R.string.express_more_providers_soon),
         style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.icon.informative,
+        color = TangemTheme.colors3.icon.secondary,
         modifier = Modifier
             .padding(top = 4.dp, bottom = 24.dp)
             .padding(horizontal = 56.dp)

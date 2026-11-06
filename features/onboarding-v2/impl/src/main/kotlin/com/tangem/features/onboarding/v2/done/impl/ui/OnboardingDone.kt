@@ -58,7 +58,7 @@ internal fun OnboardingDone(
                 modifier = Modifier.padding(horizontal = 32.dp),
                 text = stringResourceSafe(R.string.onboarding_done_header),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             SpacerH12()
             Text(
@@ -70,7 +70,7 @@ internal fun OnboardingDone(
                         stringResourceSafe(R.string.visa_onboarding_success_screen_description)
                 },
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
             SpacerH(72.dp)

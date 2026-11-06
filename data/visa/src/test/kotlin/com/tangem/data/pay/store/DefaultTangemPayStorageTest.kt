@@ -1,6 +1,7 @@
 package com.tangem.data.pay.store
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.json.NetworkJsonFactory
@@ -19,6 +20,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 /**
  * Tests for [DefaultTangemPayStorage.clearAll] and [DefaultTangemPayStorage.clearIsTangemPayDeactivated].
@@ -104,10 +107,10 @@ internal class DefaultTangemPayStorageTest {
         assertThat(prefs.data.first()[spendPreferencesKeys.getVirtualAccountOrderFailedKey(ADDRESS)]).isNull()
     }
 
-    @Test
-    fun `GIVEN payment account recents WHEN clearAll THEN the recents key is removed`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideRecentsKeys")
+    fun `GIVEN a recents journal WHEN clearAll THEN its key is removed`(key: Preferences.Key<String>) = runTest {
         // Arrange
-        val key = spendPreferencesKeys.paymentAccountRecents(WALLET)
         prefs.editData { preferences ->
             preferences[key] = """{"coin⟨ethereum⟩ethereum":{"accountId":"aa","usedAtMillis":1}}"""
         }
@@ -118,6 +121,11 @@ internal class DefaultTangemPayStorageTest {
         // Assert
         assertThat(prefs.data.first()[key]).isNull()
     }
+
+    private fun provideRecentsKeys() = listOf(
+        spendPreferencesKeys.paymentAccountRecents(WALLET),
+        spendPreferencesKeys.moneyAccountRecents(WALLET),
+    )
 
     @Test
     fun `GIVEN two wallets WHEN clearAll for one THEN the other one keeps its data`() = runTest {

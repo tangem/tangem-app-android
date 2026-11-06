@@ -60,7 +60,7 @@ fun ExpandableSearchView(
     title: String? = null,
     placeholderSearchText: String = "",
     expandedInitially: Boolean = false,
-    tint: Color = TangemTheme.colors.icon.primary1,
+    tint: Color = TangemTheme.colors3.icon.primary,
     subtitle: String? = null,
     icon: Painter? = null,
 ) {
@@ -100,7 +100,7 @@ private fun CollapsedSearchView(
 ) {
     Row(
         modifier = Modifier
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -111,7 +111,7 @@ private fun CollapsedSearchView(
                 .padding(16.dp)
                 .size(24.dp)
                 .clickable { onBackClick() },
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
         )
         Column(
             verticalArrangement = Arrangement.Center,
@@ -120,7 +120,7 @@ private fun CollapsedSearchView(
             if (!title.isNullOrBlank()) {
                 Text(
                     text = title,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     maxLines = 1,
                     style = TangemTheme.typography.subtitle1,
                     modifier = Modifier.defaultMinSize(minHeight = 24.dp),
@@ -159,7 +159,7 @@ private fun SubtitleView(subtitle: String, icon: Painter?) {
         }
         Text(
             text = subtitle,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             style = TangemTheme.typography.caption2,
         )
@@ -187,7 +187,7 @@ private fun ExpandedSearchView(
 
     Row(
         modifier = Modifier
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
@@ -224,9 +224,9 @@ private fun ExpandedSearchView(
                 onDone = { focusManager.clearFocus() },
             ),
             colors = TangemTextFieldsDefault.defaultTextFieldColors.copy(
-                focusedPlaceholderColor = TangemTheme.colors.text.disabled,
-                unfocusedPlaceholderColor = TangemTheme.colors.text.disabled,
-                cursorColor = TangemTheme.colors.text.tertiary,
+                focusedPlaceholderColor = TangemTheme.colors3.text.tertiary,
+                unfocusedPlaceholderColor = TangemTheme.colors3.text.tertiary,
+                cursorColor = TangemTheme.colors3.text.secondary,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 disabledIndicatorColor = Color.Transparent,

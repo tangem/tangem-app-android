@@ -58,7 +58,7 @@ internal fun SendDestinationContent(
     val isError by remember(address.isError) { derivedStateOf { address.isError } }
     LazyColumn(
         modifier = Modifier // Do not put fillMaxSize() in here
-            .background(TangemTheme.colors.background.tertiary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(horizontal = 16.dp)
             .testTag(SendAddressScreenTestTags.CONTAINER),
     ) {
@@ -167,7 +167,7 @@ private fun LazyListScope.addressItem(
                 isValuePasted = address.isValuePasted,
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors.background.action,
+                        color = TangemTheme.colors3.bg.secondary,
                         shape = TangemTheme.shapes.roundedCornersXMedium,
                     ),
                 resolvedAddress = address.blockchainAddress,
@@ -195,7 +195,7 @@ private fun LazyListScope.memoField(
                             text = stringResourceSafe(
                                 R.string.send_recipient_memo_footer_v2_highlighted,
                             ),
-                            color = TangemTheme.colors.text.secondary,
+                            color = TangemTheme.colors3.text.secondary,
                         )
                     }
                 },
@@ -237,7 +237,7 @@ private fun LazyListScope.listHeaderItem(
                             topStart = topRadius,
                         ),
                     )
-                    .background(TangemTheme.colors.background.action)
+                    .background(TangemTheme.colors3.bg.secondary)
                     .padding(
                         top = paddingFromTop,
                         bottom = 12.dp,
@@ -257,7 +257,7 @@ private fun LazyListScope.listHeaderItem(
                     Text(
                         text = stringResourceSafe(titleRes),
                         style = TangemTheme.typography.subtitle2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                     )
                 }
             }
@@ -305,7 +305,7 @@ private fun LazyListScope.listItem(
                             Modifier
                         },
                     )
-                    .background(TangemTheme.colors.background.action),
+                    .background(TangemTheme.colors3.bg.secondary),
             )
         }
     }

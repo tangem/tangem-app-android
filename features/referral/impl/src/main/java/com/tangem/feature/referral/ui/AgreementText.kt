@@ -43,13 +43,13 @@ internal fun AgreementText(@StringRes firstPartResId: Int, onClick: () -> Unit) 
 @Composable
 private fun annotatedAgreementString(firstPart: String): AnnotatedString {
     return buildAnnotatedString {
-        withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+        withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
             append("$firstPart ")
         }
-        withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+        withStyle(SpanStyle(color = TangemTheme.colors3.text.accent.blue)) {
             append(stringResourceSafe(id = R.string.common_terms_and_conditions))
         }
-        withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+        withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
             append(" ${stringResourceSafe(id = R.string.referral_tos_suffix)}")
         }
     }
@@ -60,7 +60,7 @@ private fun annotatedAgreementString(firstPart: String): AnnotatedString {
 @Composable
 private fun Preview_AgreementText() {
     TangemThemePreview {
-        Box(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
+        Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
             AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClick = {})
         }
     }

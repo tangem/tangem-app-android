@@ -89,7 +89,7 @@ private fun MarketsListShimmerLine(style: TextStyle, width: Dp, modifier: Modifi
 @Composable
 private fun PreviewV1() {
     TangemThemePreview {
-        Column(Modifier.background(TangemTheme.colors.background.tertiary)) {
+        Column(Modifier.background(TangemTheme.colors3.bg.primary)) {
             repeat(20) {
                 MarketsListItemPlaceholder()
             }
@@ -103,7 +103,7 @@ private fun PreviewV1() {
 @Composable
 private fun PreviewV2() {
     TangemThemePreviewRedesign {
-        Column(Modifier.background(TangemTheme.colors2.surface.level3)) {
+        Column(Modifier.background(TangemTheme.colors3.bg.secondary)) {
             repeat(20) {
                 MarketsListItemPlaceholder()
             }

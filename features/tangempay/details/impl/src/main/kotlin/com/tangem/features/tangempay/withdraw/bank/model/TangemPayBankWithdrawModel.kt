@@ -5,14 +5,13 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
-import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
@@ -24,22 +23,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankWithdrawModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
-    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase,
-    private val analytics: AnalyticsEventHandler,
+    analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawComponent.Params>()
+
+    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
 
     val draft: StateFlow<BankWithdrawDraft>
         field = MutableStateFlow(BankWithdrawDraft(entry = params.entry))
@@ -85,8 +85,13 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     }
 
     fun onAmountConfirmed(result: BankWithdrawAmountResult) {
-        draft.update {
-            it.copy(amount = result.amount, source = result.source, destination = result.destination)
+        draft.update { current ->
+            current.copy(
+                amount = result.amount,
+                source = result.source,
+                destination = result.destination,
+                networkFee = result.networkFee,
+            )
         }
     }
 
@@ -94,14 +99,17 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         draft.update { it.copy(order = result) }
     }
 
-    /** The transfer is on its way, so the balance is refetched. */
+    fun onDestinationChanged(destination: OfframpDestination) {
+        draft.update { it.copy(destination = destination) }
+    }
+
+    fun onNetworkFeeChanged(networkFee: BigDecimal) {
+        draft.update { it.copy(networkFee = networkFee) }
+    }
+
     fun onOrderSigned() {
-        analytics.send(TangemPayAnalyticsEvents.Offramp.SendSuccessScreenShowed(rail = draft.value.destination?.rail))
-        modelScope.launch {
-            paymentAccountStatusFetcher(params.userWalletId).onLeft { error ->
-                TangemLogger.withTag(TAG).e("Failed to refresh the payment account after a bank withdraw: $error")
-            }
-        }
+        withdrawAnalytics.onSendSucceeded(rail = draft.value.destination?.rail)
+        params.onWithdrawSent()
     }
 
     /** The wizard's address steps open two pickers; warming them here keeps the first tap instant. */

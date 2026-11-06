@@ -37,7 +37,7 @@ fun AccountTitle(
     accountTitleUM: AccountTitleUM,
     modifier: Modifier = Modifier,
     textStyle: TextStyle = TangemTheme.typography.subtitle2,
-    textColor: Color = TangemTheme.colors.text.tertiary,
+    textColor: Color = TangemTheme.colors3.text.secondary,
     iconSize: AccountIconSize = AccountIconSize.ExtraSmall,
 ) {
     Row(

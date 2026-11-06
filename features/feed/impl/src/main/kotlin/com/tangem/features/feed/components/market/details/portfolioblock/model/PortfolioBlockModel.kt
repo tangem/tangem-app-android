@@ -158,7 +158,7 @@ internal class PortfolioBlockModel @Inject constructor(
             fiat(
                 fiatCurrencyCode = appCurrency.code,
                 fiatCurrencySymbol = appCurrency.symbol,
-                spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
             )
         }
 

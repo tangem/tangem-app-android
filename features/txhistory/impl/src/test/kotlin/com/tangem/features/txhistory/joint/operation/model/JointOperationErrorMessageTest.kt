@@ -14,12 +14,8 @@ import com.tangem.core.ui.R as CoreUiR
 internal class JointOperationErrorMessageTest {
 
     private var supportClicks = 0
-    private var operationGone = 0
 
-    private val converter = JointOperationErrorMessage(
-        onSupportClick = { supportClicks++ },
-        onOperationGone = { operationGone++ },
-    )
+    private val converter = JointOperationErrorMessage(onSupportClick = { supportClicks++ })
 
     @ParameterizedTest
     @ProvideTestModels
@@ -67,18 +63,6 @@ internal class JointOperationErrorMessageTest {
         ),
         ConvertModel(error = JointOperationSignError.UserCancelled, title = null, message = null),
     )
-
-    @Test
-    fun `GIVEN the operation is gone WHEN the dialog is dismissed THEN the sheet is told to go`() {
-        // Arrange
-        val dialog = converter.convert(JointOperationSignError.OperationNotFound)
-
-        // Act
-        dialog?.onDismissRequest?.invoke()
-
-        // Assert
-        assertThat(operationGone).isEqualTo(1)
-    }
 
     @Test
     fun `GIVEN a security refusal WHEN support is tapped THEN the support request opens`() {

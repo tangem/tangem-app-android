@@ -18,7 +18,7 @@ import com.tangem.data.staking.StakeKitRepositoryFixtures.stakingTransaction
 import com.tangem.data.staking.StakeKitRepositoryFixtures.transactionDTO
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.models.request.ConstructTransactionRequestBody

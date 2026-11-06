@@ -33,7 +33,7 @@ fun TangemTopBarActionContent(
 ) {
     val background = lerp(
         start = Color.Transparent,
-        stop = TangemTheme.colors2.button.backgroundSecondary,
+        stop = TangemTheme.colors3.bg.transparent.secondary,
         fraction = actionUM.ghostModeProgress,
     )
     val padding = (44.dp - type.getSideContentSize()) / 2
@@ -41,7 +41,7 @@ fun TangemTopBarActionContent(
     Icon(
         imageVector = ImageVector.vectorResource(id = actionUM.iconRes),
         contentDescription = null,
-        tint = TangemTheme.colors2.graphic.neutral.primary,
+        tint = TangemTheme.colors3.icon.primary,
         modifier = modifier
             .size(44.dp)
             .clip(CircleShape)

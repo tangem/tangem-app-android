@@ -3,6 +3,7 @@ package com.tangem.features.hotwallet.manualbackup.check.model
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.input.TextFieldValue
 import arrow.core.getOrElse
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -95,7 +96,7 @@ internal class ManualBackupCheckModel @Inject constructor(
                 it.copy(isCompleteButtonInProgress = true)
             }
 
-            runCatching {
+            runSuspendCatching {
                 val userWallet = getUserWalletUseCase(params.userWalletId)
                     .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
                 if (userWallet is UserWallet.Hot) {

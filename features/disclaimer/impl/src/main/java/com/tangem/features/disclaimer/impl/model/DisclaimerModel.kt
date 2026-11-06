@@ -10,7 +10,6 @@ import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
-import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.disclaimer.impl.entity.DisclaimerUM
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
@@ -25,7 +24,6 @@ internal class DisclaimerModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val cardRepository: CardRepository,
     private val router: Router,
-    private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val appFinisher: AppFinisher,
     private val notificationsRepository: NotificationsRepository,
@@ -63,7 +61,6 @@ internal class DisclaimerModel @Inject constructor(
                     ),
                 )
             } else {
-                neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
                 neverRequestPermissionUseCase(PUSH_PERMISSION)
                 router.replaceAll(nextRoute)
             }

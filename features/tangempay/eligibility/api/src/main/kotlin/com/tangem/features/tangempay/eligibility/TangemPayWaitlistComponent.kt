@@ -9,7 +9,7 @@ interface TangemPayWaitlistComponent : ComposableBottomSheetComponent {
 
     data class Params(
         val userWalletId: UserWalletId?,
-        val product: TangemPayProduct,
+        val products: List<TangemPayProduct>,
         val countryCode: String,
         val regionCode: String?,
         val onDismiss: () -> Unit,

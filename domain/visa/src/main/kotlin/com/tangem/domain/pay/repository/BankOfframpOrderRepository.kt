@@ -6,10 +6,13 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
+import com.tangem.domain.pay.model.bankofframp.BankRail
 
 /**
  * Placing a bank off-ramp withdrawal: create the order, follow it until it asks for a signature, then sign
- * it or abandon it.
+ * it or abandon it — or, when the account sends the funds itself, create the route that takes them.
  *
  * Every function is total: failures come back as [BankOfframpError], never thrown.
  */
@@ -37,4 +40,12 @@ interface BankOfframpOrderRepository {
     ): Either<BankOfframpError, Unit>
 
     suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<BankOfframpError, Unit>
+
+    suspend fun createRoute(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+        rail: BankRail,
+        recipient: BankOfframpRecipient,
+        idempotencyKey: String,
+    ): Either<BankOfframpError, BankOfframpRoute>
 }

@@ -16,6 +16,7 @@ import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCas
 import com.tangem.domain.txhistory.list.HistoryTxListManager
 import com.tangem.domain.txhistory.list.HistoryTxListManager.*
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
@@ -80,13 +81,13 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
         actionsFlow.trySend(Action.LoadMore)
     }
 
-    override fun txExpressHistoryItemFlow(txId: String): Flow<TxHistoryInfo> {
+    override fun txHistoryItemFlow(txId: String): Flow<TxHistoryInfo> {
         val alreadyLoaded = (state.value as? HistoryState.Content)
-            ?.items?.find { it.txId == txId }
+            ?.items?.find { it.isRowOf(txId) }
 
         val mergedTxByIdFlow = state
             .mapNotNull { (it as? HistoryState.Content)?.items }
-            .mapNotNull { list -> list.firstOrNull { it.txId == txId } }
+            .mapNotNull { list -> list.firstOrNull { it.isRowOf(txId) } }
             .distinctUntilChanged()
 
         return if (alreadyLoaded != null) {
@@ -109,6 +110,9 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
             }.distinctUntilChanged()
         }
     }
+
+    private fun TxHistoryInfo.isRowOf(txId: String): Boolean =
+        this.txId == txId || (this as? JointOperationTx)?.txInfo?.txId == txId
 
     private fun buildPipeline(): Flow<HistoryState> = channelFlow {
         val reloadInitialLoading = flow {
@@ -192,8 +196,8 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
                     when (error) {
                         is TxHistoryStateError.DataError -> throw error
                         is TxHistoryStateError.AddressNotReady -> throw error
-                        TxHistoryStateError.EmptyTxHistories -> OnChainSource.BSDK
-                        TxHistoryStateError.TxHistoryNotImplemented -> OnChainSource.IndexTable
+                        is TxHistoryStateError.EmptyTxHistories -> OnChainSource.BSDK
+                        is TxHistoryStateError.TxHistoryNotImplemented -> OnChainSource.IndexTable
                     }
                 },
                 ifRight = { OnChainSource.BSDK },
