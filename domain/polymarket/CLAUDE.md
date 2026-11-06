@@ -97,8 +97,8 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   CTF or neg-risk CTF exchange, domain `"2"`; V2 → ExchangeV3, domain `"3"`; unknown → never signed. Any
   other `exchange` / `signingDomainVersion` is refused while the draft is built — before the card is asked —
   and the draft carries the table's constants, never the quoted strings. The signed order is re-validated
-  against the draft, the domain, the deposit wallet, the market and the quote age (60 s) before it is sent,
-  and the repository checks the signature tail against the domain once more.
+  against the draft, the domain, the deposit wallet and the market before it is sent (quote age is checked
+  at the tap, in the feature), and the repository checks the signature tail against the domain once more.
 - An order on `PredictionOrderSigningRoute.Session` keeps `maker = signer = deposit wallet`: the session key signs
   the same ERC-7739 digest, and the wrapped signature goes into `PolymarketSessionKeyEnvelope`. Validation and the
   repository unwrap it and refuse an envelope the placing identity's key did not make — or any envelope on the

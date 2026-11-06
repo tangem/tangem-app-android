@@ -58,8 +58,6 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         summary.tapPlace()
         advanceUntilIdle()
         assertThat(request.captured.quote).isEqualTo((accepted.quote as QuoteUM.Content).signable.quote)
-        assertThat(request.captured.quoteReceivedAtMillis)
-            .isEqualTo((accepted.quote as QuoteUM.Content).signable.receivedAtMillis)
         coVerify(exactly = 2) { getQuoteUseCase(any(), any()) }
     }
 
@@ -135,7 +133,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN an expired quote WHEN confirmed THEN the generic error keeps the snapshot on summary`() = runTest {
+    fun `GIVEN an order failing its checks WHEN confirmed THEN the generic error keeps the snapshot on summary`() = runTest {
         // Arrange
         val amount = createAmountModel(this)
         advanceUntilIdle()
@@ -144,7 +142,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
         val summary = createSummaryModel(this, amount)
         coEvery { signOrderInteractor(any()) } returns PredictionOrderFailure.Invalid(
-            PredictionOrderValidationError.StaleQuote(ageMillis = 60_001),
+            PredictionOrderValidationError.SignatureNotWrapped(length = 130),
         ).left()
         val accepted = summary.uiState.value
         val dialog = slot<DialogMessage>()
