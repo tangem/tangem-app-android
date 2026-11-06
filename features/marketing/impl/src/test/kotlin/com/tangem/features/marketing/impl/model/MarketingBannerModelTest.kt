@@ -24,7 +24,6 @@ import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
-import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.getEmittedValues
@@ -72,7 +71,6 @@ internal class MarketingBannerModelTest {
     private val quotesRepository: QuotesRepository = mockk()
     private val marketingUidBindingRepository: MarketingUidBindingRepository = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
-    private val useDeskFeatureToggles: UseDeskFeatureToggles = mockk()
 
     @BeforeAll
     fun mockUriParsing() {
@@ -93,10 +91,8 @@ internal class MarketingBannerModelTest {
             quotesRepository,
             marketingUidBindingRepository,
             urlOpener,
-            useDeskFeatureToggles,
         )
         every { Uri.parse(any()) } returns uriWithUids()
-        every { useDeskFeatureToggles.isSupportChatDeepLinkEnabled } returns true
     }
 
     private fun TestScope.createModel(
@@ -121,7 +117,6 @@ internal class MarketingBannerModelTest {
             marketingUidBindingRepository = marketingUidBindingRepository,
             appCoroutineScope = TestAppCoroutineScope(),
             urlOpener = urlOpener,
-            useDeskFeatureToggles = useDeskFeatureToggles,
             clock = clock,
         )
     }
@@ -796,26 +791,6 @@ internal class MarketingBannerModelTest {
         }
 
     @Test
-    fun `GIVEN cta campaigns fetched WHEN amount changes THEN links are not classified again`() = runTest {
-        // Arrange
-        coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
-            campaign(id = 1, uiType = MarketingBanner.UiType.PSEUDO_PROVIDER, deeplink = "tangem://support"),
-        ).right()
-        val requests = MutableStateFlow<CtaBannerRequest?>(ctaRequest(isDemandSurveyCompleted = false))
-        createModel(MarketingBannerComponent.Params.Cta(requests))
-        advanceUntilIdle()
-
-        // Act
-        repeat(5) { step ->
-            requests.value = ctaRequest(isDemandSurveyCompleted = false, amount = usdAmount(step + 1))
-            advanceUntilIdle()
-        }
-
-        // Assert
-        verify(exactly = 1) { useDeskFeatureToggles.isSupportChatDeepLinkEnabled }
-    }
-
-    @Test
     fun `GIVEN cta link with surrounding whitespace WHEN shown and clicked THEN opened as the trimmed link`() =
         runTest {
             // Arrange
@@ -839,39 +814,23 @@ internal class MarketingBannerModelTest {
             verify(exactly = 1) { urlOpener.openUrl("https://partner.example") }
         }
 
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class SupportChatToggle {
+    @Test
+    fun `GIVEN support chat cta banner WHEN fetched THEN shown alongside other banners`() = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
+            campaign(id = 1, uiType = MarketingBanner.UiType.PSEUDO_PROVIDER, deeplink = "tangem://support"),
+            campaign(id = 2, uiType = MarketingBanner.UiType.PSEUDO_PROVIDER, deeplink = "https://partner.example"),
+        ).right()
 
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN concierge banner WHEN support chat deeplink toggle set THEN shown only while it is on`(
-            model: SupportChatToggleModel,
-        ) = runTest {
-            // Arrange
-            every { useDeskFeatureToggles.isSupportChatDeepLinkEnabled } returns model.isEnabled
-            coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
-                campaign(id = 1, uiType = MarketingBanner.UiType.PSEUDO_PROVIDER, deeplink = "tangem://support"),
-                campaign(id = 2, uiType = MarketingBanner.UiType.PSEUDO_PROVIDER, deeplink = "https://partner.example"),
-            ).right()
-
-            // Act
-            val bannerModel = createModel(
-                MarketingBannerComponent.Params.Cta(flowOf(ctaRequest(isDemandSurveyCompleted = false))),
-            )
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(bannerModel.uiState.value.shownIds()).containsExactlyElementsIn(model.expectedIds).inOrder()
-        }
-
-        private fun provideTestModels() = listOf(
-            SupportChatToggleModel(isEnabled = true, expectedIds = listOf(1, 2)),
-            SupportChatToggleModel(isEnabled = false, expectedIds = listOf(2)),
+        // Act
+        val model = createModel(
+            MarketingBannerComponent.Params.Cta(flowOf(ctaRequest(isDemandSurveyCompleted = false))),
         )
-    }
+        advanceUntilIdle()
 
-    internal data class SupportChatToggleModel(val isEnabled: Boolean, val expectedIds: List<Int>)
+        // Assert
+        assertThat(model.uiState.value.shownIds()).containsExactly(1, 2).inOrder()
+    }
 
     @Test
     fun `GIVEN cta in-app link WHEN clicked THEN launcher routes it`() = runTest {

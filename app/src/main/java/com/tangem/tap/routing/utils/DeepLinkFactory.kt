@@ -13,37 +13,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.MarketingUidBindingRepository
-import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
-import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
-import com.tangem.feature.usedesk.api.deeplink.SupportDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.DiscoverDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
-import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
-import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
-import com.tangem.features.mcp.api.McpFeatureToggles
-import com.tangem.features.mcp.api.deeplink.McpDeepLinkHandler
-import com.tangem.features.mcp.api.deeplink.McpIntentDeepLinkHandler
-import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
-import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
-import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
-import com.tangem.features.promobanners.api.deeplink.CampaignsDeepLinkHandler
-import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
-import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
-import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
-import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
-import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
-import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
-import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
-import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
-import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
-import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
-import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -59,43 +28,10 @@ import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 @ActivityScoped
 internal class DeepLinkFactory @Inject constructor(
     private val cardSdkProvider: CardSdkProvider,
-    private val onrampDeepLink: OnrampDeepLinkHandler.Factory,
-    private val sellRedirectDeepLink: SellRedirectDeepLinkHandler.Factory,
-    private val referralDeepLink: ReferralDeepLinkHandler.Factory,
-    private val walletConnectDeepLink: WalletConnectDeepLinkHandler.Factory,
-    private val walletDeepLink: WalletDeepLinkHandler.Factory,
-    private val tokenDetailsDeepLink: TokenDetailsDeepLinkHandler.Factory,
-    private val stakingDeepLink: StakingDeepLinkHandler.Factory,
-    private val marketsDeepLink: MarketsDeepLinkHandler.Factory,
-    private val marketsTokenDetailDeepLink: MarketsTokenDetailDeepLinkHandler.Factory,
-    private val buyDeepLink: BuyDeepLinkHandler.Factory,
-    private val sellDeepLink: SellDeepLinkHandler.Factory,
-    private val swapDeepLink: SwapDeepLinkHandler.Factory,
-    private val promoDeepLink: PromoDeeplinkHandler.Factory,
-    private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
-    private val marketsTokenExchangesDeepLink: MarketsTokenExchangesDeepLinkHandler.Factory,
-    private val tangemPayMainDeepLink: TangemPayMainDeepLinkHandler.Factory,
-    private val tangemPayAccountDeepLink: TangemPayAccountDeepLinkHandler.Factory,
-    private val newsDetailsDeepLink: NewsDetailsDeepLinkHandler.Factory,
-    private val newsDeepLink: NewsDeepLinkHandler.Factory,
-    private val earnDeepLink: EarnDeepLinkHandler.Factory,
-    private val yieldDeepLink: YieldDeepLinkHandler.Factory,
-    private val discoverDeepLink: DiscoverDeepLinkHandler.Factory,
-    private val surveyDeepLink: SurveyDeepLinkHandler.Factory,
-    private val supportDeepLink: SupportDeepLinkHandler.Factory,
-    private val useDeskFeatureToggles: UseDeskFeatureToggles,
-    private val promoCampaignsDeepLink: CampaignsDeepLinkHandler.Factory,
-    private val jointAccountDeepLink: JointAccountDeepLinkHandler.Factory,
-    private val jointAccountInviteDeepLink: JointAccountInviteDeepLinkHandler.Factory,
-    private val mcpDeepLink: McpDeepLinkHandler.Factory,
-    private val mcpIntentDeepLink: McpIntentDeepLinkHandler.Factory,
-    private val mcpFeatureToggles: McpFeatureToggles,
     private val urlOpener: UrlOpener,
-    private val deepLinkFeatureToggles: DeepLinkFeatureToggles,
     private val marketingFeatureToggles: MarketingFeatureToggles,
     private val marketingUidBindingRepository: MarketingUidBindingRepository,
     private val appCoroutineScope: AppCoroutineScope,
@@ -142,7 +78,7 @@ internal class DeepLinkFactory @Inject constructor(
         }.transformLatest<Pair<Boolean, Boolean>, Unit> { (isRoutePermitted, isCardSdkVisible) ->
             if (isRoutePermitted && !isCardSdkVisible) {
                 parkedDeeplink?.let { (uri, source) ->
-                    val isRouted = launchDeepLink(
+                    val isRouted = launchRegisteredDeepLink(
                         deeplinkUri = uri,
                         coroutineScope = coroutineScope,
                         isFromOnNewIntent = isFromOnNewIntent,
@@ -210,41 +146,6 @@ internal class DeepLinkFactory @Inject constructor(
         }
     }
 
-    /** Returns `true` when a handler took the deeplink, `false` when nothing matched it. */
-    private fun launchDeepLink(
-        deeplinkUri: Uri,
-        coroutineScope: CoroutineScope,
-        isFromOnNewIntent: Boolean,
-        source: DeeplinkSource,
-    ): Boolean {
-        if (deepLinkFeatureToggles.isHandlerRegistryEnabled) {
-            return launchRegisteredDeepLink(
-                deeplinkUri = deeplinkUri,
-                coroutineScope = coroutineScope,
-                isFromOnNewIntent = isFromOnNewIntent,
-                source = source,
-            )
-        }
-
-        return when (deeplinkUri.scheme) {
-            DeepLinkScheme.Https.scheme -> handleHttpDeepLinks(deeplinkUri, coroutineScope)
-            DeepLinkScheme.Tangem.scheme -> handleTangemDeepLinks(deeplinkUri, coroutineScope, isFromOnNewIntent)
-            DeepLinkScheme.WalletConnect.scheme -> {
-                walletConnectDeepLink.create(deeplinkUri)
-                true
-            }
-            else -> {
-                TangemLogger.i(
-                    """
-                        No match found for deep link
-                        |- Received URI: $deeplinkUri
-                    """.trimIndent(),
-                )
-                false
-            }
-        }
-    }
-
     /**
      * Dispatches [deeplinkUri] to the handler a feature contributed for it. Returns `false` when no feature claims it.
      * A push deep link to a handler that is not openable from push is consumed without handling, so that no
@@ -280,39 +181,6 @@ internal class DeepLinkFactory @Inject constructor(
         return true
     }
 
-    private fun handleHttpDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope): Boolean {
-        if (deeplinkUri.host != DeepLinkRoute.PayApp.host) return false
-
-        val path = deeplinkUri.path.orEmpty()
-
-        return when {
-            path.matchesPathSegment(PAY_APP_MAIN_PATH) -> {
-                tangemPayMainDeepLink.create(coroutineScope, getQueryParams(deeplinkUri))
-                true
-            }
-            path.matchesPathSegment("/pay-app") -> {
-                onboardVisaDeepLink.create(deeplinkUri)
-                true
-            }
-            path.matchesPathSegment("/news") -> {
-                // Article-less paths (`/news`, `/news/{category}`) would silently no-op in the details
-                // handler, and the web fallback can't open them either: the manifest claims `/news*` as a
-                // verified App Link, so ACTION_VIEW would bounce straight back. Show the news list instead.
-                if (NewsDetailsDeepLinkHandler.extractArticleIdFromUri(deeplinkUri) != null) {
-                    newsDetailsDeepLink.create(coroutineScope, deeplinkUri)
-                } else {
-                    newsDeepLink.create(getQueryParams(deeplinkUri))
-                }
-                true
-            }
-            path.matchesPathSegment("/joint-account/join") -> {
-                jointAccountInviteDeepLink.create(coroutineScope, deeplinkUri)
-                true
-            }
-            else -> false
-        }
-    }
-
     /**
      * Whole-segment path match: `/news` and `/news/1-slug` match `/news`, `/newsletter` does not.
      *
@@ -330,74 +198,6 @@ internal class DeepLinkFactory @Inject constructor(
     private fun Uri.isPayAppMainPath(): Boolean {
         return path.orEmpty().matchesPathSegment(PAY_APP_MAIN_PATH) ||
             pathSegments.firstOrNull() == PAY_APP_MAIN_SEGMENT
-    }
-
-    @Suppress("CyclomaticComplexMethod")
-    private fun handleTangemDeepLinks(
-        deeplinkUri: Uri,
-        coroutineScope: CoroutineScope,
-        isFromOnNewIntent: Boolean,
-    ): Boolean {
-        val queryParams = getQueryParams(deeplinkUri)
-        when (deeplinkUri.host) {
-            DeepLinkRoute.Onramp.host -> onrampDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.SellRedirect.host -> sellRedirectDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.BuyRedirect.host -> Unit
-            DeepLinkRoute.Referral.host -> referralDeepLink.create()
-            DeepLinkRoute.Wallet.host -> walletDeepLink.create()
-            DeepLinkRoute.TokenDetails.host -> tokenDetailsDeepLink.create(
-                coroutineScope = coroutineScope,
-                queryParams = queryParams,
-                isFromOnNewIntent = isFromOnNewIntent,
-            )
-            DeepLinkRoute.Staking.host -> stakingDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.Markets.host -> marketsDeepLink.create(queryParams)
-            DeepLinkRoute.MarketTokenDetail.host -> marketsTokenDetailDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.TokenExchanges.host -> marketsTokenExchangesDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.Buy.host -> buyDeepLink.create()
-            DeepLinkRoute.Sell.host -> sellDeepLink.create()
-            DeepLinkRoute.Swap.host -> swapDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.WalletConnect.host -> walletConnectDeepLink.create(deeplinkUri)
-            DeepLinkRoute.Promo.host -> promoDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.OnboardVisa.host -> onboardVisaDeepLink.create(deeplinkUri)
-            DeepLinkRoute.News.host -> newsDeepLink.create(queryParams)
-            DeepLinkRoute.Earn.host -> earnDeepLink.create(queryParams)
-            DeepLinkRoute.Yield.host -> yieldDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.Discover.host -> discoverDeepLink.create(queryParams)
-            DeepLinkRoute.PayAppMain.host -> tangemPayMainDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.PayAccount.host -> tangemPayAccountDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.Survey.host -> surveyDeepLink.create(queryParams)
-            DeepLinkRoute.Support.host -> {
-                if (!useDeskFeatureToggles.isSupportChatDeepLinkEnabled) return false
-                supportDeepLink.create(coroutineScope)
-            }
-            DeepLinkRoute.Campaigns.host -> promoCampaignsDeepLink.create(queryParams)
-            DeepLinkRoute.McpAuthorization.host -> {
-                if (!mcpFeatureToggles.isMcpEnabled) return false
-                mcpDeepLink.create(queryParams)
-            }
-            DeepLinkRoute.Intent.host -> {
-                if (!mcpFeatureToggles.isMcpEnabled) return false
-                mcpIntentDeepLink.create(queryParams)
-            }
-            DeepLinkRoute.JointAccount.host -> jointAccountDeepLink.create(
-                coroutineScope = coroutineScope,
-                queryParams = queryParams,
-                isFromOnNewIntent = isFromOnNewIntent,
-            )
-            else -> {
-                TangemLogger.i(
-                    """
-                        No match found for deep link
-                        |- Received URI: $deeplinkUri
-                        |- With params: $queryParams
-                    """.trimIndent(),
-                )
-                return false
-            }
-        }
-
-        return true
     }
 
     private fun getQueryParams(uri: Uri): Map<String, String> {
