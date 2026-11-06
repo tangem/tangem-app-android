@@ -21,7 +21,10 @@ import com.tangem.domain.wallets.models.backup.CardBackupStatus
 import com.tangem.domain.wallets.models.backup.CardBackupError
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.models.errors.WalletCardsBackupError
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.test.core.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.createAppPreferencesStore
+import androidx.datastore.preferences.core.emptyPreferences
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -54,15 +57,19 @@ internal class DefaultWalletCardsBackupRepositoryTest {
     private val pendingStore = PendingWalletCardsBackupStore(dataStore = dataStore)
 
     private val registryDataStore = MockStateDataStore<WalletCardsRegistry>(default = emptyMap())
+    private val preferencesDataStore = MockStateDataStore(default = emptyPreferences())
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles = mockk()
 
     private val repository = createRepository(pendingStore)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(tangemTechApi, deliveryScheduler)
+        clearMocks(tangemTechApi, deliveryScheduler, onboardingV2FeatureToggles)
+        every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateV2Enabled } returns true
         runBlocking {
             dataStore.updateData { emptyList() }
             registryDataStore.updateData { emptyMap() }
+            preferencesDataStore.updateData { emptyPreferences() }
         }
     }
 
@@ -376,6 +383,37 @@ internal class DefaultWalletCardsBackupRepositoryTest {
         }
 
         @Test
+        fun `GIVEN toggle off and card reported before WHEN saveWalletCards THEN only given cards are sent`() =
+            runTest {
+                // Arrange
+                every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateV2Enabled } returns false
+                repository.saveWalletCards(
+                    userWalletId = WALLET_ID,
+                    cards = listOf(domainCard(CardBackupStatus.CARD_LINKED, cardId = SECOND_CARD_ID)),
+                    usedSeed = false,
+                )
+
+                // Act
+                repository.saveWalletCards(
+                    userWalletId = WALLET_ID,
+                    cards = listOf(domainCard(CardBackupStatus.ACTIVE)),
+                    usedSeed = false,
+                )
+
+                // Assert
+                coVerify(exactly = 1) {
+                    tangemTechApi.saveWalletCards(
+                        walletId = WALLET_ID.stringValue,
+                        body = WalletCardsBody(
+                            cards = listOf(dtoCard(WalletCardDTO.BackupStatus.ACTIVE)),
+                            usedSeed = false,
+                        ),
+                    )
+                }
+                assertThat(repository.hasCardWithIncompleteBackup(WALLET_ID)).isFalse()
+            }
+
+        @Test
         fun `GIVEN nothing seen WHEN hasCardWithIncompleteBackup THEN false`() = runTest {
             // Act
             val actual = repository.hasCardWithIncompleteBackup(WALLET_ID)
@@ -620,6 +658,11 @@ internal class DefaultWalletCardsBackupRepositoryTest {
         tangemTechApi = tangemTechApi,
         pendingStore = store,
         registryStore = WalletCardsRegistryStore(dataStore = registryDataStore),
+        appPreferencesStore = createAppPreferencesStore(
+            dispatchers = TestingCoroutineDispatcherProvider(),
+            preferencesDataStore = preferencesDataStore,
+        ),
+        onboardingV2FeatureToggles = onboardingV2FeatureToggles,
         deliveryScheduler = deliveryScheduler,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )

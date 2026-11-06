@@ -58,6 +58,7 @@ dependencies {
     api(projects.domain.settings)
     api(projects.domain.wallets)
     implementation(projects.domain.card)
+    implementation(projects.features.onboardingV2.api)
     implementation(projects.domain.wallets.models)
     runtimeOnly(projects.domain.account)
     // endregion

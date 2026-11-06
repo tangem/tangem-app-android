@@ -34,6 +34,7 @@ import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.tap.domain.DefaultUserWalletSelectedHandler
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -489,6 +490,21 @@ internal object WalletsDomainModule {
         walletCardsBackupRepository: WalletCardsBackupRepository,
     ): ReportWalletCardsBackupUseCase {
         return ReportWalletCardsBackupUseCase(walletCardsBackupRepository = walletCardsBackupRepository)
+    }
+
+    @Provides
+    @Singleton
+    @RemoveWithToggle("TWI_1586_CARD_LINKED_STATUS_UPDATE_V2")
+    fun provideReportCardLinkedWalletsBackupUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+        reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase,
+    ): ReportCardLinkedWalletsBackupUseCase {
+        return ReportCardLinkedWalletsBackupUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            walletCardsBackupRepository = walletCardsBackupRepository,
+            reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
+        )
     }
 
     @Provides

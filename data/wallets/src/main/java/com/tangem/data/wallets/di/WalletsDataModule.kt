@@ -43,6 +43,7 @@ import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.domain.wallets.signing.DeriveAndSignSession
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
 import dagger.Module
@@ -88,6 +89,8 @@ internal object WalletsDataModule {
     fun provideWalletCardsBackupRepository(
         tangemTechApi: TangemTechApi,
         dataStoreFactory: AppDataStoreFactory,
+        appPreferencesStore: AppPreferencesStore,
+        onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
         deliveryScheduler: WalletCardsBackupDeliveryScheduler,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletCardsBackupRepository {
@@ -107,6 +110,8 @@ internal object WalletsDataModule {
                     fileName = "wallet_cards_registry",
                 ),
             ),
+            appPreferencesStore = appPreferencesStore,
+            onboardingV2FeatureToggles = onboardingV2FeatureToggles,
             deliveryScheduler = deliveryScheduler,
             dispatchers = dispatchers,
         )
