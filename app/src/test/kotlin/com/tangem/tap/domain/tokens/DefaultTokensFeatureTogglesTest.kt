@@ -30,8 +30,8 @@ internal class DefaultTokensFeatureTogglesTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN pluggable sources and yield positions toggles WHEN isYieldPositionsSourceEnabled THEN both are required`(
-        model: YieldPositionsModel,
+    fun `GIVEN pluggable sources and yield contribution toggles WHEN isYieldContributionEnabled THEN both are required`(
+        model: YieldContributionModel,
     ) {
         // Arrange
         every {
@@ -39,7 +39,7 @@ internal class DefaultTokensFeatureTogglesTest {
         } returns model.isPluggableEnabled
         every {
             featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1948_YIELD_CONTRIBUTION_ENABLED)
-        } returns model.isYieldPositionsEnabled
+        } returns model.isYieldContributionEnabled
 
         // Act
         val actual = toggles.isYieldContributionEnabled
@@ -49,7 +49,7 @@ internal class DefaultTokensFeatureTogglesTest {
     }
 
     @Test
-    fun `GIVEN the toggles WHEN isYieldPositionsSourceEnabled read twice THEN it is re-evaluated each time`() {
+    fun `GIVEN the toggles WHEN isYieldContributionEnabled read twice THEN it is re-evaluated each time`() {
         // Arrange — a getter, not a cached value: flipping the toggle at runtime must be observed
         every {
             featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED)
@@ -65,15 +65,15 @@ internal class DefaultTokensFeatureTogglesTest {
 
     @Suppress("unused")
     private fun provideTestModels() = listOf(
-        YieldPositionsModel(isPluggableEnabled = false, isYieldPositionsEnabled = false, expected = false),
-        YieldPositionsModel(isPluggableEnabled = false, isYieldPositionsEnabled = true, expected = false),
-        YieldPositionsModel(isPluggableEnabled = true, isYieldPositionsEnabled = false, expected = false),
-        YieldPositionsModel(isPluggableEnabled = true, isYieldPositionsEnabled = true, expected = true),
+        YieldContributionModel(isPluggableEnabled = false, isYieldContributionEnabled = false, expected = false),
+        YieldContributionModel(isPluggableEnabled = false, isYieldContributionEnabled = true, expected = false),
+        YieldContributionModel(isPluggableEnabled = true, isYieldContributionEnabled = false, expected = false),
+        YieldContributionModel(isPluggableEnabled = true, isYieldContributionEnabled = true, expected = true),
     )
 
-    data class YieldPositionsModel(
+    data class YieldContributionModel(
         val isPluggableEnabled: Boolean,
-        val isYieldPositionsEnabled: Boolean,
+        val isYieldContributionEnabled: Boolean,
         val expected: Boolean,
     )
 }
