@@ -138,6 +138,7 @@ internal fun EarnPickerContent(state: EarnPickerUM, modifier: Modifier = Modifie
             barProgress = barProgress,
             tabs = tabs.takeIf { isTabsPinned },
             onClose = state.onClose,
+            onTabsHeightChange = { tabsHeightPx = it },
             onBarHeightChange = { barHeightPx = it },
             modifier = Modifier.align(Alignment.TopCenter),
         )
@@ -238,6 +239,7 @@ private fun rememberSectionTabs(
  * 95% of the page background, except its last 40 dp, which fade out; with the tabs it ends 2 dp under them, so the
  * gradient starts inside the tab block.
  */
+@Suppress("LongParameterList")
 @Composable
 private fun PinnedHeader(
     barTitle: TextReference,
@@ -245,6 +247,7 @@ private fun PinnedHeader(
     tabs: ImmutableList<TangemTabItemUM>?,
     onClose: () -> Unit,
     onBarHeightChange: (Int) -> Unit,
+    onTabsHeightChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val titleAlpha = ((barProgress - TITLE_FADE_START) / (1f - TITLE_FADE_START)).coerceIn(0f, 1f)
@@ -288,7 +291,12 @@ private fun PinnedHeader(
             )
         }
         if (tabs != null) {
-            Box(modifier = Modifier.fillMaxWidth().padding(vertical = TABS_VERTICAL_PADDING)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onSizeChanged { onTabsHeightChange(it.height) }
+                    .padding(vertical = TABS_VERTICAL_PADDING),
+            ) {
                 TangemTabNavigation(tabs = tabs, contentPadding = PaddingValues(horizontal = PAGE_MARGIN))
             }
         }
