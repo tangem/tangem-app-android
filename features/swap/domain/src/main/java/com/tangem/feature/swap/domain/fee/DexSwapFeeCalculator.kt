@@ -27,6 +27,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.GaslessApproval
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.models.tron.TronGaslessApprove
@@ -150,19 +151,14 @@ class DexSwapFeeCalculator(
         if (fromSwapCurrencyStatus.currency !is CryptoCurrency.Token) {
             raise(GetFeeError.GaslessError.NetworkIsNotSupported)
         }
-        val txValue = transaction.txValue ?: raise(GetFeeError.UnknownError)
         val network = fromSwapCurrencyStatus.currency.network
-        val nativeAmount = createNativeAmountForDex(txValue, network)
+        val nativeAmount = requireNoNativeCoin(transaction, network)
         // State override is applied by the SDK only for a token amount — it takes the token contract from it
         val estimationAmount = if (permissionState is PermissionDataState.PermissionSettings) {
             transaction.fromAmount.value.convertToSdkAmount(fromSwapCurrencyStatus.status)
         } else {
             nativeAmount
         }
-        // The gasless executor always calls with value = 0, and a bridge fee is paid in the native coin
-        val isNativeCoinRequired = nativeAmount.value.orZero().signum() != 0 ||
-            transaction.otherNativeFeeWei.orZero().signum() != 0
-        if (isNativeCoinRequired) raise(GetFeeError.GaslessError.NetworkIsNotSupported)
 
         val extras = createTransactionExtrasUseCase(data = transaction.txData, network = network)
             .getOrNull() ?: raise(GetFeeError.UnknownError)
@@ -177,35 +173,132 @@ class DexSwapFeeCalculator(
         val approval = (permissionState as? PermissionDataState.PermissionSettings)
             ?.let { createGaslessApproval(fromSwapCurrencyStatus, transaction, it) }
 
+        val fee = getEvmGaslessFee(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            transactionData = transactionData,
+            selectedToken = selectedToken,
+            approval = approval,
+            sentAmount = null,
+        )
+        return DexFeeResult(
+            transactionFee = TransactionFeeResult.LoadedExtended(fee),
+            otherNativeFee = BigDecimal.ZERO,
+            gas = transaction.gas,
+        )
+    }
+
+    /**
+     * Gasless fee of a swap out of the yield module: the relayer calls `swap` on the module, which spends its own
+     * protocol balance and approves the router itself, so no approve joins the batch.
+     *
+     * @param yieldModuleAddress the user's module on the from-token network.
+     */
+    suspend fun calculateYieldGasless(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transaction: ExpressTransactionModel.DEX,
+        yieldModuleAddress: String,
+        selectedToken: CryptoCurrencyStatus?,
+    ): Either<GetFeeError, DexFeeResult> = either {
+        val fromCurrency = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token
+            ?: raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+        val network = fromCurrency.network
+        requireNoNativeCoin(transaction, network)
+
+        val walletAddress = fromSwapCurrencyStatus.status.value.networkAddress
+            ?.defaultAddress
+            ?.value
+            ?: raise(GetFeeError.UnknownError)
+        val spenderAddress = transaction.allowanceContract ?: raise(GetFeeError.UnknownError)
+
+        val swapCallData = catch(
+            block = {
+                buildYieldSwapCallData(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    txTo = transaction.txTo,
+                    dexCallData = transaction.txData,
+                    amount = transaction.fromAmount.value,
+                    spenderAddress = spenderAddress,
+                )
+            },
+            catch = { error ->
+                when (error) {
+                    is YieldModuleUpgradeUnavailableException,
+                    is YieldModuleVersionIndeterminateException,
+                    -> raise(GetFeeError.GaslessError.ModuleUpdateUnavailable)
+                    else -> raise(GetFeeError.GaslessError.DataError(error))
+                }
+            },
+        )
+        val extras = createTransactionExtrasUseCase(callData = swapCallData, network = network)
+            .getOrNull() ?: raise(GetFeeError.UnknownError)
+        val transactionData = TransactionData.Uncompiled(
+            // A yield-supply amount names the sold token to the fee plan, and the SDK still calls the module
+            amount = transaction.fromAmount.value.convertToSdkAmount(fromSwapCurrencyStatus.status),
+            destinationAddress = yieldModuleAddress,
+            fee = null,
+            sourceAddress = walletAddress,
+            extras = extras,
+        )
+
+        val fee = getEvmGaslessFee(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            transactionData = transactionData,
+            selectedToken = selectedToken,
+            approval = null,
+            sentAmount = transaction.fromAmount.value,
+        )
+        DexFeeResult(
+            transactionFee = TransactionFeeResult.LoadedExtended(fee),
+            otherNativeFee = BigDecimal.ZERO,
+            gas = transaction.gas,
+        )
+    }
+
+    /** The gasless executor always calls with value = 0, and a bridge fee is paid in the native coin. */
+    private fun Raise<GetFeeError>.requireNoNativeCoin(
+        transaction: ExpressTransactionModel.DEX,
+        network: Network,
+    ): Amount {
+        val txValue = transaction.txValue ?: raise(GetFeeError.UnknownError)
+        val nativeAmount = createNativeAmountForDex(txValue, network)
+        val isNativeCoinRequired = nativeAmount.value.orZero().signum() != 0 ||
+            transaction.otherNativeFeeWei.orZero().signum() != 0
+        if (isNativeCoinRequired) raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+        return nativeAmount
+    }
+
+    private suspend fun Raise<GetFeeError>.getEvmGaslessFee(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transactionData: TransactionData.Uncompiled,
+        selectedToken: CryptoCurrencyStatus?,
+        approval: GaslessApproval?,
+        sentAmount: BigDecimal?,
+    ): TransactionFeeExtended {
         val feeExtended = when (val feeToken = selectedToken?.currency) {
             is CryptoCurrency.Token -> getFeeForTokenUseCase(
                 userWallet = fromSwapCurrencyStatus.userWallet,
                 token = feeToken,
                 transactionData = transactionData,
+                sentAmount = sentAmount,
                 approval = approval,
             )
             is CryptoCurrency.Coin, null -> getFeeForGaslessUseCase(
                 userWallet = fromSwapCurrencyStatus.userWallet,
-                network = network,
+                network = fromSwapCurrencyStatus.currency.network,
                 transactionData = transactionData,
+                sentAmount = sentAmount,
                 sentCurrencyStatus = fromSwapCurrencyStatus.status,
                 approval = approval,
             )
         }.bind()
 
         // Paid in the native coin, the swap is a regular transaction and gets the native path's gas-limit margin
-        val swapFee = if (feeExtended.isGasless) {
+        return if (feeExtended.isGasless) {
             feeExtended
         } else {
             val patchedFee = patchEthGasLimitForSwap(feeExtended.transactionFee)
             feeExtended.copy(transactionFee = patchedFee, nativeFee = patchedFee)
         }
-
-        return DexFeeResult(
-            transactionFee = TransactionFeeResult.LoadedExtended(swapFee),
-            otherNativeFee = BigDecimal.ZERO,
-            gas = transaction.gas,
-        )
     }
 
     private suspend fun Raise<GetFeeError>.createGaslessApproval(
