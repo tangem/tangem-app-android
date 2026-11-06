@@ -5,6 +5,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.product.api.product.EarnRateEntry
@@ -28,7 +29,7 @@ internal class YieldModeRateMapper @Inject constructor() {
 
         return EarnRateEntry(
             rate = EarnProductRate(fraction = apyPercent.movePointLeft(PERCENT_POINT_SHIFT), type = EarnRateType.APY),
-            isActive = status.value.yieldSupplyStatus?.isActive == true,
+            isActive = status.value.yieldSupply?.isActive == true,
             source = status.value.sources.networkSource,
             route = AppRoute.YieldSupplyEntry(userWalletId, token, apyPercent.toPlainString()),
         )

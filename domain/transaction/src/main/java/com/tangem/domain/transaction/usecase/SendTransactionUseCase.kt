@@ -17,6 +17,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
+import com.tangem.domain.account.status.utils.NetworkContributionsRefresher
 import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
@@ -45,6 +46,7 @@ class SendTransactionUseCase(
     private val transactionRepository: TransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+    private val networkContributionsRefresher: NetworkContributionsRefresher,
     private val parallelUpdatingScope: AppCoroutineScope,
     private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
     private val pushNotificationsRepository: PushNotificationsRepository,
@@ -109,14 +111,7 @@ class SendTransactionUseCase(
         cardSdkConfigRepository.setLinkedTerminal(isLinkedTerminal)
 
         return sendResult
-            .onRight {
-                singleNetworkStatusFetcher(
-                    params = SingleNetworkStatusFetcher.Params(
-                        userWalletId = userWallet.walletId,
-                        network = network,
-                    ),
-                )
-            }
+            .onRight { refreshBalances(userWallet = userWallet, network = network) }
             .fold(
                 ifRight = { result ->
                     processSentTransactionsHashes(
@@ -141,6 +136,15 @@ class SendTransactionUseCase(
             network = network,
             sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
         ).map { it.first() }
+    }
+
+    private suspend fun refreshBalances(userWallet: UserWallet, network: Network) {
+        singleNetworkStatusFetcher(
+            params = SingleNetworkStatusFetcher.Params(userWalletId = userWallet.walletId, network = network),
+        )
+        parallelUpdatingScope.launch {
+            networkContributionsRefresher(userWalletId = userWallet.walletId, network = network)
+        }
     }
 
     private fun processSentTransactionsHashes(
