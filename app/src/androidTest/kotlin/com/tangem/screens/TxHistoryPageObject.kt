@@ -22,6 +22,13 @@ class TxHistoryPageObject(private val semanticsProvider: SemanticsNodeInteractio
         useUnmergedTree = true
     }
 
+    fun transactionItemWithText(title: String, text: String): KNode = child {
+        hasTestTag(TransactionHistoryItemTestTags.ITEM)
+        hasAnyDescendant(withText(title))
+        hasAnyDescendant(withText(text = text, substring = true))
+        useUnmergedTree = true
+    }
+
     // Raw Compose on purpose: polled in a pull-to-refresh loop, where a Kakao check waits out a 10 s retry.
     fun isTransactionItemShown(title: String): Boolean = semanticsProvider
         .onAllNodes(
@@ -32,6 +39,17 @@ class TxHistoryPageObject(private val semanticsProvider: SemanticsNodeInteractio
         .isNotEmpty()
 
     /** A settled yield row is a pill whose label and end state read as one text node: "Yield mode Enabled". */
+    // Raw Compose on purpose: read once right after a pull, so a skeleton flash is not hidden by a retry.
+    fun isTransactionItemWithTextShown(title: String, text: String): Boolean = semanticsProvider
+        .onAllNodes(
+            matcher = withTestTag(TransactionHistoryItemTestTags.ITEM) and
+                hasAnyDescendant(withText(title)) and
+                hasAnyDescendant(withText(text = text, substring = true)),
+            useUnmergedTree = true,
+        )
+        .fetchSemanticsNodes(atLeastOneRootRequired = false)
+        .isNotEmpty()
+
     fun yieldModePill(@StringRes state: Int): KNode = transactionItem(
         title = "${getResourceString(CoreResR.string.common_yield_mode_inline)} ${getResourceString(state)}",
     )
