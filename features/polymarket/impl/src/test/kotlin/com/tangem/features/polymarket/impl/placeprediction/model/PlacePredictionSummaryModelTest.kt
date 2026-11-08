@@ -508,7 +508,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             }
 
         @Test
-        fun `GIVEN the reads of a delayed order run out WHEN the wait ends THEN a dialog returns the summary to idle`() =
+        fun `GIVEN the reads of a delayed order run out WHEN the wait ends THEN the still-processing result is shown`() =
             runTest {
                 // Arrange
                 val amountModel = createAmountModel(testScope = this)
@@ -527,9 +527,10 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-                verify(exactly = 1) { messageSender.send(any()) }
-                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
+                val submit = model.uiState.value.submit as SubmitUM.Result
+                assertThat(submit.result).isEqualTo(PlaceResultUM.StillProcessing(placedAt = submit.result.placedAt))
+                verify(exactly = 0) { messageSender.send(any()) }
+                verify(exactly = 1) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
                 coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
 
                 model.onDestroy()
@@ -563,7 +564,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             verify(exactly = 0) { router.pop(onComplete = any()) }
             verify(exactly = 0) { router.popTo(any<PolymarketRoute.Main>(), onComplete = any()) }
             advanceUntilIdle()
-            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
 
             model.onDestroy()
         }
