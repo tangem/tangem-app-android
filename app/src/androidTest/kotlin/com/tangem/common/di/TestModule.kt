@@ -1,6 +1,7 @@
 package com.tangem.common.di
 
 import com.tangem.core.decompose.utils.ForegroundActivityProvider
+import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.di.TangemSdkManagerModule
@@ -23,8 +24,9 @@ object TestModule {
     @Singleton
     fun provideTangemSdkManager(
         foregroundActivityProvider: ForegroundActivityProvider,
+        deviceRegistrar: Lazy<DeviceRegistrar>,
         walletRegistrar: Lazy<WalletRegistrar>,
     ): TangemSdkManager {
-        return MockTangemSdkManager(foregroundActivityProvider, walletRegistrar)
+        return MockTangemSdkManager(foregroundActivityProvider, deviceRegistrar, walletRegistrar)
     }
 }

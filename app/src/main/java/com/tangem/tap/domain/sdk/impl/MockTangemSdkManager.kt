@@ -23,6 +23,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialData
 import com.tangem.domain.visa.model.MoneyAccountActivationData
+import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
@@ -38,10 +39,11 @@ import dagger.Lazy
 @Suppress("TooManyFunctions")
 class MockTangemSdkManager(
     private val foregroundActivityProvider: ForegroundActivityProvider,
+    deviceRegistrar: Lazy<DeviceRegistrar>,
     walletRegistrar: Lazy<WalletRegistrar>,
 ) : TangemSdkManager {
 
-    private val coldWalletRegistration = MockColdWalletRegistration(walletRegistrar)
+    private val coldWalletRegistration = MockColdWalletRegistration(deviceRegistrar, walletRegistrar)
 
     private var userCodeRequestPolicyInternal: UserCodeRequestPolicy = UserCodeRequestPolicy.Default
 
