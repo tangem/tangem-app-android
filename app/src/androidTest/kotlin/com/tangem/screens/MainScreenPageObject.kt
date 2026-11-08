@@ -172,6 +172,12 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         error("Wallet did not switch from '$before' after $WALLET_SWITCH_ATTEMPTS attempts")
     }
 
+    // The identity flips mid-animation, and a tap while the pager is still settling only stops the scroll.
+    fun assertOnScreenPageSettled() {
+        val left = onScreenPage()?.fetchSemanticsNode()?.boundsInRoot?.left
+        if (left == null || abs(left) >= 1f) throw AssertionError("Wallet pager page is not settled, left = $left")
+    }
+
     // Expand only *after* a swipe that didn't page: if the header is already pinned, a swipe-down here
     // would trigger pull-to-refresh and un-pin it, breaking the horizontal swipe.
     private fun expandCollapsingHeader() {
