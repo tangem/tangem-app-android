@@ -1,7 +1,7 @@
 package com.tangem.store.features.cardsettings.impl.securitymode
 
 import com.tangem.core.ui.R
-import com.tangem.store.features.cardsettings.impl.common.SecurityOption
+import com.tangem.store.features.cardsettings.impl.domain.SecurityOption
 
 internal data class SecurityModeScreenState(
     val availableOptions: List<SecurityOption>,
