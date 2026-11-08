@@ -123,8 +123,9 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   wallet: a second one ends at once in `OperationInProgress`, nothing signed; toggling is not guarded, as on iOS.
   Progress is emitted outside the lock. Renewal and replacement release the lock while the revocation settles and take
   it again to send the pre-signed authorization; a claim in between takes that nonce. They emit `Revoked` once the old
-  key is settled `REVOKED`, so a failure after it is told apart from one before: the key no longer trades. Nothing is
-  signed twice without the user: a batch refused for its signature (`NONCE_ALREADY_USED`, `INVALID_DEADLINE`,
+  key is settled `REVOKED`, so a failure after it is told apart from one before: the key no longer trades. A key the
+  BFF stops listing while it is `REVOKING` counts as revoked there and the authorization follows (iOS parity); a plain
+  revoke ends in `RevocationFailed` instead. Nothing is signed twice without the user: a batch refused for its signature (`NONCE_ALREADY_USED`, `INVALID_DEADLINE`,
   `INVALID_VALID_UNTIL`, `RELAYER_REJECTED`) or a pre-signed authorization expired before it is sent ends in
   `StaleSignature`, and the user starts the operation again; only an unanswered or `502` send is repeated, with the
   same body. The one exception: the authorization sent after a revocation is resent up to 5 times, 3 s apart, on
