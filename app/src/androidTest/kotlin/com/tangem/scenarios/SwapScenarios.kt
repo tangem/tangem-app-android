@@ -236,6 +236,29 @@ fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
     }
 }
 
+fun BaseTestCase.selectGaslessSwapFeeSpeed(currentSpeed: String, newSpeed: String, selectedFeeAmount: String) {
+    step("Open the 'Network fee' bottom sheet") {
+        openSwapNetworkFeeSelector()
+    }
+    step("Open 'Choose speed' by clicking on '$currentSpeed' fee row") {
+        onSendFeeSelectorBottomSheet { feeSpeedItemTitle(currentSpeed).performClick() }
+    }
+    step("Click on '$newSpeed' item") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(newSpeed).performClick() }
+        }
+    }
+    step("Click on 'Apply' button") {
+        waitForIdle()
+        onSendFeeSelectorBottomSheet { applyButton.performClick() }
+    }
+    step("Assert fee amount is equal to '$newSpeed' fee:'$selectedFeeAmount'") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
+        }
+    }
+}
+
 fun BaseTestCase.selectFeeTypeAndReadFee(feeType: FeeType): String {
     step("Click on 'Select fee' icon") {
         onSwapTokenScreen { selectFeeIcon.performClick() }
