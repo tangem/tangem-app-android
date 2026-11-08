@@ -17,7 +17,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -715,6 +718,50 @@ internal class PolymarketSessionKeyStateServiceTest {
     }
 
     @Test
+    fun `GIVEN a reconciliation in flight WHEN refresh and await THEN it waits for the requested one`() = runTest {
+        // Arrange
+        val active = overview(PolymarketSessionKeyStatus.ACTIVE)
+        val stale = overview(PolymarketSessionKeyStatus.PENDING)
+        val revoked = overview(PolymarketSessionKeyStatus.REVOKED)
+        val inFlight = CompletableDeferred<Unit>()
+        val requested = CompletableDeferred<Unit>()
+        var reconciles = 0
+        coEvery { reconcile(USER_WALLET_ID) } coAnswers {
+            reconciles++
+            when (reconciles) {
+                1 -> active.right()
+                2 -> {
+                    inFlight.await()
+                    stale.right()
+                }
+                else -> {
+                    requested.await()
+                    revoked.right()
+                }
+            }
+        }
+        val service = service()
+        backgroundScope.launch { service.observe(USER_WALLET_ID).collect() }
+        runCurrent()
+        service.refresh(USER_WALLET_ID)
+        runCurrent()
+
+        // Act
+        val awaited = async { service.refreshAndAwait(USER_WALLET_ID) }
+        runCurrent()
+        inFlight.complete(Unit)
+        runCurrent()
+        val isDoneOnStaleOverview = awaited.isCompleted
+        requested.complete(Unit)
+        awaited.await()
+
+        // Assert
+        assertThat(isDoneOnStaleOverview).isFalse()
+        assertThat(reconciles).isEqualTo(3)
+        assertThat(service.observe(USER_WALLET_ID).first()).isEqualTo(revoked.right())
+    }
+
+    @Test
     fun `GIVEN an unobserved wallet WHEN refresh and await THEN it reconciles without waiting`() = runTest {
         // Arrange
         coEvery { reconcile(USER_WALLET_ID) } returns overview(PolymarketSessionKeyStatus.ACTIVE).right()
@@ -731,9 +778,32 @@ internal class PolymarketSessionKeyStateServiceTest {
     }
 
     @Test
-    fun `GIVEN the overview does not change WHEN refresh and await THEN it returns after the timeout`() = runTest {
+    fun `GIVEN the overview does not change WHEN refresh and await THEN it returns once the reconciliation ends`() =
+        runTest {
+            // Arrange
+            coEvery { reconcile(USER_WALLET_ID) } returns overview(PolymarketSessionKeyStatus.ACTIVE).right()
+            val service = service()
+            backgroundScope.launch { service.observe(USER_WALLET_ID).collect() }
+            runCurrent()
+
+            // Act
+            val started = testScheduler.currentTime
+            service.refreshAndAwait(USER_WALLET_ID)
+
+            // Assert
+            assertThat(testScheduler.currentTime - started).isEqualTo(0)
+            coVerify(exactly = 2) { reconcile(USER_WALLET_ID) }
+        }
+
+    @Test
+    fun `GIVEN the reconciliation hangs WHEN refresh and await THEN it returns after the timeout`() = runTest {
         // Arrange
-        coEvery { reconcile(USER_WALLET_ID) } returns overview(PolymarketSessionKeyStatus.ACTIVE).right()
+        var reconciles = 0
+        coEvery { reconcile(USER_WALLET_ID) } coAnswers {
+            reconciles++
+            if (reconciles > 1) delay(REFRESH_AWAIT_TIMEOUT_MILLIS * 10)
+            overview(PolymarketSessionKeyStatus.ACTIVE).right()
+        }
         val service = service()
         backgroundScope.launch { service.observe(USER_WALLET_ID).collect() }
         runCurrent()
@@ -744,7 +814,6 @@ internal class PolymarketSessionKeyStateServiceTest {
 
         // Assert
         assertThat(testScheduler.currentTime - started).isEqualTo(REFRESH_AWAIT_TIMEOUT_MILLIS)
-        coVerify(exactly = 2) { reconcile(USER_WALLET_ID) }
     }
 
     private fun TestScope.service() = PolymarketSessionKeyStateService(
