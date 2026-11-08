@@ -8,6 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.store.features.cardsettings.impl.securitymode.api.SecurityModeComponent
 import com.tangem.store.features.cardsettings.impl.securitymode.model.SecurityModeModel
+import com.tangem.store.features.cardsettings.impl.securitymode.ui.SecurityModeScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,7 +22,7 @@ internal class DefaultSecurityModeComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.screenState.collectAsStateWithLifecycle()
+        val state by model.uiState.collectAsStateWithLifecycle()
 
         SecurityModeScreen(
             modifier = modifier,

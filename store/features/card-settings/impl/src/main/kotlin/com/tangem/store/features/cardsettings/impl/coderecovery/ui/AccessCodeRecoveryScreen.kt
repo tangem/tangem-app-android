@@ -1,4 +1,4 @@
-package com.tangem.store.features.cardsettings.impl.coderecovery
+package com.tangem.store.features.cardsettings.impl.coderecovery.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,9 +12,10 @@ import com.tangem.store.features.cardsettings.impl.common.DetailsMainButton
 import com.tangem.store.features.cardsettings.impl.common.DetailsRadioButtonElement
 import com.tangem.store.features.cardsettings.impl.common.ScreenTitle
 import com.tangem.store.features.cardsettings.impl.common.SettingsScreensScaffold
+import com.tangem.store.features.cardsettings.impl.coderecovery.ui.state.AccessCodeRecoveryUM
 
 @Composable
-internal fun AccessCodeRecoveryScreen(state: AccessCodeRecoveryScreenState, onBackClick: () -> Unit) {
+internal fun AccessCodeRecoveryScreen(state: AccessCodeRecoveryUM, onBackClick: () -> Unit) {
     SettingsScreensScaffold(
         onBackClick = onBackClick,
         content = { AccessCodeRecoveryOptions(state = state) },
@@ -22,7 +23,7 @@ internal fun AccessCodeRecoveryScreen(state: AccessCodeRecoveryScreenState, onBa
 }
 
 @Composable
-internal fun AccessCodeRecoveryOptions(state: AccessCodeRecoveryScreenState) {
+internal fun AccessCodeRecoveryOptions(state: AccessCodeRecoveryUM) {
     Column(
         modifier = Modifier
             .fillMaxSize()

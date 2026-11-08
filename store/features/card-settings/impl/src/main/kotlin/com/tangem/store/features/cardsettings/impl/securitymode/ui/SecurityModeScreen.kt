@@ -1,4 +1,4 @@
-package com.tangem.store.features.cardsettings.impl.securitymode
+package com.tangem.store.features.cardsettings.impl.securitymode.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,30 +7,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.toImmutableList
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.store.features.cardsettings.impl.common.DetailsMainButton
 import com.tangem.store.features.cardsettings.impl.common.DetailsRadioButtonElement
 import com.tangem.store.features.cardsettings.impl.common.ScreenTitle
+import com.tangem.store.features.cardsettings.impl.common.utils.toTitleRes
 import com.tangem.store.features.cardsettings.impl.domain.SecurityOption
+import com.tangem.store.features.cardsettings.impl.securitymode.ui.state.SecurityModeUM
 import com.tangem.store.features.cardsettings.impl.common.SettingsScreensScaffold
 
 @Composable
-internal fun SecurityModeScreen(
-    state: SecurityModeScreenState,
-    onBackClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun SecurityModeScreen(state: SecurityModeUM, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
         onBackClick = onBackClick,
         modifier = modifier,
         content = { SecurityModeOptions(state = state) },
-        // titleRes = R.string.card_settings_security_mode,
     )
 }
 
 @Composable
-private fun SecurityModeOptions(state: SecurityModeScreenState) {
+private fun SecurityModeOptions(state: SecurityModeUM) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -56,7 +54,7 @@ private fun SecurityModeOptions(state: SecurityModeScreenState) {
 }
 
 @Composable
-private fun SecurityOption(option: SecurityOption, state: SecurityModeScreenState) {
+private fun SecurityOption(option: SecurityOption, state: SecurityModeUM) {
     val isSelected = option == state.selectedSecurityMode
 
     val title = option.toTitleRes()
@@ -79,8 +77,8 @@ private fun SecurityOption(option: SecurityOption, state: SecurityModeScreenStat
 @Composable
 private fun SecurityModeScreenPreview() {
     SecurityModeScreen(
-        state = SecurityModeScreenState(
-            availableOptions = SecurityOption.entries,
+        state = SecurityModeUM(
+            availableOptions = SecurityOption.entries.toImmutableList(),
             selectedSecurityMode = SecurityOption.LongTap,
             isSaveChangesEnabled = false,
             onNewModeSelected = {},
