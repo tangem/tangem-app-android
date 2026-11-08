@@ -1,9 +1,11 @@
 package com.tangem.common.di
 
 import com.tangem.core.decompose.utils.ForegroundActivityProvider
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.di.TangemSdkManagerModule
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
+import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
@@ -19,7 +21,10 @@ object TestModule {
 
     @Provides
     @Singleton
-    fun provideTangemSdkManager(foregroundActivityProvider: ForegroundActivityProvider): TangemSdkManager {
-        return MockTangemSdkManager(foregroundActivityProvider)
+    fun provideTangemSdkManager(
+        foregroundActivityProvider: ForegroundActivityProvider,
+        walletRegistrar: Lazy<WalletRegistrar>,
+    ): TangemSdkManager {
+        return MockTangemSdkManager(foregroundActivityProvider, walletRegistrar)
     }
 }
