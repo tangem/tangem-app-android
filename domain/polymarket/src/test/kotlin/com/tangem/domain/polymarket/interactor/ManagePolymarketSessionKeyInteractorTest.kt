@@ -572,6 +572,37 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
+        fun `GIVEN the revoking key is dropped by the BFF WHEN renew THEN it counts as revoked and is authorized`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                val authorization = authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(emptyList(), listOf(key()))
+
+                // Act
+                val actual = createInteractor().renew(USER_WALLET_ID).toList()
+
+                // Assert
+                assertThat(actual).containsExactly(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                    PolymarketSessionKeyProgress.Revoked(key(status = PolymarketSessionKeyStatus.REVOKED)),
+                    PolymarketSessionKeyProgress.Authorizing(key(status = PolymarketSessionKeyStatus.PENDING)),
+                    PolymarketSessionKeyProgress.CheckingReadiness(key()),
+                    PolymarketSessionKeyProgress.Finished(key().right()),
+                ).inOrder()
+                coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) }
+            }
+
+        @Test
         fun `GIVEN the authorization fails after the revocation WHEN renew THEN revoked is reported first`() = runTest {
             // Arrange
             val revocation = revocation(nonce = "7")
