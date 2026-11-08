@@ -12,7 +12,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.store.features.cardsettings.impl.common.DetailsMainButton
 import com.tangem.store.features.cardsettings.impl.common.DetailsRadioButtonElement
 import com.tangem.store.features.cardsettings.impl.common.ScreenTitle
-import com.tangem.store.features.cardsettings.impl.common.SecurityOption
+import com.tangem.store.features.cardsettings.impl.domain.SecurityOption
 import com.tangem.store.features.cardsettings.impl.common.SettingsScreensScaffold
 
 @Composable

@@ -8,13 +8,10 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.analytics.TangemSdkErrorEvent
 import com.tangem.store.features.cardsettings.impl.common.CardSettingsAnalyticsEvent
-import com.tangem.store.features.cardsettings.impl.common.SecurityOption
-import com.tangem.store.features.cardsettings.impl.common.utils.getAllowedSecurityOptions
-import com.tangem.store.features.cardsettings.impl.common.utils.getCurrentSecurityOption
+import com.tangem.store.features.cardsettings.impl.domain.SecurityOption
 import com.tangem.store.features.cardsettings.impl.domain.CardSettingsInteractor
 import com.tangem.store.features.cardsettings.impl.securitymode.SecurityModeScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -34,22 +31,18 @@ internal class SecurityModeModel @Inject constructor(
     private val router: Router,
 ) : Model() {
 
-    private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
-        ?: error("Scan response is null")
+    private val scannedScanResponse = cardSettingsInteractor.requireScanResponse()
 
     /**
      * Security option that is set on the card at the moment the screen is opened. A successful [saveChanges] closes
      * the screen, so this option stays valid for the whole lifetime of the model.
      */
-    private val actualSecurityOption = getCurrentSecurityOption(scannedScanResponse.card)
+    private val actualSecurityOption = cardSettingsInteractor.getSecurityOption(scannedScanResponse.card)
 
     val screenState = MutableStateFlow(value = getInitialState())
 
     private fun getInitialState(): SecurityModeScreenState {
-        val card = scannedScanResponse.card
-        val cardTypesResolver = scannedScanResponse.cardTypesResolver
-
-        val allowedSecurityOptions = getAllowedSecurityOptions(card, cardTypesResolver, actualSecurityOption)
+        val allowedSecurityOptions = cardSettingsInteractor.getAllowedSecurityOptions(scannedScanResponse)
 
         return SecurityModeScreenState(
             availableOptions = allowedSecurityOptions.toList(),
@@ -84,14 +77,7 @@ internal class SecurityModeModel @Inject constructor(
                 is CompletionResult.Success -> {
                     // The scan response is shared between all card settings screens, so it must reflect the card
                     // state only after the user code has actually been changed
-                    cardSettingsInteractor.update { scanResponse ->
-                        scanResponse.copy(
-                            card = scanResponse.card.copy(
-                                isAccessCodeSet = selectedOption == SecurityOption.AccessCode,
-                                isPasscodeSet = selectedOption == SecurityOption.PassCode,
-                            ),
-                        )
-                    }
+                    cardSettingsInteractor.updateSecurityOption(selectedOption)
 
                     val paramValue = selectedOption.toAnalyticsSecurityMode()
                     analyticsEventHandler.send(CardSettingsAnalyticsEvent.SecurityModeChanged(paramValue))
