@@ -26,10 +26,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
@@ -616,6 +619,96 @@ internal class OnrampUseCasesTest {
 
         @ParameterizedTest
         @ValueSource(strings = ["countries", "currencies", "transactions", "allOffers", "offers"])
+        fun `GIVEN success then upstream failure WHEN collecting THEN success precedes mapped error`(kind: String) =
+            runTest {
+                // Arrange
+                every { repository.getCountries() } returns flow { emit(emptyList()); throw thrown }
+                every { repository.getCurrencies() } returns flow { emit(emptyList()); throw thrown }
+                val failQuotes = CompletableDeferred<Unit>()
+                every { repository.getQuotes() } returns flow {
+                    emit(emptyList())
+                    failQuotes.await()
+                    throw thrown
+                }
+                every { transactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flow {
+                    emit(emptyList())
+                    throw thrown
+                }
+                every { transactionRepository.getAllTransactions() } returns flowOf(emptyList())
+                val collected = mutableListOf<Either<OnrampError, *>>()
+
+                // Act
+                val job = launch { errorFlow(kind).toList(collected) }
+                runCurrent()
+                failQuotes.complete(Unit)
+                job.join()
+
+                // Assert
+                assertThat(collected).hasSize(2)
+                assertThat(collected.first().isRight()).isTrue()
+                assertThat(collected.last()).isEqualTo(Either.Left(expectedError))
+                verify(exactly = 1) {
+                    errorResolver.resolve(match { it is IllegalStateException && it.message == thrown.message })
+                }
+            }
+
+        @Test
+        fun `GIVEN transaction source fails WHEN offers collected THEN error is mapped`() = runTest {
+            // Arrange
+            every { repository.getQuotes() } returns flowOf(emptyList())
+            every { transactionRepository.getAllTransactions() } returns flow { throw thrown }
+
+            // Act
+            val result = errorFlow("offers").toList()
+
+            // Assert
+            assertThat(result).containsExactly(Either.Left(expectedError))
+            verify(exactly = 1) {
+                errorResolver.resolve(match { it is IllegalStateException && it.message == thrown.message })
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = ["allOffers", "offers"])
+        fun `GIVEN settings fail during processing WHEN offers collected THEN error is mapped`(kind: String) = runTest {
+            // Arrange
+            every { repository.getQuotes() } returns flowOf(listOf(quote(PaymentMethodType.CARD, "10")))
+            every { transactionRepository.getAllTransactions() } returns flowOf(emptyList())
+            coEvery { settingsRepository.isGooglePayAvailability() } throws thrown
+
+            // Act
+            val result = errorFlow(kind).toList()
+
+            // Assert
+            assertThat(result).containsExactly(Either.Left(expectedError))
+            verify(exactly = 1) {
+                errorResolver.resolve(match { it is IllegalStateException && it.message == thrown.message })
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = ["countries", "currencies", "transactions", "allOffers", "offers"])
+        fun `GIVEN collector throws WHEN collecting domain flow THEN downstream failure is not mapped`(kind: String) =
+            runTest {
+                // Arrange
+                every { repository.getCountries() } returns flowOf(emptyList())
+                every { repository.getCurrencies() } returns flowOf(emptyList())
+                every { repository.getQuotes() } returns flowOf(emptyList())
+                every { transactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns
+                    flowOf(emptyList())
+                every { transactionRepository.getAllTransactions() } returns flowOf(emptyList())
+
+                // Act
+                val actual = runCatching { errorFlow(kind).collect { throw thrown } }.exceptionOrNull()
+
+                // Assert
+                assertThat(actual).isInstanceOf(IllegalStateException::class.java)
+                assertThat(actual).hasMessageThat().isEqualTo(thrown.message)
+                verify(exactly = 0) { errorResolver.resolve(any()) }
+            }
+
+        @ParameterizedTest
+        @ValueSource(strings = ["countries", "currencies", "transactions", "allOffers", "offers"])
         fun `GIVEN upstream failure WHEN collecting domain flow THEN emits mapped error`(kind: String) = runTest {
             // Arrange
             every { repository.getCountries() } returns flow { throw thrown }
@@ -686,15 +779,43 @@ internal class OnrampUseCasesTest {
             val quote = mockk<com.tangem.domain.onramp.model.OnrampProviderWithQuote.Data>()
             val transaction = mockk<OnrampTransaction>()
             coEvery { repository.getOnrampData(userWallet, cryptoCurrency, quote, true) } returns transaction
+            val releaseStorage = CompletableDeferred<Unit>()
+            coEvery { transactionRepository.storeTransaction(transaction) } coAnswers { releaseStorage.await() }
+
+            // Act
+            val result = async {
+                GetOnrampRedirectUrlUseCase(repository, transactionRepository, errorResolver)(
+                    userWallet, quote, cryptoCurrency, true,
+                )
+            }
+            runCurrent()
+
+            // Assert
+            assertThat(result.isCompleted).isFalse()
+            coVerify(exactly = 1) { transactionRepository.storeTransaction(transaction) }
+
+            // Act
+            releaseStorage.complete(Unit)
+
+            // Assert
+            assertThat(result.await()).isEqualTo(Either.Right(transaction))
+        }
+
+        @Test
+        fun `GIVEN redirect data fails WHEN requesting redirect THEN nothing is persisted`() = runTest {
+            // Arrange
+            val quote = mockk<com.tangem.domain.onramp.model.OnrampProviderWithQuote.Data>()
+            coEvery { repository.getOnrampData(userWallet, cryptoCurrency, quote, false) } throws thrown
 
             // Act
             val result = GetOnrampRedirectUrlUseCase(repository, transactionRepository, errorResolver)(
-                userWallet, quote, cryptoCurrency, true,
+                userWallet, quote, cryptoCurrency, false,
             )
 
             // Assert
-            assertThat(result).isEqualTo(Either.Right(transaction))
-            coVerify(exactly = 1) { transactionRepository.storeTransaction(transaction) }
+            assertThat(result).isEqualTo(Either.Left(expectedError))
+            coVerify(exactly = 0) { transactionRepository.storeTransaction(any()) }
+            verify(exactly = 1) { errorResolver.resolve(thrown) }
         }
 
         @Test

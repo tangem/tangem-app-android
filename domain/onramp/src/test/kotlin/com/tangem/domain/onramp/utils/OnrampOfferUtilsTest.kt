@@ -26,7 +26,10 @@ internal class OnrampOfferUtilsTest {
     }
 
     @ParameterizedTest
-    @CsvSource("90,100,0.1", "90.00,100,0.1", "0,1,1", "99.99,100,0.0001", "0.0009,0.001,0.1")
+    @CsvSource(
+        "90,100,0.1", "90.00,100,0.1", "0,1,1", "99.99,100,0.0001", "0.0009,0.001,0.1",
+        "2,3,0.3333333333333333333333333333333333", "99.989999,100,0.00010001",
+    )
     fun `GIVEN meaningful difference WHEN calculate rate difference THEN returns scale independent fraction`(
         current: String,
         best: String,
@@ -40,14 +43,16 @@ internal class OnrampOfferUtilsTest {
         assertThat(result!!.compareTo(BigDecimal(expected))).isEqualTo(0)
     }
 
-    @Test
-    fun `GIVEN zero best rate WHEN calculate rate difference THEN returns null`() {
-        assertThat(calculateRateDif(BigDecimal.ZERO, BigDecimal.ZERO)).isNull()
+    @ParameterizedTest
+    @CsvSource("0", "-1")
+    fun `GIVEN nonpositive best rate WHEN calculate rate difference THEN returns null`(best: String) {
+        assertThat(calculateRateDif(BigDecimal.ZERO, BigDecimal(best))).isNull()
     }
 
-    @Test
-    fun `GIVEN negligible rate difference WHEN calculate rate difference THEN hides difference`() {
-        assertThat(calculateRateDif(BigDecimal("99.99995"), BigDecimal("100"))).isNull()
+    @ParameterizedTest
+    @CsvSource("99.99995", "99.990001")
+    fun `GIVEN negligible rate difference WHEN calculate rate difference THEN hides difference`(current: String) {
+        assertThat(calculateRateDif(BigDecimal(current), BigDecimal("100"))).isNull()
     }
 
     @Test
