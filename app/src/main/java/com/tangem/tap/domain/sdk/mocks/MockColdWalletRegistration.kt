@@ -3,6 +3,7 @@ package com.tangem.tap.domain.sdk.mocks
 import android.util.Base64
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
@@ -12,6 +13,7 @@ import com.tangem.utils.logging.TangemLogger
 import dagger.Lazy
 
 internal class MockColdWalletRegistration(
+    private val deviceRegistrar: Lazy<DeviceRegistrar>,
     private val walletRegistrar: Lazy<WalletRegistrar>,
 ) {
 
@@ -20,6 +22,8 @@ internal class MockColdWalletRegistration(
         val walletId = UserWalletIdBuilder.card(card).build() ?: return
 
         runSuspendCatching {
+            // Joins the device registration started on app launch, which a scan right after launch can outrun
+            deviceRegistrar.get().register()
             walletRegistrar.get().register(
                 walletId = Base64.encodeToString(walletId.value, Base64.NO_WRAP),
                 signer = CannedSigner,
