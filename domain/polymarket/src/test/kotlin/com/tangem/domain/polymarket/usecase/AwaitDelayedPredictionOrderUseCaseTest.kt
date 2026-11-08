@@ -101,6 +101,51 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
         coVerify(exactly = MAX_READS) { repository.getOrder(OWNER_IDENTITY, ORDER_ID) }
     }
 
+    @ParameterizedTest
+    @MethodSource("provideOpenStatuses")
+    fun `GIVEN the order is still open on the book before the match WHEN invoked THEN it is read again`(
+        status: PredictionOrderStatus,
+    ) = runTest {
+        // Arrange
+        val matched = order(status = PredictionOrderStatus.Matched)
+        coEvery { repository.getOrder(OWNER_IDENTITY, ORDER_ID) } returnsMany listOf(
+            order(status = status).right(),
+            order(status = status).right(),
+            matched.right(),
+        )
+
+        // Act
+        val actual = useCase(addresses = ADDRESSES, orderId = ORDER_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(DelayedPredictionOrderOutcome.Matched(order = matched))
+        assertThat(currentTime).isEqualTo(READ_INTERVAL_MILLIS * MAX_READS)
+        coVerify(exactly = MAX_READS) { repository.getOrder(OWNER_IDENTITY, ORDER_ID) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideOpenStatuses")
+    fun `GIVEN the order stays open on the book WHEN the reads run out THEN the order stays unconfirmed`(
+        status: PredictionOrderStatus,
+    ) = runTest {
+        // Arrange
+        coEvery { repository.getOrder(OWNER_IDENTITY, ORDER_ID) } returns order(status = status).right()
+
+        // Act
+        val actual = useCase(addresses = ADDRESSES, orderId = ORDER_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(DelayedPredictionOrderOutcome.Unconfirmed)
+        assertThat(currentTime).isEqualTo(READ_INTERVAL_MILLIS * MAX_READS)
+        coVerify(exactly = MAX_READS) { repository.getOrder(OWNER_IDENTITY, ORDER_ID) }
+    }
+
+    private fun provideOpenStatuses() = listOf(
+        PredictionOrderStatus.Other(raw = "ORDER_STATUS_LIVE"),
+        PredictionOrderStatus.Other(raw = "ORDER_STATUS_UNMATCHED"),
+        PredictionOrderStatus.Other(raw = null),
+    )
+
     private fun provideUnknownStatusErrors() = listOf(
         PredictionOrderStateError.Timeout,
         PredictionOrderStateError.Network,
@@ -110,7 +155,7 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN the book answers with something other than a match WHEN invoked THEN the wait fails at once`(
+    fun `GIVEN the book gives a final answer other than a match WHEN invoked THEN the wait fails at once`(
         model: FinalAnswerModel,
     ) = runTest {
         // Arrange
@@ -134,14 +179,13 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
 
     private fun provideTestModels() = listOf(
         FinalAnswerModel(
-            name = "live",
-            answer = order(status = PredictionOrderStatus.Other(raw = "ORDER_STATUS_LIVE")).right(),
+            name = "canceled",
+            answer = order(status = PredictionOrderStatus.Rejected(raw = "ORDER_STATUS_CANCELED")).right(),
         ),
         FinalAnswerModel(
-            name = "canceled",
-            answer = order(status = PredictionOrderStatus.Other(raw = "ORDER_STATUS_CANCELED")).right(),
+            name = "invalid",
+            answer = order(status = PredictionOrderStatus.Rejected(raw = "ORDER_STATUS_INVALID")).right(),
         ),
-        FinalAnswerModel(name = "no status", answer = order(status = PredictionOrderStatus.Other(raw = null)).right()),
         FinalAnswerModel(name = "404", answer = PredictionOrderStateError.NotFound.left()),
         FinalAnswerModel(
             name = "4xx",
