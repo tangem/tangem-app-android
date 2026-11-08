@@ -12,6 +12,7 @@ import com.tangem.domain.onramp.OnrampSaveDefaultCurrencyUseCase
 import com.tangem.domain.onramp.model.OnrampCurrencies
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.features.onramp.OnrampModelTestBase
 import com.tangem.features.onramp.selectcurrency.SelectCurrencyComponent
 import com.tangem.features.onramp.selectcurrency.entity.CurrenciesListUM
@@ -53,6 +54,35 @@ internal class OnrampSelectCurrencyModelTest : OnrampModelTestBase() {
         // Assert
         assertThat(content.sections.single().items.single().onrampCurrency).isEqualTo(eur)
         coVerifyOrder { saveCurrency(eur); dismiss() }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN save fails WHEN currency selected again THEN error reported and dismiss follows successful save`() = runTest {
+        // Arrange
+        every { cryptoCurrency.symbol } returns "BTC"
+        every { getCurrencies() } returns flowOf(OnrampCurrencies(listOf(usd), emptyList()).right())
+        coEvery { fetchCurrencies(wallet) } returns Unit.right()
+        coEvery { saveCurrency(usd) } returnsMany listOf(OnrampError.DomainError("offline").left(), Unit.right())
+        val model = createModel()
+        advanceUntilIdle()
+        val item = (model.state.value as CurrenciesListUM.Content).sections.single().items.single()
+
+        // Act
+        item.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { dismiss() }
+        verify(exactly = 1) { analyticsEventHandler.send(OnrampAnalyticsEvent.AppErrors("BTC", "offline")) }
+
+        // Act
+        item.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { saveCurrency(usd) }
+        verify(exactly = 1) { dismiss() }
         model.onDestroy()
     }
 

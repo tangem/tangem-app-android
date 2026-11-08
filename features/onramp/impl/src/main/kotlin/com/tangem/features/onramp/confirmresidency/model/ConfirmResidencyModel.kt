@@ -15,7 +15,9 @@ import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyUM
 import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -54,7 +56,11 @@ internal class ConfirmResidencyModel @Inject constructor(
                 analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceConfirm(country.name))
                 modelScope.launch {
                     saveDefaultCountryUseCase.invoke(country)
-                    params.onDismiss()
+                        .onRight { params.onDismiss() }
+                        .onLeft { error ->
+                            TangemLogger.e("Unable to save residency: $error")
+                            analyticsEventHandler.sendOnrampErrorEvent(error, params.cryptoCurrency.symbol)
+                        }
                 }
             },
             text = resourceReference(R.string.common_confirm),

@@ -1,15 +1,19 @@
 package com.tangem.features.onramp.confirmresidency.model
 
 import arrow.core.right
+import arrow.core.left
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.onramp.OnrampSaveDefaultCountryUseCase
 import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.features.onramp.OnrampModelTestBase
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.verify
+import io.mockk.every
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -17,6 +21,34 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ConfirmResidencyModelTest : OnrampModelTestBase() {
+
+    @Test
+    fun `GIVEN save fails WHEN confirmation retried THEN error reported and only successful save dismisses`() = runTest {
+        // Arrange
+        val country = country(isAvailable = true)
+        val onDismiss: () -> Unit = io.mockk.mockk(relaxed = true)
+        val saveCountry = io.mockk.mockk<OnrampSaveDefaultCountryUseCase>()
+        every { cryptoCurrency.symbol } returns "BTC"
+        coEvery { saveCountry(country) } returnsMany listOf(OnrampError.DomainError("offline").left(), Unit.right())
+        val model = createModel(country, saveCountry, onDismiss)
+
+        // Act
+        model.state.value.primaryButtonConfig.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { onDismiss() }
+        verify(exactly = 1) { analyticsEventHandler.send(OnrampAnalyticsEvent.AppErrors("BTC", "offline")) }
+
+        // Act
+        model.state.value.primaryButtonConfig.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { saveCountry(country) }
+        verify(exactly = 1) { onDismiss() }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN supported country WHEN confirm clicked THEN country is saved and sheet dismissed`() = runTest {

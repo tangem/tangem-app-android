@@ -10,6 +10,7 @@ import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.OnrampModelTestBase
 import com.tangem.features.onramp.selectcountry.SelectCountryComponent
@@ -59,6 +60,35 @@ internal class OnrampSelectCountryModelTest : OnrampModelTestBase() {
         // Assert
         assertThat(item.countryName).isEqualTo(country.name)
         coVerifyOrder { saveCountry(country); dismiss(true) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN save fails WHEN country selected again THEN error reported and dismiss follows successful save`() = runTest {
+        // Arrange
+        every { cryptoCurrency.symbol } returns "BTC"
+        every { getCountries() } returns flowOf(listOf(country).right())
+        coEvery { fetchCountries(wallet) } returns Unit.right()
+        coEvery { saveCountry(country) } returnsMany listOf(OnrampError.DomainError("offline").left(), Unit.right())
+        val model = createModel()
+        advanceUntilIdle()
+        val item = (model.state.value as CountryListUM.Content).items.single() as CountryItemState.WithContent.Content
+
+        // Act
+        item.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { dismiss(any()) }
+        verify(exactly = 1) { analyticsEventHandler.send(OnrampAnalyticsEvent.AppErrors("BTC", "offline")) }
+
+        // Act
+        item.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { saveCountry(country) }
+        verify(exactly = 1) { dismiss(true) }
         model.onDestroy()
     }
 

@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
+import java.math.MathContext
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -193,8 +194,8 @@ internal class SelectProviderModel @Inject constructor(
                     val rate = quote.toAmount.value.format {
                         crypto(symbol = quote.toAmount.symbol, decimals = quote.toAmount.decimals)
                     }
-                    val rateDiff = bestProvider?.toAmount?.value?.let { bestRate ->
-                        BigDecimal.ONE - quote.toAmount.value / bestRate
+                    val rateDiff = bestProvider?.toAmount?.value?.takeIf { it.signum() > 0 }?.let { bestRate ->
+                        BigDecimal.ONE - quote.toAmount.value.divide(bestRate, MathContext.DECIMAL128)
                     }
                     val isBestProvider =
                         quote == bestProvider && hasBestProvider && !userCountry.needApplyFCARestrictions()
@@ -210,7 +211,7 @@ internal class SelectProviderModel @Inject constructor(
                         name = quote.provider.info.name,
                         rate = rate,
                         isBestRate = isBestProvider,
-                        diffRate = stringReference("$MINUS${rateDiff.format { percent() }}")
+                        diffRate = rateDiff?.let { stringReference("$MINUS${it.format { percent() }}") }
                             .takeIf { hasBestProvider },
                         providerResult = providerResult,
                         isSelected = isSelectedProvider,

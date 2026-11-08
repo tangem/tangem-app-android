@@ -26,6 +26,7 @@ import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
@@ -97,7 +98,11 @@ internal class OnrampSelectCountryModel @Inject constructor(
         analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceChosen(country.name))
         modelScope.launch {
             saveDefaultCountryUseCase.invoke(country)
-            dismiss(isCountrySelected = true)
+                .onRight { dismiss(isCountrySelected = true) }
+                .onLeft { error ->
+                    TangemLogger.e("Unable to save country: $error")
+                    analyticsEventHandler.sendOnrampErrorEvent(error, params.cryptoCurrency.symbol)
+                }
         }
     }
 
