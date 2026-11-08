@@ -133,6 +133,14 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   batch with "wallet has in-flight action" (seen on prod 26.10.2026; iOS does not resend).
   A withdrawal reads its nonce in `prepare`, outside the lock: a lifecycle operation in between costs it a
   `RelayerRejected`.
+- The UI never calls `ManagePolymarketSessionKeyInteractor` itself: it starts operations on
+  `PolymarketSessionKeyOperationRunner`, which runs them in the app scope, so leaving the screen (or onboarding's
+  `replaceAll`) cannot drop a pre-signed authorization halfway through a renewal. One operation per wallet, toggling
+  included — a second `start` answers `Busy` before anything is signed. `Activate` picks enable, renew or replace from
+  the current assessment, as iOS does. The outcome stays in `finished` until the host acknowledges it (the toast survives
+  a recreated screen); the runner awaits a refresh of `PolymarketSessionKeyStateService` before it publishes the
+  outcome, so the overview is not stale at that moment. `ObservePolymarketFastTradingUseCase` merges both:
+  `isActivationOffered` is false while an operation runs, so a renewal's `REVOKED` window never shows the Activate banner.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 - A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
   them against the position: one adapter `redeemPositions` call on the root collection of the condition for
