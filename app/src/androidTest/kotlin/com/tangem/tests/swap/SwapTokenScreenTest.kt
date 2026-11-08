@@ -1052,12 +1052,11 @@ class SwapTokenScreenTest : BaseTestCase() {
                 }
             }
             step("Select '$fastFeeType' fee type") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    selectFeeType(feeType = FeeType.Fast, selectedFeeAmount = fastFeeAmount)
-                }
-            }
-            step("Assert fee amount is equal to '$fastFeeType' fee:'$fastFeeAmount'") {
-                onSwapTokenScreen { feeAmount.assertTextContains(fastFeeAmount, substring = true) }
+                selectGaslessSwapFeeSpeed(
+                    currentSpeed = marketFeeType,
+                    newSpeed = fastFeeType,
+                    selectedFeeAmount = fastFeeAmount,
+                )
             }
             step("Check 'Unable to cover '$networkName' fee notification") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -1068,9 +1067,11 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onSwapTokenScreen { swapButton.assertIsNotEnabled() }
             }
             step("Select '$marketFeeType' fee type") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    selectFeeType(feeType = FeeType.Market, selectedFeeAmount = marketFeeAmount)
-                }
+                selectGaslessSwapFeeSpeed(
+                    currentSpeed = fastFeeType,
+                    newSpeed = marketFeeType,
+                    selectedFeeAmount = marketFeeAmount,
+                )
             }
             step("Assert 'Swap' button is enabled") {
                 waitForIdle()
