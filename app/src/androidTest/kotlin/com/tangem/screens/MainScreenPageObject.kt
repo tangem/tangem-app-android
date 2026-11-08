@@ -174,7 +174,7 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
 
     // The identity flips mid-animation, and a tap while the pager is still settling only stops the scroll.
     fun assertOnScreenPageSettled() {
-        val left = onScreenPage()?.fetchSemanticsNode()?.boundsInRoot?.left
+        val left = onScreenPage()?.fetchSemanticsNode()?.positionInRoot?.x
         if (left == null || abs(left) >= 1f) throw AssertionError("Wallet pager page is not settled, left = $left")
     }
 

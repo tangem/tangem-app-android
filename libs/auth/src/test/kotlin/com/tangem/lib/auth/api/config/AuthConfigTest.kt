@@ -23,6 +23,7 @@ internal class AuthConfigTest {
         assertThat(actual).containsExactlyEntriesIn(
             mapOf(
                 ApiEnvironment.DEV to "[REDACTED_ENV_URL]",
+                ApiEnvironment.MOCK to "[REDACTED_ENV_URL]",
                 ApiEnvironment.PROD to "https://api.tangem.org/",
             ),
         )
