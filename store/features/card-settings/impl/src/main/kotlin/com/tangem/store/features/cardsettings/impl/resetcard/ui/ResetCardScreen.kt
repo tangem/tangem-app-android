@@ -1,4 +1,4 @@
-package com.tangem.store.features.cardsettings.impl.resetcard
+package com.tangem.store.features.cardsettings.impl.resetcard.ui
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
@@ -25,10 +25,11 @@ import com.tangem.core.ui.test.ResetCardScreenTestTags
 import com.tangem.store.features.cardsettings.impl.common.DetailsMainButton
 import com.tangem.store.features.cardsettings.impl.common.SettingsScreensScaffold
 import kotlinx.collections.immutable.persistentListOf
-import com.tangem.store.features.cardsettings.impl.resetcard.ResetCardScreenState.Dialog as ResetCardDialog
+import com.tangem.store.features.cardsettings.impl.resetcard.ui.state.ResetCardUM
+import com.tangem.store.features.cardsettings.impl.resetcard.ui.state.ResetCardUM.Dialog as ResetCardDialog
 
 @Composable
-internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun ResetCardScreen(state: ResetCardUM, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     BackHandler(onBack = onBackClick)
 
     SettingsScreensScaffold(
@@ -50,7 +51,7 @@ internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Uni
 }
 
 @Composable
-private fun ResetCardView(state: ResetCardScreenState) {
+private fun ResetCardView(state: ResetCardUM) {
     val scrollState = rememberScrollState()
 
     Column(
@@ -117,7 +118,7 @@ private fun Description(text: TextReference) {
 }
 
 @Composable
-private fun Conditions(state: ResetCardScreenState) {
+private fun Conditions(state: ResetCardUM) {
     state.warningsToShow.forEach { warning ->
         ConditionCheckBox(
             checkedState = warning.isChecked,
@@ -231,12 +232,12 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
             .background(TangemTheme.colors3.bg.primary),
     ) {
         ResetCardScreen(
-            state = ResetCardScreenState(
+            state = ResetCardUM(
                 isResetButtonEnabled = true,
                 warningsToShow = persistentListOf(
-                    ResetCardScreenState.WarningUM(
+                    ResetCardUM.WarningUM(
                         isChecked = false,
-                        type = ResetCardScreenState.WarningType.LOST_WALLET_ACCESS,
+                        type = ResetCardUM.WarningType.LOST_WALLET_ACCESS,
                         description = TextReference.Res(id = R.string.reset_card_to_factory_condition_1),
                     ),
                 ),

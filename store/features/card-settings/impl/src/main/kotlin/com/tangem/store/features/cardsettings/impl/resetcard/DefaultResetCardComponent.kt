@@ -8,6 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.store.features.cardsettings.impl.resetcard.api.ResetCardComponent
 import com.tangem.store.features.cardsettings.impl.resetcard.model.ResetCardModel
+import com.tangem.store.features.cardsettings.impl.resetcard.ui.ResetCardScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,7 +22,7 @@ internal class DefaultResetCardComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.screenState.collectAsStateWithLifecycle()
+        val state by model.uiState.collectAsStateWithLifecycle()
 
         ResetCardScreen(
             modifier = modifier,

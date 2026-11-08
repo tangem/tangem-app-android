@@ -11,11 +11,13 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.analytics.TangemSdkErrorEvent
 import com.tangem.store.features.cardsettings.impl.common.CardSettingsAnalyticsEvent
-import com.tangem.store.features.cardsettings.impl.domain.SecurityOption
 import com.tangem.store.features.cardsettings.impl.domain.CardSettingsInteractor
-import com.tangem.store.features.cardsettings.impl.securitymode.SecurityModeScreenState
+import com.tangem.store.features.cardsettings.impl.domain.SecurityOption
+import com.tangem.store.features.cardsettings.impl.securitymode.ui.state.SecurityModeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -39,13 +41,14 @@ internal class SecurityModeModel @Inject constructor(
      */
     private val actualSecurityOption = cardSettingsInteractor.getSecurityOption(scannedScanResponse.card)
 
-    val screenState = MutableStateFlow(value = getInitialState())
+    val uiState: StateFlow<SecurityModeUM>
+        field = MutableStateFlow(getInitialState())
 
-    private fun getInitialState(): SecurityModeScreenState {
+    private fun getInitialState(): SecurityModeUM {
         val allowedSecurityOptions = cardSettingsInteractor.getAllowedSecurityOptions(scannedScanResponse)
 
-        return SecurityModeScreenState(
-            availableOptions = allowedSecurityOptions.toList(),
+        return SecurityModeUM(
+            availableOptions = allowedSecurityOptions.toImmutableList(),
             selectedSecurityMode = actualSecurityOption,
             isSaveChangesEnabled = false,
             onNewModeSelected = ::selectOption,
@@ -54,7 +57,7 @@ internal class SecurityModeModel @Inject constructor(
     }
 
     private fun selectOption(securityOption: SecurityOption) {
-        screenState.update { state ->
+        uiState.update { state ->
             state.copy(
                 selectedSecurityMode = securityOption,
                 isSaveChangesEnabled = securityOption != actualSecurityOption,
@@ -64,7 +67,7 @@ internal class SecurityModeModel @Inject constructor(
 
     private fun saveChanges() {
         val cardId = scannedScanResponse.card.cardId
-        val selectedOption = screenState.value.selectedSecurityMode
+        val selectedOption = uiState.value.selectedSecurityMode
 
         modelScope.launch {
             val result = when (selectedOption) {
