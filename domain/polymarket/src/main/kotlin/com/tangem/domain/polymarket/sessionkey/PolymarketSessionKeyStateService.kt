@@ -9,8 +9,10 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +21,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.shareIn
@@ -57,6 +61,24 @@ class PolymarketSessionKeyStateService(
                 TangemLogger.e("Polymarket session keys of an unobserved wallet could not be reconciled: $error")
             }
         }
+    }
+
+    suspend fun refreshAndAwait(userWalletId: UserWalletId, timeout: Duration = REFRESH_AWAIT_TIMEOUT) {
+        val wallet = wallets[userWalletId]
+        if (wallet == null || wallet.refreshes.subscriptionCount.value == 0) {
+            refresh(userWalletId)
+            return
+        }
+        val nextOverview = withTimeoutOrNull(timeout) {
+            coroutineScope {
+                val awaited = async(start = CoroutineStart.UNDISPATCHED) {
+                    wallet.overview.drop(wallet.overview.replayCache.size).first()
+                }
+                wallet.refreshes.tryEmit(Unit)
+                awaited.await()
+            }
+        }
+        if (nextOverview == null) TangemLogger.i("Polymarket session keys not refreshed within $timeout, moving on")
     }
 
     private inner class WalletState(userWalletId: UserWalletId) {
@@ -187,6 +209,7 @@ class PolymarketSessionKeyStateService(
 
     private companion object {
         val STOP_TIMEOUT: Duration = 5.seconds
+        val REFRESH_AWAIT_TIMEOUT: Duration = 5.seconds
         const val SETTLE_REFRESHES = 100
         val MAX_BACKOFF: Duration = 1.minutes
         const val MAX_DOUBLINGS = 5
