@@ -14,6 +14,8 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 internal class DefaultOnrampTransactionRepositoryTest {
@@ -139,6 +141,35 @@ internal class DefaultOnrampTransactionRepositoryTest {
         // Assert
         assertThat(repository.isHandledTransaction("old")).isFalse()
         assertThat(repository.isHandledTransaction("recent")).isTrue()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `GIVEN records around seven day cutoff WHEN either transaction flow collected THEN strict boundary applied`(
+        walletScoped: Boolean,
+    ) = runTest {
+        // Arrange
+        val now = 10L * 24 * 60 * 60 * 1000
+        val cutoff = now - 7L * 24 * 60 * 60 * 1000
+        val records = setOf(
+            com.tangem.data.onramp.models.OnrampTerminalTransactionDTO("before", cutoff - 1),
+            com.tangem.data.onramp.models.OnrampTerminalTransactionDTO("at", cutoff),
+            com.tangem.data.onramp.models.OnrampTerminalTransactionDTO("after", cutoff + 1),
+        )
+        preferences.editData { it.setObjectSet(keys.onrampHandledTransactionsKey, records) }
+        val repository = DefaultOnrampTransactionRepository(preferences, keys, dispatchers) { now }
+        val transaction = transaction()
+        repository.storeTransaction(transaction)
+
+        // Act
+        val actual = if (walletScoped) repository.getTransactions(WALLET_ID, CURRENCY_ID).first()
+        else repository.getAllTransactions().first()
+
+        // Assert
+        assertThat(actual).containsExactly(transaction)
+        assertThat(repository.isHandledTransaction("before")).isFalse()
+        assertThat(repository.isHandledTransaction("at")).isFalse()
+        assertThat(repository.isHandledTransaction("after")).isTrue()
     }
 
     private fun transaction(

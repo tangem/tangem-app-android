@@ -24,6 +24,7 @@ internal class DefaultOnrampTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val growPreferencesKeys: GrowPreferencesKeys,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) : OnrampTransactionRepository {
 
     private val transactionConverter = TransactionConverter()
@@ -126,7 +127,7 @@ internal class DefaultOnrampTransactionRepository(
 
                     val record = OnrampTerminalTransactionDTO(
                         txId = txId,
-                        terminatedAt = System.currentTimeMillis(),
+                        terminatedAt = currentTimeMillis(),
                     )
 
                     archived.add(record)
@@ -148,7 +149,7 @@ internal class DefaultOnrampTransactionRepository(
                         growPreferencesKeys.onrampHandledTransactionsKey,
                     )?.toMutableSet() ?: return@editData
 
-                    val oneWeekAgo = System.currentTimeMillis() -
+                    val oneWeekAgo = currentTimeMillis() -
                         TimeUnit.DAYS.toMillis(HANDLED_TRANSACTIONS_RETENTION_DAYS)
                     val cleaned = archived
                         .filterTo(mutableSetOf()) { it.terminatedAt > oneWeekAgo }
