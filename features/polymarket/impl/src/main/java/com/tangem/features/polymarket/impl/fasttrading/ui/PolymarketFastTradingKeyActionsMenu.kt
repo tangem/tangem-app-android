@@ -29,6 +29,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_20
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM.RevokeSubject
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
@@ -89,7 +90,10 @@ private fun KeyActionMenuItem(action: FastTradingKeyActionUM, onClick: () -> Uni
 private fun KeyActionMenuItemPreview() {
     TangemThemePreviewRedesign {
         Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
-            KeyActionMenuItem(action = FastTradingKeyActionUM.Revoke("0x1"), onClick = {})
+            KeyActionMenuItem(
+                action = FastTradingKeyActionUM.Revoke("0x1", RevokeSubject.UnknownSigner),
+                onClick = {},
+            )
         }
     }
 }

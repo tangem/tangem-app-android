@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.fasttrading.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
@@ -274,7 +275,10 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                     deviceName = resourceReference(R.string.prediction_session_key_unknown_device),
                     status = FastTradingKeyStatusUM.Active(until = "Feb 17, 2027"),
                     isExpiringSoon = false,
-                    actions = revokeOf(OWN_ADDRESS),
+                    actions = revokeOf(
+                        address = OWN_ADDRESS,
+                        name = resourceReference(R.string.prediction_session_key_unknown_device),
+                    ),
                 ),
             )
             assertThat(actual.otherDevices.map { it.id }).containsExactly(OTHER_ADDRESS)
@@ -303,7 +307,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
 
             // Assert
             assertThat(actual.unknownSigners).containsExactly(
-                FastTradingUnknownSignerUM(address = FOREIGN_ADDRESS, actions = revokeOf(FOREIGN_ADDRESS)),
+                FastTradingUnknownSignerUM(address = FOREIGN_ADDRESS, actions = signerRevokeOf(FOREIGN_ADDRESS)),
             )
         }
 
@@ -356,7 +360,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             assertThat(actual.areActionsEnabled).isFalse()
             assertThat(actual.thisDevice?.actions).isEqualTo(revokeOf(OWN_ADDRESS))
             assertThat(actual.otherDevices.single().actions).isEqualTo(revokeOf(OTHER_ADDRESS))
-            assertThat(actual.unknownSigners.single().actions).isEqualTo(revokeOf(FOREIGN_ADDRESS))
+            assertThat(actual.unknownSigners.single().actions).isEqualTo(signerRevokeOf(FOREIGN_ADDRESS))
         }
 
         @Test
@@ -496,7 +500,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
 
             // Assert
             assertThat(actual.unknownSigners).containsExactly(
-                FastTradingUnknownSignerUM(address = FOREIGN_ADDRESS, actions = revokeOf(FOREIGN_ADDRESS)),
+                FastTradingUnknownSignerUM(address = FOREIGN_ADDRESS, actions = signerRevokeOf(FOREIGN_ADDRESS)),
             )
         }
 
@@ -543,7 +547,14 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         fun signerOf(address: String) =
             PolymarketSessionSigner(address = address, scopes = listOf("CLOB"), validUntil = null)
 
-        fun revokeOf(address: String) = persistentListOf<FastTradingKeyActionUM>(FastTradingKeyActionUM.Revoke(address))
+        fun revokeOf(address: String, name: TextReference = stringReference(OTHER_DEVICE_NAME)) =
+            persistentListOf<FastTradingKeyActionUM>(
+                FastTradingKeyActionUM.Revoke(address, FastTradingKeyActionUM.RevokeSubject.Device(name)),
+            )
+
+        fun signerRevokeOf(address: String) = persistentListOf<FastTradingKeyActionUM>(
+            FastTradingKeyActionUM.Revoke(address, FastTradingKeyActionUM.RevokeSubject.UnknownSigner),
+        )
 
         fun createKey(
             address: String = OTHER_ADDRESS,

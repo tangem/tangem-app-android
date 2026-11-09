@@ -37,6 +37,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM.RevokeSubject
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyRowUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyStatusUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeysUM
@@ -183,7 +184,9 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
                 unknownSigners = persistentListOf(
                     FastTradingUnknownSignerUM(
                         address = PREVIEW_SIGNER_ADDRESS,
-                        actions = persistentListOf(FastTradingKeyActionUM.Revoke(PREVIEW_SIGNER_ADDRESS)),
+                        actions = persistentListOf(
+                            FastTradingKeyActionUM.Revoke(PREVIEW_SIGNER_ADDRESS, RevokeSubject.UnknownSigner),
+                        ),
                     ),
                 ),
                 thisDevice = previewRow("Pixel 9", FastTradingKeyStatusUM.Active("20 Apr 2027"), isExpiringSoon = true),
@@ -212,7 +215,9 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
             actions = if (status == FastTradingKeyStatusUM.Revoking) {
                 persistentListOf()
             } else {
-                persistentListOf(FastTradingKeyActionUM.Revoke(name))
+                persistentListOf(
+                    FastTradingKeyActionUM.Revoke(name, RevokeSubject.Device(stringReference(name))),
+                )
             },
         )
 }
