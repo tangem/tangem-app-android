@@ -307,18 +307,16 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         }
 
         when (outcome) {
-            is DelayedPredictionOrderOutcome.Matched -> {
-                val result = PlaceResultUMConverter.convert(
+            is DelayedPredictionOrderOutcome.Matched -> return onPlaceOutcome(
+                outcome = PlaceResultUMConverter.convert(
                     order = outcome.order,
                     quotedAmount = quotedAmount,
                     placedAt = placedAt,
-                )
-                if (result == null) {
-                    showPlaceFailure(reason = "Delayed order $orderId matched, but its fill cannot be read")
-                } else {
-                    return showResult(result = result)
-                }
-            }
+                ),
+                addresses = addresses,
+                quotedAmount = quotedAmount,
+                route = route,
+            )
             is DelayedPredictionOrderOutcome.Failed -> {
                 showPlaceFailure(reason = "Delayed order $orderId did not fill: ${outcome.detail}")
             }
