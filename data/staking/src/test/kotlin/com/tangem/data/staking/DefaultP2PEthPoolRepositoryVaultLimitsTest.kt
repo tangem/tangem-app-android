@@ -189,16 +189,31 @@ internal class DefaultP2PEthPoolRepositoryVaultLimitsTest {
         }
 
         @Test
-        fun `GIVEN api error WHEN fetchVaultLimits THEN failure swallowed and limits stay unset`() = runTest {
+        fun `GIVEN api error WHEN fetchVaultLimits THEN Left without a throw and limits stay unset`() = runTest {
             // Arrange
             coEvery { tangemTechApi.getCoinsSettings() } returns apiError(ApiResponseError.NetworkException())
 
             // Act
-            val error = runCatching { repository.fetchVaultLimits() }.exceptionOrNull()
+            val actual = runCatching { repository.fetchVaultLimits() }
 
             // Assert
-            assertThat(error).isNull()
+            assertThat(actual.exceptionOrNull()).isNull()
+            assertThat(actual.getOrNull()?.isLeft()).isTrue()
             assertThat(limitsStore.getSyncOrNull()).isNull()
+        }
+
+        @Test
+        fun `GIVEN limits loaded WHEN fetchVaultLimits THEN Right`() = runTest {
+            // Arrange
+            coEvery { tangemTechApi.getCoinsSettings() } returns coinsSettings(
+                VaultSettingsDTO("0xABC", BigDecimal("32"), null),
+            )
+
+            // Act
+            val actual = repository.fetchVaultLimits()
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
         }
 
         @Test
