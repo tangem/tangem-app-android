@@ -23,9 +23,7 @@ object PolymarketSessionKeyAssessor {
 
     private fun nextChangeAt(snapshot: PolymarketSessionKeySnapshot): Instant? {
         val activeKeys = snapshot.sessionKeys.filter { it.status == PolymarketSessionKeyStatus.ACTIVE }
-        val own = snapshot.sessionKeys
-            .firstOrNull { it.address == snapshot.localKeyAddress }
-            ?.takeIf { it.status == PolymarketSessionKeyStatus.ACTIVE }
+        val own = snapshot.ownRecord()?.takeIf { it.status == PolymarketSessionKeyStatus.ACTIVE }
         val ownBoundaries = listOfNotNull(own?.validUntil?.minus(SIGNING_EXPIRY_MARGIN), own?.renewAfter)
         val expiries = activeKeys.mapNotNull { it.validUntil }
         val readinessGraces = if (snapshot.signers == null) {
@@ -43,7 +41,7 @@ object PolymarketSessionKeyAssessor {
         val missingOnExchange = (reconciliation as? PolymarketSessionKeyReconciliation.Checked)
             ?.missingOnExchange
             .orEmpty()
-        val own = snapshot.localKeyAddress?.let { local -> snapshot.sessionKeys.firstOrNull { it.address == local } }
+        val own = snapshot.ownRecord()
 
         own?.let { resolveLiveOwnState(it, snapshot.now, missingOnExchange) }?.let { return it }
 
@@ -65,6 +63,11 @@ object PolymarketSessionKeyAssessor {
             } -> PolymarketSessionKeyDeviceState.RepairByRenewal(own)
             else -> PolymarketSessionKeyDeviceState.Reenable(own)
         }
+    }
+
+    private fun PolymarketSessionKeySnapshot.ownRecord(): PolymarketSessionKey? {
+        val local = localKeyAddress ?: return null
+        return sessionKeys.filter { it.address.equals(local, ignoreCase = true) }.maxByOrNull { it.createdAt }
     }
 
     private fun resolveLiveOwnState(
@@ -90,7 +93,7 @@ object PolymarketSessionKeyAssessor {
     }
 
     private fun PolymarketSessionKey.isLivePreviousOf(snapshot: PolymarketSessionKeySnapshot): Boolean {
-        if (deviceId != snapshot.deviceId || address == snapshot.localKeyAddress) return false
+        if (deviceId != snapshot.deviceId || address.equals(snapshot.localKeyAddress, ignoreCase = true)) return false
         return when (status) {
             PolymarketSessionKeyStatus.PENDING,
             PolymarketSessionKeyStatus.REVOKING,

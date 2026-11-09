@@ -57,6 +57,28 @@ internal class PolymarketSessionKeyAssessorTest {
                 expected = Enabling(key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING)),
             ),
             Model(
+                case = "local key renewed after revocation trades on its newest record",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.LOCAL, PolymarketSessionKeyStatus.REVOKED).copy(createdAt = NOW - Duration.ofDays(2)),
+                        key(Owner.LOCAL),
+                    ),
+                    signers = listOf(matching(key(Owner.LOCAL))),
+                ),
+                expected = Active(key(Owner.LOCAL), isRenewDue = false),
+            ),
+            Model(
+                case = "local key requested again matches its newest record ignoring case",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.LOCAL).copy(createdAt = NOW - Duration.ofDays(2)),
+                        key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING),
+                    ),
+                    localAddress = checksummed(Owner.LOCAL),
+                ),
+                expected = Enabling(key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING)),
+            ),
+            Model(
                 case = "revoking local key is revoking",
                 snapshot = snapshot(keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.REVOKING))),
                 expected = Revoking(key(Owner.LOCAL, PolymarketSessionKeyStatus.REVOKING)),
