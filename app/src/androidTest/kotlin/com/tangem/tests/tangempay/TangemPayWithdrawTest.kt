@@ -26,7 +26,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
     private val withdrawDataEndpoint = "/bff-v2/v1/customer/card/withdraw/data"
     private val withdrawEndpoint = "/bff-v2/v1/customer/card/withdraw"
     private val withdrawOrderEndpoint = "/bff-v2/v1/order/mock-tangempay-withdraw-order-001"
-    private val exchangeSentEndpoint = "/v1/exchange-sent"
+    private val exchangeSentEndpoint = "/v[12]/exchange-sent"
 
     private val minPollsToProveContinuation = 2
 
@@ -233,7 +233,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val receiveToken = "Bitcoin"
         val expectedSubmissions = 1
         // CEX withdraw submits via the Express swap endpoint — count it to prove a single submission.
-        val exchangeSentEndpointPattern = "/v1/exchange-sent"
+        val exchangeSentEndpointPattern = "/v[12]/exchange-sent"
 
         setupHooks(
             additionalBeforeSection = {
