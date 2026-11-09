@@ -12,7 +12,6 @@ import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledResourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -280,10 +279,7 @@ internal class WalletTokenCurrencyItemConverter(
         }
 
         return TangemTokenRowUM.PromoBannerUM.Content(
-            title = resourceReference(
-                R.string.yield_module_main_screen_promo_banner_message,
-                wrappedList(yieldApyPercent.movePointLeft(YIELD_PERCENT_POINT_SHIFT).formatEarnRate()),
-            ),
+            title = yieldApyPercent.toYieldPromoText(),
             iconRes = R.drawable.ic_yield_mode_mini_12,
             type = TangemTokenRowUM.PromoBannerUM.Content.Type.Yield,
             onPromoBannerClick = {

@@ -5,7 +5,6 @@ import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chart_ascending_16
 import com.tangem.core.ui.res.generated.icons.ic_clock_16
@@ -98,10 +97,7 @@ internal class WalletTokenRowConverter(
 
         return YieldPromo(
             bubble = TangemTokenRow.MessageBubble(
-                text = resourceReference(
-                    R.string.yield_module_main_screen_promo_banner_message,
-                    wrappedList(yieldApyPercent.movePointLeft(YIELD_PERCENT_POINT_SHIFT).formatEarnRate()),
-                ),
+                text = yieldApyPercent.toYieldPromoText(),
                 variant = TangemMessageBubble.Variant.Success,
                 icon = Icons.ic_chart_ascending_16,
                 onClick = {
