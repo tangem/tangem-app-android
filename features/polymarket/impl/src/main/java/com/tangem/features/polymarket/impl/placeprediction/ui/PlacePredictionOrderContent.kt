@@ -37,6 +37,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isTradable
 import com.tangem.features.polymarket.impl.placeprediction.entity.orderTotal
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountCaptionStyle
@@ -47,6 +48,7 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.components.Predict
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionOrderHeader
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionPlaceButton
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionPlaceFooter
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionUntradableSheet
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionOrderPreviewProvider
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PreviewAmountPresets
@@ -103,6 +105,8 @@ internal fun PlacePredictionOrderContent(
             footerHeight = footerHeight,
         )
     }
+
+    PredictionUntradableSheet(priceError = state.priceError, onDismiss = intents::onUntradableSheetDismiss)
 }
 
 @Composable
@@ -114,6 +118,7 @@ private fun OrderBody(
     footerHeight: Int,
 ) {
     val isIdle = state.submit is SubmitUM.Idle
+    val isAdjustable = isIdle && state.isTradable()
 
     Column(
         modifier = Modifier
@@ -127,7 +132,7 @@ private fun OrderBody(
                 state = state,
                 onAmountChange = intents::onAmountChange,
                 onAddFundsClick = intents::onAddFundsClick,
-                isEnabled = isIdle,
+                isEnabled = if (state.order is OrderSideUM.Sell) isAdjustable else isIdle,
                 presets = if (presets.isEmpty()) {
                     null
                 } else {
@@ -135,7 +140,7 @@ private fun OrderBody(
                         PredictionAmountPresets(
                             modifier = Modifier.padding(top = 12.dp, bottom = 16.dp),
                             presets = presets,
-                            isEnabled = isIdle,
+                            isEnabled = isAdjustable,
                             isMaxEnabled = state.isMaxPresetEnabled(),
                             onPresetClick = intents::onPresetClick,
                             onMaxClick = intents::onMaxClick,

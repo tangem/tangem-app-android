@@ -55,6 +55,8 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
 
+    private var isLeavingUntradable = false
+
     val uiState: StateFlow<PlacePredictionUM>
         field = MutableStateFlow(PlacePredictionUM.initial(side = params.side))
 
@@ -223,6 +225,13 @@ internal class PlacePredictionOrderModel @Inject constructor(
     override fun onCloseClick() {
         if (isSubmitting()) return
 
+        router.pop()
+    }
+
+    override fun onUntradableSheetDismiss() {
+        if (isLeavingUntradable) return
+
+        isLeavingUntradable = true
         router.pop()
     }
 
