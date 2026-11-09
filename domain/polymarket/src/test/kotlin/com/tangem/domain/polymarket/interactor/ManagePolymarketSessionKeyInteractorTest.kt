@@ -1127,6 +1127,26 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
+        fun `GIVEN Polymarket lists a dropped key without expiry WHEN revoke THEN it ends unsettled`() = runTest {
+            // Arrange
+            givenDroppedWhileRevoking()
+            coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                listOf(signer(KEY, validUntil = null)).right()
+
+            // Act
+            val actual = createInteractor().revoke(USER_WALLET_ID, KEY).toList()
+
+            // Assert
+            assertThat(actual.last()).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(
+                    PolymarketSessionKeyLifecycleError.Unsettled(
+                        key(status = PolymarketSessionKeyStatus.REVOKING),
+                    ).left(),
+                ),
+            )
+        }
+
+        @Test
         fun `GIVEN the signers are refused WHEN revoke of a dropped key THEN it ends unsettled at once`() = runTest {
             // Arrange
             givenDroppedWhileRevoking()
@@ -1439,7 +1459,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             createdAt = NOW,
         )
 
-        fun signer(address: String, validUntil: Instant = VALID_UNTIL) =
+        fun signer(address: String, validUntil: Instant? = VALID_UNTIL) =
             PolymarketSessionSigner(address = address, scopes = listOf("CLOB"), validUntil = validUntil)
 
         fun authorize(replaces: String? = null) = PolymarketSessionKeyBatch.Authorize(
