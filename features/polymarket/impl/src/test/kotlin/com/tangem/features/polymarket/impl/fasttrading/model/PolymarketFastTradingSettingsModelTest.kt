@@ -58,7 +58,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
+import com.tangem.test.core.ProvideTestModels
 import java.time.Duration
 import java.time.Instant
 
@@ -332,7 +332,7 @@ internal class PolymarketFastTradingSettingsModelTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideIgnoredActivationStates")
+    @ProvideTestModels
     fun `GIVEN banner not actionable WHEN activate clicked THEN nothing starts`(state: PolymarketFastTradingState) =
         runTest {
             // Arrange
@@ -430,7 +430,7 @@ internal class PolymarketFastTradingSettingsModelTest {
         )
 
         @JvmStatic
-        fun provideIgnoredActivationStates() = listOf(
+        fun provideTestModels() = listOf(
             createState(
                 OVERVIEW.copy(
                     assessment = OVERVIEW.assessment.copy(

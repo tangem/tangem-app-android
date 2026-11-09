@@ -48,6 +48,10 @@ internal class PolymarketSessionKeyMessagesFactoryTest {
             OutcomeModel(success(RESUME), expected = null),
             OutcomeModel(success(REVOKE), expected = SUCCESS_REVOKED),
             OutcomeModel(failure(ACTIVATE), error(R.string.prediction_session_key_toast_activation_failed)),
+            OutcomeModel(
+                failure(ACTIVATE, isAfterRevocation = true),
+                error(R.string.prediction_session_key_toast_reactivation_failed_revoked),
+            ),
             OutcomeModel(failure(REACTIVATE), error(R.string.prediction_session_key_toast_reactivation_failed)),
             OutcomeModel(
                 failure(REACTIVATE, isAfterRevocation = true),

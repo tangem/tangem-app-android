@@ -67,11 +67,10 @@ internal class PolymarketModel @Inject constructor(
 
     private fun toastSubmittedOperations() {
         observeVisibleWallet(observeSessionKeyOperation::invoke)
-            .mapNotNull { operation ->
-                operation?.let(PolymarketSessionKeyMessagesFactory::create)?.let { toast -> operation.id to toast }
-            }
-            .distinctUntilChangedBy { (operationId, _) -> operationId }
-            .onEach { (_, toast) -> messageSender.send(toast) }
+            .mapNotNull { operation -> operation?.takeIf(PolymarketSessionKeyMessagesFactory::isSubmitted) }
+            .distinctUntilChangedBy { operation -> operation.id }
+            .mapNotNull { operation -> PolymarketSessionKeyMessagesFactory.create(operation) }
+            .onEach(messageSender::send)
             .launchIn(modelScope)
     }
 
