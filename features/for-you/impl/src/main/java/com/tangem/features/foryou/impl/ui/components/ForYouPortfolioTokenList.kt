@@ -56,9 +56,11 @@ import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.ForYouWalletGroupUM
 import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
 import com.tangem.utils.StringsSigns
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 internal fun ForYouPortfolioTokenList(items: ImmutableList<ForYouTokenListItemUM>, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         items.fastForEachIndexed { index, listItem ->
@@ -70,6 +72,7 @@ internal fun ForYouPortfolioTokenList(items: ImmutableList<ForYouTokenListItemUM
 }
 
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 internal fun ForYouEarnOpportunitiesTokenList(
     groups: ImmutableList<ForYouWalletGroupUM>,
     modifier: Modifier = Modifier,
@@ -91,7 +94,7 @@ internal fun ForYouEarnOpportunitiesTokenList(
 }
 
 @Composable
-private fun WalletNameRow(header: ForYouWalletHeaderUM, modifier: Modifier = Modifier) {
+internal fun WalletNameRow(header: ForYouWalletHeaderUM, modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier
             .padding(horizontal = 16.dp)
@@ -114,6 +117,7 @@ private fun WalletNameRow(header: ForYouWalletHeaderUM, modifier: Modifier = Mod
 }
 
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun PortfolioTokenItem(listItem: ForYouTokenListItemUM, index: Int) {
     PortfolioAssetItem(listItem = listItem, index = index)
 
@@ -151,6 +155,7 @@ private fun PortfolioTokenItem(listItem: ForYouTokenListItemUM, index: Int) {
 
 @Suppress("MagicNumber")
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun PortfolioAssetItem(listItem: ForYouTokenListItemUM, index: Int, modifier: Modifier = Modifier) {
     val itemBackgroundColor = TangemTheme.colors3.bg.secondary
 
@@ -225,6 +230,7 @@ private fun PortfolioAssetItem(listItem: ForYouTokenListItemUM, index: Int, modi
 }
 
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun PortfolioSharedAssetIcon(
     listItem: ForYouTokenListItemUM,
     isExpandedWrapped: Boolean,
@@ -282,6 +288,7 @@ private fun PortfolioSharedAssetIcon(
 }
 
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun PortfolioSharedAssetTitle(
     listItem: ForYouTokenListItemUM,
     isExpandedWrapped: Boolean,
@@ -327,6 +334,7 @@ private fun PortfolioSharedAssetTitle(
 }
 
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun ForYouPortfolioListHeader(
     tokenRowUM: TangemTokenRowUM,
     headComponent: @Composable (Modifier) -> Unit,
@@ -379,6 +387,7 @@ private fun ForYouPortfolioListHeader(
     )
 }
 
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun DrawScope.drawBadge(
     containerColor: Color,
     color: Color = TangemColorPalette.Azure,
@@ -400,6 +409,7 @@ private fun DrawScope.drawBadge(
 
 @Suppress("MagicNumber")
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun portfolioAssetExpandAnimation(listItem: ForYouTokenListItemUM): State<Int> {
     return animateIntAsState(
         targetValue = if (listItem.isExpanded) listItem.tokenList.size else 0,
@@ -413,12 +423,14 @@ private fun portfolioAssetExpandAnimation(listItem: ForYouTokenListItemUM): Stat
 }
 
 @Suppress("MagicNumber")
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun portfolioAssetExpandFadeAnimation(): ContentTransform {
     return fadeIn(animationSpec = tween(350, delayMillis = 90))
         .togetherWith(fadeOut(animationSpec = tween(350)))
 }
 
 @Stable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 internal class SharedTokenRowComposables(
     val title: @Composable (Modifier) -> Unit,
     val icon: @Composable (Modifier) -> Unit,
