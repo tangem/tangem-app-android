@@ -123,18 +123,15 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   wallet: a second one ends at once in `OperationInProgress`, nothing signed; toggling is not guarded, as on iOS.
   Progress is emitted outside the lock. Renewal and replacement release the lock while the revocation settles and take
   it again to send the pre-signed authorization; a claim in between takes that nonce. They emit `Revoked` once the old
-  key is settled `REVOKED` or dropped, so a failure after it is told apart from one before: the key no longer trades.
-  A key missing from two successful wallet-status reads in a row while it is `REVOKING` counts as dropped, in renewal
-  and in a plain revoke (an unknown signer is never listed); a failed read neither counts nor resets, a listing resets.
-  Polymarket confirms the drop: an owner without that session signer makes it revoked, the signer still there or no
-  owner credentials fail the revocation, and unread signers keep the polling going until it ends `Unsettled`. In
-  renewal the authorization follows (iOS parity). Nothing is signed twice without the user: a batch refused for its
-  signature (`NONCE_ALREADY_USED`, `INVALID_DEADLINE`, `INVALID_VALID_UNTIL`, `RELAYER_REJECTED`) or a pre-signed
-  authorization expired before it is sent ends in `StaleSignature`, and the user starts the operation again; only an
-  unanswered or `502` send is repeated, with the same body. The one exception: the authorization sent after a
-  revocation is resent up to 5 times, 3 s apart, on `RELAYER_REJECTED` — the BFF reports the key `REVOKED` while the
-  revocation is still in flight and rejects the next batch with "wallet has in-flight action" (seen on prod 26.10.2026;
-  iOS does not resend).
+  key is revoked, so a failure after it is told apart from one before: the key no longer trades. A key the BFF stops
+  listing while it is `REVOKING` (an unknown signer is never listed) counts as revoked once Polymarket no longer lists
+  it as a session signer, otherwise the revocation failed; in renewal the authorization follows (iOS parity). Nothing
+  is signed twice without the user: a batch refused for its signature (`NONCE_ALREADY_USED`, `INVALID_DEADLINE`,
+  `INVALID_VALID_UNTIL`, `RELAYER_REJECTED`) or a pre-signed authorization expired before it is sent ends in
+  `StaleSignature`, and the user starts the operation again; only an unanswered or `502` send is repeated, with the
+  same body. The one exception: the authorization sent after a revocation is resent up to 5 times, 3 s apart, on
+  `RELAYER_REJECTED` — the BFF reports the key `REVOKED` while the revocation is still in flight and rejects the next
+  batch with "wallet has in-flight action" (seen on prod 26.10.2026; iOS does not resend).
   A withdrawal reads its nonce in `prepare`, outside the lock: a lifecycle operation in between costs it a
   `RelayerRejected`.
 - The UI never calls `ManagePolymarketSessionKeyInteractor` itself: it starts operations on

@@ -33,7 +33,7 @@ sealed interface PolymarketSessionKeyLifecycleError : PolymarketError {
 
     data class AuthorizationFailed(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyLifecycleError
 
-    /** @property sessionKey the key back in its previous status */
+    /** @property sessionKey the key's last known record: back in its previous status, or still `REVOKING` */
     data class RevocationFailed(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyLifecycleError
 
     data class Unsettled(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyLifecycleError
