@@ -426,13 +426,8 @@ class CreateAndSendEvmGaslessTransactionUseCase(
     internal companion object {
 
         /**
-         * Assembles the [GaslessPayload] from already-built domain objects and the resolved fee plan.
-         *
-         * The batch is ordered `[approve, calls, withdraw]`: the approve of a [GaslessFeePlan.TokenPay] runs first, as
-         * the user's [calls] spend the allowance it grants, and its yield withdraw runs last, topping up the fee token
-         * before the gasless service settles the fee. A single call without either sub-call is a
-         * [GaslessPayload.Single]. [GaslessFeePlan.NativePay] never reaches this use case — the standard send path
-         * handles it.
+         * The batch runs `[approve, calls, withdraw]`: [calls] spend the allowance granted by the approve call,
+         * and the withdraw call tops up the fee token before the fee is charged.
          */
         @Suppress("LongParameterList")
         internal fun assembleGaslessPayload(

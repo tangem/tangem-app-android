@@ -8,10 +8,7 @@ data class TransactionFeeExtended(
     val transactionFee: TransactionFee,
     val feeTokenId: CryptoCurrency.ID,
     /**
-     * Resolved gasless fee strategy. Non-null only for token-paid gasless fees; null for native fee.
-     * A null value is semantically equivalent to [GaslessFeePlan.NativePay] — consumers MUST treat them
-     * the same. [GaslessFeePlan.NativePay] is produced only by ResolveGaslessFeePlanUseCase.
-     * When it is a [GaslessFeePlan.TokenPay] with an approval or a yield withdraw, the send step builds a batch.
+     * Set only when the fee is paid in a token via gasless; null when it is paid in the native coin.
      */
     val gaslessFeePlan: GaslessFeePlan? = null,
     /**
