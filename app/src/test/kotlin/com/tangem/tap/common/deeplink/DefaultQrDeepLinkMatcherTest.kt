@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.net.URI
+import javax.inject.Provider
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultQrDeepLinkMatcherTest {
@@ -29,7 +30,7 @@ internal class DefaultQrDeepLinkMatcherTest {
                 "tangem://redirect",
                 "https://tangem.com/news",
                 "wc:",
-            ).associateWith { DeepLinkHandler {} },
+            ).associateWith { Provider { DeepLinkHandler {} } },
         ),
     )
 
