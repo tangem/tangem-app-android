@@ -116,7 +116,7 @@ class ManagePolymarketSessionKeyInteractor(
                 val signed = sign(userWalletId, nonEmptyListOf(revoke))
                 send { relay.revoke(userWalletId, revocationOf(signed)) }
             }
-            awaitRevokedUnlessDropped(userWalletId, revoking) ?: revoking.droppedWhileRevoking()
+            awaitRevoked(userWalletId, revoking)
         }
 
     suspend fun setEnabled(
@@ -159,7 +159,7 @@ class ManagePolymarketSessionKeyInteractor(
             val signed = sign(userWalletId, batches)
             signed to send { relay.revoke(userWalletId, revocationOf(signed)) }
         }
-        val revoked = awaitRevokedUnlessDropped(userWalletId, revoking) ?: revoking.droppedWhileRevoking()
+        val revoked = awaitRevoked(userWalletId, revoking)
         emit(PolymarketSessionKeyProgress.Revoked(revoked))
         val (sent, pending) = depositWalletLock.withLock(userWalletId) {
             sendAuthorization(
@@ -223,12 +223,12 @@ class ManagePolymarketSessionKeyInteractor(
         return signed
     }
 
-    private suspend fun Operation.awaitRevokedUnlessDropped(
+    private suspend fun Operation.awaitRevoked(
         userWalletId: UserWalletId,
         revoking: PolymarketSessionKey,
-    ): PolymarketSessionKey? {
+    ): PolymarketSessionKey {
         emit(PolymarketSessionKeyProgress.Revoking(revoking))
-        val settled = relay.settle(userWalletId, revoking) ?: return null
+        val settled = relay.settle(userWalletId, revoking)
         ensure(!settled.status.isSettling()) { PolymarketSessionKeyLifecycleError.Unsettled(settled) }
         ensure(settled.status == PolymarketSessionKeyStatus.REVOKED) {
             TangemLogger.e("Polymarket session key ${settled.address} not revoked, back to ${settled.status}")
@@ -237,17 +237,12 @@ class ManagePolymarketSessionKeyInteractor(
         return settled
     }
 
-    private fun PolymarketSessionKey.droppedWhileRevoking(): PolymarketSessionKey {
-        TangemLogger.i("Polymarket session key $address dropped while revoking, taken as revoked")
-        return copy(status = PolymarketSessionKeyStatus.REVOKED)
-    }
-
     private suspend fun Operation.awaitActive(
         userWalletId: UserWalletId,
         ownerAddress: String,
         pending: PolymarketSessionKey,
     ): PolymarketSessionKey {
-        val settled = relay.settle(userWalletId, pending) ?: pending
+        val settled = relay.settle(userWalletId, pending)
         ensure(!settled.status.isSettling()) { PolymarketSessionKeyLifecycleError.Unsettled(settled) }
         ensure(settled.status == PolymarketSessionKeyStatus.ACTIVE) {
             TangemLogger.e("Polymarket session key ${settled.address} not authorized: ${settled.status}")
