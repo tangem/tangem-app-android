@@ -9,7 +9,6 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.*
-import com.tangem.screens.moneyaccount.onMoneyAccountScreen
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawAmountScreen
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawErrorScreen
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawPreviewScreen
@@ -102,11 +101,7 @@ class MoneyAccountBankWithdrawSendTest : BaseTestCase() {
                 setWireMockScenarioState(balanceScenario, balanceAfterWithdrawState)
             }
             step("Close 'Sending' screen") { closeMoneyAccountBankWithdrawSuccess() }
-            step("Assert account balance is '$balanceAfterWithdraw'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onMoneyAccountScreen { balance.assertTextEquals(balanceAfterWithdraw) }
-                }
-            }
+            refreshMoneyAccountUntilBalance(balanceAfterWithdraw)
             step("Open 'Send' hub") { openMoneyAccountSendHub() }
             step("Open recent recipient '${JOHN.shortName}'") { openTangemPayRecentRecipient(JOHN) }
             step("Enter amount '$amount'") { enterTangemPayBankWithdrawAmount(amount) }

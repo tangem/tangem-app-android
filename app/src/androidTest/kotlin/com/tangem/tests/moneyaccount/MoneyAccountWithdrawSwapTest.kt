@@ -153,7 +153,10 @@ class MoneyAccountWithdrawSwapTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { feeBlockCurrency(usdc).assertIsDisplayed() } }
             }
             step("Assert no '$polygon' fee warning is displayed") {
-                onSwapTokenScreen { insufficientFeeForTransferNotificationTitle(polygon).assertDoesNotExist() }
+                onSwapTokenScreen {
+                    insufficientFeeForTransferNotificationTitle(polygon).assertDoesNotExist()
+                    unableToCoverFeeNotificationTitle(polygon).assertDoesNotExist()
+                }
             }
             step("Assert '$feeCoverageTitle' warning is displayed: the fee is taken from the amount") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { warningTitle(feeCoverageTitle).assertIsDisplayed() } }
