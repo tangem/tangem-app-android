@@ -36,6 +36,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyRowUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyStatusUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeysUM
@@ -78,7 +79,7 @@ internal fun PolymarketFastTradingSettingsScreen(
                     config = state.pullToRefreshConfig,
                     indicatorOffset = contentPadding.calculateTopPadding(),
                 ) {
-                    KeysList(keys = state.keys, contentPadding = contentPadding)
+                    KeysList(keys = state.keys, onActionClick = state.onActionClick, contentPadding = contentPadding)
                 }
             }
         }
@@ -86,26 +87,43 @@ internal fun PolymarketFastTradingSettingsScreen(
 }
 
 @Composable
-private fun KeysList(keys: FastTradingKeysUM, contentPadding: PaddingValues) {
+private fun KeysList(
+    keys: FastTradingKeysUM,
+    onActionClick: (FastTradingKeyActionUM) -> Unit,
+    contentPadding: PaddingValues,
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
     ) {
-        unknownSignersSection(keys)
+        unknownSignersSection(keys, onActionClick)
         keys.thisDevice?.let { row ->
             sectionHeader(key = "this_device_header", title = R.string.prediction_session_key_this_device)
-            item(key = "this_device:${row.id}", contentType = "key") { PolymarketFastTradingKeyRow(state = row) }
+            item(key = "this_device:${row.id}", contentType = "key") {
+                PolymarketFastTradingKeyRow(
+                    state = row,
+                    areActionsEnabled = keys.areActionsEnabled,
+                    onActionClick = onActionClick,
+                )
+            }
         }
         if (keys.otherDevices.isNotEmpty()) {
             sectionHeader(key = "other_devices_header", title = R.string.prediction_session_key_other_devices)
             items(keys.otherDevices, key = { "other_device:${it.id}" }, contentType = { "key" }) { row ->
-                PolymarketFastTradingKeyRow(state = row)
+                PolymarketFastTradingKeyRow(
+                    state = row,
+                    areActionsEnabled = keys.areActionsEnabled,
+                    onActionClick = onActionClick,
+                )
             }
         }
     }
 }
 
-private fun LazyListScope.unknownSignersSection(keys: FastTradingKeysUM) {
+private fun LazyListScope.unknownSignersSection(
+    keys: FastTradingKeysUM,
+    onActionClick: (FastTradingKeyActionUM) -> Unit,
+) {
     if (keys.unknownSigners.isEmpty()) return
     item(key = "unknown_signers_banner", contentType = "banner") {
         TangemMessageBanner(
@@ -116,7 +134,11 @@ private fun LazyListScope.unknownSignersSection(keys: FastTradingKeysUM) {
         )
     }
     items(keys.unknownSigners, key = { "unknown_signer:${it.address}" }, contentType = { "signer" }) { signer ->
-        PolymarketFastTradingUnknownSignerRow(state = signer)
+        PolymarketFastTradingUnknownSignerRow(
+            state = signer,
+            areActionsEnabled = keys.areActionsEnabled,
+            onActionClick = onActionClick,
+        )
     }
 }
 
@@ -158,7 +180,10 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
             onBackClick = {},
             keys = FastTradingKeysUM(
                 unknownSigners = persistentListOf(
-                    FastTradingUnknownSignerUM("0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"),
+                    FastTradingUnknownSignerUM(
+                        address = PREVIEW_SIGNER_ADDRESS,
+                        actions = persistentListOf(FastTradingKeyActionUM.Revoke(PREVIEW_SIGNER_ADDRESS)),
+                    ),
                 ),
                 thisDevice = previewRow("Pixel 9", FastTradingKeyStatusUM.Active("20 Apr 2027"), isExpiringSoon = true),
                 otherDevices = persistentListOf(
@@ -168,8 +193,10 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
                     previewRow("Pixel 8", FastTradingKeyStatusUM.ActivationFailed),
                     previewRow("iPad", FastTradingKeyStatusUM.ReconnectNeeded),
                 ),
+                areActionsEnabled = true,
             ),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+            onActionClick = {},
         ),
         PolymarketFastTradingSettingsUM.Loading(onBackClick = {}),
         PolymarketFastTradingSettingsUM.Error(onBackClick = {}, onRetryClick = {}),
@@ -181,5 +208,12 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
             deviceName = stringReference(name),
             status = status,
             isExpiringSoon = isExpiringSoon,
+            actions = if (status == FastTradingKeyStatusUM.Revoking) {
+                persistentListOf()
+            } else {
+                persistentListOf(FastTradingKeyActionUM.Revoke(name))
+            },
         )
 }
+
+private const val PREVIEW_SIGNER_ADDRESS = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"

@@ -62,6 +62,7 @@ import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
+import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
 import com.tangem.domain.polymarket.usecase.AcknowledgePolymarketSessionKeyOutcomeUseCase
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
@@ -576,4 +577,10 @@ internal object PolymarketDomainModule {
     fun provideAcknowledgePolymarketSessionKeyOutcomeUseCase(
         runner: PolymarketSessionKeyOperationRunner,
     ): AcknowledgePolymarketSessionKeyOutcomeUseCase = AcknowledgePolymarketSessionKeyOutcomeUseCase(runner = runner)
+
+    @Provides
+    @Singleton
+    fun provideStartPolymarketSessionKeyOperationUseCase(
+        runner: PolymarketSessionKeyOperationRunner,
+    ): StartPolymarketSessionKeyOperationUseCase = StartPolymarketSessionKeyOperationUseCase(runner = runner)
 }
