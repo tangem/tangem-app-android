@@ -3,10 +3,9 @@ package com.tangem.features.feed.deeplink.di
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkKey
 import com.tangem.features.feed.deeplink.DefaultMarketsTokenDetailDeepLinkHandler
-import com.tangem.features.feed.deeplink.DefaultMarketsTokenExchangesDeepLinkHandler
 import com.tangem.features.feed.deeplink.MarketsDeepLinkHandler
+import com.tangem.features.feed.deeplink.MarketsTokenExchangesDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -31,10 +30,9 @@ internal interface MarketsDeepLinkModule {
     ): MarketsTokenDetailDeepLinkHandler.Factory
 
     @Binds
-    @Singleton
-    fun bindMarketsTokenExchangesDeepLinkHandlerFactory(
-        impl: DefaultMarketsTokenExchangesDeepLinkHandler.Factory,
-    ): MarketsTokenExchangesDeepLinkHandler.Factory
+    @IntoMap
+    @DeepLinkKey(MarketsTokenExchangesDeepLinkHandler.DEEPLINK_KEY)
+    fun bindMarketsTokenExchangesDeepLinkHandler(impl: MarketsTokenExchangesDeepLinkHandler): DeepLinkHandler
 
     companion object {
 
@@ -45,17 +43,6 @@ internal interface MarketsDeepLinkModule {
         @DeepLinkKey(DefaultMarketsTokenDetailDeepLinkHandler.DEEPLINK_KEY)
         fun provideMarketsTokenDetailDeepLinkHandler(
             factory: MarketsTokenDetailDeepLinkHandler.Factory,
-        ): DeepLinkHandler = DeepLinkHandler { request ->
-            factory.create(coroutineScope = request.scope, params = request.queryParams)
-        }
-
-        // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
-        // bound here as a DeepLinkHandler instead of a lambda over its factory.
-        @Provides
-        @IntoMap
-        @DeepLinkKey(DefaultMarketsTokenExchangesDeepLinkHandler.DEEPLINK_KEY)
-        fun provideMarketsTokenExchangesDeepLinkHandler(
-            factory: MarketsTokenExchangesDeepLinkHandler.Factory,
         ): DeepLinkHandler = DeepLinkHandler { request ->
             factory.create(coroutineScope = request.scope, params = request.queryParams)
         }

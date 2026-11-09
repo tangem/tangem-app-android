@@ -2,6 +2,8 @@ package com.tangem.features.staking.impl.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
@@ -12,29 +14,19 @@ import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-@Suppress("LongParameterList")
-internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val scope: CoroutineScope,
-    @Assisted private val queryParams: Map<String, String>,
+internal class StakingDeepLinkHandler @Inject constructor(
     private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
-) : StakingDeepLinkHandler {
+) : DeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
-
-    private fun handleDeepLink() {
+    override fun handle(request: DeepLinkRequest) {
+        val queryParams = request.queryParams
         val networkId = queryParams[NETWORK_ID_KEY]
         val tokenId = queryParams[TOKEN_ID_KEY]
 
@@ -50,7 +42,7 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
             return
         }
 
-        scope.launch {
+        request.scope.launch {
             val cryptoCurrency = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
                 params = MultiWalletCryptoCurrenciesProducer.Params(selectedUserWalletId),
             )
@@ -91,14 +83,6 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
                 ),
             )
         }
-    }
-
-    @AssistedFactory
-    interface Factory : StakingDeepLinkHandler.Factory {
-        override fun create(
-            coroutineScope: CoroutineScope,
-            queryParams: Map<String, String>,
-        ): DefaultStakingDeepLinkHandler
     }
 
     companion object {
