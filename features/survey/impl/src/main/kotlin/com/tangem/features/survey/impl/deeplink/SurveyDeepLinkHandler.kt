@@ -2,22 +2,17 @@ package com.tangem.features.survey.impl.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import javax.inject.Inject
 
-internal class DefaultSurveyDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val queryParams: Map<String, String>,
+internal class SurveyDeepLinkHandler @Inject constructor(
     private val appRouter: AppRouter,
-) : SurveyDeepLinkHandler {
+) : DeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
-
-    private fun handleDeepLink() {
+    override fun handle(request: DeepLinkRequest) {
+        val queryParams = request.queryParams
         val token = queryParams[QUERY_TOKEN]?.takeIf { it.isNotBlank() }
         if (token == null) {
             TangemLogger.e("$TAG: survey deeplink ignored, missing 'token' query param")
@@ -25,11 +20,6 @@ internal class DefaultSurveyDeepLinkHandler @AssistedInject constructor(
         }
 
         appRouter.push(AppRoute.Survey(token = token, displayId = queryParams[QUERY_DISPLAY_ID]))
-    }
-
-    @AssistedFactory
-    interface Factory : SurveyDeepLinkHandler.Factory {
-        override fun create(queryParams: Map<String, String>): DefaultSurveyDeepLinkHandler
     }
 
     companion object {

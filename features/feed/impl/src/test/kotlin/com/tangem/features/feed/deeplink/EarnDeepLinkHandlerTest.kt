@@ -1,7 +1,9 @@
 package com.tangem.features.feed.deeplink
 
+import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.EARN_TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.domain.models.earn.PreselectedEarnType
@@ -10,12 +12,15 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class DefaultEarnDeepLinkHandlerTest {
+class EarnDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk()
+
+    private val handler = EarnDeepLinkHandler(appRouter = appRouter)
 
     @BeforeEach
     fun setUp() {
@@ -24,7 +29,7 @@ class DefaultEarnDeepLinkHandlerTest {
 
     @Test
     fun `no params opens earn list with no filters`() {
-        DefaultEarnDeepLinkHandler(queryParams = emptyMap(), appRouter = appRouter)
+        handler.handle(createRequest(queryParams = emptyMap()))
 
         verify {
             appRouter.push(
@@ -36,10 +41,7 @@ class DefaultEarnDeepLinkHandlerTest {
 
     @Test
     fun `staking earnType is parsed`() {
-        DefaultEarnDeepLinkHandler(
-            queryParams = mapOf(EARN_TYPE_KEY to "staking"),
-            appRouter = appRouter,
-        )
+        handler.handle(createRequest(queryParams = mapOf(EARN_TYPE_KEY to "staking")))
 
         verify {
             appRouter.push(
@@ -51,10 +53,7 @@ class DefaultEarnDeepLinkHandlerTest {
 
     @Test
     fun `yield earnType is parsed`() {
-        DefaultEarnDeepLinkHandler(
-            queryParams = mapOf(EARN_TYPE_KEY to "yield"),
-            appRouter = appRouter,
-        )
+        handler.handle(createRequest(queryParams = mapOf(EARN_TYPE_KEY to "yield")))
 
         verify {
             appRouter.push(
@@ -66,10 +65,7 @@ class DefaultEarnDeepLinkHandlerTest {
 
     @Test
     fun `invalid earnType is silently dropped`() {
-        DefaultEarnDeepLinkHandler(
-            queryParams = mapOf(EARN_TYPE_KEY to "bogus"),
-            appRouter = appRouter,
-        )
+        handler.handle(createRequest(queryParams = mapOf(EARN_TYPE_KEY to "bogus")))
 
         verify {
             appRouter.push(
@@ -81,10 +77,7 @@ class DefaultEarnDeepLinkHandlerTest {
 
     @Test
     fun `networkId is passed through`() {
-        DefaultEarnDeepLinkHandler(
-            queryParams = mapOf(NETWORK_ID_KEY to "base"),
-            appRouter = appRouter,
-        )
+        handler.handle(createRequest(queryParams = mapOf(NETWORK_ID_KEY to "base")))
 
         verify {
             appRouter.push(
@@ -96,10 +89,7 @@ class DefaultEarnDeepLinkHandlerTest {
 
     @Test
     fun `blank networkId is dropped`() {
-        DefaultEarnDeepLinkHandler(
-            queryParams = mapOf(NETWORK_ID_KEY to "   "),
-            appRouter = appRouter,
-        )
+        handler.handle(createRequest(queryParams = mapOf(NETWORK_ID_KEY to "   ")))
 
         verify {
             appRouter.push(
@@ -111,10 +101,7 @@ class DefaultEarnDeepLinkHandlerTest {
 
     @Test
     fun `earnType and networkId together`() {
-        DefaultEarnDeepLinkHandler(
-            queryParams = mapOf(EARN_TYPE_KEY to "yield", NETWORK_ID_KEY to "base"),
-            appRouter = appRouter,
-        )
+        handler.handle(createRequest(queryParams = mapOf(EARN_TYPE_KEY to "yield", NETWORK_ID_KEY to "base")))
 
         verify {
             appRouter.push(
@@ -126,4 +113,11 @@ class DefaultEarnDeepLinkHandlerTest {
             )
         }
     }
+
+    private fun createRequest(queryParams: Map<String, String>) = DeepLinkRequest(
+        uri = mockk<Uri>(),
+        queryParams = queryParams,
+        scope = mockk<CoroutineScope>(),
+        isFromOnNewIntent = false,
+    )
 }

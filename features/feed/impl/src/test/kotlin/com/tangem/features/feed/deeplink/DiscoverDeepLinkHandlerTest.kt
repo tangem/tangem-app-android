@@ -1,7 +1,9 @@
 package com.tangem.features.feed.deeplink
 
+import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.CATEGORY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
@@ -15,10 +17,11 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class DefaultDiscoverDeepLinkHandlerTest {
+internal class DiscoverDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk()
     private val feedEntryController: FeedEntryController = mockk()
@@ -34,7 +37,7 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
     @Test
     fun `GIVEN no params WHEN handled THEN opens the wallet with an empty request`() {
         // Act
-        createHandler(queryParams = emptyMap())
+        handle(queryParams = emptyMap())
 
         // Assert
         verify(exactly = 1) { feedEntryController.request(FeedEntryRequest()) }
@@ -43,7 +46,7 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
     @Test
     fun `GIVEN assets section WHEN handled THEN requests the real assets section`() {
         // Act
-        createHandler(queryParams = mapOf(SECTION_KEY to "assets"))
+        handle(queryParams = mapOf(SECTION_KEY to "assets"))
 
         // Assert
         verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = FeedSection.Assets)) }
@@ -52,7 +55,7 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
     @Test
     fun `GIVEN unknown section WHEN handled THEN requests no section so the default tab opens`() {
         // Act
-        createHandler(queryParams = mapOf(SECTION_KEY to "nonsense"))
+        handle(queryParams = mapOf(SECTION_KEY to "nonsense"))
 
         // Assert
         verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = null)) }
@@ -61,7 +64,7 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
     @Test
     fun `GIVEN category WHEN handled THEN it is forwarded unvalidated for the tab to resolve`() {
         // Act
-        createHandler(queryParams = mapOf(SECTION_KEY to "crypto", CATEGORY_KEY to "layer-1"))
+        handle(queryParams = mapOf(SECTION_KEY to "crypto", CATEGORY_KEY to "layer-1"))
 
         // Assert
         verify(exactly = 1) {
@@ -74,7 +77,7 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
     @Test
     fun `GIVEN blank category WHEN handled THEN no category is requested`() {
         // Act
-        createHandler(queryParams = mapOf(SECTION_KEY to "crypto", CATEGORY_KEY to " "))
+        handle(queryParams = mapOf(SECTION_KEY to "crypto", CATEGORY_KEY to " "))
 
         // Assert
         verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = FeedSection.Crypto)) }
@@ -83,7 +86,7 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
     @Test
     fun `GIVEN earn section and staking type WHEN handled THEN requests that earn type`() {
         // Act
-        createHandler(queryParams = mapOf(SECTION_KEY to "earn", TYPE_KEY to "staking"))
+        handle(queryParams = mapOf(SECTION_KEY to "earn", TYPE_KEY to "staking"))
 
         // Assert
         verify(exactly = 1) {
@@ -96,7 +99,7 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
     @Test
     fun `GIVEN a type the app has no filter for WHEN handled THEN the section opens unfiltered`() {
         // Act
-        createHandler(queryParams = mapOf(SECTION_KEY to "earn", TYPE_KEY to "embedded_yield"))
+        handle(queryParams = mapOf(SECTION_KEY to "earn", TYPE_KEY to "embedded_yield"))
 
         // Assert
         verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = FeedSection.Earn)) }
@@ -105,7 +108,7 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
     @Test
     fun `GIVEN a covered wallet WHEN handled THEN the screens above it are dropped`() {
         // Act
-        createHandler(queryParams = emptyMap())
+        handle(queryParams = emptyMap())
 
         // Assert
         verify(exactly = 1) { appRouter.popTo(AppRoute.Wallet, any()) }
@@ -117,7 +120,7 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
         every { appRouter.stack } returns listOf(AppRoute.Wallet)
 
         // Act
-        createHandler(queryParams = mapOf(SECTION_KEY to "assets"))
+        handle(queryParams = mapOf(SECTION_KEY to "assets"))
 
         // Assert
         verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = FeedSection.Assets)) }
@@ -130,16 +133,22 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
         every { appRouter.stack } returns emptyList()
 
         // Act
-        createHandler(queryParams = mapOf(SECTION_KEY to "earn"))
+        handle(queryParams = mapOf(SECTION_KEY to "earn"))
 
         // Assert
         verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = FeedSection.Earn)) }
         verify(exactly = 0) { appRouter.popTo(any<AppRoute>(), any()) }
     }
 
-    private fun createHandler(queryParams: Map<String, String>) = DefaultDiscoverDeepLinkHandler(
-        queryParams = queryParams,
+    private fun handle(queryParams: Map<String, String>) = DiscoverDeepLinkHandler(
         feedEntryController = feedEntryController,
         appRouter = appRouter,
+    ).handle(
+        DeepLinkRequest(
+            uri = mockk<Uri>(),
+            queryParams = queryParams,
+            scope = mockk<CoroutineScope>(),
+            isFromOnNewIntent = false,
+        ),
     )
 }
