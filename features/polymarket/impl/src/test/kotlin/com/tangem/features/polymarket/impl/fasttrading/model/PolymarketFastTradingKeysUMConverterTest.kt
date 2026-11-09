@@ -639,6 +639,22 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                 ),
             ),
             ScenarioModel(
+                sessionKeys = listOf(OWN_KEY, OLD_LAPSED_KEY),
+                deviceState = PolymarketSessionKeyDeviceState.Active(OWN_KEY, isRenewDue = false),
+                expectedBanner = null,
+                expectedThisDevice = listOf(OWN_ADDRESS to OWN_ACTIVE),
+            ),
+            ScenarioModel(
+                sessionKeys = listOf(OWN_KEY, OLD_LAPSED_KEY),
+                listedSigners = setOf(PREVIOUS_ADDRESS),
+                deviceState = PolymarketSessionKeyDeviceState.Active(OWN_KEY, isRenewDue = false),
+                expectedBanner = null,
+                expectedThisDevice = listOf(
+                    OWN_ADDRESS to OWN_ACTIVE,
+                    PREVIOUS_ADDRESS to FastTradingKeyStatusUM.Expired(at = "Nov 4, 2026"),
+                ),
+            ),
+            ScenarioModel(
                 sessionKeys = listOf(OWN_KEY, PREVIOUS_KEY),
                 deviceState = PolymarketSessionKeyDeviceState.Active(OWN_KEY, isRenewDue = false),
                 expectedBanner = null,
@@ -1037,6 +1053,11 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         val OLD_EXPIRED_KEY = createKey(
             address = PREVIOUS_ADDRESS,
             status = PolymarketSessionKeyStatus.EXPIRED,
+            validUntil = NOW.minus(Duration.ofDays(5)),
+            deviceId = THIS_DEVICE_ID,
+        )
+        val OLD_LAPSED_KEY = createKey(
+            address = PREVIOUS_ADDRESS,
             validUntil = NOW.minus(Duration.ofDays(5)),
             deviceId = THIS_DEVICE_ID,
         )
