@@ -11,6 +11,7 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
+import com.tangem.common.extensions.performTextInputInChunks
 import com.tangem.common.extensions.tapBackButton
 import com.tangem.common.utils.findWireMockRequestBodies
 import com.tangem.common.utils.findWireMockRequestQueryParamValues
@@ -133,6 +134,17 @@ fun BaseTestCase.enterTangemPayBankWithdrawAmount(amount: String) {
     step("Enter amount '$amount'") {
         awaitSuccess { onTangemPayBankWithdrawAmountScreen { amountInput.assertIsDisplayed() } }
         onTangemPayBankWithdrawAmountScreen { amountInput.performTextReplacement(amount) }
+    }
+    step("Dismiss keyboard") {
+        Espresso.closeSoftKeyboard()
+        waitForIdle()
+    }
+}
+
+fun BaseTestCase.typeTangemPayBankWithdrawAmount(amount: String) {
+    step("Type amount '$amount'") {
+        awaitSuccess { onTangemPayBankWithdrawAmountScreen { amountInput.assertIsDisplayed() } }
+        onTangemPayBankWithdrawAmountScreen { amountInput.performTextInputInChunks(amount, chunkSize = 1) }
     }
     step("Dismiss keyboard") {
         Espresso.closeSoftKeyboard()
