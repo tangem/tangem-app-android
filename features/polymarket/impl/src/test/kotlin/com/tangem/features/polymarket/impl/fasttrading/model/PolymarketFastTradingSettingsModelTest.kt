@@ -313,6 +313,38 @@ internal class PolymarketFastTradingSettingsModelTest {
             verify(exactly = 1) { startOperation(USER_WALLET_ID, REVOKE) }
         }
 
+    @Test
+    fun `GIVEN activation offered WHEN activate clicked THEN activation starts without a toast`() = runTest {
+        // Arrange
+        every { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) } returns
+            PolymarketSessionKeyOperationStart.Started(OPERATION_ID)
+        val model = createContentModel()
+
+        // Act
+        content(model).onActivateClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) }
+        assertThat(sentMessages).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN another operation running WHEN activate clicked THEN busy toast is shown`() = runTest {
+        // Arrange
+        every { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) } returns
+            PolymarketSessionKeyOperationStart.Busy
+        val model = createContentModel()
+
+        // Act
+        content(model).onActivateClick()
+        advanceUntilIdle()
+
+        // Assert
+        val toast = sentMessages.single() as SnackbarMessage
+        assertThat(toast.message).isEqualTo(resourceReference(R.string.prediction_session_key_toast_busy))
+    }
+
     private suspend fun TestScope.createContentModel(): PolymarketFastTradingSettingsModel {
         val model = createModel()
         states.emit(createState(OVERVIEW.right()))

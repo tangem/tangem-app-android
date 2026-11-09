@@ -17,6 +17,7 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliatio
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingActivateBannerUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyRowUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyStatusUM
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -386,32 +388,258 @@ internal class PolymarketFastTradingKeysUMConverterTest {
     }
 
     @Nested
-    inner class ExchangeListing {
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ThisDevice {
 
-        @Test
-        fun `GIVEN this device failed key the exchange lists WHEN convert THEN it offers revoke`() {
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN this device state WHEN convert THEN banner and row follow it`(model: ThisDeviceModel) {
             // Arrange
-            val key = createKey(address = OWN_ADDRESS, status = PolymarketSessionKeyStatus.FAILED)
-            val overview = createOverview(sessionKeys = listOf(key), listedSigners = setOf(OWN_ADDRESS))
+            val overview = createOverview(
+                sessionKeys = listOf(OWN_KEY, PREVIOUS_KEY),
+                deviceState = model.deviceState,
+            )
 
             // Act
             val actual = converter.convert(overview, operation = null)
 
             // Assert
-            assertThat(actual.thisDevice?.actions).isEqualTo(revokeOf(OWN_ADDRESS))
+            assertThat(actual.activateBanner).isEqualTo(model.expectedBanner)
+            assertThat(actual.thisDevice?.id).isEqualTo(model.expectedRowId)
+            assertThat(actual.otherDevices.map { it.id })
+                .containsExactlyElementsIn(listOf(PREVIOUS_ADDRESS) - setOfNotNull(model.expectedRowId))
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideOperationModels")
+        fun `GIVEN activation offered and an operation WHEN convert THEN banner follows the operation`(
+            model: BannerOperationModel,
+        ) {
+            // Arrange
+            val overview = createOverview(sessionKeys = emptyList(), localKeyAddress = null)
+            val operation = createOperation(request = model.request, stage = model.stage, targetAddress = null)
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.activateBanner).isEqualTo(model.expectedBanner)
+            assertThat(actual.thisDevice?.status).isEqualTo(model.expectedRowStatus)
         }
 
         @Test
-        fun `GIVEN this device failed key the exchange does not list WHEN convert THEN it offers nothing`() {
+        fun `GIVEN this device key revoked WHEN convert THEN only the banner is shown for this device`() {
             // Arrange
-            val key = createKey(address = OWN_ADDRESS, status = PolymarketSessionKeyStatus.FAILED)
+            val ownKey = createKey(address = OWN_ADDRESS, status = PolymarketSessionKeyStatus.REVOKED)
+            val overview = createOverview(
+                sessionKeys = listOf(ownKey, createKey()),
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(ownKey),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.activateBanner).isEqualTo(FastTradingActivateBannerUM(isLoading = false))
+            assertThat(actual.thisDevice).isNull()
+            assertThat(actual.otherDevices.map { it.id }).containsExactly(OTHER_ADDRESS)
+        }
+
+        @Test
+        fun `GIVEN this device key failed WHEN activation is submitted THEN activating row replaces the banner`() {
+            // Arrange
+            val ownKey = createKey(address = OWN_ADDRESS, status = PolymarketSessionKeyStatus.FAILED)
+            val overview = createOverview(
+                sessionKeys = listOf(ownKey),
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(ownKey),
+            )
+            val operation = createOperation(
+                request = PolymarketSessionKeyOperationRequest.Activate,
+                stage = PolymarketSessionKeyOperationStage.AUTHORIZING,
+                targetAddress = OWN_ADDRESS,
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.activateBanner).isNull()
+            assertThat(actual.thisDevice?.id).isEqualTo("this_device_pending")
+            assertThat(actual.thisDevice?.status).isEqualTo(FastTradingKeyStatusUM.Activating)
+            assertThat(actual.otherDevices).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN this device key enabling WHEN activation checks readiness THEN its own row shows activating`() {
+            // Arrange
+            val ownKey = createKey(address = OWN_ADDRESS, status = PolymarketSessionKeyStatus.PENDING)
+            val overview = createOverview(
+                sessionKeys = listOf(ownKey),
+                deviceState = PolymarketSessionKeyDeviceState.Enabling(ownKey),
+            )
+            val operation = createOperation(
+                request = PolymarketSessionKeyOperationRequest.Activate,
+                stage = PolymarketSessionKeyOperationStage.CHECKING_READINESS,
+                targetAddress = OWN_ADDRESS,
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.activateBanner).isNull()
+            assertThat(actual.thisDevice?.id).isEqualTo(OWN_ADDRESS)
+            assertThat(actual.thisDevice?.status).isEqualTo(FastTradingKeyStatusUM.Activating)
+            assertThat(actual.thisDevice?.actions).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN replacement revoking the previous key WHEN convert THEN previous stays in other devices`() {
+            // Arrange
+            val overview = createOverview(
+                sessionKeys = listOf(PREVIOUS_KEY),
+                localKeyAddress = null,
+                deviceState = PolymarketSessionKeyDeviceState.Replace.ByRevocation(PREVIOUS_KEY),
+            )
+            val operation = createOperation(
+                request = PolymarketSessionKeyOperationRequest.Activate,
+                stage = PolymarketSessionKeyOperationStage.REVOKING,
+                targetAddress = PREVIOUS_ADDRESS,
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.thisDevice?.status).isEqualTo(FastTradingKeyStatusUM.Activating)
+            assertThat(actual.otherDevices.single().status).isEqualTo(FastTradingKeyStatusUM.Revoking)
+        }
+
+        private fun provideTestModels() = listOf(
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.OfferEnable,
+                expectedBanner = FastTradingActivateBannerUM(isLoading = false),
+                expectedRowId = null,
+            ),
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(OWN_KEY),
+                expectedBanner = FastTradingActivateBannerUM(isLoading = false),
+                expectedRowId = null,
+            ),
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.RepairByRenewal(OWN_KEY),
+                expectedBanner = FastTradingActivateBannerUM(isLoading = false),
+                expectedRowId = null,
+            ),
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.Replace.ByRevocation(PREVIOUS_KEY),
+                expectedBanner = FastTradingActivateBannerUM(isLoading = false),
+                expectedRowId = null,
+            ),
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.Replace.ByOverwrite(PREVIOUS_KEY),
+                expectedBanner = FastTradingActivateBannerUM(isLoading = false),
+                expectedRowId = null,
+            ),
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.Enabling(OWN_KEY),
+                expectedBanner = null,
+                expectedRowId = OWN_ADDRESS,
+            ),
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.Revoking(OWN_KEY),
+                expectedBanner = null,
+                expectedRowId = OWN_ADDRESS,
+            ),
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.Active(OWN_KEY, isRenewDue = false),
+                expectedBanner = null,
+                expectedRowId = OWN_ADDRESS,
+            ),
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.Disabled(OWN_KEY, isRenewDue = false),
+                expectedBanner = null,
+                expectedRowId = OWN_ADDRESS,
+            ),
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.RenewalRequired(OWN_KEY),
+                expectedBanner = null,
+                expectedRowId = OWN_ADDRESS,
+            ),
+            ThisDeviceModel(
+                deviceState = PolymarketSessionKeyDeviceState.WaitingForPrevious(PREVIOUS_KEY),
+                expectedBanner = null,
+                expectedRowId = PREVIOUS_ADDRESS,
+            ),
+        )
+
+        private fun provideOperationModels() = listOf(
+            BannerOperationModel(
+                request = PolymarketSessionKeyOperationRequest.Activate,
+                stage = PolymarketSessionKeyOperationStage.SIGNING,
+                expectedBanner = FastTradingActivateBannerUM(isLoading = true),
+                expectedRowStatus = null,
+            ),
+            BannerOperationModel(
+                request = PolymarketSessionKeyOperationRequest.Activate,
+                stage = PolymarketSessionKeyOperationStage.AUTHORIZING,
+                expectedBanner = null,
+                expectedRowStatus = FastTradingKeyStatusUM.Activating,
+            ),
+            BannerOperationModel(
+                request = PolymarketSessionKeyOperationRequest.Reactivate,
+                stage = PolymarketSessionKeyOperationStage.SIGNING,
+                expectedBanner = null,
+                expectedRowStatus = null,
+            ),
+            BannerOperationModel(
+                request = PolymarketSessionKeyOperationRequest.Revoke(OTHER_ADDRESS),
+                stage = PolymarketSessionKeyOperationStage.SIGNING,
+                expectedBanner = null,
+                expectedRowStatus = null,
+            ),
+            BannerOperationModel(
+                request = PolymarketSessionKeyOperationRequest.Revoke(OTHER_ADDRESS),
+                stage = PolymarketSessionKeyOperationStage.REVOKING,
+                expectedBanner = null,
+                expectedRowStatus = null,
+            ),
+            BannerOperationModel(
+                request = PolymarketSessionKeyOperationRequest.Extend,
+                stage = PolymarketSessionKeyOperationStage.REVOKED,
+                expectedBanner = null,
+                expectedRowStatus = FastTradingKeyStatusUM.Extending,
+            ),
+        )
+    }
+
+    @Nested
+    inner class ExchangeListing {
+
+        @Test
+        fun `GIVEN another device failed key the exchange lists WHEN convert THEN it offers revoke`() {
+            // Arrange
+            val key = createKey(status = PolymarketSessionKeyStatus.FAILED)
             val overview = createOverview(sessionKeys = listOf(key), listedSigners = setOf(OTHER_ADDRESS))
 
             // Act
             val actual = converter.convert(overview, operation = null)
 
             // Assert
-            assertThat(actual.thisDevice?.actions).isEmpty()
+            assertThat(actual.otherDevices.single().actions).isEqualTo(revokeOf(OTHER_ADDRESS))
+        }
+
+        @Test
+        fun `GIVEN another device failed key the exchange does not list WHEN convert THEN it offers nothing`() {
+            // Arrange
+            val key = createKey(status = PolymarketSessionKeyStatus.FAILED)
+            val overview = createOverview(sessionKeys = listOf(key), listedSigners = setOf(FOREIGN_ADDRESS))
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.otherDevices.single().actions).isEmpty()
         }
 
         @Test
@@ -594,6 +822,19 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         val offersRevoke: Boolean = true,
     )
 
+    data class ThisDeviceModel(
+        val deviceState: PolymarketSessionKeyDeviceState,
+        val expectedBanner: FastTradingActivateBannerUM?,
+        val expectedRowId: String?,
+    )
+
+    data class BannerOperationModel(
+        val request: PolymarketSessionKeyOperationRequest,
+        val stage: PolymarketSessionKeyOperationStage,
+        val expectedBanner: FastTradingActivateBannerUM?,
+        val expectedRowStatus: FastTradingKeyStatusUM?,
+    )
+
     data class OperationModel(
         val request: PolymarketSessionKeyOperationRequest,
         val stage: PolymarketSessionKeyOperationStage,
@@ -603,11 +844,14 @@ internal class PolymarketFastTradingKeysUMConverterTest {
     private companion object {
         val NOW: Instant = Instant.ofEpochSecond(1_794_182_400)
         val DEFAULT_VALID_UNTIL: Instant = NOW.plus(Duration.ofDays(100))
+        val OWN_KEY = createKey(address = OWN_ADDRESS, deviceName = THIS_DEVICE_NAME)
+        val PREVIOUS_KEY = createKey(address = PREVIOUS_ADDRESS, deviceName = THIS_DEVICE_NAME)
         const val THIS_DEVICE_NAME = "Pixel 9"
         const val OTHER_DEVICE_NAME = "Galaxy S24"
         const val OWN_ADDRESS = "0x5e55000000000000000000000000000000000001"
         const val OTHER_ADDRESS = "0x5e55000000000000000000000000000000000002"
         const val FOREIGN_ADDRESS = "0x5e55000000000000000000000000000000000003"
+        const val PREVIOUS_ADDRESS = "0x5e55000000000000000000000000000000000004"
 
         fun signerOf(address: String) =
             PolymarketSessionSigner(address = address, scopes = listOf("CLOB"), validUntil = null)
@@ -647,6 +891,10 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             foreignSigners: List<PolymarketSessionSigner> = emptyList(),
             listedSigners: Set<String> = emptySet(),
             isReconciled: Boolean = true,
+            deviceState: PolymarketSessionKeyDeviceState = sessionKeys
+                .firstOrNull { it.address == localKeyAddress }
+                ?.let { PolymarketSessionKeyDeviceState.Active(sessionKey = it, isRenewDue = false) }
+                ?: PolymarketSessionKeyDeviceState.OfferEnable,
         ) = PolymarketSessionKeyOverview(
             wallet = PolymarketWalletState(
                 depositWalletAddress = "0x2222222222222222222222222222222222222222",
@@ -655,7 +903,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             ),
             localKeyAddress = localKeyAddress,
             assessment = PolymarketSessionKeyAssessment(
-                deviceState = PolymarketSessionKeyDeviceState.OfferEnable,
+                deviceState = deviceState,
                 reconciliation = if (isReconciled) {
                     PolymarketSessionKeyReconciliation.Checked(
                         foreignSigners = foreignSigners,

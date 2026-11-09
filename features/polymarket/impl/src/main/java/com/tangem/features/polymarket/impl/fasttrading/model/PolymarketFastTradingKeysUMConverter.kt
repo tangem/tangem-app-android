@@ -6,10 +6,12 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingActivateBannerUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyRowUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyStatusUM
@@ -76,7 +78,12 @@ internal class PolymarketFastTradingKeysUMConverter(
                     ),
                 )
             }
-        val ownRow = rows.firstOrNull { (address, _) -> address.equals(localKeyAddress, ignoreCase = true) }?.second
+        val deviceState = overview.assessment.deviceState
+        val isActivationOffered = deviceState.isActivationOffered()
+        val ownRow = rows.rowOf(localKeyAddress)
+        val previousRow = (deviceState as? PolymarketSessionKeyDeviceState.WaitingForPrevious)
+            ?.let { rows.rowOf(it.previous.address) }
+        val thisDeviceRow = previousRow ?: ownRow?.takeUnless { isActivationOffered }
 
         return FastTradingKeysUM(
             isUnknownSignersWarningShown = foreignSigners.isNotEmpty(),
@@ -93,10 +100,42 @@ internal class PolymarketFastTradingKeysUMConverter(
                     )
                 }
                 .toImmutableList(),
-            thisDevice = ownRow ?: submittedOperation?.pendingThisDeviceRow(),
-            otherDevices = rows.map { it.second }.filter { it !== ownRow }.toImmutableList(),
+            thisDevice = thisDeviceRow ?: submittedOperation?.pendingThisDeviceRow(),
+            activateBanner = activateBannerOf(isActivationOffered, operation),
+            otherDevices = rows.map { it.second }.filter { it !== ownRow && it !== previousRow }.toImmutableList(),
             areActionsEnabled = operation == null,
         )
+    }
+
+    private fun List<Pair<String, FastTradingKeyRowUM>>.rowOf(address: String?): FastTradingKeyRowUM? =
+        firstOrNull { (rowAddress, _) -> rowAddress.equals(address, ignoreCase = true) }?.second
+
+    private fun activateBannerOf(
+        isActivationOffered: Boolean,
+        operation: PolymarketSessionKeyOperation?,
+    ): FastTradingActivateBannerUM? = when {
+        !isActivationOffered -> null
+        operation == null -> FastTradingActivateBannerUM(isLoading = false)
+        operation.isActivationSigning() -> FastTradingActivateBannerUM(isLoading = true)
+        else -> null
+    }
+
+    private fun PolymarketSessionKeyOperation.isActivationSigning(): Boolean =
+        request == PolymarketSessionKeyOperationRequest.Activate && stage == PolymarketSessionKeyOperationStage.SIGNING
+
+    private fun PolymarketSessionKeyDeviceState.isActivationOffered(): Boolean = when (this) {
+        PolymarketSessionKeyDeviceState.OfferEnable,
+        is PolymarketSessionKeyDeviceState.Reenable,
+        is PolymarketSessionKeyDeviceState.RepairByRenewal,
+        is PolymarketSessionKeyDeviceState.Replace,
+        -> true
+        is PolymarketSessionKeyDeviceState.Enabling,
+        is PolymarketSessionKeyDeviceState.Revoking,
+        is PolymarketSessionKeyDeviceState.Active,
+        is PolymarketSessionKeyDeviceState.Disabled,
+        is PolymarketSessionKeyDeviceState.RenewalRequired,
+        is PolymarketSessionKeyDeviceState.WaitingForPrevious,
+        -> false
     }
 
     private fun revokeOf(address: String, subject: FastTradingKeyActionUM.RevokeSubject) =

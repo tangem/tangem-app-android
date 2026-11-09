@@ -6,9 +6,11 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyLifecycleError
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationFailure
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationOutcome
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.core.ui.R as CoreUiR
 
@@ -29,8 +31,17 @@ internal object PolymarketSessionKeyMessagesFactory {
         is PolymarketSessionKeyOperationStart.Started -> null
     }
 
-    fun revokingToast(): SnackbarMessage =
-        SnackbarMessage(message = resourceReference(R.string.prediction_session_key_toast_revoking))
+    fun create(operation: PolymarketSessionKeyOperation): SnackbarMessage? = when (operation.request) {
+        PolymarketSessionKeyOperationRequest.Activate,
+        PolymarketSessionKeyOperationRequest.Reactivate,
+        -> infoToast(R.string.prediction_session_key_toast_activation_in_progress)
+            .takeIf { operation.stage != PolymarketSessionKeyOperationStage.SIGNING }
+        is PolymarketSessionKeyOperationRequest.Revoke -> infoToast(R.string.prediction_session_key_toast_revoking)
+            .takeIf { operation.stage == PolymarketSessionKeyOperationStage.REVOKING }
+        PolymarketSessionKeyOperationRequest.Extend,
+        is PolymarketSessionKeyOperationRequest.SetEnabled,
+        -> null
+    }
 
     private fun successToast(request: PolymarketSessionKeyOperationRequest): SnackbarMessage? = when (request) {
         is PolymarketSessionKeyOperationRequest.Revoke -> SnackbarMessage(
@@ -50,6 +61,7 @@ internal object PolymarketSessionKeyMessagesFactory {
         failure: PolymarketSessionKeyOperationFailure,
     ): SnackbarMessage? = when {
         failure.isCancelled -> null
+        failure.error is PolymarketSessionKeyLifecycleError.Unsettled -> null
         failure.isBusy() -> errorToast(R.string.prediction_session_key_toast_busy)
         else -> errorToast(failureMessageId(request, failure.isAfterRevocation))
     }
@@ -77,6 +89,9 @@ internal object PolymarketSessionKeyMessagesFactory {
         }
 
     private fun PolymarketSessionKeyOperationFailure.isBusy(): Boolean = !isAfterRevocation && error in BUSY_ERRORS
+
+    private fun infoToast(@StringRes messageId: Int): SnackbarMessage =
+        SnackbarMessage(message = resourceReference(messageId))
 
     private fun errorToast(@StringRes messageId: Int): SnackbarMessage = SnackbarMessage(
         message = resourceReference(messageId),
