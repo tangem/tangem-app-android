@@ -20,6 +20,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledResourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
@@ -29,6 +30,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUseCase
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
 import com.tangem.features.hotwallet.SocialLoginUseCase
@@ -326,6 +328,15 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             SocialLoginError.WalletAlreadySaved -> uiMessageSender.send(
                 DialogMessage(message = resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved)),
             )
+            SocialLoginError.HotWalletsLimitReached -> {
+                analyticsEventHandler.send(
+                    NoticeMobileWalletLimit(
+                        type = NoticeMobileWalletLimit.Type.SocialLogin,
+                        limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                    ),
+                )
+                uiMessageSender.send(Dialogs.hotWalletsLimitReachedDialog())
+            }
             else -> uiMessageSender.send(SnackbarMessage(error.toMessage()))
         }
     }
@@ -378,6 +389,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         SocialLoginError.NetworkError -> "No internet connection"
         is SocialLoginError.BackupWriteFailed -> "Couldn't save backup"
         SocialLoginError.WalletAlreadySaved -> "This wallet has already been saved"
+        SocialLoginError.HotWalletsLimitReached -> "Mobile wallets limit reached"
         else -> "Something went wrong"
     }
 
