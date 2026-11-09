@@ -23,19 +23,27 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialData
 import com.tangem.domain.visa.model.MoneyAccountActivationData
+import com.tangem.lib.auth.session.DeviceRegistrar
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.tap.domain.sdk.mocks.MockColdWalletRegistration
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.domain.sdk.mocks.showMockCardPicker
 import com.tangem.tap.domain.tasks.jointaccount.JointAccountSignTask
+import dagger.Lazy
 
 @Suppress("TooManyFunctions")
 class MockTangemSdkManager(
     private val foregroundActivityProvider: ForegroundActivityProvider,
+    deviceRegistrar: Lazy<DeviceRegistrar>,
+    walletRegistrar: Lazy<WalletRegistrar>,
 ) : TangemSdkManager {
+
+    private val coldWalletRegistration = MockColdWalletRegistration(deviceRegistrar, walletRegistrar)
 
     private var userCodeRequestPolicyInternal: UserCodeRequestPolicy = UserCodeRequestPolicy.Default
 
@@ -72,14 +80,18 @@ class MockTangemSdkManager(
                 }
             }
         }
-        return MockProvider.getScanResponse()
+        val result = MockProvider.getScanResponse()
+        if (result is CompletionResult.Success) {
+            coldWalletRegistration.register(result.data.card)
+        }
+        return result
     }
 
     override suspend fun createProductWallet(
         scanResponse: ScanResponse,
         shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        return MockProvider.getCreateProductWalletResponse()
+        return MockProvider.getCreateProductWalletResponse().registerColdWallet()
     }
 
     override suspend fun importWallet(
@@ -89,7 +101,11 @@ class MockTangemSdkManager(
         shouldReset: Boolean,
         shouldForceColdRegistration: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        return MockProvider.getImportWalletResponse()
+        return MockProvider.getImportWalletResponse().registerColdWallet()
+    }
+
+    private suspend fun CompletionResult<CreateProductWalletTaskResponse>.registerColdWallet() = also { result ->
+        if (result is CompletionResult.Success) coldWalletRegistration.register(result.data.card)
     }
 
     override suspend fun derivePublicKeys(
