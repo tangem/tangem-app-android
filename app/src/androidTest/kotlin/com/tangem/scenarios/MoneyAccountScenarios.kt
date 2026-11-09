@@ -5,16 +5,22 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
+import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
+import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.utils.findWireMockRequestBodiesByPathPattern
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.screens.VirtualAccountRequisitesBottomSheetPageObject
 import com.tangem.screens.moneyaccount.onMoneyAccountAddFundsSheet
 import com.tangem.screens.moneyaccount.onMoneyAccountScreen
+import com.tangem.screens.onSwapSelectTokenScreen
 import com.tangem.screens.onSwapSuccessScreen
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTxHistoryScreen
+import com.tangem.screens.tangempay.onTangemPayBankWithdrawPreviewScreen
+import com.tangem.screens.tangempay.onTangemPayBankWithdrawSuccessScreen
 import com.tangem.screens.tangempay.onTangemPayWithdrawHubScreen
 import com.tangem.screens.onVirtualAccountRequisitesBottomSheet
 import io.qameta.allure.kotlin.Allure.step
@@ -88,6 +94,76 @@ fun BaseTestCase.openMoneyAccountSendHub() {
     }
 }
 
+fun BaseTestCase.setMoneyAccountBankWithdrawScenarios() {
+    val eligibilityState = "PaeraCustomer"
+    val moneyAccountScenario = "tangem_pay_money_account"
+    val moneyAccountActiveState = "AccountActive"
+    val channelsBankOfframpState = "BankOfframp"
+
+    step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
+        setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+    }
+    step("Set WireMock scenario '$moneyAccountScenario' to '$moneyAccountActiveState'") {
+        setWireMockScenarioState(moneyAccountScenario, moneyAccountActiveState)
+    }
+    step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBankOfframpState'") {
+        setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBankOfframpState)
+    }
+}
+
+fun countMoneyAccountBankWithdrawRoutes(): Int = getWireMockRequestCount("POST", BANK_OFFRAMP_ROUTE_ENDPOINT)
+
+fun countMoneyAccountTransferSignRequests(): Int = getWireMockRequestCount("POST", GASLESS_SIGN_ENDPOINT_PATTERN)
+
+fun BaseTestCase.clickMoneyAccountBankWithdrawPay(total: String) {
+    step("Click on 'Pay $total' button") {
+        awaitSuccess { onTangemPayBankWithdrawPreviewScreen { payButton(total).assertIsEnabled() } }
+        onTangemPayBankWithdrawPreviewScreen { payButton(total).performClick() }
+    }
+}
+
+fun BaseTestCase.closeMoneyAccountBankWithdrawPreview() {
+    step("Click on 'Close' button") {
+        onTangemPayBankWithdrawPreviewScreen { closeButton.performClick() }
+    }
+    step("Assert 'Money account' screen is displayed") {
+        awaitSuccess { onMoneyAccountScreen { sendButton.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.closeMoneyAccountBankWithdrawSuccess() {
+    step("Click on 'Close' button") {
+        onTangemPayBankWithdrawSuccessScreen { closeButton.performClick() }
+    }
+    step("Assert 'Money account' screen is displayed") {
+        awaitSuccess { onMoneyAccountScreen { sendButton.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.chooseMoneyAccountWithdrawReceiveToken(accountName: String, tokenName: String, networkName: String) {
+    step("Click on 'Choose token' button in the 'To' block") {
+        onSwapTokenScreen { receiveChooseTokenButton.performClick() }
+    }
+    step("Expand account '$accountName' in receive selector") {
+        awaitSuccess { onSwapSelectTokenScreen { tokenWithName(accountName).performClick() } }
+    }
+    step("Click on '$tokenName' on '$networkName'") {
+        awaitSuccess { onSwapSelectTokenScreen { tokenWithNameAndNetwork(tokenName, networkName).performClick() } }
+    }
+}
+
+fun BaseTestCase.returnToMoneyAccountFromSendHub() {
+    step("Click on system 'Back' button") { device.uiDevice.pressBack() }
+    step("Assert 'Money account' screen is displayed") {
+        awaitSuccess { onMoneyAccountScreen { sendButton.assertIsDisplayed() } }
+    }
+}
+
+fun countMoneyAccountNetworkFeeEstimates(): Int =
+    findWireMockRequestBodiesByPathPattern("POST", POLYGON_RPC_PATH_PATTERN).count { body ->
+        body.contains(ESTIMATE_GAS_METHOD) && body.contains(MONEY_ACCOUNT_ADDRESS_HEX, ignoreCase = true)
+    }
+
 fun BaseTestCase.openMoneyAccountBankDetails() {
     openMoneyAccountAddFunds()
     step("Click on 'From a bank account' option") {
@@ -100,6 +176,13 @@ fun BaseTestCase.openMoneyAccountBankDetails() {
             }
         }
         onVirtualAccountRequisitesBottomSheet { accountDetailsTitle.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.closeMoneyAccountBankDetails() {
+    step("Click on system 'Back' button") { device.uiDevice.pressBack() }
+    step("Assert 'Money account' screen is displayed") {
+        awaitSuccess { onMoneyAccountScreen { sendButton.assertIsDisplayed() } }
     }
 }
 
@@ -128,18 +211,6 @@ fun BaseTestCase.refreshMainUntilMoneyAccountCacheIcon() {
                 var isShown = false
                 onMoneyAccountScreen { isShown = isMainRowCacheIconShown() }
                 isShown
-            }
-        }
-    }
-}
-
-fun BaseTestCase.refreshMainUntilMoneyAccountCacheIconHidden() {
-    step("Refresh 'Main' until the 'Money account' row hides the cached-data icon") {
-        refreshMainUntil {
-            composeTestRule.waitUntil(timeoutMillis = BALANCE_RELOAD_TIMEOUT_MILLIS) {
-                var isShown = true
-                onMoneyAccountScreen { isShown = isMainRowCacheIconShown() }
-                !isShown
             }
         }
     }
@@ -335,3 +406,9 @@ fun BaseTestCase.assertMoneyAccountMenuHasTermsAndSupportOnly(termsTitle: String
 private const val DETAILS_OPEN_TIMEOUT_MILLIS = 3_000L
 private const val BALANCE_RELOAD_TIMEOUT_MILLIS = 5_000L
 private const val CUSTOMER_SUMMARY_PATH = "/bff-v2/v1/customer/summary"
+
+private const val BANK_OFFRAMP_ROUTE_ENDPOINT = "/bff-v2/v1/account/bank-offramp/route"
+private const val POLYGON_RPC_PATH_PATTERN = "/polygon/?"
+private const val ESTIMATE_GAS_METHOD = "eth_estimateGas"
+private const val MONEY_ACCOUNT_ADDRESS_HEX = "5aab90356b4cd7fb64f7f70dc6fe063a7b52f011"
+private const val GASLESS_SIGN_ENDPOINT_PATTERN = "/gasless/api/v[12]/transaction/sign"

@@ -724,6 +724,27 @@ enum class FeeType {
     Fast
 }
 
+fun BaseTestCase.clickSwapMaxAmountButton() {
+    step("Focus the amount input until 'Max' button is displayed") {
+        var isShown = false
+        onSwapTokenScreen { isShown = isMaxAmountButtonShown() }
+        var attemptsLeft = MAX_BUTTON_FOCUS_ATTEMPTS
+        while (!isShown && attemptsLeft-- > 0) {
+            onSwapTokenScreen { textInput.performClick() }
+            runCatching {
+                composeTestRule.waitUntil(KEYBOARD_OPEN_TIMEOUT_MILLIS) {
+                    onSwapTokenScreen { isShown = isMaxAmountButtonShown() }
+                    isShown
+                }
+            }
+        }
+        onSwapTokenScreen { maxAmountButton.assertIsDisplayed() }
+    }
+    step("Click on 'Max' button") {
+        onSwapTokenScreen { maxAmountButton.performClick() }
+    }
+}
+
 fun BaseTestCase.inputAmount(amount: String) {
     // No waitForIdle(): the transfer screen recalculates the fee continuously and never reaches idle.
     awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
@@ -866,3 +887,6 @@ fun BaseTestCase.checkProviderSlippageSheet(slippagePercent: String) {
         onSwapSlippageBottomSheet { providerSlippageInfo(slippagePercent).assertDoesNotExist() }
     }
 }
+
+private const val MAX_BUTTON_FOCUS_ATTEMPTS = 5
+private const val KEYBOARD_OPEN_TIMEOUT_MILLIS = 3_000L

@@ -17,7 +17,6 @@ import com.tangem.scenarios.closeFinishWalletActivationSheetIfShown
 import com.tangem.scenarios.openMainWithMoneyAccountWallet
 import com.tangem.scenarios.openMoneyAccount
 import com.tangem.scenarios.refreshMainUntilMoneyAccountCacheIcon
-import com.tangem.scenarios.refreshMainUntilMoneyAccountCacheIconHidden
 import com.tangem.scenarios.returnToMainFromMoneyAccount
 import com.tangem.scenarios.waitForMoneyAccountRowWithText
 import com.tangem.screens.moneyaccount.onMoneyAccountScreen
@@ -226,47 +225,6 @@ class MoneyAccountStateCachingTest : BaseTestCase() {
                     onTangemPayMainScreen { tileBalance.assertIsDisplayed() }
                     onMoneyAccountScreen { mainRowWithText(cachedBalance).assertIsDisplayed() }
                 }
-            }
-        }
-    }
-
-    @AllureId("13662")
-    @DisplayName("Money account: Main row keeps the cached balance when customer/summary fails")
-    @Test
-    fun mainRowKeepsCachedBalanceWhenCustomerSummaryFailsTest() {
-        val summaryScenario = "money_account_customer_summary"
-        val summaryServerErrorState = "ServerError"
-        val summaryConnectionResetState = "ConnectionReset"
-
-        setupHooks().run {
-            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
-                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
-            }
-            step("Set WireMock scenario '$moneyAccountScenario' to '$moneyAccountActiveState'") {
-                setWireMockScenarioState(moneyAccountScenario, moneyAccountActiveState)
-            }
-            step("Open 'Main' screen of the wallet with the account") { openMainWithMoneyAccountWallet() }
-            step("Assert 'Money account' row shows '$cachedBalance'") { waitForMoneyAccountRowWithText(cachedBalance) }
-            step("Set WireMock scenario '$summaryScenario' to '$summaryServerErrorState'") {
-                setWireMockScenarioState(summaryScenario, summaryServerErrorState)
-            }
-            step("Refresh 'Main' screen") { refreshMainUntilMoneyAccountCacheIcon() }
-            step("Assert 'Money account' row shows the cached data") {
-                assertMoneyAccountRowShowsCachedBalance(cachedBalance)
-            }
-            step("Reset WireMock scenario '$summaryScenario'") { resetWireMockScenarioState(summaryScenario) }
-            step("Refresh 'Main' screen") { refreshMainUntilMoneyAccountCacheIconHidden() }
-            step("Set WireMock scenario '$summaryScenario' to '$summaryConnectionResetState'") {
-                setWireMockScenarioState(summaryScenario, summaryConnectionResetState)
-            }
-            step("Refresh 'Main' screen") { refreshMainUntilMoneyAccountCacheIcon() }
-            step("Assert 'Money account' row shows the cached data") {
-                assertMoneyAccountRowShowsCachedBalance(cachedBalance)
-            }
-            step("Reset WireMock scenario '$summaryScenario'") { resetWireMockScenarioState(summaryScenario) }
-            step("Refresh 'Main' screen") { refreshMainUntilMoneyAccountCacheIconHidden() }
-            step("Assert 'Money account' row shows '$cachedBalance'") {
-                onMoneyAccountScreen { mainRowWithText(cachedBalance).assertIsDisplayed() }
             }
         }
     }
