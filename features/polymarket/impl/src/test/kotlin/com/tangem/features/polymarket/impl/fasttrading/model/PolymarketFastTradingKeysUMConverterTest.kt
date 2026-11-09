@@ -490,6 +490,29 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         }
 
         @Test
+        fun `GIVEN several records of one address WHEN convert THEN each list has one row per address`() {
+            // Arrange
+            val overview = createOverview(
+                sessionKeys = listOf(
+                    OWN_FAILED_KEY.copy(createdAt = NOW.minus(Duration.ofDays(1))),
+                    OWN_PENDING_KEY,
+                    createKey(createdAt = NOW.minus(Duration.ofDays(2))),
+                    createKey(status = PolymarketSessionKeyStatus.PENDING),
+                ),
+                deviceState = PolymarketSessionKeyDeviceState.Enabling(OWN_PENDING_KEY),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.thisDevice.map { it.id to it.status })
+                .containsExactly(OWN_ADDRESS to FastTradingKeyStatusUM.Activating)
+            assertThat(actual.otherDevices.map { it.id to it.status })
+                .containsExactly(OTHER_ADDRESS to FastTradingKeyStatusUM.Activating)
+        }
+
+        @Test
         fun `GIVEN replacement offered WHEN convert THEN previous key keeps its menu under this device`() {
             // Arrange
             val overview = createOverview(
@@ -575,6 +598,51 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                     PREVIOUS_ADDRESS to FastTradingKeyStatusUM.Active(until = "Feb 17, 2027"),
                 ),
                 expectedOtherDevices = listOf(OTHER_ADDRESS),
+            ),
+            ScenarioModel(
+                sessionKeys = listOf(
+                    OWN_FAILED_KEY.copy(createdAt = NOW.minus(Duration.ofDays(1))),
+                    OWN_PENDING_KEY,
+                    createKey(status = PolymarketSessionKeyStatus.EXPIRED, createdAt = NOW.minus(Duration.ofDays(1))),
+                    createKey(),
+                ),
+                deviceState = PolymarketSessionKeyDeviceState.Enabling(OWN_PENDING_KEY),
+                expectedBanner = null,
+                expectedThisDevice = listOf(OWN_ADDRESS to FastTradingKeyStatusUM.Activating),
+                expectedOtherDevices = listOf(OTHER_ADDRESS),
+            ),
+            ScenarioModel(
+                sessionKeys = listOf(OWN_KEY, OLD_EXPIRED_KEY, OLD_FAILED_KEY),
+                deviceState = PolymarketSessionKeyDeviceState.Active(OWN_KEY, isRenewDue = false),
+                expectedBanner = null,
+                expectedThisDevice = listOf(OWN_ADDRESS to OWN_ACTIVE),
+            ),
+            ScenarioModel(
+                sessionKeys = listOf(OWN_KEY, OLD_EXPIRED_KEY, OLD_FAILED_KEY),
+                listedSigners = setOf(PREVIOUS_ADDRESS),
+                deviceState = PolymarketSessionKeyDeviceState.Active(OWN_KEY, isRenewDue = false),
+                expectedBanner = null,
+                expectedThisDevice = listOf(
+                    OWN_ADDRESS to OWN_ACTIVE,
+                    PREVIOUS_ADDRESS to FastTradingKeyStatusUM.Expired(at = "Nov 4, 2026"),
+                ),
+            ),
+            ScenarioModel(
+                sessionKeys = listOf(OWN_KEY, OLD_EXPIRED_KEY, OLD_FAILED_KEY),
+                isReconciled = false,
+                deviceState = PolymarketSessionKeyDeviceState.Active(OWN_KEY, isRenewDue = false),
+                expectedBanner = null,
+                expectedThisDevice = listOf(
+                    OWN_ADDRESS to OWN_ACTIVE,
+                    PREVIOUS_ADDRESS to FastTradingKeyStatusUM.Expired(at = "Nov 4, 2026"),
+                    FOREIGN_ADDRESS to FastTradingKeyStatusUM.ActivationFailed,
+                ),
+            ),
+            ScenarioModel(
+                sessionKeys = listOf(OWN_KEY, PREVIOUS_KEY),
+                deviceState = PolymarketSessionKeyDeviceState.Active(OWN_KEY, isRenewDue = false),
+                expectedBanner = null,
+                expectedThisDevice = listOf(OWN_ADDRESS to OWN_ACTIVE, PREVIOUS_ADDRESS to OWN_ACTIVE),
             ),
             ScenarioModel(
                 sessionKeys = listOf(OWN_KEY),
@@ -965,6 +1033,18 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             deviceName = THIS_DEVICE_NAME,
             status = PolymarketSessionKeyStatus.FAILED,
         )
+        val OWN_ACTIVE = FastTradingKeyStatusUM.Active(until = "Feb 17, 2027")
+        val OLD_EXPIRED_KEY = createKey(
+            address = PREVIOUS_ADDRESS,
+            status = PolymarketSessionKeyStatus.EXPIRED,
+            validUntil = NOW.minus(Duration.ofDays(5)),
+            deviceId = THIS_DEVICE_ID,
+        )
+        val OLD_FAILED_KEY = createKey(
+            address = FOREIGN_ADDRESS,
+            status = PolymarketSessionKeyStatus.FAILED,
+            deviceId = THIS_DEVICE_ID,
+        )
         val OWN_PENDING_KEY = createKey(
             address = OWN_ADDRESS,
             deviceName = THIS_DEVICE_NAME,
@@ -1002,6 +1082,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             isEnabled: Boolean = true,
             validUntil: Instant? = DEFAULT_VALID_UNTIL,
             deviceId: String = "device-$address",
+            createdAt: Instant = NOW,
         ) = PolymarketSessionKey(
             address = address,
             deviceId = deviceId,
@@ -1012,7 +1093,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             validUntil = validUntil,
             renewAfter = null,
             authorizedAt = null,
-            createdAt = NOW,
+            createdAt = createdAt,
         )
 
         fun createOverview(

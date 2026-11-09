@@ -51,14 +51,19 @@ internal class PolymarketFastTradingKeysUMConverter(
             foreignAddresses = foreignSigners.mapTo(mutableSetOf()) { it.address.lowercase() },
         )
         val rows = overview.wallet.sessionKeys
-            .filter { it.status != PolymarketSessionKeyStatus.REVOKED }
-            .map { key -> keyRowOf(key, context) }
+            .groupBy { it.address.lowercase() }
+            .values
+            .mapNotNull { records ->
+                records.maxBy { it.createdAt }
+                    .takeIf { it.status != PolymarketSessionKeyStatus.REVOKED }
+                    ?.let { key -> keyRowOf(key, context) }
+            }
         val isActivationOffered = overview.assessment.deviceState.isActivationOffered()
         val thisDeviceRows = rows
             .filter { it.isThisDevice }
-            .filter { keyRow ->
-                keyRow.address != context.localKeyAddress || !isActivationOffered || reconciliation == null ||
-                    keyRow.address in context.listedSigners
+            .filterNot { keyRow ->
+                val isHideable = keyRow.isDead || keyRow.address == context.localKeyAddress && isActivationOffered
+                isHideable && reconciliation != null && keyRow.address !in context.listedSigners
             }
             .sortedByDescending { it.address == context.localKeyAddress }
 
@@ -90,6 +95,7 @@ internal class PolymarketFastTradingKeysUMConverter(
         return KeyRow(
             address = address,
             isThisDevice = address == context.localKeyAddress || key.deviceId == context.thisDeviceId,
+            isDead = key.status in DEAD_STATUSES,
             row = FastTradingKeyRowUM(
                 id = key.address,
                 deviceName = deviceName,
@@ -277,11 +283,21 @@ internal class PolymarketFastTradingKeysUMConverter(
         val foreignAddresses: Set<String>,
     )
 
-    private data class KeyRow(val address: String, val isThisDevice: Boolean, val row: FastTradingKeyRowUM)
+    private data class KeyRow(
+        val address: String,
+        val isThisDevice: Boolean,
+        val isDead: Boolean,
+        val row: FastTradingKeyRowUM,
+    )
 
     private companion object {
         val EXPIRY_WARNING_WINDOW: Duration = Duration.ofDays(30)
         const val THIS_DEVICE_PENDING_ROW_ID = "this_device_pending"
+        val DEAD_STATUSES = setOf(
+            PolymarketSessionKeyStatus.EXPIRED,
+            PolymarketSessionKeyStatus.FAILED,
+            PolymarketSessionKeyStatus.UNKNOWN,
+        )
         val REVOCATION_STAGES =
             setOf(PolymarketSessionKeyOperationStage.REVOKING, PolymarketSessionKeyOperationStage.REVOKED)
     }
