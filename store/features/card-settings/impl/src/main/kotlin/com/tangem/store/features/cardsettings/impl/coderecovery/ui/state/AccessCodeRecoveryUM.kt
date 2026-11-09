@@ -1,4 +1,4 @@
-package com.tangem.store.features.cardsettings.impl.coderecovery
+package com.tangem.store.features.cardsettings.impl.coderecovery.ui.state
 
 /**
  * @property isEnabledOnCard Indicates whether access code recovery is enabled on the card
@@ -7,7 +7,7 @@ package com.tangem.store.features.cardsettings.impl.coderecovery
  * @property onSaveChangesClick Callback function called when the user wants to apply the selected option
  * @property onOptionClick Callback function called when the user selects an option
  * */
-internal data class AccessCodeRecoveryScreenState(
+internal data class AccessCodeRecoveryUM(
     val isEnabledOnCard: Boolean,
     val isEnabledSelection: Boolean,
     val isSaveChangesEnabled: Boolean,

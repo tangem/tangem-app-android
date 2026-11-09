@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.store.features.cardsettings.api.CardSettingsComponent
 import com.tangem.store.features.cardsettings.impl.main.model.CardSettingsModel
+import com.tangem.store.features.cardsettings.impl.main.ui.CardSettingsScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -22,7 +23,7 @@ internal class CardSettingsMainComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.screenState.collectAsStateWithLifecycle()
+        val state by model.uiState.collectAsStateWithLifecycle()
         CardSettingsScreen(modifier = modifier, state = state)
     }
 
