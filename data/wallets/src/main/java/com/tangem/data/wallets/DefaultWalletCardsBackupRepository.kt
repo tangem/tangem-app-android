@@ -2,6 +2,7 @@ package com.tangem.data.wallets
 
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
@@ -40,11 +41,7 @@ internal class DefaultWalletCardsBackupRepository(
     private val tangemTechApi: TangemTechApi,
     private val pendingStore: PendingWalletCardsBackupStore,
     private val registryStore: WalletCardsRegistryStore,
-    @RemoveWithToggle("TWI_1586_CARD_LINKED_STATUS_UPDATE_V2") private val appPreferencesStore: AppPreferencesStore,
-    @RemoveWithToggle(
-        "TWI_1586_CARD_LINKED_STATUS_UPDATE_V2",
-        description = "inline the true branch in saveWalletCards",
-    )
+    private val appPreferencesStore: AppPreferencesStore,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val deliveryScheduler: WalletCardsBackupDeliveryScheduler,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -57,6 +54,13 @@ internal class DefaultWalletCardsBackupRepository(
      */
     private val sendMutex = Mutex()
 
+    /**
+     * A report is a snapshot of the registry, so remembering its cards and queuing it happen under one lock —
+     * otherwise two concurrent reports could be queued in the opposite order to their snapshots, and the older
+     * state of a card would reach the backend last.
+     */
+    private val queueMutex = Mutex()
+
     override suspend fun saveWalletCards(
         userWalletId: UserWalletId,
         cards: List<WalletCardBackup>,
@@ -64,11 +68,13 @@ internal class DefaultWalletCardsBackupRepository(
     ): Either<WalletCardsBackupError, Unit> = withContext(dispatchers.io) {
         if (!onboardingV2FeatureToggles.isCardLinkedStatusUpdateV2Enabled) {
             val reportedCards = PendingWalletCardsBackupConverter.convert(WalletCardDTOConverter.convertList(cards))
-            return@withContext queueAndSend(userWalletId, reportedCards, usedSeed)
+            return@withContext enqueue(userWalletId, reportedCards, usedSeed).flatMap { sendQueued() }
         }
 
-        val registration = register(userWalletId, cards).getOrElse { return@withContext it.left() }
-        queueAndSend(userWalletId, registration.walletCards, usedSeed)
+        queueMutex.withLock {
+            val registration = register(userWalletId, cards).getOrElse { return@withContext it.left() }
+            enqueue(userWalletId, registration.walletCards, usedSeed)
+        }.flatMap { sendQueued() }
     }
 
     override suspend fun saveSeenWalletCard(
@@ -76,10 +82,12 @@ internal class DefaultWalletCardsBackupRepository(
         card: WalletCardBackup,
         usedSeed: Boolean,
     ): Either<WalletCardsBackupError, Unit> = withContext(dispatchers.io) {
-        val registration = register(userWalletId, listOf(card)).getOrElse { return@withContext it.left() }
-        if (!registration.isChanged) return@withContext Unit.right()
+        queueMutex.withLock {
+            val registration = register(userWalletId, listOf(card)).getOrElse { return@withContext it.left() }
+            if (!registration.isChanged) return@withContext Unit.right()
 
-        queueAndSend(userWalletId, registration.walletCards, usedSeed)
+            enqueue(userWalletId, registration.walletCards, usedSeed)
+        }.flatMap { sendQueued() }
     }
 
     override suspend fun sendPendingWalletCards(): Either<WalletCardsBackupError, Unit> =
@@ -144,7 +152,7 @@ internal class DefaultWalletCardsBackupRepository(
             }
     }
 
-    private suspend fun queueAndSend(
+    private suspend fun enqueue(
         userWalletId: UserWalletId,
         walletCards: List<PendingWalletCardsBackup.Card>,
         usedSeed: Boolean,
@@ -163,6 +171,10 @@ internal class DefaultWalletCardsBackupRepository(
             return WalletCardsBackupError.Unexpected(cause = error).left()
         }
 
+        return Unit.right()
+    }
+
+    private suspend fun sendQueued(): Either<WalletCardsBackupError, Unit> {
         return drain().onLeft { deliveryScheduler.schedule() }
     }
 

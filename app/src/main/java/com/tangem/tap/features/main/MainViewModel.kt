@@ -44,7 +44,6 @@ import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.tap.routing.configurator.AppRouterConfig
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
@@ -84,12 +83,7 @@ internal class MainViewModel @Inject constructor(
     private val offrampRepository: OfframpRepository,
     private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
     private val reportSavedWalletsBackupUseCase: ReportSavedWalletsBackupUseCase,
-    @RemoveWithToggle("TWI_1586_CARD_LINKED_STATUS_UPDATE_V2")
     private val reportCardLinkedWalletsBackupUseCase: ReportCardLinkedWalletsBackupUseCase,
-    @RemoveWithToggle(
-        "TWI_1586_CARD_LINKED_STATUS_UPDATE_V2",
-        description = "inline the true branch in reportSavedWalletsBackups",
-    )
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
