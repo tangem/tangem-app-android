@@ -1,17 +1,14 @@
 package com.tangem.domain.polymarket.sessionkey
 
 import arrow.core.Either
-import arrow.core.raise.Raise
-import arrow.core.raise.ensure
-import arrow.core.raise.ensureNotNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
+import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyAuthorization
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
-import com.tangem.domain.polymarket.model.PolymarketSessionKeyLifecycleError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyRevocation
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSessionSigner
@@ -44,22 +41,17 @@ internal class PolymarketSessionKeyRelay(
     }
 
     /**
-     * @return the key's latest record, still settling if the BFF never settled it, or the key taken as `REVOKED` once
-     * the BFF dropped its record while revoking it — missing from [DROPPED_READS] successful reads in a row — and
-     * [owner] has no such session signer on Polymarket; a signer still there or no [owner] fails the revocation
+     * @return the key's latest record, still settling if the BFF never settled it, or [Settlement.Dropped] with the
+     * last record once the BFF stops listing a key it was revoking
      */
-    suspend fun Raise<PolymarketSessionKeyLifecycleError>.settle(
-        userWalletId: UserWalletId,
-        submitted: PolymarketSessionKey,
-        owner: PolymarketClobIdentity.Owner? = null,
-    ): PolymarketSessionKey {
+    suspend fun settle(userWalletId: UserWalletId, submitted: PolymarketSessionKey): Settlement {
         var latest = submitted
         var readsWithoutRecord = 0
         repeat(SETTLE_ATTEMPTS) {
-            if (!latest.status.isSettling()) return latest
+            if (!latest.status.isSettling()) return Settlement.Settled(latest)
             delay(POLL_INTERVAL)
             polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue)
-                .onLeft { error -> TangemLogger.i("Polymarket session key status not read, still waiting: $error") }
+                .onLeft { error -> TangemLogger.d("Polymarket session key status not read, still waiting: $error") }
                 .onRight { state ->
                     val record = state.sessionKeys.firstOrNull { it.address.equals(submitted.address, true) }
                     when {
@@ -70,9 +62,9 @@ internal class PolymarketSessionKeyRelay(
                         latest.status == PolymarketSessionKeyStatus.REVOKING -> readsWithoutRecord++
                     }
                 }
-            if (readsWithoutRecord >= DROPPED_READS) confirmDropped(owner, latest)?.let { revoked -> return revoked }
+            if (readsWithoutRecord == DROPPED_READS) return Settlement.Dropped(latest)
         }
-        return latest
+        return Settlement.Settled(latest)
     }
 
     /** @return whether Polymarket lists [sessionKey] as able to trade before the attempts run out */
@@ -87,24 +79,31 @@ internal class PolymarketSessionKeyRelay(
         return false
     }
 
-    private suspend fun Raise<PolymarketSessionKeyLifecycleError>.confirmDropped(
-        owner: PolymarketClobIdentity.Owner?,
-        revoking: PolymarketSessionKey,
-    ): PolymarketSessionKey? {
-        ensureNotNull(owner) {
-            TangemLogger.e("Polymarket session key ${revoking.address} dropped while revoking, no owner to check it")
-            PolymarketSessionKeyLifecycleError.RevocationFailed(revoking)
+    suspend fun awaitUnlisted(owner: PolymarketClobIdentity.Owner, sessionKey: PolymarketSessionKey): Unlisting {
+        var unlisting = Unlisting.UNREAD
+        repeat(LISTING_ATTEMPTS) { attempt ->
+            if (attempt > 0) delay(POLL_INTERVAL)
+            sessionKeyRepository.getSessionSigners(owner).fold(
+                ifLeft = { error ->
+                    TangemLogger.d("Polymarket session signers not read while revoking: $error")
+                    if (!error.isTransient()) return Unlisting.REFUSED
+                },
+                ifRight = { signers ->
+                    if (signers.none { it.signsFor(sessionKey, now = clock.instant()) }) return Unlisting.GONE
+                    unlisting = Unlisting.LISTED
+                },
+            )
         }
-        val signers = sessionKeyRepository.getSessionSigners(owner)
-            .onLeft { error -> TangemLogger.i("Polymarket session signers not read, dropped key unconfirmed: $error") }
-            .getOrNull()
-            ?: return null
-        ensure(signers.none { it.address.equals(revoking.address, ignoreCase = true) }) {
-            TangemLogger.e("Polymarket session key ${revoking.address} dropped while revoking, still a session signer")
-            PolymarketSessionKeyLifecycleError.RevocationFailed(revoking)
-        }
-        TangemLogger.i("Polymarket session key ${revoking.address} dropped while revoking and gone, taken as revoked")
-        return revoking.copy(status = PolymarketSessionKeyStatus.REVOKED)
+        return unlisting
+    }
+
+    private fun PolymarketSessionSigner.signsFor(sessionKey: PolymarketSessionKey, now: Instant): Boolean =
+        address.equals(sessionKey.address, ignoreCase = true) && validUntil?.isAfter(now) != false
+
+    private fun PolymarketAuthError.isTransient(): Boolean = when (this) {
+        PolymarketAuthError.Network, PolymarketAuthError.RateLimited -> true
+        PolymarketAuthError.InvalidSignature, PolymarketAuthError.KeyNotFound -> false
+        is PolymarketAuthError.Unknown -> httpCode == null || httpCode >= SERVER_ERROR_CODE
     }
 
     private suspend fun resendUnanswered(
@@ -123,6 +122,16 @@ internal class PolymarketSessionKeyRelay(
         return result
     }
 
+    sealed interface Settlement {
+        val sessionKey: PolymarketSessionKey
+
+        data class Settled(override val sessionKey: PolymarketSessionKey) : Settlement
+
+        data class Dropped(override val sessionKey: PolymarketSessionKey) : Settlement
+    }
+
+    enum class Unlisting { GONE, LISTED, UNREAD, REFUSED }
+
     companion object {
         val POLL_INTERVAL: Duration = 3.seconds
         private val SETTLE_TIMEOUT: Duration = 35.minutes
@@ -130,6 +139,7 @@ internal class PolymarketSessionKeyRelay(
         private const val DROPPED_READS = 2
         private const val LISTING_ATTEMPTS = 20
         private const val RESEND_ATTEMPTS = 3
+        private const val SERVER_ERROR_CODE = 500
     }
 }
 
