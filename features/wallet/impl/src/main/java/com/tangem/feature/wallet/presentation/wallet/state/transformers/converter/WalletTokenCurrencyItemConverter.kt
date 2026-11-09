@@ -25,6 +25,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletContentClickIntents
 import com.tangem.feature.wallet.impl.R
@@ -164,7 +165,7 @@ internal class WalletTokenCurrencyItemConverter(
     }
 
     private fun toCurrencyRowTopEnd(currencyStatus: CryptoCurrencyStatus): TangemTokenRowUM.EndContentUM {
-        val yieldSupply = currencyStatus.value.yieldSupplyStatus
+        val yieldSupply = currencyStatus.value.yieldSupply
         return when (currencyStatus.value) {
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
