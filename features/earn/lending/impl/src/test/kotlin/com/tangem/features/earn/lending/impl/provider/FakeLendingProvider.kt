@@ -32,9 +32,6 @@ internal class FakeLendingProvider(
 
     override fun market(userWalletId: UserWalletId, asset: LendingAsset): Flow<LendingMarket> = marketFlow
 
-    override suspend fun readMarket(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, LendingMarket> =
-        marketFlow.value.right()
-
     override suspend fun refresh(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit> {
         refreshCalls += userWalletId to asset
         return refreshResult

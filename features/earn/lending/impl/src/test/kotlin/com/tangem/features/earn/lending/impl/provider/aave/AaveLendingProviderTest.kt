@@ -302,31 +302,38 @@ internal class AaveLendingProviderTest {
     }
 
     @Test
-    fun `GIVEN WETH status WHEN readMarket THEN status is fetched before it is read`() = runTest {
-        // Arrange
-        coEvery { statusFetcher(any()) } coAnswers {
-            statuses.value = setOf(wethStatus(balance = "2"))
-            Unit.right()
+    fun `GIVEN network update WHEN market THEN WETH status is requested again`() = runTest {
+        provider.market(userWalletId, asset).test {
+            expectMostRecentItem()
+
+            // Act
+            networkUpdates.emit(mockk(relaxed = true))
+            expectMostRecentItem()
+
+            // Assert
+            coVerify(exactly = 2) { statusFetcher(YieldModuleStatusFetcher.Params(userWalletId, setOf(weth))) }
+            cancelAndIgnoreRemainingEvents()
         }
-
-        // Act
-        val actual = provider.readMarket(userWalletId, asset)
-
-        // Assert
-        assertThat(actual.getOrNull()?.position).isEqualTo(LendingPosition(BigDecimal("2")))
-        assertThat(actual.getOrNull()?.source).isEqualTo(StatusSource.ACTUAL)
     }
 
     @Test
-    fun `GIVEN WETH status fetch fails WHEN readMarket THEN Left`() = runTest {
+    fun `GIVEN status fetch failed then succeeded WHEN network updates THEN failure is cleared`() = runTest {
         // Arrange
         coEvery { statusFetcher(any()) } returns IllegalStateException("rpc").left()
 
-        // Act
-        val actual = provider.readMarket(userWalletId, asset)
+        provider.market(userWalletId, asset).test {
+            assertThat(expectMostRecentItem().deposit).isEqualTo(LendingDepositGate.ReadFailed)
+            coEvery { statusFetcher(any()) } returns Unit.right()
 
-        // Assert
-        assertThat(actual.isLeft()).isTrue()
+            // Act
+            networkUpdates.emit(mockk(relaxed = true))
+
+            // Assert
+            val actual = expectMostRecentItem()
+            assertThat(actual.deposit).isEqualTo(LendingDepositGate.Loading)
+            assertThat(actual.source).isEqualTo(StatusSource.CACHE)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test

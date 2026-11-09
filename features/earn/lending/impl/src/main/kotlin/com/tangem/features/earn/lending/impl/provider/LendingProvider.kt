@@ -33,9 +33,6 @@ internal interface LendingProvider {
     /** The first item comes at once, the next ones when the data it depends on changes */
     fun market(userWalletId: UserWalletId, asset: LendingAsset): Flow<LendingMarket>
 
-    /** The same data without a flow, for re-reading between signing rounds */
-    suspend fun readMarket(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, LendingMarket>
-
     suspend fun refresh(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit>
 
     suspend fun minDeposit(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, BigDecimal>
