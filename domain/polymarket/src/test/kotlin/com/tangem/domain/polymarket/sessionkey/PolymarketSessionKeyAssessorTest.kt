@@ -253,6 +253,33 @@ internal class PolymarketSessionKeyAssessorTest {
         }
 
         @Test
+        fun `GIVEN addresses differing only in case WHEN assess THEN signers match their records`() {
+            // Arrange
+            val other = key(Owner.OTHER_DEVICE).copy(address = checksummed(Owner.OTHER_DEVICE))
+            val ownFailed = key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)
+            val snapshot = snapshot(
+                keys = listOf(other, ownFailed),
+                signers = listOf(
+                    matching(other).copy(address = Owner.OTHER_DEVICE.address),
+                    matching(ownFailed).copy(address = checksummed(Owner.LOCAL)),
+                ),
+                localAddress = checksummed(Owner.LOCAL),
+            )
+
+            // Act
+            val actual = PolymarketSessionKeyAssessor.assess(snapshot).reconciliation
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                Checked(
+                    foreignSigners = emptyList(),
+                    missingOnExchange = emptySet(),
+                    listedSigners = setOf(Owner.OTHER_DEVICE.address, Owner.LOCAL.address),
+                ),
+            )
+        }
+
+        @Test
         fun `GIVEN the exchange's signers WHEN assess THEN every listed address is reported lowercased`() {
             // Arrange
             val ownFailed = key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)
@@ -555,6 +582,8 @@ internal class PolymarketSessionKeyAssessorTest {
             authorizedAt = authorizedAt,
             createdAt = NOW - Duration.ofDays(1),
         )
+
+        fun checksummed(owner: Owner) = "0x" + owner.address.drop(2).uppercase()
 
         fun matching(key: PolymarketSessionKey) = PolymarketSessionSigner(
             address = key.address,

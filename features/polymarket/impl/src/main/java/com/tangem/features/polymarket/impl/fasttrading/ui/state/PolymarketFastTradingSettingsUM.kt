@@ -85,5 +85,7 @@ internal sealed interface FastTradingKeyStatusUM {
 
     data object ReconnectNeeded : FastTradingKeyStatusUM
 
+    data object UnknownSigner : FastTradingKeyStatusUM
+
     data object Unknown : FastTradingKeyStatusUM
 }

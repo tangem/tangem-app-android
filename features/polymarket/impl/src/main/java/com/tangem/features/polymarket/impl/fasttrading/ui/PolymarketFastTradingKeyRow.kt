@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.fasttrading.ui
 
 import android.content.res.Configuration
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -131,6 +132,7 @@ private fun KeyStatusAvatar(status: FastTradingKeyStatusUM) {
         )
         is FastTradingKeyStatusUM.Expired,
         FastTradingKeyStatusUM.ReconnectNeeded,
+        FastTradingKeyStatusUM.UnknownSigner,
         -> TangemAvatar.UiState.Icon(Icons.ic_warning_20, TangemAvatar.Appearance.Warning)
         FastTradingKeyStatusUM.ActivationFailed,
         FastTradingKeyStatusUM.Unknown,
@@ -169,22 +171,37 @@ private fun statusLine(status: FastTradingKeyStatusUM): String {
             R.string.prediction_session_key_status_expired to null,
             status.at?.let { R.string.prediction_session_key_expired_at to it },
         )
-        FastTradingKeyStatusUM.Activating -> listOf(R.string.prediction_session_key_status_activating to null)
-        FastTradingKeyStatusUM.Revoking -> listOf(R.string.prediction_session_key_status_revoking to null)
-        FastTradingKeyStatusUM.Pausing -> listOf(R.string.prediction_session_key_status_pausing to null)
-        FastTradingKeyStatusUM.Resuming -> listOf(R.string.prediction_session_key_status_resuming to null)
-        FastTradingKeyStatusUM.Extending -> listOf(R.string.prediction_session_key_status_extending to null)
-        FastTradingKeyStatusUM.ActivationFailed -> listOf(
-            R.string.prediction_session_key_status_activation_failed to null,
-        )
-        FastTradingKeyStatusUM.ReconnectNeeded -> listOf(
-            R.string.prediction_session_key_status_reconnect_needed to null,
-        )
-        FastTradingKeyStatusUM.Unknown -> listOf(R.string.common_error to null)
+        FastTradingKeyStatusUM.Activating,
+        FastTradingKeyStatusUM.Revoking,
+        FastTradingKeyStatusUM.Pausing,
+        FastTradingKeyStatusUM.Resuming,
+        FastTradingKeyStatusUM.Extending,
+        FastTradingKeyStatusUM.ActivationFailed,
+        FastTradingKeyStatusUM.ReconnectNeeded,
+        FastTradingKeyStatusUM.Unknown,
+        FastTradingKeyStatusUM.UnknownSigner,
+        -> listOf(singleStatusId(status) to null)
     }
     return parts
         .map { (id, arg) -> if (arg == null) stringResourceSafe(id) else stringResourceSafe(id, arg) }
         .joinToString(separator = STATUS_SEPARATOR)
+}
+
+@StringRes
+private fun singleStatusId(status: FastTradingKeyStatusUM): Int = when (status) {
+    FastTradingKeyStatusUM.Activating -> R.string.prediction_session_key_status_activating
+    FastTradingKeyStatusUM.Revoking -> R.string.prediction_session_key_status_revoking
+    FastTradingKeyStatusUM.Pausing -> R.string.prediction_session_key_status_pausing
+    FastTradingKeyStatusUM.Resuming -> R.string.prediction_session_key_status_resuming
+    FastTradingKeyStatusUM.Extending -> R.string.prediction_session_key_status_extending
+    FastTradingKeyStatusUM.ActivationFailed -> R.string.prediction_session_key_status_activation_failed
+    FastTradingKeyStatusUM.ReconnectNeeded -> R.string.prediction_session_key_status_reconnect_needed
+    FastTradingKeyStatusUM.UnknownSigner -> R.string.prediction_session_key_unknown_signer
+    is FastTradingKeyStatusUM.Active,
+    is FastTradingKeyStatusUM.Paused,
+    is FastTradingKeyStatusUM.Expired,
+    FastTradingKeyStatusUM.Unknown,
+    -> R.string.common_error
 }
 
 private const val STATUS_SEPARATOR = " • "

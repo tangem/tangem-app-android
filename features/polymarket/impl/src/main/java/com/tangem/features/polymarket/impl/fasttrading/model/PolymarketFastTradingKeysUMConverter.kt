@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.fasttrading.model
 
 import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
@@ -43,25 +44,30 @@ internal class PolymarketFastTradingKeysUMConverter(
         val localKeyAddress = overview.localKeyAddress
         val foreignSigners = reconciliation?.foreignSigners.orEmpty()
         val listedSigners = reconciliation?.listedSigners.orEmpty()
+        val foreignAddresses = foreignSigners.mapTo(mutableSetOf()) { it.address.lowercase() }
 
-        val shownKeys = overview.wallet.sessionKeys.filter { it.status != PolymarketSessionKeyStatus.REVOKED }
-        val shownAddresses = shownKeys.mapTo(mutableSetOf()) { it.address.lowercase() }
+        val shownKeys = overview.wallet.sessionKeys
+            .filter { it.status != PolymarketSessionKeyStatus.REVOKED }
+            .map { it.address.lowercase() to it }
+        val shownAddresses = shownKeys.mapTo(mutableSetOf()) { (address, _) -> address }
         val rows = shownKeys
-            .map { key ->
+            .map { (address, key) ->
                 val isOwn = key.address.equals(localKeyAddress, ignoreCase = true)
-                val status = submittedOperation?.statusFor(key.address, isOwn) ?: key.status(now, missingOnExchange)
+                val isForeign = address in foreignAddresses
+                val status = submittedOperation?.statusFor(key.address, isOwn)
+                    ?: if (isForeign) FastTradingKeyStatusUM.UnknownSigner else key.status(now, missingOnExchange)
                 val deviceName = key.deviceName?.let(::stringReference)
                     ?: resourceReference(R.string.prediction_session_key_unknown_device)
-                val revoke = FastTradingKeyActionUM.Revoke(
-                    address = key.address,
-                    subject = FastTradingKeyActionUM.RevokeSubject.Device(deviceName),
-                )
                 key.address to FastTradingKeyRowUM(
                     id = key.address,
                     deviceName = deviceName,
                     status = status,
-                    isExpiringSoon = key.isExpiringSoon(now),
-                    actions = actionsFor(revoke, status, isListed = key.address.lowercase() in listedSigners),
+                    isExpiringSoon = !isForeign && key.isExpiringSoon(now),
+                    actions = actionsFor(
+                        revoke = revokeOf(key.address, deviceName, isForeign),
+                        status = status,
+                        isListed = address in listedSigners,
+                    ),
                 )
             }
         val ownRow = rows.firstOrNull { (address, _) -> address.equals(localKeyAddress, ignoreCase = true) }?.second
@@ -71,10 +77,7 @@ internal class PolymarketFastTradingKeysUMConverter(
             unknownSigners = foreignSigners
                 .filter { it.address.lowercase() !in shownAddresses }
                 .map { signer ->
-                    val revoke = FastTradingKeyActionUM.Revoke(
-                        address = signer.address,
-                        subject = FastTradingKeyActionUM.RevokeSubject.UnknownSigner,
-                    )
+                    val revoke = revokeOf(signer.address, deviceName = null, isForeign = true)
                     FastTradingUnknownSignerUM(address = signer.address, actions = persistentListOf(revoke))
                 }
                 .toImmutableList(),
@@ -84,6 +87,16 @@ internal class PolymarketFastTradingKeysUMConverter(
         )
     }
 
+    private fun revokeOf(address: String, deviceName: TextReference?, isForeign: Boolean) =
+        FastTradingKeyActionUM.Revoke(
+            address = address,
+            subject = if (isForeign || deviceName == null) {
+                FastTradingKeyActionUM.RevokeSubject.UnknownSigner
+            } else {
+                FastTradingKeyActionUM.RevokeSubject.Device(deviceName)
+            },
+        )
+
     private fun actionsFor(
         revoke: FastTradingKeyActionUM.Revoke,
         status: FastTradingKeyStatusUM,
@@ -91,6 +104,7 @@ internal class PolymarketFastTradingKeysUMConverter(
     ): ImmutableList<FastTradingKeyActionUM> = when (status) {
         is FastTradingKeyStatusUM.Active,
         is FastTradingKeyStatusUM.Paused,
+        FastTradingKeyStatusUM.UnknownSigner,
         -> persistentListOf(revoke)
         is FastTradingKeyStatusUM.Expired,
         FastTradingKeyStatusUM.ReconnectNeeded,

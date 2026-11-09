@@ -82,7 +82,7 @@ internal class PolymarketModel @Inject constructor(
             .flatMapLatest { walletId -> if (walletId == null) emptyFlow() else observe(walletId) }
 
     private fun PolymarketSessionKeyOperation.isSubmittedRevocation(): Boolean =
-        request is PolymarketSessionKeyOperationRequest.Revoke && stage != PolymarketSessionKeyOperationStage.SIGNING
+        request is PolymarketSessionKeyOperationRequest.Revoke && stage == PolymarketSessionKeyOperationStage.REVOKING
 
     private fun toast(userWalletId: UserWalletId, outcome: PolymarketSessionKeyOperationOutcome) {
         PolymarketSessionKeyMessagesFactory.create(outcome)?.let(messageSender::send)
