@@ -17,6 +17,8 @@ import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderStatus
+import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
@@ -120,6 +122,35 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 assertThat(submit.result).isEqualTo(PlaceResultUM.StillProcessing(placedAt = submit.result.placedAt))
                 verify(exactly = 0) { messageSender.send(any()) }
                 verify(exactly = 1) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN a delayed order matched with no shares WHEN close is tapped on the failure dialog THEN the order closes`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+                coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } returns
+                    DelayedPredictionOrderOutcome.Matched(
+                        order = PredictionOrderState(
+                            status = PredictionOrderStatus.Matched,
+                            price = BigDecimal("0.5"),
+                            originalSize = BigDecimal("23.2"),
+                            sizeMatched = BigDecimal.ZERO,
+                        ),
+                    )
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                dialog.captured.secondAction?.onClick()
+
+                // Assert
+                assertThat(dialog.captured.isDismissable).isFalse()
+                verify(exactly = 1) { router.pop(onComplete = any()) }
+                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
             }
 
         @Test
