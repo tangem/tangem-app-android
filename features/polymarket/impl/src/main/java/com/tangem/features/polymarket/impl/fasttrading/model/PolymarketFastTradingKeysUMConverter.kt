@@ -10,10 +10,13 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliatio
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyRowUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyStatusUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeysUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingUnknownSignerUM
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.time.Clock
 import java.time.Duration
@@ -43,24 +46,47 @@ internal class PolymarketFastTradingKeysUMConverter(
             .filter { it.status != PolymarketSessionKeyStatus.REVOKED }
             .map { key ->
                 val isOwn = key.address.equals(localKeyAddress, ignoreCase = true)
+                val status = submittedOperation?.statusFor(key.address, isOwn) ?: key.status(now, missingOnExchange)
                 key.address to FastTradingKeyRowUM(
                     id = key.address,
                     deviceName = key.deviceName?.let(::stringReference)
                         ?: resourceReference(R.string.prediction_session_key_unknown_device),
-                    status = submittedOperation?.statusFor(key.address, isOwn) ?: key.status(now, missingOnExchange),
+                    status = status,
                     isExpiringSoon = key.isExpiringSoon(now),
+                    actions = actionsFor(key.address, status),
                 )
             }
         val ownRow = rows.firstOrNull { (address, _) -> address.equals(localKeyAddress, ignoreCase = true) }?.second
 
         return FastTradingKeysUM(
             unknownSigners = reconciliation?.foreignSigners.orEmpty()
-                .map { FastTradingUnknownSignerUM(address = it.address) }
+                .map { FastTradingUnknownSignerUM(address = it.address, actions = revokeOnly(it.address)) }
                 .toImmutableList(),
             thisDevice = ownRow ?: submittedOperation?.pendingThisDeviceRow(),
             otherDevices = rows.map { it.second }.filter { it !== ownRow }.toImmutableList(),
+            areActionsEnabled = operation == null,
         )
     }
+
+    private fun actionsFor(address: String, status: FastTradingKeyStatusUM): ImmutableList<FastTradingKeyActionUM> =
+        when (status) {
+            is FastTradingKeyStatusUM.Active,
+            is FastTradingKeyStatusUM.Paused,
+            is FastTradingKeyStatusUM.Expired,
+            FastTradingKeyStatusUM.ActivationFailed,
+            FastTradingKeyStatusUM.ReconnectNeeded,
+            FastTradingKeyStatusUM.Unknown,
+            -> revokeOnly(address)
+            FastTradingKeyStatusUM.Activating,
+            FastTradingKeyStatusUM.Revoking,
+            FastTradingKeyStatusUM.Pausing,
+            FastTradingKeyStatusUM.Resuming,
+            FastTradingKeyStatusUM.Extending,
+            -> persistentListOf()
+        }
+
+    private fun revokeOnly(address: String): ImmutableList<FastTradingKeyActionUM> =
+        persistentListOf(FastTradingKeyActionUM.Revoke(address))
 
     private fun PolymarketSessionKey.status(now: Instant, missingOnExchange: Set<String>): FastTradingKeyStatusUM =
         when (status) {
@@ -132,6 +158,7 @@ internal class PolymarketFastTradingKeysUMConverter(
             deviceName = stringReference(thisDeviceName),
             status = status,
             isExpiringSoon = false,
+            actions = persistentListOf(),
         )
     }
 

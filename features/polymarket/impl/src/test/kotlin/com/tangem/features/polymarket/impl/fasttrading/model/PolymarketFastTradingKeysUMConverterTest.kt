@@ -16,10 +16,12 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliatio
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyRowUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyStatusUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingUnknownSignerUM
 import com.tangem.test.core.ProvideTestModels
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -59,6 +61,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                     deviceName = stringReference(OTHER_DEVICE_NAME),
                     status = status,
                     isExpiringSoon = model.isExpiringSoon,
+                    actions = if (model.offersRevoke) revokeOf(OTHER_ADDRESS) else persistentListOf(),
                 )
             }
             assertThat(actual.otherDevices).containsExactlyElementsIn(listOfNotNull(expected))
@@ -112,8 +115,16 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                 validUntil = NOW.minus(Duration.ofDays(5)),
                 expected = FastTradingKeyStatusUM.Expired(at = "Nov 4, 2026"),
             ),
-            StatusModel(status = PolymarketSessionKeyStatus.PENDING, expected = FastTradingKeyStatusUM.Activating),
-            StatusModel(status = PolymarketSessionKeyStatus.REVOKING, expected = FastTradingKeyStatusUM.Revoking),
+            StatusModel(
+                status = PolymarketSessionKeyStatus.PENDING,
+                expected = FastTradingKeyStatusUM.Activating,
+                offersRevoke = false,
+            ),
+            StatusModel(
+                status = PolymarketSessionKeyStatus.REVOKING,
+                expected = FastTradingKeyStatusUM.Revoking,
+                offersRevoke = false,
+            ),
             StatusModel(
                 status = PolymarketSessionKeyStatus.FAILED,
                 expected = FastTradingKeyStatusUM.ActivationFailed,
@@ -163,6 +174,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                     deviceName = stringReference(THIS_DEVICE_NAME),
                     status = FastTradingKeyStatusUM.Activating,
                     isExpiringSoon = false,
+                    actions = persistentListOf(),
                 ),
             )
         }
@@ -253,6 +265,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                     deviceName = resourceReference(R.string.prediction_session_key_unknown_device),
                     status = FastTradingKeyStatusUM.Active(until = "Feb 17, 2027"),
                     isExpiringSoon = false,
+                    actions = revokeOf(OWN_ADDRESS),
                 ),
             )
             assertThat(actual.otherDevices.map { it.id }).containsExactly(OTHER_ADDRESS)
@@ -280,7 +293,9 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             val actual = converter.convert(overview, operation = null)
 
             // Assert
-            assertThat(actual.unknownSigners).containsExactly(FastTradingUnknownSignerUM(FOREIGN_ADDRESS))
+            assertThat(actual.unknownSigners).containsExactly(
+                FastTradingUnknownSignerUM(address = FOREIGN_ADDRESS, actions = revokeOf(FOREIGN_ADDRESS)),
+            )
         }
 
         @Test
@@ -298,6 +313,65 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         }
     }
 
+    @Nested
+    inner class Actions {
+
+        @Test
+        fun `GIVEN no running operation WHEN convert THEN actions are enabled`() {
+            // Arrange
+            val overview = createOverview(sessionKeys = listOf(createKey()))
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.areActionsEnabled).isTrue()
+        }
+
+        @Test
+        fun `GIVEN an operation awaiting signature WHEN convert THEN actions are disabled but still offered`() {
+            // Arrange
+            val ownKey = createKey(address = OWN_ADDRESS)
+            val signer = PolymarketSessionSigner(address = FOREIGN_ADDRESS, scopes = listOf("CLOB"), validUntil = null)
+            val overview = createOverview(sessionKeys = listOf(ownKey, createKey()), foreignSigners = listOf(signer))
+            val operation = createOperation(
+                request = PolymarketSessionKeyOperationRequest.Revoke(OTHER_ADDRESS),
+                stage = PolymarketSessionKeyOperationStage.SIGNING,
+                targetAddress = OTHER_ADDRESS,
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.areActionsEnabled).isFalse()
+            assertThat(actual.thisDevice?.actions).isEqualTo(revokeOf(OWN_ADDRESS))
+            assertThat(actual.otherDevices.single().actions).isEqualTo(revokeOf(OTHER_ADDRESS))
+            assertThat(actual.unknownSigners.single().actions).isEqualTo(revokeOf(FOREIGN_ADDRESS))
+        }
+
+        @Test
+        fun `GIVEN a submitted revocation WHEN convert THEN only the revoked row loses its actions`() {
+            // Arrange
+            val ownKey = createKey(address = OWN_ADDRESS)
+            val overview = createOverview(sessionKeys = listOf(ownKey, createKey()))
+            val operation = createOperation(
+                request = PolymarketSessionKeyOperationRequest.Revoke(OTHER_ADDRESS),
+                stage = PolymarketSessionKeyOperationStage.REVOKING,
+                targetAddress = OTHER_ADDRESS,
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.areActionsEnabled).isFalse()
+            assertThat(actual.otherDevices.single().status).isEqualTo(FastTradingKeyStatusUM.Revoking)
+            assertThat(actual.otherDevices.single().actions).isEmpty()
+            assertThat(actual.thisDevice?.actions).isEqualTo(revokeOf(OWN_ADDRESS))
+        }
+    }
+
     data class StatusModel(
         val status: PolymarketSessionKeyStatus,
         val expected: FastTradingKeyStatusUM?,
@@ -305,6 +379,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         val validUntil: Instant? = DEFAULT_VALID_UNTIL,
         val missingOnExchange: Set<String> = emptySet(),
         val isExpiringSoon: Boolean = false,
+        val offersRevoke: Boolean = true,
     )
 
     data class OperationModel(
@@ -321,6 +396,8 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         const val OWN_ADDRESS = "0x5e55000000000000000000000000000000000001"
         const val OTHER_ADDRESS = "0x5e55000000000000000000000000000000000002"
         const val FOREIGN_ADDRESS = "0x5e55000000000000000000000000000000000003"
+
+        fun revokeOf(address: String) = persistentListOf<FastTradingKeyActionUM>(FastTradingKeyActionUM.Revoke(address))
 
         fun createKey(
             address: String = OTHER_ADDRESS,
