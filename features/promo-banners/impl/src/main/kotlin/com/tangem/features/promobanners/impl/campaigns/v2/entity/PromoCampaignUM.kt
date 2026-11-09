@@ -27,6 +27,7 @@ internal data class PromoTokenSelectorUM(
     val accountTitle: TextReference,
     val onClick: () -> Unit,
     val selectedTokenRow: TangemTokenRow.State? = null,
+    val isBalanceHidden: Boolean = false,
 )
 
 internal data class PromoSelectedAccountUM(
