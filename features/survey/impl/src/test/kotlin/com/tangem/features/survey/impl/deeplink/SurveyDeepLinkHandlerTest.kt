@@ -1,7 +1,10 @@
 package com.tangem.features.survey.impl.deeplink
 
+import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.utils.logging.TangemLogger
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -9,12 +12,12 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import io.mockk.verify
-import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CoroutineScope
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class DefaultSurveyDeepLinkHandlerTest {
+internal class SurveyDeepLinkHandlerTest {
 
     private val appRouter = mockk<AppRouter>(relaxed = true)
 
@@ -32,29 +35,34 @@ internal class DefaultSurveyDeepLinkHandlerTest {
 
     @Test
     fun `does not navigate when token is missing`() {
-        createHandler(emptyMap())
+        handle(emptyMap())
 
         verify(exactly = 0) { appRouter.push(any(), any()) }
     }
 
     @Test
     fun `pushes survey route with token and display id on happy path`() {
-        createHandler(mapOf("token" to TOKEN, "display_id" to DISPLAY_ID))
+        handle(mapOf("token" to TOKEN, "display_id" to DISPLAY_ID))
 
         verify { appRouter.push(route = AppRoute.Survey(token = TOKEN, displayId = DISPLAY_ID), onComplete = any()) }
     }
 
     @Test
     fun `pushes survey route with null display id when absent`() {
-        createHandler(mapOf("token" to TOKEN))
+        handle(mapOf("token" to TOKEN))
 
         verify { appRouter.push(route = AppRoute.Survey(token = TOKEN, displayId = null), onComplete = any()) }
     }
 
-    private fun createHandler(queryParams: Map<String, String>) = DefaultSurveyDeepLinkHandler(
-        queryParams = queryParams,
-        appRouter = appRouter,
-    )
+    private fun handle(queryParams: Map<String, String>) = SurveyDeepLinkHandler(appRouter = appRouter)
+        .handle(
+            DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = mockk<CoroutineScope>(),
+                isFromOnNewIntent = false,
+            ),
+        )
 
     private companion object {
         const val TOKEN = "ntt-84iF22PDajmervYneMW4kv"
