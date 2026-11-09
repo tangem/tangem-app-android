@@ -1,0 +1,158 @@
+package com.tangem.features.polymarket.impl.fasttrading.model
+
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import com.google.common.truth.Truth.assertThat
+import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
+import com.tangem.domain.polymarket.model.PolymarketFastTradingState
+import com.tangem.domain.polymarket.model.PolymarketWalletError
+import com.tangem.domain.polymarket.model.PolymarketWalletState
+import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessment
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
+import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
+import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingSettingsUM
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+internal class PolymarketFastTradingSettingsModelTest {
+
+    private val router: Router = mockk(relaxed = true)
+    private val observeFastTrading: ObservePolymarketFastTradingUseCase = mockk()
+    private val refreshFastTrading: RefreshPolymarketFastTradingUseCase = mockk()
+    private val deviceIdProvider: PolymarketDeviceIdProvider = mockk()
+    private val states = MutableSharedFlow<PolymarketFastTradingState>(replay = 1)
+    private var model: PolymarketFastTradingSettingsModel? = null
+
+    @BeforeEach
+    fun setup() {
+        clearMocks(router, observeFastTrading, refreshFastTrading, deviceIdProvider)
+        states.resetReplayCache()
+        every { observeFastTrading(USER_WALLET_ID) } returns states
+        every { deviceIdProvider.deviceName } returns "Pixel 9"
+        coEvery { refreshFastTrading(USER_WALLET_ID) } returns Unit
+    }
+
+    @AfterEach
+    fun destroyModel() {
+        model?.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no state yet WHEN model is created THEN state is loading`() = runTest {
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(PolymarketFastTradingSettingsUM.Loading::class.java)
+    }
+
+    @Test
+    fun `GIVEN overview fails WHEN retry clicked THEN refresh is requested`() = runTest {
+        // Arrange
+        val model = createModel()
+        states.emit(createState(PolymarketWalletError.Network.left()))
+        advanceUntilIdle()
+
+        // Act
+        val error = model.uiState.value as PolymarketFastTradingSettingsUM.Error
+        error.onRetryClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { refreshFastTrading(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN content WHEN pull to refresh THEN refreshing until refresh completes`() = runTest {
+        // Arrange
+        val refreshed = CompletableDeferred<Unit>()
+        coEvery { refreshFastTrading(USER_WALLET_ID) } coAnswers { refreshed.await() }
+        val model = createModel()
+        states.emit(createState(OVERVIEW.right()))
+        advanceUntilIdle()
+
+        // Act
+        content(model).pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        advanceUntilIdle()
+        val whileRefreshing = content(model).pullToRefreshConfig.isRefreshing
+        refreshed.complete(Unit)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(whileRefreshing).isTrue()
+        assertThat(content(model).pullToRefreshConfig.isRefreshing).isFalse()
+        coVerify(exactly = 1) { refreshFastTrading(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN content WHEN back clicked THEN route is popped`() = runTest {
+        // Arrange
+        val model = createModel()
+        states.emit(createState(OVERVIEW.right()))
+        advanceUntilIdle()
+
+        // Act
+        content(model).onBackClick()
+
+        // Assert
+        verify(exactly = 1) { router.pop(any()) }
+    }
+
+    private fun content(model: PolymarketFastTradingSettingsModel) =
+        model.uiState.value as PolymarketFastTradingSettingsUM.Content
+
+    private fun TestScope.createModel() = PolymarketFastTradingSettingsModel(
+        dispatchers = createTestingCoroutineDispatcherProvider(),
+        paramsContainer = MutableParamsContainer(PolymarketFastTradingSettingsComponent.Params(USER_WALLET_ID)),
+        router = router,
+        observeFastTrading = observeFastTrading,
+        refreshFastTrading = refreshFastTrading,
+        deviceIdProvider = deviceIdProvider,
+    ).also { model = it }
+
+    private companion object {
+        val USER_WALLET_ID = UserWalletId("011")
+        val OVERVIEW = PolymarketSessionKeyOverview(
+            wallet = PolymarketWalletState(
+                depositWalletAddress = "0x2222222222222222222222222222222222222222",
+                status = PolymarketWalletStatus.READY_TO_TRADE,
+            ),
+            localKeyAddress = null,
+            assessment = PolymarketSessionKeyAssessment(
+                deviceState = PolymarketSessionKeyDeviceState.OfferEnable,
+                reconciliation = PolymarketSessionKeyReconciliation.Unavailable,
+                nextChangeAt = null,
+            ),
+            isTradable = false,
+        )
+
+        fun createState(overview: Either<PolymarketWalletError, PolymarketSessionKeyOverview>) =
+            PolymarketFastTradingState(overview = overview, operation = null, finished = null)
+    }
+}
