@@ -34,6 +34,7 @@ import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.deeplink.ConciergeWaitlistListener
+import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.main.entity.factory.OnrampAmountButtonUMStateFactory
@@ -44,6 +45,7 @@ import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.features.onramp.utils.sendProviderCalculatedEvent
 import com.tangem.features.onramp.utils.showDemoModeWarningIfNeeded
 import com.tangem.utils.Provider
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.PeriodicTask
@@ -64,6 +66,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     private val clearOnrampCacheUseCase: ClearOnrampCacheUseCase,
+    private val resetOnrampCountryUseCase: ResetOnrampCountryUseCase,
     private val fetchQuotesUseCase: OnrampFetchQuotesUseCase,
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase,
     private val fetchPairsUseCase: OnrampFetchPairsUseCase,
@@ -74,11 +77,15 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val conciergeWaitlistListener: ConciergeWaitlistListener,
     private val observeDemandSurveyCompletedUseCase: ObserveDemandSurveyCompletedUseCase,
+    onrampFeatureToggles: OnrampFeatureToggles,
+    private val appCoroutineScope: AppCoroutineScope,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model(), OnrampIntents {
 
     val params = paramsContainer.require<OnrampMainComponent.Params>()
+
+    private val isCountryByIpEnabled: Boolean = onrampFeatureToggles.isCountryByIpEnabled
 
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory by lazy(LazyThreadSafetyMode.NONE) {
         OnrampAmountButtonUMStateFactory()
@@ -100,6 +107,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 currency = params.cryptoCurrency.name,
                 onClose = ::onCloseClick,
                 openSettings = ::openSettings,
+                isCountryByIpEnabled = isCountryByIpEnabled,
             ),
         )
 
@@ -180,26 +188,38 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val quotesTaskScheduler = SingleTaskScheduler<Unit>()
     private var sentGeoRestrictionProviders: Set<String> = emptySet()
     private val conciergeWaitlistJobHolder = JobHolder()
+    private val countrySubscriptionJobHolder = JobHolder()
+    private var isCountryBlocked = false
 
     val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
     val demandSurveyNavigation: SlotNavigation<ConciergeDemandSurveyComponent.Params> = SlotNavigation()
     val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
 
     init {
-        modelScope.launch {
-            clearOnrampCacheUseCase()
-        }
         startLoadingQuotes()
         sendScreenOpenAnalytics()
-        checkResidenceCountry()
         subscribeToAmountChanges()
-        subscribeToCountryAndCurrencyUpdates()
         subscribeToQuotesUpdate()
         subscribeOnOffers()
+        if (isCountryByIpEnabled) {
+            modelScope.launch {
+                clearOnrampCacheUseCase()
+                resetOnrampCountryUseCase()
+                checkResidenceCountry()
+                subscribeToCountryAndCurrencyUpdates()
+            }
+        } else {
+            modelScope.launch { clearOnrampCacheUseCase() }
+            checkResidenceCountry()
+            subscribeToCountryAndCurrencyUpdates()
+        }
     }
 
     override fun onDestroy() {
-        modelScope.launch { clearOnrampCacheUseCase.invoke() }
+        appCoroutineScope.launch {
+            if (isCountryByIpEnabled) resetOnrampCountryUseCase()
+            clearOnrampCacheUseCase.invoke()
+        }
         quotesTaskScheduler.cancelTask()
         super.onDestroy()
     }
@@ -222,7 +242,11 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun openSettings() {
-        params.openSettings.invoke()
+        if (isCountryByIpEnabled) {
+            bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.SelectCountry)
+        } else {
+            params.openSettings.invoke()
+        }
     }
 
     override fun openCurrenciesList() {
@@ -235,7 +259,8 @@ internal class OnrampMainComponentModel @Inject constructor(
         onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM,
         categoryUM: OnrampOfferCategoryUM,
     ) {
-        if (onrampOfferAdvantagesUM is OnrampOfferAdvantagesUM.Unavailable ||
+        if (isCountryBlocked ||
+            onrampOfferAdvantagesUM is OnrampOfferAdvantagesUM.Unavailable ||
             onrampOfferAdvantagesUM == OnrampOfferAdvantagesUM.Restricted
         ) {
             return
@@ -269,11 +294,13 @@ internal class OnrampMainComponentModel @Inject constructor(
                 currency = params.cryptoCurrency.name,
                 onClose = router::pop,
                 openSettings = ::openSettings,
+                isCountryByIpEnabled = isCountryByIpEnabled,
             )
         }
+        isCountryBlocked = false
         modelScope.launch {
             clearOnrampCacheUseCase.invoke()
-            checkResidenceCountry()
+            checkAvailability()
             handleOnrampAvailable()
         }
     }
@@ -285,10 +312,16 @@ internal class OnrampMainComponentModel @Inject constructor(
             .saveIn(conciergeWaitlistJobHolder)
     }
 
-    // The survey would render under the sheets' dialog windows; residency confirmation keeps priority over the link.
+    // The survey would render under the sheets' dialog windows; residency confirmation and country selection
+    // keep priority over the link.
     private fun openDemandSurvey() {
         bottomSheetNavigation.navigate(
-            transformer = { sheet -> sheet as? OnrampMainBottomSheetConfig.ConfirmResidency },
+            transformer = { sheet ->
+                sheet.takeIf { config ->
+                    config is OnrampMainBottomSheetConfig.ConfirmResidency ||
+                        config is OnrampMainBottomSheetConfig.SelectCountry
+                }
+            },
             onComplete = { sheet, _ ->
                 if (sheet == null) {
                     demandSurveyNavigation.activate(ConciergeDemandSurveyComponent.Params(params.userWalletId))
@@ -336,11 +369,21 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private fun checkResidenceCountry() {
-        modelScope.launch {
-            checkOnrampAvailabilityUseCase(userWallet)
-                .onRight(::handleOnrampAvailability)
-                .onLeft(::handleOnrampError)
-        }
+        modelScope.launch { checkAvailability() }
+    }
+
+    private suspend fun checkAvailability() {
+        checkOnrampAvailabilityUseCase(userWallet, isCountryByIpEnabled)
+            .onLeft(::handleOnrampError)
+            .onRight { availability ->
+                if (isCountryByIpEnabled) {
+                    if (availability is OnrampAvailability.NotSupported) {
+                        showCountryNotSupported(availability.country)
+                    }
+                } else {
+                    handleOnrampAvailability(availability)
+                }
+            }
     }
 
     private fun handleOnrampAvailability(availability: OnrampAvailability) {
@@ -366,6 +409,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 maybeOffers.fold(
                     ifLeft = ::handleOnrampError,
                     ifRight = { offers ->
+                        if (isCountryBlocked) return@fold
                         val currentState = state.value
                         if (currentState is OnrampMainComponentUM.Content) {
                             if (currentState.amountBlockState.amountFieldModel.fiatValue.isEmpty()) {
@@ -398,6 +442,17 @@ internal class OnrampMainComponentModel @Inject constructor(
                     ifLeft = ::handleOnrampError,
                     ifRight = { country ->
                         if (country == null) return@onEach
+                        if (isCountryByIpEnabled) {
+                            state.update { stateFactory.getCountryFlagState(it, country.image, country.name) }
+                        }
+                        if (isCountryByIpEnabled && !country.isOnrampAvailable) {
+                            showCountryNotSupported(country)
+                            return@onEach
+                        }
+                        if (isCountryBlocked) {
+                            onRefresh()
+                            return@onEach
+                        }
                         // Resolve token-level buy support BEFORE emitting any Content state, so an
                         // unsupported token never briefly shows an enabled amount field — otherwise it
                         // would grab focus and flash the keyboard before being disabled.
@@ -411,15 +466,27 @@ internal class OnrampMainComponentModel @Inject constructor(
                 )
             }
             .launchIn(modelScope)
+            .saveIn(countrySubscriptionJobHolder)
     }
 
     private fun getCountryUpdatedState(
         prevState: OnrampMainComponentUM,
         country: OnrampCountry,
-    ): OnrampMainComponentUM = when (prevState) {
-        is OnrampMainComponentUM.Content -> amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
-        is OnrampMainComponentUM.InitialLoading ->
-            stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
+    ): OnrampMainComponentUM {
+        val updatedState = when (prevState) {
+            is OnrampMainComponentUM.Content -> amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
+            is OnrampMainComponentUM.InitialLoading ->
+                stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
+        }
+        return if (isCountryByIpEnabled) {
+            stateFactory.getCountryFlagState(
+                state = updatedState,
+                flagUrl = country.image,
+                countryName = country.name,
+            )
+        } else {
+            updatedState
+        }
     }
 
     /**
@@ -441,6 +508,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
+        if (isCountryBlocked) return
         sendOnrampQuotesErrorAnalytic(quotes)
         val hasAvailableOffer = quotes.any { it is OnrampQuote.Data && !it.isRestricted }
         val isRegionRestricted = !hasAvailableOffer && quotes.any(OnrampQuote::isRestricted)
@@ -522,6 +590,14 @@ internal class OnrampMainComponentModel @Inject constructor(
         state.update { stateFactory.getOnrampErrorState(onrampError) }
     }
 
+    private fun showCountryNotSupported(country: OnrampCountry) {
+        isCountryBlocked = true
+        quotesTaskScheduler.cancelTask()
+        state.update { prevState ->
+            stateFactory.getCountryNotSupportedState(getCountryUpdatedState(prevState, country))
+        }
+    }
+
     private fun showBuyNotSupported(country: OnrampCountry) {
         if (state.value.buyNotSupportedMessage != null) return
 
@@ -533,7 +609,6 @@ internal class OnrampMainComponentModel @Inject constructor(
             ),
         )
         quotesTaskScheduler.cancelTask()
-        // "Not supported" has priority: hide the residency bottom sheet if it was already shown.
         bottomSheetNavigation.dismiss()
         // Emit the not-supported state in a single update built from the ready state, so the amount
         // field never appears enabled first (no focus/keyboard flash).
