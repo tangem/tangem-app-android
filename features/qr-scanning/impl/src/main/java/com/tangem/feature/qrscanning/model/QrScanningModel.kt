@@ -1,7 +1,5 @@
 package com.tangem.feature.qrscanning.model
 
-import android.os.Handler
-import android.os.Looper
 import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -14,6 +12,7 @@ import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.RawQrResult
 import com.tangem.domain.qrscanning.usecases.EmitQrScannedEventUseCase
 import com.tangem.feature.qrscanning.QrScanningComponent
+import com.tangem.feature.qrscanning.inner.CameraReleaseAwaiter
 import com.tangem.feature.qrscanning.presentation.QrScanningState
 import com.tangem.feature.qrscanning.presentation.QrScanningStateController
 import com.tangem.feature.qrscanning.presentation.transformers.DismissBottomSheetTransformer
@@ -38,6 +37,7 @@ internal class QrScanningModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val router: Router,
     private val clipboardManager: ClipboardManager,
+    private val cameraReleaseAwaiter: CameraReleaseAwaiter,
 ) : Model(), QrScanningClickIntents {
 
     private val params = paramsContainer.require<QrScanningComponent.Params>()
@@ -99,22 +99,18 @@ internal class QrScanningModel @Inject constructor(
 
     override fun onDestroy() {
         super.onDestroy()
-        forceEnableReaderModeDelayed()
-    }
-
-    private fun forceEnableReaderModeDelayed() {
-        // we need to delay task because some devices can't enable until navigation completes
-        Handler(Looper.getMainLooper())
-            .postDelayed(
-                {
-                    // don't forget enable reader mode after scan complete
-                    cardSdkProvider.sdk.forceEnableReaderMode()
-                },
-                DELAY_BEFORE_CALL_ENABLE_NFC,
-            )
+        // Samsung drops a reader mode request made while the camera is still open and does not restore it
+        // once the camera closes, so wait for the camera to be released as well as for navigation to complete
+        cameraReleaseAwaiter.runWhenReleased(
+            minDelayMillis = DELAY_BEFORE_CALL_ENABLE_NFC,
+            timeoutMillis = CAMERA_RELEASE_TIMEOUT,
+        ) {
+            cardSdkProvider.sdk.forceEnableReaderMode()
+        }
     }
 
     private companion object {
         const val DELAY_BEFORE_CALL_ENABLE_NFC = 1000L
+        const val CAMERA_RELEASE_TIMEOUT = 5000L
     }
 }
