@@ -3,6 +3,7 @@ package com.tangem.tests.moneyaccount
 import androidx.test.espresso.Espresso
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.PROVIDERS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
@@ -13,6 +14,7 @@ import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.assertTextSharedViaChooser
 import com.tangem.common.utils.clearClipboard
 import com.tangem.common.utils.getWireMockRequestCount
+import com.tangem.common.utils.getWireMockRequestCountByQueryParam
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.common.utils.stubShareChooserIntent
 import com.tangem.core.configtoggle.FeatureToggles
@@ -808,6 +810,71 @@ class MoneyAccountTopUpTest : BaseTestCase() {
             step("Assert one 'Back' returns to 'Money account' screen") {
                 awaitSuccess { onMoneyAccountScreen { addFundsButton.assertIsDisplayed() } }
                 onVirtualAccountRequisitesBottomSheet { accountDetailsTitle.assertDoesNotExist() }
+            }
+        }
+    }
+
+    @AllureId("13435")
+    @DisplayName("Money account: on Plus the ACH deposit fee in the account details is zero")
+    @Test
+    fun plusAchDepositFeeIsZeroTest() {
+        val bankCredentialsPlusFreeAchState = "PlusFreeAch"
+        val channelsVirtualAccountState = "VirtualAccount"
+        val moneyAccountWithCardNetworksState = "AccountActiveCardNetworks"
+        val onrampFeesScenario = "tangem_pay_onramp_fees"
+        val onrampFeesBothState = "Started"
+        val feesEndpoint = "/bff-v2/v1/fees"
+        val accountTypeParam = "account_type"
+        val paymentAccountType = "PAYMENT_ACCOUNT"
+        val freeFeeValue = "$0"
+        val cardAchFeeType = "ACH_ONRAMP"
+        val cardAchFeeValue = "$1.50"
+        val cardFedwireFeeType = "FEDWIRE_ONRAMP"
+        val cardFedwireFeeTitle = "FedWire"
+        val cardFedwireFeeValue = "$25"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+            }
+            step("Set WireMock scenario '$moneyAccountScenario' to '$moneyAccountWithCardNetworksState'") {
+                setWireMockScenarioState(moneyAccountScenario, moneyAccountWithCardNetworksState)
+            }
+            step("Set WireMock scenario '$bankCredentialsScenario' to '$bankCredentialsPlusFreeAchState'") {
+                setWireMockScenarioState(bankCredentialsScenario, bankCredentialsPlusFreeAchState)
+            }
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsVirtualAccountState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsVirtualAccountState)
+            }
+            step("Set WireMock scenario '$onrampFeesScenario' to '$onrampFeesBothState'") {
+                setWireMockScenarioState(onrampFeesScenario, onrampFeesBothState)
+            }
+            step("Open 'Money account' screen") { openMoneyAccount() }
+            step("Open 'Account details' from 'Add funds'") { openMoneyAccountBankDetails() }
+            step("Assert the '$routeRail' route fee is '$freeFeeValue'") {
+                onVirtualAccountRequisitesBottomSheet {
+                    feeTitle(routeRail).performScrollTo()
+                    feeTitle(routeRail).assertTextEquals(routeRail)
+                    feeValue(routeRail).assertTextEquals(freeFeeValue)
+                }
+            }
+            step("Close 'Account details' screen") { closeMoneyAccountBankDetails() }
+            step("Return to 'Main' screen") { returnToMainFromMoneyAccount() }
+            val paymentFeesCountBefore =
+                getWireMockRequestCountByQueryParam("GET", feesEndpoint, accountTypeParam, paymentAccountType)
+            step("Click on Tangem Pay tile") { clickTangemPayTileUntilPaymentAccountOpens() }
+            step("Open bank transfer from 'Add funds' of the payment account") { openTangemPayBankTransferOnboarding() }
+            step("Assert the card '$routeRail' fee is '$cardAchFeeValue' from the fees catalog") {
+                assertVirtualAccountFee(cardAchFeeType, routeRail, cardAchFeeValue)
+            }
+            step("Assert the card '$cardFedwireFeeTitle' fee is '$cardFedwireFeeValue' from the fees catalog") {
+                assertVirtualAccountFee(cardFedwireFeeType, cardFedwireFeeTitle, cardFedwireFeeValue)
+            }
+            step("Assert the fees catalog is requested with '$accountTypeParam=$paymentAccountType'") {
+                assertTrue(
+                    getWireMockRequestCountByQueryParam("GET", feesEndpoint, accountTypeParam, paymentAccountType) >
+                        paymentFeesCountBefore,
+                )
             }
         }
     }
