@@ -433,10 +433,7 @@ class MoneyAccountBankWithdrawTest : BaseTestCase() {
                 }
             }
             step("Assert '$feesFooter' footer is displayed") {
-                onTangemPayBankWithdrawPreviewScreen {
-                    detailValue(feesFooter).performScrollTo()
-                    detailValue(feesFooter).assertIsDisplayed()
-                }
+                onTangemPayBankWithdrawPreviewScreen { detailValue(feesFooter).assertIsDisplayed() }
             }
             step("Assert 'Pay $payTotal' button is displayed") {
                 onTangemPayBankWithdrawPreviewScreen { payButton(payTotal).assertIsDisplayed() }
