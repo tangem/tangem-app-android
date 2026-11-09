@@ -6,7 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.earn.api.ui.EarnRowUM
 import kotlinx.collections.immutable.ImmutableList
 
-/** When both [primary] and [secondary] are `null`, the screen shows the default close button wired to [onClose]. */
+/** A result without buttons of its own gets a close button as [primary]. */
 internal data class EarnResultUM(
     val icons: EarnIconsUM,
     val variant: TangemStatusScreen.Variant,
