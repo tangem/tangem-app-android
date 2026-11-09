@@ -12,49 +12,6 @@ sealed class Settings(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
-    sealed class CardSettings(
-        event: String,
-        params: Map<String, String> = emptyMap(),
-    ) : Settings("Settings / Card Settings", event, params) {
-
-        class ButtonFactoryReset : CardSettings("Button - Factory Reset")
-        class FactoryResetFinished(cardsCount: Int? = null) : CardSettings(
-            event = "Factory Reset Finished",
-            params = buildMap {
-                cardsCount?.let { put("Cards Count", "$it") }
-            },
-        )
-
-        class FactoryResetCanceled(cardsCount: Int) : CardSettings(
-            event = "Factory Reset Canceled",
-            params = mapOf("Cards Count" to "$cardsCount"),
-        )
-
-        class UserCodeChanged : CardSettings("User Code Changed")
-        class ButtonChangeSecurityMode : CardSettings("Button - Change Security Mode")
-
-        class ButtonChangeUserCode(type: AnalyticsParam.UserCode) : CardSettings(
-            event = "Button - Change User Code",
-            params = mapOf("Type" to type.value),
-        )
-
-        class SecurityModeChanged(mode: Mode) : CardSettings(
-            event = "Security Mode Changed",
-            params = mapOf("Mode" to mode.value),
-        ) {
-            enum class Mode(val value: String) {
-                AccessCode("Access Code"),
-                Passcode("Passcode"),
-                LongTap("Long Tap"),
-            }
-        }
-
-        class AccessCodeRecoveryChanged(status: AnalyticsParam.AccessCodeRecoveryStatus) : CardSettings(
-            event = "Access Code Recovery Changed",
-            params = mapOf(status.key to status.value),
-        )
-    }
-
     sealed class AppSettings(
         event: String,
         params: Map<String, String> = emptyMap(),
