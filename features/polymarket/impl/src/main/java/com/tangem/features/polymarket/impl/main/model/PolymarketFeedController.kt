@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -65,7 +66,7 @@ internal class PolymarketFeedController(
     private var activeEntry: Entry? = null
     private val isResumed = MutableStateFlow(false)
     private val hasRefreshError = MutableStateFlow(false)
-    private val refreshJob = JobHolder()
+    private val feedRefreshJob = JobHolder()
     private val sports = PolymarketFeedSports(observeSports, isPhaseTwoEnabled)
     private val quotes = PolymarketFeedQuotes(observeQuotes, isPhaseTwoEnabled)
 
@@ -105,7 +106,7 @@ internal class PolymarketFeedController(
 
     fun select(config: PolymarketEventsListConfig, reloadVisited: Boolean = false): PolymarketFeedScrollPosition? {
         activeFeed.value?.poller?.pause()
-        refreshJob.cancel()
+        feedRefreshJob.cancel()
         hasRefreshError.value = false
         if (!shouldCacheFeeds) activeEntry?.scope?.cancel()
         val visited = feeds[config]
@@ -128,9 +129,13 @@ internal class PolymarketFeedController(
         }
     }
 
+    /**
+     * Keeps the current feed until its replacement loads successfully.
+     * A new refresh or [select] cancels this call, including footer retries; cancellation propagates to the caller.
+     */
     suspend fun refresh() = coroutineScope {
         val previous = activeEntry ?: return@coroutineScope
-        requireNotNull(coroutineContext[Job]).saveIn(refreshJob)
+        coroutineContext.job.saveIn(feedRefreshJob)
         val replacement = createEntry(previous.feed.config)
         hasRefreshError.value = false
         try {
