@@ -133,7 +133,6 @@ internal object PlacePredictionPreviewIntents :
     override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) = Unit
     override fun onBackClick() = Unit
     override fun onCloseClick() = Unit
-    override fun onToMainClick() = Unit
     override fun onViewPositionClick() = Unit
 }
 
