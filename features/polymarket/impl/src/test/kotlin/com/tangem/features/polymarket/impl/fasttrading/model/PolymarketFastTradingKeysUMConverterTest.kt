@@ -475,6 +475,52 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         }
 
         @Test
+        fun `GIVEN a key the exchange honours on other terms WHEN convert THEN its row reads unknown signer`() {
+            // Arrange
+            val key = createKey(validUntil = NOW.plus(Duration.ofDays(20)))
+            val overview = createOverview(
+                sessionKeys = listOf(key),
+                foreignSigners = listOf(signerOf(OTHER_ADDRESS.uppercase())),
+                listedSigners = setOf(OTHER_ADDRESS),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.otherDevices).containsExactly(
+                FastTradingKeyRowUM(
+                    id = OTHER_ADDRESS,
+                    deviceName = stringReference(OTHER_DEVICE_NAME),
+                    status = FastTradingKeyStatusUM.UnknownSigner,
+                    isExpiringSoon = false,
+                    actions = signerRevokeOf(OTHER_ADDRESS),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN a foreign key being revoked WHEN convert THEN its row shows revoking`() {
+            // Arrange
+            val overview = createOverview(
+                sessionKeys = listOf(createKey()),
+                foreignSigners = listOf(signerOf(OTHER_ADDRESS)),
+                listedSigners = setOf(OTHER_ADDRESS),
+            )
+            val operation = createOperation(
+                request = PolymarketSessionKeyOperationRequest.Revoke(OTHER_ADDRESS),
+                stage = PolymarketSessionKeyOperationStage.REVOKING,
+                targetAddress = OTHER_ADDRESS,
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.otherDevices.single().status).isEqualTo(FastTradingKeyStatusUM.Revoking)
+        }
+
+        @Test
         fun `GIVEN no foreign signers WHEN convert THEN warning is hidden`() {
             // Arrange
             val overview = createOverview(sessionKeys = listOf(createKey()))

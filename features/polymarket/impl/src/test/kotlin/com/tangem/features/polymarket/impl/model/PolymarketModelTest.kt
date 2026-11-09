@@ -282,6 +282,18 @@ internal class PolymarketModelTest {
         }
 
     @Test
+    fun `GIVEN revocation already revoked WHEN host first sees it THEN nothing is sent`() = runTest {
+        // Arrange
+        createVisibleModel(USER_WALLET_ID)
+
+        // Act
+        run(USER_WALLET_ID, revocation(PolymarketSessionKeyOperationStage.REVOKED))
+
+        // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
     fun `GIVEN visible host WHEN another operation leaves signing THEN nothing is sent`() = runTest {
         // Arrange
         createVisibleModel(USER_WALLET_ID)

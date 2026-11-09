@@ -22,6 +22,8 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
 import com.tangem.domain.polymarket.model.PolymarketFastTradingState
+import com.tangem.domain.polymarket.model.PolymarketSessionKey
+import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
@@ -29,7 +31,9 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessment
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
@@ -53,6 +57,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Duration
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketFastTradingSettingsModelTest {
@@ -247,6 +253,47 @@ internal class PolymarketFastTradingSettingsModelTest {
         assertThat(toast.message).isEqualTo(resourceReference(R.string.prediction_session_key_toast_busy))
     }
 
+    @Test
+    fun `GIVEN an operation started meanwhile WHEN revoke confirmed THEN nothing starts nor is toasted`() = runTest {
+        // Arrange
+        val model = createContentModel()
+        content(model).onActionClick(DEVICE_REVOKE)
+        advanceUntilIdle()
+        val operation = PolymarketSessionKeyOperation(
+            id = OPERATION_ID,
+            request = PolymarketSessionKeyOperationRequest.Extend,
+            targetAddress = null,
+            stage = PolymarketSessionKeyOperationStage.SIGNING,
+        )
+        states.emit(createState(OVERVIEW.right(), operation))
+        advanceUntilIdle()
+
+        // Act
+        sentModal().buttons.first().onClick(TangemModalActionScope {})
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { startOperation(any(), any()) }
+        assertThat(sentMessages).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN the key disappeared meanwhile WHEN revoke confirmed THEN nothing starts`() = runTest {
+        // Arrange
+        val model = createContentModel()
+        content(model).onActionClick(DEVICE_REVOKE)
+        advanceUntilIdle()
+        states.emit(createState(OVERVIEW.copy(wallet = OVERVIEW.wallet.copy(sessionKeys = emptyList())).right()))
+        advanceUntilIdle()
+
+        // Act
+        sentModal().buttons.first().onClick(TangemModalActionScope {})
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { startOperation(any(), any()) }
+    }
+
     private suspend fun TestScope.createContentModel(): PolymarketFastTradingSettingsModel {
         val model = createModel()
         states.emit(createState(OVERVIEW.right()))
@@ -284,6 +331,20 @@ internal class PolymarketFastTradingSettingsModelTest {
             wallet = PolymarketWalletState(
                 depositWalletAddress = "0x2222222222222222222222222222222222222222",
                 status = PolymarketWalletStatus.READY_TO_TRADE,
+                sessionKeys = listOf(
+                    PolymarketSessionKey(
+                        address = KEY_ADDRESS,
+                        deviceId = "other-device",
+                        deviceName = "Galaxy S24",
+                        isEnabled = true,
+                        status = PolymarketSessionKeyStatus.ACTIVE,
+                        scopes = listOf("CLOB"),
+                        validUntil = Instant.now().plus(Duration.ofDays(100)),
+                        renewAfter = null,
+                        authorizedAt = null,
+                        createdAt = Instant.now(),
+                    ),
+                ),
             ),
             localKeyAddress = null,
             assessment = PolymarketSessionKeyAssessment(
@@ -294,7 +355,9 @@ internal class PolymarketFastTradingSettingsModelTest {
             isTradable = false,
         )
 
-        fun createState(overview: Either<PolymarketWalletError, PolymarketSessionKeyOverview>) =
-            PolymarketFastTradingState(overview = overview, operation = null, finished = null)
+        fun createState(
+            overview: Either<PolymarketWalletError, PolymarketSessionKeyOverview>,
+            operation: PolymarketSessionKeyOperation? = null,
+        ) = PolymarketFastTradingState(overview = overview, operation = operation, finished = null)
     }
 }

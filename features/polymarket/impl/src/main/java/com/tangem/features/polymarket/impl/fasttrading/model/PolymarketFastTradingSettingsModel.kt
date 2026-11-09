@@ -102,7 +102,9 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
                     text = resourceReference(R.string.prediction_session_key_revoke)
                     onClick {
                         dismiss()
-                        start(PolymarketSessionKeyOperationRequest.Revoke(action.address))
+                        if (isRevokeOffered(action.address)) {
+                            start(PolymarketSessionKeyOperationRequest.Revoke(action.address))
+                        }
                     }
                 }
                 secondaryButton {
@@ -110,6 +112,14 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
                 }
             },
         )
+    }
+
+    private fun isRevokeOffered(address: String): Boolean {
+        val keys = (uiState.value as? PolymarketFastTradingSettingsUM.Content)?.keys ?: return false
+        if (!keys.areActionsEnabled) return false
+        val rows = listOfNotNull(keys.thisDevice) + keys.otherDevices
+        val actions = rows.flatMap { it.actions } + keys.unknownSigners.flatMap { it.actions }
+        return actions.any { it is FastTradingKeyActionUM.Revoke && it.address == address }
     }
 
     private fun start(request: PolymarketSessionKeyOperationRequest) {
