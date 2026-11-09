@@ -101,11 +101,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             appComponentContext = factoryContext,
             userWalletId = configuration.userWalletId,
         )
-        is PolymarketRoute.Main -> PolymarketMainComponent(
-            appComponentContext = factoryContext,
-            userWalletId = configuration.userWalletId,
-            tokenReceiveComponentFactory = tokenReceiveComponentFactory,
-        )
+        is PolymarketRoute.Main -> createMain(configuration, factoryContext)
         is PolymarketRoute.Category -> createCategory(configuration, factoryContext)
         is PolymarketRoute.History -> PolymarketHistoryComponent(
             appComponentContext = factoryContext,
@@ -168,6 +164,13 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             context = factoryContext,
             params = PolymarketCategoryComponent.Params(configuration.userWalletId, configuration.category),
         )
+
+    private fun createMain(configuration: PolymarketRoute.Main, factoryContext: AppComponentContext) =
+        PolymarketMainComponent(
+            appComponentContext = factoryContext,
+            userWalletId = configuration.userWalletId,
+            tokenReceiveComponentFactory = tokenReceiveComponentFactory,
+        ).also { model.onWalletSettled(configuration.userWalletId) }
 
     private fun createFastTradingSettings(
         configuration: PolymarketRoute.FastTradingSettings,
