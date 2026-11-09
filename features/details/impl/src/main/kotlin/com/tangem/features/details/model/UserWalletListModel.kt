@@ -15,10 +15,10 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.analytics.toAnalyticsWalletsType
 import com.tangem.domain.wallets.usecase.ApplyUserWalletListSortingUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletUseCase
 import com.tangem.features.details.entity.AddWalletBS
@@ -159,18 +159,8 @@ internal class UserWalletListModel @Inject constructor(
         )
     }
 
-    private fun getWalletsType(): AnalyticsParam.WalletsType? {
-        val userWallets = userWalletsListRepository.userWallets.value ?: return null
-        val hasMobile = userWallets.any { it is UserWallet.Hot }
-        val hasCold = userWallets.any { it is UserWallet.Cold }
-
-        return when {
-            hasMobile && hasCold -> AnalyticsParam.WalletsType.Multiple
-            hasMobile -> AnalyticsParam.WalletsType.Mobile
-            hasCold -> AnalyticsParam.WalletsType.Cold
-            else -> null
-        }
-    }
+    private fun getWalletsType(): AnalyticsParam.WalletsType? =
+        userWalletsListRepository.userWallets.value.toAnalyticsWalletsType()
 
     private fun onWalletClicked(userWalletId: UserWalletId) {
         modelScope.launch {
