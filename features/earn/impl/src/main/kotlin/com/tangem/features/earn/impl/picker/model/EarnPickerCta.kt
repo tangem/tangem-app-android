@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.earn.impl.guardedBy
 import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.product.api.product.EarnBlock
+import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.session.EarnAction
 import java.math.BigDecimal
@@ -31,12 +32,13 @@ internal class EarnPickerCta @Inject constructor() {
 
         val block = primary.guardedBy(state).block
         val minDeposit = state.limits.minDeposit
+        val isStart = state.position == EarnPositionState.None
         return when {
             block != null -> Result(
                 button = button(primary.label, isDimmed = true, onClick = { onBlocked(block) }),
                 hint = null,
             )
-            ethBalance < minDeposit -> Result(
+            isStart && ethBalance < minDeposit -> Result(
                 button = button(EarnPickerTexts.addFunds, onClick = onAddFunds),
                 hint = EarnPickerTexts.minDepositHint(minDeposit),
             )

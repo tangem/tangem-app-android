@@ -65,6 +65,7 @@ internal class EarnPickerCtaTest {
         val productBlocked = ready.copy(primary = ready.primary.copy(block = PRODUCT_BLOCK))
         val stale = ready.copy(freshness = STALE)
         val staleAndProductBlocked = productBlocked.copy(freshness = STALE)
+        val staked = fakeReadyState(FakeEarnProductPreset.Lending, FakeEarnPosition.Known)
 
         return listOf(
             idle(state = EarnProductState.Loading),
@@ -84,6 +85,12 @@ internal class EarnPickerCtaTest {
             addFunds(state = ready, ethBalance = BigDecimal("0.005"), minDeposit = minDeposit),
             start(state = ready, ethBalance = minDeposit, label = label, action = action),
             start(state = ready, ethBalance = BigDecimal("5"), label = label, action = action),
+            start(
+                state = staked,
+                ethBalance = BigDecimal.ZERO,
+                label = staked.primary.label,
+                action = staked.primary.action,
+            ),
         )
     }
 
