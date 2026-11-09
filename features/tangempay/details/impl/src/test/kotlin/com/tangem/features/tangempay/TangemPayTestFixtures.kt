@@ -69,6 +69,7 @@ internal fun spendTransaction(
     cardNumberLast4: String? = "9092",
     status: TangemPayTxHistoryItem.Status = TangemPayTxHistoryItem.Status.COMPLETED,
     cashback: TangemPayTxHistoryItem.Cashback? = null,
+    enrichedMerchantIconUrl: String? = null,
 ): TangemPayTxHistoryItem.Spend = TangemPayTxHistoryItem.Spend(
     id = id,
     jsonRepresentation = "{}",
@@ -84,7 +85,7 @@ internal fun spendTransaction(
     merchantCategoryCode = null,
     merchantCategory = null,
     status = status,
-    enrichedMerchantIconUrl = null,
+    enrichedMerchantIconUrl = enrichedMerchantIconUrl,
     declinedReason = null,
     cardName = cardName,
     cardNumberLast4 = cardNumberLast4,
