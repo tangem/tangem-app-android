@@ -3,6 +3,8 @@ package com.tangem.features.feed.deeplink
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -10,28 +12,18 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class DefaultMarketsTokenExchangesDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val scope: CoroutineScope,
-    @Assisted private val queryParams: Map<String, String>,
+internal class MarketsTokenExchangesDeepLinkHandler @Inject constructor(
     private val appRouter: AppRouter,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
-) : MarketsTokenExchangesDeepLinkHandler {
+) : DeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
-
-    private fun handleDeepLink() {
-        val tokenId = queryParams[TOKEN_ID_KEY]
+    override fun handle(request: DeepLinkRequest) {
+        val tokenId = request.queryParams[TOKEN_ID_KEY]
 
         if (tokenId.isNullOrEmpty()) {
             TangemLogger.e("Markets token exchanges deeplink does not contain token_id")
@@ -41,7 +33,7 @@ internal class DefaultMarketsTokenExchangesDeepLinkHandler @AssistedInject const
 
         val rawTokenId = CryptoCurrency.RawID(tokenId)
 
-        scope.launch {
+        request.scope.launch {
             val appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse {
                 AppCurrency.Default
             }
@@ -76,14 +68,6 @@ internal class DefaultMarketsTokenExchangesDeepLinkHandler @AssistedInject const
                 ),
             )
         }
-    }
-
-    @AssistedFactory
-    interface Factory : MarketsTokenExchangesDeepLinkHandler.Factory {
-        override fun create(
-            coroutineScope: CoroutineScope,
-            queryParams: Map<String, String>,
-        ): DefaultMarketsTokenExchangesDeepLinkHandler
     }
 
     companion object {

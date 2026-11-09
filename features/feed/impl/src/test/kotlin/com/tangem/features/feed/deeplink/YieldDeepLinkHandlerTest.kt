@@ -1,8 +1,10 @@
 package com.tangem.features.feed.deeplink
 
+import android.net.Uri
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -32,7 +34,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class DefaultYieldDeepLinkHandlerTest {
+class YieldDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk()
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
@@ -300,13 +302,13 @@ class DefaultYieldDeepLinkHandlerTest {
     }
 
     private fun handle(scope: CoroutineScope, queryParams: Map<String, String>) {
-        DefaultYieldDeepLinkHandler(
-            scope = scope,
-            queryParams = queryParams,
+        YieldDeepLinkHandler(
             appRouter = appRouter,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             yieldSupplyGetAvailabilityUseCase = yieldSupplyGetAvailabilityUseCase,
+        ).handle(
+            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = scope, isFromOnNewIntent = false),
         )
     }
 }

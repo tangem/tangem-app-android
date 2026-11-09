@@ -1,10 +1,12 @@
 package com.tangem.features.staking.impl.deeplink
 
+import android.net.Uri
 import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
@@ -36,12 +38,19 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
-internal class DefaultStakingDeepLinkHandlerTest {
+internal class StakingDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
     private val supplier: MultiWalletCryptoCurrenciesSupplier = mockk()
     private val availabilityUseCase: GetStakingAvailabilityUseCase = mockk()
+
+    private val handler = StakingDeepLinkHandler(
+        appRouter = appRouter,
+        getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+        multiWalletCryptoCurrenciesSupplier = supplier,
+        getStakingAvailabilityUseCase = availabilityUseCase,
+    )
 
     private val wallet = MockUserWalletFactory.create()
     private val currency = coin(Blockchain.Solana)
@@ -68,28 +77,28 @@ internal class DefaultStakingDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN matching currency case insensitive and available WHEN created THEN staking route pushed`() = runTest {
+    fun `GIVEN matching currency case insensitive and available WHEN handled THEN staking route pushed`() = runTest {
         // Act
-        createHandler(params)
+        handle(params)
 
         // Assert
         verify(exactly = 1) { appRouter.push(expectedRoute, any()) }
     }
 
     @Test
-    fun `GIVEN full availability WHEN created THEN staking route pushed`() = runTest {
+    fun `GIVEN full availability WHEN handled THEN staking route pushed`() = runTest {
         // Arrange
         coEvery { availabilityUseCase.invokeSync(any(), any()) } returns StakingAvailability.Full(option).right()
 
         // Act
-        createHandler(params)
+        handle(params)
 
         // Assert
         verify(exactly = 1) { appRouter.push(expectedRoute, any()) }
     }
 
     @Test
-    fun `GIVEN ethereum with p2p pool option WHEN created THEN staking route pushed with p2p integration`() = runTest {
+    fun `GIVEN ethereum with p2p pool option WHEN handled THEN staking route pushed with p2p integration`() = runTest {
         // Arrange
         val ethereum = coin(Blockchain.Ethereum)
         coEvery { supplier.getSyncOrNull(any(), any()) } returns setOf(currency, ethereum)
@@ -101,7 +110,7 @@ internal class DefaultStakingDeepLinkHandlerTest {
         )
 
         // Act
-        createHandler(ethereumParams)
+        handle(ethereumParams)
 
         // Assert
         verify(exactly = 1) {
@@ -122,12 +131,12 @@ internal class DefaultStakingDeepLinkHandlerTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN unavailable staking WHEN created THEN nothing pushed`(model: UnavailableModel) = runTest {
+        fun `GIVEN unavailable staking WHEN handled THEN nothing pushed`(model: UnavailableModel) = runTest {
             // Arrange
             coEvery { availabilityUseCase.invokeSync(any(), any()) } returns model.availability.right()
 
             // Act
-            createHandler(params)
+            handle(params)
 
             // Assert
             verifyNothingPushed()
@@ -141,24 +150,24 @@ internal class DefaultStakingDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN availability error WHEN created THEN nothing pushed`() = runTest {
+    fun `GIVEN availability error WHEN handled THEN nothing pushed`() = runTest {
         // Arrange
         coEvery { availabilityUseCase.invokeSync(any(), any()) } returns StakingError.DomainError("x").left()
 
         // Act
-        createHandler(params)
+        handle(params)
 
         // Assert
         verifyNothingPushed()
     }
 
     @Test
-    fun `GIVEN no selected wallet WHEN created THEN nothing loaded or pushed`() = runTest {
+    fun `GIVEN no selected wallet WHEN handled THEN nothing loaded or pushed`() = runTest {
         // Arrange
         every { getSelectedWalletSyncUseCase() } returns GetUserWalletError.UserWalletNotFound.left()
 
         // Act
-        createHandler(params)
+        handle(params)
 
         // Assert
         verifyNothingPushed()
@@ -166,9 +175,9 @@ internal class DefaultStakingDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN wallet id of other wallet WHEN created THEN ignored`() = runTest {
+    fun `GIVEN wallet id of other wallet WHEN handled THEN ignored`() = runTest {
         // Act
-        createHandler(params + (WALLET_ID_KEY to "ffff"))
+        handle(params + (WALLET_ID_KEY to "ffff"))
 
         // Assert
         verifyNothingPushed()
@@ -176,9 +185,9 @@ internal class DefaultStakingDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN non-hex wallet id WHEN created THEN ignored`() = runTest {
+    fun `GIVEN non-hex wallet id WHEN handled THEN ignored`() = runTest {
         // Act
-        createHandler(params + (WALLET_ID_KEY to "not-a-hex-id"))
+        handle(params + (WALLET_ID_KEY to "not-a-hex-id"))
 
         // Assert
         verifyNothingPushed()
@@ -186,21 +195,21 @@ internal class DefaultStakingDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN wallet id of selected wallet WHEN created THEN staking route pushed`() = runTest {
+    fun `GIVEN wallet id of selected wallet WHEN handled THEN staking route pushed`() = runTest {
         // Act
-        createHandler(params + (WALLET_ID_KEY to wallet.walletId.stringValue))
+        handle(params + (WALLET_ID_KEY to wallet.walletId.stringValue))
 
         // Assert
         verify(exactly = 1) { appRouter.push(expectedRoute, any()) }
     }
 
     @Test
-    fun `GIVEN supplier returns null WHEN created THEN nothing pushed`() = runTest {
+    fun `GIVEN supplier returns null WHEN handled THEN nothing pushed`() = runTest {
         // Arrange
         coEvery { supplier.getSyncOrNull(any(), any()) } returns null
 
         // Act
-        createHandler(params)
+        handle(params)
 
         // Assert
         verifyNothingPushed()
@@ -208,40 +217,35 @@ internal class DefaultStakingDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN network mismatch WHEN created THEN nothing pushed`() = runTest {
+    fun `GIVEN network mismatch WHEN handled THEN nothing pushed`() = runTest {
         // Act
-        createHandler(params + (NETWORK_ID_KEY to "bitcoin"))
+        handle(params + (NETWORK_ID_KEY to "bitcoin"))
 
         // Assert
         verifyNothingPushed()
     }
 
     @Test
-    fun `GIVEN token mismatch WHEN created THEN nothing pushed`() = runTest {
+    fun `GIVEN token mismatch WHEN handled THEN nothing pushed`() = runTest {
         // Act
-        createHandler(params + (TOKEN_ID_KEY to "other"))
+        handle(params + (TOKEN_ID_KEY to "other"))
 
         // Assert
         verifyNothingPushed()
     }
 
     @Test
-    fun `GIVEN missing query params WHEN created THEN nothing pushed`() = runTest {
+    fun `GIVEN missing query params WHEN handled THEN nothing pushed`() = runTest {
         // Act
-        createHandler(emptyMap())
+        handle(emptyMap())
 
         // Assert
         verifyNothingPushed()
     }
 
-    private fun TestScope.createHandler(queryParams: Map<String, String>) {
-        DefaultStakingDeepLinkHandler(
-            scope = this,
-            queryParams = queryParams,
-            appRouter = appRouter,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            multiWalletCryptoCurrenciesSupplier = supplier,
-            getStakingAvailabilityUseCase = availabilityUseCase,
+    private fun TestScope.handle(queryParams: Map<String, String>) {
+        handler.handle(
+            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = this, isFromOnNewIntent = false),
         )
         advanceUntilIdle()
     }

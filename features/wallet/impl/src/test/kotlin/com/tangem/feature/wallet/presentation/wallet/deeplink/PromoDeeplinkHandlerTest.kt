@@ -2,10 +2,12 @@
 
 package com.tangem.feature.wallet.presentation.wallet.deeplink
 
+import android.net.Uri
 import arrow.core.Either
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessage
@@ -34,7 +36,7 @@ import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.ActivatePromoCodeUseCase
 import com.tangem.domain.wallets.usecase.BindRefcodeWithWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.feature.wallet.deeplink.DefaultPromoDeeplinkHandler
+import com.tangem.feature.wallet.deeplink.PromoDeeplinkHandler
 import com.tangem.feature.wallet.deeplink.analytics.PromoActivationError
 import com.tangem.feature.wallet.deeplink.analytics.PromoBannerAnalytics
 import com.tangem.feature.wallet.impl.R
@@ -60,7 +62,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class DefaultPromoDeeplinkHandlerTest {
+class PromoDeeplinkHandlerTest {
 
     @MockK(relaxed = true)
     private lateinit var uiMessageSender: UiMessageSender
@@ -138,9 +140,7 @@ class DefaultPromoDeeplinkHandlerTest {
         coEvery { activatePromoCodeUseCase.invoke(any(), "bc1qxyz", promoCode, null) } returns Either.Right(activation)
         val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
+        PromoDeeplinkHandler(
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -151,7 +151,7 @@ class DefaultPromoDeeplinkHandlerTest {
             appsFlyerRepository = appsFlyerRepository,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
-        )
+        ).handle(createRequest(queryParams))
 
         advanceUntilIdle()
 
@@ -174,9 +174,7 @@ class DefaultPromoDeeplinkHandlerTest {
         val queryParams = emptyMap<String, String>()
         every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(mockUserWallet("ABCDEF"))
 
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
+        PromoDeeplinkHandler(
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -187,7 +185,7 @@ class DefaultPromoDeeplinkHandlerTest {
             appsFlyerRepository = appsFlyerRepository,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = TestingCoroutineDispatcherProvider(),
-        )
+        ).handle(createRequest(queryParams))
 
         val sent = messages.last { it is DialogMessage } as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_invalid_code_title))
@@ -213,7 +211,7 @@ class DefaultPromoDeeplinkHandlerTest {
         every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(mockUserWallet("ABCDEF"))
 
         // Act
-        createHandler(queryParams)
+        handle(queryParams)
         advanceUntilIdle()
 
         // Assert
@@ -238,9 +236,7 @@ class DefaultPromoDeeplinkHandlerTest {
         val queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to "PROMO123")
         every { getSelectedWalletSyncUseCase.invoke() } returns Either.Left(GetUserWalletError.UserWalletNotFound)
 
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
+        PromoDeeplinkHandler(
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -251,7 +247,7 @@ class DefaultPromoDeeplinkHandlerTest {
             appsFlyerRepository = appsFlyerRepository,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = TestingCoroutineDispatcherProvider(),
-        )
+        ).handle(createRequest(queryParams))
 
         val sent = messages.last { it is DialogMessage } as DialogMessage
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error_title))
@@ -278,9 +274,7 @@ class DefaultPromoDeeplinkHandlerTest {
         coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoin)
         val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
+        PromoDeeplinkHandler(
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -291,7 +285,7 @@ class DefaultPromoDeeplinkHandlerTest {
             appsFlyerRepository = appsFlyerRepository,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
-        )
+        ).handle(createRequest(queryParams))
 
         advanceUntilIdle()
 
@@ -322,9 +316,7 @@ class DefaultPromoDeeplinkHandlerTest {
         coEvery { activatePromoCodeUseCase.invoke(any(), "bc1qxyz", promoCode, null) } returns Either.Right(activation)
         val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
+        PromoDeeplinkHandler(
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -335,7 +327,7 @@ class DefaultPromoDeeplinkHandlerTest {
             appsFlyerRepository = appsFlyerRepository,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
-        )
+        ).handle(createRequest(queryParams))
 
         advanceUntilIdle()
 
@@ -423,7 +415,7 @@ class DefaultPromoDeeplinkHandlerTest {
             } returns Either.Right(PromoCodeActivation(programId = "program-id"))
 
             // Act
-            createHandler(queryParams = stellarQueryParams)
+            handle(queryParams = stellarQueryParams)
             advanceUntilIdle()
 
             // Assert
@@ -457,7 +449,7 @@ class DefaultPromoDeeplinkHandlerTest {
             )
 
             // Act
-            createHandler(queryParams = stellarQueryParams)
+            handle(queryParams = stellarQueryParams)
             advanceUntilIdle()
 
             // Assert
@@ -493,7 +485,7 @@ class DefaultPromoDeeplinkHandlerTest {
         )
 
         // Act
-        createHandler(queryParams = queryParams)
+        handle(queryParams = queryParams)
         advanceUntilIdle()
 
         // Assert
@@ -523,7 +515,7 @@ class DefaultPromoDeeplinkHandlerTest {
         } returns Either.Left(ActivatePromoCodeError.CampaignExpired)
 
         // Act
-        createHandler(queryParams = stellarQueryParams)
+        handle(queryParams = stellarQueryParams)
         advanceUntilIdle()
 
         // Assert
@@ -564,7 +556,7 @@ class DefaultPromoDeeplinkHandlerTest {
             val expected = AppsFlyerConversionData(refcode = refcode, campaign = null)
 
             // Act
-            createHandler(queryParams = mapOf(DeeplinkConst.REF_KEY to refcode))
+            handle(queryParams = mapOf(DeeplinkConst.REF_KEY to refcode))
             advanceUntilIdle()
 
             // Assert
@@ -581,7 +573,7 @@ class DefaultPromoDeeplinkHandlerTest {
             every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(mockUserWallet("ABCDEF"))
 
             // Act
-            createHandler(queryParams = mapOf(DeeplinkConst.REF_KEY to invalidRef))
+            handle(queryParams = mapOf(DeeplinkConst.REF_KEY to invalidRef))
             advanceUntilIdle()
 
             // Assert
@@ -598,7 +590,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 val expected = AppsFlyerConversionData(refcode = refcode, campaign = "spring")
 
                 // Act
-                createHandler(
+                handle(
                     queryParams = mapOf(
                         DeeplinkConst.PROMO_CODE_KEY to promoCode,
                         DeeplinkConst.REF_KEY to refcode,
@@ -622,7 +614,7 @@ class DefaultPromoDeeplinkHandlerTest {
             val expected = AppsFlyerConversionData(refcode = refcode, campaign = null)
 
             // Act
-            createHandler(queryParams = mapOf(DeeplinkConst.REF_KEY to refcode, DeeplinkConst.CAMPAIGN_KEY to "null"))
+            handle(queryParams = mapOf(DeeplinkConst.REF_KEY to refcode, DeeplinkConst.CAMPAIGN_KEY to "null"))
             advanceUntilIdle()
 
             // Assert
@@ -638,7 +630,7 @@ class DefaultPromoDeeplinkHandlerTest {
             val expected = AppsFlyerConversionData(refcode = refcode, campaign = null)
 
             // Act
-            createHandler(queryParams = mapOf(DeeplinkConst.REF_KEY to " $refcode "))
+            handle(queryParams = mapOf(DeeplinkConst.REF_KEY to " $refcode "))
             advanceUntilIdle()
 
             // Assert
@@ -654,7 +646,7 @@ class DefaultPromoDeeplinkHandlerTest {
             val expected = AppsFlyerConversionData(refcode = refcode, campaign = null)
 
             // Act
-            createHandler(
+            handle(
                 queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode, DeeplinkConst.REF_KEY to refcode),
             )
             advanceUntilIdle()
@@ -681,9 +673,7 @@ class DefaultPromoDeeplinkHandlerTest {
         }
     }
 
-    private fun TestScope.createHandler(queryParams: Map<String, String>) = DefaultPromoDeeplinkHandler(
-        scope = this,
-        queryParams = queryParams,
+    private fun TestScope.handle(queryParams: Map<String, String>) = PromoDeeplinkHandler(
         uiMessageSender = uiMessageSender,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -694,6 +684,13 @@ class DefaultPromoDeeplinkHandlerTest {
         appsFlyerRepository = appsFlyerRepository,
         analyticsEventsHandler = analyticsEventHandler,
         dispatchers = testDispatcherProvider(testScheduler),
+    ).handle(createRequest(queryParams))
+
+    private fun TestScope.createRequest(queryParams: Map<String, String>) = DeepLinkRequest(
+        uri = mockk<Uri>(),
+        queryParams = queryParams,
+        scope = this,
+        isFromOnNewIntent = false,
     )
 
     private fun runActivationErrorCase(
@@ -712,9 +709,7 @@ class DefaultPromoDeeplinkHandlerTest {
         coEvery { activatePromoCodeUseCase.invoke(any(), "bc1qxyz", promoCode, null) } returns Either.Left(error)
         val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-        DefaultPromoDeeplinkHandler(
-            scope = this,
-            queryParams = queryParams,
+        PromoDeeplinkHandler(
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -725,7 +720,7 @@ class DefaultPromoDeeplinkHandlerTest {
             appsFlyerRepository = appsFlyerRepository,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
-        )
+        ).handle(createRequest(queryParams))
 
         advanceUntilIdle()
 
@@ -746,9 +741,7 @@ class DefaultPromoDeeplinkHandlerTest {
             coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(ethOnly)
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-            DefaultPromoDeeplinkHandler(
-                scope = this,
-                queryParams = queryParams,
+            PromoDeeplinkHandler(
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -759,7 +752,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 appsFlyerRepository = appsFlyerRepository,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
-            )
+            ).handle(createRequest(queryParams))
 
             advanceUntilIdle()
 
@@ -789,9 +782,7 @@ class DefaultPromoDeeplinkHandlerTest {
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-            DefaultPromoDeeplinkHandler(
-                scope = this,
-                queryParams = queryParams,
+            PromoDeeplinkHandler(
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -802,7 +793,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 appsFlyerRepository = appsFlyerRepository,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
-            )
+            ).handle(createRequest(queryParams))
 
             advanceUntilIdle()
 
@@ -862,9 +853,7 @@ class DefaultPromoDeeplinkHandlerTest {
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-            DefaultPromoDeeplinkHandler(
-                scope = this,
-                queryParams = queryParams,
+            PromoDeeplinkHandler(
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -875,7 +864,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 appsFlyerRepository = appsFlyerRepository,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
-            )
+            ).handle(createRequest(queryParams))
 
             advanceUntilIdle()
 
@@ -920,9 +909,7 @@ class DefaultPromoDeeplinkHandlerTest {
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-            DefaultPromoDeeplinkHandler(
-                scope = this,
-                queryParams = queryParams,
+            PromoDeeplinkHandler(
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -933,7 +920,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 appsFlyerRepository = appsFlyerRepository,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
-            )
+            ).handle(createRequest(queryParams))
 
             advanceUntilIdle()
 
@@ -981,9 +968,7 @@ class DefaultPromoDeeplinkHandlerTest {
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-            DefaultPromoDeeplinkHandler(
-                scope = this,
-                queryParams = queryParams,
+            PromoDeeplinkHandler(
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -994,7 +979,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 appsFlyerRepository = appsFlyerRepository,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
-            )
+            ).handle(createRequest(queryParams))
 
             advanceUntilIdle()
 
@@ -1043,9 +1028,7 @@ class DefaultPromoDeeplinkHandlerTest {
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-            DefaultPromoDeeplinkHandler(
-                scope = this,
-                queryParams = queryParams,
+            PromoDeeplinkHandler(
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -1056,7 +1039,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 appsFlyerRepository = appsFlyerRepository,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
-            )
+            ).handle(createRequest(queryParams))
 
             advanceUntilIdle()
 
@@ -1100,9 +1083,7 @@ class DefaultPromoDeeplinkHandlerTest {
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-            DefaultPromoDeeplinkHandler(
-                scope = this,
-                queryParams = queryParams,
+            PromoDeeplinkHandler(
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -1113,7 +1094,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 appsFlyerRepository = appsFlyerRepository,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
-            )
+            ).handle(createRequest(queryParams))
 
             advanceUntilIdle()
 
@@ -1157,9 +1138,7 @@ class DefaultPromoDeeplinkHandlerTest {
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
-            DefaultPromoDeeplinkHandler(
-                scope = this,
-                queryParams = queryParams,
+            PromoDeeplinkHandler(
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
@@ -1170,7 +1149,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 appsFlyerRepository = appsFlyerRepository,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
-            )
+            ).handle(createRequest(queryParams))
 
             advanceUntilIdle()
 
@@ -1218,7 +1197,7 @@ class DefaultPromoDeeplinkHandlerTest {
             Either.Right(activation)
 
         // Act
-        createHandler(mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode))
+        handle(mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode))
         advanceUntilIdle()
 
         // Assert
