@@ -31,6 +31,7 @@ dependencies {
     implementation(projects.domain.account.status)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
     implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.transaction)
