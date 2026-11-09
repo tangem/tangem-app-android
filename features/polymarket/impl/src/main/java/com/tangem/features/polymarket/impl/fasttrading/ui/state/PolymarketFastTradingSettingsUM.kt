@@ -30,7 +30,7 @@ internal sealed interface PolymarketFastTradingSettingsUM {
 internal data class FastTradingKeysUM(
     val isUnknownSignersWarningShown: Boolean,
     val unknownSigners: ImmutableList<FastTradingUnknownSignerUM>,
-    val thisDevice: FastTradingKeyRowUM?,
+    val thisDevice: ImmutableList<FastTradingKeyRowUM>,
     val activateBanner: FastTradingActivateBannerUM?,
     val otherDevices: ImmutableList<FastTradingKeyRowUM>,
     val areActionsEnabled: Boolean,
