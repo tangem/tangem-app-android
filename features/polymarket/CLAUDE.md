@@ -5,6 +5,12 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 ## Gating and wiring
 
+- `TWI_1700_POLYMARKET_PHASE_TWO_ENABLED` gates all D2 behavior through
+  `PolymarketFeatureToggles.isPolymarketPhaseTwoEnabled`: sports cards and scores, abbreviated outcome
+  labels, live quotes, crypto screens and charts as they are connected. Gate both UI mapping/navigation
+  and data subscriptions; hiding a component alone must not leave its D2 socket or polling active.
+  With D2 off, preserve the D1 REST presentation and outcome click targets. Test both flag values at
+  each integration boundary. Reusable data/socket implementations can remain flag-independent and cold.
 - The feed's Predictions block is gated by Amplitude `twi_1576_polymarket = on`, read once per model.
   Accounts, balances and the wallet-screen row are not gated.
 - Add funds (swap) and Withdraw are not screens of this module: they are `AppRoute.Swap` with
