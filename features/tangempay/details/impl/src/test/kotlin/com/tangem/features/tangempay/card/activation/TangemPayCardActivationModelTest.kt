@@ -13,14 +13,14 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.EventMessage
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayImage
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayImage
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.model.CardActivationOrder
-import com.tangem.domain.pay.usecase.ActivatePlasticCardUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.model.CardActivationOrder
+import com.tangem.domain.tangempay.usecase.ActivatePlasticCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
@@ -178,7 +178,7 @@ internal class TangemPayCardActivationModelTest {
     fun `GIVEN wrong last digits WHEN submitted THEN the error is shown and the input cleared`() = runTest {
         // Arrange
         coEvery { activatePlasticCard(any(), any(), any()) } returns
-            VisaApiError.CardActivationInvalidCardData.left()
+            TangemPayApiError.CardActivationInvalidCardData.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -199,7 +199,7 @@ internal class TangemPayCardActivationModelTest {
     fun `GIVEN wrong last digits repeatedly WHEN submitted THEN the screen keeps accepting attempts`() = runTest {
         // Arrange
         coEvery { activatePlasticCard(any(), any(), any()) } returns
-            VisaApiError.CardActivationInvalidCardData.left()
+            TangemPayApiError.CardActivationInvalidCardData.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -219,7 +219,7 @@ internal class TangemPayCardActivationModelTest {
     fun `GIVEN an error shown WHEN the user types again THEN the error is cleared`() = runTest {
         // Arrange
         coEvery { activatePlasticCard(any(), any(), any()) } returns
-            VisaApiError.CardActivationInvalidCardData.left()
+            TangemPayApiError.CardActivationInvalidCardData.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         submit(model, "1111")
@@ -278,7 +278,7 @@ internal class TangemPayCardActivationModelTest {
     }
 
     internal data class RejectionModel(
-        val error: VisaApiError,
+        val error: TangemPayApiError,
         @StringRes val title: Int,
         val statusRefreshes: Int = 0,
         val pops: Int = 1,
@@ -287,22 +287,22 @@ internal class TangemPayCardActivationModelTest {
 
     private fun provideRejectionModels() = listOf(
         RejectionModel(
-            error = VisaApiError.CardActivationCardNotPhysical,
+            error = TangemPayApiError.CardActivationCardNotPhysical,
             title = R.string.tangempay_card_activation_error_not_physical,
             pops = 0,
             accountPops = 1,
         ),
         RejectionModel(
-            error = VisaApiError.CardActivationCardAlreadyActive,
+            error = TangemPayApiError.CardActivationCardAlreadyActive,
             title = R.string.tangempay_card_activation_error_already_active,
             statusRefreshes = 1,
         ),
         RejectionModel(
-            error = VisaApiError.CardActivationCardNotReadyForActivation,
+            error = TangemPayApiError.CardActivationCardNotReadyForActivation,
             title = R.string.tangempay_card_activation_error_not_ready,
         ),
         RejectionModel(
-            error = VisaApiError.CardActivationActiveOrderExists,
+            error = TangemPayApiError.CardActivationActiveOrderExists,
             title = R.string.tangempay_card_activation_error_in_progress,
             statusRefreshes = 1,
         ),
@@ -312,7 +312,7 @@ internal class TangemPayCardActivationModelTest {
     fun `GIVEN an unexpected failure WHEN submitted THEN a generic sheet is shown and the input stays filled`() =
         runTest {
             // Arrange
-            coEvery { activatePlasticCard(any(), any(), any()) } returns VisaApiError.ServerUnavailable.left()
+            coEvery { activatePlasticCard(any(), any(), any()) } returns TangemPayApiError.ServerUnavailable.left()
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -332,7 +332,7 @@ internal class TangemPayCardActivationModelTest {
     @ParameterizedTest
     @MethodSource("provideStatusRefreshingRejections")
     fun `GIVEN a rejection that refreshes the account WHEN the refresh runs THEN the screen stays busy`(
-        error: VisaApiError,
+        error: TangemPayApiError,
     ) = runTest {
         // Arrange
         coEvery { activatePlasticCard(any(), any(), any()) } returns error.left()
@@ -350,14 +350,14 @@ internal class TangemPayCardActivationModelTest {
     }
 
     private fun provideStatusRefreshingRejections() = listOf(
-        VisaApiError.CardActivationCardAlreadyActive,
-        VisaApiError.CardActivationActiveOrderExists,
+        TangemPayApiError.CardActivationCardAlreadyActive,
+        TangemPayApiError.CardActivationActiveOrderExists,
     )
 
     @Test
     fun `GIVEN a rejection shown in a sheet WHEN submitted THEN the hint returns to the description`() = runTest {
         // Arrange
-        coEvery { activatePlasticCard(any(), any(), any()) } returns VisaApiError.ServerUnavailable.left()
+        coEvery { activatePlasticCard(any(), any(), any()) } returns TangemPayApiError.ServerUnavailable.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -485,7 +485,7 @@ internal class TangemPayCardActivationModelTest {
     @ParameterizedTest
     @MethodSource(OUTCOME_UNKNOWN_ERRORS)
     fun `GIVEN outcome unknown WHEN the same digits are submitted again THEN the same key is reused`(
-        error: VisaApiError,
+        error: TangemPayApiError,
     ) = runTest {
         // Arrange
         val idempotencyKeys = mutableListOf<String>()
@@ -509,7 +509,7 @@ internal class TangemPayCardActivationModelTest {
         // Arrange
         val idempotencyKeys = mutableListOf<String>()
         coEvery { activatePlasticCard(any(), any(), capture(idempotencyKeys)) } returns
-            VisaApiError.ServerUnavailable.left()
+            TangemPayApiError.ServerUnavailable.left()
         val model = createModel(testScope = this)
         model.uiState.value.onLastDigitsChange("1234")
         model.uiState.value.onContinueClick()
@@ -530,7 +530,7 @@ internal class TangemPayCardActivationModelTest {
         // Arrange
         val idempotencyKeys = mutableListOf<String>()
         coEvery { activatePlasticCard(any(), any(), capture(idempotencyKeys)) } returns
-            VisaApiError.ServerUnavailable.left()
+            TangemPayApiError.ServerUnavailable.left()
         val model = createModel(testScope = this)
         model.uiState.value.onLastDigitsChange("1234")
         model.uiState.value.onContinueClick()
@@ -550,7 +550,7 @@ internal class TangemPayCardActivationModelTest {
     @ParameterizedTest
     @MethodSource("provideDefinitiveErrors")
     fun `GIVEN a definitive error WHEN the same digits are submitted again THEN a new idempotency key is used`(
-        error: VisaApiError,
+        error: TangemPayApiError,
     ) = runTest {
         // Arrange
         val idempotencyKeys = mutableListOf<String>()
@@ -569,17 +569,17 @@ internal class TangemPayCardActivationModelTest {
     }
 
     private fun provideDefinitiveErrors() = provideRejectionModels().map { it.error } + listOf(
-        VisaApiError.CardActivationInvalidCardData,
-        VisaApiError.Unknown(errorCode = 104000429),
-        VisaApiError.CustomerIsBlocked,
-        VisaApiError.Unspecified,
+        TangemPayApiError.CardActivationInvalidCardData,
+        TangemPayApiError.Unknown(errorCode = 104000429),
+        TangemPayApiError.CustomerIsBlocked,
+        TangemPayApiError.Unspecified,
     )
 
     @Test
     fun `GIVEN wrong last digits WHEN submitted THEN the validation error event is sent and no success`() = runTest {
         // Arrange
         coEvery { activatePlasticCard(any(), any(), any()) } returns
-            VisaApiError.CardActivationInvalidCardData.left()
+            TangemPayApiError.CardActivationInvalidCardData.left()
         val model = createModel(testScope = this)
         model.uiState.value.onLastDigitsChange("1234")
 

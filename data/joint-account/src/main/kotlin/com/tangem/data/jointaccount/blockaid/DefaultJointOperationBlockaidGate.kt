@@ -8,6 +8,8 @@ import com.tangem.blockchainsdk.utils.BlockAidChainNameConverter
 import com.tangem.data.jointaccount.safe.SafeTxTypedDataBuilder
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate.Verdict
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate.Verdict.NoVerdict.Reason
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.models.network.Network
@@ -15,7 +17,9 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addHexPrefix
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -34,9 +38,28 @@ internal class DefaultJointOperationBlockaidGate @Inject constructor(
         safeAddress: String,
         ownerAddress: String,
         deployment: SafeDeployment,
-    ): JointOperationBlockaidGate.Verdict = withContext(dispatchers.io) {
+    ): Verdict = withContext(dispatchers.io) {
+        check(
+            network = network,
+            safeTx = safeTx,
+            chainId = chainId,
+            safeAddress = safeAddress,
+            ownerAddress = ownerAddress,
+            deployment = deployment,
+        )
+    }
+
+    @Suppress("LongParameterList")
+    private suspend fun check(
+        network: Network,
+        safeTx: SafeTx,
+        chainId: Long,
+        safeAddress: String,
+        ownerAddress: String,
+        deployment: SafeDeployment,
+    ): Verdict {
         val chain = BlockAidChainNameConverter.convert(network)
-            ?: return@withContext JointOperationBlockaidGate.Verdict.UNKNOWN
+            ?: return Verdict.NoVerdict(Reason.UNSUPPORTED_NETWORK)
 
         val request = when (deployment) {
             SafeDeployment.DEPLOYED -> typedDataRequest(
@@ -45,19 +68,26 @@ internal class DefaultJointOperationBlockaidGate @Inject constructor(
                 chainId = chainId,
                 safeAddress = safeAddress,
                 ownerAddress = ownerAddress,
-            ) ?: return@withContext JointOperationBlockaidGate.Verdict.UNKNOWN
-            SafeDeployment.NOT_DEPLOYED -> innerCallRequest(chain = chain, safeTx = safeTx, safeAddress = safeAddress)
+            ) ?: return Verdict.NoVerdict(Reason.ERROR)
+            SafeDeployment.NOT_DEPLOYED -> {
+                if (safeTx.operation != SafeTx.OPERATION_CALL) return Verdict.Malicious
+                innerCallRequest(chain = chain, safeTx = safeTx, safeAddress = safeAddress)
+            }
         }
 
-        blockAidVerifier
-            .verifyTransaction(data = request)
-            .fold(
-                ifLeft = { error ->
-                    TangemLogger.e("Blockaid check of a joint operation did not run", error)
-                    JointOperationBlockaidGate.Verdict.UNAVAILABLE
-                },
-                ifRight = ::toVerdict,
-            )
+        val result = withTimeoutOrNull(BLOCKAID_TIMEOUT) { blockAidVerifier.verifyTransaction(data = request) }
+        if (result == null) {
+            TangemLogger.e("Blockaid check of a joint operation timed out")
+            return Verdict.NoVerdict(Reason.TIMEOUT)
+        }
+
+        return result.fold(
+            ifLeft = { error ->
+                TangemLogger.e("Blockaid check of a joint operation did not run", error)
+                Verdict.NoVerdict(Reason.ERROR)
+            },
+            ifRight = ::toVerdict,
+        )
     }
 
     private fun typedDataRequest(
@@ -110,12 +140,12 @@ internal class DefaultJointOperationBlockaidGate @Inject constructor(
         )
     }
 
-    private fun toVerdict(result: CheckTransactionResult): JointOperationBlockaidGate.Verdict {
+    private fun toVerdict(result: CheckTransactionResult): Verdict {
         return when (result.validation) {
-            ValidationResult.SAFE -> JointOperationBlockaidGate.Verdict.SAFE
-            ValidationResult.WARNING -> JointOperationBlockaidGate.Verdict.WARNING
-            ValidationResult.UNSAFE -> JointOperationBlockaidGate.Verdict.MALICIOUS
-            ValidationResult.FAILED_TO_VALIDATE -> JointOperationBlockaidGate.Verdict.UNKNOWN
+            ValidationResult.SAFE -> Verdict.Safe
+            ValidationResult.WARNING -> Verdict.Warning
+            ValidationResult.UNSAFE -> Verdict.Malicious
+            ValidationResult.FAILED_TO_VALIDATE -> Verdict.NoVerdict(Reason.ERROR)
         }
     }
 
@@ -125,5 +155,6 @@ internal class DefaultJointOperationBlockaidGate @Inject constructor(
         const val DOMAIN_URL = "https://tangem.com"
         const val HEX_PREFIX = "0x"
         const val HEX_RADIX = 16
+        val BLOCKAID_TIMEOUT = 10.seconds
     }
 }

@@ -7,7 +7,7 @@ import com.tangem.core.ui.extensions.arrayItemReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
-import com.tangem.domain.pay.model.TangemPayCashback
+import com.tangem.domain.tangempay.model.TangemPayCashback
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
 import io.mockk.every
 import io.mockk.mockkObject

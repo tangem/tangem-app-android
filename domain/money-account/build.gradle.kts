@@ -29,13 +29,13 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.networks)
     api(projects.domain.quotes)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     // endregion
 
     // region Domain models
     api(projects.domain.models)
     api(projects.domain.moneyAccount.models)
-    api(projects.domain.visa.models)
+    api(projects.domain.tangempay.models)
     // endregion
 
     // region Tests

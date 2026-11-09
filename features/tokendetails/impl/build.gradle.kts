@@ -117,6 +117,6 @@ dependencies {
     api(deps.kotlin.coroutines)
     api(projects.domain.account)
     api(projects.domain.common)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.walletManager)
 }

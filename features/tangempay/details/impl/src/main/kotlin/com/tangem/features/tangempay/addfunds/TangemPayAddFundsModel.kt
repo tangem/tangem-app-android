@@ -10,8 +10,8 @@ import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.ReceiveAddressModel.DisplayType
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.isOrderRequired
-import com.tangem.domain.pay.model.TangemPayTopUpData
-import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.tangempay.model.TangemPayTopUpData
+import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

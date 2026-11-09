@@ -11,7 +11,6 @@ import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.nft.NFTFeatureToggles
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.transaction.R
 import io.mockk.coEvery
@@ -22,8 +21,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import kotlin.time.Duration.Companion.seconds
 
 internal class ReceiveAddressesFactoryTest {
@@ -33,7 +30,6 @@ internal class ReceiveAddressesFactoryTest {
     private val getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase = mockk()
     private val dynamicAddressesRepository: DynamicAddressesRepository = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val nftFeatureToggles: NFTFeatureToggles = mockk()
 
     private val factory = ReceiveAddressesFactory(
         getEnsNameUseCase = getEnsNameUseCase,
@@ -41,7 +37,6 @@ internal class ReceiveAddressesFactoryTest {
         getDynamicReceiveAddressUseCase = getDynamicReceiveAddressUseCase,
         dynamicAddressesRepository = dynamicAddressesRepository,
         userWalletsListRepository = userWalletsListRepository,
-        nftFeatureToggles = nftFeatureToggles,
     )
 
     @Test
@@ -72,13 +67,9 @@ internal class ReceiveAddressesFactoryTest {
         assertThat(config!!.receiveAddress.map { it.value }).containsExactly(ADDRESS)
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [false, true])
-    fun `GIVEN Solana NFT receive WHEN createForNft THEN the unsupported types warning follows the toggle`(
-        isToggleEnabled: Boolean,
-    ) = runTest {
+    @Test
+    fun `GIVEN Solana NFT receive WHEN createForNft THEN the unsupported cNFT warning is shown`() = runTest {
         // Arrange
-        every { nftFeatureToggles.isSolanaPnftAndCoreNftEnabled } returns isToggleEnabled
         val solana = MockCryptoCurrencyFactory().createCoin(Blockchain.Solana)
         coEvery { getEnsNameUseCase.invoke(any(), any(), any()) } returns null
         coEvery { getViewedTokenReceiveWarningUseCase() } returns emptySet()
@@ -94,13 +85,11 @@ internal class ReceiveAddressesFactoryTest {
         )
 
         // Assert
-        val expectedSubtitle = if (isToggleEnabled) {
-            R.string.nft_receive_unsupported_cnft_description
-        } else {
-            R.string.nft_receive_unsupported_types_description
-        }
         assertThat(config.tokenReceiveNotification).containsExactly(
-            TokenReceiveNotification(title = R.string.nft_receive_unsupported_types, subtitle = expectedSubtitle),
+            TokenReceiveNotification(
+                title = R.string.nft_receive_unsupported_types,
+                subtitle = R.string.nft_receive_unsupported_cnft_description,
+            ),
         )
     }
 

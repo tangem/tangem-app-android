@@ -21,7 +21,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.requireColdWallet
-import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -29,6 +29,7 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.features.details.ui.cardsettings.CardInfo
+import com.tangem.tap.features.details.ui.cardsettings.CardSettingsRoute
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsScreenState
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
@@ -205,10 +206,10 @@ internal class CardSettingsModel @Inject constructor(
             }
             is CardInfo.SecurityMode -> {
                 analyticsEventHandler.send(Settings.CardSettings.ButtonChangeSecurityMode())
-                router.push(route = AppRoute.DetailsSecurity(userWalletId))
+                router.push(route = CardSettingsRoute.SecurityMode(userWalletId))
             }
             is CardInfo.AccessCodeRecovery -> {
-                router.push(AppRoute.AccessCodeRecovery)
+                router.push(CardSettingsRoute.AccessCodeRecovery)
             }
             else -> {}
         }
@@ -232,7 +233,7 @@ internal class CardSettingsModel @Inject constructor(
             modelScope.launch {
                 val hasTangemPay = onboardingRepository.hasTangemPayInWallet(userWalletId).getOrNull() == true
                 router.push(
-                    route = AppRoute.ResetToFactory(
+                    route = CardSettingsRoute.ResetCard(
                         userWalletId = userWalletId,
                         cardId = card.cardId,
                         isActiveBackupStatus = card.backupStatus?.isActive == true,

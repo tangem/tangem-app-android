@@ -18,8 +18,10 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndeterminateException
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -87,7 +89,6 @@ class DefaultYieldSupplyTransactionRepositoryTest {
     private val outcomeRepository = DefaultYieldSupplyTransactionRepository(
         walletManagersFacade = outcomeWalletManagersFacade,
         dispatchers = TestingCoroutineDispatcherProvider(),
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns false },
     )
 
     @BeforeEach
@@ -96,11 +97,11 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             objToCopy = DefaultYieldSupplyTransactionRepository(
                 walletManagersFacade = walletManagersFacade,
                 dispatchers = TestingCoroutineDispatcherProvider(),
-                yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns false },
             ),
             recordPrivateCalls = true,
         )
         every { mockk<Token>().contractAddress } returns mockedContractAddress
+        coEvery { walletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
         clearMocks(receiptWalletManager, outcomeWalletManagersFacade)
     }
 
@@ -536,11 +537,6 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             currentImplementation = OLD_IMPLEMENTATION,
             latestImplementation = LATEST_IMPLEMENTATION,
         )
-        private val v3Repository = DefaultYieldSupplyTransactionRepository(
-            walletManagersFacade = walletManagersFacade,
-            dispatchers = TestingCoroutineDispatcherProvider(),
-            yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns true },
-        )
 
         @Test
         fun `GIVEN no fee WHEN createClaimRewardsTransaction THEN builds a zero amount call to the module`() = runTest {
@@ -594,7 +590,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             }
 
         @Test
-        fun `GIVEN V3 disabled and UpgradeAvailable WHEN createClaimRewardsTransaction THEN claim is not wrapped`() =
+        fun `GIVEN UpgradeAvailable WHEN createClaimRewardsTransaction THEN claim is wrapped`() =
             runTest {
                 // Arrange
                 coEvery { walletManager.checkModuleVersionStatus() } returns upgradeAvailable
@@ -609,37 +605,18 @@ class DefaultYieldSupplyTransactionRepositoryTest {
                 )
 
                 // Assert
-                Truth.assertThat((result.extras as EthereumTransactionExtras).callData).isSameInstanceAs(claimCallData)
-            }
-
-        @Test
-        fun `GIVEN V3 enabled and UpgradeAvailable WHEN createClaimRewardsTransaction THEN claim is wrapped`() =
-            runTest {
-                // Arrange
-                coEvery { walletManager.checkModuleVersionStatus() } returns upgradeAvailable
-
-                // Act
-                val result = v3Repository.createClaimRewardsTransaction(
-                    userWalletId = userWalletId,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    destinationAddress = MODULE_ADDRESS,
-                    callData = claimCallData,
-                    fee = null,
-                )
-
-                // Assert
                 val actual = (result.extras as EthereumTransactionExtras).callData
                 Truth.assertThat(actual).isInstanceOf(EthereumYieldSupplyUpgradeToAndCallCallData::class.java)
                 Truth.assertThat(actual?.unwrapYieldModuleUpgrade()).isSameInstanceAs(claimCallData)
             }
 
         @Test
-        fun `GIVEN V3 enabled and UpToDate WHEN createClaimRewardsTransaction THEN claim is not wrapped`() = runTest {
+        fun `GIVEN UpToDate WHEN createClaimRewardsTransaction THEN claim is not wrapped`() = runTest {
             // Arrange
             coEvery { walletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
 
             // Act
-            val result = v3Repository.createClaimRewardsTransaction(
+            val result = repository.createClaimRewardsTransaction(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 destinationAddress = MODULE_ADDRESS,
@@ -652,7 +629,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         }
 
         @Test
-        fun `GIVEN V3 enabled and UpgradeUnavailable WHEN createClaimRewardsTransaction THEN throws`() = runTest {
+        fun `GIVEN UpgradeUnavailable WHEN createClaimRewardsTransaction THEN throws`() = runTest {
             // Arrange
             coEvery { walletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpgradeUnavailable(
                 currentImplementation = OLD_IMPLEMENTATION,
@@ -660,7 +637,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
             // Act
             val actual = runCatching {
-                v3Repository.createClaimRewardsTransaction(
+                repository.createClaimRewardsTransaction(
                     userWalletId = userWalletId,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     destinationAddress = MODULE_ADDRESS,
@@ -682,11 +659,6 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             currentImplementation = OLD_IMPLEMENTATION,
             latestImplementation = LATEST_IMPLEMENTATION,
         )
-        private val v3Repository = DefaultYieldSupplyTransactionRepository(
-            walletManagersFacade = walletManagersFacade,
-            dispatchers = TestingCoroutineDispatcherProvider(),
-            yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns true },
-        )
 
         @BeforeEach
         fun clearWalletManagerCalls() {
@@ -701,7 +673,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             coEvery { walletManager.checkModuleVersionStatus() } returns model.moduleStatus
 
             // Act
-            val result = v3Repository.createEnterTransactions(
+            val result = repository.createEnterTransactions(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 maxNetworkFee = BigDecimal.TEN,
@@ -721,33 +693,13 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         }
 
         @Test
-        fun `GIVEN V3 disabled and UpgradeAvailable WHEN createEnterTransactions THEN no wrap and no check`() =
-            runTest {
-                // Arrange
-                arrangeWalletManager(TokenState.NOT_INITIALIZED)
-                coEvery { walletManager.checkModuleVersionStatus() } returns upgradeAvailable
-
-                // Act
-                val result = repository.createEnterTransactions(
-                    userWalletId = userWalletId,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    maxNetworkFee = BigDecimal.TEN,
-                )
-
-                // Assert
-                val actual = result.map { (it.extras as EthereumTransactionExtras).callData }
-                Truth.assertThat(actual.none { it is EthereumYieldSupplyUpgradeToAndCallCallData }).isTrue()
-                coVerify(exactly = 0) { walletManager.checkModuleVersionStatus() }
-            }
-
-        @Test
         fun `GIVEN version check throws WHEN createEnterTransactions THEN batch is not wrapped`() = runTest {
             // Arrange
             arrangeWalletManager(TokenState.NOT_INITIALIZED)
             coEvery { walletManager.checkModuleVersionStatus() } throws IllegalStateException("rpc failed")
 
             // Act
-            val result = v3Repository.createEnterTransactions(
+            val result = repository.createEnterTransactions(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 maxNetworkFee = BigDecimal.TEN,
@@ -933,6 +885,380 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         )
     }
 
+    private val nativeWalletManager = mockk<WalletManager>()
+    private val nativeWalletManagersFacade = mockk<WalletManagersFacade>()
+    private val nativeRepository = DefaultYieldSupplyTransactionRepository(
+        walletManagersFacade = nativeWalletManagersFacade,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
+    private val ethereum = mockk<Network> {
+        every { id } returns Network.ID(
+            value = "ethereum",
+            derivationPath = Network.DerivationPath.Card(NATIVE_DERIVATION_PATH),
+        )
+        every { derivationPath } returns Network.DerivationPath.Card(NATIVE_DERIVATION_PATH)
+    }
+    private val nativeWeth = mockk<CryptoCurrency.Token> {
+        every { network } returns ethereum
+        every { contractAddress } returns NATIVE_WETH_ADDRESS
+        every { decimals } returns 18
+    }
+
+    private fun resetNativeMocks() {
+        clearMocks(nativeWalletManager, nativeWalletManagersFacade)
+        coEvery {
+            nativeWalletManagersFacade.getOrCreateWalletManager(userWalletId, Blockchain.Ethereum, NATIVE_DERIVATION_PATH)
+        } returns nativeWalletManager
+        every { nativeWalletManager.wallet } returns mockk {
+            every { blockchain } returns Blockchain.Ethereum
+            every { address } returns OWNER_ADDRESS
+        }
+    }
+
+    private fun nativeTransaction(value: BigDecimal, callData: SmartContractCallData) = TransactionData.Uncompiled(
+        amount = Amount(value = value, blockchain = Blockchain.Ethereum),
+        sourceAddress = OWNER_ADDRESS,
+        destinationAddress = MODULE_ADDRESS,
+        extras = EthereumTransactionExtras(callData = callData),
+        fee = null,
+    )
+
+    private fun upgradeAvailable() = YieldModuleVersionStatus.UpgradeAvailable(
+        currentImplementation = OLD_IMPLEMENTATION,
+        latestImplementation = LATEST_IMPLEMENTATION,
+    )
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreateNativeEnterTransaction {
+
+        private val enterWithNative = YieldSupplyContractCallDataProviderFactory.getEnterWithNativeCallData()
+
+        @BeforeEach
+        fun resetMocks() = resetNativeMocks()
+
+        @Test
+        fun `GIVEN up to date module WHEN createNativeEnterTransaction THEN amount goes as value to the module`() =
+            runTest {
+                // Arrange
+                coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+                coEvery { nativeWalletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
+
+                // Act
+                val actual = nativeRepository.createNativeEnterTransaction(userWalletId, ethereum, BigDecimal("1.5"))
+
+                // Assert
+                Truth.assertThat(actual).isEqualTo(nativeTransaction(BigDecimal("1.5"), enterWithNative))
+            }
+
+        @Test
+        fun `GIVEN module not deployed WHEN createNativeEnterTransaction THEN sent to the calculated address`() =
+            runTest {
+                // Arrange
+                coEvery { nativeWalletManager.getYieldModuleAddress() } returns EthereumUtils.ZERO_ADDRESS
+                coEvery { nativeWalletManager.calculateYieldModuleAddress() } returns MODULE_ADDRESS
+                coEvery { nativeWalletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.NotDeployed
+
+                // Act
+                val actual = nativeRepository.createNativeEnterTransaction(userWalletId, ethereum, BigDecimal.ONE)
+
+                // Assert
+                Truth.assertThat(actual).isEqualTo(nativeTransaction(BigDecimal.ONE, enterWithNative))
+            }
+
+        @Test
+        fun `GIVEN outdated module WHEN createNativeEnterTransaction THEN enter goes inside the upgrade`() = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+            coEvery { nativeWalletManager.checkModuleVersionStatus() } returns upgradeAvailable()
+
+            // Act
+            val actual = nativeRepository.createNativeEnterTransaction(userWalletId, ethereum, BigDecimal.ONE)
+
+            // Assert
+            val callData = (actual.extras as EthereumTransactionExtras).callData
+            Truth.assertThat(callData).isInstanceOf(EthereumYieldSupplyUpgradeToAndCallCallData::class.java)
+            Truth.assertThat((callData as EthereumYieldSupplyUpgradeToAndCallCallData).newImplementation)
+                .isEqualTo(LATEST_IMPLEMENTATION)
+            Truth.assertThat(callData.innerCallData).isSameInstanceAs(enterWithNative)
+            Truth.assertThat(actual.amount).isEqualTo(Amount(value = BigDecimal.ONE, blockchain = Blockchain.Ethereum))
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN module that cannot take the coin WHEN createNativeEnterTransaction THEN throws`(
+            model: NativeRefusalModel,
+        ) = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+            coEvery { nativeWalletManager.checkModuleVersionStatus() } returns model.versionStatus
+
+            // Act
+            val actual = runCatching {
+                nativeRepository.createNativeEnterTransaction(userWalletId, ethereum, BigDecimal.ONE)
+            }.exceptionOrNull()
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(model.expected)
+            Truth.assertThat(actual).hasMessageThat().isEqualTo(model.expectedMessage)
+        }
+
+        @Test
+        fun `GIVEN no wallet manager WHEN createNativeEnterTransaction THEN throws`() = runTest {
+            // Arrange
+            coEvery {
+                nativeWalletManagersFacade.getOrCreateWalletManager(
+                    userWalletId,
+                    Blockchain.Ethereum,
+                    NATIVE_DERIVATION_PATH,
+                )
+            } returns null
+
+            // Act
+            val actual = runCatching {
+                nativeRepository.createNativeEnterTransaction(userWalletId, ethereum, BigDecimal.ONE)
+            }.exceptionOrNull()
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(IllegalStateException::class.java)
+            Truth.assertThat(actual).hasMessageThat().startsWith("Wallet manager not found for ")
+        }
+
+        private fun provideTestModels() = nativeRefusalModels()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreateNativeWithdrawTransaction {
+
+        @BeforeEach
+        fun resetMocks() = resetNativeMocks()
+
+        @Test
+        fun `GIVEN no amount WHEN createNativeWithdrawTransaction THEN withdraws everything and deactivates`() =
+            runTest {
+                // Arrange
+                coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+                coEvery { nativeWalletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
+
+                // Act
+                val actual = nativeRepository.createNativeWithdrawTransaction(userWalletId, ethereum, amount = null)
+
+                // Assert
+                Truth.assertThat(actual).isEqualTo(
+                    nativeTransaction(
+                        BigDecimal.ZERO,
+                        YieldSupplyContractCallDataProviderFactory.getExitNativeCallData(),
+                    ),
+                )
+            }
+
+        @Test
+        fun `GIVEN amount WHEN createNativeWithdrawTransaction THEN withdraws it in the coin with zero value`() =
+            runTest {
+                // Arrange
+                coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+                coEvery { nativeWalletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
+
+                // Act
+                val actual = nativeRepository.createNativeWithdrawTransaction(
+                    userWalletId = userWalletId,
+                    network = ethereum,
+                    amount = BigDecimal("0.5"),
+                )
+
+                // Assert
+                val callData = (actual.extras as EthereumTransactionExtras).callData
+                Truth.assertThat(callData).isInstanceOf(EthereumYieldSupplyWithdrawNativeCallData::class.java)
+                Truth.assertThat((callData as EthereumYieldSupplyWithdrawNativeCallData).amount)
+                    .isEqualTo(Amount(value = BigDecimal("0.5"), blockchain = Blockchain.Ethereum))
+                Truth.assertThat(actual.copy(extras = null)).isEqualTo(
+                    nativeTransaction(BigDecimal.ZERO, callData).copy(extras = null),
+                )
+            }
+
+        @Test
+        fun `GIVEN outdated module WHEN createNativeWithdrawTransaction THEN withdraw goes inside the upgrade`() =
+            runTest {
+                // Arrange
+                coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+                coEvery { nativeWalletManager.checkModuleVersionStatus() } returns upgradeAvailable()
+
+                // Act
+                val actual = nativeRepository.createNativeWithdrawTransaction(userWalletId, ethereum, amount = null)
+
+                // Assert
+                val callData = (actual.extras as EthereumTransactionExtras).callData
+                Truth.assertThat(callData).isInstanceOf(EthereumYieldSupplyUpgradeToAndCallCallData::class.java)
+                Truth.assertThat((callData as EthereumYieldSupplyUpgradeToAndCallCallData).innerCallData)
+                    .isSameInstanceAs(YieldSupplyContractCallDataProviderFactory.getExitNativeCallData())
+            }
+
+        @Test
+        fun `GIVEN outdated module and amount WHEN createNativeWithdrawTransaction THEN partial withdraw is upgraded`() =
+            runTest {
+                // Arrange
+                coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+                coEvery { nativeWalletManager.checkModuleVersionStatus() } returns upgradeAvailable()
+
+                // Act
+                val actual = nativeRepository.createNativeWithdrawTransaction(
+                    userWalletId = userWalletId,
+                    network = ethereum,
+                    amount = BigDecimal("0.5"),
+                )
+
+                // Assert
+                val callData = (actual.extras as EthereumTransactionExtras).callData
+                Truth.assertThat(callData).isInstanceOf(EthereumYieldSupplyUpgradeToAndCallCallData::class.java)
+                val innerCallData = (callData as EthereumYieldSupplyUpgradeToAndCallCallData).innerCallData
+                Truth.assertThat(innerCallData).isInstanceOf(EthereumYieldSupplyWithdrawNativeCallData::class.java)
+                Truth.assertThat((innerCallData as EthereumYieldSupplyWithdrawNativeCallData).amount)
+                    .isEqualTo(Amount(value = BigDecimal("0.5"), blockchain = Blockchain.Ethereum))
+                Truth.assertThat(actual.amount).isEqualTo(Amount(value = BigDecimal.ZERO, blockchain = Blockchain.Ethereum))
+            }
+
+        @Test
+        fun `GIVEN zero amount WHEN createNativeWithdrawTransaction THEN throws before reading the module`() = runTest {
+            // Act
+            val actual = runCatching {
+                nativeRepository.createNativeWithdrawTransaction(userWalletId, ethereum, amount = BigDecimal.ZERO)
+            }.exceptionOrNull()
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(IllegalArgumentException::class.java)
+            Truth.assertThat(actual).hasMessageThat().isEqualTo("Withdraw amount must be positive: 0")
+            coVerify(exactly = 0) { nativeWalletManager.getYieldModuleAddress() }
+        }
+
+        @Test
+        fun `GIVEN module not deployed WHEN createNativeWithdrawTransaction THEN throws`() = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.getYieldModuleAddress() } returns EthereumUtils.ZERO_ADDRESS
+
+            // Act
+            val actual = runCatching {
+                nativeRepository.createNativeWithdrawTransaction(userWalletId, ethereum, amount = null)
+            }.exceptionOrNull()
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(IllegalStateException::class.java)
+            Truth.assertThat(actual).hasMessageThat().startsWith("Yield module is not deployed on ")
+            coVerify(exactly = 0) { nativeWalletManager.calculateYieldModuleAddress() }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN module that cannot be called WHEN createNativeWithdrawTransaction THEN throws`(
+            model: NativeRefusalModel,
+        ) = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+            coEvery { nativeWalletManager.checkModuleVersionStatus() } returns model.versionStatus
+
+            // Act
+            val actual = runCatching {
+                nativeRepository.createNativeWithdrawTransaction(userWalletId, ethereum, amount = null)
+            }.exceptionOrNull()
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(model.expected)
+            Truth.assertThat(actual).hasMessageThat().isEqualTo(model.expectedMessage)
+        }
+
+        private fun provideTestModels() = nativeRefusalModels()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsEntrySuspended {
+
+        @BeforeEach
+        fun resetMocks() = resetNativeMocks()
+
+        @Test
+        fun `GIVEN suspended entry WHEN isEntrySuspended THEN true`() = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.isEntrySuspended(NATIVE_WETH_ADDRESS) } returns true
+
+            // Act
+            val actual = nativeRepository.isEntrySuspended(userWalletId, nativeWeth)
+
+            // Assert
+            Truth.assertThat(actual).isTrue()
+        }
+
+        @Test
+        fun `GIVEN read fails WHEN isEntrySuspended THEN throws`() = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.isEntrySuspended(NATIVE_WETH_ADDRESS) } throws IllegalStateException("rpc")
+
+            // Act
+            val actual = runCatching { nativeRepository.isEntrySuspended(userWalletId, nativeWeth) }.exceptionOrNull()
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(IllegalStateException::class.java)
+            Truth.assertThat(actual).hasMessageThat().isEqualTo("rpc")
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetWithdrawLiquidity {
+
+        @BeforeEach
+        fun resetMocks() = resetNativeMocks()
+
+        @Test
+        fun `GIVEN pool liquidity WHEN getWithdrawLiquidity THEN read in token decimals`() = runTest {
+            // Arrange
+            coEvery {
+                nativeWalletManager.getVirtualUnderlyingBalance(tokenContractAddress = NATIVE_WETH_ADDRESS, decimals = 18)
+            } returns BigDecimal("42.5")
+
+            // Act
+            val actual = nativeRepository.getWithdrawLiquidity(userWalletId, nativeWeth)
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(BigDecimal("42.5"))
+        }
+
+        @Test
+        fun `GIVEN read fails WHEN getWithdrawLiquidity THEN throws`() = runTest {
+            // Arrange
+            coEvery {
+                nativeWalletManager.getVirtualUnderlyingBalance(tokenContractAddress = any(), decimals = any())
+            } throws IllegalStateException("rpc")
+
+            // Act
+            val actual = runCatching { nativeRepository.getWithdrawLiquidity(userWalletId, nativeWeth) }
+                .exceptionOrNull()
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(IllegalStateException::class.java)
+            Truth.assertThat(actual).hasMessageThat().isEqualTo("rpc")
+        }
+    }
+
+    data class NativeRefusalModel(
+        val versionStatus: YieldModuleVersionStatus,
+        val expected: Class<out Throwable>,
+        val expectedMessage: String,
+    )
+
+    private fun nativeRefusalModels() = listOf(
+        NativeRefusalModel(
+            versionStatus = YieldModuleVersionStatus.UpgradeUnavailable(currentImplementation = OLD_IMPLEMENTATION),
+            expected = YieldModuleUpgradeUnavailableException::class.java,
+            expectedMessage = "Yield module is outdated (implementation: $OLD_IMPLEMENTATION) and cannot be upgraded",
+        ),
+        NativeRefusalModel(
+            versionStatus = YieldModuleVersionStatus.Indeterminate(reason = "rpc"),
+            expected = YieldModuleVersionIndeterminateException::class.java,
+            expectedMessage = "Yield module version cannot be determined: rpc",
+        ),
+    )
+
     data class TransactionOutcomeModel(
         val receipt: Result<EthereumTransactionReceipt?>,
         val expected: YieldSupplyTransactionOutcome?,
@@ -959,5 +1285,8 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         const val MODULE_ADDRESS = "0x2222222222222222222222222222222222222222"
         const val OLD_IMPLEMENTATION = "0x4444444444444444444444444444444444444444"
         const val LATEST_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
+        const val OWNER_ADDRESS = "0x6666666666666666666666666666666666666666"
+        const val NATIVE_WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        const val NATIVE_DERIVATION_PATH = "m/44'/60'/0'/0/0"
     }
 }

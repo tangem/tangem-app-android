@@ -13,7 +13,9 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.JointAccount
@@ -24,6 +26,7 @@ import com.tangem.domain.jointaccount.model.SafeInnerCall
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
+import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase.SubmitResult
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -37,6 +40,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -84,9 +89,11 @@ internal class JointSendDelegateTest {
             recipient = FIXTURE_RECIPIENT,
             amountWei = BigInteger("1000000000000000000"),
         )
+        val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe)
         coEvery {
-            createJointOperationUseCase(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
-        } returns Unit.right()
+            createJointOperationUseCase.prepare(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
+        } returns prepared.right()
+        coEvery { createJointOperationUseCase.submit(prepared) } returns SubmitResult.Created.right()
 
         // Act
         val actual = delegate.createOperation(
@@ -100,8 +107,82 @@ internal class JointSendDelegateTest {
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerify(exactly = 1) {
-            createJointOperationUseCase(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
+            createJointOperationUseCase.prepare(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
         }
+        coVerify(exactly = 1) { createJointOperationUseCase.submit(prepared) }
+    }
+
+    @Test
+    fun `GIVEN the retry rebuilt a risky payload WHEN the operation is created THEN the rebuilt one is submitted`() =
+        runTest {
+            // Arrange
+            val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe)
+            val rebuilt = prepared(verdict = JointOperationBlockaidGate.Verdict.Warning)
+            coEvery { createJointOperationUseCase.prepare(any(), any(), any(), any()) } returns prepared.right()
+            coEvery { createJointOperationUseCase.submit(prepared) } returns
+                SubmitResult.Rebuilt(prepared = rebuilt).right()
+            coEvery { createJointOperationUseCase.submit(rebuilt) } returns SubmitResult.Created.right()
+
+            // Act
+            val actual = delegate.createOperation(
+                account = mockk(),
+                currency = fixtureCoin,
+                amount = BigDecimal.ONE,
+                destinationUM = createDestinationContent(),
+                feeToken = null,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 1) { createJointOperationUseCase.submit(rebuilt) }
+        }
+
+    @Test
+    fun `GIVEN blockaid says malicious WHEN the operation is created THEN Malicious and nothing is submitted`() =
+        runTest {
+            // Arrange
+            val account: Account.Joint = mockk()
+            coEvery { createJointOperationUseCase.prepare(account, fixtureCoin.network, any(), SafeGasToken.Coin) } returns
+                prepared(verdict = JointOperationBlockaidGate.Verdict.Malicious).right()
+
+            // Act
+            val actual = delegate.createOperation(
+                account = account,
+                currency = fixtureCoin,
+                amount = BigDecimal.ONE,
+                destinationUM = createDestinationContent(),
+                feeToken = null,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(JointOperationCreateError.Malicious.left())
+            coVerify(exactly = 0) { createJointOperationUseCase.submit(any()) }
+        }
+
+    @ParameterizedTest
+    @MethodSource("submittedVerdicts")
+    fun `GIVEN a verdict short of malicious WHEN the operation is created THEN it is submitted`(
+        verdict: JointOperationBlockaidGate.Verdict,
+    ) = runTest {
+        // Arrange
+        val account: Account.Joint = mockk()
+        val prepared = prepared(verdict = verdict)
+        coEvery { createJointOperationUseCase.prepare(account, fixtureCoin.network, any(), SafeGasToken.Coin) } returns
+            prepared.right()
+        coEvery { createJointOperationUseCase.submit(prepared) } returns SubmitResult.Created.right()
+
+        // Act
+        val actual = delegate.createOperation(
+            account = account,
+            currency = fixtureCoin,
+            amount = BigDecimal.ONE,
+            destinationUM = createDestinationContent(),
+            feeToken = null,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 1) { createJointOperationUseCase.submit(prepared) }
     }
 
     @Test
@@ -118,7 +199,7 @@ internal class JointSendDelegateTest {
 
             // Assert
             assertThat(actual).isEqualTo(JointOperationCreateError.InvalidPayload.left())
-            coVerify(exactly = 0) { createJointOperationUseCase(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { createJointOperationUseCase.prepare(any(), any(), any(), any()) }
         }
 
     @Test
@@ -400,7 +481,10 @@ internal class JointSendDelegateTest {
         coEvery {
             gasTokenResolver.resolve(fixtureUsdc.network, fixtureUsdc.contractAddress, fixtureUsdc.id.rawCurrencyId)
         } returns gasToken.right()
-        coEvery { createJointOperationUseCase(account, fixtureUsdc.network, any(), gasToken) } returns Unit.right()
+        val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe)
+        coEvery { createJointOperationUseCase.prepare(account, fixtureUsdc.network, any(), gasToken) } returns
+            prepared.right()
+        coEvery { createJointOperationUseCase.submit(prepared) } returns SubmitResult.Created.right()
 
         // Act
         val actual = delegate.createOperation(
@@ -413,7 +497,7 @@ internal class JointSendDelegateTest {
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) { createJointOperationUseCase(account, fixtureUsdc.network, any(), gasToken) }
+        coVerify(exactly = 1) { createJointOperationUseCase.prepare(account, fixtureUsdc.network, any(), gasToken) }
     }
 
     @Test
@@ -434,7 +518,22 @@ internal class JointSendDelegateTest {
         assertThat(actual).isSameInstanceAs(stored)
     }
 
+    private fun prepared(verdict: JointOperationBlockaidGate.Verdict): PreparedJointOperation.Creation = mockk {
+        every { this@mockk.verdict } returns verdict
+    }
+
     private companion object {
+        @JvmStatic
+        fun submittedVerdicts() = listOf(
+            JointOperationBlockaidGate.Verdict.Safe,
+            JointOperationBlockaidGate.Verdict.Warning,
+            JointOperationBlockaidGate.Verdict.NoVerdict(JointOperationBlockaidGate.Verdict.NoVerdict.Reason.ERROR),
+            JointOperationBlockaidGate.Verdict.NoVerdict(JointOperationBlockaidGate.Verdict.NoVerdict.Reason.TIMEOUT),
+            JointOperationBlockaidGate.Verdict.NoVerdict(
+                JointOperationBlockaidGate.Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK,
+            ),
+        )
+
         val USDC_GAS_TOKEN = SafeGasToken.Token(
             address = fixtureUsdc.contractAddress,
             decimals = fixtureUsdc.decimals,

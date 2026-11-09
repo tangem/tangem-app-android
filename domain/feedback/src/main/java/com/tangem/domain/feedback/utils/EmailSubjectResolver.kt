@@ -4,7 +4,7 @@ import android.content.res.Resources
 import com.tangem.core.res.getStringSafe
 import com.tangem.domain.feedback.R
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 
 /**
  * Email subject resolver
@@ -42,19 +42,19 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             FeedbackEmailType.CardAttestationFailed -> "Card attestation failed"
             FeedbackEmailType.BiometricsAuthenticationFailed -> "Biometrics authentication failed"
             FeedbackEmailType.AppUpdateProblem -> resources.getStringSafe(R.string.feedback_subject_support_tangem)
-            is FeedbackEmailType.Visa.DirectUserRequest -> "[Visa] {auto-filled subject}"
-            is FeedbackEmailType.Visa.MoneyAccountRequest -> "[Visa] [USD ACCOUNT]"
-            is FeedbackEmailType.Visa.FailedIssueCard -> "[Visa] Failed to issue card"
-            is FeedbackEmailType.Visa.Dispute -> when (type.item) {
+            is FeedbackEmailType.TangemPay.DirectUserRequest -> "[Visa] {auto-filled subject}"
+            is FeedbackEmailType.TangemPay.MoneyAccountRequest -> "[Visa] [USD ACCOUNT]"
+            is FeedbackEmailType.TangemPay.FailedIssueCard -> "[Visa] Failed to issue card"
+            is FeedbackEmailType.TangemPay.Dispute -> when (type.item) {
                 is TangemPayTxHistoryItem.Collateral -> "[Visa] Deposit/withdrawal"
                 is TangemPayTxHistoryItem.Fee,
                 is TangemPayTxHistoryItem.Spend,
                 is TangemPayTxHistoryItem.Payment,
                 -> "[Visa] [PAYMENT] Help"
             }
-            is FeedbackEmailType.Visa.Withdrawal -> "[Visa] [WITHDRAWAL] {auto-filled subject}"
-            is FeedbackEmailType.Visa.FeatureIsBeta -> "[Visa] General help"
-            is FeedbackEmailType.Visa.KycRejected -> "Tangem Pay - [VISA] [KYC REJECTED]"
+            is FeedbackEmailType.TangemPay.Withdrawal -> "[Visa] [WITHDRAWAL] {auto-filled subject}"
+            is FeedbackEmailType.TangemPay.FeatureIsBeta -> "[Visa] General help"
+            is FeedbackEmailType.TangemPay.KycRejected -> "Tangem Pay - [VISA] [KYC REJECTED]"
         }
     }
 }

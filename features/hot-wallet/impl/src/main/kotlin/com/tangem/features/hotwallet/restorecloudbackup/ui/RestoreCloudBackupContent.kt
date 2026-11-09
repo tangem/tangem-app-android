@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
@@ -212,6 +213,16 @@ private fun BackupListScreen(
     ) {
         SpacerH(12.dp)
         state.items.forEach { row -> BackupRow(row) }
+        if (state.areAllAdded) {
+            Text(
+                text = stringResourceSafe(
+                    R.string.hw_cloud_backup_restore_all_added_hint,
+                    stringResourceSafe(R.string.hw_cloud_backup_service_name),
+                ),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
+        }
         SpacerH(contentPadding.calculateBottomPadding())
     }
 }
@@ -223,30 +234,21 @@ private fun BackupRow(row: BackupRowUM, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors3.bg.secondary)
-            .clickableSingle(onClick = row.onClick)
+            .clickableSingle(enabled = !row.isAlreadyAdded, onClick = row.onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(TangemTheme.colors3.bg.status.infoSubtle),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.ic_cloud_24_filled,
-                contentDescription = null,
-                tint = TangemTheme.colors3.icon.status.info,
-                modifier = Modifier.size(20.dp),
-            )
-        }
+        BackupRowIcon(isAlreadyAdded = row.isAlreadyAdded)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = row.walletName,
                 style = TangemTheme.typography3.body.medium,
-                color = TangemTheme.colors3.text.primary,
+                color = if (row.isAlreadyAdded) {
+                    TangemTheme.colors3.text.secondary
+                } else {
+                    TangemTheme.colors3.text.primary
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -262,11 +264,35 @@ private fun BackupRow(row: BackupRowUM, modifier: Modifier = Modifier) {
                 overflow = TextOverflow.Ellipsis,
             )
         }
+        if (row.isAlreadyAdded) {
+            TangemBadge(text = resourceReference(R.string.common_added))
+        } else {
+            Icon(
+                imageVector = Icons.ic_chevron_right_24,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.secondary,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun BackupRowIcon(isAlreadyAdded: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(
+                if (isAlreadyAdded) TangemTheme.colors3.bg.tertiary else TangemTheme.colors3.bg.status.infoSubtle,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
         Icon(
-            imageVector = Icons.ic_chevron_right_24,
+            imageVector = Icons.ic_cloud_24_filled,
             contentDescription = null,
-            tint = TangemTheme.colors3.icon.secondary,
-            modifier = Modifier.size(24.dp),
+            tint = if (isAlreadyAdded) TangemTheme.colors3.icon.tertiary else TangemTheme.colors3.icon.status.info,
+            modifier = Modifier.size(20.dp),
         )
     }
 }
@@ -340,8 +366,8 @@ private fun PreviewBackupList() {
         RestoreCloudBackupContent(
             state = RestoreCloudBackupUM.BackupList(
                 items = persistentListOf(
-                    BackupRowUM(walletName = "My Wallet", createdAtMillis = 0L, onClick = {}),
-                    BackupRowUM(walletName = "Savings", createdAtMillis = 1_000L, onClick = {}),
+                    BackupRowUM(walletName = "My Wallet", createdAtMillis = 0L, isAlreadyAdded = false, onClick = {}),
+                    BackupRowUM(walletName = "Savings", createdAtMillis = 1_000L, isAlreadyAdded = true, onClick = {}),
                 ),
                 accountEmail = "user@gmail.com",
                 onBack = {},

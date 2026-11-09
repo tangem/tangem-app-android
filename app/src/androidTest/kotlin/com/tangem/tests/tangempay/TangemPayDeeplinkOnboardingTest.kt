@@ -27,7 +27,7 @@ import org.junit.Test
 @HiltAndroidTest
 class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
 
-    private val onboardVisaDeeplink = "tangem://onboard-visa?entry=ff1&id=6USB3LU2"
+    private val onboardingDeeplink = "tangem://onboard-visa?entry=ff1&id=6USB3LU2"
     private val validateEndpoint = "/bff-v2/v1/deeplink/validate"
     private val residencyCountry = "United States"
     private val residencyRegion = "California"
@@ -35,7 +35,7 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
     @AllureId("9527")
     @DisplayName("Tangem Pay: onboard-visa deeplink validated as VALID opens Tangem Pay onboarding")
     @Test
-    fun onboardingOpensForValidOnboardVisaDeeplinkTest() {
+    fun onboardingOpensForValidDeeplinkTest() {
         val eligibilityStartedState = "Started"
         val validateValidState = "Started"
 
@@ -50,8 +50,8 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
                 openMainScreenWithNewHotWallet()
             }
             val validateRequestsBefore = getWireMockRequestCount("POST", validateEndpoint)
-            step("Open deeplink '$onboardVisaDeeplink'") {
-                openAppByDeepLink(onboardVisaDeeplink)
+            step("Open deeplink '$onboardingDeeplink'") {
+                openAppByDeepLink(onboardingDeeplink)
             }
             step("Assert Tangem Pay onboarding screen is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
@@ -71,7 +71,7 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
     @AllureId("10415")
     @DisplayName("Tangem Pay: onboard-visa deeplink validated as INVALID opens the region restriction screen")
     @Test
-    fun regionRestrictionOpensForInvalidOnboardVisaDeeplinkTest() {
+    fun regionRestrictionOpensForInvalidDeeplinkTest() {
         val eligibilityStartedState = "Started"
         val validateInvalidState = "Invalid"
 
@@ -86,8 +86,8 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
                 openMainScreenWithNewHotWallet()
             }
             val validateRequestsBefore = getWireMockRequestCount("POST", validateEndpoint)
-            step("Open deeplink '$onboardVisaDeeplink'") {
-                openAppByDeepLink(onboardVisaDeeplink)
+            step("Open deeplink '$onboardingDeeplink'") {
+                openAppByDeepLink(onboardingDeeplink)
             }
             step("Assert region restriction screen is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
@@ -128,8 +128,8 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
                 }
             }
             val validateRequestsBefore = getWireMockRequestCount("POST", validateEndpoint)
-            step("Open deeplink '$onboardVisaDeeplink'") {
-                openAppByDeepLink(onboardVisaDeeplink)
+            step("Open deeplink '$onboardingDeeplink'") {
+                openAppByDeepLink(onboardingDeeplink)
             }
             step("Assert 'Introduction' screen is displayed") {
                 waitForIdle()
@@ -168,8 +168,8 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
                 }
             }
             val validateRequestsBefore = getWireMockRequestCount("POST", validateEndpoint)
-            step("Open deeplink '$onboardVisaDeeplink'") {
-                openAppByDeepLink(onboardVisaDeeplink)
+            step("Open deeplink '$onboardingDeeplink'") {
+                openAppByDeepLink(onboardingDeeplink)
             }
             // Not openMainScreenWithNewHotWallet: the parked deeplink covers Main before its tooltip can be closed.
             step("Click on 'Create wallet' button") {

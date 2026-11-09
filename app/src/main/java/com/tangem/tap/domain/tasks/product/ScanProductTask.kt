@@ -17,7 +17,6 @@ import com.tangem.domain.card.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.common.TwinsHelper
-import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
@@ -120,7 +119,6 @@ internal class ScanProductTask(
         ) {
             return TapSdkError.CardNotSupportedByRelease()
         }
-        if (VisaUtilities.isVisaCard(cardDto)) return TangemSdkError.NotSupportedFirmwareVersion()
         return null
     }
 }

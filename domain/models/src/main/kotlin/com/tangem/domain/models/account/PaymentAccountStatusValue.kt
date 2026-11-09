@@ -5,8 +5,8 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCustomerResidency
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

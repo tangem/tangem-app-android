@@ -17,7 +17,7 @@ internal class SetAmountFractionTransformer(
         val amount = BuyAmountCalculator.fraction(
             balance = balance,
             fraction = fraction,
-            feeRate = prevState.lastFeeRate,
+            feeRate = BuyAmountCalculator.feeRate(quote = prevState.quote),
         )
 
         val value = amount.parseBigDecimal(decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS)

@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.deeplink
 
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.ProvideTestModels
 import org.joda.time.DateTime

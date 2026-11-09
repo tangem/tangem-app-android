@@ -11,7 +11,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.core.ui.res.generated.icons.ic_percent_backward_24
 import com.tangem.core.ui.utils.DateTimeFormatters
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter

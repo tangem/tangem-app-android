@@ -5,7 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayBankingDetailsErrorModelTest {
 
-    private val retry: suspend () -> Either<VisaApiError, Unit> = mockk()
+    private val retry: suspend () -> Either<TangemPayApiError, Unit> = mockk()
     private val onDismiss: () -> Unit = mockk(relaxed = true)
     private val onContactSupport: () -> Unit = mockk(relaxed = true)
 
@@ -54,7 +54,7 @@ internal class TangemPayBankingDetailsErrorModelTest {
     @Test
     fun `GIVEN retry fails WHEN retry clicked THEN loading reset`() = runTest {
         // Arrange
-        coEvery { retry() } returns VisaApiError.Unspecified.left()
+        coEvery { retry() } returns TangemPayApiError.Unspecified.left()
         val model = createModel()
 
         // Act
@@ -68,7 +68,7 @@ internal class TangemPayBankingDetailsErrorModelTest {
     @Test
     fun `GIVEN retry in flight WHEN retry clicked twice THEN retried once and loading shown`() = runTest {
         // Arrange
-        val pending = CompletableDeferred<Either<VisaApiError, Unit>>()
+        val pending = CompletableDeferred<Either<TangemPayApiError, Unit>>()
         coEvery { retry() } coAnswers { pending.await() }
         val model = createModel()
 

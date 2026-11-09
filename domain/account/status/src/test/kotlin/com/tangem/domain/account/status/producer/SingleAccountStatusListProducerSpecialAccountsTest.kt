@@ -20,7 +20,7 @@ import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
@@ -128,23 +128,6 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
     }
 
     @Test
-    fun `GIVEN polymarket is disabled WHEN produced THEN the prediction supplier is never subscribed`() = runTest {
-        // Arrange
-        val supplier = predictionSupplier(flowOf(PredictionAccountStatusValue.NotOnboarded))
-        val producer = createProducer(isPolymarketEnabled = false, predictionAccountStatusSupplier = supplier)
-
-        // Act
-        val statuses = getEmittedValues(producer.produce()).last().accountStatuses
-
-        // Assert — an account list holding a prediction account with the toggle off is only reachable if the
-        // toggle flips between the two producers' lifetimes, so the second assertion pins a defensive path
-        verify(inverse = true) { supplier.invoke(userWalletId = walletId) }
-        assertThat(statuses.filterIsInstance<AccountStatus.CryptoPortfolio>()).hasSize(1)
-        assertThat(statuses.filterIsInstance<AccountStatus.Prediction>().single().value)
-            .isEqualTo(PredictionAccountStatusValue.Error.Unavailable)
-    }
-
-    @Test
     fun `GIVEN a single-currency wallet WHEN produced THEN the prediction supplier is never subscribed`() = runTest {
         // Arrange — the wallet cannot hold the account, so its producer must not read storage or subscribe a quote
         val supplier = predictionSupplier(flowOf(PredictionAccountStatusValue.NotOnboarded))
@@ -219,7 +202,6 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
     private fun createProducer(
         predictionStatus: Flow<PredictionAccountStatusValue> = flowOf(PredictionAccountStatusValue.NotOnboarded),
         accounts: AccountList = accountListWithSpecialAccounts(),
-        isPolymarketEnabled: Boolean = true,
         predictionAccountStatusSupplier: PredictionAccountStatusSupplier = predictionSupplier(predictionStatus),
         isCollectiblesEnabled: Boolean = false,
         collectiblesStatus: Flow<CollectiblesAccountStatusValue> = flowOf(CollectiblesAccountStatusValue.NotOnboarded),
@@ -256,9 +238,6 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
                 )
             },
             predictionAccountStatusSupplier = predictionAccountStatusSupplier,
-            polymarketFeatureToggles = mockk {
-                every { this@mockk.isPolymarketEnabled } returns isPolymarketEnabled
-            },
             collectiblesAccountStatusSupplier = collectiblesAccountStatusSupplier,
             collectiblesFeatureToggles = mockk {
                 every { this@mockk.isCollectiblesEnabled } returns isCollectiblesEnabled

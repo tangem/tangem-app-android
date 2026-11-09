@@ -5,13 +5,13 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.test.mock.pay.MockBankCredentials
+import com.tangem.test.mock.tangempay.MockBankCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -101,13 +101,13 @@ internal class GetMoneyAccountBankCredentialsUseCaseTest {
     @Test
     fun `GIVEN customer info fails WHEN invoke THEN its error returned without credentials request`() = runTest {
         // Arrange
-        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns VisaApiError.ServerUnavailable.left()
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns TangemPayApiError.ServerUnavailable.left()
 
         // Act
         val actual = useCase(userWalletId, includeAllRails = false)
 
         // Assert
-        assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
+        assertThat(actual).isEqualTo(TangemPayApiError.ServerUnavailable.left())
         coVerify(exactly = 0) { onboardingRepository.getBankCredentials(any(), any()) }
     }
 
@@ -117,15 +117,15 @@ internal class GetMoneyAccountBankCredentialsUseCaseTest {
         // Arrange
         every { onboardingRepository.getSavedCustomerInfo(userWalletId) } returns customerInfo()
         coEvery { onboardingRepository.getBankCredentials(userWalletId, PRODUCT_INSTANCE_ID) } returns
-            VisaApiError.ServerUnavailable.left()
+            TangemPayApiError.ServerUnavailable.left()
         coEvery { onboardingRepository.getAllBankCredentials(userWalletId, PRODUCT_INSTANCE_ID) } returns
-            VisaApiError.ServerUnavailable.left()
+            TangemPayApiError.ServerUnavailable.left()
 
         // Act
         val actual = useCase(userWalletId, includeAllRails = includeAllRails)
 
         // Assert
-        assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
+        assertThat(actual).isEqualTo(TangemPayApiError.ServerUnavailable.left())
     }
 
     @Test
@@ -155,7 +155,7 @@ internal class GetMoneyAccountBankCredentialsUseCaseTest {
         val actual = useCase(userWalletId, includeAllRails = true)
 
         // Assert
-        assertThat(actual).isEqualTo(VisaApiError.ProductInstanceNotFoundActivationRequired.left())
+        assertThat(actual).isEqualTo(TangemPayApiError.ProductInstanceNotFoundActivationRequired.left())
         coVerify(exactly = 0) { onboardingRepository.getBankCredentials(any(), any()) }
         coVerify(exactly = 0) { onboardingRepository.getAllBankCredentials(any(), any()) }
     }

@@ -12,10 +12,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.account.isOrderRequired
-import com.tangem.domain.models.pay.TangemPayProduct
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
-import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
+import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.usecase.CreateVirtualAccountOrderUseCase
+import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.addfunds.VIRTUAL_ACCOUNT_TERMS_OF_USE_URL
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesLoader

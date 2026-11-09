@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
-import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 
 /**

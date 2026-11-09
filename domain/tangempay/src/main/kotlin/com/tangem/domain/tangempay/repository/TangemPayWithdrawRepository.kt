@@ -1,0 +1,32 @@
+package com.tangem.domain.tangempay.repository
+
+import arrow.core.Either
+import com.tangem.core.error.UniversalError
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.TangemPayWithdrawExchangeState
+import com.tangem.domain.tangempay.WithdrawalResult
+import java.math.BigDecimal
+
+interface TangemPayWithdrawRepository {
+
+    suspend fun withdrawWithSwap(
+        userWallet: UserWallet,
+        receiverAddress: String,
+        cryptoAmount: BigDecimal,
+        sourceCurrency: CryptoCurrency,
+        exchangeData: TangemPayWithdrawExchangeState,
+    ): Either<UniversalError, WithdrawalResult>
+
+    suspend fun withdraw(
+        userWallet: UserWallet,
+        receiverAddress: String,
+        cryptoAmount: BigDecimal,
+        sourceCurrency: CryptoCurrency,
+    ): Either<UniversalError, WithdrawalResult>
+
+    suspend fun hasWithdrawOrder(userWalletId: UserWalletId): Boolean
+
+    suspend fun pollWithdrawOrdersIfNeeds(userWallet: UserWallet)
+}

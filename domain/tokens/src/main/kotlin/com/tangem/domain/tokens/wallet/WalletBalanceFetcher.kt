@@ -16,8 +16,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
-import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
@@ -33,7 +33,6 @@ import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -72,7 +71,6 @@ class WalletBalanceFetcher internal constructor(
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
-    private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : FlowFetcher<WalletBalanceFetcher.Params> {
@@ -97,7 +95,6 @@ class WalletBalanceFetcher internal constructor(
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
-        polymarketFeatureToggles: PolymarketFeatureToggles,
         collectiblesFeatureToggles: CollectiblesFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
@@ -119,7 +116,6 @@ class WalletBalanceFetcher internal constructor(
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
-        polymarketFeatureToggles = polymarketFeatureToggles,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = dispatchers,
     )
@@ -144,7 +140,6 @@ class WalletBalanceFetcher internal constructor(
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
-        polymarketFeatureToggles: PolymarketFeatureToggles,
         collectiblesFeatureToggles: CollectiblesFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
@@ -173,7 +168,6 @@ class WalletBalanceFetcher internal constructor(
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
-        polymarketFeatureToggles = polymarketFeatureToggles,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = dispatchers,
     )
@@ -232,10 +226,7 @@ class WalletBalanceFetcher internal constructor(
                 paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
             }
 
-            if (
-                fetchingSources.any { it is WalletFetchingSource.Prediction } &&
-                polymarketFeatureToggles.isPolymarketEnabled
-            ) {
+            if (fetchingSources.any { it is WalletFetchingSource.Prediction }) {
                 launch { balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(PredictionCollateral.RAW_ID)) }
                 launch {
                     predictionAccountStatusFetcher.invoke(

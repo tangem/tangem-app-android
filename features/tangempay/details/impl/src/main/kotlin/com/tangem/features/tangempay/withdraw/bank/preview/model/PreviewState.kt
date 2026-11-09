@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.model
 
-import com.tangem.domain.pay.model.bankofframp.BankOfframpError
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.features.tangempay.withdraw.bank.preview.completion.CompletionState
 
 internal data class PreviewState(

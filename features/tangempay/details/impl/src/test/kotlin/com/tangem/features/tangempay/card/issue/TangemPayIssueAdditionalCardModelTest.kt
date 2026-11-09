@@ -9,10 +9,10 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.IssueAdditionalCardError
-import com.tangem.domain.pay.model.IssueAdditionalCardResult
-import com.tangem.domain.pay.usecase.IssueAdditionalCardUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.IssueAdditionalCardError
+import com.tangem.domain.tangempay.model.IssueAdditionalCardResult
+import com.tangem.domain.tangempay.usecase.IssueAdditionalCardUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.features.tangempay.payOrder
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -83,7 +83,7 @@ internal class TangemPayIssueAdditionalCardModelTest {
     fun `GIVEN generic error WHEN issue clicked THEN error shown AND sheet dismissed`() = runTest {
         // Arrange
         coEvery { issueAdditionalCard(USER_WALLET_ID, any()) } returns
-            IssueAdditionalCardError.Other(VisaApiError.Unspecified).left()
+            IssueAdditionalCardError.Other(TangemPayApiError.Unspecified).left()
         val model = createModel()
 
         // Act
@@ -98,7 +98,7 @@ internal class TangemPayIssueAdditionalCardModelTest {
     @ParameterizedTest
     @MethodSource(OUTCOME_UNKNOWN_ERRORS)
     fun `GIVEN outcome unknown WHEN issue clicked THEN sheet stays open AND loading reset`(
-        error: VisaApiError,
+        error: TangemPayApiError,
     ) = runTest {
         // Arrange
         coEvery { issueAdditionalCard(USER_WALLET_ID, any()) } returns IssueAdditionalCardError.Other(error).left()
@@ -118,7 +118,7 @@ internal class TangemPayIssueAdditionalCardModelTest {
     fun `GIVEN insufficient balance error WHEN issue clicked THEN add funds offered AND loading reset`() = runTest {
         // Arrange
         coEvery { issueAdditionalCard(USER_WALLET_ID, any()) } returns
-            IssueAdditionalCardError.Other(VisaApiError.CardIssueInsufficientBalance).left()
+            IssueAdditionalCardError.Other(TangemPayApiError.CardIssueInsufficientBalance).left()
         val model = createModel()
 
         // Act
@@ -136,7 +136,7 @@ internal class TangemPayIssueAdditionalCardModelTest {
         // Arrange
         val idempotencyKeys = mutableListOf<String>()
         coEvery { issueAdditionalCard(USER_WALLET_ID, capture(idempotencyKeys)) } returns
-            IssueAdditionalCardError.Other(VisaApiError.CardIssueInsufficientBalance).left()
+            IssueAdditionalCardError.Other(TangemPayApiError.CardIssueInsufficientBalance).left()
         val model = createModel()
         model.uiState.value.onIssueClick()
         advanceUntilIdle()
@@ -153,7 +153,7 @@ internal class TangemPayIssueAdditionalCardModelTest {
     @ParameterizedTest
     @MethodSource(OUTCOME_UNKNOWN_ERRORS)
     fun `GIVEN outcome unknown WHEN issue clicked again THEN the same idempotency key is reused`(
-        error: VisaApiError,
+        error: TangemPayApiError,
     ) = runTest {
         // Arrange
         val idempotencyKeys = mutableListOf<String>()

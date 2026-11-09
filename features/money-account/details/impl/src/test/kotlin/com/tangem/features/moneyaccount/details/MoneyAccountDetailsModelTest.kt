@@ -40,8 +40,8 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
@@ -49,7 +49,7 @@ import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
-import com.tangem.test.mock.pay.MockBankCredentials
+import com.tangem.test.mock.tangempay.MockBankCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -266,7 +266,7 @@ internal class MoneyAccountDetailsModelTest {
     fun `GIVEN credentials fail WHEN error sheet retried THEN error returned and the error sheet kept`() = runTest {
         // Arrange
         coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, false) } returns
-            VisaApiError.ServerUnavailable.left()
+            TangemPayApiError.ServerUnavailable.left()
         val model = createModel(activeAccount(balance = balance()))
         val openedSheets = model.bottomSheetNavigation.trackSlot()
         advanceUntilIdle()
@@ -276,7 +276,7 @@ internal class MoneyAccountDetailsModelTest {
         val actual = model.retryBankCredentials()
 
         // Assert
-        assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
+        assertThat(actual).isEqualTo(TangemPayApiError.ServerUnavailable.left())
         assertThat(openedSheets.last()).isEqualTo(MoneyAccountDetailsNavigation.BankDetailsError)
         verify(exactly = 0) { router.push(any(), any()) }
         model.onDestroy()
@@ -1136,7 +1136,7 @@ internal class MoneyAccountDetailsModelTest {
         amount = BigDecimal.ONE,
     )
 
-    private fun supportEmailType() = FeedbackEmailType.Visa.MoneyAccountRequest(
+    private fun supportEmailType() = FeedbackEmailType.TangemPay.MoneyAccountRequest(
         walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
         customerId = CUSTOMER_ID,
     )

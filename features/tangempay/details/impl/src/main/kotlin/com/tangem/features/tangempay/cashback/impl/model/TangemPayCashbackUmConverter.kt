@@ -10,7 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.pay.model.TangemPayCashback
+import com.tangem.domain.tangempay.model.TangemPayCashback
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
 import com.tangem.utils.extensions.isNegative
 import com.tangem.utils.extensions.isPositive

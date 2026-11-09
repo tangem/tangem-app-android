@@ -8,9 +8,9 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
-import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
 import com.tangem.features.tangempay.common.balanceOrNull
 import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount

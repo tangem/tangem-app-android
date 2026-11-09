@@ -7,6 +7,7 @@ import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResp
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CollectibleTxStatusConverterTest {
@@ -20,7 +21,25 @@ internal class CollectibleTxStatusConverterTest {
         val response = json.decodeFromString<CollectibleTxResponse>("""{"txId":"tx-id","status":"${model.wire}"}""")
 
         // Act
-        val actual = CollectibleTxStatusConverter.convert(response.status)
+        val actual = CollectibleTxStatusConverter.convert(response)
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @ParameterizedTest
+    @MethodSource("errorCodeModels")
+    fun `GIVEN a status with an error code WHEN converted THEN only the refund code makes it a refund`(
+        model: ErrorCodeModel,
+    ) {
+        // Arrange
+        val code = model.code?.let { ""","packOpeningErrorCode":"$it"""" }.orEmpty()
+        val response = json.decodeFromString<CollectibleTxResponse>(
+            """{"txId":"tx-id","status":"${model.wire}"$code}""",
+        )
+
+        // Act
+        val actual = CollectibleTxStatusConverter.convert(response)
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
@@ -28,10 +47,20 @@ internal class CollectibleTxStatusConverterTest {
 
     internal data class StatusModel(val wire: String, val expected: CollectibleTxStatus)
 
+    internal data class ErrorCodeModel(val wire: String, val code: String?, val expected: CollectibleTxStatus)
+
+    private fun errorCodeModels() = listOf(
+        ErrorCodeModel(wire = "pack-opening-error", code = "3999", expected = CollectibleTxStatus.REFUNDING),
+        ErrorCodeModel(wire = "pack-opening-error", code = "3120", expected = CollectibleTxStatus.PACK_OPENING_ERROR),
+        ErrorCodeModel(wire = "pack-opening-error", code = null, expected = CollectibleTxStatus.PACK_OPENING_ERROR),
+        ErrorCodeModel(wire = "pack-opening-error", code = "oops", expected = CollectibleTxStatus.PACK_OPENING_ERROR),
+        ErrorCodeModel(wire = "pack-purchased", code = "3999", expected = CollectibleTxStatus.PACK_PURCHASED),
+    )
+
     private fun provideTestModels() = listOf(
         StatusModel(wire = "created", expected = CollectibleTxStatus.CREATED),
         StatusModel(wire = "waiting-tx-hash", expected = CollectibleTxStatus.WAITING_TX_HASH),
-        StatusModel(wire = "purchase-tx-hash", expected = CollectibleTxStatus.PURCHASE_TX_HASH),
+        StatusModel(wire = "purchase-tx-sent", expected = CollectibleTxStatus.PURCHASE_TX_SENT),
         StatusModel(wire = "waiting-for-payment", expected = CollectibleTxStatus.WAITING_FOR_PAYMENT),
         StatusModel(wire = "pack-purchased", expected = CollectibleTxStatus.PACK_PURCHASED),
         StatusModel(wire = "pack-opening-error", expected = CollectibleTxStatus.PACK_OPENING_ERROR),

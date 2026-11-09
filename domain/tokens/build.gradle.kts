@@ -36,7 +36,7 @@ dependencies {
     api(projects.domain.quotes)
     api(projects.domain.staking)
     api(projects.domain.stories)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.walletManager)
     implementation(projects.domain.card)
     // endregion
@@ -54,7 +54,6 @@ dependencies {
     // region Features
     api(projects.features.moneyAccount.details.api) // AND_15325_MONEY_ACCOUNTS_ENABLED
     api(projects.features.collectibles.api) // TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED
-    api(projects.features.polymarket.api) // POLYMARKET_ENABLED
     // endregion
 
     // region Libs
