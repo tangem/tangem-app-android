@@ -16,6 +16,7 @@ import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.orderCard.impl.TangemPayReissuePlasticCardComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayReissuePlasticCardUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -29,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -112,7 +112,7 @@ internal class TangemPayReissuePlasticCardModelTest {
         }
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun `GIVEN incomplete data WHEN model created THEN error state`(model: LoadErrorModel) = runTest {
         // Arrange
         model.arrange()

@@ -3,16 +3,16 @@ package com.tangem.data.tangempay.util
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.tangempay.model.CashbackHistory
 import com.tangem.spend.datasource.tangempay.models.response.CashbackHistoryResponse
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CashbackHistoryConverterTest {
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun convert(model: ConvertModel) {
         // Act
         val actual = CashbackHistoryConverter.convert(model.response)
