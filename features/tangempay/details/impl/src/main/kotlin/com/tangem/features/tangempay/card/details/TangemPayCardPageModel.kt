@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.card.details
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Stable
 import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
@@ -53,6 +54,7 @@ import com.tangem.domain.tangempay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.closure.CloseCardListener
@@ -110,13 +112,13 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val cardAuthenticator: TangemPayCardAuthenticator,
     private val onboardingRepository: OnboardingRepository,
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     googleWalletControllerFactory: TangemPayAddToGoogleWalletController.Factory,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
 
     private val addFundsJobHolder = JobHolder()
-    private val changeFrozenStateJobHolder = JobHolder()
     private val reloadLimitsJobHolder = JobHolder()
     private val viewPinAuthJobHolder = JobHolder()
     private val frozenStateJobHolder = JobHolder()
@@ -126,6 +128,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val userWalletId = currentStatus.value.userWalletId
 
     private val deliveryEmail = MutableStateFlow(onboardingRepository.getSavedCustomerInfo(userWalletId)?.email)
+
+    private val frozenStateChangingCardIds = MutableStateFlow<Set<String>>(emptySet())
 
     private var isDeliveryDetailsShown = false
 
@@ -196,12 +200,14 @@ internal class TangemPayCardPageModel @Inject constructor(
             flow2 = selectedCardId,
             flow3 = deliveryEmail,
             flow4 = isDetailsShown,
-        ) { status, selectedId, email, isDetailsShown ->
+            flow5 = frozenStateChangingCardIds,
+        ) { status, selectedId, email, isDetailsShown, frozenStateChangingCardIds ->
             updateSelectedCardUi(
                 state = status,
                 selectedId = selectedId,
                 email = email,
                 isDetailsShown = isDetailsShown,
+                frozenStateChangingCardIds = frozenStateChangingCardIds,
             )
             openPendingActivation(status)
         }.launchIn(modelScope)
@@ -293,18 +299,24 @@ internal class TangemPayCardPageModel @Inject constructor(
         selectedId: String,
         email: String?,
         isDetailsShown: Boolean,
+        frozenStateChangingCardIds: Set<String>,
     ) {
         val status = state.value
         if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
             val card = status.findCardWithId(selectedId)
             googleWalletController.selectCard(card)
             if (card == null) return
-            googleWalletController.updateFrozenState(card.frozenState)
+            val frozenState = if (card.id in frozenStateChangingCardIds) {
+                TangemPayCardFrozenState.Pending
+            } else {
+                card.frozenState
+            }
+            googleWalletController.updateFrozenState(frozenState)
             if (card.state == TangemPayCardState.Delivering) loadDeliveryEmail()
             uiState.update { uiState ->
                 uiState.copy(
                     dailyLimitState = buildDailyLimitState(state),
-                    settings = status.buildSettings(card.frozenState, isDetailsShown),
+                    settings = status.buildSettings(frozenState, isDetailsShown),
                     menuItems = buildMenuItems(
                         isLastCard = status.cards.isLastCard(),
                         isAwaitingActivation = card.state.isAwaitingActivation,
@@ -319,7 +331,7 @@ internal class TangemPayCardPageModel @Inject constructor(
             uiState.update { it.copy(dailyLimitState = buildDailyLimitState(state)) }
         }
 
-        subscribeToCardFrozenState(selectedId)
+        if (!tangemPayFeatureToggles.isOrderFrameworkEnabled) subscribeToCardFrozenState(selectedId)
     }
 
     private fun buildDeliveryState(cardState: TangemPayCardState, email: String?): TangemPayCardDeliveryUM? {
@@ -428,7 +440,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                         R.string.tangem_pay_freeze_card_freeze
                     },
                 ),
-                onClick = { onClickFreezeOrUnfreezeCard(card.isFrozen) },
+                onClick = { onClickFreezeOrUnfreezeCard(cardId = card.id, isFrozen = card.isFrozen) },
                 iconRes = CoreUiR.drawable.ic_freeze_24,
                 testTag = TangemPayTestTags.FREEZE_CARD_ROW,
                 isLoading = frozenState == TangemPayCardFrozenState.Pending,
@@ -530,13 +542,13 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
-    private fun onClickFreezeOrUnfreezeCard(isFrozen: Boolean) {
-        if (changeFrozenStateJobHolder.isActive) return
+    private fun onClickFreezeOrUnfreezeCard(cardId: String, isFrozen: Boolean) {
+        if (cardId in frozenStateChangingCardIds.value) return
 
         val message = if (isFrozen) {
-            TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = ::unfreezeCard)
+            TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = { unfreezeCard(cardId) })
         } else {
-            TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = ::freezeCard)
+            TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = { freezeCard(cardId) })
         }
         uiMessageSender.send(message)
     }
@@ -716,38 +728,47 @@ internal class TangemPayCardPageModel @Inject constructor(
         bottomSheetNavigation.dismiss()
     }
 
-    private fun freezeCard() {
-        val card = selectedCard() ?: return
-        modelScope.launch {
-            changeCardFrozenStateUseCase(
-                userWalletId = userWalletId,
-                cardId = card.id,
-                isFreezing = true,
-            ).onLeft {
-                val message = SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed))
-                uiMessageSender.send(message)
-            }.onRight {
-                val message = SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_success))
-                uiMessageSender.send(message)
-            }
-        }.saveIn(changeFrozenStateJobHolder)
+    private fun freezeCard(cardId: String) {
+        changeFrozenState(
+            cardId = cardId,
+            isFreezing = true,
+            failedMessage = R.string.tangem_pay_freeze_card_failed,
+            successMessage = R.string.tangem_pay_freeze_card_success,
+        )
     }
 
-    private fun unfreezeCard() {
-        val card = selectedCard() ?: return
+    private fun unfreezeCard(cardId: String) {
+        changeFrozenState(
+            cardId = cardId,
+            isFreezing = false,
+            failedMessage = R.string.tangem_pay_unfreeze_card_failed,
+            successMessage = R.string.tangem_pay_unfreeze_card_success,
+        )
+    }
+
+    private fun changeFrozenState(
+        cardId: String,
+        isFreezing: Boolean,
+        @StringRes failedMessage: Int,
+        @StringRes successMessage: Int,
+    ) {
+        if (cardId in frozenStateChangingCardIds.value) return
+        frozenStateChangingCardIds.update { it + cardId }
         modelScope.launch {
-            changeCardFrozenStateUseCase(
-                userWalletId = userWalletId,
-                cardId = card.id,
-                isFreezing = false,
-            ).onLeft {
-                val message = SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed))
-                uiMessageSender.send(message)
-            }.onRight {
-                val message = SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_success))
-                uiMessageSender.send(message)
+            try {
+                changeCardFrozenStateUseCase(
+                    userWalletId = userWalletId,
+                    cardId = cardId,
+                    isFreezing = isFreezing,
+                ).onLeft {
+                    uiMessageSender.send(SnackbarMessage(resourceReference(failedMessage)))
+                }.onRight {
+                    uiMessageSender.send(SnackbarMessage(resourceReference(successMessage)))
+                }
+            } finally {
+                frozenStateChangingCardIds.update { it - cardId }
             }
-        }.saveIn(changeFrozenStateJobHolder)
+        }
     }
 
     private fun onClickAddToWallet() {

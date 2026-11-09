@@ -47,6 +47,7 @@ import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.store.entity.CashbackSummaryDM
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
@@ -280,12 +281,16 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideChangeCardFrozenStateUseCase(
             cardDetailsRepository: TangemPayCardDetailsRepository,
+            startOrderUseCase: StartOrderUseCase,
             startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            tangemPayFeatureToggles: TangemPayFeatureToggles,
             appCoroutineScope: AppCoroutineScope,
         ): ChangeCardFrozenStateUseCase {
             return ChangeCardFrozenStateUseCase(
                 cardDetailsRepository = cardDetailsRepository,
+                startOrderUseCase = startOrderUseCase,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                tangemPayFeatureToggles = tangemPayFeatureToggles,
                 appCoroutineScope = appCoroutineScope,
             )
         }

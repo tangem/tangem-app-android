@@ -38,6 +38,7 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.tangempay.models)
     implementation(projects.features.moneyAccount.details.api)
+    implementation(projects.features.tangempay.details.api)
     // endregion
 
     // region Libs
