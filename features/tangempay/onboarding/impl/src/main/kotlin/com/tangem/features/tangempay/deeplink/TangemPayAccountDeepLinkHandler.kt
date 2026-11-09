@@ -2,6 +2,8 @@ package com.tangem.features.tangempay.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.SCREEN_KEY
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.AccountStatus
@@ -12,30 +14,21 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class DefaultTangemPayAccountDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val scope: CoroutineScope,
-    @Assisted private val queryParams: Map<String, String>,
+internal class TangemPayAccountDeepLinkHandler @Inject constructor(
     private val appRouter: AppRouter,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
-) : TangemPayAccountDeepLinkHandler {
+) : DeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
+    override fun handle(request: DeepLinkRequest) {
+        val initialRoute = resolveInitialRoute(request.queryParams)
 
-    private fun handleDeepLink() {
-        val initialRoute = resolveInitialRoute()
-
-        scope.launch {
+        request.scope.launch {
             val userWallet = userWalletsListRepository.selectedUserWalletSync()
             if (userWallet == null || userWallet.isLocked) {
                 TangemLogger.i("$TAG: no unlocked selected wallet")
@@ -58,7 +51,7 @@ internal class DefaultTangemPayAccountDeepLinkHandler @AssistedInject constructo
         }
     }
 
-    private fun resolveInitialRoute(): TangemPayDetailsInitialRoute {
+    private fun resolveInitialRoute(queryParams: Map<String, String>): TangemPayDetailsInitialRoute {
         val screen = queryParams[SCREEN_KEY]?.takeIf(String::isNotBlank)
             ?: return TangemPayDetailsInitialRoute.ACCOUNT_DETAILS
 
@@ -95,14 +88,6 @@ internal class DefaultTangemPayAccountDeepLinkHandler @AssistedInject constructo
         is PaymentAccountStatusValue.Loaded,
         is PaymentAccountStatusValue.Deactivated,
         -> true
-    }
-
-    @AssistedFactory
-    interface Factory : TangemPayAccountDeepLinkHandler.Factory {
-        override fun create(
-            scope: CoroutineScope,
-            queryParams: Map<String, String>,
-        ): DefaultTangemPayAccountDeepLinkHandler
     }
 
     companion object {
