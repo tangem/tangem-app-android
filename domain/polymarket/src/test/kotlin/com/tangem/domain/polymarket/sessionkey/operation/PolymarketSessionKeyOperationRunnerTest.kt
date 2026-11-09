@@ -349,7 +349,7 @@ internal class PolymarketSessionKeyOperationRunnerTest {
         @Test
         fun `GIVEN revoke fails WHEN finished THEN the failure is not after revocation`() = runTest {
             // Arrange
-            val error = PolymarketSessionKeyLifecycleError.RevocationFailed(sessionKey = null)
+            val error = PolymarketSessionKeyLifecycleError.RevocationFailed(key(FOREIGN, PolymarketSessionKeyStatus.ACTIVE))
             every { manage.revoke(USER_WALLET_ID, FOREIGN) } returns flowOf(
                 PolymarketSessionKeyProgress.Signing,
                 PolymarketSessionKeyProgress.Revoking(key(FOREIGN, PolymarketSessionKeyStatus.REVOKING)),
