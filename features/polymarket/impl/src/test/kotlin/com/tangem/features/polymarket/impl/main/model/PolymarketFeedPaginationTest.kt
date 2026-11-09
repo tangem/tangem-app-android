@@ -28,7 +28,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -37,6 +40,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.job
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -258,7 +262,122 @@ internal class PolymarketFeedPaginationTest {
         assertThat(requests).hasSize(3)
     }
 
-    private fun TestScope.controller(sports: ObservePolymarketSportsStateUseCase? = null): PolymarketFeedController {
+    @Test
+    fun `GIVEN initial error and pending refresh WHEN reload is clicked THEN refresh stops and retry wins`() = runTest {
+        // Arrange
+        val controller = controller()
+        controller.select(games)
+        runCurrent()
+        requests.single().result.complete(BatchFetchResult.Error(IllegalStateException("Offline")))
+        runCurrent()
+        val refresh = backgroundScope.launch { controller.refresh() }
+        runCurrent()
+        val refreshRequest = requests.last()
+
+        // Act
+        (controller.content.value as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        runCurrent()
+        val refreshWasCancelled = refreshRequest.cancelled
+        requests.last().complete("retried")
+        runCurrent()
+        refreshRequest.complete("stale")
+        runCurrent()
+
+        // Assert
+        assertThat(refreshWasCancelled).isTrue()
+        assertThat(refresh.isCancelled).isTrue()
+        assertThat(controller.events()).containsExactly("retried")
+    }
+
+    @Test
+    fun `GIVEN pending refresh WHEN another refresh starts THEN only the latest request replaces the feed`() = runTest {
+        // Arrange
+        val controller = controller()
+        controller.select(games)
+        runCurrent()
+        requests.single().complete("old")
+        runCurrent()
+        val firstRefresh = backgroundScope.launch { controller.refresh() }
+        runCurrent()
+        val firstRequest = requests.last()
+
+        // Act
+        val secondRefresh = backgroundScope.launch { controller.refresh() }
+        runCurrent()
+        val firstWasCancelled = firstRequest.cancelled
+        requests.last().complete("latest")
+        runCurrent()
+        firstRequest.complete("stale")
+        runCurrent()
+
+        // Assert
+        assertThat(firstWasCancelled).isTrue()
+        assertThat(firstRefresh.isCancelled).isTrue()
+        assertThat(secondRefresh.isCompleted).isTrue()
+        assertThat(secondRefresh.isCancelled).isFalse()
+        assertThat(controller.events()).containsExactly("latest")
+    }
+
+    @Test
+    fun `GIVEN pending refresh WHEN caller cancels THEN current cards and pagination remain usable`() = runTest {
+        // Arrange
+        val controller = controller()
+        controller.select(games)
+        runCurrent()
+        requests.single().complete("old", cursor = "old-page-2")
+        runCurrent()
+        val refresh = backgroundScope.launch { controller.refresh() }
+        runCurrent()
+        val refreshRequest = requests.last()
+
+        // Act
+        refresh.cancel()
+        runCurrent()
+        val refreshWasCancelled = refreshRequest.cancelled
+        refreshRequest.complete("stale")
+        runCurrent()
+        controller.loadMore()
+        runCurrent()
+        val nextPage = requests.last()
+        nextPage.complete("next")
+        runCurrent()
+
+        // Assert
+        assertThat(refreshWasCancelled).isTrue()
+        assertThat(nextPage.cursor).isEqualTo("old-page-2")
+        assertThat(controller.events()).containsExactly("old", "next").inOrder()
+    }
+
+    @Test
+    fun `GIVEN pending page and refresh WHEN owner is destroyed THEN both requests are cancelled`() = runTest {
+        // Arrange
+        val owner = CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext.job))
+        val controller = controller(scope = owner)
+        controller.select(games)
+        runCurrent()
+        requests.single().complete("old", cursor = "page-2")
+        runCurrent()
+        controller.loadMore()
+        runCurrent()
+        val nextPage = requests.last()
+        val refresh = owner.launch { controller.refresh() }
+        runCurrent()
+        val refreshRequest = requests.last()
+
+        // Act
+        owner.cancel()
+        runCurrent()
+
+        // Assert
+        assertThat(nextPage.cancelled).isTrue()
+        assertThat(refreshRequest.cancelled).isTrue()
+        assertThat(refresh.isCancelled).isTrue()
+    }
+
+    private fun TestScope.controller(
+        sports: ObservePolymarketSportsStateUseCase? = null,
+        scope: CoroutineScope = backgroundScope,
+    ): PolymarketFeedController {
         val dispatchers = createTestingCoroutineDispatcherProvider()
         val getEvents = mockk<GetPolymarketEventsBatchFlowUseCase>()
         every { getEvents(any(), any(), any()) } answers {
@@ -271,7 +390,7 @@ internal class PolymarketFeedPaginationTest {
             ).toBatchFlow()
         }
         return PolymarketFeedController(
-            scope = backgroundScope,
+            scope = scope,
             dispatchers = dispatchers,
             userWalletId = UserWalletId("011"),
             getEvents = getEvents,

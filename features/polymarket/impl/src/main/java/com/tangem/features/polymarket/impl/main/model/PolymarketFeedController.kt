@@ -21,7 +21,7 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -121,6 +121,7 @@ internal class PolymarketFeedController(
 
     fun reload() {
         val feed = activeFeed.value ?: return
+        feedRefreshJob.cancel()
         hasRefreshError.value = false
         content.value = PolymarketMainUM.ContentUM.Loading
         scope.launch {
@@ -131,7 +132,8 @@ internal class PolymarketFeedController(
 
     /**
      * Keeps the current feed until its replacement loads successfully.
-     * A new refresh or [select] cancels this call, including footer retries; cancellation propagates to the caller.
+     * A new refresh, [reload] or [select] cancels this call, including footer retries.
+     * Cancellation propagates to the caller.
      */
     suspend fun refresh() = coroutineScope {
         val previous = activeEntry ?: return@coroutineScope
@@ -207,7 +209,7 @@ internal class PolymarketFeedController(
     }
 
     private fun createEntry(config: PolymarketEventsListConfig): Entry {
-        val feedScope = CoroutineScope(scope.coroutineContext + Job(scope.coroutineContext[Job]))
+        val feedScope = CoroutineScope(scope.coroutineContext + SupervisorJob(scope.coroutineContext.job))
         val actions = MutableSharedFlow<PolymarketEventsBatchAction>(replay = 1)
         val batches = getEvents(
             userWalletId = userWalletId,

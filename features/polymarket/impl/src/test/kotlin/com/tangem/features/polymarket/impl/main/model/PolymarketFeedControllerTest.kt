@@ -18,6 +18,7 @@ import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -80,6 +82,30 @@ internal class PolymarketFeedControllerTest {
         assertThat(feeds).hasSize(2)
         assertThat(feeds.map { it.actions.size }).containsExactly(1, 1)
         assertThat(feeds.map { it.scope.coroutineContext[Job]?.isActive }).containsExactly(true, true)
+    }
+
+    @Test
+    fun `GIVEN a feed WHEN a background task fails THEN other tasks can still handle reload`() = runTest {
+        // Arrange
+        val controller = controller(shouldCache = false)
+        controller.select(games)
+        runCurrent()
+        val feed = feeds.single()
+        val failure = IllegalStateException("Background task failed")
+        val errors = mutableListOf<Throwable>()
+
+        // Act
+        feed.scope.launch(CoroutineExceptionHandler { _, error -> errors += error }) { throw failure }
+        runCurrent()
+        controller.reload()
+        runCurrent()
+
+        // Assert
+        assertThat(errors).containsExactly(failure)
+        assertThat(feed.actions).containsExactly(
+            BatchAction.Reload(requestParams = games),
+            BatchAction.Reload(requestParams = games),
+        )
     }
 
     private fun TestScope.controller(shouldCache: Boolean): PolymarketFeedController {
