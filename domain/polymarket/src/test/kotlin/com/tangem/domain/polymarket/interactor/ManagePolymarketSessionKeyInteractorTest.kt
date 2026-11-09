@@ -25,6 +25,7 @@ import com.tangem.domain.polymarket.model.PolymarketSessionSigner
 import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.model.PolymarketSignedSessionKeyBatches
 import com.tangem.domain.polymarket.model.PolymarketSigningError
+import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
@@ -572,7 +573,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN the revoking key is dropped by the BFF WHEN renew THEN it counts as revoked and is authorized`() =
+        fun `GIVEN the revoking key is missing twice in a row WHEN renew THEN it is taken as revoked and authorized`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -585,7 +586,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     key(status = PolymarketSessionKeyStatus.REVOKING).right()
                 coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
                     key(status = PolymarketSessionKeyStatus.PENDING).right()
-                givenWalletReads(emptyList(), listOf(key()))
+                givenWalletReads(emptyList(), emptyList(), listOf(key()))
 
                 // Act
                 val actual = createInteractor().renew(USER_WALLET_ID).toList()
@@ -890,7 +891,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN the record of an unknown signer is dropped WHEN revoke THEN it counts as revoked`() = runTest {
+        fun `GIVEN an unknown signer the BFF never lists WHEN revoke THEN it counts as revoked`() = runTest {
             // Arrange
             val revocation = revocation(address = FOREIGN)
             givenSigned(nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(FOREIGN)), signed(revocation))
@@ -899,14 +900,109 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             givenWalletReads(emptyList())
 
             // Act
-            val actual = createInteractor().revoke(USER_WALLET_ID, FOREIGN).toList().last()
+            val actual = createInteractor().revoke(USER_WALLET_ID, FOREIGN).toList()
 
             // Assert
-            assertThat(actual).isEqualTo(
+            assertThat(actual).containsExactly(
+                PolymarketSessionKeyProgress.Signing,
+                PolymarketSessionKeyProgress.Revoking(key(address = FOREIGN, status = PolymarketSessionKeyStatus.REVOKING)),
                 PolymarketSessionKeyProgress.Finished(
                     key(address = FOREIGN, status = PolymarketSessionKeyStatus.REVOKED).right(),
                 ),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN the active key is missing twice in a row WHEN revoke THEN it counts as revoked`() = runTest {
+            // Arrange
+            givenSigned(nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY)), signed(revocation()))
+            coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation()) } returns
+                key(status = PolymarketSessionKeyStatus.REVOKING).right()
+            givenWalletReads(emptyList(), emptyList(), listOf(key()))
+
+            // Act
+            val actual = createInteractor().revoke(USER_WALLET_ID, KEY).toList()
+
+            // Assert
+            assertThat(actual).containsExactly(
+                PolymarketSessionKeyProgress.Signing,
+                PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                PolymarketSessionKeyProgress.Finished(key(status = PolymarketSessionKeyStatus.REVOKED).right()),
+            ).inOrder()
+            coVerify(exactly = 2) { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) }
+        }
+
+        @Test
+        fun `GIVEN the key is missing from one read and then listed WHEN revoke THEN the listed record settles it`() =
+            runTest {
+                // Arrange
+                givenSigned(nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY)), signed(revocation()))
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation()) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                givenWalletReads(
+                    emptyList(),
+                    listOf(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                    emptyList(),
+                    listOf(key(status = PolymarketSessionKeyStatus.REVOKED, isEnabled = false)),
+                )
+
+                // Act
+                val actual = createInteractor().revoke(USER_WALLET_ID, KEY).toList()
+
+                // Assert
+                assertThat(actual).containsExactly(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                    PolymarketSessionKeyProgress.Finished(
+                        key(status = PolymarketSessionKeyStatus.REVOKED, isEnabled = false).right(),
+                    ),
+                ).inOrder()
+            }
+
+        @Test
+        fun `GIVEN the key is missing from one read and then listed active WHEN revoke THEN the revocation failed`() =
+            runTest {
+                // Arrange
+                givenSigned(nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY)), signed(revocation()))
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation()) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                givenWalletReads(emptyList(), listOf(key()))
+
+                // Act
+                val actual = createInteractor().revoke(USER_WALLET_ID, KEY).toList()
+
+                // Assert
+                assertThat(actual).containsExactly(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.RevocationFailed(key()).left(),
+                    ),
+                ).inOrder()
+            }
+
+        @Test
+        fun `GIVEN a failed read between two reads without the key WHEN revoke THEN it counts as revoked`() = runTest {
+            // Arrange
+            givenSigned(nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY)), signed(revocation()))
+            coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation()) } returns
+                key(status = PolymarketSessionKeyStatus.REVOKING).right()
+            coEvery { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) } returnsMany listOf(
+                walletState(emptyList()).right(),
+                PolymarketWalletError.Network.left(),
+                walletState(emptyList()).right(),
+                walletState(listOf(key())).right(),
             )
+
+            // Act
+            val actual = createInteractor().revoke(USER_WALLET_ID, KEY).toList()
+
+            // Assert
+            assertThat(actual).containsExactly(
+                PolymarketSessionKeyProgress.Signing,
+                PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                PolymarketSessionKeyProgress.Finished(key(status = PolymarketSessionKeyStatus.REVOKED).right()),
+            ).inOrder()
         }
 
         @Test
@@ -1010,14 +1106,14 @@ internal class ManagePolymarketSessionKeyInteractorTest {
 
     private fun givenWalletReads(vararg sessionKeys: List<PolymarketSessionKey>) {
         coEvery { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) } returnsMany
-            sessionKeys.map { keys ->
-                PolymarketWalletState(
-                    depositWalletAddress = DEPOSIT_WALLET,
-                    status = PolymarketWalletStatus.READY_TO_TRADE,
-                    sessionKeys = keys,
-                ).right()
-            }
+            sessionKeys.map { keys -> walletState(keys).right() }
     }
+
+    private fun walletState(sessionKeys: List<PolymarketSessionKey>) = PolymarketWalletState(
+        depositWalletAddress = DEPOSIT_WALLET,
+        status = PolymarketWalletStatus.READY_TO_TRADE,
+        sessionKeys = sessionKeys,
+    )
 
     private class SchedulerClock(private val scheduler: TestCoroutineScheduler) : Clock() {
 

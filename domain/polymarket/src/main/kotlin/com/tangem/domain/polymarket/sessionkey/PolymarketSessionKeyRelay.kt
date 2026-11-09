@@ -40,11 +40,12 @@ internal class PolymarketSessionKeyRelay(
     }
 
     /**
-     * @return the key's latest record, still settling if the BFF never settled it, or `null` if the record of a
-     * key being revoked was dropped — a revocation of a signer the BFF did not know failed
+     * @return the key's latest record, still settling if the BFF never settled it, or the key taken as `REVOKED` once
+     * the BFF dropped its record while revoking it: missing from [DROPPED_READS] successful reads in a row
      */
-    suspend fun settle(userWalletId: UserWalletId, submitted: PolymarketSessionKey): PolymarketSessionKey? {
+    suspend fun settle(userWalletId: UserWalletId, submitted: PolymarketSessionKey): PolymarketSessionKey {
         var latest = submitted
+        var readsWithoutRecord = 0
         repeat(SETTLE_ATTEMPTS) {
             if (!latest.status.isSettling()) return latest
             delay(POLL_INTERVAL)
@@ -53,10 +54,14 @@ internal class PolymarketSessionKeyRelay(
                 .onRight { state ->
                     val record = state.sessionKeys.firstOrNull { it.address.equals(submitted.address, true) }
                     when {
-                        record != null -> latest = record
-                        latest.status == PolymarketSessionKeyStatus.REVOKING -> return null
+                        record != null -> {
+                            latest = record
+                            readsWithoutRecord = 0
+                        }
+                        latest.status == PolymarketSessionKeyStatus.REVOKING -> readsWithoutRecord++
                     }
                 }
+            if (readsWithoutRecord == DROPPED_READS) return latest.droppedWhileRevoking()
         }
         return latest
     }
@@ -71,6 +76,11 @@ internal class PolymarketSessionKeyRelay(
             if (signers.orEmpty().any { it.lists(sessionKey, now = clock.instant()) }) return true
         }
         return false
+    }
+
+    private fun PolymarketSessionKey.droppedWhileRevoking(): PolymarketSessionKey {
+        TangemLogger.i("Polymarket session key $address dropped while revoking, taken as revoked")
+        return copy(status = PolymarketSessionKeyStatus.REVOKED)
     }
 
     private suspend fun resendUnanswered(
@@ -93,6 +103,7 @@ internal class PolymarketSessionKeyRelay(
         val POLL_INTERVAL: Duration = 3.seconds
         private val SETTLE_TIMEOUT: Duration = 35.minutes
         private val SETTLE_ATTEMPTS = (SETTLE_TIMEOUT / POLL_INTERVAL).toInt()
+        private const val DROPPED_READS = 2
         private const val LISTING_ATTEMPTS = 20
         private const val RESEND_ATTEMPTS = 3
     }
