@@ -2,6 +2,7 @@ package com.tangem.tap.common.analytics.appsflyer
 
 import com.tangem.core.analytics.api.AppsFlyerDeepLink
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
@@ -19,14 +20,16 @@ import org.junit.jupiter.params.ParameterizedTest
 class AppsFlyerReferralParamsHandlerTest {
 
     private val appsFlyerRepository: AppsFlyerRepository = mockk(relaxUnitFun = true)
+    private val marketingUidBindingRepository: MarketingUidBindingRepository = mockk(relaxUnitFun = true)
 
     private lateinit var handler: AppsFlyerReferralParamsHandler
 
     @BeforeEach
     fun setUp() {
-        clearMocks(appsFlyerRepository)
+        clearMocks(appsFlyerRepository, marketingUidBindingRepository)
         handler = AppsFlyerReferralParamsHandler(
             appsFlyerRepository = appsFlyerRepository,
+            marketingUidBindingRepository = marketingUidBindingRepository,
             coroutineScope = TestAppCoroutineScope(),
         )
     }
@@ -645,10 +648,115 @@ class AppsFlyerReferralParamsHandlerTest {
         val expectedStored: String? = null,
     )
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class MarketingUidBinding {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN deep_link_sub3 WHEN handle THEN valid uid bound for any deep_link_value`(model: UidModel) =
+            runTest {
+                // Act
+                model.handle(handler)
+
+                // Assert
+                val expectedUid = model.expectedUid
+                if (expectedUid == null) {
+                    coVerify(inverse = true) { marketingUidBindingRepository.bind(any()) }
+                } else {
+                    coVerify(exactly = 1) { marketingUidBindingRepository.bind(expectedUid) }
+                }
+            }
+
+        private fun provideTestModels(): List<UidModel> = listOf(
+            UidModel.Udl(createDeepLink(deepLinkValue = "referral", uid = UID), expectedUid = UID),
+            UidModel.Udl(createDeepLink(deepLinkValue = "tpay_mobileonboard", uid = UID), expectedUid = UID),
+            UidModel.Udl(createDeepLink(deepLinkValue = "some_other_deep_link_value", uid = UID), expectedUid = UID),
+            UidModel.Udl(createDeepLink(deepLinkValue = null, uid = UID), expectedUid = UID),
+            UidModel.Udl(createDeepLink(deepLinkValue = "referral", uid = UID, isDeferred = true), expectedUid = UID),
+            UidModel.Udl(createDeepLink(deepLinkValue = "referral", uid = " $UID "), expectedUid = UID),
+            UidModel.Udl(createDeepLink(deepLinkValue = "referral", uid = null), expectedUid = null),
+            UidModel.Udl(createDeepLink(deepLinkValue = "referral", uid = ""), expectedUid = null),
+            UidModel.Udl(createDeepLink(deepLinkValue = "referral", uid = " "), expectedUid = null),
+            UidModel.Udl(createDeepLink(deepLinkValue = "referral", uid = "null"), expectedUid = null),
+            UidModel.ConversionData(conversionData(deepLinkValue = "referral", uid = UID), expectedUid = UID),
+            UidModel.ConversionData(conversionData(uid = UID), expectedUid = UID),
+            UidModel.ConversionData(conversionData(uid = UID, isFirstLaunch = false), expectedUid = null),
+        )
+
+        @Test
+        fun `GIVEN deferred udl link with uid WHEN conversion data follows THEN uid bound once`() = runTest {
+            // Arrange
+            handler.handle(createDeepLink(deepLinkValue = null, uid = UID, isDeferred = true))
+
+            // Act
+            handler.handle(conversionData = conversionData(uid = UID))
+
+            // Assert
+            coVerify(exactly = 1) { marketingUidBindingRepository.bind(UID) }
+        }
+
+        @Test
+        fun `GIVEN conversion data with uid WHEN deferred udl link follows THEN uid bound once`() = runTest {
+            // Arrange
+            handler.handle(conversionData = conversionData(uid = UID))
+
+            // Act
+            handler.handle(createDeepLink(deepLinkValue = null, uid = UID, isDeferred = true))
+
+            // Assert
+            coVerify(exactly = 1) { marketingUidBindingRepository.bind(UID) }
+        }
+
+        @Test
+        fun `GIVEN deferred udl link without uid handled WHEN conversion data with uid follows THEN uid bound`() =
+            runTest {
+                // Arrange
+                handler.handle(createDeepLink(deepLinkValue = "referral", uid = null, isDeferred = true))
+
+                // Act
+                handler.handle(conversionData = conversionData(deepLinkValue = "referral", uid = UID))
+
+                // Assert
+                coVerify(exactly = 1) { marketingUidBindingRepository.bind(UID) }
+                coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink("referral") }
+            }
+
+        @Test
+        fun `GIVEN links with different uids WHEN handle THEN each uid bound`() = runTest {
+            // Act
+            handler.handle(createDeepLink(deepLinkValue = "referral", uid = UID))
+            handler.handle(createDeepLink(deepLinkValue = "referral", uid = OTHER_UID))
+
+            // Assert
+            coVerify(exactly = 1) { marketingUidBindingRepository.bind(UID) }
+            coVerify(exactly = 1) { marketingUidBindingRepository.bind(OTHER_UID) }
+        }
+    }
+
+    sealed interface UidModel {
+
+        val expectedUid: String?
+
+        fun handle(handler: AppsFlyerReferralParamsHandler)
+
+        data class Udl(val deepLink: AppsFlyerDeepLink, override val expectedUid: String?) : UidModel {
+            override fun handle(handler: AppsFlyerReferralParamsHandler) = handler.handle(deepLink = deepLink)
+        }
+
+        data class ConversionData(
+            val params: Map<String?, Any?>,
+            override val expectedUid: String?,
+        ) : UidModel {
+            override fun handle(handler: AppsFlyerReferralParamsHandler) = handler.handle(conversionData = params)
+        }
+    }
+
     private fun createDeepLink(
         deepLinkValue: String?,
         refcode: String? = null,
         campaign: String? = null,
+        uid: String? = null,
         afDp: String? = null,
         isDeferred: Boolean? = false,
     ): AppsFlyerDeepLink = AppsFlyerDeepLink(
@@ -656,6 +764,7 @@ class AppsFlyerReferralParamsHandlerTest {
         afDp = afDp,
         deepLinkSub1 = refcode,
         deepLinkSub2 = campaign,
+        deepLinkSub3 = uid,
         isDeferred = isDeferred,
     )
 
@@ -663,12 +772,14 @@ class AppsFlyerReferralParamsHandlerTest {
         deepLinkValue: String? = null,
         refcode: String? = null,
         campaign: String? = null,
+        uid: String? = null,
         isFirstLaunch: Any = true,
     ): Map<String?, Any?> = buildMap {
         put("is_first_launch", isFirstLaunch)
         deepLinkValue?.let { put("deep_link_value", it) }
         refcode?.let { put("deep_link_sub1", it) }
         campaign?.let { put("deep_link_sub2", it) }
+        uid?.let { put("deep_link_sub3", it) }
     }
 
     private companion object Companion {
@@ -676,5 +787,7 @@ class AppsFlyerReferralParamsHandlerTest {
         const val SUCCESS_CAMPAIGN = "valid_campaign"
         const val CAMPAIGN_VALUE = "tpay_for_oxford"
         const val DIRECT_URI = "tangem://onboard-visa"
+        const val UID = "6a43ab1e856b0d6f"
+        const val OTHER_UID = "0f1e2d3c4b5a6978"
     }
 }
