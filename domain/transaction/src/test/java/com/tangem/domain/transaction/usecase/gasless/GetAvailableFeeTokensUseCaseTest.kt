@@ -76,6 +76,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
         private fun createStatus(yieldSupplyStatus: YieldSupplyStatus?): CryptoCurrencyStatus {
             val status = mockk<CryptoCurrencyStatus>()
             every { status.value.yieldSupplyStatus } returns yieldSupplyStatus
+            every { status.value.contributions } returns emptyList()
             return status
         }
     }

@@ -1110,6 +1110,7 @@ class TokenFeeCalculatorTest {
         every { status.value.amount } returns balance
         every { status.value.fiatRate } returns fiatRate
         every { status.value.yieldSupplyStatus } returns null
+        every { status.value.contributions } returns emptyList()
 
         return status
     }
@@ -1126,6 +1127,7 @@ class TokenFeeCalculatorTest {
         every { newStatus.value.amount } returns original.value.amount
         every { newStatus.value.fiatRate } returns original.value.fiatRate
         every { newStatus.value.yieldSupplyStatus } returns yieldSupplyStatus
+        every { newStatus.value.contributions } returns emptyList()
         return newStatus
     }
 
@@ -1142,6 +1144,7 @@ class TokenFeeCalculatorTest {
         every { status.currency } returns coin
         every { status.value.fiatRate } returns fiatRate
         every { status.value.yieldSupplyStatus } returns null
+        every { status.value.contributions } returns emptyList()
 
         return status
     }

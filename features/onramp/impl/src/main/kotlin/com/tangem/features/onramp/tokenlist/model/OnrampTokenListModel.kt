@@ -22,6 +22,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.tokens.GetAssetRequirementsUseCase
@@ -311,7 +312,7 @@ internal class OnrampTokenListModel @Inject constructor(
             OnrampOperation.SWAP -> {
                 val isAvailable = !status.currency.isCustom
 
-                val supplyStatus = status.value.yieldSupplyStatus
+                val supplyStatus = status.value.yieldSupply
                 val isUnavailableByYieldSupply = supplyStatus?.isAllowedToSpend == false && supplyStatus.isActive
 
                 isAvailable && status.value !is CryptoCurrencyStatus.NoQuote && !isUnavailableByYieldSupply
