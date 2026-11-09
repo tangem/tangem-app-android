@@ -30,4 +30,5 @@
     <string name="backend_auth_status" translatable="false">Backend Auth</string>
     <string name="social_login" translatable="false">Social Login</string>
     <string name="sell_redirect_generator" translatable="false">Sell Redirect DeepLink</string>
+    <string name="earn_flow" translatable="false">Earn flow</string>
 </resources>
