@@ -5,8 +5,10 @@ import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCas
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.tangempay.usecase.RestoreActiveCardOrdersUseCase
+import com.tangem.domain.tangempay.usecase.order.RestoreOrdersUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -19,6 +21,8 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val restoreActiveCardOrdersUseCase: RestoreActiveCardOrdersUseCase,
+    private val restoreOrdersUseCase: RestoreOrdersUseCase,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val pollTangemPayAccountStatusesUseCase: PollTangemPayAccountStatusesUseCase,
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
@@ -32,6 +36,11 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
         }
         launch {
             restoreActiveCardOrdersUseCase(userWallet.walletId)
+        }
+        if (tangemPayFeatureToggles.isOrderFrameworkEnabled) {
+            launch {
+                restoreOrdersUseCase(userWallet.walletId)
+            }
         }
         if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
             pollTangemPayAccountStatusesUseCase(userWallet.walletId).launchIn(this)
