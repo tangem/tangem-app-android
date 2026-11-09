@@ -562,12 +562,73 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             assertThat(actual).containsExactly(
                 PolymarketSessionKeyProgress.Signing,
                 PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                PolymarketSessionKeyProgress.Revoked(key(status = PolymarketSessionKeyStatus.REVOKED)),
                 PolymarketSessionKeyProgress.Authorizing(key(status = PolymarketSessionKeyStatus.PENDING)),
                 PolymarketSessionKeyProgress.CheckingReadiness(key()),
                 PolymarketSessionKeyProgress.Finished(key().right()),
             ).inOrder()
             coVerify(exactly = 1) { signBatches(any(), any()) }
             coVerify(exactly = 1) { tradingStore.markReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) }
+        }
+
+        @Test
+        fun `GIVEN the revoking key is dropped by the BFF WHEN renew THEN it counts as revoked and is authorized`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                val authorization = authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(emptyList(), listOf(key()))
+
+                // Act
+                val actual = createInteractor().renew(USER_WALLET_ID).toList()
+
+                // Assert
+                assertThat(actual).containsExactly(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                    PolymarketSessionKeyProgress.Revoked(key(status = PolymarketSessionKeyStatus.REVOKED)),
+                    PolymarketSessionKeyProgress.Authorizing(key(status = PolymarketSessionKeyStatus.PENDING)),
+                    PolymarketSessionKeyProgress.CheckingReadiness(key()),
+                    PolymarketSessionKeyProgress.Finished(key().right()),
+                ).inOrder()
+                coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) }
+            }
+
+        @Test
+        fun `GIVEN the authorization fails after the revocation WHEN renew THEN revoked is reported first`() = runTest {
+            // Arrange
+            val revocation = revocation(nonce = "7")
+            val authorization = authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)
+            givenSigned(
+                nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                signed(revocation, authorization),
+            )
+            coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                key(status = PolymarketSessionKeyStatus.REVOKING).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
+                PolymarketSessionKeyError.SessionKeyLimitReached.left()
+            givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)))
+
+            // Act
+            val actual = createInteractor().renew(USER_WALLET_ID).toList()
+
+            // Assert
+            assertThat(actual).containsExactly(
+                PolymarketSessionKeyProgress.Signing,
+                PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                PolymarketSessionKeyProgress.Revoked(key(status = PolymarketSessionKeyStatus.REVOKED)),
+                PolymarketSessionKeyProgress.Finished(
+                    PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.SessionKeyLimitReached).left(),
+                ),
+            ).inOrder()
         }
 
         @Test
@@ -679,12 +740,14 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             givenWalletReads(listOf(key()))
 
             // Act
-            val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+            val actual = createInteractor().renew(USER_WALLET_ID).toList()
 
             // Assert
-            assertThat(actual).isEqualTo(
+            assertThat(actual).containsExactly(
+                PolymarketSessionKeyProgress.Signing,
+                PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
                 PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.RevocationFailed(key()).left()),
-            )
+            ).inOrder()
             coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
         }
 
@@ -752,10 +815,15 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 val replacement = PolymarketSessionKeyDeviceState.Replace.ByRevocation(key(address = PREVIOUS))
 
                 // Act
-                val actual = createInteractor().replace(USER_WALLET_ID, replacement).toList().last()
+                val actual = createInteractor().replace(USER_WALLET_ID, replacement).toList()
 
                 // Assert
-                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                assertThat(actual).containsAtLeast(
+                    PolymarketSessionKeyProgress.Revoked(
+                        key(address = PREVIOUS, status = PolymarketSessionKeyStatus.REVOKED),
+                    ),
+                    PolymarketSessionKeyProgress.Finished(key().right()),
+                ).inOrder()
                 coVerify(exactly = 1) { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) }
             }
 
