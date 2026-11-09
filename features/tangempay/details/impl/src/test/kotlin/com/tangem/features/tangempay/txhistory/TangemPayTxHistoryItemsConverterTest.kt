@@ -17,6 +17,7 @@ import com.tangem.features.tangempay.spendTransaction
 import io.mockk.mockk
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -80,6 +81,38 @@ internal class TangemPayTxHistoryItemsConverterTest {
             time = actual.time,
         )
         assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN https merchant icon WHEN convert THEN icon is loaded from the url`() {
+        // Arrange
+        val converter = TangemPayTxHistoryItemsConverter(txHistoryUiActions = uiActions)
+
+        // Act
+        val actual = converter.convert(spendTransaction(enrichedMerchantIconUrl = HTTPS_ICON_URL))
+
+        // Assert
+        assertThat(actual.icon)
+            .isEqualTo(TangemIconUM.Url(url = HTTPS_ICON_URL, fallbackRes = R.drawable.ic_category_24))
+    }
+
+    @Test
+    fun `GIVEN non-https merchant icon WHEN convert THEN category icon is shown`() {
+        // Arrange
+        val converter = TangemPayTxHistoryItemsConverter(txHistoryUiActions = uiActions)
+
+        // Act
+        val actual = converter.convert(spendTransaction(enrichedMerchantIconUrl = HTTP_ICON_URL))
+
+        // Assert
+        val icon = actual.icon
+        assertThat(icon).isInstanceOf(TangemIconUM.Icon::class.java)
+        assertThat(icon).isEqualTo(
+            TangemIconUM.Icon(
+                iconRes = R.drawable.ic_category_24,
+                tintReference = requireNotNull((icon as TangemIconUM.Icon).tint),
+            ),
+        )
     }
 
     data class CashbackModel(
@@ -196,4 +229,9 @@ internal class TangemPayTxHistoryItemsConverterTest {
             expected = null,
         ),
     )
+
+    private companion object {
+        const val HTTPS_ICON_URL = "https://images.us.paera.com/merchant.png"
+        const val HTTP_ICON_URL = "http://images.us.paera.com/merchant.png"
+    }
 }

@@ -190,6 +190,18 @@ internal class TangemPaySelectPlanModelTest {
     }
 
     @Test
+    fun `GIVEN markdown link to app deep link WHEN onLinkClick THEN nothing is opened`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.state.value.onLinkClick("tangem://wc?uri=wc:topic@2?relay-protocol=irn&symKey=secret")
+
+        // Assert
+        verify(exactly = 0) { urlOpener.openUrl(any()) }
+    }
+
+    @Test
     fun `GIVEN new index WHEN onPlanSelected THEN selectedIndex updates and swipe analytics sent`() {
         // GIVEN
         val model = createModel()
