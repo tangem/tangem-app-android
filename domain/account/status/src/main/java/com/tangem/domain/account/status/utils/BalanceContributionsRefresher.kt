@@ -1,6 +1,6 @@
 package com.tangem.domain.account.status.utils
 
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.BalanceFetchingOperations
@@ -16,8 +16,8 @@ import com.tangem.utils.logging.TangemLogger
  * A send can change a contribution, not only the network balance: a yield-active token withdraws the shortfall from
  * its Yield Module.
  */
-class NetworkContributionsRefresher(
-    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+class BalanceContributionsRefresher(
+    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val balanceFetchingOperations: BalanceFetchingOperations,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
@@ -26,9 +26,8 @@ class NetworkContributionsRefresher(
         // Without the toggle CONTRIBUTIONS is the legacy staking fetch, which this refresh never triggered
         if (!tokensFeatureToggles.isPluggableBalanceSourcesEnabled) return
 
-        val currencies = singleAccountStatusListSupplier.getSyncOrNull(userWalletId)
+        val currencies = singleAccountListSupplier.getSyncOrNull(userWalletId)
             ?.flattenCurrencies()
-            ?.map { it.currency }
             ?.filter { it.network.id == network.id }
 
         if (currencies.isNullOrEmpty()) return
