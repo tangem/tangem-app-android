@@ -320,6 +320,7 @@ dependencies {
     implementation(projects.features.earn.impl)
     implementation(projects.features.earn.flow.impl)
     implementation(projects.features.earn.staking.impl)
+    implementation(projects.features.earn.yield.impl)
     implementation(projects.features.forceUpdate.api)
     implementation(projects.features.forceUpdate.impl)
     implementation(projects.features.pushNotifications.api)
