@@ -113,6 +113,7 @@ object PolymarketSessionKeyAssessor {
         return PolymarketSessionKeyReconciliation.Checked(
             foreignSigners = signers.filter { it.isForeign(snapshot) },
             missingOnExchange = missingOnExchange,
+            listedSigners = signers.mapTo(mutableSetOf()) { it.address.lowercase() },
         )
     }
 

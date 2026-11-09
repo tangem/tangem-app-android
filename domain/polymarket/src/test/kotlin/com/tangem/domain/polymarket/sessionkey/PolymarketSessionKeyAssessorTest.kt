@@ -18,6 +18,7 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliatio
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation.Unavailable
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.time.Duration
@@ -248,7 +249,29 @@ internal class PolymarketSessionKeyAssessorTest {
             val actual = PolymarketSessionKeyAssessor.assess(model.snapshot).reconciliation
 
             // Assert
-            assertThat(actual).isEqualTo(model.expected)
+            assertThat((actual as? Checked)?.copy(listedSigners = emptySet()) ?: actual).isEqualTo(model.expected)
+        }
+
+        @Test
+        fun `GIVEN the exchange's signers WHEN assess THEN every listed address is reported lowercased`() {
+            // Arrange
+            val ownFailed = key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)
+            val other = key(Owner.OTHER_DEVICE)
+            val unrecorded = UNRECORDED.copy(address = UNRECORDED.address.uppercase())
+            val snapshot = snapshot(
+                keys = listOf(ownFailed, other),
+                signers = listOf(matching(ownFailed), matching(other), unrecorded),
+            )
+
+            // Act
+            val actual = PolymarketSessionKeyAssessor.assess(snapshot).reconciliation
+
+            // Assert
+            assertThat((actual as Checked).listedSigners).containsExactly(
+                Owner.LOCAL.address.lowercase(),
+                Owner.OTHER_DEVICE.address.lowercase(),
+                UNRECORDED.address.lowercase(),
+            )
         }
 
         private fun provideTestModels() = listOf(
@@ -554,6 +577,6 @@ internal class PolymarketSessionKeyAssessorTest {
         fun checked(
             foreign: List<PolymarketSessionSigner> = emptyList(),
             missing: Set<String> = emptySet(),
-        ) = Checked(foreignSigners = foreign, missingOnExchange = missing)
+        ) = Checked(foreignSigners = foreign, missingOnExchange = missing, listedSigners = emptySet())
     }
 }

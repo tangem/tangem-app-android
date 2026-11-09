@@ -99,21 +99,25 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                 status = PolymarketSessionKeyStatus.ACTIVE,
                 validUntil = NOW.minus(Duration.ofDays(5)),
                 expected = FastTradingKeyStatusUM.Expired(at = "Nov 4, 2026"),
+                offersRevoke = false,
             ),
             StatusModel(
                 status = PolymarketSessionKeyStatus.ACTIVE,
                 validUntil = null,
                 expected = FastTradingKeyStatusUM.Expired(at = null),
+                offersRevoke = false,
             ),
             StatusModel(
                 status = PolymarketSessionKeyStatus.ACTIVE,
                 missingOnExchange = setOf(OTHER_ADDRESS),
                 expected = FastTradingKeyStatusUM.ReconnectNeeded,
+                offersRevoke = false,
             ),
             StatusModel(
                 status = PolymarketSessionKeyStatus.EXPIRED,
                 validUntil = NOW.minus(Duration.ofDays(5)),
                 expected = FastTradingKeyStatusUM.Expired(at = "Nov 4, 2026"),
+                offersRevoke = false,
             ),
             StatusModel(
                 status = PolymarketSessionKeyStatus.PENDING,
@@ -130,7 +134,11 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                 expected = FastTradingKeyStatusUM.ActivationFailed,
                 offersRevoke = false,
             ),
-            StatusModel(status = PolymarketSessionKeyStatus.UNKNOWN, expected = FastTradingKeyStatusUM.Unknown),
+            StatusModel(
+                status = PolymarketSessionKeyStatus.UNKNOWN,
+                expected = FastTradingKeyStatusUM.Unknown,
+                offersRevoke = false,
+            ),
             StatusModel(status = PolymarketSessionKeyStatus.REVOKED, expected = null),
         )
     }
@@ -374,40 +382,126 @@ internal class PolymarketFastTradingKeysUMConverterTest {
     }
 
     @Nested
-    inner class OnExchange {
+    inner class ExchangeListing {
 
         @Test
-        fun `GIVEN a failed key the exchange still lists WHEN convert THEN it offers revoke`() {
+        fun `GIVEN this device failed key the exchange lists WHEN convert THEN it offers revoke`() {
             // Arrange
-            val key = createKey(status = PolymarketSessionKeyStatus.FAILED)
-            val overview = createOverview(sessionKeys = listOf(key), foreignSigners = listOf(signerOf(OTHER_ADDRESS)))
+            val key = createKey(address = OWN_ADDRESS, status = PolymarketSessionKeyStatus.FAILED)
+            val overview = createOverview(sessionKeys = listOf(key), listedSigners = setOf(OWN_ADDRESS))
 
             // Act
             val actual = converter.convert(overview, operation = null)
 
             // Assert
-            assertThat(actual.otherDevices.single().actions).isEqualTo(revokeOf(OTHER_ADDRESS))
+            assertThat(actual.thisDevice?.actions).isEqualTo(revokeOf(OWN_ADDRESS))
         }
 
         @Test
-        fun `GIVEN a foreign signer shown as a key row WHEN convert THEN it is not listed as unknown signer`() {
+        fun `GIVEN this device failed key the exchange does not list WHEN convert THEN it offers nothing`() {
             // Arrange
-            val key = createKey(status = PolymarketSessionKeyStatus.EXPIRED)
+            val key = createKey(address = OWN_ADDRESS, status = PolymarketSessionKeyStatus.FAILED)
+            val overview = createOverview(sessionKeys = listOf(key), listedSigners = setOf(OTHER_ADDRESS))
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.thisDevice?.actions).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN expired and unknown keys the exchange lists WHEN convert THEN they offer revoke`() {
+            // Arrange
+            val expired = createKey(address = OTHER_ADDRESS.uppercase(), status = PolymarketSessionKeyStatus.EXPIRED)
+            val unknown = createKey(address = FOREIGN_ADDRESS, status = PolymarketSessionKeyStatus.UNKNOWN)
             val overview = createOverview(
-                sessionKeys = listOf(key),
-                foreignSigners = listOf(signerOf(OTHER_ADDRESS.uppercase()), signerOf(FOREIGN_ADDRESS)),
+                sessionKeys = listOf(expired, unknown),
+                listedSigners = setOf(OTHER_ADDRESS, FOREIGN_ADDRESS),
             )
 
             // Act
             val actual = converter.convert(overview, operation = null)
 
             // Assert
-            assertThat(actual.otherDevices.map { it.id }).containsExactly(OTHER_ADDRESS)
-            assertThat(actual.unknownSigners.map { it.address }).containsExactly(FOREIGN_ADDRESS)
+            assertThat(actual.otherDevices.map { it.actions }).containsExactly(
+                revokeOf(OTHER_ADDRESS.uppercase()),
+                revokeOf(FOREIGN_ADDRESS),
+            ).inOrder()
         }
 
         @Test
-        fun `GIVEN a foreign signer whose record is revoked WHEN convert THEN it is listed as unknown signer`() {
+        fun `GIVEN reconciliation unavailable WHEN convert THEN only active and paused keys offer revoke`() {
+            // Arrange
+            val active = createKey(address = OWN_ADDRESS)
+            val paused = createKey(isEnabled = false)
+            val expired = createKey(address = FOREIGN_ADDRESS, status = PolymarketSessionKeyStatus.EXPIRED)
+            val overview = createOverview(sessionKeys = listOf(active, paused, expired), isReconciled = false)
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.thisDevice?.actions).isEqualTo(revokeOf(OWN_ADDRESS))
+            assertThat(actual.otherDevices.map { it.actions })
+                .containsExactly(revokeOf(OTHER_ADDRESS), persistentListOf<FastTradingKeyActionUM>())
+                .inOrder()
+        }
+    }
+
+    @Nested
+    inner class UnknownSigners {
+
+        @Test
+        fun `GIVEN only foreign signers shown as key rows WHEN convert THEN warning is shown without signer rows`() {
+            // Arrange
+            val key = createKey(status = PolymarketSessionKeyStatus.EXPIRED)
+            val overview = createOverview(
+                sessionKeys = listOf(key),
+                foreignSigners = listOf(signerOf(OTHER_ADDRESS.uppercase())),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.isUnknownSignersWarningShown).isTrue()
+            assertThat(actual.unknownSigners).isEmpty()
+            assertThat(actual.otherDevices.map { it.id }).containsExactly(OTHER_ADDRESS)
+        }
+
+        @Test
+        fun `GIVEN no foreign signers WHEN convert THEN warning is hidden`() {
+            // Arrange
+            val overview = createOverview(sessionKeys = listOf(createKey()))
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.isUnknownSignersWarningShown).isFalse()
+        }
+
+        @Test
+        fun `GIVEN foreign signers with and without key rows WHEN convert THEN only those without get a row`() {
+            // Arrange
+            val key = createKey(status = PolymarketSessionKeyStatus.EXPIRED)
+            val overview = createOverview(
+                sessionKeys = listOf(key),
+                foreignSigners = listOf(signerOf(OTHER_ADDRESS), signerOf(FOREIGN_ADDRESS)),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.unknownSigners).containsExactly(
+                FastTradingUnknownSignerUM(address = FOREIGN_ADDRESS, actions = revokeOf(FOREIGN_ADDRESS)),
+            )
+        }
+
+        @Test
+        fun `GIVEN a foreign signer whose record is revoked WHEN convert THEN it gets a signer row`() {
             // Arrange
             val key = createKey(status = PolymarketSessionKeyStatus.REVOKED)
             val overview = createOverview(sessionKeys = listOf(key), foreignSigners = listOf(signerOf(OTHER_ADDRESS)))
@@ -475,6 +569,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             localKeyAddress: String? = OWN_ADDRESS,
             missingOnExchange: Set<String> = emptySet(),
             foreignSigners: List<PolymarketSessionSigner> = emptyList(),
+            listedSigners: Set<String> = emptySet(),
             isReconciled: Boolean = true,
         ) = PolymarketSessionKeyOverview(
             wallet = PolymarketWalletState(
@@ -489,6 +584,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                     PolymarketSessionKeyReconciliation.Checked(
                         foreignSigners = foreignSigners,
                         missingOnExchange = missingOnExchange,
+                        listedSigners = listedSigners,
                     )
                 } else {
                     PolymarketSessionKeyReconciliation.Unavailable
