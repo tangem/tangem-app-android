@@ -2,13 +2,17 @@ package com.tangem.features.earn.impl.fake
 
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.session.EarnFlowExit
+import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.EarnResult
+import com.tangem.features.earn.product.api.session.EarnResultAsset
 import com.tangem.features.earn.product.api.session.EarnResultButton
 import com.tangem.features.earn.product.api.session.EarnTxRef
 import kotlinx.datetime.Instant
@@ -48,11 +52,25 @@ internal fun fakeTxRef(preset: FakeEarnSessionPreset, actionId: String): EarnTxR
     analytics = fakeTxAnalytics(actionId),
 )
 
-internal fun fakeResult(title: String): EarnResult = EarnResult(
+internal fun fakeResult(title: String, provider: String): EarnResult = EarnResult(
     title = stringReference(title),
-    subtitle = null,
-    chip = null,
+    subtitle = stringReference("Your ETH in Main account is now earning in $provider"),
+    chip = stringReference("Current 5.5% APY"),
     rows = emptyList(),
     primary = EarnResultButton(stringReference("Go to yield"), EarnFlowExit.ToYield),
     secondary = EarnResultButton(stringReference("Go to token"), EarnFlowExit.ToToken),
+)
+
+internal fun fakeWithdrawResult(title: String, period: String): EarnResult = EarnResult(
+    title = stringReference(title),
+    subtitle = null,
+    chip = null,
+    rows = listOf(
+        EarnRow(label = stringReference("Withdrawal period"), value = EarnValue.Text(stringReference(period))),
+        EarnRow(label = stringReference("Network fee"), value = EarnValue.Text(stringReference("$FAKE_FEE_ETH ETH"))),
+    ),
+    primary = EarnResultButton(stringReference("Done"), EarnFlowExit.Done),
+    secondary = null,
+    asset = EarnResultAsset.Status(TangemStatusIcon.Kind.Checkmark),
+    isExplorerShown = true,
 )
