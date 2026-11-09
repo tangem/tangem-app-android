@@ -100,10 +100,6 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   (`CREATED_POSITION_READS`) and treats a failed read like a missing one; a market without `conditionId`
   offers no View position. View position replaces the stack with Main + details, so Back lands on the feed,
   not on the result of an order already placed.
-- **Result screen** has one button, as iOS: View position for a buy that expects a position, Got it otherwise.
-  Got it closes the flow back to where it was opened, except a sell that left less than 0.01 share: that
-  returns to Main rather than to the details of a sold position. An order matched with no shares filled shows
-  the error dialog without a dismiss-outside and closes the flow after Close, or after Support has sent its email.
 - **Sell** re-validates at signing that the position exists, the market accepts orders and enough shares
   remain after grid rounding.
 - Quotes and prices are decimal strings: `BigDecimal`, `compareTo`, never `==`. Market end dates are
