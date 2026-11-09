@@ -48,7 +48,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         isHotBackedUp: Boolean? = null,
         jointPendingOperations: List<JointPendingOperation> = emptyList(),
     ) {
-        val isRedesignedAccountRowsEnabled = accountDependencies.walletFeatureToggles.isRedesignedAccountRowsEnabled
+        val walletFeatureToggles = accountDependencies.walletFeatureToggles
         stateController.update(
             SetTokenListTransformer(
                 params = TokenConverterParams.Account(accountList, expandedAccounts),
@@ -61,7 +61,8 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 isAccountsModeEnabled = isAccountMode,
                 isHotBackedUp = isHotBackedUp,
                 jointPendingOperations = jointPendingOperations,
-                isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
+                isRedesignedAccountRowsEnabled = walletFeatureToggles.isRedesignedAccountRowsEnabled,
+                isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
             ),
         )
     }
