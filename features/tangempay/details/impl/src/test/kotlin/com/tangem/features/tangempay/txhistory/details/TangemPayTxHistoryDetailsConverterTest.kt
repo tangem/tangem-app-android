@@ -13,14 +13,16 @@ import com.tangem.core.ui.res.generated.icons.ic_percent_backward_24
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.collateralTransaction
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.spendTransaction
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -45,7 +47,7 @@ internal class TangemPayTxHistoryDetailsConverterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun `GIVEN collateral type WHEN convert THEN sheet shows type title, icon, signed amount and no subtitle`(
         model: CollateralModel,
     ) {
@@ -89,6 +91,51 @@ internal class TangemPayTxHistoryDetailsConverterTest {
         assertThat(actual).isEqualTo(expected)
     }
 
+    @Test
+    fun `GIVEN https merchant icon WHEN convert THEN icon is loaded from the url`() {
+        // Arrange
+        val input = input(item = spendTransaction(enrichedMerchantIconUrl = HTTPS_ICON_URL))
+
+        // Act
+        val actual = TangemPayTxHistoryDetailsConverter.convert(input)
+
+        // Assert
+        assertThat(actual.iconState)
+            .isEqualTo(TangemIconUM.Url(url = HTTPS_ICON_URL, fallbackRes = R.drawable.ic_category_24))
+    }
+
+    @Test
+    fun `GIVEN non-https merchant icon WHEN convert THEN category icon is shown`() {
+        // Arrange
+        val input = input(item = spendTransaction(enrichedMerchantIconUrl = HTTP_ICON_URL))
+
+        // Act
+        val actual = TangemPayTxHistoryDetailsConverter.convert(input)
+
+        // Assert
+        val icon = actual.iconState
+        assertThat(icon).isInstanceOf(TangemIconUM.Icon::class.java)
+        assertThat(icon).isEqualTo(
+            TangemIconUM.Icon(
+                iconRes = R.drawable.ic_category_24,
+                tintReference = requireNotNull((icon as TangemIconUM.Icon).tint),
+            ),
+        )
+    }
+
+    private fun input(item: TangemPayTxHistoryItem) = TangemPayTxHistoryDetailsConverter.Input(
+        item = item,
+        isBalanceHidden = false,
+        transactionLoadState = TransactionLoadState.Loading,
+        cashbackDetails = null,
+        cashbackLoadState = TransactionLoadState.Loading,
+        onExplorerClick = {},
+        onDisputeClick = onDisputeClick,
+        onCardRefreshClick = {},
+        onCashbackRefreshClick = {},
+        onDismiss = onDismiss,
+    )
+
     data class CollateralModel(
         val type: TangemPayTxHistoryItem.Type,
         val amount: BigDecimal,
@@ -120,4 +167,9 @@ internal class TangemPayTxHistoryDetailsConverterTest {
             expectedIcon = Icons.ic_percent_backward_24,
         ),
     )
+
+    private companion object {
+        const val HTTPS_ICON_URL = "https://images.us.paera.com/merchant.png"
+        const val HTTP_ICON_URL = "http://images.us.paera.com/merchant.png"
+    }
 }

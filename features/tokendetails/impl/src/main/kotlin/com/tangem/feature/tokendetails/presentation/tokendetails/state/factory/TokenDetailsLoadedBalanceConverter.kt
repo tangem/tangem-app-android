@@ -10,6 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
@@ -92,12 +93,12 @@ internal class TokenDetailsLoadedBalanceConverter(
                     stakingCryptoAmount,
                     currentState.selectedBalanceType,
                 ),
-                displayYieldSupplyFiatBalance = if (status.value.yieldSupplyStatus?.isActive == true) {
+                displayYieldSupplyFiatBalance = if (status.value.yieldSupply?.isActive == true) {
                     (currentState as? TokenDetailsBalanceBlockState.Content)?.displayYieldSupplyFiatBalance
                 } else {
                     null
                 },
-                displayYieldSupplyCryptoBalance = if (status.value.yieldSupplyStatus?.isActive == true) {
+                displayYieldSupplyCryptoBalance = if (status.value.yieldSupply?.isActive == true) {
                     (currentState as? TokenDetailsBalanceBlockState.Content)?.displayYieldSupplyCryptoBalance
                 } else {
                     null
@@ -107,7 +108,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 selectedBalanceType = currentState.selectedBalanceType,
                 isBalanceSelectorEnabled = isBalanceSelectorEnabled,
                 isBalanceFlickering = status.value.isFlickering(),
-                yieldSupplyState = if (status.value.yieldSupplyStatus?.isActive == true) {
+                yieldSupplyState = if (status.value.yieldSupply?.isActive == true) {
                     TokenDetailsYieldSupplyState.Active(clickIntents::onYieldInfoClick)
                 } else {
                     TokenDetailsYieldSupplyState.Empty

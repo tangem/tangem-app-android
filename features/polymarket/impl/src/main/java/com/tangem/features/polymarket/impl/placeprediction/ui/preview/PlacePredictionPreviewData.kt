@@ -106,6 +106,7 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
             ),
             PlaceResultUM.NotFilled(placedAt = PLACED_AT),
             PlaceResultUM.Submitted(placedAt = PLACED_AT),
+            PlaceResultUM.StillProcessing(placedAt = PLACED_AT),
         )
 }
 

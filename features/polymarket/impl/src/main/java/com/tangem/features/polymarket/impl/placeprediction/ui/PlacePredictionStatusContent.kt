@@ -62,12 +62,16 @@ internal fun PlacePredictionStatusContent(
         modifier = modifier,
         variant = result.variant(),
         title = result.title(side = side),
-        description = stringReference(result.placedAt.formatPlacedAt()),
+        description = result.description(),
         asset = { ResultIcon(result = result) },
-        details = {
-            ResultBanner(result = result)
-            PredictionMarketBlock(state = market)
-            ResultRows(result = result, market = market, side = side)
+        details = if (result is PlaceResultUM.StillProcessing) {
+            null
+        } else {
+            {
+                ResultBanner(result = result)
+                PredictionMarketBlock(state = market)
+                ResultRows(result = result, market = market, side = side)
+            }
         },
         footer = { ResultFooter(viewPosition = viewPosition, intents = intents) },
     )
@@ -120,13 +124,16 @@ private fun ResultIcon(result: PlaceResultUM) {
             tint = TangemTheme.colors3.icon.status.warning,
         )
         is PlaceResultUM.NotFilled -> TangemStatusIcon(kind = TangemStatusIcon.Kind.HeartBroken, modifier = modifier)
+        is PlaceResultUM.StillProcessing -> TangemStatusIcon(kind = TangemStatusIcon.Kind.Info, modifier = modifier)
     }
 }
 
 @Composable
 private fun ResultBanner(result: PlaceResultUM) {
     when (result) {
-        is PlaceResultUM.Filled -> Unit
+        is PlaceResultUM.Filled,
+        is PlaceResultUM.StillProcessing,
+        -> Unit
         is PlaceResultUM.PartiallyFilled,
         is PlaceResultUM.Submitted,
         -> TangemMessageBanner(
@@ -161,6 +168,7 @@ private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM, side: Pred
         is PlaceResultUM.PartiallyFilled -> result.shares
         is PlaceResultUM.NotFilled,
         is PlaceResultUM.Submitted,
+        is PlaceResultUM.StillProcessing,
         -> return
     }
 
@@ -202,6 +210,7 @@ private fun PlaceResultUM.variant(): TangemStatusScreen.Variant = when (this) {
     is PlaceResultUM.Submitted,
     -> TangemStatusScreen.Variant.Warning
     is PlaceResultUM.NotFilled -> TangemStatusScreen.Variant.Error
+    is PlaceResultUM.StillProcessing -> TangemStatusScreen.Variant.Neutral
 }
 
 private fun PlaceResultUM.title(side: PredictionOrderSide): TextReference = when (this) {
@@ -230,6 +239,16 @@ private fun PlaceResultUM.title(side: PredictionOrderSide): TextReference = when
         },
     )
     is PlaceResultUM.Submitted -> resourceReference(R.string.prediction_place_result_partial_title)
+    is PlaceResultUM.StillProcessing -> resourceReference(R.string.prediction_place_delayed_timeout_title)
+}
+
+private fun PlaceResultUM.description(): TextReference = when (this) {
+    is PlaceResultUM.StillProcessing -> resourceReference(R.string.prediction_place_delayed_timeout_description)
+    is PlaceResultUM.Filled,
+    is PlaceResultUM.PartiallyFilled,
+    is PlaceResultUM.NotFilled,
+    is PlaceResultUM.Submitted,
+    -> stringReference(placedAt.formatPlacedAt())
 }
 
 @StringRes
@@ -261,6 +280,7 @@ private fun PlacePredictionStatusContentPreview(
                 is PlaceResultUM.PartiallyFilled -> ViewPositionUM.Awaiting
                 is PlaceResultUM.NotFilled,
                 is PlaceResultUM.Submitted,
+                is PlaceResultUM.StillProcessing,
                 -> ViewPositionUM.Hidden
             },
             side = PredictionOrderSide.BUY,

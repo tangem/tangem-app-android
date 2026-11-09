@@ -5,6 +5,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.yieldSupply
 
 /**
  * Represents the status of a cryptocurrency in the context of a swap operation.
@@ -31,7 +32,7 @@ data class SwapCurrencyStatus(
     val userWalletId: UserWalletId
         get() = userWallet.walletId
     val isYieldSupplyActive: Boolean
-        get() = status.value.yieldSupplyStatus?.isActive == true
+        get() = status.value.yieldSupply?.isActive == true
 
     /** @param isWithdrawSource whether the swap screen was opened to withdraw from this account */
     fun isTargetOnly(isWithdrawSource: Boolean): Boolean = account.isSwapTargetOnly(isWithdrawSource)

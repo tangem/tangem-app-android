@@ -13,6 +13,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.utils.StringsSigns
 
 class TokenRowStateConverter(private val appCurrency: AppCurrency) {
@@ -58,7 +59,7 @@ class TokenRowStateConverter(private val appCurrency: AppCurrency) {
             is CryptoCurrencyStatus.NoAccount,
             -> {
                 val isFlickering = value.sources.total == StatusSource.CACHE
-                val yieldSupply = value.yieldSupplyStatus
+                val yieldSupply = value.yieldSupply
                 TangemTokenRow.State.Content(
                     id = id,
                     icon = icon,

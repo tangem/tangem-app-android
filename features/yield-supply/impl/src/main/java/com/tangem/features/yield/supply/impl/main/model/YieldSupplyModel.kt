@@ -23,6 +23,7 @@ import com.tangem.domain.models.currency.hasNotSuppliedAmount
 import com.tangem.domain.models.currency.shouldShowNotSuppliedNotification
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -247,7 +248,7 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     private suspend fun loadStatus(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
+        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupply
         if (yieldSupplyStatus?.isActive == true) {
             loadActiveState(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -355,7 +356,7 @@ internal class YieldSupplyModel @Inject constructor(
         // Only mirror a status the chain actually confirmed. A cached one can be stale and an absent one says
         // nothing, and either would announce a state the chain does not have.
         if (cryptoCurrencyStatus.value.sources.networkSource != StatusSource.ACTUAL) return
-        val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive ?: return
+        val isActive = cryptoCurrencyStatus.value.yieldSupply?.isActive ?: return
 
         modelScope.launch(dispatchers.default) {
             // Activation dispatches the backend relayer, which deposits the same funds as a yield transaction
