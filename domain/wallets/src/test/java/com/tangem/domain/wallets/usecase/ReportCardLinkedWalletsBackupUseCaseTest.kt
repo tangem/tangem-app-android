@@ -21,7 +21,9 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import com.tangem.utils.annotations.RemoveWithToggle
 
+@RemoveWithToggle("TWI_1586_CARD_LINKED_STATUS_UPDATE_V2")
 internal class ReportCardLinkedWalletsBackupUseCaseTest {
 
     private val userWallets = MutableStateFlow<List<UserWallet>?>(null)

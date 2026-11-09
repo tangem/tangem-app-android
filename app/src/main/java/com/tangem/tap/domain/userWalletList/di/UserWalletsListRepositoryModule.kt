@@ -18,6 +18,7 @@ import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.serialization.*
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.backup.SeenWalletCardReporter
 import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -66,6 +67,7 @@ internal object UserWalletsListRepositoryModule {
         isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
         getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
         walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
+        seenWalletCardReporter: Lazy<SeenWalletCardReporter>,
         tangemSdkManager: Lazy<TangemSdkManager>,
         hotWalletFeatureToggles: HotWalletFeatureToggles,
     ): UserWalletsListRepository {
@@ -124,6 +126,7 @@ internal object UserWalletsListRepositoryModule {
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,
             walletRegistrationTrigger = walletRegistrationTrigger,
+            seenWalletCardReporter = seenWalletCardReporter,
             hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
