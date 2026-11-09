@@ -1,6 +1,14 @@
 package com.tangem.features.tangempay.card.details
 
 import arrow.core.left
+import kotlinx.coroutines.CompletableDeferred
+import com.tangem.domain.tangempay.usecase.ChangeCardFrozenStateUseCase
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.decompose.ui.UiMessage
+import com.tangem.core.ui.message.BottomSheetMessage
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
+import com.tangem.core.error.UniversalError
+import arrow.core.Either
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -18,6 +26,7 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController.Entry as GoogleWalletEntry
@@ -54,6 +63,10 @@ internal class TangemPayCardPageModelTest {
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk()
     private val controllerFactory: TangemPayCardDetailsController.Factory = mockk()
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
+    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val sentMessages = mutableListOf<UiMessage>()
+    private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase = mockk()
     private val cardControllers = mutableMapOf<String, TangemPayCardDetailsController>()
     private val googleWalletController: TangemPayAddToGoogleWalletController = mockk(relaxed = true) {
         every { entry } returns MutableStateFlow(TangemPayAddToGoogleWalletController.Entry.ManualGuide)
@@ -75,6 +88,8 @@ internal class TangemPayCardPageModelTest {
     init {
         every { supplier.invoke(userWalletId) } returns statusFlow
         every { cardDetailsRepository.cardFrozenState(any()) } returns emptyFlow()
+        every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
+        every { uiMessageSender.send(capture(sentMessages)) } just Runs
         coEvery { cardDetailsRepository.isAddToWalletDone(any()) } returns true.right()
         every {
             controllerFactory.create(any(), any(), any(), any(), any(), any())
@@ -151,6 +166,83 @@ internal class TangemPayCardPageModelTest {
 
         // Assert
         assertThat(model.isDetailsSettingEnabled()).isFalse()
+    }
+
+    @Test
+    fun `GIVEN order framework enabled and pending card WHEN status emitted THEN freeze row loads from the status`() =
+        runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns true
+            every { cardDetailsRepository.cardFrozenState(any()) } returns flowOf(TangemPayCardFrozenState.Unfrozen)
+            val pendingStatus: AccountStatus.Payment = mockk(relaxed = true) {
+                every { account } returns Account.Payment(userWalletId)
+                every { value } returns mockk<PaymentAccountStatusValue.Loaded>(relaxed = true) {
+                    every { source } returns StatusSource.ACTUAL
+                    every { cards } returns listOf(
+                        firstCard.copy(frozenState = TangemPayCardFrozenState.Pending),
+                        secondCard,
+                    )
+                }
+            }
+            val model = createModel()
+
+            // Act
+            statusFlow.emit(pendingStatus)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.settings.first { it.id == TangemPayCardPageSetting.Id.Freeze }.isLoading)
+                .isTrue()
+            verify(exactly = 0) { cardDetailsRepository.cardFrozenState(any()) }
+        }
+
+    @Test
+    fun `GIVEN freeze confirmed WHEN operation is in progress THEN freeze row is loading until it ends`() = runTest {
+        // Arrange
+        val result = CompletableDeferred<Either<UniversalError, Unit>>()
+        coEvery { changeCardFrozenStateUseCase(any(), any(), any()) } coAnswers { result.await() }
+        val model = createModel()
+        statusFlow.emit(paymentStatus)
+        runCurrent()
+
+        // Act
+        model.confirmFreezeOfSelectedCard()
+        runCurrent()
+        val isLoadingDuringOperation = model.freezeRow().isLoading
+        result.complete(Unit.right())
+        runCurrent()
+
+        // Assert
+        assertThat(isLoadingDuringOperation to model.freezeRow().isLoading).isEqualTo(true to false)
+        coVerify(exactly = 1) { changeCardFrozenStateUseCase(userWalletId, firstCard.id, true) }
+    }
+
+    @Test
+    fun `GIVEN first card freezing WHEN second card frozen THEN both run and each finishes on its own`() = runTest {
+        // Arrange
+        val firstResult = CompletableDeferred<Either<UniversalError, Unit>>()
+        val secondResult = CompletableDeferred<Either<UniversalError, Unit>>()
+        coEvery { changeCardFrozenStateUseCase(any(), firstCard.id, any()) } coAnswers { firstResult.await() }
+        coEvery { changeCardFrozenStateUseCase(any(), secondCard.id, any()) } coAnswers { secondResult.await() }
+        val model = createModel()
+        statusFlow.emit(paymentStatus)
+        runCurrent()
+        model.confirmFreezeOfSelectedCard()
+        runCurrent()
+
+        // Act
+        model.onCardPageSelected(index = 1)
+        runCurrent()
+        model.confirmFreezeOfSelectedCard()
+        runCurrent()
+        firstResult.complete(Unit.right())
+        runCurrent()
+
+        // Assert
+        assertThat(model.freezeRow().isLoading).isTrue()
+        coVerify(exactly = 1) { changeCardFrozenStateUseCase(userWalletId, firstCard.id, true) }
+        coVerify(exactly = 1) { changeCardFrozenStateUseCase(userWalletId, secondCard.id, true) }
+        secondResult.complete(Unit.right())
     }
 
     @Test
@@ -442,6 +534,19 @@ internal class TangemPayCardPageModelTest {
 
     internal data class ButtonState(val isLoading: Boolean)
 
+    private fun TangemPayCardPageModel.confirmFreezeOfSelectedCard() {
+        freezeRow().onClick()
+        val sheet = sentMessages.filterIsInstance<BottomSheetMessage>().last()
+        sheet.messageBottomSheetUM.elements
+            .filterIsInstance<MessageBottomSheetUM.Button>()
+            .last()
+            .onClick
+            ?.invoke(sheet.messageBottomSheetUM.closeScope)
+    }
+
+    private fun TangemPayCardPageModel.freezeRow(): TangemPayCardPageSetting =
+        uiState.value.settings.first { it.id == TangemPayCardPageSetting.Id.Freeze }
+
     private fun TangemPayCardPageModel.isDetailsSettingEnabled(): Boolean =
         uiState.value.settings.first { it.id == TangemPayCardPageSetting.Id.Details }.isEnabled
 
@@ -457,13 +562,14 @@ internal class TangemPayCardPageModelTest {
         analytics = mockk(relaxed = true),
         sendFeedbackEmailUseCase = mockk(relaxed = true),
         cardDetailsRepository = cardDetailsRepository,
-        uiMessageSender = mockk(relaxed = true),
-        changeCardFrozenStateUseCase = mockk(relaxed = true),
+        uiMessageSender = uiMessageSender,
+        changeCardFrozenStateUseCase = changeCardFrozenStateUseCase,
         cardDetailsEventListener = eventListener,
         cardDetailsControllerFactory = controllerFactory,
         cardAuthenticator = mockk(relaxed = true),
         onboardingRepository = mockk(relaxed = true),
         getBankCredentialsUseCase = getBankCredentialsUseCase,
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
         googleWalletControllerFactory = googleWalletControllerFactory,
     )
 
