@@ -26,7 +26,7 @@ internal class PolymarketFeedContentTransformer(
         return prevState.copy(content = transformContent())
     }
 
-    private fun transformContent(): PolymarketMainUM.ContentUM {
+    fun transformContent(): PolymarketMainUM.ContentUM {
         return when (val status = batchListState.status) {
             is PaginationStatus.None,
             is PaginationStatus.InitialLoading,
