@@ -41,6 +41,8 @@ internal class PolymarketFastTradingKeysUMConverter(
         val missingOnExchange = reconciliation?.missingOnExchange.orEmpty()
         val submittedOperation = operation?.takeIf { it.stage != PolymarketSessionKeyOperationStage.SIGNING }
         val localKeyAddress = overview.localKeyAddress
+        val foreignSigners = reconciliation?.foreignSigners.orEmpty()
+        val onExchange = foreignSigners.mapTo(mutableSetOf()) { it.address.lowercase() }
 
         val rows = overview.wallet.sessionKeys
             .filter { it.status != PolymarketSessionKeyStatus.REVOKED }
@@ -53,13 +55,14 @@ internal class PolymarketFastTradingKeysUMConverter(
                         ?: resourceReference(R.string.prediction_session_key_unknown_device),
                     status = status,
                     isExpiringSoon = key.isExpiringSoon(now),
-                    actions = actionsFor(key.address, status),
+                    actions = actionsFor(key.address, status, isOnExchange = key.address.lowercase() in onExchange),
                 )
             }
         val ownRow = rows.firstOrNull { (address, _) -> address.equals(localKeyAddress, ignoreCase = true) }?.second
 
         return FastTradingKeysUM(
-            unknownSigners = reconciliation?.foreignSigners.orEmpty()
+            unknownSigners = foreignSigners
+                .filter { signer -> rows.none { (address, _) -> address.equals(signer.address, ignoreCase = true) } }
                 .map { FastTradingUnknownSignerUM(address = it.address, actions = revokeOnly(it.address)) }
                 .toImmutableList(),
             thisDevice = ownRow ?: submittedOperation?.pendingThisDeviceRow(),
@@ -68,22 +71,25 @@ internal class PolymarketFastTradingKeysUMConverter(
         )
     }
 
-    private fun actionsFor(address: String, status: FastTradingKeyStatusUM): ImmutableList<FastTradingKeyActionUM> =
-        when (status) {
-            is FastTradingKeyStatusUM.Active,
-            is FastTradingKeyStatusUM.Paused,
-            is FastTradingKeyStatusUM.Expired,
-            FastTradingKeyStatusUM.ActivationFailed,
-            FastTradingKeyStatusUM.ReconnectNeeded,
-            FastTradingKeyStatusUM.Unknown,
-            -> revokeOnly(address)
-            FastTradingKeyStatusUM.Activating,
-            FastTradingKeyStatusUM.Revoking,
-            FastTradingKeyStatusUM.Pausing,
-            FastTradingKeyStatusUM.Resuming,
-            FastTradingKeyStatusUM.Extending,
-            -> persistentListOf()
-        }
+    private fun actionsFor(
+        address: String,
+        status: FastTradingKeyStatusUM,
+        isOnExchange: Boolean,
+    ): ImmutableList<FastTradingKeyActionUM> = when (status) {
+        is FastTradingKeyStatusUM.Active,
+        is FastTradingKeyStatusUM.Paused,
+        is FastTradingKeyStatusUM.Expired,
+        FastTradingKeyStatusUM.ReconnectNeeded,
+        FastTradingKeyStatusUM.Unknown,
+        -> revokeOnly(address)
+        FastTradingKeyStatusUM.ActivationFailed -> if (isOnExchange) revokeOnly(address) else persistentListOf()
+        FastTradingKeyStatusUM.Activating,
+        FastTradingKeyStatusUM.Revoking,
+        FastTradingKeyStatusUM.Pausing,
+        FastTradingKeyStatusUM.Resuming,
+        FastTradingKeyStatusUM.Extending,
+        -> persistentListOf()
+    }
 
     private fun revokeOnly(address: String): ImmutableList<FastTradingKeyActionUM> =
         persistentListOf(FastTradingKeyActionUM.Revoke(address))
