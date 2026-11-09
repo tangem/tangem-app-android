@@ -4,7 +4,10 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
+import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
+import com.tangem.features.polymarket.impl.createPolymarketEvent
+import com.tangem.features.polymarket.impl.createPolymarketMarket
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
@@ -33,6 +36,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
@@ -321,6 +327,47 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         // Assert
         assertThat(isAwaitingFunds).isTrue()
     }
+
+    @Test
+    fun `GIVEN sell market ends late evening Eastern WHEN engine starts THEN resolution date is the market end`() =
+        runTest {
+            // Arrange
+            val marketEnd = Instant.parse("2028-11-08T04:59:00Z")
+            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createPolymarketEvent(
+                id = EVENT_ID,
+                markets = listOf(
+                    createPolymarketMarket(
+                        id = MARKET_ID,
+                        conditionId = CONDITION_ID,
+                        eventId = EVENT_ID,
+                        endDate = marketEnd.toString(),
+                    ),
+                ),
+            ).right()
+
+            // Act
+            val (_, uiState) = createEngine(params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(uiState.value.market.resolutionDateMillis).isEqualTo(marketEnd.toEpochMilli())
+        }
+
+    @Test
+    fun `GIVEN sell event read fails WHEN engine starts THEN resolution date is the position day in Eastern time`() =
+        runTest {
+            // Arrange
+            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns PolymarketEventError.Network.left()
+
+            // Act
+            val (_, uiState) = createEngine(params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(uiState.value.market.resolutionDateMillis).isEqualTo(
+                ZonedDateTime.of(2027, 4, 30, 0, 0, 0, 0, ZoneId.of("America/New_York")).toInstant().toEpochMilli(),
+            )
+        }
 
     private fun stubFailedResumeSources() {
         coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()

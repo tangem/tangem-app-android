@@ -1105,7 +1105,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
     inner class PositionReads {
 
         @Test
-        fun `GIVEN sell params WHEN model created THEN the position fills the screen AND no event is read`() = runTest {
+        fun `GIVEN sell params WHEN model created THEN the position fills the screen AND the event is read once for its end date`() = runTest {
             // Act
             val model = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
@@ -1118,7 +1118,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
             assertThat(model.uiState.value.market.entryPrice).isEqualTo("35.6¢")
             assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("pUSD")
-            coVerify(exactly = 0) { getEventUseCase(any(), eventId = any()) }
+            coVerify(exactly = 1) { getEventUseCase(any(), eventId = EVENT_ID) }
 
             model.onDestroy()
         }

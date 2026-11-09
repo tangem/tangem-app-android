@@ -9,10 +9,12 @@ import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
+import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionPriceError
+import com.tangem.domain.polymarket.model.findMarket
 import com.tangem.domain.polymarket.model.findOutcome
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -20,6 +22,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCa
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.features.polymarket.impl.common.endInstantOrNull
 import com.tangem.features.polymarket.impl.common.funding.PredictionFundingRequisites
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
@@ -48,6 +51,7 @@ import com.tangem.features.polymarket.impl.placeprediction.model.transformers.Se
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetResolutionDateTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSellPositionStateTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetTradingPermissionTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -104,6 +108,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     private val quoteJobHolder = JobHolder()
     private val tradingAllowanceJobHolder = JobHolder()
     private val positionJobHolder = JobHolder()
+    private val resolutionDateJobHolder = JobHolder()
     private val balancePollJobHolder = JobHolder()
 
     private val activeStatus = MutableStateFlow<PredictionAccountStatusValue.Active?>(value = null)
@@ -361,9 +366,23 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
             isNegRiskMarket = position.isNegRisk
 
             uiState.update(SetPositionTransformer(position = position))
+            loadResolutionDate(position = position)
 
             restartQuoteLoop(withDebounce = false)
         }.saveIn(positionJobHolder)
+    }
+
+    private fun loadResolutionDate(position: PolymarketPosition.Open) {
+        val eventId = position.eventId ?: return
+        if (resolutionDateJobHolder.isActive) return
+
+        scope.launch {
+            val event = withContext(dispatchers.default) {
+                getPolymarketEventUseCase(userWalletId = params.userWalletId, eventId = eventId).getOrNull()
+            } ?: return@launch
+            val endInstant = event.findMarket(position)?.endInstantOrNull() ?: return@launch
+            uiState.update(SetResolutionDateTransformer(resolutionDateMillis = endInstant.toEpochMilli()))
+        }.saveIn(resolutionDateJobHolder)
     }
 
     private fun cancelQuote() {

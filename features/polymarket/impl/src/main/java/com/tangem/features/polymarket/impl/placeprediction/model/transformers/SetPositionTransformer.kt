@@ -30,7 +30,7 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
                 outcomePrice = prevState.market.outcomePrice
                     ?: position.curPrice.formatPolymarketPrice(isResolved = isResolved),
                 entryPrice = position.avgPrice.formatPolymarketPrice(isResolved = isResolved),
-                resolutionDateMillis = position.endDate
+                resolutionDateMillis = prevState.market.resolutionDateMillis ?: position.endDate
                     ?.atStartOfDay(ZoneId.of(PolymarketConst.EASTERN_TIME_ZONE))
                     ?.toInstant()
                     ?.toEpochMilli(),
