@@ -124,7 +124,7 @@ private fun LazyListScope.thisDeviceSection(
     onActionClick: (FastTradingKeyActionUM) -> Unit,
     onActivateClick: () -> Unit,
 ) {
-    if (keys.thisDevice == null && keys.activateBanner == null) return
+    if (keys.thisDevice.isEmpty() && keys.activateBanner == null) return
     sectionHeader(key = "this_device_header", title = R.string.prediction_session_key_this_device)
     keys.activateBanner?.let { banner ->
         item(key = "activate_banner", contentType = "banner") {
@@ -135,20 +135,19 @@ private fun LazyListScope.thisDeviceSection(
                 primaryButton = TangemMessageBanner.Button(
                     text = resourceReference(R.string.common_activate),
                     onClick = onActivateClick,
+                    isEnabled = keys.areActionsEnabled || banner.isLoading,
                     isLoading = banner.isLoading,
                 ),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
     }
-    keys.thisDevice?.let { row ->
-        item(key = "this_device:${row.id}", contentType = "key") {
-            PolymarketFastTradingKeyRow(
-                state = row,
-                areActionsEnabled = keys.areActionsEnabled,
-                onActionClick = onActionClick,
-            )
-        }
+    items(keys.thisDevice, key = { "this_device:${it.id}" }, contentType = { "key" }) { row ->
+        PolymarketFastTradingKeyRow(
+            state = row,
+            areActionsEnabled = keys.areActionsEnabled,
+            onActionClick = onActionClick,
+        )
     }
 }
 
@@ -220,7 +219,9 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
                         ),
                     ),
                 ),
-                thisDevice = previewRow("Pixel 9", FastTradingKeyStatusUM.Active("20 Apr 2027"), isExpiringSoon = true),
+                thisDevice = persistentListOf(
+                    previewRow("Pixel 9", FastTradingKeyStatusUM.Active("20 Apr 2027"), isExpiringSoon = true),
+                ),
                 activateBanner = null,
                 otherDevices = persistentListOf(
                     previewRow("Galaxy S24", FastTradingKeyStatusUM.Paused("2 May 2027")),
@@ -240,7 +241,7 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
             keys = FastTradingKeysUM(
                 isUnknownSignersWarningShown = false,
                 unknownSigners = persistentListOf(),
-                thisDevice = null,
+                thisDevice = persistentListOf(),
                 activateBanner = FastTradingActivateBannerUM(isLoading = false),
                 otherDevices = persistentListOf(
                     previewRow("iPhone XR", FastTradingKeyStatusUM.Active("20 Apr 2027"), isExpiringSoon = true),
