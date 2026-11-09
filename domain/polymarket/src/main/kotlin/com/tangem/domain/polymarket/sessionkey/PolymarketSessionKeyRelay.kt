@@ -1,6 +1,9 @@
 package com.tangem.domain.polymarket.sessionkey
 
 import arrow.core.Either
+import arrow.core.raise.Raise
+import arrow.core.raise.ensure
+import arrow.core.raise.ensureNotNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
@@ -8,6 +11,7 @@ import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyAuthorization
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
+import com.tangem.domain.polymarket.model.PolymarketSessionKeyLifecycleError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyRevocation
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSessionSigner
@@ -41,9 +45,14 @@ internal class PolymarketSessionKeyRelay(
 
     /**
      * @return the key's latest record, still settling if the BFF never settled it, or the key taken as `REVOKED` once
-     * the BFF dropped its record while revoking it: missing from [DROPPED_READS] successful reads in a row
+     * the BFF dropped its record while revoking it — missing from [DROPPED_READS] successful reads in a row — and
+     * [owner] has no such session signer on Polymarket; a signer still there or no [owner] fails the revocation
      */
-    suspend fun settle(userWalletId: UserWalletId, submitted: PolymarketSessionKey): PolymarketSessionKey {
+    suspend fun Raise<PolymarketSessionKeyLifecycleError>.settle(
+        userWalletId: UserWalletId,
+        submitted: PolymarketSessionKey,
+        owner: PolymarketClobIdentity.Owner? = null,
+    ): PolymarketSessionKey {
         var latest = submitted
         var readsWithoutRecord = 0
         repeat(SETTLE_ATTEMPTS) {
@@ -61,7 +70,7 @@ internal class PolymarketSessionKeyRelay(
                         latest.status == PolymarketSessionKeyStatus.REVOKING -> readsWithoutRecord++
                     }
                 }
-            if (readsWithoutRecord == DROPPED_READS) return latest.droppedWhileRevoking()
+            if (readsWithoutRecord >= DROPPED_READS) confirmDropped(owner, latest)?.let { revoked -> return revoked }
         }
         return latest
     }
@@ -78,9 +87,24 @@ internal class PolymarketSessionKeyRelay(
         return false
     }
 
-    private fun PolymarketSessionKey.droppedWhileRevoking(): PolymarketSessionKey {
-        TangemLogger.i("Polymarket session key $address dropped while revoking, taken as revoked")
-        return copy(status = PolymarketSessionKeyStatus.REVOKED)
+    private suspend fun Raise<PolymarketSessionKeyLifecycleError>.confirmDropped(
+        owner: PolymarketClobIdentity.Owner?,
+        revoking: PolymarketSessionKey,
+    ): PolymarketSessionKey? {
+        ensureNotNull(owner) {
+            TangemLogger.e("Polymarket session key ${revoking.address} dropped while revoking, no owner to check it")
+            PolymarketSessionKeyLifecycleError.RevocationFailed(revoking)
+        }
+        val signers = sessionKeyRepository.getSessionSigners(owner)
+            .onLeft { error -> TangemLogger.i("Polymarket session signers not read, dropped key unconfirmed: $error") }
+            .getOrNull()
+            ?: return null
+        ensure(signers.none { it.address.equals(revoking.address, ignoreCase = true) }) {
+            TangemLogger.e("Polymarket session key ${revoking.address} dropped while revoking, still a session signer")
+            PolymarketSessionKeyLifecycleError.RevocationFailed(revoking)
+        }
+        TangemLogger.i("Polymarket session key ${revoking.address} dropped while revoking and gone, taken as revoked")
+        return revoking.copy(status = PolymarketSessionKeyStatus.REVOKED)
     }
 
     private suspend fun resendUnanswered(
