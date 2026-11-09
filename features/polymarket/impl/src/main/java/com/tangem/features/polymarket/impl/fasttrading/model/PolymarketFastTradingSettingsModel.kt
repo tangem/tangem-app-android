@@ -86,9 +86,8 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     }
 
     private fun isActivationOffered(): Boolean {
-        val keys = (uiState.value as? PolymarketFastTradingSettingsUM.Content)?.keys ?: return false
-        val banner = keys.activateBanner ?: return false
-        return keys.areActionsEnabled && !banner.isLoading
+        val content = uiState.value as? PolymarketFastTradingSettingsUM.Content ?: return false
+        return content.keys.activateBanner?.isEnabled == true
     }
 
     private fun confirmRevocation(action: FastTradingKeyActionUM.Revoke) {

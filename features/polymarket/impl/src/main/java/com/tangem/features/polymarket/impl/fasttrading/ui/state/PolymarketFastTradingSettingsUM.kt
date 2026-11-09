@@ -37,7 +37,7 @@ internal data class FastTradingKeysUM(
 )
 
 @Immutable
-internal data class FastTradingActivateBannerUM(val isLoading: Boolean)
+internal data class FastTradingActivateBannerUM(val isLoading: Boolean, val isEnabled: Boolean)
 
 @Immutable
 internal data class FastTradingUnknownSignerUM(

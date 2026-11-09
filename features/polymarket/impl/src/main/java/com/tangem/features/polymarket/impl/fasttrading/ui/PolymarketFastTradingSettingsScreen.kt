@@ -135,7 +135,7 @@ private fun LazyListScope.thisDeviceSection(
                 primaryButton = TangemMessageBanner.Button(
                     text = resourceReference(R.string.common_activate),
                     onClick = onActivateClick,
-                    isEnabled = keys.areActionsEnabled || banner.isLoading,
+                    isEnabled = banner.isEnabled || banner.isLoading,
                     isLoading = banner.isLoading,
                 ),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -242,7 +242,7 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
                 isUnknownSignersWarningShown = false,
                 unknownSigners = persistentListOf(),
                 thisDevice = persistentListOf(),
-                activateBanner = FastTradingActivateBannerUM(isLoading = false),
+                activateBanner = FastTradingActivateBannerUM(isLoading = false, isEnabled = true),
                 otherDevices = persistentListOf(
                     previewRow("iPhone XR", FastTradingKeyStatusUM.Active("20 Apr 2027"), isExpiringSoon = true),
                 ),
