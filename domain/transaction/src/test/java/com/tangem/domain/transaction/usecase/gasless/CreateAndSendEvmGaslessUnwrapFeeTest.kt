@@ -16,10 +16,6 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import java.math.BigInteger
 
-/**
- * Unit tests for [CreateAndSendEvmGaslessTransactionUseCase.unwrapFeePlanIfNeeded] — the batch upgrades the yield
- * module at most once.
- */
 internal class CreateAndSendEvmGaslessUnwrapFeeTest {
 
     private val feeToken: CryptoCurrency.Token = mockk()

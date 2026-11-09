@@ -190,8 +190,6 @@ class DexSwapFeeCalculator(
     /**
      * Gasless fee of a swap out of the yield module: the relayer calls `swap` on the module, which spends its own
      * protocol balance and approves the router itself, so no approve joins the batch.
-     *
-     * @param yieldModuleAddress the user's module on the from-token network.
      */
     suspend fun calculateYieldGasless(
         fromSwapCurrencyStatus: SwapCurrencyStatus,

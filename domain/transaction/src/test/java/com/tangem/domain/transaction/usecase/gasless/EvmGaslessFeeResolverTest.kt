@@ -46,10 +46,6 @@ import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 import java.math.BigInteger
 
-/**
- * Covers the integrated-approve paths: the approve either joins the gasless batch or stays a native transaction, and a
- * fee token in yield adds its withdraw to the same batch.
- */
 internal class EvmGaslessFeeResolverTest {
 
     private val walletManagersFacade: WalletManagersFacade = mockk()
