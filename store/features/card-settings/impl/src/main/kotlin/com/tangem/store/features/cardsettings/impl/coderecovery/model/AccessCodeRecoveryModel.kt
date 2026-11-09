@@ -7,11 +7,9 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.store.features.cardsettings.impl.coderecovery.AccessCodeRecoveryScreenState
 import com.tangem.store.features.cardsettings.impl.common.CardSettingsAnalyticsEvent
-import com.tangem.store.features.cardsettings.impl.common.utils.isAccessCodeRecoveryEnabled
 import com.tangem.store.features.cardsettings.impl.domain.CardSettingsInteractor
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,18 +27,14 @@ internal class AccessCodeRecoveryModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
-    private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
-        ?: error("Scan response is null")
+    private val scannedScanResponse = cardSettingsInteractor.requireScanResponse()
 
     val screenState = MutableStateFlow(
         value = getInitialState(),
     )
 
     private fun getInitialState(): AccessCodeRecoveryScreenState {
-        val isEnabled = isAccessCodeRecoveryEnabled(
-            typeResolver = scannedScanResponse.cardTypesResolver,
-            card = scannedScanResponse.card,
-        )
+        val isEnabled = cardSettingsInteractor.isAccessCodeRecoveryEnabled(scannedScanResponse)
 
         return AccessCodeRecoveryScreenState(
             isEnabledOnCard = isEnabled,
@@ -63,15 +57,7 @@ internal class AccessCodeRecoveryModel @Inject constructor(
                     ),
                 )
 
-                cardSettingsInteractor.update { scanResponse ->
-                    scanResponse.copy(
-                        card = scanResponse.card.copy(
-                            userSettings = scanResponse.card.userSettings?.copy(
-                                isUserCodeRecoveryAllowed = isEnabled,
-                            ),
-                        ),
-                    )
-                }
+                cardSettingsInteractor.updateAccessCodeRecovery(isEnabled)
 
                 router.pop()
             }

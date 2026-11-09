@@ -3,7 +3,7 @@ package com.tangem.store.features.cardsettings.impl.main
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.store.features.cardsettings.impl.common.SecurityOption
+import com.tangem.store.features.cardsettings.impl.domain.SecurityOption
 import com.tangem.store.features.cardsettings.impl.securitymode.toTitleRes
 
 internal data class CardSettingsScreenState(
