@@ -1,5 +1,6 @@
 package com.tangem.features.txhistory.joint.operation.model
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
@@ -14,11 +15,14 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
+import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignerState
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.model.JointOperationTransfer
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeTx
@@ -56,6 +60,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigInteger
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -419,6 +425,65 @@ internal class JointOperationDelegateTest {
         assertThat(values).containsExactly(JointOperationSnapshot.Unreadable)
         verify(exactly = 0) { jointAccountListSupplier(USER_WALLET_ID) }
         verify(exactly = 0) { historyRepository.observeOperation(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN blockaid says malicious WHEN sign THEN Malicious and nothing is submitted`() = runTest {
+        // Arrange
+        val state = signState()
+        coEvery {
+            signJointOperationUseCase.prepare(state.account, jointCurrency.network, OPERATION_ID, TRANSFER_INTENT)
+        } returns prepared(verdict = JointOperationBlockaidGate.Verdict.Malicious).right()
+
+        // Act
+        val actual = createDelegate().sign(state = state, network = jointCurrency.network, operationId = OPERATION_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationSignError.Malicious.left())
+        coVerify(exactly = 0) { signJointOperationUseCase.submit(any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("submittedVerdicts")
+    fun `GIVEN a verdict short of malicious WHEN sign THEN the prepared operation is submitted`(
+        verdict: JointOperationBlockaidGate.Verdict,
+    ) = runTest {
+        // Arrange
+        val state = signState()
+        val prepared = prepared(verdict = verdict)
+        val signed: JointOperation = mockk()
+        coEvery {
+            signJointOperationUseCase.prepare(state.account, jointCurrency.network, OPERATION_ID, TRANSFER_INTENT)
+        } returns prepared.right()
+        coEvery { signJointOperationUseCase.submit(prepared) } returns signed.right()
+
+        // Act
+        val actual = createDelegate().sign(state = state, network = jointCurrency.network, operationId = OPERATION_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(signed.right())
+    }
+
+    private fun submittedVerdicts() = listOf(
+        JointOperationBlockaidGate.Verdict.Safe,
+        JointOperationBlockaidGate.Verdict.Warning,
+        JointOperationBlockaidGate.Verdict.NoVerdict(JointOperationBlockaidGate.Verdict.NoVerdict.Reason.ERROR),
+        JointOperationBlockaidGate.Verdict.NoVerdict(JointOperationBlockaidGate.Verdict.NoVerdict.Reason.TIMEOUT),
+        JointOperationBlockaidGate.Verdict.NoVerdict(
+            JointOperationBlockaidGate.Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK,
+        ),
+    )
+
+    private fun signState(): JointOperationState {
+        val account: Account.Joint = mockk()
+        return mockk {
+            every { this@mockk.account } returns account
+            every { displayed } returns TRANSFER_INTENT
+        }
+    }
+
+    private fun prepared(verdict: JointOperationBlockaidGate.Verdict): PreparedJointOperation.Signing = mockk {
+        every { this@mockk.verdict } returns verdict
     }
 
     private fun createDelegate() = JointOperationDelegate(

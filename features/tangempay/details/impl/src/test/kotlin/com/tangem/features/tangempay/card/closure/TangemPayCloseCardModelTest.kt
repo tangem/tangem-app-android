@@ -8,9 +8,9 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.usecase.CloseTangemPayCardUseCase
+import com.tangem.domain.tangempay.usecase.CloseTangemPayCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -88,7 +88,7 @@ internal class TangemPayCloseCardModelTest {
 
         @Test
         fun `GIVEN close fails WHEN onCloseClick THEN snackbar shown and dialog dismissed`() {
-            coEvery { closeCardUseCase(userWalletId, cardId) } returns VisaApiError.Unspecified.left()
+            coEvery { closeCardUseCase(userWalletId, cardId) } returns TangemPayApiError.Unspecified.left()
             val model = createModel()
 
             model.state.value.onCloseClick()
@@ -99,7 +99,7 @@ internal class TangemPayCloseCardModelTest {
 
         @Test
         fun `GIVEN close fails WHEN onCloseClick THEN progress is reset`() {
-            coEvery { closeCardUseCase(userWalletId, cardId) } returns VisaApiError.Unspecified.left()
+            coEvery { closeCardUseCase(userWalletId, cardId) } returns TangemPayApiError.Unspecified.left()
             val model = createModel()
 
             model.state.value.onCloseClick()

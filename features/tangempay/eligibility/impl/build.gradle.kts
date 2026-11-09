@@ -29,8 +29,8 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.models)
-    implementation(projects.domain.visa)
-    implementation(projects.domain.visa.models)
+    implementation(projects.domain.tangempay)
+    implementation(projects.domain.tangempay.models)
 
     /** Compose */
     api(deps.compose.coil)

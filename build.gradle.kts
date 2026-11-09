@@ -202,10 +202,10 @@ dependencyAnalysis {
                     "org.jetbrains.kotlinx:kotlinx-coroutines-test",
                     "org.junit.jupiter:junit-jupiter",
                 )
-                // wire-runtime (protobuf) and jakarta.inject-api are deep transitives of the Visa /
-                // WalletConnect (reown) SDKs. A few generated/SDK-facing types reference them, but they're
-                // never declared directly — they always arrive with their owning SDK. Don't advise
-                // declaring them per-module.
+                // wire-runtime (protobuf) and jakarta.inject-api are deep transitives of other libraries
+                // (the blockchain SDK, OpenTelemetry disk buffering, Dagger). A few generated/SDK-facing types
+                // reference them, but they're never declared directly — they always arrive with their owning
+                // library. Don't advise declaring them per-module.
                 exclude(
                     "com.squareup.wire:wire-runtime",
                     "jakarta.inject:jakarta.inject-api",
@@ -254,6 +254,8 @@ dependencyAnalysis {
                     ":features:earn:api",
                     ":features:earn:impl",
                     ":features:earn:flow:impl",
+                    ":features:earn:staking:impl",
+                    ":features:earn:yield:impl",
                 )
                 // CameraX is split into runtime-wired artifacts: camera-lifecycle and camera-view back
                 // the preview/ProcessCameraProvider machinery that camera2 (runtimeOnly) drives.
@@ -364,14 +366,6 @@ dependencyAnalysis {
         project(":core:ui") {
             onRuntimeOnly {
                 exclude("com.google.android.material:material")
-            }
-        }
-        // core:error exposes UniversalError, a supertype of VisaActivationError that card consumes via
-        // domain:visa:models. The compiler needs the supertype on the classpath, but DAGP sees no direct
-        // reference and flags it unused — false positive, keep it `implementation`.
-        project(":domain:card") {
-            onUnusedDependencies {
-                exclude(":core:error")
             }
         }
         // The processor tests compile source snippets that import com.tangem.core.socket with kctfork's

@@ -68,6 +68,8 @@ internal class AddExistingWalletModel @Inject constructor(
 
     private val analyticsSource = AnalyticsParam.ScreensSources.ImportWallet
 
+    val importAnalyticsSource: AnalyticsParam.ScreensSources = params.analyticsSource
+
     init {
         trackingContextProxy.addHotWalletContext()
         // After the context: interceptors run when the event is processed, so it carries Product Type only this way.

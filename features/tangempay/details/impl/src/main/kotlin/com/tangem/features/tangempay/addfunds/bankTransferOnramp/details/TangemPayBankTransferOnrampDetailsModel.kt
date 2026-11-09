@@ -10,8 +10,8 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.models.pay.TangemPayProduct
-import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
+import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesLoader
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayRouteFeeUMConverter

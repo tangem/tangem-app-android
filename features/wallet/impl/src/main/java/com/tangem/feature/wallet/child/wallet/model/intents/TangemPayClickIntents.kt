@@ -18,13 +18,13 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.pay.TangemPayProduct
-import com.tangem.domain.models.pay.TangemPayCustomerResidency
+import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -220,7 +220,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         modelScope.launch {
             analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
             sendFeedbackEmailUseCase(
-                type = FeedbackEmailType.Visa.KycRejected(
+                type = FeedbackEmailType.TangemPay.KycRejected(
                     walletMetaInfo = WalletMetaInfo(
                         userWalletId = stateHolder.getSelectedWalletId(),
                     ),
@@ -250,7 +250,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     }
 
     override fun onOnboardingBannerClick(userWalletId: UserWalletId) {
-        analyticsEventHandler.send(TangemPayAnalyticsEvents.MainVisaPermanentBannerClicked())
+        analyticsEventHandler.send(TangemPayAnalyticsEvents.PermanentBannerClicked())
         router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
     }
 
@@ -275,7 +275,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private fun kycRequiredFeedbackEmailType(userWalletId: UserWalletId, customerId: String?): FeedbackEmailType {
         val walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId)
         return if (customerId != null) {
-            FeedbackEmailType.Visa.DirectUserRequest(walletMetaInfo = walletMetaInfo, customerId = customerId)
+            FeedbackEmailType.TangemPay.DirectUserRequest(walletMetaInfo = walletMetaInfo, customerId = customerId)
         } else {
             FeedbackEmailType.DirectUserRequest(walletMetaInfo = walletMetaInfo)
         }

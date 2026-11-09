@@ -19,14 +19,14 @@ import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.usecase.CancelTangemPayOrderUseCase
-import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
-import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
-import com.tangem.domain.pay.usecase.IsTangemPayCustomerVerifiedUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.usecase.CancelTangemPayOrderUseCase
+import com.tangem.domain.tangempay.usecase.CancelTariffPlanPendingTransitionUseCase
+import com.tangem.domain.tangempay.usecase.CancelTariffTransitionUseCase
+import com.tangem.domain.tangempay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.awaitingDepositOrder
@@ -234,7 +234,7 @@ internal class TangemPayCurrentPlanModelTest {
     @Test
     fun `GIVEN cancel fails WHEN cancel clicked THEN error message sent AND processing reset`() {
         // GIVEN
-        coEvery { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) } returns VisaApiError.Unspecified.left()
+        coEvery { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(planState = awaitingDepositState())
 
         // WHEN
@@ -248,7 +248,7 @@ internal class TangemPayCurrentPlanModelTest {
     @Test
     fun `GIVEN cancel in progress WHEN cancel clicked again THEN use case called once AND back is ignored`() {
         // GIVEN
-        val pending = CompletableDeferred<Either<VisaApiError, Unit>>()
+        val pending = CompletableDeferred<Either<TangemPayApiError, Unit>>()
         coEvery { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) } coAnswers { pending.await() }
         val model = createModel(planState = awaitingDepositState())
         model.state.value.notification?.button?.onClick?.invoke()
@@ -317,7 +317,7 @@ internal class TangemPayCurrentPlanModelTest {
         // Arrange
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { isCustomerVerified(USER_WALLET_ID) } returns VisaApiError.Unspecified.left()
+        coEvery { isCustomerVerified(USER_WALLET_ID) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
 
         // Act
@@ -351,7 +351,7 @@ internal class TangemPayCurrentPlanModelTest {
     fun `GIVEN money accounts AND cancel fails WHEN cancel clicked THEN error sent AND no navigation`() {
         // Arrange
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
-        coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns VisaApiError.Unspecified.left()
+        coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
 
         // Act

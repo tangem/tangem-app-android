@@ -10,6 +10,7 @@ import arrow.core.raise.ensureNotNull
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
@@ -216,8 +217,17 @@ internal class JointSendDelegate @Inject constructor(
             .mapLeft(JointOperationCreateError::Failed)
             .bind()
 
-        createJointOperationUseCase(account = account, network = currency.network, intent = intent, gasToken = gasToken)
+        val prepared = createJointOperationUseCase
+            .prepare(account = account, network = currency.network, intent = intent, gasToken = gasToken)
             .bind()
+        ensure(prepared.verdict != JointOperationBlockaidGate.Verdict.Malicious) { JointOperationCreateError.Malicious }
+
+        when (val result = createJointOperationUseCase.submit(prepared = prepared).bind()) {
+            CreateJointOperationUseCase.SubmitResult.Created -> Unit
+            is CreateJointOperationUseCase.SubmitResult.Rebuilt -> {
+                createJointOperationUseCase.submit(prepared = result.prepared).bind()
+            }
+        }
     }
 
     private suspend fun resolveGasToken(

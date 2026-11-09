@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.account
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayTariffPlanState
-import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCard
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import kotlinx.serialization.Serializable

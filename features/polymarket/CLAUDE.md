@@ -5,9 +5,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 ## Gating and wiring
 
-- `AND_16204_POLYMARKET_ENABLED` gates everything (dev builds only until release). The feed's Predictions
-  block additionally needs Amplitude `twi_1576_polymarket = on`, read once per model and only while the
-  toggle is on; accounts, balances and the wallet-screen row follow the toggle alone.
+- The feed's Predictions block is gated by Amplitude `twi_1576_polymarket = on`, read once per model.
+  Accounts, balances and the wallet-screen row are not gated.
 - Add funds (swap) and Withdraw are not screens of this module: they are `AppRoute.Swap` with
   `AccountFlow.PredictionTopUp` / `PredictionWithdraw`, and the Polymarket branches live in
   `features/swap/impl`. Withdraw ends on swap's success screen with the tracker polling in the background —
@@ -82,7 +81,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   `PlaceActionUM` (`Ready`, `ReadyOnceQuoted`, `AwaitingQuote`, `Unavailable`); the button reads only that and
   spins while a tap waits.
 - **Quote loop** runs only while Amount or Order is on top and in the foreground (bound to its resume/pause).
-  The quote is never cached; a stale one (>60 s at signing) is refused before submission.
+  The quote is never cached. A quote older than 30 s at the tap is refused, as on iOS: the price-changed
+  dialog shows, Order drops it and requotes, Summary closes back to Amount.
 - **Placeable** = `quote.isPlaceable` (a SELL also places on `BELOW_MIN_ORDER_SIZE`) and, for BUY only,
   the price-weighted minimum. A SELL has no floor beyond one whole share or the whole position.
 - **Shares.** The sellable size is the whole position at on-chain precision (6 decimals), not floored to

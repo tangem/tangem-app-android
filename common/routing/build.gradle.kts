@@ -44,7 +44,7 @@ dependencies {
     api(projects.domain.onramp.models)
     api(projects.domain.staking)
     api(projects.domain.tokens.models)
-    implementation(projects.domain.visa.models)
+    implementation(projects.domain.tangempay.models)
     // endregion
 
     // region Tests

@@ -15,6 +15,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
@@ -67,6 +68,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPredic
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.time.CurrentTimeProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -107,6 +109,8 @@ internal abstract class PlacePredictionModelTestBase {
         every { this@mockk(any()) } returns coldWallet().right()
     }
     protected val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk()
+    protected var nowMillis = START_MILLIS
+    private val currentTimeProvider = CurrentTimeProvider { nowMillis }
 
     protected val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(value = activeStatus())
     protected val isFundingOpen = MutableStateFlow(false)
@@ -140,6 +144,7 @@ internal abstract class PlacePredictionModelTestBase {
             refreshRequisites,
         )
 
+        nowMillis = START_MILLIS
         statusFlow.value = activeStatus()
         isFundingOpen.value = false
         every { statusSupplier(userWalletId = USER_WALLET_ID) } returns statusFlow
@@ -157,6 +162,7 @@ internal abstract class PlacePredictionModelTestBase {
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
         every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+        every { featureToggles.isPolymarketPhaseTwoEnabled } returns false
         coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
             createPosition().right()
@@ -205,7 +211,12 @@ internal abstract class PlacePredictionModelTestBase {
                 predictionFundingWindow = fundingWindow,
                 predictionAccountStatusSupplier = statusSupplier,
                 predictionBalancePoller = balancePoller,
+                currentTimeProvider = currentTimeProvider,
                 refreshPredictionDepositRequisitesInteractor = refreshRequisites,
+                receiveSheetFactory = PolymarketReceiveSheetFactory(
+                    featureToggles = featureToggles,
+                    collateralCurrencyFactory = mockk(relaxed = true),
+                ),
             )
         }
 
@@ -246,6 +257,7 @@ internal abstract class PlacePredictionModelTestBase {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             orderSubmitterFactory = createOrderSubmitterFactory(testScope),
             buttonStyleFactory = createButtonStyleFactory(testScope.createTestingCoroutineDispatcherProvider()),
+            quoteFreshness = createQuoteFreshness(),
         ).also(models::add)
 
     protected fun createOrderSubmitterFactory(
@@ -297,7 +309,13 @@ internal abstract class PlacePredictionModelTestBase {
         quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
         orderSubmitterFactory = orderSubmitterFactory,
         buttonStyleFactory = createButtonStyleFactory(dispatchers = dispatchers),
+        quoteFreshness = createQuoteFreshness(),
     ).also(models::add)
+
+    private fun createQuoteFreshness() = PlacePredictionQuoteFreshness(
+        currentTimeProvider = currentTimeProvider,
+        messageSender = messageSender,
+    )
 
     private fun createButtonStyleFactory(dispatchers: CoroutineDispatcherProvider) =
         object : PlacePredictionButtonStyle.Factory {
@@ -437,6 +455,7 @@ internal abstract class PlacePredictionModelTestBase {
         )
 
     protected companion object {
+        const val START_MILLIS = 1_787_300_000_000L
         const val EVENT_ID = "event-1"
         const val MARKET_ID = "market-1"
         const val ASSET_ID = "asset-1"

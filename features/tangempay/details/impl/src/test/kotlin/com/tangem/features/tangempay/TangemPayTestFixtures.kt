@@ -1,24 +1,24 @@
 package com.tangem.features.tangempay
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.tangem.domain.models.pay.TangemPayImage
+import com.tangem.domain.models.tangempay.TangemPayImage
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.TangemPayCardType
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.model.AccountFeeGroupType
-import com.tangem.domain.pay.model.Order
-import com.tangem.domain.pay.model.OrderStatus
-import com.tangem.domain.pay.model.OrderStep
-import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardType
+import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.model.AccountFeeGroupType
+import com.tangem.domain.tangempay.model.Order
+import com.tangem.domain.tangempay.model.OrderStatus
+import com.tangem.domain.tangempay.model.OrderStep
+import com.tangem.domain.tangempay.model.OrderType
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.Currency
@@ -194,10 +194,10 @@ internal fun payOrder(
 
 internal const val OUTCOME_UNKNOWN_ERRORS = "com.tangem.features.tangempay.TangemPayTestFixturesKt#outcomeUnknownErrors"
 
-internal fun outcomeUnknownErrors(): List<VisaApiError> = listOf(
-    VisaApiError.ServerUnavailable,
-    VisaApiError.UnknownWithoutCode,
-    VisaApiError.RefreshTokenExpired,
+internal fun outcomeUnknownErrors(): List<TangemPayApiError> = listOf(
+    TangemPayApiError.ServerUnavailable,
+    TangemPayApiError.UnknownWithoutCode,
+    TangemPayApiError.RefreshTokenExpired,
 )
 
 internal fun awaitingDepositOrder(

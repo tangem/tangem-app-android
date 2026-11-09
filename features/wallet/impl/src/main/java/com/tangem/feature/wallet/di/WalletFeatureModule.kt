@@ -10,7 +10,7 @@ import com.tangem.feature.wallet.link.DefaultWalletLinkComponent
 import com.tangem.feature.wallet.link.WalletLinkModel
 import com.tangem.feature.wallet.link.WalletLinkRequesterProxy
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedModel
+import com.tangem.feature.wallet.presentation.wallet.ui.components.tangempay.KycRejectedModel
 import com.tangem.feature.wallet.utils.DefaultUserWalletImageFetcher
 import com.tangem.feature.wallet.utils.DefaultUserWalletsFetcher
 import com.tangem.features.wallet.WalletEntryComponent

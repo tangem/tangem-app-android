@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="money_account_balance_unavailable_description">Не вдалося завантажити баланс. Спробуйте пізніше.</string>
+  <string name="money_account_balance_unavailable_title">Баланс недоступний</string>
+  <string name="money_account_main_status_active_v2">ACH</string>
+  <string name="money_account_main_status_awaiting_deposit">Відкриється після поповнення</string>
+  <string name="money_account_main_status_dialog_failed_description">Під час активації сталася помилка</string>
+  <string name="money_account_main_status_dialog_failed_title">Не вдалося активувати рахунок</string>
+  <string name="money_account_main_status_failed">Помилка</string>
   <string name="money_account_send_bank_transfer_unavailable">Недоступно</string>
+  <string name="money_account_send_unavailable_description">Спробуйте знову через 5 хвилин</string>
+  <string name="money_account_send_unavailable_title">Операція зараз недоступна</string>
   <string name="prediction_account_open_detailed_view">Відкрити детальний вигляд</string>
   <string name="prediction_account_subtitle">Поповніть рахунок і почніть прогнозувати</string>
   <string name="prediction_account_title">Акаунт прогнозів</string>
@@ -249,6 +258,9 @@
   <string name="prediction_withdraw_status_in_progress_title">Виведення триває</string>
   <string name="prediction_withdraw_status_sent_description">Зарахування може зайняти до %1$d хв</string>
   <string name="prediction_withdraw_status_sent_title">Кошти надіслано</string>
+  <string name="tangempay_cancel_kyc">Приховати статус</string>
+  <string name="tangempay_cashback_accruals_pay_description">До 11-го числа наступного місяця, після перевірки транзакцій на відповідність правилам програми кешбеку</string>
+  <string name="tangempay_kyc_rejected_button_text">Приховати статус</string>
   <string name="tangempay_pay_support">Підтримка</string>
   <string name="tangempay_sync_needed_body">Оновіть, щоб побачити картку й рахунок</string>
   <string name="tangempay_sync_needed_button">Оновити сесію</string>
@@ -257,6 +269,7 @@
   <string name="tangempay_topup_bank_transfer_title">З банківського рахунку</string>
   <string name="tangempay_topup_receive_title">З іншого гаманця або біржі</string>
   <string name="tangempay_topup_swap_title">З вашого Tangem Wallet</string>
+  <string name="tangempay_unified_onboarding_cashback_title">До 2%%\n%1$s</string>
   <string name="tangempay_unified_onboarding_description">Картка Visa та рахунок у USD в одному. Підтвердьте особу й відкрийте продукти, доступні у вашому регіоні</string>
   <string name="tangempay_unified_onboarding_fees_caption">Долар за долар</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">Без комісій за обмін і щомісячної плати</string>
@@ -271,6 +284,7 @@
   <string name="tangempay_va_banking_details_error_description">Спробуйте ще раз або зверніться до служби підтримки, якщо проблема не зникне</string>
   <string name="tangempay_va_banking_details_error_title">Не вдалося завантажити банківські реквізити</string>
   <string name="token_details_balance_total">Загальний баланс</string>
+  <string name="virtual_account_transactions_empty">Транзакцій ще немає. Почніть витрачати кошти, і тут з’явиться історія.</string>
   <string name="yield_module_main_promo_button">Спробувати Режим дохідності</string>
   <string name="yield_module_main_promo_subtitle">Нехай вільні монети працюють. Без блокування, виведення в будь-який час.</string>
   <string name="yield_module_main_promo_title">Заробляйте на крипті до %1$s%% APY</string>

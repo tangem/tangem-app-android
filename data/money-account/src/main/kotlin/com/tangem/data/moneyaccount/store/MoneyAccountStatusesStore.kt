@@ -3,7 +3,7 @@ package com.tangem.data.moneyaccount.store
 import androidx.datastore.core.DataStore
 import com.tangem.data.moneyaccount.converter.MoneyAccountStatusValueDMConverter
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
+import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue

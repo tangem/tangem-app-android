@@ -18,7 +18,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
@@ -36,7 +35,6 @@ import java.math.BigDecimal
 internal class DefaultYieldSupplyTransactionRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) : YieldSupplyTransactionRepository {
 
     override suspend fun createEnterTransactions(
@@ -120,11 +118,7 @@ internal class DefaultYieldSupplyTransactionRepository(
         createTransaction(
             walletManager = walletManager,
             cryptoCurrency = cryptoCurrency,
-            callData = if (yieldModuleFeatureToggles.isYieldModuleV3Enabled) {
-                wrapWithUpgradeIfNeeded(walletManager, callData)
-            } else {
-                callData
-            },
+            callData = wrapWithUpgradeIfNeeded(walletManager, callData),
             destinationAddress = destinationAddress,
             amount = BigDecimal.ZERO.convertToSdkAmount(cryptoCurrencyStatus),
             fee = fee,
@@ -194,7 +188,6 @@ internal class DefaultYieldSupplyTransactionRepository(
                     yieldContractAddress = activeYieldContractAddress,
                     amount = amount,
                     maxNetworkFee = maxNetworkFee,
-                    wrapIntoUpgrade = yieldModuleFeatureToggles.isYieldModuleV3Enabled,
                 ),
             )
             !yieldSupplyStatus.isActive -> enterTransactions.add(
@@ -204,7 +197,6 @@ internal class DefaultYieldSupplyTransactionRepository(
                     yieldContractAddress = activeYieldContractAddress,
                     amount = amount,
                     maxNetworkFee = maxNetworkFee,
-                    wrapIntoUpgrade = yieldModuleFeatureToggles.isYieldModuleV3Enabled,
                 ),
             )
             else -> Unit
@@ -228,7 +220,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     cryptoCurrency = cryptoCurrency,
                     amount = amount,
                     yieldContractAddress = activeYieldContractAddress,
-                    wrapIntoUpgrade = yieldModuleFeatureToggles.isYieldModuleV3Enabled && isModuleActive,
+                    wrapIntoUpgrade = isModuleActive,
                 ),
             )
         }
@@ -286,6 +278,96 @@ internal class DefaultYieldSupplyTransactionRepository(
             ) ?: error("Wallet manager not found for $network")
             walletManager.isAtLeastV2(walletManager.checkModuleVersionStatus())
         }
+
+    override suspend fun createNativeEnterTransaction(
+        userWalletId: UserWalletId,
+        network: Network,
+        amount: BigDecimal,
+    ): TransactionData.Uncompiled = withContext(dispatchers.io) {
+        runSuspendCatching {
+            val walletManager = getWalletManager(userWalletId, network)
+            val moduleAddress = walletManager.getYieldModuleAddress()
+                .takeUnless { it == EthereumUtils.ZERO_ADDRESS }
+                ?: walletManager.calculateYieldModuleAddress()
+            createNativeTransaction(
+                walletManager = walletManager,
+                moduleAddress = moduleAddress,
+                value = amount,
+                callData = wrapWithUpgradeIfNeeded(
+                    walletManager = walletManager,
+                    callData = YieldSupplyContractCallDataProviderFactory.getEnterWithNativeCallData(),
+                ),
+            )
+        }.logErrorUnlessCancellation().getOrThrow()
+    }
+
+    override suspend fun createNativeWithdrawTransaction(
+        userWalletId: UserWalletId,
+        network: Network,
+        amount: BigDecimal?,
+    ): TransactionData.Uncompiled = withContext(dispatchers.io) {
+        runSuspendCatching {
+            require(amount == null || amount > BigDecimal.ZERO) { "Withdraw amount must be positive: $amount" }
+            val walletManager = getWalletManager(userWalletId, network)
+            val moduleAddress = walletManager.getYieldModuleAddress()
+                .takeUnless { it == EthereumUtils.ZERO_ADDRESS }
+                ?: error("Yield module is not deployed on ${network.id}")
+            val callData = if (amount == null) {
+                YieldSupplyContractCallDataProviderFactory.getExitNativeCallData()
+            } else {
+                YieldSupplyContractCallDataProviderFactory.getWithdrawNativeCallData(
+                    amount = Amount(value = amount, blockchain = walletManager.wallet.blockchain),
+                )
+            }
+            createNativeTransaction(
+                walletManager = walletManager,
+                moduleAddress = moduleAddress,
+                value = BigDecimal.ZERO,
+                callData = wrapWithUpgradeIfNeeded(walletManager, callData),
+            )
+        }.logErrorUnlessCancellation().getOrThrow()
+    }
+
+    override suspend fun isEntrySuspended(userWalletId: UserWalletId, token: CryptoCurrency.Token): Boolean =
+        withContext(dispatchers.io) {
+            runSuspendCatching {
+                getWalletManager(userWalletId, token.network).isEntrySuspended(token.contractAddress)
+            }.logErrorUnlessCancellation().getOrThrow()
+        }
+
+    override suspend fun getWithdrawLiquidity(userWalletId: UserWalletId, token: CryptoCurrency.Token): BigDecimal =
+        withContext(dispatchers.io) {
+            runSuspendCatching {
+                getWalletManager(userWalletId, token.network).getVirtualUnderlyingBalance(
+                    tokenContractAddress = token.contractAddress,
+                    decimals = token.decimals,
+                )
+            }.logErrorUnlessCancellation().getOrThrow()
+        }
+
+    private suspend fun getWalletManager(userWalletId: UserWalletId, network: Network): WalletManager =
+        walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = network.toBlockchain(),
+            derivationPath = network.derivationPath.value,
+        ) ?: error("Wallet manager not found for ${network.id}")
+
+    /**
+     * Unlike the token calls, the amount is in the coin: the transaction builder sends a coin amount as msg.value,
+     * which the native enter needs and the native withdrawals keep at zero.
+     */
+    private fun createNativeTransaction(
+        walletManager: WalletManager,
+        moduleAddress: String,
+        value: BigDecimal,
+        callData: SmartContractCallData,
+    ): TransactionData.Uncompiled = TransactionData.Uncompiled(
+        amount = Amount(value = value, blockchain = walletManager.wallet.blockchain),
+        sourceAddress = walletManager.wallet.address,
+        destinationAddress = moduleAddress,
+        extras = EthereumTransactionExtras(callData = callData, gasLimit = null, nonce = null),
+        fee = null,
+    )
 
     override suspend fun createPartialWithdrawCallData(
         userWalletId: UserWalletId,
@@ -470,14 +552,12 @@ internal class DefaultYieldSupplyTransactionRepository(
         fee = null,
     )
 
-    @Suppress("LongParameterList")
     private suspend fun createInitTokenTransaction(
         walletManager: WalletManager,
         cryptoCurrency: CryptoCurrency.Token,
         yieldContractAddress: String,
         amount: Amount,
         maxNetworkFee: Amount,
-        wrapIntoUpgrade: Boolean,
     ): TransactionData.Uncompiled {
         val callData = YieldSupplyContractCallDataProviderFactory.getInitTokenCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
@@ -487,25 +567,19 @@ internal class DefaultYieldSupplyTransactionRepository(
         return createTransaction(
             walletManager = walletManager,
             cryptoCurrency = cryptoCurrency,
-            callData = if (wrapIntoUpgrade) {
-                walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData)
-            } else {
-                callData
-            },
+            callData = walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData),
             destinationAddress = yieldContractAddress,
             amount = amount,
             fee = null,
         )
     }
 
-    @Suppress("LongParameterList")
     private suspend fun createReactivateTokenTransaction(
         walletManager: WalletManager,
         cryptoCurrency: CryptoCurrency.Token,
         yieldContractAddress: String,
         amount: Amount,
         maxNetworkFee: Amount,
-        wrapIntoUpgrade: Boolean,
     ): TransactionData.Uncompiled {
         val callData = YieldSupplyContractCallDataProviderFactory.getReactivateTokenCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
@@ -515,11 +589,7 @@ internal class DefaultYieldSupplyTransactionRepository(
         return createTransaction(
             walletManager = walletManager,
             cryptoCurrency = cryptoCurrency,
-            callData = if (wrapIntoUpgrade) {
-                walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData)
-            } else {
-                callData
-            },
+            callData = walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData),
             destinationAddress = yieldContractAddress,
             amount = amount,
             fee = null,

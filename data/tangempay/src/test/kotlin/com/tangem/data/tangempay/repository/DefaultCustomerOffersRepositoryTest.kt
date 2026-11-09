@@ -1,0 +1,251 @@
+package com.tangem.data.tangempay.repository
+
+import arrow.core.left
+import arrow.core.right
+import com.google.common.truth.Truth.assertThat
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.spend.datasource.tangempay.TangemPayApi
+import com.tangem.spend.datasource.tangempay.models.response.CustomerOffersResponse
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.model.Offer
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+
+internal class DefaultCustomerOffersRepositoryTest {
+
+    private val tangemPayApi: TangemPayApi = mockk()
+    private val requestHelper: TangemPayRequestPerformer = mockk()
+
+    private val userWalletId = UserWalletId("011")
+
+    private val offersResponse = CustomerOffersResponse(
+        result = listOf(
+            CustomerOffersResponse.Offer(
+                type = "CARD_ISSUE_VIRTUAL_RAIN",
+                fee = CustomerOffersResponse.Fee(amount = BigDecimal("1.00"), currency = "USD"),
+                data = CustomerOffersResponse.Data(
+                    specificationName = "SP_000004",
+                    orderType = "CARD_ISSUE_VIRTUAL_RAIN_KYC",
+                ),
+            ),
+        ),
+    )
+
+    private val reissueOffersResponse = CustomerOffersResponse(
+        result = listOf(
+            CustomerOffersResponse.Offer(
+                type = "CARD_REISSUE_PLASTIC_RAIN",
+                fee = CustomerOffersResponse.Fee(amount = BigDecimal("10.00"), currency = "USD"),
+                data = CustomerOffersResponse.Data(
+                    orderType = "CARD_REISSUE_PLASTIC_RAIN",
+                    deliveryEtaMinDays = 3,
+                    deliveryEtaMaxDays = 20,
+                ),
+            ),
+        ),
+    )
+
+    @BeforeEach
+    fun setUp() {
+        clearMocks(tangemPayApi, requestHelper)
+
+        // performRequest is a transparent pass-through: it invokes the request block and maps the
+        // ApiResponse to Either, so each test drives behaviour via the TangemPayApi mock.
+        coEvery {
+            requestHelper.performRequest<Any>(userWalletId = any(), requestBlock = any())
+        } coAnswers {
+            val block = secondArg<suspend (String) -> ApiResponse<Any>>()
+            when (val response = block(AUTH_HEADER)) {
+                is ApiResponse.Success -> response.data.right()
+                is ApiResponse.Error -> TangemPayApiError.Unspecified.left()
+            }
+        }
+        coEvery { tangemPayApi.getCustomerOffers(any(), any()) } returns ApiResponse.Success(offersResponse)
+        coEvery {
+            tangemPayApi.getProductInstanceOffers(any(), any())
+        } returns ApiResponse.Success(reissueOffersResponse)
+    }
+
+    @Test
+    fun `GIVEN offers response WHEN getOffers called twice THEN backend is hit each time`() = runTest {
+        // Arrange
+        val repository = createRepository()
+
+        // Act
+        val first = repository.getOffers(userWalletId)
+        val second = repository.getOffers(userWalletId)
+
+        // Assert
+        assertThat(first.isRight()).isTrue()
+        assertThat(second).isEqualTo(first)
+        coVerify(exactly = 2) { tangemPayApi.getCustomerOffers(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN backend error WHEN getOffers called again THEN backend is hit again`() = runTest {
+        // Arrange
+        coEvery { tangemPayApi.getCustomerOffers(any(), any()) } returnsMany listOf(
+            ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CustomerOffersResponse>,
+            ApiResponse.Success(offersResponse),
+        )
+        val repository = createRepository()
+
+        // Act
+        val first = repository.getOffers(userWalletId)
+        val second = repository.getOffers(userWalletId)
+
+        // Assert
+        assertThat(first.isLeft()).isTrue()
+        assertThat(second.isRight()).isTrue()
+        coVerify(exactly = 2) { tangemPayApi.getCustomerOffers(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN no deeplink value WHEN getOffers THEN query is sent without deeplink_value`() = runTest {
+        // Arrange
+        val repository = createRepository()
+
+        // Act
+        repository.getOffers(userWalletId)
+
+        // Assert
+        coVerify(exactly = 1) { tangemPayApi.getCustomerOffers(authHeader = AUTH_HEADER, deeplinkValue = null) }
+    }
+
+    @Test
+    fun `GIVEN deeplink value WHEN getOffers THEN it is passed as deeplink_value query`() = runTest {
+        // Arrange
+        val repository = createRepository()
+
+        // Act
+        repository.getOffers(userWalletId, deeplinkValue = DEEPLINK_VALUE)
+
+        // Assert
+        coVerify(exactly = 1) {
+            tangemPayApi.getCustomerOffers(authHeader = AUTH_HEADER, deeplinkValue = DEEPLINK_VALUE)
+        }
+    }
+
+    @Test
+    fun `GIVEN a plastic offer without fee and data WHEN getOffers THEN only the virtual offer is returned`() =
+        runTest {
+            // Arrange
+            val response = CustomerOffersResponse(
+                result = offersResponse.result.orEmpty() + CustomerOffersResponse.Offer(
+                    type = "CARD_ISSUE_PLASTIC_RAIN",
+                    fee = null,
+                    data = null,
+                ),
+            )
+            coEvery { tangemPayApi.getCustomerOffers(any(), any()) } returns ApiResponse.Success(response)
+            val repository = createRepository()
+
+            // Act
+            val actual = repository.getOffers(userWalletId)
+
+            // Assert
+            assertThat(actual.getOrNull()?.orderable?.single()?.type).isEqualTo(Offer.Type.CARD_ISSUE_VIRTUAL_RAIN)
+        }
+
+    @Test
+    fun `GIVEN a plastic offer without fee and data WHEN getOffers THEN its artwork is kept`() = runTest {
+        // Arrange
+        val response = CustomerOffersResponse(
+            result = offersResponse.result.orEmpty() + CustomerOffersResponse.Offer(
+                type = "CARD_ISSUE_PLASTIC_RAIN",
+                fee = null,
+                data = null,
+                images = listOf(CustomerOffersResponse.Image(type = "MAIN", url = PLASTIC_IMAGE_URL)),
+            ),
+        )
+        coEvery { tangemPayApi.getCustomerOffers(any(), any()) } returns ApiResponse.Success(response)
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getOffers(userWalletId)
+
+        // Assert
+        assertThat(actual.getOrNull()?.artwork)
+            .containsExactly(Offer.Type.CARD_ISSUE_PLASTIC_RAIN, PLASTIC_IMAGE_URL)
+    }
+
+    @Test
+    fun `GIVEN a product instance WHEN getProductInstanceOffers THEN the instance offers are returned`() = runTest {
+        // Arrange
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getProductInstanceOffers(userWalletId, PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual.getOrNull()?.orderable?.single()?.type).isEqualTo(Offer.Type.CARD_REISSUE_PLASTIC_RAIN)
+        coVerify(exactly = 1) { tangemPayApi.getProductInstanceOffers(AUTH_HEADER, PRODUCT_INSTANCE_ID) }
+    }
+
+    @Test
+    fun `GIVEN a placeholder reissue offer WHEN getProductInstanceOffers THEN it is dropped`() = runTest {
+        // Arrange
+        val response = CustomerOffersResponse(
+            result = listOf(
+                CustomerOffersResponse.Offer(type = "CARD_REISSUE_PLASTIC_RAIN", fee = null, data = null),
+            ),
+        )
+        coEvery { tangemPayApi.getProductInstanceOffers(any(), any()) } returns ApiResponse.Success(response)
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getProductInstanceOffers(userWalletId, PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual.getOrNull()?.orderable).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a null result WHEN getOffers THEN no offers are returned instead of an error`() = runTest {
+        // Arrange
+        coEvery {
+            tangemPayApi.getCustomerOffers(any(), any())
+        } returns ApiResponse.Success(CustomerOffersResponse(result = null))
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getOffers(userWalletId)
+
+        // Assert
+        assertThat(actual.getOrNull()?.orderable).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN backend error WHEN getProductInstanceOffers THEN the error is returned`() = runTest {
+        // Arrange
+        coEvery { tangemPayApi.getProductInstanceOffers(any(), any()) } returns
+            ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CustomerOffersResponse>
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getProductInstanceOffers(userWalletId, PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
+    }
+
+    private fun createRepository() = DefaultCustomerOffersRepository(
+        tangemPayApi = tangemPayApi,
+        requestHelper = requestHelper,
+    )
+
+    private companion object {
+        const val AUTH_HEADER = "auth-header"
+        const val PLASTIC_IMAGE_URL = "https://images.us.paera.com/whitebird-plastic.png"
+        const val PRODUCT_INSTANCE_ID = "pi_source_0001"
+        const val DEEPLINK_VALUE = "tpay_for_oxford"
+    }
+}

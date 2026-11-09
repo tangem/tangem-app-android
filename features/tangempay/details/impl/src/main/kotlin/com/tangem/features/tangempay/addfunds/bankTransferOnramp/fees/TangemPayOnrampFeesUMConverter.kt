@@ -7,17 +7,17 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 internal class TangemPayOnrampFeesUMConverter(
     private val onRetryClick: () -> Unit,
-) : Converter<Either<VisaApiError, List<AccountFee>>, TangemPayOnrampFeesUM> {
+) : Converter<Either<TangemPayApiError, List<AccountFee>>, TangemPayOnrampFeesUM> {
 
-    override fun convert(value: Either<VisaApiError, List<AccountFee>>): TangemPayOnrampFeesUM = value.fold(
+    override fun convert(value: Either<TangemPayApiError, List<AccountFee>>): TangemPayOnrampFeesUM = value.fold(
         ifLeft = { TangemPayOnrampFeesUM.Error(onRetryClick = onRetryClick) },
         ifRight = { fees -> TangemPayOnrampFeesUM.Content(rows = fees.map(::toFeeRow).toImmutableList()) },
     )

@@ -50,6 +50,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     quoteEngineFactory: PlacePredictionQuoteEngine.Factory,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
     buttonStyleFactory: PlacePredictionButtonStyle.Factory,
+    private val quoteFreshness: PlacePredictionQuoteFreshness,
 ) : Model(), PlacePredictionOrderIntents, PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -179,6 +180,12 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     private fun place(prepared: PreparedPrediction, confirmedWith: PlaceButtonStyleUM) {
+        if (quoteFreshness.refuseIfStale(quote = prepared.quote)) {
+            quoteEngine.requote()
+            settleButtonIfIdle()
+            return
+        }
+
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             quoteEngine.holdDuring {
                 val result = orderSubmitter.submit(
@@ -217,7 +224,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     private fun maxBuyAmount(balance: BigDecimal): BigDecimal? = BuyAmountCalculator.fraction(
         balance = balance,
         fraction = AmountFractionUM.Max,
-        feeRate = uiState.value.lastFeeRate,
+        feeRate = BuyAmountCalculator.feeRate(quote = uiState.value.quote),
     ).takeIf { it >= MIN_QUOTABLE_AMOUNT }
 
     private fun BigDecimal.toCollateralInput(): String =

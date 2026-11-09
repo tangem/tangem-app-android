@@ -19,14 +19,14 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
-import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.IssueAdditionalCardError
-import com.tangem.domain.pay.model.IssueAdditionalCardResult
-import com.tangem.domain.pay.usecase.IssueAdditionalCardUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.IssueAdditionalCardError
+import com.tangem.domain.tangempay.model.IssueAdditionalCardResult
+import com.tangem.domain.tangempay.usecase.IssueAdditionalCardUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.features.tangempay.components.TangemPayCampaignIssueCardComponent
 import com.tangem.features.tangempay.customerTariffPlan
@@ -256,7 +256,7 @@ internal class TangemPayCampaignIssueCardModelTest {
         fun `GIVEN other error WHEN issue clicked THEN snackbar shown AND screen stays`() = runTest {
             // Arrange
             coEvery { issueAdditionalCardUseCase(WALLET_ID, any(), CAMPAIGN_KEY) } returns
-                IssueAdditionalCardError.Other(VisaApiError.ServerUnavailable).left()
+                IssueAdditionalCardError.Other(TangemPayApiError.ServerUnavailable).left()
             val message = captureMessage()
             val model = createModel(testScope = this)
 
@@ -278,7 +278,7 @@ internal class TangemPayCampaignIssueCardModelTest {
         @ParameterizedTest
         @MethodSource(OUTCOME_UNKNOWN_ERRORS)
         fun `GIVEN outcome unknown WHEN issue clicked again THEN the same idempotency key is reused`(
-            error: VisaApiError,
+            error: TangemPayApiError,
         ) = runTest {
             // Arrange
             val idempotencyKeys = mutableListOf<String>()
@@ -303,7 +303,7 @@ internal class TangemPayCampaignIssueCardModelTest {
                 // Arrange
                 val idempotencyKeys = mutableListOf<String>()
                 coEvery { issueAdditionalCardUseCase(WALLET_ID, capture(idempotencyKeys), CAMPAIGN_KEY) } returns
-                    IssueAdditionalCardError.Other(VisaApiError.CardIssueActiveOrderExists).left()
+                    IssueAdditionalCardError.Other(TangemPayApiError.CardIssueActiveOrderExists).left()
                 val model = createModel(testScope = this)
                 model.uiState.value.onIssueClick()
                 advanceUntilIdle()

@@ -35,7 +35,6 @@ internal data class PlacePredictionUM(
     val submit: SubmitUM,
     val placeAction: PlaceActionUM,
     val isAwaitingFunds: Boolean = false,
-    val lastFeeRate: BigDecimal = BigDecimal.ZERO,
     val isAmountFromFraction: Boolean = false,
     val placeButtonStyle: PlaceButtonStyleUM = PlaceButtonStyleUM.HOLD,
     val holdResetKey: Int = 0,

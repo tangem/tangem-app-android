@@ -4,6 +4,9 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
@@ -1074,26 +1077,47 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a fee capped max WHEN max clicked again before its quote returns THEN the fee cap holds`() =
+        fun `GIVEN a steep fee quote WHEN max clicked again before the next quote returns THEN its fee rate is not reused`() =
             runOrderTest {
                 // Arrange
-                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createQuote().copy(
-                    notional = BigDecimal(100),
-                    fees = PredictionOrderFees(
-                        market = BigDecimal(20),
-                        builder = BigDecimal.ZERO,
-                        total = BigDecimal(20),
-                    ),
-                ).right()
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns steepFeeQuote().right()
                 val model = createQuotedModel()
                 model.onMaxClick()
+                val afterFirstClick = model.uiState.value.amountValue
 
                 // Act
                 model.onMaxClick()
 
                 // Assert
-                assertThat(model.uiState.value.amountValue).isEqualTo("83.33")
+                assertThat(afterFirstClick).isEqualTo("83.33")
+                assertThat(model.uiState.value.amountValue).isEqualTo("90")
             }
+
+        @Test
+        fun `GIVEN a steep fee quote followed by a failed one WHEN max clicked THEN the old fee rate is not reused`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returnsMany listOf(
+                    steepFeeQuote().right(),
+                    PredictionOrderQuoteError.Network.left(),
+                )
+                val model = createQuotedModel()
+                model.onAmountChange(value = "20")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val quoteBeforeClick = model.uiState.value.quote
+
+                // Act
+                model.onMaxClick()
+
+                // Assert
+                assertThat(quoteBeforeClick).isInstanceOf(QuoteUM.Error::class.java)
+                assertThat(model.uiState.value.amountValue).isEqualTo("90")
+            }
+
+        private fun steepFeeQuote(): PredictionOrderQuote = createQuote().copy(
+            notional = BigDecimal(100),
+            fees = PredictionOrderFees(market = BigDecimal(20), builder = BigDecimal.ZERO, total = BigDecimal(20)),
+        )
 
         @Test
         fun `GIVEN a German locale WHEN max clicked THEN the amount is entered with a comma the screen reads back`() =
@@ -1451,6 +1475,90 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
     }
 
+    @Nested
+    inner class StaleQuote {
+
+        @Test
+        fun `GIVEN a quote received 30 s ago WHEN place clicked THEN the order is signed`() = runOrderTest {
+            // Arrange
+            val model = createQuotedModel()
+            nowMillis += MAX_QUOTE_AGE_MILLIS
+
+            // Act
+            model.tapPlace()
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { signOrderInteractor(request = any()) }
+            verify(exactly = 0) { messageSender.send(any()) }
+        }
+
+        @Test
+        fun `GIVEN a quote older than 30 s WHEN place clicked THEN it is refused and a new quote is requested`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel()
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+                nowMillis += MAX_QUOTE_AGE_MILLIS + 1
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                assertThat(dialog.captured.title).isNull()
+                assertThat(dialog.captured.message)
+                    .isEqualTo(resourceReference(R.string.prediction_place_price_changed_description))
+                assertThat(dialog.captured.secondAction).isNull()
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
+                coVerify(exactly = 2) { getQuoteUseCase(userWalletId = any(), request = any()) }
+            }
+
+        @Test
+        fun `GIVEN the clock moved back before the quote time WHEN place clicked THEN the quote is refused`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotedModel()
+                nowMillis -= 1
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                verify(exactly = 1) { messageSender.send(any()) }
+            }
+
+        @Test
+        fun `GIVEN a refused stale quote WHEN the new quote arrives and place clicked THEN the new one is signed`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel()
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+                nowMillis += MAX_QUOTE_AGE_MILLIS + 1
+                model.tapPlace()
+                runCurrent()
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 1) { signOrderInteractor(request = any()) }
+                verify(exactly = 1) { messageSender.send(any()) }
+            }
+    }
+
     enum class UnplaceableResult { NoLiquidity, QuoteError }
 
     enum class MarketLoad { Hanging, Failed }
@@ -1505,5 +1613,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         val HELD = BigDecimal("51.234567")
         const val SIGNING_MILLIS = 1_000L
         const val QUOTE_MILLIS = 1_000L
+        const val MAX_QUOTE_AGE_MILLIS = 30_000L
     }
 }

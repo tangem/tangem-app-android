@@ -103,7 +103,7 @@ dependencies {
     api(projects.domain.tokens.models)
     api(projects.domain.transaction)
     api(projects.domain.txhistory)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.walletConnect)
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
@@ -126,7 +126,7 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.stories.models)
     implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.visa.models)
+    implementation(projects.domain.tangempay.models)
     implementation(projects.domain.walletConnect.models)
     implementation(projects.domain.yieldSupply.models)
 

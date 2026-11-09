@@ -1,9 +1,9 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
-import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.util.Currency

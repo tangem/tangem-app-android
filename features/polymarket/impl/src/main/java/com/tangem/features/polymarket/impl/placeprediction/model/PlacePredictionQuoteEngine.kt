@@ -20,6 +20,8 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCa
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.features.polymarket.impl.common.funding.PredictionFundingRequisites
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
@@ -52,6 +54,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.time.CurrentTimeProvider
 import com.tangem.utils.transformer.update
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -93,7 +96,9 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     private val predictionFundingWindow: PredictionFundingWindow,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
     private val predictionBalancePoller: PredictionBalancePoller,
+    private val currentTimeProvider: CurrentTimeProvider,
     refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
+    receiveSheetFactory: PolymarketReceiveSheetFactory,
 ) {
 
     private val quoteJobHolder = JobHolder()
@@ -110,8 +115,12 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         activeStatus = activeStatus,
         router = router,
         messageSender = messageSender,
-        refreshInteractor = refreshPredictionDepositRequisitesInteractor,
-        scope = scope,
+        receiveSheetFactory = receiveSheetFactory,
+        requisites = PredictionFundingRequisites(
+            refreshInteractor = refreshPredictionDepositRequisitesInteractor,
+            userWalletId = params.userWalletId,
+            scope = scope,
+        ),
     )
 
     private var isNegRiskMarket: Boolean? = null
@@ -197,6 +206,14 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
         cancelQuote()
         return PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk, positionId = positionId)
+    }
+
+    fun requote() {
+        uiState.update { state ->
+            SetAmountTransformer(value = state.amountValue, isAmountFromFraction = state.isAmountFromFraction)
+                .transform(state)
+        }
+        restartQuoteLoop(withDebounce = false)
     }
 
     suspend fun <T> holdDuring(block: suspend () -> T): T {
@@ -429,7 +446,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         uiState.update(
             SetQuoteResultTransformer(
                 result = result,
-                receivedAtMillis = System.currentTimeMillis(),
+                receivedAtMillis = currentTimeProvider.nowMillis(),
                 assetId = tradedAssetId,
             ),
         )

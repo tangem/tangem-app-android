@@ -24,7 +24,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
@@ -143,7 +143,6 @@ internal class SingleAccountStatusListProducerContributionsTest {
             predictionAccountStatusSupplier = mockk<PredictionAccountStatusSupplier> {
                 every { this@mockk.invoke(userWalletId = id) } returns flowOf(PredictionAccountStatusValue.Loading)
             },
-            polymarketFeatureToggles = mockk { every { isPolymarketEnabled } returns true },
             // the toggle is off, so the supplier is never invoked
             collectiblesAccountStatusSupplier = mockk(),
             collectiblesFeatureToggles = mockk { every { isCollectiblesEnabled } returns false },

@@ -64,7 +64,7 @@ sealed class DeepLinkRoute {
         override val host: String = "token_exchanges"
     }
 
-    data object OnboardVisa : DeepLinkRoute() {
+    data object TangemPayOnboard : DeepLinkRoute() {
         override val host: String = "onboard-visa"
     }
 

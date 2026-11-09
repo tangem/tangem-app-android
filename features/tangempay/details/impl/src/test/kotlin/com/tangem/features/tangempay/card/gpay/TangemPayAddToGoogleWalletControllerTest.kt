@@ -14,14 +14,14 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.account.CardDisplayName
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.TangemPayCardProvisioningData
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.model.TangemPayCardProvisioningData
+import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController.Entry
 import com.tangem.features.tangempay.details.impl.R
@@ -676,10 +676,10 @@ internal class TangemPayAddToGoogleWalletControllerTest {
         }
 
         private fun provideTestModels() = listOf(
-            BackendFailureModel(error = VisaApiError.UnknownWithoutCode, expectedDialog = NETWORK_ERROR_DIALOG),
-            BackendFailureModel(error = VisaApiError.ServerUnavailable, expectedDialog = NETWORK_ERROR_DIALOG),
-            BackendFailureModel(error = VisaApiError.Unspecified, expectedDialog = GENERIC_ERROR_DIALOG),
-            BackendFailureModel(error = VisaApiError.RefreshTokenExpired, expectedDialog = GENERIC_ERROR_DIALOG),
+            BackendFailureModel(error = TangemPayApiError.UnknownWithoutCode, expectedDialog = NETWORK_ERROR_DIALOG),
+            BackendFailureModel(error = TangemPayApiError.ServerUnavailable, expectedDialog = NETWORK_ERROR_DIALOG),
+            BackendFailureModel(error = TangemPayApiError.Unspecified, expectedDialog = GENERIC_ERROR_DIALOG),
+            BackendFailureModel(error = TangemPayApiError.RefreshTokenExpired, expectedDialog = GENERIC_ERROR_DIALOG),
         )
     }
 

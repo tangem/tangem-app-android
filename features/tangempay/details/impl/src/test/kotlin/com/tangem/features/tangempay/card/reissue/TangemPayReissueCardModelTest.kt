@@ -8,13 +8,13 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.error.UniversalError
-import com.tangem.domain.models.pay.TangemPayReissueCardFee
+import com.tangem.domain.models.tangempay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.TangemPayCardBalance
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
-import com.tangem.domain.pay.usecase.ReissueTangemPayCardUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.TangemPayCardBalance
+import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.repository.TangemPayReissueCardRepository
+import com.tangem.domain.tangempay.usecase.ReissueTangemPayCardUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -135,7 +135,7 @@ internal class TangemPayReissueCardModelTest {
         ),
         LoadDataModel(
             balance = balance(amount = "10").right(),
-            fee = VisaApiError.Unspecified.left(),
+            fee = TangemPayApiError.Unspecified.left(),
             expectedError = TangemPayReissueCardError.InitialDataLoading,
             expectedConfirmButtonEnabled = true,
         ),
@@ -147,7 +147,7 @@ internal class TangemPayReissueCardModelTest {
 
     data class LoadDataModel(
         val balance: Either<UniversalError, TangemPayCardBalance>,
-        val fee: Either<VisaApiError, TangemPayReissueCardFee>,
+        val fee: Either<TangemPayApiError, TangemPayReissueCardFee>,
         val expectedError: TangemPayReissueCardError?,
         val expectedConfirmButtonEnabled: Boolean,
     )

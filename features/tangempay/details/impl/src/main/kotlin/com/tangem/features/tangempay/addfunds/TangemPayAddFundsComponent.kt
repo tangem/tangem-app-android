@@ -9,7 +9,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.TangemPayTopUpData
+import com.tangem.domain.tangempay.model.TangemPayTopUpData
 import java.math.BigDecimal
 
 internal class TangemPayAddFundsComponent(

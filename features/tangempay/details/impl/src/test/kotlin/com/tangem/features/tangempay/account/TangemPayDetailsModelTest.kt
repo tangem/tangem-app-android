@@ -24,35 +24,35 @@ import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.account.VirtualAccountOnramp
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.CashbackDisplayMode
-import com.tangem.domain.pay.model.CashbackSummary
-import com.tangem.domain.pay.model.TangemPayCashback
-import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
-import com.tangem.domain.pay.usecase.DismissVirtualAccountOrderFailureUseCase
-import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
-import com.tangem.domain.pay.usecase.GetCashbackDeactivationDismissedUseCase
-import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
-import com.tangem.domain.pay.usecase.ObserveCashbackSummaryUseCase
-import com.tangem.domain.pay.usecase.SetCashbackDeactivationDismissedUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.CashbackDisplayMode
+import com.tangem.domain.tangempay.model.CashbackSummary
+import com.tangem.domain.tangempay.model.TangemPayCashback
+import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.tangempay.usecase.DismissVirtualAccountOrderFailureUseCase
+import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.tangempay.usecase.GetCashbackDeactivationDismissedUseCase
+import com.tangem.domain.tangempay.usecase.GetCashbackSummaryUseCase
+import com.tangem.domain.tangempay.usecase.ObserveCashbackSummaryUseCase
+import com.tangem.domain.tangempay.usecase.SetCashbackDeactivationDismissedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.pay.model.CardIssueOffers
-import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.model.Order
-import com.tangem.domain.pay.model.OrderStatus
-import com.tangem.domain.pay.model.OrderStep
-import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
-import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.CardIssueOffers
+import com.tangem.domain.tangempay.model.Offer
+import com.tangem.domain.tangempay.model.Order
+import com.tangem.domain.tangempay.model.OrderStatus
+import com.tangem.domain.tangempay.model.OrderStep
+import com.tangem.domain.tangempay.model.OrderType
+import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.customerTariffPlan
@@ -300,7 +300,7 @@ internal class TangemPayDetailsModelTest {
         @Test
         fun `GIVEN nothing cached WHEN refresh fails THEN error block shown`() = runTest {
             // Arrange
-            givenRefreshReturns(VisaApiError.Unspecified.left())
+            givenRefreshReturns(TangemPayApiError.Unspecified.left())
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -430,7 +430,7 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN credentials fail WHEN banking details retried THEN error returned and nothing opened`() = runTest {
         // Arrange
         coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns
-            VisaApiError.Unspecified.left()
+            TangemPayApiError.Unspecified.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -438,7 +438,7 @@ internal class TangemPayDetailsModelTest {
         val actual = model.retryBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
 
         // Assert
-        assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
+        assertThat(actual).isEqualTo(TangemPayApiError.Unspecified.left())
         verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
         model.onDestroy()
     }
@@ -624,7 +624,7 @@ internal class TangemPayDetailsModelTest {
             // Assert
             coVerify(exactly = 1) {
                 sendFeedbackEmailUseCase.invoke(
-                    type = FeedbackEmailType.Visa.FeatureIsBeta(
+                    type = FeedbackEmailType.TangemPay.FeatureIsBeta(
                         walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                         customerId = "customer-id",
                     ),
@@ -661,7 +661,7 @@ internal class TangemPayDetailsModelTest {
         // Assert
         coVerify(exactly = 1) {
             sendFeedbackEmailUseCase.invoke(
-                type = FeedbackEmailType.Visa.FailedIssueCard(
+                type = FeedbackEmailType.TangemPay.FailedIssueCard(
                     walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                     customerId = "customer-id",
                 ),
@@ -808,7 +808,7 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN the active order lookup fails WHEN withdraw clicked THEN hub pushed without in progress error`() =
         runTest {
             // Arrange
-            coEvery { findActiveBankOfframpOrderUseCase(any()) } returns VisaApiError.Unspecified.left()
+            coEvery { findActiveBankOfframpOrderUseCase(any()) } returns TangemPayApiError.Unspecified.left()
             val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
             advanceUntilIdle()
 
@@ -941,7 +941,7 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN the offers request fails WHEN add card clicked THEN a message is shown and nothing is opened`() =
         runTest {
             // Arrange
-            coEvery { getCustomerOffers.cardIssueOffers(any()) } returns VisaApiError.ServerUnavailable.left()
+            coEvery { getCustomerOffers.cardIssueOffers(any()) } returns TangemPayApiError.ServerUnavailable.left()
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -1119,7 +1119,7 @@ internal class TangemPayDetailsModelTest {
         ),
     )
 
-    private fun givenRefreshReturns(result: Either<VisaApiError, CashbackSummary>) {
+    private fun givenRefreshReturns(result: Either<TangemPayApiError, CashbackSummary>) {
         coEvery { getCashbackSummaryUseCase(any()) } coAnswers {
             result.onRight { summary ->
                 cachedSummary.value = summary.takeIf {
@@ -1386,7 +1386,7 @@ internal class TangemPayDetailsModelTest {
         fun `GIVEN banking details fail WHEN va onramp deeplink handled THEN details error sheet opens`() =
             runTest {
                 // Arrange
-                coEvery { getBankCredentialsUseCase(any(), any()) } returns mockk<VisaApiError>(relaxed = true).left()
+                coEvery { getBankCredentialsUseCase(any(), any()) } returns mockk<TangemPayApiError>(relaxed = true).left()
                 val payModel = createModel(
                     testScope = this,
                     initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,

@@ -11,12 +11,12 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
-import com.tangem.domain.pay.usecase.GetCurrentTariffUseCase
-import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
-import com.tangem.domain.pay.usecase.SubmitTariffTransitionUseCase
+import com.tangem.domain.tangempay.usecase.GetCurrentTariffUseCase
+import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanTransitionsUseCase
+import com.tangem.domain.tangempay.usecase.SubmitTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory

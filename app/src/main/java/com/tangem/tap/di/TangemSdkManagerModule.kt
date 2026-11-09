@@ -12,8 +12,8 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
-import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
-import com.tangem.tap.domain.tasks.visa.TangemPayGenerateMoneyAccountAddressTask
+import com.tangem.tap.domain.tasks.tangempay.TangemPayGenerateAddressAndSignChallengeTask
+import com.tangem.tap.domain.tasks.tangempay.TangemPayGenerateMoneyAccountAddressTask
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import dagger.Lazy
 import dagger.Module

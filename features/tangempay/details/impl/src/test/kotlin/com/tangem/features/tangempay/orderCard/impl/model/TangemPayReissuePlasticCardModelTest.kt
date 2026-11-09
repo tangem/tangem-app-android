@@ -8,12 +8,12 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.model.Offer
+import com.tangem.domain.tangempay.model.OrderType
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.orderCard.impl.TangemPayReissuePlasticCardComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayReissuePlasticCardUM
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -139,7 +139,7 @@ internal class TangemPayReissuePlasticCardModelTest {
         // Arrange
         coEvery {
             getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID)
-        } returns VisaApiError.ServerUnavailable.left()
+        } returns TangemPayApiError.ServerUnavailable.left()
         val model = createLoadedModel()
         val error = model.state.value as TangemPayReissuePlasticCardUM.Error
         coEvery {
@@ -240,7 +240,7 @@ internal class TangemPayReissuePlasticCardModelTest {
         LoadErrorModel(name = "offers request fails") {
             coEvery {
                 getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID)
-            } returns VisaApiError.ServerUnavailable.left()
+            } returns TangemPayApiError.ServerUnavailable.left()
         },
         LoadErrorModel(name = "no reissue offer for the product instance") {
             coEvery {
@@ -254,7 +254,7 @@ internal class TangemPayReissuePlasticCardModelTest {
         },
         LoadErrorModel(name = "customer info request fails") {
             coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
-                VisaApiError.ServerUnavailable.left()
+                TangemPayApiError.ServerUnavailable.left()
         },
         LoadErrorModel(name = "blank kyc country") {
             coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns

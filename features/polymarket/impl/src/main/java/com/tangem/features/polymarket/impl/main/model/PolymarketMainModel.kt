@@ -38,7 +38,7 @@ import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
-import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveConfigFactory
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.features.polymarket.impl.main.addfunds.dismissIfShown
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
@@ -101,6 +101,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val predictionFundingWindow: PredictionFundingWindow,
     private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+    private val receiveSheetFactory: PolymarketReceiveSheetFactory,
     observePolymarketSportsStateUseCase: ObservePolymarketSportsStateUseCase,
     observePolymarketLiveQuotesUseCase: ObservePolymarketLiveQuotesUseCase,
     polymarketFeatureToggles: PolymarketFeatureToggles,
@@ -539,14 +540,12 @@ internal class PolymarketMainModel @Inject constructor(
 
     override fun onReceiveClick() {
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
-        val target = fundingRequisites.target ?: return
+        val requisites = fundingRequisites.ready ?: return
         fundingSheetNavigation.activate(
-            PolymarketFundingSheetConfig.Receive(
-                config = PolymarketReceiveConfigFactory.create(
-                    cryptoCurrency = collateral,
-                    userWalletId = params.userWalletId,
-                    target = target,
-                ),
+            receiveSheetFactory.create(
+                collateral = collateral,
+                userWalletId = params.userWalletId,
+                requisites = requisites,
             ),
         )
     }

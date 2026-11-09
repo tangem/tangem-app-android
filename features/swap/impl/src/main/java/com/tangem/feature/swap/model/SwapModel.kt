@@ -77,9 +77,9 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.WithdrawalResult
-import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
-import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
+import com.tangem.domain.tangempay.WithdrawalResult
+import com.tangem.domain.tangempay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -1715,10 +1715,7 @@ internal class SwapModel @Inject constructor(
 
         return if (consideredProviders.isNotEmpty()) {
             val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
-            val bestQuotesProvider = SwapProviderResolver.findBest(
-                states = successLoadedData,
-                isOverallBestPriceEnabled = swapFeatureToggles.isOverallBestPriceEnabled,
-            )
+            val bestQuotesProvider = SwapProviderResolver.findBest(states = successLoadedData)
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
                 // logic for always choose best if already selected provider
@@ -1877,23 +1874,14 @@ internal class SwapModel @Inject constructor(
                             messageString = "onSwapClick: swap transaction error: $swapTransactionState",
                             shouldSanitize = false,
                         )
-                        if (swapFeatureToggles.isHideRejectedCexProviderEnabled) {
-                            hideProviderIfRejected(provider = provider, error = swapTransactionState)
-                            startLoadingQuotesFromLastState()
-                            showTransactionErrorAlert(
-                                error = swapTransactionState,
-                                isSwapAttemptAlert = true,
-                                providerName = provider.name,
-                                amountCurrency = fromSwapCurrencyStatus.currency,
-                            )
-                        } else {
-                            startLoadingQuotesFromLastState()
-                            showTransactionErrorAlert(
-                                error = swapTransactionState,
-                                isSwapAttemptAlert = true,
-                                amountCurrency = fromSwapCurrencyStatus.currency,
-                            )
-                        }
+                        hideProviderIfRejected(provider = provider, error = swapTransactionState)
+                        startLoadingQuotesFromLastState()
+                        showTransactionErrorAlert(
+                            error = swapTransactionState,
+                            isSwapAttemptAlert = true,
+                            providerName = provider.name,
+                            amountCurrency = fromSwapCurrencyStatus.currency,
+                        )
                     }
                     is SwapTransactionState.TangemPayWithdrawalData -> {
                         processTangemPayWithdrawal(
@@ -2601,7 +2589,7 @@ internal class SwapModel @Inject constructor(
         modelScope.launch {
             val metaInfo = getWalletMetaInfoUseCase(fromUserWalletId).getOrNull() ?: return@launch
             val customerId = getTangemPayCustomerIdUseCase(fromUserWalletId).getOrNull().orEmpty()
-            val email = FeedbackEmailType.Visa.Withdrawal(
+            val email = FeedbackEmailType.TangemPay.Withdrawal(
                 walletMetaInfo = metaInfo,
                 customerId = customerId,
                 providerName = dataState.selectedProvider?.name.orEmpty(),

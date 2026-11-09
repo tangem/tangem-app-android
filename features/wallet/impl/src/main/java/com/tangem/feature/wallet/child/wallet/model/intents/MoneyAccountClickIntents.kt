@@ -80,7 +80,7 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
         modelScope.launch {
             sendFeedbackEmailUseCase(
-                type = FeedbackEmailType.Visa.MoneyAccountRequest(
+                type = FeedbackEmailType.TangemPay.MoneyAccountRequest(
                     walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                     customerId = customerId,
                 ),
