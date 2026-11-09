@@ -1,4 +1,4 @@
-package com.tangem.store.features.cardsettings.impl.main
+package com.tangem.store.features.cardsettings.impl.main.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
@@ -24,6 +24,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.DeviceSettingsScreenTestTags
 import com.tangem.store.features.cardsettings.impl.common.DetailsMainButton
+import com.tangem.store.features.cardsettings.impl.main.ui.state.CardInfoUM
+import com.tangem.store.features.cardsettings.impl.main.ui.state.CardSettingsUM
 import com.tangem.store.features.cardsettings.impl.common.SettingsScreensScaffold
 import com.tangem.store.features.cardsettings.impl.R as ImplR
 
@@ -31,7 +33,7 @@ private const val CARD_PLACEHOLDER_SECONDARY_ROTATION = -15f
 private const val CARD_PLACEHOLDER_PRIMARY_ROTATION = -1f
 
 @Composable
-internal fun CardSettingsScreen(state: CardSettingsScreenState, modifier: Modifier = Modifier) {
+internal fun CardSettingsScreen(state: CardSettingsUM, modifier: Modifier = Modifier) {
     val isCardReadingNeeded = state.cardDetails == null
 
     SettingsScreensScaffold(
@@ -129,7 +131,7 @@ private fun ScanCardContent(onScanCardClick: () -> Unit) {
 
 @Suppress("ComplexMethod")
 @Composable
-private fun CardSettings(state: CardSettingsScreenState) {
+private fun CardSettings(state: CardSettingsUM) {
     if (state.cardDetails == null) return
 
     LazyColumn(
@@ -139,21 +141,21 @@ private fun CardSettings(state: CardSettingsScreenState) {
     ) {
         items(state.cardDetails) { cardInfo ->
             val paddingBottom = when (cardInfo) {
-                is CardInfo.CardId, is CardInfo.Issuer -> 12.dp
-                is CardInfo.SignedHashes -> 14.dp
-                is CardInfo.SecurityMode -> 16.dp
-                is CardInfo.ChangeAccessCode -> 16.dp
-                is CardInfo.AccessCodeRecovery -> 16.dp
-                is CardInfo.ResetToFactorySettings -> 28.dp
+                is CardInfoUM.CardId, is CardInfoUM.Issuer -> 12.dp
+                is CardInfoUM.SignedHashes -> 14.dp
+                is CardInfoUM.SecurityMode -> 16.dp
+                is CardInfoUM.ChangeAccessCode -> 16.dp
+                is CardInfoUM.AccessCodeRecovery -> 16.dp
+                is CardInfoUM.ResetToFactorySettings -> 28.dp
             }
             val paddingTop = when (cardInfo) {
-                is CardInfo.CardId -> 0.dp
-                is CardInfo.Issuer -> 12.dp
-                is CardInfo.SignedHashes -> 12.dp
-                is CardInfo.SecurityMode -> 14.dp
-                is CardInfo.ChangeAccessCode -> 16.dp
-                is CardInfo.AccessCodeRecovery -> 16.dp
-                is CardInfo.ResetToFactorySettings -> 16.dp
+                is CardInfoUM.CardId -> 0.dp
+                is CardInfoUM.Issuer -> 12.dp
+                is CardInfoUM.SignedHashes -> 12.dp
+                is CardInfoUM.SecurityMode -> 14.dp
+                is CardInfoUM.ChangeAccessCode -> 16.dp
+                is CardInfoUM.AccessCodeRecovery -> 16.dp
+                is CardInfoUM.ResetToFactorySettings -> 16.dp
             }
             Column(
                 modifier = Modifier
@@ -199,16 +201,16 @@ private fun CardSettings(state: CardSettingsScreenState) {
 
 // region Preview
 @Composable
-private fun CardSettingsScreenStateSample() {
-    CardSettingsScreen(state = CardSettingsScreenState(onBackClick = {}, onScanCardClick = {}, onElementClick = {}))
+private fun CardSettingsUMSample() {
+    CardSettingsScreen(state = CardSettingsUM(onBackClick = {}, onScanCardClick = {}, onElementClick = {}))
 }
 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun CardSettingsScreenStatePreview() {
+private fun CardSettingsUMPreview() {
     TangemThemePreview {
-        CardSettingsScreenStateSample()
+        CardSettingsUMSample()
     }
 }
 // endregion Preview

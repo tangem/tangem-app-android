@@ -1,11 +1,11 @@
-package com.tangem.store.features.cardsettings.impl.resetcard
+package com.tangem.store.features.cardsettings.impl.resetcard.ui.state
 
 import androidx.annotation.StringRes
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
-internal data class ResetCardScreenState(
+internal data class ResetCardUM(
     val isResetButtonEnabled: Boolean,
     val descriptionText: TextReference,
     val warningsToShow: ImmutableList<WarningUM>,
