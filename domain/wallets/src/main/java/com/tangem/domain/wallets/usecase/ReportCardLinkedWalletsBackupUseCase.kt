@@ -6,6 +6,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.backup.CardBackupConverter
 import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -18,6 +19,7 @@ import kotlinx.coroutines.sync.withLock
  * card of the wallet, so its role is not sent. A locked wallet is skipped until it is unlocked, because its card is
  * stored without wallets and the curves would be lost.
  */
+@RemoveWithToggle("TWI_1586_CARD_LINKED_STATUS_UPDATE_V2")
 class ReportCardLinkedWalletsBackupUseCase(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletCardsBackupRepository: WalletCardsBackupRepository,
