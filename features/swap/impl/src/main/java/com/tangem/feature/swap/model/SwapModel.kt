@@ -53,7 +53,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.account.status.utils.NetworkContributionsRefresher
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
@@ -184,7 +184,7 @@ internal class SwapModel @Inject constructor(
     private val analyticsErrorEventHandler: AnalyticsErrorHandler,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
-    private val networkContributionsRefresher: NetworkContributionsRefresher,
+    private val balanceContributionsRefresher: BalanceContributionsRefresher,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
@@ -3301,7 +3301,7 @@ internal class SwapModel @Inject constructor(
             network = network,
             delayMillis = UPDATE_BALANCE_DELAY_MILLIS,
         )
-        networkContributionsRefresher(userWalletId = userWalletId, network = network)
+        balanceContributionsRefresher(userWalletId = userWalletId, network = network)
     }
 
     private fun triggerPromoProviderEvent(recommendedProvider: SwapProvider?, bestQuotesProvider: SwapProvider?) {

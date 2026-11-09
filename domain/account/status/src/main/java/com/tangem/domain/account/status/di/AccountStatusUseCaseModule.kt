@@ -6,7 +6,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.*
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
-import com.tangem.domain.account.status.utils.NetworkContributionsRefresher
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
@@ -196,12 +196,12 @@ internal object AccountStatusUseCaseModule {
     @Provides
     @Singleton
     fun provideNetworkContributionsRefresher(
-        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        singleAccountListSupplier: SingleAccountListSupplier,
         balanceFetchingOperations: BalanceFetchingOperations,
         tokensFeatureToggles: TokensFeatureToggles,
-    ): NetworkContributionsRefresher {
-        return NetworkContributionsRefresher(
-            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+    ): BalanceContributionsRefresher {
+        return BalanceContributionsRefresher(
+            singleAccountListSupplier = singleAccountListSupplier,
             balanceFetchingOperations = balanceFetchingOperations,
             tokensFeatureToggles = tokensFeatureToggles,
         )

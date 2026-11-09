@@ -2,7 +2,7 @@ package com.tangem.features.send.common
 
 import arrow.core.right
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
-import com.tangem.domain.account.status.utils.NetworkContributionsRefresher
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -25,7 +25,7 @@ internal class SendBalanceUpdaterTest {
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase = mockk()
     private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk(relaxed = true)
     private val updateDelayedNetworkStatusUseCase: UpdateDelayedNetworkStatusUseCase = mockk(relaxed = true)
-    private val networkContributionsRefresher: NetworkContributionsRefresher = mockk(relaxed = true)
+    private val balanceContributionsRefresher: BalanceContributionsRefresher = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId(stringValue = "0123456789")
     private val userWallet: UserWallet = mockk {
@@ -64,7 +64,7 @@ internal class SendBalanceUpdaterTest {
             // Assert
             coVerifyOrder {
                 updateDelayedNetworkStatusUseCase(userWalletId, sentNetwork, any())
-                networkContributionsRefresher(userWalletId, sentNetwork)
+                balanceContributionsRefresher(userWalletId, sentNetwork)
             }
         }
 
@@ -75,7 +75,7 @@ internal class SendBalanceUpdaterTest {
         txHistoryContentUpdateEmitter = mockk(relaxed = true),
         refreshAllNFTUseCase = mockk(relaxed = true),
         nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
-        networkContributionsRefresher = networkContributionsRefresher,
+        balanceContributionsRefresher = balanceContributionsRefresher,
         coroutineScope = TestAppCoroutineScope(testScope = testScope),
         userWallet = userWallet,
         cryptoCurrency = cryptoCurrency,

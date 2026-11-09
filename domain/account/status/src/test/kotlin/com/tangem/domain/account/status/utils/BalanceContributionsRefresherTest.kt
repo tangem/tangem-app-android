@@ -2,9 +2,9 @@ package com.tangem.domain.account.status.utils
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.BalanceFetchingOperations
 import com.tangem.domain.tokens.FetchingSource
@@ -18,14 +18,14 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class NetworkContributionsRefresherTest {
+internal class BalanceContributionsRefresherTest {
 
-    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
+    private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val balanceFetchingOperations: BalanceFetchingOperations = mockk()
     private val tokensFeatureToggles: TokensFeatureToggles = mockk()
 
-    private val refresher = NetworkContributionsRefresher(
-        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+    private val refresher = BalanceContributionsRefresher(
+        singleAccountListSupplier = singleAccountListSupplier,
         balanceFetchingOperations = balanceFetchingOperations,
         tokensFeatureToggles = tokensFeatureToggles,
     )
@@ -38,11 +38,11 @@ internal class NetworkContributionsRefresherTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(singleAccountStatusListSupplier, balanceFetchingOperations, tokensFeatureToggles)
+        clearMocks(singleAccountListSupplier, balanceFetchingOperations, tokensFeatureToggles)
         every { tokensFeatureToggles.isPluggableBalanceSourcesEnabled } returns true
         coEvery { balanceFetchingOperations.fetchAll(any(), any(), any()) } returns emptyMap()
-        coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList(
-            statuses = listOf(ethereum, ethereumToken, cardano).map { CryptoCurrencyStatus(it, mockk()) },
+        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns accountList(
+            currencies = listOf(ethereum, ethereumToken, cardano),
         )
     }
 
@@ -72,7 +72,7 @@ internal class NetworkContributionsRefresherTest {
 
         // Assert
         coVerify(exactly = 0) { balanceFetchingOperations.fetchAll(any(), any(), any()) }
-        coVerify(exactly = 0) { singleAccountStatusListSupplier.getSyncOrNull(any<UserWalletId>()) }
+        coVerify(exactly = 0) { singleAccountListSupplier.getSyncOrNull(any<UserWalletId>()) }
     }
 
     @Test
@@ -88,9 +88,9 @@ internal class NetworkContributionsRefresherTest {
     }
 
     @Test
-    fun `GIVEN no account status list WHEN invoke THEN nothing is fetched`() = runTest {
+    fun `GIVEN no account list WHEN invoke THEN nothing is fetched`() = runTest {
         // Arrange
-        coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns null
+        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns null
 
         // Act
         refresher(userWalletId = userWalletId, network = ethereum.network)
@@ -99,7 +99,7 @@ internal class NetworkContributionsRefresherTest {
         coVerify(exactly = 0) { balanceFetchingOperations.fetchAll(any(), any(), any()) }
     }
 
-    private fun accountStatusList(statuses: List<CryptoCurrencyStatus>): AccountStatusList = mockk {
-        every { flattenCurrencies() } returns statuses
+    private fun accountList(currencies: List<CryptoCurrency>): AccountList = mockk {
+        every { flattenCurrencies() } returns currencies
     }
 }
