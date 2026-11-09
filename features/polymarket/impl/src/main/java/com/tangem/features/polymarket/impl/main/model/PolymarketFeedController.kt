@@ -19,11 +19,11 @@ import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -62,8 +62,10 @@ internal class PolymarketFeedController(
         field = MutableStateFlow<PolymarketMainUM.ContentUM>(PolymarketMainUM.ContentUM.Loading)
 
     private val feeds = mutableMapOf<PolymarketEventsListConfig, Entry>()
-    private val activeFeed = MutableStateFlow<PolymarketCategoryFeed?>(null)
-    private var activeEntry: Entry? = null
+    private val activeEntry = MutableStateFlow<Entry?>(null)
+    private val activeFeed: PolymarketCategoryFeed?
+        get() = activeEntry.value?.feed
+    private val activeFeedFlow = activeEntry.map { it?.feed }.filterNotNull()
     private val isResumed = MutableStateFlow(false)
     private val hasRefreshError = MutableStateFlow(false)
     private val feedRefreshJob = JobHolder()
@@ -71,9 +73,9 @@ internal class PolymarketFeedController(
     private val quotes = PolymarketFeedQuotes(observeQuotes, isPhaseTwoEnabled)
 
     init {
-        activeFeed.filterNotNull().distinctUntilChangedBy { it.config }.flatMapLatest { selection ->
+        activeFeedFlow.distinctUntilChangedBy { it.config }.flatMapLatest { selection ->
             channelFlow {
-                val selectedFeeds = activeFeed.filterNotNull().filter { it.config == selection.config }
+                val selectedFeeds = activeFeedFlow.filter { it.config == selection.config }
                 val games = sports.observe(selectedFeeds, isResumed).stateIn(
                     scope = this,
                     started = SharingStarted.Eagerly,
@@ -99,27 +101,26 @@ internal class PolymarketFeedController(
                 }.collect { send(it) }
             }
         }.flowOn(dispatchers.default)
-            .onEach { (feed, state) -> if (activeFeed.value === feed) content.value = state }
+            .onEach { (feed, state) -> if (activeFeed === feed) content.value = state }
             .launchIn(scope)
     }
 
     fun select(config: PolymarketEventsListConfig, reloadVisited: Boolean = false): PolymarketFeedScrollPosition? {
-        activeFeed.value?.poller?.pause()
+        activeFeed?.poller?.pause()
         feedRefreshJob.cancel()
         hasRefreshError.value = false
-        if (!shouldCacheFeeds) activeEntry?.scope?.cancel()
+        if (!shouldCacheFeeds) activeEntry.value?.scope?.cancel()
         val visited = feeds[config]
         val entry = visited ?: createEntry(config)
         if (shouldCacheFeeds) feeds[config] = entry
-        activeEntry = entry
-        activeFeed.value = entry.feed
+        activeEntry.value = entry
         if (visited == null || reloadVisited) reload()
         if (isResumed.value) entry.feed.poller.resume()
         return entry.feed.scrollPosition
     }
 
     fun reload() {
-        val feed = activeFeed.value ?: return
+        val feed = activeFeed ?: return
         feedRefreshJob.cancel()
         hasRefreshError.value = false
         content.value = PolymarketMainUM.ContentUM.Loading
@@ -130,17 +131,11 @@ internal class PolymarketFeedController(
     }
 
     suspend fun refresh() {
-        val job = scope.launch { replaceActiveFeed() }.saveIn(feedRefreshJob)
-        try {
-            job.join()
-        } catch (e: CancellationException) {
-            job.cancel()
-            throw e
-        }
+        coroutineScope { launch { replaceActiveFeed() }.saveIn(feedRefreshJob) }
     }
 
     private suspend fun replaceActiveFeed() {
-        val previous = activeEntry ?: return
+        val previous = activeEntry.value ?: return
         val replacement = createEntry(previous.feed.config)
         hasRefreshError.value = false
         try {
@@ -158,12 +153,11 @@ internal class PolymarketFeedController(
             val visibleIds = previous.feed.visibleEventIds.value
             replacement.feed.visibleEventIds.value = visibleIds
             replacement.feed.poller.setVisibleEventIds(visibleIds)
-            activeEntry = replacement
             if (shouldCacheFeeds) feeds[replacement.feed.config] = replacement
-            activeFeed.value = replacement.feed
+            activeEntry.value = replacement
             if (isResumed.value) replacement.feed.poller.resume()
         } finally {
-            if (activeEntry !== replacement) replacement.scope.cancel()
+            if (activeEntry.value !== replacement) replacement.scope.cancel()
         }
     }
 
@@ -183,7 +177,7 @@ internal class PolymarketFeedController(
     }
 
     fun loadMore() {
-        val feed = activeFeed.value ?: return
+        val feed = activeFeed ?: return
         scope.launch {
             val status = feed.batchFlow.state.value.status as? PaginationStatus.Paginating ?: return@launch
             val lastResult = status.lastResult
@@ -195,25 +189,25 @@ internal class PolymarketFeedController(
     }
 
     fun setVisibleEvents(eventIds: Set<String>) {
-        val feed = activeFeed.value ?: return
+        val feed = activeFeed ?: return
         feed.visibleEventIds.value = eventIds
         feed.poller.setVisibleEventIds(eventIds)
     }
 
     fun onScrollIdle(index: Int, offset: Int) {
-        val feed = activeFeed.value ?: return
+        val feed = activeFeed ?: return
         feed.scrollPosition = PolymarketFeedScrollPosition(index = index, offset = offset)
         feed.poller.onScrollIdle()
     }
 
     fun resume() {
         isResumed.value = true
-        activeFeed.value?.poller?.resume()
+        activeFeed?.poller?.resume()
     }
 
     fun pause() {
         isResumed.value = false
-        activeFeed.value?.poller?.pause()
+        activeFeed?.poller?.pause()
     }
 
     private fun createEntry(config: PolymarketEventsListConfig): Entry {
