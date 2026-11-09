@@ -31,6 +31,7 @@ import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
@@ -43,6 +44,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.ZeroBalanceActionsBlock
+import com.tangem.features.earn.api.EarnBannerComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.txhistory.component.JointCosignRequestsComponent
@@ -71,6 +73,7 @@ internal fun TokenDetailsScreen(
     txHistoryComponent: TxHistoryComponent,
     jointCosignRequestsComponent: JointCosignRequestsComponent,
     marketingBannerComponent: MarketingBannerComponent,
+    earnBannerComponent: EarnBannerComponent,
     modifier: Modifier = Modifier,
 ) {
     val jointCosignRequestsState by jointCosignRequestsComponent.state.collectAsStateWithLifecycle()
@@ -107,6 +110,7 @@ internal fun TokenDetailsScreen(
                     jointCosignRequestsComponent = jointCosignRequestsComponent,
                     jointCosignRequestsState = jointCosignRequestsState,
                     marketingBannerComponent = marketingBannerComponent,
+                    earnBannerComponent = earnBannerComponent,
                     rootBackground = rootBackground,
                     buttonsHazeState = buttonsHazeState,
                     topContentPadding = topBarTotalHeight,
@@ -169,6 +173,7 @@ private fun TokenDetailsBody(
     jointCosignRequestsComponent: JointCosignRequestsComponent,
     jointCosignRequestsState: JointCosignRequestsUM,
     marketingBannerComponent: MarketingBannerComponent,
+    earnBannerComponent: EarnBannerComponent,
     rootBackground: Color,
     buttonsHazeState: HazeState,
     topContentPadding: Dp,
@@ -224,6 +229,15 @@ private fun TokenDetailsBody(
                         .testTag(stakingTag),
                 )
             }
+        }
+        item(key = "earn_banner_block") {
+            val isBelowNotifications =
+                tokenDetailsUM.earnBlockState == null && tokenDetailsUM.notifications.isNotEmpty()
+            earnBannerComponent.Content(
+                modifier = itemModifier
+                    .conditional(isBelowNotifications) { padding(top = 12.dp) }
+                    .padding(bottom = 8.dp),
+            )
         }
         item(key = "yield_supply_block") {
             yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = 12.dp))
@@ -323,6 +337,13 @@ private fun TokenDetailsScreen_Preview() {
             marketingBannerComponent = object : MarketingBannerComponent {
                 @Composable
                 override fun Content(modifier: Modifier) = Unit
+            },
+            earnBannerComponent = object : EarnBannerComponent {
+                @Composable
+                override fun Content(modifier: Modifier) = Unit
+
+                @Composable
+                override fun BottomSheet() = Unit
             },
         )
     }
