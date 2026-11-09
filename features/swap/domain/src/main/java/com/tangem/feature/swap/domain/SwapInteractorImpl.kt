@@ -37,6 +37,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.tangempay.TangemPayWithdrawExchangeState
 import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.quotes.QuotesRepository
@@ -581,11 +582,11 @@ internal class SwapInteractorImpl @Inject constructor(
             allowanceInfo is AllowanceInfo.Enough && !isTronReapprovalPending
         }
         // For yield swaps the on-chain allowance is not sufficient on its own: spending also
-        // requires the yield-module proxy approval (yieldSupplyStatus.isAllowedToSpend).
+        // requires the yield-module proxy approval (yieldSupply.isAllowedToSpend).
         // For regular swaps a failed quote must not proceed to exchange-data loading.
         val isAllowedToSpend = if (isYieldSwap) {
             isAllowanceSatisfied &&
-                fromSwapCurrencyStatus.status.value.yieldSupplyStatus?.isAllowedToSpend == true
+                fromSwapCurrencyStatus.status.value.yieldSupply?.isAllowedToSpend == true
         } else {
             isAllowanceSatisfied && maybeQuote.isRight()
         }
