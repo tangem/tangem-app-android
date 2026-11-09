@@ -114,7 +114,7 @@ fun getWireMockRequestCount(
  * e.g. that a pagination request carried a specific cursor.
  *
  * @param method HTTP method to match (e.g. "GET")
- * @param urlPath Exact request path, without the query string (e.g. "/bff-v2/v1/customer/transactions")
+ * @param urlPath Request path regex, without the query string (e.g. "/bff-v2/v1/customer/transactions")
  * @param queryParam Query parameter name to match (e.g. "cursor")
  * @param queryValue Exact expected value of [queryParam]
  * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
@@ -130,7 +130,7 @@ fun getWireMockRequestCountByQueryParam(
     // A queryParameters matcher instead of a urlPattern regex: no backslash escaping to get wrong.
     val json = JSONObject()
         .put("method", method)
-        .put("urlPath", urlPath)
+        .put("urlPathPattern", urlPath)
         .put("queryParameters", JSONObject().put(queryParam, JSONObject().put("equalTo", queryValue)))
         .toString()
     val mediaType = "application/json".toMediaType()
@@ -163,7 +163,7 @@ fun getWireMockRequestCountByQueryParam(
  * named the chain and the token contract the user picked.
  *
  * @param method HTTP method to match (e.g. "POST")
- * @param urlPath Exact request path, without the query string
+ * @param urlPath Request path regex, without the query string
  * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
  * @return the matching request bodies in journal order, or an empty list if the journal could not be queried
  */
@@ -172,7 +172,7 @@ fun findWireMockRequestBodies(
     urlPath: String,
     baseUrl: String = getWireMockBaseUrl(),
 ): List<String> = findWireMockRequestBodies(
-    requestPattern = JSONObject().put("method", method).put("urlPath", urlPath),
+    requestPattern = JSONObject().put("method", method).put("urlPathPattern", urlPath),
     baseUrl = baseUrl,
 )
 
@@ -194,7 +194,7 @@ fun findWireMockRequestTimestampsByQueryParam(
 ): List<Long> = findWireMockRequests(
     requestPattern = JSONObject()
         .put("method", method)
-        .put("urlPath", urlPath)
+        .put("urlPathPattern", urlPath)
         .put("queryParameters", JSONObject().put(queryParam, JSONObject().put("equalTo", queryValue))),
     baseUrl = baseUrl,
 ).map { request -> request.getLong("loggedDate") }.sorted()
@@ -204,7 +204,7 @@ fun findWireMockRequestTimestamps(
     urlPath: String,
     baseUrl: String = getWireMockBaseUrl(),
 ): List<Long> = findWireMockRequests(
-    requestPattern = JSONObject().put("method", method).put("urlPath", urlPath),
+    requestPattern = JSONObject().put("method", method).put("urlPathPattern", urlPath),
     baseUrl = baseUrl,
 ).map { request -> request.getLong("loggedDate") }.sorted()
 
@@ -214,7 +214,7 @@ fun findWireMockRequestQueryParamValues(
     queryParam: String,
     baseUrl: String = getWireMockBaseUrl(),
 ): List<String> = findWireMockRequests(
-    requestPattern = JSONObject().put("method", method).put("urlPath", urlPath),
+    requestPattern = JSONObject().put("method", method).put("urlPathPattern", urlPath),
     baseUrl = baseUrl,
 ).mapNotNull { request -> Uri.parse(request.getString("url")).getQueryParameter(queryParam) }
 
@@ -223,7 +223,7 @@ fun findWireMockRequestHeaders(
     urlPath: String,
     baseUrl: String = getWireMockBaseUrl(),
 ): List<Map<String, String>> = findWireMockRequests(
-    requestPattern = JSONObject().put("method", method).put("urlPath", urlPath),
+    requestPattern = JSONObject().put("method", method).put("urlPathPattern", urlPath),
     baseUrl = baseUrl,
 ).map { request ->
     val headers = request.optJSONObject("headers") ?: JSONObject()
