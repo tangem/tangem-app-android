@@ -35,12 +35,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.scan
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -71,15 +71,21 @@ internal class AaveLendingProvider @Inject constructor(
     override fun resolveAsset(currency: CryptoCurrency): LendingAsset? = assetResolver.resolve(currency)
 
     override fun market(userWalletId: UserWalletId, asset: LendingAsset): Flow<LendingMarket> = channelFlow {
-        // The wallet refresh reads WETH only when it is in the portfolio, so Lending asks for it itself
         val isStatusFetchFailed = MutableStateFlow(false)
-        launch { fetchStatus(userWalletId, asset).onLeft { isStatusFetchFailed.value = true } }
 
         val isSupported = yieldSupplyRepository.isYieldSupplySupported(userWalletId, asset.currency)
 
-        // Re-read on every network update of the wallet rather than on a timer
+        // Re-read on every network update of the wallet rather than on a timer. The wallet refresh reads WETH only when
+        // it is in the portfolio, so Lending asks for its status itself
         val onChain = networkStatusSupplier(SingleNetworkStatusProducer.Params(userWalletId, asset.currency.network))
-            .mapLatest { moduleReader.read(userWalletId, asset) }
+            .mapLatest {
+                coroutineScope {
+                    val statusFetch = async { fetchStatus(userWalletId, asset) }
+                    val read = moduleReader.read(userWalletId, asset)
+                    isStatusFetchFailed.value = statusFetch.await().isLeft()
+                    read
+                }
+            }
             .scan(OnChainState.Initial, OnChainState::next)
 
         combine(
@@ -96,25 +102,6 @@ internal class AaveLendingProvider @Inject constructor(
             )
         }.collect(::send)
     }
-
-    override suspend fun readMarket(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, LendingMarket> =
-        either {
-            fetchStatus(userWalletId, asset).bind()
-            val chain = moduleReader.read(userWalletId, asset).bind()
-            val market = Either.catch {
-                markets.current(asset) to yieldSupplyRepository.isYieldSupplySupported(userWalletId, asset.currency)
-            }.bind()
-            val status = Either.catch {
-                statusSupplier(YieldModuleStatusProducer.Params(userWalletId)).first().findFor(asset.weth)
-            }.bind()
-
-            toMarket(
-                market = market.first,
-                chain = OnChainState(read = chain, source = StatusSource.ACTUAL),
-                status = StatusRead(status = status, isFetchFailed = false),
-                isSupported = market.second,
-            )
-        }
 
     override suspend fun refresh(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit> = either {
         Either.catch { yieldSupplyRepository.updateMarkets() }
