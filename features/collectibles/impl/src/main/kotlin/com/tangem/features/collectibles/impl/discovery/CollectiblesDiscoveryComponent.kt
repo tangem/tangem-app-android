@@ -22,7 +22,13 @@ internal interface CollectiblesDiscoveryComponent : ComposableListContentCompone
     /** Refetches the catalogue from page one, keeping the selected category and the query. */
     fun onRefresh()
 
+    data class Params(val modelCallbacks: ModelCallbacks)
+
+    interface ModelCallbacks {
+        fun onPackClick(externalId: String)
+    }
+
     interface Factory {
-        fun create(context: AppComponentContext): CollectiblesDiscoveryComponent
+        fun create(context: AppComponentContext, params: Params): CollectiblesDiscoveryComponent
     }
 }
