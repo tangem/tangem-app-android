@@ -1,7 +1,6 @@
 package com.tangem.features.polymarket.impl.fasttrading.model
 
 import com.tangem.core.res.R
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
@@ -64,7 +63,14 @@ internal class PolymarketFastTradingKeysUMConverter(
                     status = status,
                     isExpiringSoon = !isForeign && key.isExpiringSoon(now),
                     actions = actionsFor(
-                        revoke = revokeOf(key.address, deviceName, isForeign),
+                        revoke = revokeOf(
+                            address = key.address,
+                            subject = if (isForeign) {
+                                FastTradingKeyActionUM.RevokeSubject.UnknownSigner
+                            } else {
+                                FastTradingKeyActionUM.RevokeSubject.Device(deviceName)
+                            },
+                        ),
                         status = status,
                         isListed = address in listedSigners,
                     ),
@@ -77,7 +83,7 @@ internal class PolymarketFastTradingKeysUMConverter(
             unknownSigners = foreignSigners
                 .filter { it.address.lowercase() !in shownAddresses }
                 .map { signer ->
-                    val revoke = revokeOf(signer.address, deviceName = null, isForeign = true)
+                    val revoke = revokeOf(signer.address, FastTradingKeyActionUM.RevokeSubject.UnknownSigner)
                     FastTradingUnknownSignerUM(address = signer.address, actions = persistentListOf(revoke))
                 }
                 .toImmutableList(),
@@ -87,15 +93,8 @@ internal class PolymarketFastTradingKeysUMConverter(
         )
     }
 
-    private fun revokeOf(address: String, deviceName: TextReference?, isForeign: Boolean) =
-        FastTradingKeyActionUM.Revoke(
-            address = address,
-            subject = if (isForeign || deviceName == null) {
-                FastTradingKeyActionUM.RevokeSubject.UnknownSigner
-            } else {
-                FastTradingKeyActionUM.RevokeSubject.Device(deviceName)
-            },
-        )
+    private fun revokeOf(address: String, subject: FastTradingKeyActionUM.RevokeSubject) =
+        FastTradingKeyActionUM.Revoke(address = address, subject = subject)
 
     private fun actionsFor(
         revoke: FastTradingKeyActionUM.Revoke,
