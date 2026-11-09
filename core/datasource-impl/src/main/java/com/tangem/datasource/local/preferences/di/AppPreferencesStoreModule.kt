@@ -11,7 +11,9 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.core.local.moshi.PersistedModelGuard
 import com.tangem.core.local.moshi.SdkMoshi
+import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.local.preferences.*
 import com.tangem.datasource.local.preferences.migration.CleanupKeyMigration
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -45,7 +47,7 @@ internal object AppPreferencesStoreModule {
                 appScope = appScope,
                 externalMigrations = externalMigrations,
             ),
-            moshi = moshi,
+            moshi = moshi.newBuilder().add(PersistedModelGuard(isStrict = BuildConfig.LOG_ENABLED)).build(),
             dispatchers = dispatchers,
         )
     }

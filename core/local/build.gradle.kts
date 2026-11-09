@@ -15,4 +15,5 @@ dependencies {
     implementation(deps.hilt.core)
 
     testImplementation(projects.test.core)
+    testImplementation(deps.moshi.kotlin)
 }

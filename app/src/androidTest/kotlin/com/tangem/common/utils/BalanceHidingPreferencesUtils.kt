@@ -1,23 +1,16 @@
 package com.tangem.common.utils
 
-import androidx.datastore.preferences.core.MutablePreferences
-import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.balancehiding.BalanceHidingSettings
-import com.tangem.store.datasource.preferences.StorePreferencesKeys
+import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import kotlinx.coroutines.runBlocking
 
-fun AppPreferencesStore.hideBalances(preferences: MutablePreferences) {
-    setBalanceHidden(preferences, isBalanceHidden = true)
-}
+fun BalanceHidingRepository.hideBalances() = setBalanceHidden(isBalanceHidden = true)
 
-fun AppPreferencesStore.showBalances() {
-    runBlocking { editData { setBalanceHidden(it, isBalanceHidden = false) } }
-}
+fun BalanceHidingRepository.showBalances() = setBalanceHidden(isBalanceHidden = false)
 
-private fun AppPreferencesStore.setBalanceHidden(preferences: MutablePreferences, isBalanceHidden: Boolean) {
-    preferences.setObject(
-        key = StorePreferencesKeys().balanceHidingSettingsKey,
-        value = BalanceHidingSettings(
+private fun BalanceHidingRepository.setBalanceHidden(isBalanceHidden: Boolean) = runBlocking {
+    storeBalanceHidingSettings(
+        BalanceHidingSettings(
             isHidingEnabledInSettings = true,
             isBalanceHidden = isBalanceHidden,
             isBalanceHidingNotificationEnabled = false,

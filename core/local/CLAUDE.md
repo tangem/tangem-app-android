@@ -19,7 +19,9 @@ Owned by the core Android team.
 - **DataStore utilities** — `AppDataStoreFactory`, `DeleteObsoleteFileMigration` (drops the file of a
   renamed store), `MoshiDataStoreSerializer`, `MoshiTypesExt`, `DataStoreExt`.
 - **Connectivity** — `NetworkConnectionManager`.
-- **Moshi** — the `@SdkMoshi` qualifier and `SdkMoshiConfigurer` extension point.
+- **Moshi** — the `@SdkMoshi` qualifier, `SdkMoshiConfigurer` extension point and `PersistedModelGuard`: add
+  it right before KotlinJsonAdapterFactory to every Moshi that writes to disk (deprecated
+  `MoshiDataStoreSerializer` aside).
 
 ## Rules
 

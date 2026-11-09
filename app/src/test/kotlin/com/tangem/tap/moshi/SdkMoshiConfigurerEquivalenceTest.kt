@@ -1,14 +1,12 @@
 package com.tangem.tap.moshi
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.core.local.moshi.SdkMoshiConfigurer
 import com.tangem.datasource.common.di.MoshiModule
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.scan.serialization.addScanResponseAdapters
 import org.junit.jupiter.api.Test
 
 /**
@@ -19,14 +17,6 @@ import org.junit.jupiter.api.Test
  */
 internal class SdkMoshiConfigurerEquivalenceTest {
 
-    private val cardSdkConfigurer = SdkMoshiConfigurer { builder ->
-        builder.apply {
-            MoshiJsonConverter.getTangemSdkAdapters().forEach { add(it) }
-            MoshiJsonConverter.getTangemSdkTypedAdapters().forEach { (type, adapter) -> add(type, adapter) }
-        }
-    }
-    private val scanResponseConfigurer = SdkMoshiConfigurer { it.addScanResponseAdapters() }
-
     private val scanResponse: ScanResponse = MockScanResponseFactory.create(
         cardConfig = GenericCardConfig(maxWalletCount = 2),
         derivedKeys = emptyMap(),
@@ -36,9 +26,9 @@ internal class SdkMoshiConfigurerEquivalenceTest {
     fun `GIVEN configurers in either order WHEN provideSdkMoshi THEN ScanResponse json is identical`() {
         // Arrange
         val cardSdkFirst = MoshiModule()
-            .provideSdkMoshi(linkedSetOf(cardSdkConfigurer, scanResponseConfigurer))
+            .provideSdkMoshi(linkedSetOf(TestSdkMoshiConfigurers.cardSdk, TestSdkMoshiConfigurers.scanResponse))
         val scanResponseFirst = MoshiModule()
-            .provideSdkMoshi(linkedSetOf(scanResponseConfigurer, cardSdkConfigurer))
+            .provideSdkMoshi(linkedSetOf(TestSdkMoshiConfigurers.scanResponse, TestSdkMoshiConfigurers.cardSdk))
 
         // Act
         val cardSdkFirstJson = cardSdkFirst.adapter(ScanResponse::class.java).toJson(scanResponse)

@@ -6,7 +6,6 @@ import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.hot.sdk.model.HotWalletId
 
 @JsonClass(generateAdapter = true)
 internal data class UserWalletSensitiveInformation(
@@ -37,7 +36,7 @@ internal data class UserWalletPublicInformation(
     val hasBackupError: Boolean = false,
     // Hot
     @Json(name = "hotWalletId")
-    val hotWalletId: HotWalletId? = null,
+    val hotWalletId: HotWalletIdDTO? = null,
     @Json(name = "backedUp")
     val backedUp: Boolean? = null,
     @Json(name = "isSocialBackupCompleted")
