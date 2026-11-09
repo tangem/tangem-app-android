@@ -25,7 +25,7 @@ internal object TangemPayOrderConverter : Converter<TangemPayOrderResponse.Resul
         )
     }
 
-    @Suppress("CyclomaticComplexMethod")
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private fun convertDetails(data: OrderDataResponse): OrderDetails = when (data) {
         is OrderDataResponse.CardFreeze -> OrderDetails.CardFreeze(productInstanceId = data.productInstanceId)
         is OrderDataResponse.CardUnfreeze -> OrderDetails.CardUnfreeze(productInstanceId = data.productInstanceId)
