@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.earn.EarnProductId
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
@@ -47,6 +48,7 @@ private const val FAKE_APY_POINTS = 3
 internal data class FakeEarnProductSpec(
     val id: EarnProductId,
     val rank: Int,
+    val badgeAccent: EarnBadgeAccent,
     val title: TextReference,
     val provider: EarnProvider,
     val analytics: EarnProductAnalytics,
@@ -58,6 +60,7 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
         FakeEarnProductPreset.Lending -> fakeSpec(
             id = "lending",
             rank = 0,
+            badgeAccent = EarnBadgeAccent.Success,
             title = "Lending on Aave",
             provider = "Aave",
             product = "Lending",
@@ -65,6 +68,7 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
         FakeEarnProductPreset.Staking -> fakeSpec(
             id = "staking",
             rank = 1,
+            badgeAccent = EarnBadgeAccent.Info,
             title = "Pooled staking",
             provider = "P2P",
             product = "Staking",
@@ -72,6 +76,7 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
         FakeEarnProductPreset.Vault -> fakeSpec(
             id = "vault",
             rank = 2,
+            badgeAccent = EarnBadgeAccent.Success,
             title = "Vault",
             provider = "Vault",
             product = "Vault",
@@ -177,9 +182,17 @@ internal fun fakeApyHistory(period: EarnPeriod): Either<Throwable, EarnApyHistor
     ).right()
 }
 
-private fun fakeSpec(id: String, rank: Int, title: String, provider: String, product: String) = FakeEarnProductSpec(
+private fun fakeSpec(
+    id: String,
+    rank: Int,
+    badgeAccent: EarnBadgeAccent,
+    title: String,
+    provider: String,
+    product: String,
+) = FakeEarnProductSpec(
     id = EarnProductId(id),
     rank = rank,
+    badgeAccent = badgeAccent,
     title = stringReference(title),
     provider = EarnProvider(
         title = stringReference(provider),

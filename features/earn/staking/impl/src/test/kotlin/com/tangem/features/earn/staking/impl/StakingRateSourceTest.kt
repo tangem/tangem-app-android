@@ -13,6 +13,7 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.staking.impl.fixtures.coin
 import com.tangem.features.earn.staking.impl.fixtures.currencyStatus
 import com.tangem.features.earn.staking.impl.fixtures.polygonToken
@@ -49,6 +50,12 @@ internal class StakingRateSourceTest {
         assertThat(source.id).isEqualTo(EarnProductId("staking_stakekit"))
         assertThat(source.rank).isEqualTo(1)
         assertThat(source.id).isNotEqualTo(POOLED_STAKING_ID)
+    }
+
+    @Test
+    fun `GIVEN source WHEN reading the badge accent THEN Info`() {
+        // Assert
+        assertThat(source.badgeAccent).isEqualTo(EarnBadgeAccent.Info)
     }
 
     @Test
