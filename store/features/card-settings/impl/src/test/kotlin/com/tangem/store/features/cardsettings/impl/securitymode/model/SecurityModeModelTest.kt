@@ -12,7 +12,7 @@ import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.store.features.cardsettings.impl.common.SecurityOption
+import com.tangem.store.features.cardsettings.impl.domain.SecurityOption
 import com.tangem.store.features.cardsettings.impl.domain.CardSettingsInteractor
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
