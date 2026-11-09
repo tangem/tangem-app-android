@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.navigation.EarnNavigator
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -16,6 +17,9 @@ interface EarnProduct {
     val id: EarnProductId
 
     val rank: Int
+
+    /** The accent of the headline badge when this product wins and the user has a position in it. */
+    val badgeAccent: EarnBadgeAccent
 
     val title: TextReference
 

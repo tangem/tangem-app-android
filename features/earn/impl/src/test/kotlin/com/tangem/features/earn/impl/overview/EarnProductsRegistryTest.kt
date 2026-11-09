@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.product.api.product.EarnProduct
@@ -26,6 +27,7 @@ internal class EarnProductsRegistryTest {
 
     private val yieldSource = TestRateSource(id = EarnProductId("yield"), rank = 5)
     private val bonusSource = TestRateSource(id = EarnProductId("bonus"), rank = 3)
+    private val infoSource = TestRateSource(id = EarnProductId("info"), rank = 7, badgeAccent = EarnBadgeAccent.Info)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -201,6 +203,50 @@ internal class EarnProductsRegistryTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BadgeAccentOf {
+
+        private val registry = EarnProductsRegistry(
+            products = setOf(vault, staking, lending),
+            rateSources = setOf(yieldSource, infoSource),
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN registered id WHEN badgeAccentOf THEN the accent of that product or rate source is returned`(
+            model: AccentModel,
+        ) {
+            // Act
+            val actual = registry.badgeAccentOf(model.id)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expectedAccent)
+        }
+
+        private fun provideTestModels() = listOf(
+            AccentModel(id = lending.id, expectedAccent = EarnBadgeAccent.Success),
+            AccentModel(id = staking.id, expectedAccent = EarnBadgeAccent.Info),
+            AccentModel(id = vault.id, expectedAccent = EarnBadgeAccent.Success),
+            AccentModel(id = yieldSource.id, expectedAccent = EarnBadgeAccent.Success),
+            AccentModel(id = infoSource.id, expectedAccent = EarnBadgeAccent.Info),
+        )
+
+        @Test
+        fun `GIVEN an id that is in neither list WHEN badgeAccentOf THEN IllegalStateException names the id`() {
+            // Act
+            val actual = runCatching { registry.badgeAccentOf(EarnProductId("unknown")) }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(IllegalStateException::class.java)
+            assertThat(actual).hasMessageThat().contains("unknown")
+        }
+    }
+
+    internal data class AccentModel(val id: EarnProductId, val expectedAccent: EarnBadgeAccent) {
+        override fun toString(): String = "${id.value} -> $expectedAccent"
+    }
+
     internal data class DuplicateIdsModel(
         val name: String,
         val products: Set<EarnProduct>,
@@ -220,7 +266,11 @@ private class RankedProduct(
     delegate: EarnProduct = createFakeEarnProduct(FakeEarnProductPreset.Lending),
 ) : EarnProduct by delegate
 
-private class TestRateSource(override val id: EarnProductId, override val rank: Int) : EarnRateSource {
+private class TestRateSource(
+    override val id: EarnProductId,
+    override val rank: Int,
+    override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success,
+) : EarnRateSource {
 
     override fun rates(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnRateEntry>> = emptyFlow()
 }

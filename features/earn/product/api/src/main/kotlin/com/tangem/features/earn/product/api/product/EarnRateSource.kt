@@ -5,6 +5,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnProductRate
 import kotlinx.coroutines.flow.Flow
 
@@ -14,6 +15,9 @@ interface EarnRateSource {
     val id: EarnProductId
 
     val rank: Int
+
+    /** The accent of the headline badge when this source wins and the user is active in it. */
+    val badgeAccent: EarnBadgeAccent
 
     /** No entry for a currency means the source has no rate for it. The first frame comes from cache, without waiting. */
     fun rates(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnRateEntry>>
