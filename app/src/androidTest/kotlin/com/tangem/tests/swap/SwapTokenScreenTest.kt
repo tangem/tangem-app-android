@@ -4,14 +4,11 @@ import com.tangem.grow.datasource.config.Express
 
 import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
-import com.tangem.common.annotations.ApiEnv
-import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.res.R
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -132,9 +129,6 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
     @AllureId("9458")
     @DisplayName("Swap: predefined percent buttons (25/50/75/Max) split the balance of the 'From' token")
     @Test
@@ -362,22 +356,16 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
     @AllureId("3549")
     @DisplayName("Swap: network error test")
     @Test
     fun networkErrorSwapTest() {
         val tokenTitle = "Polygon"
         val receiveTokenName = "Ethereum"
+        val pairsScenarioName = "polygon_pos_pairs"
+        val pairsUnreachableState = "Unreachable"
 
-        setupHooks(
-            additionalAfterSection = {
-                enableWiFi()
-                enableMobileData()
-            }
-        ).run {
+        setupHooks().run {
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -391,9 +379,8 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
-            step("Turn off Wi-Fi and Mobile Data") {
-                disableWiFi()
-                disableMobileData()
+            step("Set WireMock scenario: '$pairsScenarioName' to state: '$pairsUnreachableState'") {
+                setWireMockScenarioState(scenarioName = pairsScenarioName, state = pairsUnreachableState)
             }
             step("Click on 'Swap' button") {
                 onTokenDetailsScreen { swapButton.performClick() }
@@ -509,9 +496,6 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
     @AllureId("2828")
     @DisplayName("Swap: go to token swap")
     @Test
@@ -561,9 +545,6 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
     @AllureId("575")
     @DisplayName("Swap: check UI")
     @Test
@@ -848,9 +829,6 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
     @AllureId("583")
     @DisplayName("Swap: check switch fee type (enable to cover 'Market' and 'Fast' fee)")
     @Test
