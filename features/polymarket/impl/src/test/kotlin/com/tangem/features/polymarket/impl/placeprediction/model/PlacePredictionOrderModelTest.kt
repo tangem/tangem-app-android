@@ -1077,26 +1077,47 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a fee capped max WHEN max clicked again before its quote returns THEN the fee cap holds`() =
+        fun `GIVEN a steep fee quote WHEN max clicked again before the next quote returns THEN its fee rate is not reused`() =
             runOrderTest {
                 // Arrange
-                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createQuote().copy(
-                    notional = BigDecimal(100),
-                    fees = PredictionOrderFees(
-                        market = BigDecimal(20),
-                        builder = BigDecimal.ZERO,
-                        total = BigDecimal(20),
-                    ),
-                ).right()
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns steepFeeQuote().right()
                 val model = createQuotedModel()
                 model.onMaxClick()
+                val afterFirstClick = model.uiState.value.amountValue
 
                 // Act
                 model.onMaxClick()
 
                 // Assert
-                assertThat(model.uiState.value.amountValue).isEqualTo("83.33")
+                assertThat(afterFirstClick).isEqualTo("83.33")
+                assertThat(model.uiState.value.amountValue).isEqualTo("90")
             }
+
+        @Test
+        fun `GIVEN a steep fee quote followed by a failed one WHEN max clicked THEN the old fee rate is not reused`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returnsMany listOf(
+                    steepFeeQuote().right(),
+                    PredictionOrderQuoteError.Network.left(),
+                )
+                val model = createQuotedModel()
+                model.onAmountChange(value = "20")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val quoteBeforeClick = model.uiState.value.quote
+
+                // Act
+                model.onMaxClick()
+
+                // Assert
+                assertThat(quoteBeforeClick).isInstanceOf(QuoteUM.Error::class.java)
+                assertThat(model.uiState.value.amountValue).isEqualTo("90")
+            }
+
+        private fun steepFeeQuote(): PredictionOrderQuote = createQuote().copy(
+            notional = BigDecimal(100),
+            fees = PredictionOrderFees(market = BigDecimal(20), builder = BigDecimal.ZERO, total = BigDecimal(20)),
+        )
 
         @Test
         fun `GIVEN a German locale WHEN max clicked THEN the amount is entered with a comma the screen reads back`() =
