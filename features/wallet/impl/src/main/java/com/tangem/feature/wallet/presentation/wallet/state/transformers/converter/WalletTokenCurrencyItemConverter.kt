@@ -29,6 +29,7 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletContentClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.StringsSigns
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.orZero
@@ -37,6 +38,10 @@ import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 @Suppress("LongParameterList")
+@RemoveWithToggle(
+    toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED",
+    description = "Also backs legacy portfolio rows until AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED is removed",
+)
 internal class WalletTokenCurrencyItemConverter(
     private val appCurrency: AppCurrency,
     private val accountId: AccountId,
