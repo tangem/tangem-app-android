@@ -233,13 +233,12 @@ internal class EarnProductsRegistryTest {
         )
 
         @Test
-        fun `GIVEN an id that is in neither list WHEN badgeAccentOf THEN IllegalStateException names the id`() {
+        fun `GIVEN an id that is in neither list WHEN badgeAccentOf THEN Success is returned`() {
             // Act
-            val actual = runCatching { registry.badgeAccentOf(EarnProductId("unknown")) }.exceptionOrNull()
+            val actual = registry.badgeAccentOf(EarnProductId("unknown"))
 
             // Assert
-            assertThat(actual).isInstanceOf(IllegalStateException::class.java)
-            assertThat(actual).hasMessageThat().contains("unknown")
+            assertThat(actual).isEqualTo(EarnBadgeAccent.Success)
         }
     }
 

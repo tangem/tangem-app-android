@@ -22,10 +22,10 @@ internal class EarnProductsRegistry @Inject constructor(
 
     fun find(id: EarnProductId): EarnProduct? = products.firstOrNull { it.id == id }
 
-    /** The candidates of the selector come from this registry, so an unknown id is a wiring bug. */
+    /** A product the registry does not know still gets a badge, as it still gets the last rank. */
     fun badgeAccentOf(id: EarnProductId): EarnBadgeAccent = products.firstOrNull { it.id == id }?.badgeAccent
         ?: rateSources.firstOrNull { it.id == id }?.badgeAccent
-        ?: error("Unknown earn product id: ${id.value}")
+        ?: EarnBadgeAccent.Success
 
     /** Lower is higher: a product with the lower rank wins when rates are equal. */
     fun rankOf(id: EarnProductId): Int = products.firstOrNull { it.id == id }?.rank
