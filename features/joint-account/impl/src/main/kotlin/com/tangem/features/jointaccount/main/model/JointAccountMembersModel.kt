@@ -95,6 +95,8 @@ internal class JointAccountMembersModel @Inject constructor(
     /** One invite is issued at a time */
     private val issuingSlot = MutableStateFlow<Int?>(null)
 
+    private var lastSeenStatus: JointAccount.Status? = null
+
     private val resolvedAccountFlow: Flow<JointAccount?> = compromiseWatcher.verified(
         userWalletId = params.userWalletId,
         accounts = jointAccountListSupplier(userWalletId = params.userWalletId)
@@ -131,6 +133,7 @@ internal class JointAccountMembersModel @Inject constructor(
     // region Subscriptions
     private fun observeAccount() {
         resolvedAccountFlow
+            .onEach(::leaveOnActivation)
             .flatMapLatest { account ->
                 if (account == null) return@flatMapLatest flowOf(null)
 
@@ -157,6 +160,16 @@ internal class JointAccountMembersModel @Inject constructor(
                 if (isChanged && isResumed.value) memberStatusChanges.tryEmit(Unit)
             }
             .launchIn(modelScope)
+    }
+
+    private fun leaveOnActivation(account: JointAccount?) {
+        val status = account?.status ?: return
+        val previous = lastSeenStatus
+        lastSeenStatus = status
+
+        if (previous != null && previous != JointAccount.Status.ACTIVE && status == JointAccount.Status.ACTIVE) {
+            params.onActivated()
+        }
     }
 
     private fun ResolvedAccount?.toTransformer() = if (this == null) {
