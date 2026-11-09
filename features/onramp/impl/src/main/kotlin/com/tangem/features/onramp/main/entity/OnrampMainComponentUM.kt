@@ -34,5 +34,13 @@ internal data class OnrampMainTopBarUM(
     val title: TextReference,
     val subtitle: TextReference,
     val startButtonUM: TopAppBarButtonUM,
-    val endButtonUM: TopAppBarButtonUM,
+    val endButtonUM: TopAppBarButtonUM?,
+    val countryButtonUM: OnrampCountryButtonUM? = null,
+)
+
+internal data class OnrampCountryButtonUM(
+    val flagUrl: String?,
+    val countryName: String? = null,
+    val isEnabled: Boolean,
+    val onClick: () -> Unit,
 )
