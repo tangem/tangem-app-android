@@ -217,6 +217,10 @@ dependencies {
     api(projects.domain.models)
     // endregion
 
+    // region Domain modules
+    implementation(projects.domain.common)
+    // endregion
+
     // region Tests
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)

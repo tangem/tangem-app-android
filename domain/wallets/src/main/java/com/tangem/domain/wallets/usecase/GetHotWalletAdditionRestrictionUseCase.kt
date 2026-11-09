@@ -2,6 +2,7 @@ package com.tangem.domain.wallets.usecase
 
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.isHotWalletsLimitReached
+import com.tangem.domain.models.wallet.isSocialLoginWallet
 import com.tangem.domain.wallets.models.HotWalletAdditionRestriction
 
 class GetHotWalletAdditionRestrictionUseCase(
@@ -9,10 +10,16 @@ class GetHotWalletAdditionRestrictionUseCase(
     private val isMultipleHotWalletsEnabled: () -> Boolean,
 ) {
 
-    suspend operator fun invoke(): HotWalletAdditionRestriction? {
+    suspend operator fun invoke(isSocialLogin: Boolean = false): HotWalletAdditionRestriction? {
         if (!isMultipleHotWalletsEnabled()) return null
 
         val userWallets = userWalletsListRepository.userWalletsSync()
-        return HotWalletAdditionRestriction.LimitReached.takeIf { userWallets.isHotWalletsLimitReached() }
+        return when {
+            userWallets.isHotWalletsLimitReached() -> HotWalletAdditionRestriction.LimitReached
+            isSocialLogin && userWallets.any { it.isSocialLoginWallet } -> {
+                HotWalletAdditionRestriction.SocialWalletAlreadyAdded
+            }
+            else -> null
+        }
     }
 }
