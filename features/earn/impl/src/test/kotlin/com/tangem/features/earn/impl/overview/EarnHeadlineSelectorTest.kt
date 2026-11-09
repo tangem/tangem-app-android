@@ -6,6 +6,7 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.earn.EarnProductId
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnHeadline
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.product.api.product.EarnPositionSummary
@@ -49,6 +50,7 @@ internal class EarnHeadlineSelectorTest {
     private val selector = EarnHeadlineSelector(
         order = EarnSummaryOrder(registry),
         rateBadgeConverter = EarnRateBadgeConverter(),
+        registry = registry,
     )
 
     private var previousLocale: Locale = Locale.getDefault()
@@ -406,6 +408,92 @@ internal class EarnHeadlineSelectorTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BadgeAccentOfWinner {
+
+        private val infoProductId = EarnProductId("info_product")
+        private val successProductId = EarnProductId("success_product")
+        private val infoSourceId = EarnProductId("info_source")
+        private val successSourceId = EarnProductId("success_source")
+
+        private val accentRegistry = EarnProductsRegistry(
+            products = setOf(
+                TestEarnProduct(infoProductId, rank = 0, badgeAccent = EarnBadgeAccent.Info),
+                TestEarnProduct(successProductId, rank = 1, badgeAccent = EarnBadgeAccent.Success),
+            ),
+            rateSources = setOf(
+                TestEarnRateSource(infoSourceId, rank = 2, badgeAccent = EarnBadgeAccent.Info),
+                TestEarnRateSource(successSourceId, rank = 3, badgeAccent = EarnBadgeAccent.Success),
+            ),
+        )
+
+        private val accentSelector = EarnHeadlineSelector(
+            order = EarnSummaryOrder(accentRegistry),
+            rateBadgeConverter = EarnRateBadgeConverter(),
+            registry = accentRegistry,
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN candidates WHEN select THEN the headline takes the badge accent of the winner`(
+            model: AccentModel,
+        ) {
+            // Act
+            val actual = accentSelector.select(model.candidates)?.badgeAccent
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            AccentModel(
+                description = "a product with accent Info wins",
+                candidates = listOf(product(infoProductId, rate = "0.05")),
+                expected = EarnBadgeAccent.Info,
+            ),
+            AccentModel(
+                description = "a product with accent Success wins",
+                candidates = listOf(product(successProductId, rate = "0.05")),
+                expected = EarnBadgeAccent.Success,
+            ),
+            AccentModel(
+                description = "a rate source with accent Info wins",
+                candidates = listOf(rateSource(infoSourceId, rate = "0.05", route = null)),
+                expected = EarnBadgeAccent.Info,
+            ),
+            AccentModel(
+                description = "a rate source with accent Success wins",
+                candidates = listOf(rateSource(successSourceId, rate = "0.05", route = null)),
+                expected = EarnBadgeAccent.Success,
+            ),
+            AccentModel(
+                description = "an active Info product beats an inactive Success source with a better rate",
+                candidates = listOf(
+                    product(infoProductId, rate = "0.03", isActive = true),
+                    rateSource(successSourceId, rate = "0.09", route = null),
+                ),
+                expected = EarnBadgeAccent.Info,
+            ),
+            AccentModel(
+                description = "the Success source with the best rate beats an inactive Info product",
+                candidates = listOf(
+                    product(infoProductId, rate = "0.03"),
+                    rateSource(successSourceId, rate = "0.09", route = null),
+                ),
+                expected = EarnBadgeAccent.Success,
+            ),
+        )
+    }
+
+    internal data class AccentModel(
+        val description: String,
+        val candidates: List<EarnProductSummary>,
+        val expected: EarnBadgeAccent,
+    ) {
+        override fun toString(): String = description
+    }
+
     private fun product(
         id: EarnProductId,
         rate: String?,
@@ -429,6 +517,7 @@ internal class EarnHeadlineSelectorTest {
             rate = createRate(fraction = fraction, type = EarnRateType.APY),
             isActive = isActive,
             badge = resourceReference(R.string.yield_module_earn_badge, wrappedList(percent)),
+            badgeAccent = EarnBadgeAccent.Success,
             route = route,
         )
 
@@ -437,6 +526,7 @@ internal class EarnHeadlineSelectorTest {
             rate = createRate(fraction = fraction, type = EarnRateType.APR),
             isActive = isActive,
             badge = resourceReference(R.string.staking_apr_earn_badge, wrappedList(percent)),
+            badgeAccent = EarnBadgeAccent.Success,
             route = route,
         )
 

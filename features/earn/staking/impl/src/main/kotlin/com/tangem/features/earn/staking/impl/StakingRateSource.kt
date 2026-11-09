@@ -8,6 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.product.api.product.EarnRateEntry
 import com.tangem.features.earn.product.api.product.EarnRateSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,6 +30,8 @@ internal class StakingRateSource @Inject constructor(
     override val id: EarnProductId = EarnProductId("staking_stakekit")
 
     override val rank: Int = 1
+
+    override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Info
 
     override fun rates(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnRateEntry>> {
         val stakeKitStatuses = accountStatusListSupplier(userWalletId)

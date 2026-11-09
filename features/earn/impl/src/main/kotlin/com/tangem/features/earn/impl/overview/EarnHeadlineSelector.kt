@@ -23,6 +23,7 @@ internal class EarnSummaryOrder @Inject constructor(
 internal class EarnHeadlineSelector @Inject constructor(
     private val order: EarnSummaryOrder,
     private val rateBadgeConverter: EarnRateBadgeConverter,
+    private val registry: EarnProductsRegistry,
 ) {
 
     /** The rate is known, and the product is open or the user already has a position in it. */
@@ -45,6 +46,7 @@ internal class EarnHeadlineSelector @Inject constructor(
             rate = rate,
             isActive = winner.position != null,
             badge = rateBadgeConverter.convert(rate),
+            badgeAccent = registry.badgeAccentOf(winner.productId),
             route = winner.route,
         )
     }
