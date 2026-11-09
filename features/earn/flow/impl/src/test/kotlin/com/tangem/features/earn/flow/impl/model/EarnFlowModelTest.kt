@@ -1,36 +1,50 @@
 package com.tangem.features.earn.flow.impl.model
 
 import arrow.core.left
+import arrow.core.none
 import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.earn.flow.api.EarnFlowComponent
+import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
+import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnProduct
+import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAmount
 import com.tangem.features.earn.product.api.session.EarnFeeSelection
@@ -87,6 +101,12 @@ internal class EarnFlowModelTest {
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase = mockk(relaxed = true)
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val shareManager: ShareManager = mockk(relaxed = true)
+    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase = mockk()
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk()
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
 
     private val txRef = EarnTxRef(
         version = 1,
@@ -113,7 +133,16 @@ internal class EarnFlowModelTest {
             saveBlockchainErrorUseCase,
             getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase,
+            urlOpener,
+            shareManager,
+            getExplorerTransactionUrlUseCase,
+            getUserWalletUseCase,
+            getAccountCurrencyStatusUseCase,
+            isAccountsModeEnabledUseCase,
         )
+        coEvery { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) } returns none()
+        coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+        every { getUserWalletUseCase.invoke(testUserWalletId) } returns mockk<UserWallet.Hot> { every { name } returns "Wallet" }.right()
         mockkObject(CryptoCurrencyStatusOperations)
         with(CryptoCurrencyStatusOperations) {
             every { accountStatusList.getCryptoCurrencyStatus(currency = testEthereum) } returns testStatus().some()
@@ -136,6 +165,9 @@ internal class EarnFlowModelTest {
             EarnSigningStep.Done(txRef, testResult()),
         )
         every { session.track(ref = any()) } returns flowOf(EarnTxStatus(TxInfo.TransactionStatus.Confirmed))
+        every {
+            getExplorerTransactionUrlUseCase.invoke(txHash = any(), currency = any())
+        } returns TEST_EXPLORER_URL.right()
     }
 
     @AfterEach
@@ -1025,6 +1057,189 @@ internal class EarnFlowModelTest {
         }
     }
 
+    @Nested
+    inner class WalletAndResultDetails {
+
+        @Test
+        fun `GIVEN deposit WHEN created THEN amount names the source wallet`() = runTest {
+            // Act
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+
+            // Assert
+            val amountState = model.amount.value?.amountState as AmountState.Data
+            assertThat(amountState.accountTitleUM).isInstanceOf(AccountTitleUM.Text::class.java)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN withdrawal WHEN created THEN no source and the product heads the balance row`() = runTest {
+            // Act
+            val model = createModel(action = Withdraw())
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.amount.value?.isFromPosition).isTrue()
+            assertThat((model.amount.value?.amountState as AmountState.Data).tokenName).isEqualTo(testFlowProduct.title)
+            coVerify(exactly = 0) { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN card wallet WHEN confirm shown THEN primary carries the Tangem logo`() = runTest {
+            // Arrange
+            every { getUserWalletUseCase.invoke(testUserWalletId) } returns mockk<UserWallet.Cold> { every { name } returns "Wallet" }.right()
+
+            // Act
+            val model = createConfirmedModel()
+
+            // Assert
+            assertThat(model.confirm.value?.primary?.tangemIconUM).isNotNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN result without subtitle WHEN result shown THEN flow adds amount and date`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            val subtitle = model.result.value?.subtitle
+            assertThat(subtitle).isInstanceOf(TextReference.Combined::class.java)
+            assertThat(model.state.value.sentAmount).isEqualTo(TestPlan().expectedAmount)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN two sent transactions WHEN result shown THEN the plan amount is kept`() = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Sent(txRef),
+                EarnSigningStep.Sent(txRef),
+                EarnSigningStep.Done(txRef, testResult()),
+            )
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.sentAmount).isEqualTo(TestPlan().expectedAmount)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN result with subtitle WHEN result shown THEN product subtitle kept`() = runTest {
+            // Arrange
+            val subtitle = stringReference("Now earning")
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Sent(txRef),
+                EarnSigningStep.Done(txRef, testResult().copy(subtitle = subtitle)),
+            )
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.result.value?.subtitle).isEqualTo(subtitle)
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    inner class Explorer {
+
+        @Test
+        fun `GIVEN result with explorer WHEN result shown THEN explorer opens the tx link`() = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Sent(txRef),
+                EarnSigningStep.Done(txRef, testResult().copy(isExplorerShown = true)),
+            )
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+            model.result.value?.explorer?.onExploreClick?.invoke()
+
+            // Assert
+            verify(exactly = 1) { getExplorerTransactionUrlUseCase.invoke(txHash = txRef.id, currency = testEthereum) }
+            verify(exactly = 1) { urlOpener.openUrl(TEST_EXPLORER_URL) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN result without explorer WHEN result shown THEN no link is built`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.result.value?.explorer).isNull()
+            verify(exactly = 0) { getExplorerTransactionUrlUseCase.invoke(txHash = any(), currency = any()) }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    inner class HowItWorks {
+
+        @Test
+        fun `GIVEN product with how it works WHEN info pressed THEN sheet shown`() = runTest {
+            // Arrange
+            val model = createModel(flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks))
+            advanceUntilIdle()
+
+            // Act
+            model.amount.value?.onHowItWorksClick?.invoke()
+
+            // Assert
+            assertThat(model.howItWorks.value?.title).isEqualTo(testHowItWorks.title)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN sheet shown WHEN dismissed THEN sheet hidden`() = runTest {
+            // Arrange
+            val model = createModel(flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks))
+            advanceUntilIdle()
+            model.amount.value?.onHowItWorksClick?.invoke()
+
+            // Act
+            model.onHowItWorksDismiss()
+
+            // Assert
+            assertThat(model.howItWorks.value).isNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN sheet shown WHEN learn more pressed THEN its link opens`() = runTest {
+            // Arrange
+            val model = createModel(flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks))
+            advanceUntilIdle()
+            model.amount.value?.onHowItWorksClick?.invoke()
+
+            // Act
+            model.howItWorks.value?.onLearnMoreClick?.invoke()
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl(TEST_LEARN_MORE_URL) }
+            model.onDestroy()
+        }
+    }
+
     private suspend fun TestScope.createConfirmedModel(): EarnFlowModel {
         val model = createModel(action = Deposit())
         advanceUntilIdle()
@@ -1042,15 +1257,21 @@ internal class EarnFlowModelTest {
         factories: Map<String, EarnSession.Factory> = mapOf(
             testFlowProduct.productId.value to EarnSession.Factory { session },
         ),
+        flowProduct: EarnFlowProduct = testFlowProduct,
     ): EarnFlowModel = EarnFlowModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(testParams(action, callback)),
+        paramsContainer = MutableParamsContainer(testParams(action, callback).copy(flowProduct = flowProduct)),
         sessionFactories = EarnSessionFactories(factories),
         statuses = EarnFlowStatuses(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
             isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
+        ),
+        wallet = EarnFlowWallet(
+            getUserWalletUseCase = getUserWalletUseCase,
+            getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
+            isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
         ),
         feeSelectorReloadTrigger = feeSelectorReloadTrigger,
         messageSender = messageSender,
@@ -1061,7 +1282,21 @@ internal class EarnFlowModelTest {
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         ),
+        links = EarnFlowLinks(
+            urlOpener = urlOpener,
+            shareManager = shareManager,
+            getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
+        ),
     )
 
     data class DeductionModel(val entered: String?, val fee: String, val expected: String)
 }
+
+private const val TEST_EXPLORER_URL = "https://etherscan.io/tx/0xhash"
+private const val TEST_LEARN_MORE_URL = "https://aave.com"
+
+private val testHowItWorks = EarnHowItWorks(
+    title = stringReference("How it works"),
+    entries = listOf(EarnTextBlock(title = stringReference("Supply"), description = stringReference("Lend"))),
+    learnMoreUrl = TEST_LEARN_MORE_URL,
+)

@@ -1,5 +1,7 @@
 package com.tangem.features.earn.flow.impl.model
 
+import androidx.annotation.DrawableRes
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -18,6 +20,7 @@ internal enum class EarnFlowStep { Amount, Confirm, Result }
  * [amountState] holds the amount the user entered, before the fee is deducted; [plan] carries the amount that goes
  * into the protocol. [planFee] is the fee [plan] was prepared with: a plan built for another fee is never verified.
  * [minAmount] comes from the session's `BelowMinimum` and joins the amount field validation from then on.
+ * [sentAmount] keeps the plan's amount for the result: the plan itself is dropped once the transaction is sent.
  */
 internal data class EarnFlowState(
     val step: EarnFlowStep,
@@ -35,6 +38,11 @@ internal data class EarnFlowState(
     val signing: EarnSigningState = EarnSigningState.Idle,
     val result: EarnResult? = null,
     val txStatus: EarnTxStatus? = null,
+    val explorerUrl: String? = null,
+    val resultTimestamp: Long? = null,
+    val sentAmount: BigDecimal? = null,
+    @DrawableRes val walletIcon: Int? = null,
+    val source: AccountTitleUM? = null,
 ) {
 
     val feeSelection: EarnFeeSelection?
