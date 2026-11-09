@@ -54,11 +54,11 @@ internal class PolymarketModelTest {
     }
 
     @Test
-    fun `GIVEN settled wallet WHEN failed outcome arrives THEN toast is sent once and outcome acknowledged`() =
+    fun `GIVEN active wallet WHEN failed outcome arrives THEN toast is sent once and outcome acknowledged`() =
         runTest {
             // Arrange
             val model = createModel()
-            model.onWalletSettled(USER_WALLET_ID)
+            model.onActiveWalletChanged(USER_WALLET_ID)
             advanceUntilIdle()
             val message = slot<SnackbarMessage>()
             every { messageSender.send(capture(message)) } returns Unit
@@ -78,7 +78,7 @@ internal class PolymarketModelTest {
     fun `GIVEN outcome without toast WHEN it arrives THEN nothing is sent and outcome acknowledged`() = runTest {
         // Arrange
         val model = createModel()
-        model.onWalletSettled(USER_WALLET_ID)
+        model.onActiveWalletChanged(USER_WALLET_ID)
         advanceUntilIdle()
 
         // Act
@@ -91,22 +91,44 @@ internal class PolymarketModelTest {
     }
 
     @Test
-    fun `GIVEN outcome already toasted WHEN it is emitted again before acknowledge THEN toast is sent once`() =
+    fun `GIVEN active wallet WHEN stack returns to a route without wallet THEN later outcomes are not toasted`() =
         runTest {
             // Arrange
             val model = createModel()
-            model.onWalletSettled(USER_WALLET_ID)
-            advanceUntilIdle()
-            outcomes.emit(REVOKE_FAILED)
+            model.onActiveWalletChanged(USER_WALLET_ID)
             advanceUntilIdle()
 
             // Act
-            outcomes.emit(null)
+            model.onActiveWalletChanged(null)
+            advanceUntilIdle()
             outcomes.emit(REVOKE_FAILED)
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { messageSender.send(any()) }
+            verify(exactly = 0) { messageSender.send(any()) }
+            verify(exactly = 0) { acknowledgeOutcome(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN active wallet WHEN another wallet becomes active THEN outcomes of the new wallet are toasted`() =
+        runTest {
+            // Arrange
+            val otherOutcomes = MutableSharedFlow<PolymarketSessionKeyOperationOutcome?>()
+            every { observeOutcome(OTHER_WALLET_ID) } returns otherOutcomes
+            val model = createModel()
+            model.onActiveWalletChanged(USER_WALLET_ID)
+            advanceUntilIdle()
+
+            // Act
+            model.onActiveWalletChanged(OTHER_WALLET_ID)
+            advanceUntilIdle()
+            outcomes.emit(REVOKE_FAILED)
+            otherOutcomes.emit(ACTIVATE_CANCELLED)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { acknowledgeOutcome(USER_WALLET_ID, any()) }
+            verify(exactly = 1) { acknowledgeOutcome(OTHER_WALLET_ID, ACTIVATE_CANCELLED.id) }
         }
 
     @Test
@@ -114,7 +136,7 @@ internal class PolymarketModelTest {
         // Arrange
         every { featureToggles.isPolymarketSessionKeysEnabled } returns false
         val model = createModel()
-        model.onWalletSettled(USER_WALLET_ID)
+        model.onActiveWalletChanged(USER_WALLET_ID)
         advanceUntilIdle()
 
         // Act
@@ -128,7 +150,7 @@ internal class PolymarketModelTest {
     }
 
     @Test
-    fun `GIVEN no settled wallet WHEN model is created THEN outcomes are not observed`() = runTest {
+    fun `GIVEN no active wallet WHEN model is created THEN outcomes are not observed`() = runTest {
         // Act
         createModel()
         advanceUntilIdle()
@@ -147,6 +169,7 @@ internal class PolymarketModelTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
+        val OTHER_WALLET_ID = UserWalletId("022")
         val REVOKE_FAILED = PolymarketSessionKeyOperationOutcome(
             id = 5L,
             request = PolymarketSessionKeyOperationRequest.Revoke(sessionKeyAddress = "0x1"),

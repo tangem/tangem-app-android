@@ -13,6 +13,7 @@ import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
@@ -32,8 +33,7 @@ internal class PolymarketModel @Inject constructor(
     /** Initial route of the feature stack — [PolymarketRoute.Entry] decides where the user actually lands. */
     val initialRoute: PolymarketRoute = PolymarketRoute.Entry
 
-    private val settledWalletId = MutableStateFlow<UserWalletId?>(null)
-    private var lastToastedOperationId: Long? = null
+    private val activeWalletId = MutableStateFlow<UserWalletId?>(null)
 
     init {
         if (featureToggles.isPolymarketSessionKeysEnabled) {
@@ -41,26 +41,26 @@ internal class PolymarketModel @Inject constructor(
         }
     }
 
-    fun onWalletSettled(userWalletId: UserWalletId) {
-        settledWalletId.value = userWalletId
+    fun onActiveWalletChanged(userWalletId: UserWalletId?) {
+        activeWalletId.value = userWalletId
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun toastSessionKeyOutcomes() {
-        settledWalletId
-            .filterNotNull()
+        activeWalletId
             .flatMapLatest { walletId ->
-                observeSessionKeyOutcome(walletId).filterNotNull().map { outcome -> walletId to outcome }
+                if (walletId == null) {
+                    emptyFlow()
+                } else {
+                    observeSessionKeyOutcome(walletId).filterNotNull().map { outcome -> walletId to outcome }
+                }
             }
-            .onEach { (walletId, outcome) -> toastOnce(walletId, outcome) }
+            .onEach { (walletId, outcome) -> toast(walletId, outcome) }
             .launchIn(modelScope)
     }
 
-    private fun toastOnce(userWalletId: UserWalletId, outcome: PolymarketSessionKeyOperationOutcome) {
-        if (outcome.id != lastToastedOperationId) {
-            lastToastedOperationId = outcome.id
-            PolymarketSessionKeyToastFactory.create(outcome)?.let(messageSender::send)
-        }
+    private fun toast(userWalletId: UserWalletId, outcome: PolymarketSessionKeyOperationOutcome) {
+        PolymarketSessionKeyToastFactory.create(outcome)?.let(messageSender::send)
         acknowledgeSessionKeyOutcome(userWalletId, outcome.id)
     }
 }
