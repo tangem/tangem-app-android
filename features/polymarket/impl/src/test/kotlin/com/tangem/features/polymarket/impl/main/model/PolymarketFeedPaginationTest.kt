@@ -47,7 +47,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
-/** Exercises the feed controller with the production pagination state machine and suspended page requests. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketFeedPaginationTest {
 
@@ -57,10 +56,12 @@ internal class PolymarketFeedPaginationTest {
     private val scores: PolymarketLiveScoresRepository = mockk()
     private val frames = MutableSharedFlow<PolymarketLiveScore>()
     private val connections = MutableStateFlow(true)
+    private val observedGameIds = mutableListOf<Set<String>>()
 
     @Test
     fun `GIVEN final socket score WHEN refresh returns lagging REST THEN final score survives without resubscribing`() =
         runTest {
+            // Arrange
             val controller = controller(sports = sportsObserver())
             controller.select(games)
             controller.resume()
@@ -70,30 +71,35 @@ internal class PolymarketFeedPaginationTest {
             frames.emit(finalScore())
             runCurrent()
             val finished = controller.sports()
-            assertThat(finished?.homeScore).isEqualTo("2")
-            assertThat(finished?.isLive).isFalse()
             val seen = mutableListOf<PolymarketSportsUM?>()
             controller.content.filterIsInstance<PolymarketMainUM.ContentUM.Content>()
                 .onEach { seen += it.events.single().sports }.launchIn(backgroundScope)
 
-            repeat(2) {
+            // Act
+            val refreshes = List(2) {
                 val refresh = backgroundScope.launch { controller.refresh() }
                 runCurrent()
                 requests.last().completeEvents(sportsEvent().copy(dataFetchedAt = Instant.ofEpochSecond(130)))
                 runCurrent()
-                assertThat(refresh.isCompleted).isTrue()
-                assertThat(controller.sports()).isEqualTo(finished)
+                refresh.isCompleted to controller.sports()
             }
-
-            assertThat(seen).isNotEmpty()
-            assertThat(seen.all { it == finished }).isTrue()
-            verify(exactly = 1) { scores.observeLiveScores(setOf("11")) }
-            assertThat(frames.subscriptionCount.value).isEqualTo(1)
+            val refreshedSubscriptions = frames.subscriptionCount.value
+            val gamesObservedAfterRefresh = observedGameIds.filter { it.isNotEmpty() }
             controller.pause()
             runCurrent()
-            assertThat(frames.subscriptionCount.value).isEqualTo(0)
+            val pausedSubscriptions = frames.subscriptionCount.value
             controller.resume()
             runCurrent()
+
+            // Assert
+            assertThat(finished?.homeScore).isEqualTo("2")
+            assertThat(finished?.isLive).isFalse()
+            assertThat(refreshes).containsExactly(true to finished, true to finished)
+            assertThat(seen).isNotEmpty()
+            assertThat(seen.all { it == finished }).isTrue()
+            assertThat(gamesObservedAfterRefresh).containsExactly(setOf("11"))
+            assertThat(refreshedSubscriptions).isEqualTo(1)
+            assertThat(pausedSubscriptions).isEqualTo(0)
             assertThat(frames.subscriptionCount.value).isEqualTo(1)
             assertThat(controller.sports()).isEqualTo(finished)
         }
@@ -101,6 +107,7 @@ internal class PolymarketFeedPaginationTest {
     @Test
     fun `GIVEN final score WHEN refresh returns empty feed THEN removed game loses subscription and remembered result`() =
         runTest {
+            // Arrange
             val controller = controller(sports = sportsObserver())
             controller.select(games)
             controller.resume()
@@ -110,17 +117,21 @@ internal class PolymarketFeedPaginationTest {
             frames.emit(finalScore())
             runCurrent()
 
+            // Act
             backgroundScope.launch { controller.refresh() }
             runCurrent()
             requests.last().completeEvents()
             runCurrent()
-            assertThat(controller.content.value).isEqualTo(PolymarketMainUM.ContentUM.Empty)
-            assertThat(frames.subscriptionCount.value).isEqualTo(0)
-
+            val emptyContent = controller.content.value
+            val emptySubscriptions = frames.subscriptionCount.value
             backgroundScope.launch { controller.refresh() }
             runCurrent()
             requests.last().completeEvents(sportsEvent())
             runCurrent()
+
+            // Assert
+            assertThat(emptyContent).isEqualTo(PolymarketMainUM.ContentUM.Empty)
+            assertThat(emptySubscriptions).isEqualTo(0)
             assertThat(controller.sports()?.homeScore).isEqualTo("1")
             assertThat(controller.sports()?.isLive).isTrue()
             assertThat(frames.subscriptionCount.value).isEqualTo(1)
@@ -128,6 +139,7 @@ internal class PolymarketFeedPaginationTest {
 
     @Test
     fun `GIVEN final score WHEN refreshed event points to another game THEN old result is discarded`() = runTest {
+        // Arrange
         val controller = controller(sports = sportsObserver())
         controller.select(games)
         controller.resume()
@@ -137,6 +149,7 @@ internal class PolymarketFeedPaginationTest {
         frames.emit(finalScore())
         runCurrent()
 
+        // Act
         backgroundScope.launch { controller.refresh() }
         runCurrent()
         requests.last().completeEvents(sportsEvent().copy(gameId = "22"))
@@ -144,6 +157,7 @@ internal class PolymarketFeedPaginationTest {
         frames.emit(finalScore())
         runCurrent()
 
+        // Assert
         assertThat(controller.sports()?.homeScore).isEqualTo("1")
         assertThat(controller.sports()?.isLive).isTrue()
         verify { scores.observeLiveScores(setOf("22")) }
@@ -152,6 +166,7 @@ internal class PolymarketFeedPaginationTest {
 
     @Test
     fun `GIVEN next page loading WHEN filter changes THEN request is cancelled and only new filter renders`() = runTest {
+        // Arrange
         val controller = controller()
         controller.select(games)
         runCurrent()
@@ -160,29 +175,34 @@ internal class PolymarketFeedPaginationTest {
         controller.loadMore()
         runCurrent()
         val nextPage = requests.last()
-        assertThat(nextPage.config).isEqualTo(games)
-        assertThat(nextPage.cursor).isEqualTo("games-page-2")
-        assertThat(controller.events()).containsExactly("game")
-        assertThat(controller.footer()).isEqualTo(PolymarketFeedFooterUM.Loading)
+        val footerWhileLoading = controller.footer()
 
+        // Act
         controller.select(props)
         runCurrent()
-        assertThat(nextPage.cancelled).isTrue()
-        assertThat(controller.content.value).isEqualTo(PolymarketMainUM.ContentUM.Loading)
-        assertThat(requests.last().config).isEqualTo(props)
-        assertThat(requests.last().cursor).isNull()
-        requests.last().complete("question")
+        val contentAfterSwitch = controller.content.value
+        val propsRequest = requests.last()
+        propsRequest.complete("question")
         nextPage.complete("stale-game")
         runCurrent()
-
-        assertThat(controller.events()).containsExactly("question")
         controller.loadMore()
         runCurrent()
+
+        // Assert
+        assertThat(nextPage.config).isEqualTo(games)
+        assertThat(nextPage.cursor).isEqualTo("games-page-2")
+        assertThat(footerWhileLoading).isEqualTo(PolymarketFeedFooterUM.Loading)
+        assertThat(nextPage.cancelled).isTrue()
+        assertThat(contentAfterSwitch).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(propsRequest.config).isEqualTo(props)
+        assertThat(propsRequest.cursor).isNull()
+        assertThat(controller.events()).containsExactly("question")
         assertThat(requests).hasSize(3)
     }
 
     @Test
     fun `GIVEN next page loading WHEN refresh succeeds THEN old pagination stops and new cursor is used`() = runTest {
+        // Arrange
         val controller = controller()
         controller.select(games)
         runCurrent()
@@ -192,28 +212,35 @@ internal class PolymarketFeedPaginationTest {
         runCurrent()
         val oldNextPage = requests.last()
 
+        // Act
         val refresh = backgroundScope.launch { controller.refresh() }
         runCurrent()
-        assertThat(controller.events()).containsExactly("old")
-        assertThat(requests.last().config).isEqualTo(games)
-        assertThat(requests.last().cursor).isNull()
-        requests.last().complete("fresh", cursor = "fresh-page-2")
+        val eventsWhileRefreshing = controller.events()
+        val refreshRequest = requests.last()
+        refreshRequest.complete("fresh", cursor = "fresh-page-2")
         runCurrent()
-        assertThat(refresh.isCompleted).isTrue()
-        assertThat(oldNextPage.cancelled).isTrue()
-        assertThat(controller.events()).containsExactly("fresh")
-
+        val eventsAfterRefresh = controller.events()
         oldNextPage.complete("stale")
         controller.loadMore()
         runCurrent()
-        assertThat(requests.last().cursor).isEqualTo("fresh-page-2")
-        requests.last().complete("fresh-next")
+        val nextPage = requests.last()
+        nextPage.complete("fresh-next")
         runCurrent()
+
+        // Assert
+        assertThat(eventsWhileRefreshing).containsExactly("old")
+        assertThat(refreshRequest.config).isEqualTo(games)
+        assertThat(refreshRequest.cursor).isNull()
+        assertThat(refresh.isCompleted).isTrue()
+        assertThat(oldNextPage.cancelled).isTrue()
+        assertThat(eventsAfterRefresh).containsExactly("fresh")
+        assertThat(nextPage.cursor).isEqualTo("fresh-page-2")
         assertThat(controller.events()).containsExactly("fresh", "fresh-next").inOrder()
     }
 
     @Test
-    fun `GIVEN refresh loading WHEN filter changes THEN replacement request stops without replacing new feed`() = runTest {
+    fun `GIVEN refresh loading WHEN filter changes THEN replacement request stops and caller returns normally`() = runTest {
+        // Arrange
         val controller = controller()
         controller.select(games)
         runCurrent()
@@ -223,20 +250,25 @@ internal class PolymarketFeedPaginationTest {
         runCurrent()
         val refreshRequest = requests.last()
 
+        // Act
         controller.select(props)
         runCurrent()
-        assertThat(refresh.isCancelled).isTrue()
-        assertThat(refreshRequest.cancelled).isTrue()
+        val refreshWasCancelled = refreshRequest.cancelled
         requests.last().complete("question")
         refreshRequest.complete("stale-game")
         runCurrent()
 
+        // Assert
+        assertThat(refreshWasCancelled).isTrue()
+        assertThat(refresh.isCompleted).isTrue()
+        assertThat(refresh.isCancelled).isFalse()
         assertThat(controller.events()).containsExactly("question")
         assertThat(controller.footer()).isEqualTo(PolymarketFeedFooterUM.None)
     }
 
     @Test
     fun `GIVEN failed next page WHEN footer retries THEN cursor and filter survive and duplicate events collapse`() = runTest {
+        // Arrange
         val controller = controller()
         controller.select(props)
         runCurrent()
@@ -244,22 +276,138 @@ internal class PolymarketFeedPaginationTest {
         runCurrent()
         controller.loadMore()
         runCurrent()
-        requests.last().result.complete(BatchFetchResult.Error(IllegalStateException("Offline")))
+        requests.last().fail()
         runCurrent()
-        assertThat(controller.events()).containsExactly("question")
+        val eventsAfterFailure = controller.events()
 
+        // Act
         (controller.footer() as PolymarketFeedFooterUM.Error).onRetryClick()
         runCurrent()
-        assertThat(requests.last().config).isEqualTo(props)
-        assertThat(requests.last().cursor).isEqualTo("questions-page-2")
-        requests.last().complete("question", "next-question")
+        val retryRequest = requests.last()
+        retryRequest.complete("question", "next-question")
         runCurrent()
-
-        assertThat(controller.events()).containsExactly("question", "next-question").inOrder()
-        assertThat(controller.footer()).isEqualTo(PolymarketFeedFooterUM.None)
         controller.loadMore()
         runCurrent()
+
+        // Assert
+        assertThat(eventsAfterFailure).containsExactly("question")
+        assertThat(retryRequest.config).isEqualTo(props)
+        assertThat(retryRequest.cursor).isEqualTo("questions-page-2")
+        assertThat(controller.events()).containsExactly("question", "next-question").inOrder()
+        assertThat(controller.footer()).isEqualTo(PolymarketFeedFooterUM.None)
         assertThat(requests).hasSize(3)
+    }
+
+    @Test
+    fun `GIVEN loaded feed WHEN refresh fails THEN cards stay and footer retry refreshes`() = runTest {
+        // Arrange
+        val controller = controller()
+        controller.select(games)
+        runCurrent()
+        requests.single().complete("old")
+        runCurrent()
+
+        // Act
+        val refresh = backgroundScope.launch { controller.refresh() }
+        runCurrent()
+        requests.last().fail()
+        runCurrent()
+        val eventsAfterFailure = controller.events()
+        (controller.footer() as PolymarketFeedFooterUM.Error).onRetryClick()
+        runCurrent()
+        val retryRequest = requests.last()
+        retryRequest.complete("fresh")
+        runCurrent()
+
+        // Assert
+        assertThat(refresh.isCompleted).isTrue()
+        assertThat(eventsAfterFailure).containsExactly("old")
+        assertThat(requests).hasSize(3)
+        assertThat(retryRequest.config).isEqualTo(games)
+        assertThat(retryRequest.cursor).isNull()
+        assertThat(controller.events()).containsExactly("fresh")
+        assertThat(controller.footer()).isEqualTo(PolymarketFeedFooterUM.None)
+    }
+
+    @Test
+    fun `GIVEN failed next page WHEN refresh fails THEN footer still retries the page with its cursor`() = runTest {
+        // Arrange
+        val controller = controller()
+        controller.select(games)
+        runCurrent()
+        requests.single().complete("old", cursor = "page-2")
+        runCurrent()
+        controller.loadMore()
+        runCurrent()
+        requests.last().fail()
+        runCurrent()
+
+        // Act
+        backgroundScope.launch { controller.refresh() }
+        runCurrent()
+        requests.last().fail()
+        runCurrent()
+        (controller.footer() as PolymarketFeedFooterUM.Error).onRetryClick()
+        runCurrent()
+        val retryRequest = requests.last()
+        retryRequest.complete("next")
+        runCurrent()
+
+        // Assert
+        assertThat(retryRequest.cursor).isEqualTo("page-2")
+        assertThat(controller.events()).containsExactly("old", "next").inOrder()
+        assertThat(controller.footer()).isEqualTo(PolymarketFeedFooterUM.None)
+    }
+
+    @Test
+    fun `GIVEN first page loading WHEN refresh fails THEN skeleton stays and first page renders without error`() = runTest {
+        // Arrange
+        val controller = controller()
+        controller.select(games)
+        runCurrent()
+        val firstPage = requests.single()
+
+        // Act
+        backgroundScope.launch { controller.refresh() }
+        runCurrent()
+        requests.last().fail()
+        runCurrent()
+        val contentAfterFailure = controller.content.value
+        firstPage.complete("game")
+        runCurrent()
+
+        // Assert
+        assertThat(contentAfterFailure).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(controller.events()).containsExactly("game")
+        assertThat(controller.footer()).isEqualTo(PolymarketFeedFooterUM.None)
+    }
+
+    @Test
+    fun `GIVEN refresh error footer WHEN next page loads THEN error footer is cleared`() = runTest {
+        // Arrange
+        val controller = controller()
+        controller.select(games)
+        runCurrent()
+        requests.single().complete("old", cursor = "page-2")
+        runCurrent()
+        backgroundScope.launch { controller.refresh() }
+        runCurrent()
+        requests.last().fail()
+        runCurrent()
+        val footerAfterFailure = controller.footer()
+
+        // Act
+        controller.loadMore()
+        runCurrent()
+        val nextPage = requests.last()
+        nextPage.complete("next")
+        runCurrent()
+
+        // Assert
+        assertThat(footerAfterFailure).isInstanceOf(PolymarketFeedFooterUM.Error::class.java)
+        assertThat(nextPage.cursor).isEqualTo("page-2")
+        assertThat(controller.events()).containsExactly("old", "next").inOrder()
+        assertThat(controller.footer()).isEqualTo(PolymarketFeedFooterUM.None)
     }
 
     @Test
@@ -268,7 +416,7 @@ internal class PolymarketFeedPaginationTest {
         val controller = controller()
         controller.select(games)
         runCurrent()
-        requests.single().result.complete(BatchFetchResult.Error(IllegalStateException("Offline")))
+        requests.single().fail()
         runCurrent()
         val refresh = backgroundScope.launch { controller.refresh() }
         runCurrent()
@@ -285,7 +433,8 @@ internal class PolymarketFeedPaginationTest {
 
         // Assert
         assertThat(refreshWasCancelled).isTrue()
-        assertThat(refresh.isCancelled).isTrue()
+        assertThat(refresh.isCompleted).isTrue()
+        assertThat(refresh.isCancelled).isFalse()
         assertThat(controller.events()).containsExactly("retried")
     }
 
@@ -312,7 +461,8 @@ internal class PolymarketFeedPaginationTest {
 
         // Assert
         assertThat(firstWasCancelled).isTrue()
-        assertThat(firstRefresh.isCancelled).isTrue()
+        assertThat(firstRefresh.isCompleted).isTrue()
+        assertThat(firstRefresh.isCancelled).isFalse()
         assertThat(secondRefresh.isCompleted).isTrue()
         assertThat(secondRefresh.isCancelled).isFalse()
         assertThat(controller.events()).containsExactly("latest")
@@ -417,6 +567,7 @@ internal class PolymarketFeedPaginationTest {
         every { scores.observeConnectionState() } returns connections
         every { scores.observeLiveScores(any()) } answers {
             val ids = firstArg<Set<String>>()
+            observedGameIds += ids
             if (ids.isEmpty()) emptyFlow() else frames.filter { it.gameId in ids }
         }
         return ObservePolymarketSportsStateUseCase(
@@ -474,6 +625,10 @@ internal class PolymarketFeedPaginationTest {
     private class Request(val config: PolymarketEventsListConfig, val cursor: String?) {
         val result = CompletableDeferred<BatchFetchResult<PolymarketEventsBatch>>()
         var cancelled = false
+
+        fun fail() {
+            result.complete(BatchFetchResult.Error(IllegalStateException("Offline")))
+        }
 
         fun complete(vararg ids: String, cursor: String? = null) {
             completeEvents(*ids.map { createPolymarketEvent(id = it) }.toTypedArray(), cursor = cursor)
