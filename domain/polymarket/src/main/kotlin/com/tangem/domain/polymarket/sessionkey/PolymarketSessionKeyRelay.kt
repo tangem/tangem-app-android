@@ -91,7 +91,7 @@ internal class PolymarketSessionKeyRelay(
                     unlisting = Unlisting.Unread(error)
                 },
                 ifRight = { signers ->
-                    if (signers.none { it.signsFor(sessionKey, now = clock.instant()) }) return Unlisting.Gone
+                    if (signers.none { it.maySignFor(sessionKey, now = clock.instant()) }) return Unlisting.Gone
                     unlisting = Unlisting.StillListed
                 },
             )
@@ -150,6 +150,9 @@ private fun PolymarketSessionSigner.signsFor(sessionKey: PolymarketSessionKey, n
     val validUntil = validUntil ?: return false
     return address.equals(sessionKey.address, ignoreCase = true) && validUntil > now
 }
+
+private fun PolymarketSessionSigner.maySignFor(sessionKey: PolymarketSessionKey, now: Instant): Boolean =
+    address.equals(sessionKey.address, ignoreCase = true) && validUntil?.isAfter(now) != false
 
 private val TRADING_SCOPES = setOf("CLOB", "ALL")
 private val LISTING_EXPIRY_MARGIN: Duration = 10.minutes
