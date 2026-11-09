@@ -230,6 +230,33 @@ fun findWireMockRequestHeaders(
     headers.keys().asSequence().associate { name -> name.lowercase() to headers.optString(name) }
 }
 
+fun findWireMockRequestBodiesNewestFirst(
+    method: String,
+    urlPathPattern: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<String> = findWireMockRequestsNewestFirst(
+    requestPattern = JSONObject().put("method", method).put("urlPathPattern", urlPathPattern),
+    baseUrl = baseUrl,
+).map { request -> request.optString("body") }
+
+fun findWireMockRequestHeaderValuesNewestFirst(
+    method: String,
+    urlPath: String,
+    header: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<String> = findWireMockRequestsNewestFirst(
+    requestPattern = JSONObject().put("method", method).put("urlPath", urlPath),
+    baseUrl = baseUrl,
+).map { request ->
+    val headers = request.optJSONObject("headers") ?: JSONObject()
+    headers.keys().asSequence().firstOrNull { name -> name.equals(header, ignoreCase = true) }
+        ?.let(headers::optString)
+        .orEmpty()
+}
+
+private fun findWireMockRequestsNewestFirst(requestPattern: JSONObject, baseUrl: String): List<JSONObject> =
+    findWireMockRequests(requestPattern, baseUrl).sortedByDescending { request -> request.optLong("loggedDate") }
+
 private fun findWireMockRequestBodies(requestPattern: JSONObject, baseUrl: String): List<String> =
     findWireMockRequests(requestPattern, baseUrl).map { request -> request.optString("body") }
 
