@@ -1,20 +1,27 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.feature.wallet.impl.R
 import com.tangem.lib.crypto.BlockchainUtils
 import java.math.BigDecimal
 
-/** Decimal places between a backend percent (5.5) and the fraction it means (0.055). */
-internal const val YIELD_PERCENT_POINT_SHIFT = 2
+private const val YIELD_PERCENT_POINT_SHIFT = 2
 
-internal fun BigDecimal.formatEarnRate(): String = format { percent(canBeLower = true, withPercentSign = false) }
+/** The backend sends a percent (5.5), the formatter takes the fraction it means (0.055). */
+internal fun BigDecimal.toYieldPromoText(): TextReference {
+    val rate = movePointLeft(YIELD_PERCENT_POINT_SHIFT).format { percent(canBeLower = true, withPercentSign = false) }
+    return resourceReference(R.string.yield_module_main_screen_promo_banner_message, wrappedList(rate))
+}
 
 /**
- * The Yield Mode rate of a token in percent, as the backend reports it, or `null` for a coin and a token the map does
- * not list. The promo bubble shows this rate whatever product wins the headline.
+ * The promo shows this rate whatever product wins the headline.
+ * `null` for a coin and a token the map does not list.
  */
 internal fun yieldApyPercentOf(currency: CryptoCurrency, yieldModuleApyMap: Map<String, BigDecimal>): BigDecimal? {
     val token = currency as? CryptoCurrency.Token ?: return null
