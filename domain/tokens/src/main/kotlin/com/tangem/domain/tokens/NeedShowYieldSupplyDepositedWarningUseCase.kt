@@ -14,7 +14,7 @@ class NeedShowYieldSupplyDepositedWarningUseCase(
     suspend operator fun invoke(cryptoCurrencyStatus: CryptoCurrencyStatus?): Boolean = withContext(dispatchers.io) {
         // TEMPORARY REQUIREMENTS
         return@withContext false
-        // val hasActiveLending = cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
+        // val hasActiveLending = cryptoCurrencyStatus?.value?.yieldSupply?.isActive == true
         // if (!hasActiveLending) return@withContext false
         // val showedWarnings = yieldSupplyWarningsViewedRepository.getViewedWarnings()
         // return@withContext !showedWarnings.contains(cryptoCurrencyStatus?.currency?.name)

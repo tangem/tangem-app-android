@@ -9,6 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
@@ -39,7 +40,7 @@ internal class EarnApyConverter(
                     badgeRes = R.string.yield_module_earn_badge,
                     // Unlike a staking rate, the yield APY arrives in percent
                     rate = yieldSupplyApy.movePointLeft(PERCENT_POINT_SHIFT),
-                    isActive = value.value.yieldSupplyStatus?.isActive == true,
+                    isActive = value.value.yieldSupply?.isActive == true,
                 )
             }
         }

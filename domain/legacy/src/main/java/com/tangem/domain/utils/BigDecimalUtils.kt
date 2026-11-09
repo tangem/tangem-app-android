@@ -4,13 +4,14 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
 import java.math.BigDecimal
 import com.tangem.blockchain.common.Amount as SdkAmount
 
 /** Converts `BigDecimal` [cryptoCurrencyStatus] to [SdkAmount] */
 fun BigDecimal.convertToSdkAmount(cryptoCurrencyStatus: CryptoCurrencyStatus): SdkAmount {
     val cryptoCurrency = cryptoCurrencyStatus.currency
-    val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
+    val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupply
     return SdkAmount(
         currencySymbol = cryptoCurrency.symbol,
         value = this,
