@@ -1857,6 +1857,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return when (resolvedFlow) {
             ResolvedFlow.DexLike -> loadDexSwapFee(
                 fromStatus = fromStatus,
+                swapProvider = quotesLoadedState.swapProvider,
                 swapData = swapData,
                 selectedFeeToken = selectedFeeToken,
                 permissionState = quotesLoadedState.permissionState,
@@ -1880,11 +1881,16 @@ internal class SwapInteractorImpl @Inject constructor(
      */
     private suspend fun loadDexSwapFee(
         fromStatus: SwapCurrencyStatus,
+        swapProvider: SwapProvider,
         swapData: SwapDataModel?,
         selectedFeeToken: CryptoCurrencyStatus?,
         permissionState: PermissionDataState,
         isGasless: Boolean,
     ): Either<GetFeeError, SwapFee> {
+        if (isGasless && swapProvider.providerId in EOA_CALLER_ONLY_PROVIDER_IDS) {
+            return GetFeeError.GaslessError.NetworkIsNotSupported.left()
+        }
+
         val transaction = swapData?.transaction as? ExpressTransactionModel.DEX
             ?: return GetFeeError.UnknownError.left()
 
@@ -3299,6 +3305,12 @@ internal class SwapInteractorImpl @Inject constructor(
         private val PRICE_IMPACT_AMOUNT_LOW_THRESHOLD = 100_000.toBigDecimal() // in USD
         private val PRICE_IMPACT_LOW_THRESHOLD = 0.1.toBigDecimal() // 10%
         private val PRICE_IMPACT_HIGH_THRESHOLD = 0.5.toBigDecimal() // 50%
+
+        /**
+         * The provider's swap contract reverts with "Invalid from" unless `msg.sender == tx.origin`,
+         * which the gasless relayer breaks ([REDACTED_TASK_KEY]).
+         */
+        private val EOA_CALLER_ONLY_PROVIDER_IDS = setOf("swapkit")
     }
 }
 

@@ -568,12 +568,14 @@ private val MEMO_RESTRICTED_NETWORKS = setOf(
 /**
  * DEX providers allowed for token swaps in yield mode.
  * Mirrors iOS ExpressConstants.yieldModuleDEXProviderIds (PR #4998).
+ *
+ * SwapKit is excluded: its contract reverts unless `msg.sender == tx.origin`, which the yield module breaks
+ * ([REDACTED_TASK_KEY]).
  */
 private val YIELD_ALLOWED_DEX_PROVIDER_IDS = setOf(
     "1inch",
     "okx-cross-chain",
     "okx-on-chain",
-    "swapkit",
     "li-fi",
 )
 
