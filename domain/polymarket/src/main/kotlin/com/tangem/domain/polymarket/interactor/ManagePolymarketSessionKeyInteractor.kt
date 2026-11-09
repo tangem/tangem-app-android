@@ -7,7 +7,6 @@ import arrow.core.nonEmptyListOf
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import arrow.core.raise.ensureNotNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketDepositWalletLock
 import com.tangem.domain.polymarket.PolymarketRepository
@@ -117,9 +116,7 @@ class ManagePolymarketSessionKeyInteractor(
                 val signed = sign(userWalletId, nonEmptyListOf(revoke))
                 send { relay.revoke(userWalletId, revocationOf(signed)) }
             }
-            ensureNotNull(awaitRevokedUnlessDropped(userWalletId, revoking)) {
-                PolymarketSessionKeyLifecycleError.RevocationFailed(sessionKey = null)
-            }
+            awaitRevokedUnlessDropped(userWalletId, revoking) ?: revoking.droppedWhileRevoking()
         }
 
     suspend fun setEnabled(

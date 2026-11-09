@@ -890,7 +890,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN the record of an unknown signer is dropped WHEN revoke THEN the revocation failed`() = runTest {
+        fun `GIVEN the record of an unknown signer is dropped WHEN revoke THEN it counts as revoked`() = runTest {
             // Arrange
             val revocation = revocation(address = FOREIGN)
             givenSigned(nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(FOREIGN)), signed(revocation))
@@ -903,7 +903,9 @@ internal class ManagePolymarketSessionKeyInteractorTest {
 
             // Assert
             assertThat(actual).isEqualTo(
-                PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.RevocationFailed(null).left()),
+                PolymarketSessionKeyProgress.Finished(
+                    key(address = FOREIGN, status = PolymarketSessionKeyStatus.REVOKED).right(),
+                ),
             )
         }
 
