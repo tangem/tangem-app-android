@@ -64,5 +64,8 @@ data class EarnProductRate(val fraction: BigDecimal, val type: EarnRateType)
 
 enum class EarnRateType { APY, APR }
 
-/** How a host paints the badge of an active product. Names no product: a host must not know which one it shows. */
+/**
+ * How a host paints the badge of an active product. Names no product: a host must not know which one it shows. Every
+ * product and rate source declares its own, the winner's reaches the host in [EarnHeadline.badgeAccent].
+ */
 enum class EarnBadgeAccent { Info, Success }

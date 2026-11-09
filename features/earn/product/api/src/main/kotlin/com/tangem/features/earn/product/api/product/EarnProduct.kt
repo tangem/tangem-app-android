@@ -18,7 +18,6 @@ interface EarnProduct {
 
     val rank: Int
 
-    /** The accent of the headline badge when this product wins and the user has a position in it. */
     val badgeAccent: EarnBadgeAccent
 
     val title: TextReference

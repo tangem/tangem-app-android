@@ -16,7 +16,6 @@ interface EarnRateSource {
 
     val rank: Int
 
-    /** The accent of the headline badge when this source wins and the user is active in it. */
     val badgeAccent: EarnBadgeAccent
 
     /** No entry for a currency means the source has no rate for it. The first frame comes from cache, without waiting. */
