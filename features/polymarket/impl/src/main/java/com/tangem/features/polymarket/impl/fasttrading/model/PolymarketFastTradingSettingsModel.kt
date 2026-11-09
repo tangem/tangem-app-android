@@ -62,6 +62,7 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
                         keys = converter.convert(overview, state.operation),
                         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = isRefreshing) { refresh() },
                         onActionClick = ::onActionClick,
+                        onActivateClick = ::onActivateClick,
                     )
                 },
             )
@@ -78,6 +79,10 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
         when (action) {
             is FastTradingKeyActionUM.Revoke -> confirmRevocation(action)
         }
+    }
+
+    private fun onActivateClick() {
+        start(PolymarketSessionKeyOperationRequest.Activate)
     }
 
     private fun confirmRevocation(action: FastTradingKeyActionUM.Revoke) {

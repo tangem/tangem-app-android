@@ -22,6 +22,7 @@ internal sealed interface PolymarketFastTradingSettingsUM {
         val keys: FastTradingKeysUM,
         val pullToRefreshConfig: PullToRefreshConfig,
         val onActionClick: (FastTradingKeyActionUM) -> Unit,
+        val onActivateClick: () -> Unit,
     ) : PolymarketFastTradingSettingsUM
 }
 
@@ -30,9 +31,13 @@ internal data class FastTradingKeysUM(
     val isUnknownSignersWarningShown: Boolean,
     val unknownSigners: ImmutableList<FastTradingUnknownSignerUM>,
     val thisDevice: FastTradingKeyRowUM?,
+    val activateBanner: FastTradingActivateBannerUM?,
     val otherDevices: ImmutableList<FastTradingKeyRowUM>,
     val areActionsEnabled: Boolean,
 )
+
+@Immutable
+internal data class FastTradingActivateBannerUM(val isLoading: Boolean)
 
 @Immutable
 internal data class FastTradingUnknownSignerUM(
