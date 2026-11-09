@@ -26,6 +26,7 @@ import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
+import com.tangem.features.tangempay.common.openTrustedLink
 import com.tangem.features.tangempay.common.tariffPlanState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
@@ -104,7 +105,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
             currentPlanState.tariff.status != TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING &&
                 !currentPlanState.isPlanTransitioningState
         },
-        onLinkClick = urlOpener::openUrl,
+        onLinkClick = urlOpener::openTrustedLink,
         onFullTermsClick = ::onFullTermsClick,
     )
 
