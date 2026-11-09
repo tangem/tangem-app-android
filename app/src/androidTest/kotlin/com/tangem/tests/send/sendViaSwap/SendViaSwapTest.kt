@@ -602,7 +602,7 @@ class SendViaSwapTest : BaseTestCase() {
         val inputAmount = "0.001"
         val recipientAddress = XRP_ACTIVATED_RECIPIENT_ADDRESS
         val memo = "45454545"
-        val exchangeDataPath = "/v1/exchange-data"
+        val exchangeDataPath = "/v[12]/exchange-data"
         val memoQueryParam = "toExtraId"
         val hotWalletScenarioState = "HotWalletSvS"
         val quotesScenarioState = "Ripple"
