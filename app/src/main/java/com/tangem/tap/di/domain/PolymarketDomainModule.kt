@@ -60,6 +60,7 @@ import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
@@ -555,4 +556,10 @@ internal object PolymarketDomainModule {
         stateService = stateService,
         runner = runner,
     )
+
+    @Provides
+    @Singleton
+    fun provideRefreshPolymarketFastTradingUseCase(
+        stateService: PolymarketSessionKeyStateService,
+    ): RefreshPolymarketFastTradingUseCase = RefreshPolymarketFastTradingUseCase(stateService = stateService)
 }
