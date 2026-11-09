@@ -19,11 +19,11 @@ import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -74,7 +74,6 @@ internal class PolymarketFeedController(
         activeFeed.filterNotNull().distinctUntilChangedBy { it.config }.flatMapLatest { selection ->
             channelFlow {
                 val selectedFeeds = activeFeed.filterNotNull().filter { it.config == selection.config }
-                // Refresh swaps pages, not the selection's score history. Keep this collector alive across that swap.
                 val games = sports.observe(selectedFeeds, isResumed).stateIn(
                     scope = this,
                     started = SharingStarted.Eagerly,
@@ -130,26 +129,28 @@ internal class PolymarketFeedController(
         }
     }
 
-    /**
-     * Keeps the current feed until its replacement loads successfully.
-     * A new refresh, [reload] or [select] cancels this call, including footer retries.
-     * Cancellation propagates to the caller.
-     */
-    suspend fun refresh() = coroutineScope {
-        val previous = activeEntry ?: return@coroutineScope
-        coroutineContext.job.saveIn(feedRefreshJob)
+    suspend fun refresh() {
+        val job = scope.launch { replaceActiveFeed() }.saveIn(feedRefreshJob)
+        try {
+            job.join()
+        } catch (e: CancellationException) {
+            job.cancel()
+            throw e
+        }
+    }
+
+    private suspend fun replaceActiveFeed() {
+        val previous = activeEntry ?: return
         val replacement = createEntry(previous.feed.config)
         hasRefreshError.value = false
         try {
             replacement.feed.poller.onFeedReloaded(replacement.feed.config)
             replacement.feed.actionsFlow.emit(BatchAction.Reload(requestParams = replacement.feed.config))
-            val result = replacement.feed.batchFlow.state.first {
-                it.status !is PaginationStatus.None && it.status !is PaginationStatus.InitialLoading
-            }
-            if (activeEntry !== previous) return@coroutineScope
+            val result = replacement.feed.batchFlow.state.first { !it.status.isAwaitingFirstPage() }
             if (result.status is PaginationStatus.InitialLoadingError) {
-                hasRefreshError.value = true
-                return@coroutineScope
+                val previousState = previous.feed.batchFlow.state.value
+                hasRefreshError.value = !previousState.status.isAwaitingFirstPage()
+                return
             }
             previous.feed.poller.pause()
             previous.scope.cancel()
@@ -168,10 +169,16 @@ internal class PolymarketFeedController(
 
     private fun refreshErrorContent(content: PolymarketMainUM.ContentUM): PolymarketMainUM.ContentUM {
         val retry: () -> Unit = { scope.launch { refresh() } }
-        return if (content is PolymarketMainUM.ContentUM.Content) {
-            content.copy(footer = PolymarketFeedFooterUM.Error(onRetryClick = retry))
-        } else {
-            PolymarketMainUM.ContentUM.Error(onReloadClick = retry)
+        return when (content) {
+            is PolymarketMainUM.ContentUM.Content -> if (content.footer is PolymarketFeedFooterUM.None) {
+                content.copy(footer = PolymarketFeedFooterUM.Error(onRetryClick = retry))
+            } else {
+                content
+            }
+            is PolymarketMainUM.ContentUM.Loading -> content
+            is PolymarketMainUM.ContentUM.Empty,
+            is PolymarketMainUM.ContentUM.Error,
+            -> PolymarketMainUM.ContentUM.Error(onReloadClick = retry)
         }
     }
 
@@ -181,6 +188,7 @@ internal class PolymarketFeedController(
             val status = feed.batchFlow.state.value.status as? PaginationStatus.Paginating ?: return@launch
             val lastResult = status.lastResult
             if (lastResult !is BatchFetchResult.Success || !lastResult.isLast) {
+                hasRefreshError.value = false
                 feed.actionsFlow.emit(BatchAction.LoadMore())
             }
         }
@@ -227,6 +235,9 @@ internal class PolymarketFeedController(
             scope = feedScope,
         )
     }
+
+    private fun PaginationStatus<*>.isAwaitingFirstPage(): Boolean =
+        this is PaginationStatus.None || this is PaginationStatus.InitialLoading
 
     private data class Entry(val feed: PolymarketCategoryFeed, val scope: CoroutineScope)
 }

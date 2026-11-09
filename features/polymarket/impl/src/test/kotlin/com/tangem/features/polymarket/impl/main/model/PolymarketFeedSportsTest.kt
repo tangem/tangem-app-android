@@ -49,6 +49,7 @@ internal class PolymarketFeedSportsTest {
     @Test
     fun `GIVEN final score WHEN disposed pages are replaced THEN final result stays and reconnect refreshes new pages`() =
         runTest {
+            // Arrange
             resumed.value = true
             val feeds = MutableStateFlow(createFeed())
             createSports().observe(feeds, resumed).onEach(seen::add).launchIn(backgroundScope)
@@ -56,24 +57,27 @@ internal class PolymarketFeedSportsTest {
             frames.emit(createFrame().copy(period = "FT", isLive = false, isEnded = true))
             runCurrent()
             val finished = seen.last().events.getValue("event-1")
+            val replacementActions = MutableSharedFlow<PolymarketEventsBatchAction>(replay = 10)
 
+            // Act
             batches.value = PolymarketEventsBatchListState(emptyList(), PaginationStatus.None)
             runCurrent()
-            assertThat(seen.last().events.getValue("event-1")).isEqualTo(finished)
-            val replacementActions = MutableSharedFlow<PolymarketEventsBatchAction>(replay = 10)
+            val afterDisposal = seen.last().events.getValue("event-1")
             feeds.value = createFeed(
                 batches = MutableStateFlow(batchState(createEvent().copy(dataFetchedAt = Instant.ofEpochSecond(130)))),
                 actions = replacementActions,
             )
             runCurrent()
-
-            assertThat(seen.last().events.getValue("event-1")).isEqualTo(finished)
-            verify(exactly = 1) { repository.observeLiveScores(setOf("11")) }
+            val afterReplacement = seen.last().events.getValue("event-1")
             connections.value = false
             runCurrent()
             connections.value = true
             runCurrent()
 
+            // Assert
+            assertThat(afterDisposal).isEqualTo(finished)
+            assertThat(afterReplacement).isEqualTo(finished)
+            verify(exactly = 1) { repository.observeLiveScores(setOf("11")) }
             assertThat(refreshes()).isEmpty()
             assertThat(replacementActions.replayCache.filterIsInstance<BatchAction.UpdateBatches<*, *>>()).hasSize(1)
         }

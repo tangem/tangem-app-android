@@ -29,7 +29,6 @@ internal class PolymarketFeedSports(
         return flow {
             var lastRevision = 0L
             val events = feeds.flatMapLatest { it.batchFlow.state }
-                // Loading/disposal is not an empty REST response and must not discard remembered final scores.
                 .filter { state ->
                     state.status is PaginationStatus.Paginating ||
                         state.status is PaginationStatus.NextBatchLoading ||
