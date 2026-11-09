@@ -91,7 +91,9 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   as `0`. Steps move in whole shares; 100 % is the position itself, so a full close reaches the last fraction.
 - **Ambiguous orders.** A transport or inconclusive HTTP error does not prove rejection. The submitting
   step (Summary or Order) shows the existing error dialog with Support; keep balance/position refreshes and
-  never resubmit automatically, because the order may already be live.
+  never resubmit automatically, because the order may already be live. A `delayed` order is read back up to
+  3 times, 10 s apart; `LIVE`, unknown statuses and unanswered reads keep waiting, CANCELED / INVALID fail. If
+  it never settles, the flow ends on the "still being processed" result screen, not a dialog over the form.
 - **Position indexing.** `/positions/outcome` answers `null` until the position is indexed — for several
   seconds even for an outcome the wallet already held. Details shows Unavailable at once on a first `null`
   and retries only for a shown position whose size lags the last order. The result screen waits longer
