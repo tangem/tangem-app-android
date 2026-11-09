@@ -859,6 +859,7 @@ internal class PolymarketSessionKeyStateServiceTest {
                     sessionKeys = listOf(key),
                 ),
                 localKeyAddress = key.address,
+                deviceId = "this-device",
                 assessment = PolymarketSessionKeyAssessment(
                     deviceState = PolymarketSessionKeyDeviceState.OfferEnable,
                     reconciliation = PolymarketSessionKeyReconciliation.Unavailable,

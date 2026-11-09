@@ -68,6 +68,7 @@ class ReconcilePolymarketSessionKeysInteractor(
         PolymarketSessionKeyOverview(
             wallet = wallet,
             localKeyAddress = localKeyAddress,
+            deviceId = deviceId,
             assessment = assessment,
             isTradable = isTradable(userWalletId = userWalletId, wallet = wallet, localKeyAddress = localKeyAddress),
         )
@@ -140,6 +141,7 @@ class ReconcilePolymarketSessionKeysInteractor(
 data class PolymarketSessionKeyOverview(
     val wallet: PolymarketWalletState,
     val localKeyAddress: String?,
+    val deviceId: String,
     val assessment: PolymarketSessionKeyAssessment,
     val isTradable: Boolean,
 )

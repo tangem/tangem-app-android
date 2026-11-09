@@ -31,22 +31,18 @@ internal object PolymarketSessionKeyMessagesFactory {
         is PolymarketSessionKeyOperationStart.Started -> null
     }
 
-    fun isSubmitted(operation: PolymarketSessionKeyOperation): Boolean = when (operation.request) {
+    fun create(operation: PolymarketSessionKeyOperation): SnackbarMessage? = when (operation.request) {
         PolymarketSessionKeyOperationRequest.Activate,
         PolymarketSessionKeyOperationRequest.Reactivate,
-        -> operation.stage != PolymarketSessionKeyOperationStage.SIGNING
-        is PolymarketSessionKeyOperationRequest.Revoke -> operation.stage == PolymarketSessionKeyOperationStage.REVOKING
+        -> R.string.prediction_session_key_toast_activation_in_progress
+            .takeIf { operation.stage != PolymarketSessionKeyOperationStage.SIGNING }
+            ?.let(::infoToast)
+        is PolymarketSessionKeyOperationRequest.Revoke -> R.string.prediction_session_key_toast_revoking
+            .takeIf { operation.stage == PolymarketSessionKeyOperationStage.REVOKING }
+            ?.let(::infoToast)
         PolymarketSessionKeyOperationRequest.Extend,
         is PolymarketSessionKeyOperationRequest.SetEnabled,
-        -> false
-    }
-
-    fun create(operation: PolymarketSessionKeyOperation): SnackbarMessage? = when {
-        !isSubmitted(operation) -> null
-        operation.request is PolymarketSessionKeyOperationRequest.Revoke -> {
-            infoToast(R.string.prediction_session_key_toast_revoking)
-        }
-        else -> infoToast(R.string.prediction_session_key_toast_activation_in_progress)
+        -> null
     }
 
     private fun successToast(request: PolymarketSessionKeyOperationRequest): SnackbarMessage? = when (request) {

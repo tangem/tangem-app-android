@@ -41,6 +41,7 @@ import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUs
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingSettingsUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -58,7 +59,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import com.tangem.test.core.ProvideTestModels
 import java.time.Duration
 import java.time.Instant
 
@@ -421,6 +421,7 @@ internal class PolymarketFastTradingSettingsModelTest {
                 ),
             ),
             localKeyAddress = null,
+            deviceId = "this-device",
             assessment = PolymarketSessionKeyAssessment(
                 deviceState = PolymarketSessionKeyDeviceState.OfferEnable,
                 reconciliation = PolymarketSessionKeyReconciliation.Unavailable,
