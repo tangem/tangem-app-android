@@ -7,10 +7,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
@@ -42,7 +39,6 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     private val params = paramsContainer.require<PolymarketFastTradingSettingsComponent.Params>()
     private val converter = PolymarketFastTradingKeysUMConverter(thisDeviceName = deviceIdProvider.deviceName)
     private val isRefreshing = MutableStateFlow(false)
-    private var revocationAwaitingSubmission: Long? = null
 
     val uiState: StateFlow<PolymarketFastTradingSettingsUM>
         field = MutableStateFlow<PolymarketFastTradingSettingsUM>(
@@ -50,8 +46,7 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
         )
 
     init {
-        val fastTrading = observeFastTrading(params.userWalletId).onEach { announceSubmittedRevocation(it.operation) }
-        combine(fastTrading, isRefreshing) { state, isRefreshing ->
+        combine(observeFastTrading(params.userWalletId), isRefreshing) { state, isRefreshing ->
             state.overview.fold(
                 ifLeft = {
                     PolymarketFastTradingSettingsUM.Error(onBackClick = ::onBackClick, onRetryClick = ::refresh)
@@ -80,17 +75,6 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
         }
         val start = startOperation(params.userWalletId, request)
         PolymarketSessionKeyToastFactory.create(start)?.let(messageSender::send)
-        if (start is PolymarketSessionKeyOperationStart.Started) {
-            revocationAwaitingSubmission = start.id
-        }
-    }
-
-    private fun announceSubmittedRevocation(operation: PolymarketSessionKeyOperation?) {
-        val operationId = revocationAwaitingSubmission ?: return
-        val isOurs = operation?.id == operationId
-        if (isOurs && operation.stage == PolymarketSessionKeyOperationStage.SIGNING) return
-        revocationAwaitingSubmission = null
-        if (isOurs) messageSender.send(PolymarketSessionKeyToastFactory.revokingToast())
     }
 
     private fun refresh() {

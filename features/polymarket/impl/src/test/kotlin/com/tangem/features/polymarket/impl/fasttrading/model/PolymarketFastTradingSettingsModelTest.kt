@@ -21,9 +21,7 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessment
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
@@ -174,72 +172,6 @@ internal class PolymarketFastTradingSettingsModelTest {
         assertThat(message.captured.message).isEqualTo(resourceReference(R.string.prediction_session_key_toast_busy))
     }
 
-    @Test
-    fun `GIVEN started revocation WHEN it is submitted THEN revoking toast is shown once`() = runTest {
-        // Arrange
-        val message = slot<SnackbarMessage>()
-        every { messageSender.send(capture(message)) } returns Unit
-        val model = createModel()
-        states.emit(createState(OVERVIEW.right()))
-        advanceUntilIdle()
-        content(model).onActionClick(FastTradingKeyActionUM.Revoke(KEY_ADDRESS))
-
-        // Act
-        states.emit(createState(OVERVIEW.right(), revocation(PolymarketSessionKeyOperationStage.SIGNING)))
-        advanceUntilIdle()
-        val sentWhileSigning = message.isCaptured
-        states.emit(createState(OVERVIEW.right(), revocation(PolymarketSessionKeyOperationStage.REVOKING)))
-        advanceUntilIdle()
-        states.emit(createState(OVERVIEW.right(), revocation(PolymarketSessionKeyOperationStage.REVOKED)))
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(sentWhileSigning).isFalse()
-        verify(exactly = 1) { messageSender.send(any()) }
-        assertThat(message.captured.message).isEqualTo(resourceReference(R.string.prediction_session_key_toast_revoking))
-    }
-
-    @Test
-    fun `GIVEN started revocation WHEN it ends at signing THEN no revoking toast is shown`() = runTest {
-        // Arrange
-        val model = createModel()
-        states.emit(createState(OVERVIEW.right()))
-        advanceUntilIdle()
-        content(model).onActionClick(FastTradingKeyActionUM.Revoke(KEY_ADDRESS))
-
-        // Act
-        states.emit(createState(OVERVIEW.right(), revocation(PolymarketSessionKeyOperationStage.SIGNING)))
-        advanceUntilIdle()
-        states.emit(createState(OVERVIEW.right()))
-        advanceUntilIdle()
-        states.emit(createState(OVERVIEW.right(), revocation(PolymarketSessionKeyOperationStage.REVOKING)))
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 0) { messageSender.send(any()) }
-    }
-
-    @Test
-    fun `GIVEN started revocation WHEN another operation is submitted THEN no revoking toast is shown`() = runTest {
-        // Arrange
-        val model = createModel()
-        states.emit(createState(OVERVIEW.right()))
-        advanceUntilIdle()
-        content(model).onActionClick(FastTradingKeyActionUM.Revoke(KEY_ADDRESS))
-
-        // Act
-        states.emit(
-            createState(
-                OVERVIEW.right(),
-                revocation(PolymarketSessionKeyOperationStage.REVOKING).copy(id = OPERATION_ID + 1),
-            ),
-        )
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 0) { messageSender.send(any()) }
-    }
-
     private fun content(model: PolymarketFastTradingSettingsModel) =
         model.uiState.value as PolymarketFastTradingSettingsUM.Content
 
@@ -273,16 +205,7 @@ internal class PolymarketFastTradingSettingsModelTest {
             isTradable = false,
         )
 
-        fun createState(
-            overview: Either<PolymarketWalletError, PolymarketSessionKeyOverview>,
-            operation: PolymarketSessionKeyOperation? = null,
-        ) = PolymarketFastTradingState(overview = overview, operation = operation, finished = null)
-
-        fun revocation(stage: PolymarketSessionKeyOperationStage) = PolymarketSessionKeyOperation(
-            id = OPERATION_ID,
-            request = REVOKE,
-            targetAddress = KEY_ADDRESS,
-            stage = stage,
-        )
+        fun createState(overview: Either<PolymarketWalletError, PolymarketSessionKeyOverview>) =
+            PolymarketFastTradingState(overview = overview, operation = null, finished = null)
     }
 }

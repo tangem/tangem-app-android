@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +41,9 @@ internal fun PolymarketFastTradingKeyActionsMenu(
     var isExpanded by remember { mutableStateOf(false) }
     var anchorHeightPx by remember { mutableIntStateOf(0) }
     val menuOffset = with(LocalDensity.current) { DpOffset(x = 0.dp, y = -anchorHeightPx.toDp()) }
+    LaunchedEffect(isEnabled) {
+        if (!isEnabled) isExpanded = false
+    }
     Box(modifier = modifier.onSizeChanged { anchorHeightPx = it.height }) {
         TangemButton(
             variant = TangemButton.Variant.Ghost,
@@ -50,7 +54,7 @@ internal fun PolymarketFastTradingKeyActionsMenu(
             onClick = { isExpanded = true },
         )
         TangemContextMenu(
-            expanded = isExpanded && isEnabled,
+            expanded = isExpanded,
             onDismissRequest = { isExpanded = false },
             modifier = Modifier.hazeEffectTangem { blurRadius = 10.dp },
             offset = menuOffset,

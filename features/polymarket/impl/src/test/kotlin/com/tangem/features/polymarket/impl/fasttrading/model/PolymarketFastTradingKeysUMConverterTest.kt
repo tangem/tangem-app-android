@@ -128,6 +128,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             StatusModel(
                 status = PolymarketSessionKeyStatus.FAILED,
                 expected = FastTradingKeyStatusUM.ActivationFailed,
+                offersRevoke = false,
             ),
             StatusModel(status = PolymarketSessionKeyStatus.UNKNOWN, expected = FastTradingKeyStatusUM.Unknown),
             StatusModel(status = PolymarketSessionKeyStatus.REVOKED, expected = null),
@@ -372,6 +373,54 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         }
     }
 
+    @Nested
+    inner class OnExchange {
+
+        @Test
+        fun `GIVEN a failed key the exchange still lists WHEN convert THEN it offers revoke`() {
+            // Arrange
+            val key = createKey(status = PolymarketSessionKeyStatus.FAILED)
+            val overview = createOverview(sessionKeys = listOf(key), foreignSigners = listOf(signerOf(OTHER_ADDRESS)))
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.otherDevices.single().actions).isEqualTo(revokeOf(OTHER_ADDRESS))
+        }
+
+        @Test
+        fun `GIVEN a foreign signer shown as a key row WHEN convert THEN it is not listed as unknown signer`() {
+            // Arrange
+            val key = createKey(status = PolymarketSessionKeyStatus.EXPIRED)
+            val overview = createOverview(
+                sessionKeys = listOf(key),
+                foreignSigners = listOf(signerOf(OTHER_ADDRESS.uppercase()), signerOf(FOREIGN_ADDRESS)),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.otherDevices.map { it.id }).containsExactly(OTHER_ADDRESS)
+            assertThat(actual.unknownSigners.map { it.address }).containsExactly(FOREIGN_ADDRESS)
+        }
+
+        @Test
+        fun `GIVEN a foreign signer whose record is revoked WHEN convert THEN it is listed as unknown signer`() {
+            // Arrange
+            val key = createKey(status = PolymarketSessionKeyStatus.REVOKED)
+            val overview = createOverview(sessionKeys = listOf(key), foreignSigners = listOf(signerOf(OTHER_ADDRESS)))
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.otherDevices).isEmpty()
+            assertThat(actual.unknownSigners.map { it.address }).containsExactly(OTHER_ADDRESS)
+        }
+    }
+
     data class StatusModel(
         val status: PolymarketSessionKeyStatus,
         val expected: FastTradingKeyStatusUM?,
@@ -396,6 +445,9 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         const val OWN_ADDRESS = "0x5e55000000000000000000000000000000000001"
         const val OTHER_ADDRESS = "0x5e55000000000000000000000000000000000002"
         const val FOREIGN_ADDRESS = "0x5e55000000000000000000000000000000000003"
+
+        fun signerOf(address: String) =
+            PolymarketSessionSigner(address = address, scopes = listOf("CLOB"), validUntil = null)
 
         fun revokeOf(address: String) = persistentListOf<FastTradingKeyActionUM>(FastTradingKeyActionUM.Revoke(address))
 
