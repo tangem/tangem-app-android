@@ -5,7 +5,12 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.res.R
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.modalMessage
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
@@ -70,9 +75,44 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     }
 
     private fun onActionClick(action: FastTradingKeyActionUM) {
-        val request = when (action) {
-            is FastTradingKeyActionUM.Revoke -> PolymarketSessionKeyOperationRequest.Revoke(action.address)
+        when (action) {
+            is FastTradingKeyActionUM.Revoke -> confirmRevocation(action)
         }
+    }
+
+    private fun confirmRevocation(action: FastTradingKeyActionUM.Revoke) {
+        val description = when (val subject = action.subject) {
+            is FastTradingKeyActionUM.RevokeSubject.Device -> resourceReference(
+                id = R.string.prediction_session_key_revoke_confirm_text,
+                formatArgs = wrappedList(subject.name),
+            )
+            FastTradingKeyActionUM.RevokeSubject.UnknownSigner -> resourceReference(
+                id = R.string.prediction_session_key_revoke_confirm_unknown_signer_text,
+                formatArgs = wrappedList(action.address),
+            )
+        }
+        messageSender.send(
+            modalMessage {
+                status {
+                    variant = TangemModalStatus.Variant.Warning
+                    title = resourceReference(R.string.prediction_session_key_revoke_confirm_title)
+                    this.description = description
+                }
+                primaryButton {
+                    text = resourceReference(R.string.prediction_session_key_revoke)
+                    onClick {
+                        dismiss()
+                        start(PolymarketSessionKeyOperationRequest.Revoke(action.address))
+                    }
+                }
+                secondaryButton {
+                    text = resourceReference(R.string.common_cancel)
+                }
+            },
+        )
+    }
+
+    private fun start(request: PolymarketSessionKeyOperationRequest) {
         val start = startOperation(params.userWalletId, request)
         PolymarketSessionKeyToastFactory.create(start)?.let(messageSender::send)
     }

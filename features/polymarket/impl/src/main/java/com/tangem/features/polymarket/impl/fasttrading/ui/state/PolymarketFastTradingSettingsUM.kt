@@ -52,7 +52,14 @@ internal data class FastTradingKeyRowUM(
 @Immutable
 internal sealed interface FastTradingKeyActionUM {
 
-    data class Revoke(val address: String) : FastTradingKeyActionUM
+    data class Revoke(val address: String, val subject: RevokeSubject) : FastTradingKeyActionUM
+
+    sealed interface RevokeSubject {
+
+        data class Device(val name: TextReference) : RevokeSubject
+
+        data object UnknownSigner : RevokeSubject
+    }
 }
 
 @Immutable

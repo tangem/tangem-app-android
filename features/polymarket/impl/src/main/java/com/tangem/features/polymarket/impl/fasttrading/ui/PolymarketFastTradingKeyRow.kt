@@ -34,6 +34,7 @@ import com.tangem.core.ui.res.generated.icons.ic_error_20
 import com.tangem.core.ui.res.generated.icons.ic_snowflake_20
 import com.tangem.core.ui.res.generated.icons.ic_warning_20
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM.RevokeSubject
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyRowUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyStatusUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingUnknownSignerUM
@@ -215,7 +216,9 @@ private fun KeyRowsPreview(areActionsEnabled: Boolean) {
     PolymarketFastTradingUnknownSignerRow(
         state = FastTradingUnknownSignerUM(
             address = PREVIEW_SIGNER_ADDRESS,
-            actions = persistentListOf(FastTradingKeyActionUM.Revoke(PREVIEW_SIGNER_ADDRESS)),
+            actions = persistentListOf(
+                FastTradingKeyActionUM.Revoke(PREVIEW_SIGNER_ADDRESS, RevokeSubject.UnknownSigner),
+            ),
         ),
         areActionsEnabled = areActionsEnabled,
         onActionClick = {},
@@ -226,7 +229,9 @@ private fun KeyRowsPreview(areActionsEnabled: Boolean) {
             deviceName = stringReference("Pixel 9"),
             status = FastTradingKeyStatusUM.Active(until = "20 Apr 2027"),
             isExpiringSoon = true,
-            actions = persistentListOf(FastTradingKeyActionUM.Revoke("0x1")),
+            actions = persistentListOf(
+                FastTradingKeyActionUM.Revoke("0x1", RevokeSubject.Device(stringReference("Pixel 9"))),
+            ),
         ),
         areActionsEnabled = areActionsEnabled,
         onActionClick = {},
