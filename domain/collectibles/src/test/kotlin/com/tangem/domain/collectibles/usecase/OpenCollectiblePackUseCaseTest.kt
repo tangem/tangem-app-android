@@ -87,7 +87,7 @@ internal class OpenCollectiblePackUseCaseTest {
         coEvery { gachaVaultRepository.sendPurchasePack(userWallet, AMOUNT, FEE_AMOUNT, MEMO) } returns
             TX_HASH.right()
         coEvery { collectiblesRepository.reportPurchaseTxSent(WALLET_ID, TX_ID, TX_HASH) } returns
-            CollectibleTxStatus.PURCHASE_TX_HASH
+            CollectibleTxStatus.PURCHASE_TX_SENT
         coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) } returns PURCHASED
         coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID, any()) } returns OPENED
     }
@@ -493,6 +493,8 @@ internal class OpenCollectiblePackUseCaseTest {
     private fun provideTestModels() = listOf(
         ClosedStatusModel(CollectibleTxStatus.EXPIRED, OpenPackStep.Failed.OpenFailed),
         ClosedStatusModel(CollectibleTxStatus.REFUNDED, OpenPackStep.Failed.Refunded),
+        ClosedStatusModel(CollectibleTxStatus.PACK_OPENING_ERROR, OpenPackStep.Failed.OpenFailed),
+        ClosedStatusModel(CollectibleTxStatus.REFUNDING, OpenPackStep.Failed.Refunding),
         ClosedStatusModel(CollectibleTxStatus.PAUSED, OpenPackStep.Failed.PackUnopened(TX_ID)),
         ClosedStatusModel(CollectibleTxStatus.AUTO_BUYBACKED, OpenPackStep.Failed.Unexpected),
         ClosedStatusModel(CollectibleTxStatus.MANUALLY_BUYBACKED, OpenPackStep.Failed.Unexpected),
