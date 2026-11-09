@@ -11,6 +11,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.value.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -27,6 +28,7 @@ import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.navigation.userWalletIdOrNull
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.onboarding.PolymarketOnboardingComponent
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
@@ -75,6 +77,12 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         },
     )
 
+    init {
+        childStack.subscribe(lifecycle) { stack ->
+            model.onActiveWalletChanged(stack.active.configuration.userWalletIdOrNull)
+        }
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val childStackValue by childStack.subscribeAsState()
@@ -101,7 +109,11 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             appComponentContext = factoryContext,
             userWalletId = configuration.userWalletId,
         )
-        is PolymarketRoute.Main -> createMain(configuration, factoryContext)
+        is PolymarketRoute.Main -> PolymarketMainComponent(
+            appComponentContext = factoryContext,
+            userWalletId = configuration.userWalletId,
+            tokenReceiveComponentFactory = tokenReceiveComponentFactory,
+        )
         is PolymarketRoute.Category -> createCategory(configuration, factoryContext)
         is PolymarketRoute.History -> PolymarketHistoryComponent(
             appComponentContext = factoryContext,
@@ -164,13 +176,6 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             context = factoryContext,
             params = PolymarketCategoryComponent.Params(configuration.userWalletId, configuration.category),
         )
-
-    private fun createMain(configuration: PolymarketRoute.Main, factoryContext: AppComponentContext) =
-        PolymarketMainComponent(
-            appComponentContext = factoryContext,
-            userWalletId = configuration.userWalletId,
-            tokenReceiveComponentFactory = tokenReceiveComponentFactory,
-        ).also { model.onWalletSettled(configuration.userWalletId) }
 
     private fun createFastTradingSettings(
         configuration: PolymarketRoute.FastTradingSettings,

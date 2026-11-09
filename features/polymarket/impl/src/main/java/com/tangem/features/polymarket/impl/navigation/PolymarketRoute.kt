@@ -96,3 +96,19 @@ internal sealed interface PolymarketRoute : Route {
      */
     data class Search(val userWalletId: UserWalletId) : PolymarketRoute
 }
+
+internal val PolymarketRoute.userWalletIdOrNull: UserWalletId?
+    get() = when (this) {
+        PolymarketRoute.Entry -> null
+        is PolymarketRoute.Onboarding -> userWalletId
+        is PolymarketRoute.Main -> userWalletId
+        is PolymarketRoute.History -> userWalletId
+        is PolymarketRoute.FastTradingSettings -> userWalletId
+        is PolymarketRoute.Positions -> userWalletId
+        is PolymarketRoute.PositionDetails -> userWalletId
+        is PolymarketRoute.PositionResult -> userWalletId
+        is PolymarketRoute.EventDetails -> userWalletId
+        is PolymarketRoute.PlacePrediction -> userWalletId
+        is PolymarketRoute.ClosePosition -> userWalletId
+        is PolymarketRoute.Search -> userWalletId
+    }
