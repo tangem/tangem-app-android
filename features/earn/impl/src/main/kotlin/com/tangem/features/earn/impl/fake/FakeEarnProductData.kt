@@ -60,7 +60,6 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
         FakeEarnProductPreset.Lending -> fakeSpec(
             id = "lending",
             rank = 0,
-            badgeAccent = EarnBadgeAccent.Success,
             title = "Lending on Aave",
             provider = "Aave",
             product = "Lending",
@@ -68,15 +67,13 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
         FakeEarnProductPreset.Staking -> fakeSpec(
             id = "staking",
             rank = 1,
-            badgeAccent = EarnBadgeAccent.Info,
             title = "Pooled staking",
             provider = "P2P",
             product = "Staking",
-        ).copy(hasLegacyBlock = true)
+        ).copy(badgeAccent = EarnBadgeAccent.Info, hasLegacyBlock = true)
         FakeEarnProductPreset.Vault -> fakeSpec(
             id = "vault",
             rank = 2,
-            badgeAccent = EarnBadgeAccent.Success,
             title = "Vault",
             provider = "Vault",
             product = "Vault",
@@ -182,17 +179,10 @@ internal fun fakeApyHistory(period: EarnPeriod): Either<Throwable, EarnApyHistor
     ).right()
 }
 
-private fun fakeSpec(
-    id: String,
-    rank: Int,
-    badgeAccent: EarnBadgeAccent,
-    title: String,
-    provider: String,
-    product: String,
-) = FakeEarnProductSpec(
+private fun fakeSpec(id: String, rank: Int, title: String, provider: String, product: String) = FakeEarnProductSpec(
     id = EarnProductId(id),
     rank = rank,
-    badgeAccent = badgeAccent,
+    badgeAccent = EarnBadgeAccent.Success,
     title = stringReference(title),
     provider = EarnProvider(
         title = stringReference(provider),
