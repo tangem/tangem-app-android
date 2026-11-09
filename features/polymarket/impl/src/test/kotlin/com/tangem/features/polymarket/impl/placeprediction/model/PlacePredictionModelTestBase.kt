@@ -427,6 +427,7 @@ internal abstract class PlacePredictionModelTestBase {
         createPolymarketPosition(assetId = ASSET_ID).copy(
             id = POSITION_ID,
             marketId = MARKET_ID,
+            eventId = EVENT_ID,
             size = size,
             isNegRisk = false,
         )

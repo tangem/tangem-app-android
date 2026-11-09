@@ -9,6 +9,8 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
+import com.tangem.domain.polymarket.model.findMarket
+import com.tangem.features.polymarket.impl.common.easternEndDateOrNull
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
@@ -25,6 +27,7 @@ import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -72,7 +75,7 @@ internal class PolymarketPositionDetailsConverter :
                 invested = stringReference(position.initialValue.formatPolymarketMoney()),
                 status = resourceReference(statusLabel(position)),
                 resolutionSource = position.resolutionSource.toResolutionSourceUM(),
-                endDate = position.endDate?.let {
+                endDate = resolutionDate(position, value.event)?.let {
                     stringReference(it.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)))
                 },
             ),
@@ -100,6 +103,9 @@ internal class PolymarketPositionDetailsConverter :
         PolymarketPositionResult.SPLIT -> R.string.prediction_positions_split
         PolymarketPositionResult.UNKNOWN, null -> R.string.prediction_positions_unknown
     }
+
+    private fun resolutionDate(position: PolymarketPosition.Open, event: PolymarketEvent?): LocalDate? =
+        event?.takeIf { it.id == position.eventId }?.findMarket(position)?.easternEndDateOrNull() ?: position.endDate
 
     private fun event(position: PolymarketPosition.Open, event: PolymarketEvent?): PolymarketPositionDetailsUM.Event? {
         val matching = event?.takeIf { it.id == position.eventId }
