@@ -18,6 +18,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
@@ -43,6 +44,7 @@ import com.tangem.features.polymarket.impl.placeprediction.model.converter.Predi
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -118,6 +120,73 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 assertThat(submit.result).isEqualTo(PlaceResultUM.StillProcessing(placedAt = submit.result.placedAt))
                 verify(exactly = 0) { messageSender.send(any()) }
                 verify(exactly = 1) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN a matched order filled no shares WHEN close is tapped on the failure dialog THEN the order closes`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(takingAmount = BigDecimal.ZERO).right()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                dialog.captured.secondAction?.onClick()
+
+                // Assert
+                assertThat(dialog.captured.isDismissable).isFalse()
+                verify(exactly = 1) { router.pop(onComplete = any()) }
+                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN a matched order filled no shares WHEN support is tapped on the failure dialog THEN the order closes after the email`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(takingAmount = BigDecimal.ZERO).right()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                coEvery { getWalletMetaInfoUseCase(userWalletId = USER_WALLET_ID) } returns mockk<WalletMetaInfo>().right()
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                dialog.captured.firstAction.onClick()
+                dialog.captured.onDismissRequest()
+                runCurrent()
+
+                // Assert
+                coVerifyOrder {
+                    sendFeedbackEmailUseCase(any())
+                    router.pop(onComplete = any())
+                }
+                verify(exactly = 1) { router.pop(onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN no answer from the exchange WHEN the failure dialog is dismissed THEN the order stays open`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    PredictionPlaceOrderError.Ambiguous(detail = "timeout").left()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                dialog.captured.onDismissRequest()
+
+                // Assert
+                verify(exactly = 0) { router.pop(onComplete = any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
             }
 
         @Test
@@ -735,7 +804,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
             val model = createOrderModel(
                 testScope = this,
-                orderSubmitterFactory = mockk { every { create(any(), any(), any()) } returns refusingSubmitter },
+                orderSubmitterFactory = mockk { every { create(any(), any(), any(), any()) } returns refusingSubmitter },
             )
             advanceUntilIdle()
             model.onResume()
@@ -853,6 +922,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                     side = PredictionOrderSide.SELL,
                     userWalletId = USER_WALLET_ID,
                     positionId = null,
+                    isPositionClosed = true,
                 )
                 assertThat(status.captured).isEqualTo(expectedRoute)
                 coVerify(exactly = 1) {
