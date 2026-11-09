@@ -5,6 +5,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TangemPayBankRoute
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.core.ui.test.TopNavigationTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -23,6 +24,17 @@ class TangemPayBankWithdrawPreviewPageObject(semanticsProvider: SemanticsNodeInt
 
     val sendButton: KNode = child {
         hasText(getResourceString(CoreResR.string.common_send))
+        hasClickAction()
+        hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_SCREEN))
+    }
+
+    val closeButton: KNode = child {
+        hasTestTag(TopNavigationTestTags.CLOSE_BUTTON)
+        hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_SCREEN))
+    }
+
+    fun payButton(total: String): KNode = child {
+        hasText(getResourceString(CoreResR.string.money_account_send_pay_button, total))
         hasClickAction()
         hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_SCREEN))
     }
