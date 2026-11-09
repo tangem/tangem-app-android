@@ -56,11 +56,13 @@ import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOutcomeUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
+import com.tangem.domain.polymarket.usecase.AcknowledgePolymarketSessionKeyOutcomeUseCase
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
@@ -562,4 +564,16 @@ internal object PolymarketDomainModule {
     fun provideRefreshPolymarketFastTradingUseCase(
         stateService: PolymarketSessionKeyStateService,
     ): RefreshPolymarketFastTradingUseCase = RefreshPolymarketFastTradingUseCase(stateService = stateService)
+
+    @Provides
+    @Singleton
+    fun provideObservePolymarketSessionKeyOutcomeUseCase(
+        runner: PolymarketSessionKeyOperationRunner,
+    ): ObservePolymarketSessionKeyOutcomeUseCase = ObservePolymarketSessionKeyOutcomeUseCase(runner = runner)
+
+    @Provides
+    @Singleton
+    fun provideAcknowledgePolymarketSessionKeyOutcomeUseCase(
+        runner: PolymarketSessionKeyOperationRunner,
+    ): AcknowledgePolymarketSessionKeyOutcomeUseCase = AcknowledgePolymarketSessionKeyOutcomeUseCase(runner = runner)
 }
