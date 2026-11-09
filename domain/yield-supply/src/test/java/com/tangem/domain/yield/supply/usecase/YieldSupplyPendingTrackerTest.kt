@@ -2,18 +2,17 @@ package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
-import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
-import io.mockk.slot
+import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
+import com.tangem.test.core.TestAppCoroutineScope
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -28,6 +27,8 @@ class YieldSupplyPendingTrackerTest {
     private val yieldSupplyRepository: YieldSupplyRepository = mockk()
     private val yieldSupplyTransactionRepository: YieldSupplyTransactionRepository = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
+    private val yieldModuleStatusFetcher: YieldModuleStatusFetcher = mockk()
+    private val tokensFeatureToggles: TokensFeatureToggles = mockk()
 
     private lateinit var testScope: TestScope
     private lateinit var useCase: YieldSupplyPendingTracker
@@ -41,8 +42,50 @@ class YieldSupplyPendingTrackerTest {
             yieldSupplyRepository = yieldSupplyRepository,
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+            yieldModuleStatusFetcher = yieldModuleStatusFetcher,
+            tokensFeatureToggles = tokensFeatureToggles,
             coroutineScope = TestAppCoroutineScope(testScope),
         )
+        every { tokensFeatureToggles.isYieldContributionEnabled } returns false
+        coEvery { yieldModuleStatusFetcher(any()) } returns Either.Right(Unit)
+    }
+
+    @Test
+    fun `GIVEN yield positions source enabled WHEN tx settles THEN refreshes the token position after the network`() =
+        runTest {
+            // Arrange
+            val token = createToken()
+            every { tokensFeatureToggles.isYieldContributionEnabled } returns true
+            coEvery { yieldSupplyRepository.getPendingTxHashes(userWalletId, token) } returns emptyList()
+            coEvery { singleNetworkStatusFetcher.invoke(any()) } returns Either.Right(Unit)
+
+            // Act
+            useCase.addPending(userWalletId, token, listOf("0xconfirmed"))
+            testScope.advanceTimeBy(10_001L)
+
+            // Assert
+            coVerifyOrder {
+                singleNetworkStatusFetcher.invoke(any())
+                yieldModuleStatusFetcher(
+                    YieldModuleStatusFetcher.Params(userWalletId = userWalletId, tokens = setOf(token)),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN yield positions source disabled WHEN tx settles THEN no position is fetched`() = runTest {
+        // Arrange
+        val token = createToken()
+        coEvery { yieldSupplyRepository.getPendingTxHashes(userWalletId, token) } returns emptyList()
+        coEvery { singleNetworkStatusFetcher.invoke(any()) } returns Either.Right(Unit)
+
+        // Act
+        useCase.addPending(userWalletId, token, listOf("0xconfirmed"))
+        testScope.advanceTimeBy(10_001L)
+
+        // Assert
+        coVerify(exactly = 1) { singleNetworkStatusFetcher.invoke(any()) }
+        coVerify(exactly = 0) { yieldModuleStatusFetcher(any()) }
     }
 
     @Test
@@ -114,28 +157,29 @@ class YieldSupplyPendingTrackerTest {
     }
 
     @Test
-    fun `GIVEN tx no longer pending WHEN addPending THEN removes entry from tracking and refreshes network`() = runTest {
-        val token = createToken()
-        val txIds = listOf("0xconfirmed")
+    fun `GIVEN tx no longer pending WHEN addPending THEN removes entry from tracking and refreshes network`() =
+        runTest {
+            val token = createToken()
+            val txIds = listOf("0xconfirmed")
 
-        coEvery {
-            yieldSupplyRepository.getPendingTxHashes(userWalletId, token)
-        } returns emptyList()
-        coEvery {
-            singleNetworkStatusFetcher.invoke(any())
-        } returns Either.Right(Unit)
+            coEvery {
+                yieldSupplyRepository.getPendingTxHashes(userWalletId, token)
+            } returns emptyList()
+            coEvery {
+                singleNetworkStatusFetcher.invoke(any())
+            } returns Either.Right(Unit)
 
-        useCase.addPending(userWalletId, token, txIds)
+            useCase.addPending(userWalletId, token, txIds)
 
-        testScope.advanceTimeBy(10_001L)
+            testScope.advanceTimeBy(10_001L)
 
-        coVerify(exactly = 1) {
-            yieldSupplyRepository.getPendingTxHashes(userWalletId, token)
+            coVerify(exactly = 1) {
+                yieldSupplyRepository.getPendingTxHashes(userWalletId, token)
+            }
+            coVerify(exactly = 1) {
+                singleNetworkStatusFetcher.invoke(any())
+            }
         }
-        coVerify(exactly = 1) {
-            singleNetworkStatusFetcher.invoke(any())
-        }
-    }
 
     @Test
     fun `GIVEN max attempts reached WHEN addPending THEN stops tracking entry`() = runTest {
@@ -194,35 +238,36 @@ class YieldSupplyPendingTrackerTest {
     }
 
     @Test
-    fun `GIVEN multiple wallets with same network WHEN checkAllTracked THEN fetches network status once per unique pair`() = runTest {
-        val token = createToken()
-        val userWalletId1 = UserWalletId("00")
-        val userWalletId2 = UserWalletId("01")
-        val txIds1 = listOf("0xtx1")
-        val txIds2 = listOf("0xtx2")
-        val capturedParams = mutableListOf<SingleNetworkStatusFetcher.Params>()
+    fun `GIVEN multiple wallets with same network WHEN checkAllTracked THEN fetches network status once per unique pair`() =
+        runTest {
+            val token = createToken()
+            val userWalletId1 = UserWalletId("00")
+            val userWalletId2 = UserWalletId("01")
+            val txIds1 = listOf("0xtx1")
+            val txIds2 = listOf("0xtx2")
+            val capturedParams = mutableListOf<SingleNetworkStatusFetcher.Params>()
 
-        coEvery {
-            yieldSupplyRepository.getPendingTxHashes(userWalletId1, token)
-        } returns txIds1
-        coEvery {
-            yieldSupplyRepository.getPendingTxHashes(userWalletId2, token)
-        } returns txIds2
-        coEvery {
-            singleNetworkStatusFetcher.invoke(capture(capturedParams))
-        } returns Either.Right(Unit)
+            coEvery {
+                yieldSupplyRepository.getPendingTxHashes(userWalletId1, token)
+            } returns txIds1
+            coEvery {
+                yieldSupplyRepository.getPendingTxHashes(userWalletId2, token)
+            } returns txIds2
+            coEvery {
+                singleNetworkStatusFetcher.invoke(capture(capturedParams))
+            } returns Either.Right(Unit)
 
-        useCase.addPending(userWalletId1, token, txIds1)
-        useCase.addPending(userWalletId2, token, txIds2)
+            useCase.addPending(userWalletId1, token, txIds1)
+            useCase.addPending(userWalletId2, token, txIds2)
 
-        testScope.advanceTimeBy(10001)
+            testScope.advanceTimeBy(10001)
 
-        assertThat(capturedParams).hasSize(2)
-        assertThat(capturedParams.map { it.userWalletId }.toSet())
-            .containsExactly(userWalletId1, userWalletId2)
-        assertThat(capturedParams.map { it.network }.toSet())
-            .containsExactly(token.network)
-    }
+            assertThat(capturedParams).hasSize(2)
+            assertThat(capturedParams.map { it.userWalletId }.toSet())
+                .containsExactly(userWalletId1, userWalletId2)
+            assertThat(capturedParams.map { it.network }.toSet())
+                .containsExactly(token.network)
+        }
 
     @Test
     fun `GIVEN same wallet with different currencies WHEN addPending THEN tracks each currency separately`() = runTest {
