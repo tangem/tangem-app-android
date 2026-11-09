@@ -92,6 +92,7 @@ private fun LazyListScope.headerItem(state: CollectiblesMainUM, isHeaderShown: B
             CollectiblesBalanceBlock(balance = state.balance)
             CollectiblesActionsBlock(actions = state.actions)
             (state.relink as? CollectiblesMainUM.RelinkUM.Shown)?.let { relink -> RelinkBanner(relink = relink) }
+            CollectiblesPendingPacks(packs = state.pendingPacks, modifier = Modifier.padding(bottom = 8.dp))
             state.collection?.let { collection -> CollectiblesCollectionWidget(state = collection) }
         }
     }

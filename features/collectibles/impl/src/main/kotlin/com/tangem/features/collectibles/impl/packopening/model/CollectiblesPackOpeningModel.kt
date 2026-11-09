@@ -137,6 +137,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     init {
         loadMachine()
         recheckLinkage()
+        params.reopenTxId?.let { txId -> runOpenPack(OpenPackRequest.Reopen(txId)) }
     }
 
     private fun recheckLinkage() {
@@ -366,7 +367,12 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
 
     fun onOpenAgain() {
         bottomSheetNavigation.dismiss()
-        router.pop()
+
+        if (params.reopenTxId == null) {
+            router.pop()
+        } else {
+            router.replaceCurrent(CollectiblesRoute.MachineDetails(externalId = params.externalId))
+        }
     }
 
     fun onExplorePacks() {
