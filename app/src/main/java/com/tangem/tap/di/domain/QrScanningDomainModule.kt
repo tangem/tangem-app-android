@@ -17,6 +17,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -68,7 +69,7 @@ internal object QrScanningDomainModule {
     @Provides
     @Singleton
     fun provideQrDeepLinkMatcher(
-        deepLinkHandlers: Map<String, @JvmSuppressWildcards DeepLinkHandler>,
+        deepLinkHandlers: Map<String, @JvmSuppressWildcards Provider<DeepLinkHandler>>,
     ): QrDeepLinkMatcher {
         return DefaultQrDeepLinkMatcher(deepLinkHandlerRegistry = DeepLinkHandlerRegistry(deepLinkHandlers))
     }
