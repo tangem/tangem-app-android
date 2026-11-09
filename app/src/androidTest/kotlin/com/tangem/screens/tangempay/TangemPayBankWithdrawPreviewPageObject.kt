@@ -1,11 +1,14 @@
 package com.tangem.screens.tangempay
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.performTouchInput
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TangemPayBankRoute
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TopNavigationTestTags
+import io.github.kakaocup.compose.intercept.operation.ComposeOperationType
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -39,6 +42,10 @@ class TangemPayBankWithdrawPreviewPageObject(semanticsProvider: SemanticsNodeInt
         hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_SCREEN))
     }
 
+    fun doubleClickPayButton(total: String) {
+        payButton(total).delegate.perform(PayButtonAction.DOUBLE_CLICK) { performTouchInput { doubleClick() } }
+    }
+
     fun amountCard(amount: String, balance: String): KNode = child {
         hasTestTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_AMOUNT_CARD)
         hasAnyDescendant(withText(amount))
@@ -66,6 +73,8 @@ class TangemPayBankWithdrawPreviewPageObject(semanticsProvider: SemanticsNodeInt
         hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_SCREEN))
         useUnmergedTree = true
     }
+
+    private enum class PayButtonAction : ComposeOperationType { DOUBLE_CLICK }
 }
 
 internal fun BaseTestCase.onTangemPayBankWithdrawPreviewScreen(
