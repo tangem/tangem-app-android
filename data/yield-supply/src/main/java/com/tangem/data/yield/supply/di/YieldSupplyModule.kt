@@ -1,10 +1,12 @@
 package com.tangem.data.yield.supply.di
 
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.yield.supply.DefaultYieldSupplyWrappedNativeFactory
 import com.tangem.data.yield.supply.store.DefaultYieldBoostPromoStore
 import com.tangem.data.yield.supply.store.DefaultYieldBoostStatusStore
 import com.tangem.data.yield.supply.store.YieldBoostPromoStore
 import com.tangem.data.yield.supply.store.YieldBoostStatusStore
+import com.tangem.domain.yield.supply.YieldSupplyWrappedNativeFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,4 +28,10 @@ internal object YieldSupplyModule {
     fun provideYieldBoostStatusStore(): YieldBoostStatusStore {
         return DefaultYieldBoostStatusStore(dataStore = RuntimeSharedStore())
     }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyWrappedNativeFactory(
+        impl: DefaultYieldSupplyWrappedNativeFactory,
+    ): YieldSupplyWrappedNativeFactory = impl
 }
