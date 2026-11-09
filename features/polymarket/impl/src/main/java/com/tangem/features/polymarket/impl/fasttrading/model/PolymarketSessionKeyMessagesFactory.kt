@@ -31,16 +31,22 @@ internal object PolymarketSessionKeyMessagesFactory {
         is PolymarketSessionKeyOperationStart.Started -> null
     }
 
-    fun create(operation: PolymarketSessionKeyOperation): SnackbarMessage? = when (operation.request) {
+    fun isSubmitted(operation: PolymarketSessionKeyOperation): Boolean = when (operation.request) {
         PolymarketSessionKeyOperationRequest.Activate,
         PolymarketSessionKeyOperationRequest.Reactivate,
-        -> infoToast(R.string.prediction_session_key_toast_activation_in_progress)
-            .takeIf { operation.stage != PolymarketSessionKeyOperationStage.SIGNING }
-        is PolymarketSessionKeyOperationRequest.Revoke -> infoToast(R.string.prediction_session_key_toast_revoking)
-            .takeIf { operation.stage == PolymarketSessionKeyOperationStage.REVOKING }
+        -> operation.stage != PolymarketSessionKeyOperationStage.SIGNING
+        is PolymarketSessionKeyOperationRequest.Revoke -> operation.stage == PolymarketSessionKeyOperationStage.REVOKING
         PolymarketSessionKeyOperationRequest.Extend,
         is PolymarketSessionKeyOperationRequest.SetEnabled,
-        -> null
+        -> false
+    }
+
+    fun create(operation: PolymarketSessionKeyOperation): SnackbarMessage? = when {
+        !isSubmitted(operation) -> null
+        operation.request is PolymarketSessionKeyOperationRequest.Revoke -> {
+            infoToast(R.string.prediction_session_key_toast_revoking)
+        }
+        else -> infoToast(R.string.prediction_session_key_toast_activation_in_progress)
     }
 
     private fun successToast(request: PolymarketSessionKeyOperationRequest): SnackbarMessage? = when (request) {
@@ -69,7 +75,11 @@ internal object PolymarketSessionKeyMessagesFactory {
     @StringRes
     private fun failureMessageId(request: PolymarketSessionKeyOperationRequest, isAfterRevocation: Boolean): Int =
         when (request) {
-            PolymarketSessionKeyOperationRequest.Activate -> R.string.prediction_session_key_toast_activation_failed
+            PolymarketSessionKeyOperationRequest.Activate -> if (isAfterRevocation) {
+                R.string.prediction_session_key_toast_reactivation_failed_revoked
+            } else {
+                R.string.prediction_session_key_toast_activation_failed
+            }
             PolymarketSessionKeyOperationRequest.Reactivate -> if (isAfterRevocation) {
                 R.string.prediction_session_key_toast_reactivation_failed_revoked
             } else {

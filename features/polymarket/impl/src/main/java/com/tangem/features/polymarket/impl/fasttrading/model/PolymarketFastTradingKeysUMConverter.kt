@@ -45,7 +45,7 @@ internal class PolymarketFastTradingKeysUMConverter(
         val submittedOperation = operation?.takeIf { it.stage != PolymarketSessionKeyOperationStage.SIGNING }
         val localKeyAddress = overview.localKeyAddress
         val foreignSigners = reconciliation?.foreignSigners.orEmpty()
-        val listedSigners = reconciliation?.listedSigners.orEmpty()
+        val listedSigners = reconciliation?.listedSigners.orEmpty().mapTo(mutableSetOf()) { it.lowercase() }
         val foreignAddresses = foreignSigners.mapTo(mutableSetOf()) { it.address.lowercase() }
 
         val shownKeys = overview.wallet.sessionKeys
@@ -82,12 +82,14 @@ internal class PolymarketFastTradingKeysUMConverter(
         val deviceState = overview.assessment.deviceState
         val isActivationOffered = deviceState.isActivationOffered()
         val ownRow = rows.rowOf(localKeyAddress)?.takeIf { (address, _) ->
-            !isActivationOffered || address in listedSigners
+            !isActivationOffered || reconciliation == null || address in listedSigners
         }
+        val previousAddress = deviceState.previousKey()?.address?.lowercase()
+        val thisDeviceAddresses = setOfNotNull(localKeyAddress?.lowercase(), previousAddress)
         val thisDeviceRows = thisDeviceRowsOf(
-            ownRow = ownRow,
-            previousRow = deviceState.previousKey()?.let { rows.rowOf(it.address) },
+            keyRows = listOfNotNull(ownRow, previousAddress?.let { rows.rowOf(it) }),
             submittedOperation = submittedOperation,
+            localKeyAddress = localKeyAddress,
         )
 
         return FastTradingKeysUM(
@@ -96,9 +98,7 @@ internal class PolymarketFastTradingKeysUMConverter(
             thisDevice = thisDeviceRows.toImmutableList(),
             activateBanner = activateBannerOf(isActivationOffered, operation),
             otherDevices = rows
-                .filter { (address, row) ->
-                    !address.equals(localKeyAddress, ignoreCase = true) && thisDeviceRows.none { it === row }
-                }
+                .filter { (address, _) -> address !in thisDeviceAddresses }
                 .map { (_, row) -> row }
                 .toImmutableList(),
             areActionsEnabled = operation == null,
@@ -124,14 +124,22 @@ internal class PolymarketFastTradingKeysUMConverter(
         .toImmutableList()
 
     private fun thisDeviceRowsOf(
-        ownRow: Pair<String, FastTradingKeyRowUM>?,
-        previousRow: Pair<String, FastTradingKeyRowUM>?,
+        keyRows: List<Pair<String, FastTradingKeyRowUM>>,
         submittedOperation: PolymarketSessionKeyOperation?,
+        localKeyAddress: String?,
     ): List<FastTradingKeyRowUM> {
-        val keyRows = listOfNotNull(ownRow, previousRow).distinct().map { (_, row) -> row }
-        val pendingRow = submittedOperation?.pendingThisDeviceRow()
-            ?.takeUnless { pending -> keyRows.any { it.status == pending.status } }
-        return listOfNotNull(pendingRow) + keyRows
+        val keyAddresses = keyRows.mapTo(mutableSetOf()) { (address, _) -> address }
+        val pendingRow = submittedOperation
+            ?.takeUnless { it.isTrackedBy(keyAddresses, localKeyAddress) }
+            ?.pendingThisDeviceRow()
+        return listOfNotNull(pendingRow) + keyRows.map { (_, row) -> row }
+    }
+
+    private fun PolymarketSessionKeyOperation.isTrackedBy(addresses: Set<String>, localKeyAddress: String?): Boolean {
+        val target = targetAddress?.lowercase() ?: return false
+        val isRevokingPrevious = isActivation() && stage in REVOCATION_STAGES &&
+            !target.equals(localKeyAddress, ignoreCase = true)
+        return target in addresses && !isRevokingPrevious
     }
 
     private fun List<Pair<String, FastTradingKeyRowUM>>.rowOf(address: String?): Pair<String, FastTradingKeyRowUM>? =
@@ -148,8 +156,7 @@ internal class PolymarketFastTradingKeysUMConverter(
         operation: PolymarketSessionKeyOperation?,
     ): FastTradingActivateBannerUM? = when {
         !isActivationOffered -> null
-        operation == null -> FastTradingActivateBannerUM(isLoading = false)
-        !operation.isActivation() -> FastTradingActivateBannerUM(isLoading = false)
+        operation == null || !operation.isActivation() -> FastTradingActivateBannerUM(isLoading = false)
         operation.stage == PolymarketSessionKeyOperationStage.SIGNING -> FastTradingActivateBannerUM(isLoading = true)
         else -> null
     }

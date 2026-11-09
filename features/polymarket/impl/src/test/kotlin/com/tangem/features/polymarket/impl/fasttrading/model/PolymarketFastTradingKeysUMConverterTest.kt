@@ -598,6 +598,101 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         }
 
         @Test
+        fun `GIVEN reconciliation unavailable WHEN activation is offered THEN this device key stays under the banner`() {
+            // Arrange
+            val ownKey = createKey(
+                address = OWN_ADDRESS,
+                deviceName = THIS_DEVICE_NAME,
+                status = PolymarketSessionKeyStatus.FAILED,
+            )
+            val overview = createOverview(
+                sessionKeys = listOf(ownKey, createKey()),
+                isReconciled = false,
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(ownKey),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.activateBanner).isEqualTo(IDLE_BANNER)
+            assertThat(actual.thisDevice.map { it.id }).containsExactly(OWN_ADDRESS)
+            assertThat(actual.otherDevices.map { it.id }).containsExactly(OTHER_ADDRESS)
+        }
+
+        @Test
+        fun `GIVEN exchange lists this device key in another case WHEN convert THEN it stays under the banner with revoke`() {
+            // Arrange
+            val ownKey = createKey(
+                address = OWN_ADDRESS,
+                deviceName = THIS_DEVICE_NAME,
+                status = PolymarketSessionKeyStatus.FAILED,
+            )
+            val overview = createOverview(
+                sessionKeys = listOf(ownKey),
+                listedSigners = setOf(OWN_ADDRESS.uppercase()),
+                deviceState = PolymarketSessionKeyDeviceState.RepairByRenewal(ownKey),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.thisDevice.single().actions).isEqualTo(revokeOf(OWN_ADDRESS, THIS_DEVICE))
+        }
+
+        @Test
+        fun `GIVEN extension of this device key WHEN it revokes the old key THEN only its own row shows extending`() {
+            // Arrange
+            val ownKey = createKey(address = OWN_ADDRESS, deviceName = THIS_DEVICE_NAME)
+            val overview = createOverview(
+                sessionKeys = listOf(ownKey),
+                deviceState = PolymarketSessionKeyDeviceState.Active(ownKey, isRenewDue = true),
+            )
+            val operation = createOperation(
+                request = PolymarketSessionKeyOperationRequest.Extend,
+                stage = PolymarketSessionKeyOperationStage.REVOKING,
+                targetAddress = OWN_ADDRESS.uppercase(),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.thisDevice.map { it.id }).containsExactly(OWN_ADDRESS)
+            assertThat(actual.thisDevice.single().status).isEqualTo(FastTradingKeyStatusUM.Extending)
+        }
+
+        @Test
+        fun `GIVEN activation authorizing a new key WHEN the old listed key is shown THEN pending row is added`() {
+            // Arrange
+            val ownKey = createKey(
+                address = OWN_ADDRESS,
+                deviceName = THIS_DEVICE_NAME,
+                status = PolymarketSessionKeyStatus.PENDING,
+            )
+            val overview = createOverview(
+                sessionKeys = listOf(ownKey),
+                listedSigners = setOf(OWN_ADDRESS),
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(ownKey),
+            )
+            val operation = createOperation(
+                request = PolymarketSessionKeyOperationRequest.Activate,
+                stage = PolymarketSessionKeyOperationStage.AUTHORIZING,
+                targetAddress = PREVIOUS_ADDRESS,
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.thisDevice.map { it.id }).containsExactly("this_device_pending", OWN_ADDRESS).inOrder()
+            assertThat(actual.thisDevice.map { it.status })
+                .containsExactly(FastTradingKeyStatusUM.Activating, FastTradingKeyStatusUM.Activating)
+                .inOrder()
+        }
+
+        @Test
         fun `GIVEN replacement offered WHEN convert THEN previous key keeps its menu under this device`() {
             // Arrange
             val overview = createOverview(
