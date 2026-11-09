@@ -17,7 +17,6 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
-import com.tangem.domain.models.wallet.isSocialLoginWallet
 import com.tangem.utils.converter.Converter
 
 /**
@@ -50,7 +49,6 @@ class UserWalletItemUMConverter(
                 id = walletId.stringValue,
                 name = stringReference(name),
                 titleBadge = getTitleBadge(userWallet = this),
-                isSocialLogin = isSocialLoginWallet,
                 information = getInfo(userWallet = this),
                 balance = getBalanceInfo(userWallet = this),
                 isEnabled = isEnabled(userWallet = this),
