@@ -1,5 +1,6 @@
 package com.tangem.data.collectibles
 
+import com.tangem.data.collectibles.converter.CollectibleActiveTxConverter
 import com.tangem.data.collectibles.converter.CollectibleBuybackOfferConverter
 import com.tangem.data.collectibles.converter.CollectibleBuybackStatusConverter
 import com.tangem.data.collectibles.converter.CollectibleBuybackTxConverter
@@ -30,7 +31,9 @@ import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequ
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 internal class DefaultCollectiblesRepository @Inject constructor(
@@ -39,6 +42,8 @@ internal class DefaultCollectiblesRepository @Inject constructor(
     private val errorResolver: CollectiblesErrorResolver,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesRepository {
+
+    private val lastActiveTxs = ConcurrentHashMap<UserWalletId, List<CollectibleActiveTx>>()
 
     override suspend fun getCategories(): CollectibleGachaMachineCategories = withContext(dispatchers.io) {
         MachineCategoriesConverter.convert(collectiblesApi.getCategories().getOrThrow())
@@ -120,7 +125,7 @@ internal class DefaultCollectiblesRepository @Inject constructor(
             body = PurchaseTxSentRequestBody(txId = txId, txHash = txHash),
         ).getOrThrow()
 
-        CollectibleTxStatusConverter.convert(response.status)
+        CollectibleTxStatusConverter.convert(response)
     }
 
     override suspend fun getTxState(
@@ -155,6 +160,18 @@ internal class DefaultCollectiblesRepository @Inject constructor(
 
         CollectibleTxStateConverter.convert(response)
     }
+
+    override suspend fun getActiveTxs(userWalletId: UserWalletId): List<CollectibleActiveTx> =
+        withContext(dispatchers.io) {
+            runSuspendCatching {
+                collectiblesApi.getActiveTxs(userWalletId = userWalletId.stringValue, includeMachine = true)
+                    .getOrThrow()
+                    .activeTxs
+                    .map(CollectibleActiveTxConverter::convert)
+            }
+                .onSuccess { activeTxs -> lastActiveTxs[userWalletId] = activeTxs }
+                .getOrElse { error -> lastActiveTxs[userWalletId] ?: throw error }
+        }
 
     override suspend fun getBuybackOffer(userWalletId: UserWalletId, nftAddress: String): CollectibleBuybackOffer? =
         withContext(dispatchers.io) {
