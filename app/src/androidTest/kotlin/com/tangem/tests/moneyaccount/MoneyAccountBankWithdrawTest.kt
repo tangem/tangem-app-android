@@ -427,10 +427,16 @@ class MoneyAccountBankWithdrawTest : BaseTestCase() {
                 }
             }
             step("Assert bank name '${EMILY.bankName}' is displayed") {
-                onTangemPayBankWithdrawPreviewScreen { detailValue(EMILY.bankName).assertIsDisplayed() }
+                onTangemPayBankWithdrawPreviewScreen {
+                    detailValue(EMILY.bankName).performScrollTo()
+                    detailValue(EMILY.bankName).assertIsDisplayed()
+                }
             }
             step("Assert '$feesFooter' footer is displayed") {
-                onTangemPayBankWithdrawPreviewScreen { detailValue(feesFooter).assertIsDisplayed() }
+                onTangemPayBankWithdrawPreviewScreen {
+                    detailValue(feesFooter).performScrollTo()
+                    detailValue(feesFooter).assertIsDisplayed()
+                }
             }
             step("Assert 'Pay $payTotal' button is displayed") {
                 onTangemPayBankWithdrawPreviewScreen { payButton(payTotal).assertIsDisplayed() }
