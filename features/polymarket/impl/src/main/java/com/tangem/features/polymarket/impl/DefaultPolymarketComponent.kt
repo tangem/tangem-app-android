@@ -12,6 +12,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.subscribe
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -81,6 +82,10 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         childStack.subscribe(lifecycle) { stack ->
             model.onActiveWalletChanged(stack.active.configuration.userWalletIdOrNull)
         }
+        lifecycle.subscribe(
+            onStart = { model.onVisibilityChanged(isVisible = true) },
+            onStop = { model.onVisibilityChanged(isVisible = false) },
+        )
     }
 
     @Composable

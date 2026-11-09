@@ -13,6 +13,7 @@ import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -34,6 +35,7 @@ internal class PolymarketModel @Inject constructor(
     val initialRoute: PolymarketRoute = PolymarketRoute.Entry
 
     private val activeWalletId = MutableStateFlow<UserWalletId?>(null)
+    private val isVisible = MutableStateFlow(false)
 
     init {
         if (featureToggles.isPolymarketSessionKeysEnabled) {
@@ -45,9 +47,13 @@ internal class PolymarketModel @Inject constructor(
         activeWalletId.value = userWalletId
     }
 
+    fun onVisibilityChanged(isVisible: Boolean) {
+        this.isVisible.value = isVisible
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun toastSessionKeyOutcomes() {
-        activeWalletId
+        combine(isVisible, activeWalletId) { isVisible, walletId -> walletId.takeIf { isVisible } }
             .flatMapLatest { walletId ->
                 if (walletId == null) {
                     emptyFlow()
