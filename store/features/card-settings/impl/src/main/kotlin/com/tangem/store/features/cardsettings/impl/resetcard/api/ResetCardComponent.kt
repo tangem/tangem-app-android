@@ -1,0 +1,18 @@
+package com.tangem.store.features.cardsettings.impl.resetcard.api
+
+import com.tangem.core.decompose.factory.ComponentFactory
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.wallet.UserWalletId
+
+internal interface ResetCardComponent : ComposableContentComponent {
+
+    data class Params(
+        val userWalletId: UserWalletId,
+        val cardId: String,
+        val isActiveBackupStatus: Boolean,
+        val backupCardsCount: Int,
+        val hasTangemPay: Boolean,
+    )
+
+    interface Factory : ComponentFactory<Params, ResetCardComponent>
+}

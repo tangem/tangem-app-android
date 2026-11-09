@@ -10,15 +10,20 @@ import java.math.BigDecimal
 internal object PredictionOrderStateConverter : Converter<PolymarketOrderResponse, PredictionOrderState> {
 
     override fun convert(value: PolymarketOrderResponse): PredictionOrderState = PredictionOrderState(
-        status = if (value.status?.trim() == PolymarketClobOrderFormat.STATUS_MATCHED) {
-            PredictionOrderStatus.Matched
-        } else {
-            PredictionOrderStatus.Other(raw = value.status)
-        },
+        status = value.status.toOrderStatus(),
         price = value.price?.toBigDecimalOrNull(),
         originalSize = value.originalSize?.toShares(),
         sizeMatched = value.sizeMatched?.toShares(),
     )
+
+    private fun String?.toOrderStatus(): PredictionOrderStatus {
+        val status = this?.trim() ?: return PredictionOrderStatus.Other(raw = null)
+        return when (status) {
+            PolymarketClobOrderFormat.STATUS_MATCHED -> PredictionOrderStatus.Matched
+            in PolymarketClobOrderFormat.REJECTED_STATUSES -> PredictionOrderStatus.Rejected(raw = status)
+            else -> PredictionOrderStatus.Other(raw = this)
+        }
+    }
 
     private fun String.toShares(): BigDecimal? =
         toBigDecimalOrNull()?.movePointLeft(PolymarketClobOrderFormat.SHARE_DECIMALS)

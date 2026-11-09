@@ -195,6 +195,18 @@ internal class TangemPayCurrentPlanModelTest {
     }
 
     @Test
+    fun `GIVEN markdown link to app deep link WHEN onLinkClick THEN nothing is opened`() {
+        // Arrange
+        val model = createModel(planState = tariffPlanState())
+
+        // Act
+        model.state.value.onLinkClick("tangem://wc?uri=wc:topic@2?relay-protocol=irn&symKey=secret")
+
+        // Assert
+        verify(exactly = 0) { urlOpener.openUrl(any()) }
+    }
+
+    @Test
     fun `GIVEN awaiting deposit AND next billing date WHEN model created THEN awaiting deposit notification wins`() {
         // GIVEN
         val planState = tariffPlanState(

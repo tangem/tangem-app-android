@@ -2,6 +2,7 @@ package com.tangem.tap.domain.walletregistration
 
 import android.util.Base64
 import arrow.core.Either
+import arrow.core.raise.either
 import arrow.core.left
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.TangemSdkError
@@ -15,6 +16,7 @@ import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletRegistrationResult
 import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed
+import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed.Stage
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -42,39 +44,60 @@ internal class DefaultWalletDeviceLinkRepository @Inject constructor(
     override suspend fun link(userWallet: UserWallet): Either<WalletLinkError, Unit> {
         if (!userWallet.canBeLinked()) return WalletLinkError.NotSupported.left()
 
-        val signer = when (userWallet) {
-            is UserWallet.Cold -> coldSigner.signerFor(userWallet)
-            is UserWallet.Hot -> mobileSigner.signerFor(userWallet)
+        val walletId = userWallet.walletId.toBase64()
+        val result = when (userWallet) {
+            is UserWallet.Cold -> registerCold(userWallet, walletId)
+            is UserWallet.Hot -> {
+                walletRegistrar.register(walletId = walletId, signer = mobileSigner.signerFor(userWallet))
+                    .mapLeft { error -> StagedError(Stage.Register, error) }
+            }
         }
 
-        return walletRegistrar.register(walletId = userWallet.walletId.toBase64(), signer = signer)
-            .onRight { result ->
-                if (result == WalletRegistrationResult.Registered) {
+        return result
+            .onRight { registrationResult ->
+                if (registrationResult == WalletRegistrationResult.Registered) {
                     analyticsEventHandler.send(BackendAuthAnalyticsEvent.WalletLinked())
                 }
             }
-            .mapLeft { error ->
+            .mapLeft { (stage, error) ->
                 error.toLinkError().also { linkError ->
                     if (linkError is WalletLinkError.Failed) {
-                        TangemLogger.e("Wallet linking failed: $error")
-                        sendRegistrationFailed(userWallet, linkError)
+                        TangemLogger.e("Wallet linking failed at $stage: $error")
+                        sendRegistrationFailed(userWallet, stage, linkError)
                     }
                 }
             }
             .map { }
     }
 
-    private fun sendRegistrationFailed(userWallet: UserWallet, error: WalletLinkError.Failed) {
+    /** Goes through the same phases as the registration on a card scan, so a failure reports the same stages. */
+    private suspend fun registerCold(
+        userWallet: UserWallet.Cold,
+        walletId: String,
+    ): Either<StagedError, WalletRegistrationResult> = either {
+        if (walletRegistrar.isRegistered(walletId)) return@either WalletRegistrationResult.AlreadyRegistered
+
+        val nonce = walletRegistrar.requestNonce()
+            .mapLeft { error -> StagedError(Stage.Nonce, error) }
+            .bind()
+        val prepared = walletRegistrar
+            .prepare(walletId = walletId, nonce = nonce, signer = coldSigner.signerFor(userWallet))
+            .mapLeft { error -> StagedError(Stage.Prepare, error) }
+            .bind()
+            ?: return@either WalletRegistrationResult.AlreadyRegistered
+
+        walletRegistrar.submit(prepared)
+            .mapLeft { error -> StagedError(Stage.Submit, error) }
+            .bind()
+    }
+
+    private fun sendRegistrationFailed(userWallet: UserWallet, stage: Stage, error: WalletLinkError.Failed) {
         val walletType = when (userWallet) {
             is UserWallet.Cold -> WalletRegistrationFailed.WalletType.Cold
             is UserWallet.Hot -> WalletRegistrationFailed.WalletType.Mobile
         }
         analyticsEventHandler.send(
-            WalletRegistrationFailed(
-                walletType = walletType,
-                stage = WalletRegistrationFailed.Stage.Register,
-                reason = error.reason,
-            ),
+            WalletRegistrationFailed(walletType = walletType, stage = stage, reason = error.reason),
         )
     }
 
@@ -104,4 +127,6 @@ internal class DefaultWalletDeviceLinkRepository @Inject constructor(
     }
 
     private fun UserWalletId.toBase64(): String = Base64.encodeToString(value, Base64.NO_WRAP)
+
+    private data class StagedError(val stage: Stage, val error: WalletRegistrationError)
 }

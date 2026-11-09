@@ -5,6 +5,12 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 ## Gating and wiring
 
+- `TWI_1700_POLYMARKET_PHASE_TWO_ENABLED` gates all D2 behavior through
+  `PolymarketFeatureToggles.isPolymarketPhaseTwoEnabled`: sports cards and scores, abbreviated outcome
+  labels, live quotes, crypto screens and charts as they are connected. Gate both UI mapping/navigation
+  and data subscriptions; hiding a component alone must not leave its D2 socket or polling active.
+  With D2 off, preserve the D1 REST presentation and outcome click targets. Test both flag values at
+  each integration boundary. Reusable data/socket implementations can remain flag-independent and cold.
 - The feed's Predictions block is gated by Amplitude `twi_1576_polymarket = on`, read once per model.
   Accounts, balances and the wallet-screen row are not gated.
 - Add funds (swap) and Withdraw are not screens of this module: they are `AppRoute.Swap` with
@@ -91,7 +97,9 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   as `0`. Steps move in whole shares; 100 % is the position itself, so a full close reaches the last fraction.
 - **Ambiguous orders.** A transport or inconclusive HTTP error does not prove rejection. The submitting
   step (Summary or Order) shows the existing error dialog with Support; keep balance/position refreshes and
-  never resubmit automatically, because the order may already be live.
+  never resubmit automatically, because the order may already be live. A `delayed` order is read back up to
+  3 times, 10 s apart; `LIVE`, unknown statuses and unanswered reads keep waiting, CANCELED / INVALID fail. If
+  it never settles, the flow ends on the "still being processed" result screen, not a dialog over the form.
 - **Position indexing.** `/positions/outcome` answers `null` until the position is indexed — for several
   seconds even for an outcome the wallet already held. Details shows Unavailable at once on a first `null`
   and retries only for a shown position whose size lags the last order. The result screen waits longer

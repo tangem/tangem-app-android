@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
@@ -75,6 +76,11 @@ import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRow
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
+import com.tangem.core.ui.ds2.accountrow.Section
+import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
+import com.tangem.core.ui.ds2.expandable.EXPANDABLE_ROW_REVEAL_DURATION_MILLIS
+import com.tangem.core.ui.ds2.expandable.ExpandableRowRevealItem
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow as TangemTokenRowV2
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
@@ -85,11 +91,13 @@ import com.tangem.core.ui.utils.TangemSharedTransitionLayout
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.core.ui.utils.sharedBoundsSafely
+import com.tangem.features.commonfeatures.api.choosetoken.model.AccountRowUM
 import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter
 import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilterUM
 import com.tangem.features.commonfeatures.api.choosetoken.model.ChooseTokenPortfolioFullBlockUM
 import com.tangem.features.commonfeatures.api.choosetoken.model.EmptyReason
 import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
+import com.tangem.features.commonfeatures.api.choosetoken.model.TokenRowItemUM
 import com.tangem.features.commonfeatures.api.choosetoken.model.WalletListUM
 import com.tangem.features.commonfeatures.api.choosetoken.model.WalletTabUM
 import com.tangem.features.commonfeatures.impl.R
@@ -99,6 +107,7 @@ import com.tangem.features.commonfeatures.impl.choosetoken.predefined.state.Pred
 import com.tangem.features.commonfeatures.impl.choosetoken.ui.state.ChooserBlockUM
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.THREE_STARS
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -106,11 +115,23 @@ import kotlinx.coroutines.flow.first
 import kotlin.random.Random
 
 private const val LOAD_MORE_BUFFER = 25
+
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private const val ACCOUNT_COLLAPSE_STEP_MS = 50
+
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private const val ACCOUNT_COLLAPSE_MAX_DELAY_MS = 250
+
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private const val ACCOUNT_COLLAPSE_BASE_DELAY_MS = 150
+
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private const val ACCOUNT_CONTENT_ANIM_MS = 350
+
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private const val ACCOUNT_CONTENT_ANIM_DELAY_MS = 90
+
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private const val ACCOUNT_BOUNDS_ANIM_MS = 250
 
 private val ChooseTokenFullUM.marketState: SwapMarketState?
@@ -399,18 +420,32 @@ private fun LazyListScope.tokensListItems(
     when (tokensListData) {
         is TokenListUMData.AccountList -> {
             tokensListData.tokensList.forEachIndexed { index, item ->
-                accountWithTokens(
-                    portfolio = item,
-                    portfolioIndex = index,
-                    isBalanceHidden = isBalanceHidden,
-                )
+                val accountRow = tokensListData.accountRows[item.id]
+                if (accountRow != null) {
+                    accountWithTokensV2(
+                        portfolio = item,
+                        accountRow = accountRow,
+                        portfolioIndex = index,
+                        isBalanceHidden = isBalanceHidden,
+                    )
+                } else {
+                    accountWithTokens(
+                        portfolio = item,
+                        portfolioIndex = index,
+                        isBalanceHidden = isBalanceHidden,
+                    )
+                }
             }
         }
         is TokenListUMData.TokenList -> {
-            tokensList(
-                items = tokensListData.tokensList,
-                isBalanceHidden = isBalanceHidden,
-            )
+            if (tokensListData.rows.isNotEmpty()) {
+                tokenRows(rows = tokensListData.rows, isBalanceHidden = isBalanceHidden)
+            } else {
+                tokensList(
+                    items = tokensListData.tokensList,
+                    isBalanceHidden = isBalanceHidden,
+                )
+            }
         }
         is TokenListUMData.EmptyList -> {
             if (tokensListData.reason == EmptyReason.FilteredOut && balanceFilterUM != null) {
@@ -425,6 +460,33 @@ private fun LazyListScope.tokensListItems(
     }
 }
 
+private fun LazyListScope.tokenRows(rows: ImmutableList<TokenRowItemUM>, isBalanceHidden: Boolean) {
+    itemsIndexed(
+        items = rows,
+        key = { _, row -> row.id },
+        contentType = { _, row -> row::class.java },
+    ) { index, row ->
+        val modifier = Modifier
+            .roundedShapeItemDecoration(
+                currentIndex = index,
+                radius = 24.dp,
+                lastIndex = rows.lastIndex,
+                backgroundColor = TangemTheme.colors3.bg.secondary,
+            )
+            .testTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
+            .semantics { lazyListItemPosition = index }
+        when (row) {
+            is TokenRowItemUM.Token -> TangemTokenRowV2(
+                state = row.state,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokenRowItemUM.Section -> TangemAccountRow.Section(title = row.title, modifier = modifier)
+        }
+    }
+}
+
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun LazyListScope.tokensList(items: ImmutableList<TokensListItemUM>, isBalanceHidden: Boolean) {
     itemsIndexed(
         items = items,
@@ -447,7 +509,69 @@ private fun LazyListScope.tokensList(items: ImmutableList<TokensListItemUM>, isB
     )
 }
 
+private fun LazyListScope.accountWithTokensV2(
+    portfolio: TokensListItemUM.Portfolio,
+    accountRow: AccountRowUM,
+    portfolioIndex: Int,
+    isBalanceHidden: Boolean,
+) {
+    val tokens = accountRow.tokens
+    val isExpanded = portfolio.isExpanded
+    val lastIndex = tokens.size
+
+    item(key = "account-${portfolio.id}", contentType = "choose-token-account-v2") {
+        val effectiveLastIndex by animateIntAsState(
+            targetValue = if (isExpanded) lastIndex else 0,
+            animationSpec = if (isExpanded) snap() else snap(delayMillis = EXPANDABLE_ROW_REVEAL_DURATION_MILLIS),
+            label = "accountLastIndex",
+        )
+        TangemAccountRow(
+            avatar = accountRow.avatar,
+            state = accountRow.state,
+            isExpanded = isExpanded,
+            isBalanceHidden = isBalanceHidden,
+            collapseContentDescription = stringResourceSafe(id = R.string.common_hide),
+            isExpandable = portfolio.isCollapsable,
+            shape = RectangleShape,
+            modifier = Modifier
+                .testTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
+                .semantics { lazyListItemPosition = portfolioIndex }
+                .roundedShapeItemDecoration(
+                    currentIndex = 0,
+                    radius = 24.dp,
+                    lastIndex = effectiveLastIndex,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                    groupKey = portfolio.id,
+                ),
+        )
+    }
+
+    itemsIndexed(
+        items = tokens,
+        key = { _, token -> "${token.id}-choose-account-${portfolio.id}" },
+        contentType = { _, token -> token::class.java },
+    ) { tokenIndex, token ->
+        ExpandableRowRevealItem(
+            isExpanded = isExpanded,
+            index = tokenIndex,
+            count = tokens.size,
+            modifier = Modifier
+                .testTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
+                .roundedShapeItemDecoration(
+                    currentIndex = tokenIndex + 1,
+                    radius = 24.dp,
+                    lastIndex = lastIndex,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                    groupKey = portfolio.id,
+                ),
+        ) {
+            TangemTokenRowV2(state = token, isBalanceHidden = isBalanceHidden)
+        }
+    }
+}
+
 @Suppress("LongMethod")
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun LazyListScope.accountWithTokens(
     portfolio: TokensListItemUM.Portfolio,
     portfolioIndex: Int,
@@ -540,6 +664,7 @@ private fun LazyListScope.accountWithTokens(
 @Suppress("LongMethod")
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun AccountRow(
     portfolio: TokensListItemUM.Portfolio,
     isBalanceHidden: Boolean,
@@ -654,6 +779,7 @@ private fun AccountRow(
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun AccountRowSharedTransitionLayout(
     modifier: Modifier = Modifier,
     content: @Composable SharedTransitionScope.() -> Unit,
@@ -664,6 +790,7 @@ private fun AccountRowSharedTransitionLayout(
 }
 
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun AccountTail(isExpanded: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
@@ -695,6 +822,7 @@ private fun AccountTail(isExpanded: Boolean, onClick: () -> Unit, modifier: Modi
 }
 
 @Composable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun AccountExpandButton(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
@@ -713,11 +841,13 @@ private fun AccountExpandButton(modifier: Modifier = Modifier) {
 }
 
 @Stable
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private class AccountRowComposables(
     val title: @Composable (Modifier) -> Unit,
     val icon: @Composable (Modifier) -> Unit,
 )
 
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun accountTokenRowUM(
     portfolio: TokensListItemUM.Portfolio,
     isBalanceHidden: Boolean,
@@ -742,6 +872,7 @@ private fun accountTokenRowUM(
     )
 }
 
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun buildAccountSubtitle(tokensCount: TextReference?, balance: String?): TextReference? {
     return when {
         tokensCount != null && balance != null ->
@@ -787,6 +918,7 @@ private fun LazyListScope.predefinedTokensListItems(state: PredefinedTokensUM) {
     )
 }
 
+// TODO [REDACTED_TASK_KEY] Move to TangemTokenRow once it supports a network subtitle and a trailing action
 @Composable
 private fun PredefinedTokenItem(state: PredefinedTokenItemUM, modifier: Modifier = Modifier) {
     val tokenRowUM = remember(state) {

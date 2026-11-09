@@ -22,6 +22,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
@@ -202,7 +203,7 @@ class TokenItemStateConverter(
                     )
                 }?.value
                 if (yieldSupplyApy != null) {
-                    val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+                    val isActive = cryptoCurrencyStatus.value.yieldSupply?.isActive == true
                     return EarnApyInfo(
                         text = resourceReference(
                             R.string.yield_module_earn_badge,
@@ -355,8 +356,8 @@ class TokenItemStateConverter(
                         },
                         isFlickering = status.value.isFlickering(),
                         icons = buildList {
-                            if (status.value.yieldSupplyStatus?.isActive == true &&
-                                status.value.yieldSupplyStatus?.isAllowedToSpend == false
+                            if (status.value.yieldSupply?.isActive == true &&
+                                status.value.yieldSupply?.isAllowedToSpend == false
                             ) {
                                 add(
                                     TokenItemState.FiatAmountState.Content.IconUM(

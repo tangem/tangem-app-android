@@ -12,6 +12,7 @@ import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.yield.impl.fixtures.coin
 import com.tangem.features.earn.yield.impl.fixtures.currencyStatus
 import com.tangem.features.earn.yield.impl.fixtures.token
@@ -40,6 +41,12 @@ internal class YieldModeRateSourceTest {
     private val token = token()
     private val key = token.yieldSupplyKey()
     private val apy = mapOf(key to BigDecimal("5.5"))
+
+    @Test
+    fun `GIVEN source WHEN reading the badge accent THEN Success`() {
+        // Assert
+        assertThat(source.badgeAccent).isEqualTo(EarnBadgeAccent.Success)
+    }
 
     @Test
     fun `GIVEN source WHEN reading metadata THEN id yield_mode and rank 3`() {
