@@ -55,6 +55,7 @@ data class EarnHeadline(
     val rate: EarnProductRate,
     val isActive: Boolean,
     val badge: TextReference,
+    val badgeAccent: EarnBadgeAccent,
     val route: Route?,
 )
 
