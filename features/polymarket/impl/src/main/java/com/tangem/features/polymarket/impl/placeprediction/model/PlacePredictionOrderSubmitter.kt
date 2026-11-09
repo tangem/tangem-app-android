@@ -289,8 +289,9 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
 
     /**
      * The exchange accepted the order into a matching delay, so the answer to "did it fill" is read back from
-     * the book. A match is returned as a result like an immediate one; anything else is a failure dialog,
-     * since the order did not place and the same one can be placed again.
+     * the book. A match is returned as a result like an immediate one, and so is an order the book has not
+     * settled in time: it may still fill, so the form must not offer to place it again. A rejection is a failure
+     * dialog, since the same order can be placed again.
      */
     private suspend fun awaitDelayedFill(
         addresses: PolymarketAddresses,
@@ -323,11 +324,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
             }
             is DelayedPredictionOrderOutcome.Unconfirmed -> {
                 logger.e("Delayed order $orderId: the book did not say whether it matched within the reads allowed")
-                returnToIdle()
-                showFailureDialog(
-                    title = resourceReference(R.string.prediction_place_delayed_timeout_title),
-                    message = resourceReference(R.string.prediction_place_delayed_timeout_description),
-                )
+                return showResult(result = PlaceResultUM.StillProcessing(placedAt = placedAt))
             }
         }
         return null
@@ -351,6 +348,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         is PlaceResultUM.Filled,
         is PlaceResultUM.PartiallyFilled,
         is PlaceResultUM.Submitted,
+        is PlaceResultUM.StillProcessing,
         -> true
         is PlaceResultUM.NotFilled -> false
     }
