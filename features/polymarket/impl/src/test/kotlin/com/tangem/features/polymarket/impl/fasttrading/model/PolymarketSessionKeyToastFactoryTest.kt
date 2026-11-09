@@ -78,7 +78,7 @@ internal class PolymarketSessionKeyToastFactoryTest {
                 error(R.string.prediction_session_key_toast_reactivation_failed_revoked),
             ),
             OutcomeModel(
-                failure(REVOKE, error = PolymarketSessionKeyLifecycleError.RevocationFailed(sessionKey = null)),
+                failure(REVOKE, error = PolymarketSessionKeyLifecycleError.RevocationFailed(sessionKey = mockk())),
                 error(R.string.prediction_session_key_toast_revocation_failed),
             ),
             OutcomeModel(

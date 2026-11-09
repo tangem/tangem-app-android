@@ -264,7 +264,7 @@ internal class PolymarketModelTest {
             id = id,
             request = PolymarketSessionKeyOperationRequest.Revoke(sessionKeyAddress = "0x1"),
             result = PolymarketSessionKeyOperationFailure(
-                error = PolymarketSessionKeyLifecycleError.RevocationFailed(sessionKey = null),
+                error = PolymarketSessionKeyLifecycleError.RevocationFailed(sessionKey = mockk()),
                 isAfterRevocation = false,
             ).left(),
         )
