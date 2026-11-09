@@ -301,6 +301,8 @@ include(":spend:push-provisioning:no-op")
 // endregion Spend modules
 
 // region Store modules
+include(":store:features:card-settings:api")
+include(":store:features:card-settings:impl")
 include(":store:datasource")
 // endregion Store modules
 
