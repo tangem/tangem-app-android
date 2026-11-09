@@ -58,7 +58,7 @@ internal class PolymarketCategoryModel @Inject constructor(
     private var selectedSubcategoryId: Int? = null
     private var selectedFilter = availableFilters().firstOrNull()
     private val tabConverter = PolymarketCategoryTabUMConverter(::selectSubcategory)
-    private val refreshJob = JobHolder()
+    private val screenRefreshJob = JobHolder()
     private val staleReporter = PolymarketStaleDataReporter(
         onReport = { messageSender.send(SnackbarMessage(resourceReference(R.string.prediction_main_data_outdated))) },
     )
@@ -132,7 +132,7 @@ internal class PolymarketCategoryModel @Inject constructor(
     }
 
     private fun selectFeed() {
-        refreshJob.cancel()
+        screenRefreshJob.cancel()
         val selection = selection()
         uiState.update { state ->
             state.copy(
@@ -162,7 +162,7 @@ internal class PolymarketCategoryModel @Inject constructor(
             } finally {
                 setRefreshing(false)
             }
-        }.saveIn(refreshJob)
+        }.saveIn(screenRefreshJob)
     }
 
     private fun setRefreshing(value: Boolean) {
