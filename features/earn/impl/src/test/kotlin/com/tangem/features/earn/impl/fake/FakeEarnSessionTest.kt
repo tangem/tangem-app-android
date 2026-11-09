@@ -85,8 +85,8 @@ internal class FakeEarnSessionTest {
                 ),
                 result = EarnResult(
                     title = stringReference("Deposited 0.5 ETH"),
-                    subtitle = null,
-                    chip = null,
+                    subtitle = stringReference("Your ETH in Main account is now earning in Aave"),
+                    chip = stringReference("Current 5.5% APY"),
                     rows = emptyList(),
                     primary = EarnResultButton(stringReference("Go to yield"), EarnFlowExit.ToYield),
                     secondary = EarnResultButton(stringReference("Go to token"), EarnFlowExit.ToToken),
