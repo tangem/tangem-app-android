@@ -124,7 +124,7 @@ private fun LazyListScope.unknownSignersSection(
     keys: FastTradingKeysUM,
     onActionClick: (FastTradingKeyActionUM) -> Unit,
 ) {
-    if (keys.unknownSigners.isEmpty()) return
+    if (!keys.isUnknownSignersWarningShown) return
     item(key = "unknown_signers_banner", contentType = "banner") {
         TangemMessageBanner(
             title = resourceReference(R.string.prediction_session_key_unknown_signers_title),
@@ -179,6 +179,7 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
         PolymarketFastTradingSettingsUM.Content(
             onBackClick = {},
             keys = FastTradingKeysUM(
+                isUnknownSignersWarningShown = true,
                 unknownSigners = persistentListOf(
                     FastTradingUnknownSignerUM(
                         address = PREVIEW_SIGNER_ADDRESS,

@@ -103,12 +103,16 @@ internal fun PolymarketFastTradingUnknownSignerRow(
                 role = TangemRowTextRole.Subtitle,
             )
         },
-        endSlot = {
-            PolymarketFastTradingKeyActionsMenu(
-                actions = state.actions,
-                isEnabled = areActionsEnabled,
-                onActionClick = onActionClick,
-            )
+        endSlot = if (state.actions.isNotEmpty()) {
+            {
+                PolymarketFastTradingKeyActionsMenu(
+                    actions = state.actions,
+                    isEnabled = areActionsEnabled,
+                    onActionClick = onActionClick,
+                )
+            }
+        } else {
+            null
         },
     )
 }

@@ -42,10 +42,11 @@ internal class PolymarketFastTradingKeysUMConverter(
         val submittedOperation = operation?.takeIf { it.stage != PolymarketSessionKeyOperationStage.SIGNING }
         val localKeyAddress = overview.localKeyAddress
         val foreignSigners = reconciliation?.foreignSigners.orEmpty()
-        val onExchange = foreignSigners.mapTo(mutableSetOf()) { it.address.lowercase() }
+        val listedSigners = reconciliation?.listedSigners.orEmpty()
 
-        val rows = overview.wallet.sessionKeys
-            .filter { it.status != PolymarketSessionKeyStatus.REVOKED }
+        val shownKeys = overview.wallet.sessionKeys.filter { it.status != PolymarketSessionKeyStatus.REVOKED }
+        val shownAddresses = shownKeys.mapTo(mutableSetOf()) { it.address.lowercase() }
+        val rows = shownKeys
             .map { key ->
                 val isOwn = key.address.equals(localKeyAddress, ignoreCase = true)
                 val status = submittedOperation?.statusFor(key.address, isOwn) ?: key.status(now, missingOnExchange)
@@ -55,14 +56,15 @@ internal class PolymarketFastTradingKeysUMConverter(
                         ?: resourceReference(R.string.prediction_session_key_unknown_device),
                     status = status,
                     isExpiringSoon = key.isExpiringSoon(now),
-                    actions = actionsFor(key.address, status, isOnExchange = key.address.lowercase() in onExchange),
+                    actions = actionsFor(key.address, status, isListed = key.address.lowercase() in listedSigners),
                 )
             }
         val ownRow = rows.firstOrNull { (address, _) -> address.equals(localKeyAddress, ignoreCase = true) }?.second
 
         return FastTradingKeysUM(
+            isUnknownSignersWarningShown = foreignSigners.isNotEmpty(),
             unknownSigners = foreignSigners
-                .filter { signer -> rows.none { (address, _) -> address.equals(signer.address, ignoreCase = true) } }
+                .filter { it.address.lowercase() !in shownAddresses }
                 .map { FastTradingUnknownSignerUM(address = it.address, actions = revokeOnly(it.address)) }
                 .toImmutableList(),
             thisDevice = ownRow ?: submittedOperation?.pendingThisDeviceRow(),
@@ -74,15 +76,16 @@ internal class PolymarketFastTradingKeysUMConverter(
     private fun actionsFor(
         address: String,
         status: FastTradingKeyStatusUM,
-        isOnExchange: Boolean,
+        isListed: Boolean,
     ): ImmutableList<FastTradingKeyActionUM> = when (status) {
         is FastTradingKeyStatusUM.Active,
         is FastTradingKeyStatusUM.Paused,
+        -> revokeOnly(address)
         is FastTradingKeyStatusUM.Expired,
         FastTradingKeyStatusUM.ReconnectNeeded,
+        FastTradingKeyStatusUM.ActivationFailed,
         FastTradingKeyStatusUM.Unknown,
-        -> revokeOnly(address)
-        FastTradingKeyStatusUM.ActivationFailed -> if (isOnExchange) revokeOnly(address) else persistentListOf()
+        -> if (isListed) revokeOnly(address) else persistentListOf()
         FastTradingKeyStatusUM.Activating,
         FastTradingKeyStatusUM.Revoking,
         FastTradingKeyStatusUM.Pausing,
