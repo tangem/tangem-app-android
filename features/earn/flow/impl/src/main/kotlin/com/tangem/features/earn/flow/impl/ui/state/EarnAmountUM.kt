@@ -11,12 +11,16 @@ import kotlinx.collections.immutable.ImmutableList
 /**
  * There is no fee field: the fee block is the send feature's `FeeSelectorBlockComponent`, passed to the screen
  * content directly. Fee problems arrive as [notifications], and any `NotificationUM.Error` disables [primary].
+ * [onHowItWorksClick] is `null` for a product without a "How it works" sheet.
  */
 internal data class EarnAmountUM(
     val title: TextReference,
     val amountState: AmountState,
     val clickIntents: AmountScreenClickIntents,
     val percents: ImmutableList<PredefinedPercentButtonUM>,
+    val notice: TextReference?,
     val notifications: ImmutableList<NotificationUM>,
     val primary: TangemButtonUM,
+    val onHowItWorksClick: (() -> Unit)?,
+    val isFromPosition: Boolean,
 )

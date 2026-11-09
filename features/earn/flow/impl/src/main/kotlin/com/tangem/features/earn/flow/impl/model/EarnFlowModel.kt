@@ -6,20 +6,20 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.res.R
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
 import com.tangem.features.earn.flow.impl.ui.state.EarnAmountUM
@@ -59,17 +59,19 @@ import javax.inject.Inject
  * Runs one [EarnFlowAction] of a product through its [EarnSession]: amount, confirmation and result. The flow knows
  * neither the product's transactions nor the number of signing rounds: those live in the session's `execute`.
  */
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 @ModelScoped
 internal class EarnFlowModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     sessionFactories: EarnSessionFactories,
     private val statuses: EarnFlowStatuses,
+    private val wallet: EarnFlowWallet,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val messageSender: UiMessageSender,
     private val converter: EarnFlowConverter,
     private val support: EarnFlowSupport,
+    private val links: EarnFlowLinks,
 ) : Model(), AmountScreenClickIntents {
 
     private val params: EarnFlowComponent.Params = paramsContainer.require()
@@ -97,20 +99,27 @@ internal class EarnFlowModel @Inject constructor(
             action = action,
             product = params.flowProduct,
             clickIntents = this,
-            amountCallbacks = EarnAmountCallbacks(onPercentClick = ::onPercentClick, onSubmit = ::onSubmit),
-            confirmCallbacks = EarnConfirmCallbacks(onInfoClick = ::showInfo, onConfirm = ::onConfirmClick),
-            resultCallbacks = EarnResultCallbacks(onInfoClick = ::showInfo, onExit = ::finish),
+            amountCallbacks = EarnAmountCallbacks(
+                onPercentClick = ::onPercentClick,
+                onSubmit = ::onSubmit,
+                onHowItWorksClick = ::onHowItWorksClick,
+            ),
+            confirmCallbacks = EarnConfirmCallbacks(
+                onInfoClick = ::showInfo,
+                onConfirm = ::onConfirmClick,
+                onLegalClick = links::open,
+            ),
+            resultCallbacks = EarnResultCallbacks(
+                onInfoClick = ::showInfo,
+                onExit = ::finish,
+                onExploreClick = links::open,
+                onShareClick = links::share,
+            ),
             onFeeReload = ::onFeeReload,
         )
     }
 
-    private val amountInput = EarnAmountInput(
-        clickIntents = this,
-        accountTitle = when (amountSource) {
-            EarnActionInput.Amount.Source.Position -> AccountTitleUM.Text(params.flowProduct.title)
-            else -> AccountTitleUM.Text(resourceReference(R.string.common_amount))
-        },
-    )
+    private val amountInput = EarnAmountInput(clickIntents = this)
 
     private var feeJob: Job? = null
     private var feeStatusJob: Job? = null
@@ -124,6 +133,9 @@ internal class EarnFlowModel @Inject constructor(
 
     val result: StateFlow<EarnResultUM?> = state.map(::toResultUM).stateIn(modelScope, SharingStarted.Eagerly, null)
 
+    val howItWorks: StateFlow<EarnHowItWorksUM?>
+        field = MutableStateFlow(null)
+
     init {
         if (foundSession == null) {
             TangemLogger.e("Earn flow: product ${params.flowProduct.productId} has no shared flow")
@@ -132,6 +144,16 @@ internal class EarnFlowModel @Inject constructor(
         } else {
             subscribeOnStatuses()
             if (amountSource != null) loadMaxAmount()
+            val userWallet = wallet.userWallet(params.product)
+            state.update { it.copy(walletIcon = userWallet?.let(::walletInterationIcon)) }
+            if (amountSource == EarnActionInput.Amount.Source.Wallet) loadSource(userWallet)
+        }
+    }
+
+    private fun loadSource(userWallet: UserWallet?) {
+        modelScope.launch {
+            val source = wallet.source(params.product, userWallet)
+            state.update { it.copy(source = source) }
         }
     }
 
@@ -231,6 +253,15 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     fun onFeeReload() = modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
+
+    fun onHowItWorksDismiss() {
+        howItWorks.value = null
+    }
+
+    private fun onHowItWorksClick() {
+        val content = params.flowProduct.howItWorks ?: return
+        howItWorks.value = converter.howItWorks(content, onLearnMoreClick = links::open)
+    }
 
     private fun subscribeOnStatuses() {
         statuses.currency(params.product)
@@ -350,7 +381,9 @@ internal class EarnFlowModel @Inject constructor(
                         it.copy(signing = EarnSigningState(stepLabel = step.stepLabel, isExecuting = true))
                     }
                     // A sent transaction consumed the plan: confirming again needs a fresh prepare.
-                    is EarnSigningStep.Sent -> state.update { it.copy(plan = null, planFee = null) }
+                    is EarnSigningStep.Sent -> state.update {
+                        it.copy(plan = null, planFee = null, sentAmount = it.sentAmount ?: it.plan?.expectedAmount)
+                    }
                     is EarnSigningStep.Done -> showResult(step)
                     is EarnSigningStep.Failed -> onSigningFailed(step.error)
                 }
@@ -380,7 +413,13 @@ internal class EarnFlowModel @Inject constructor(
             current.copy(
                 signing = EarnSigningState.Idle,
                 result = done.result,
+                resultTimestamp = System.currentTimeMillis(),
                 txStatus = EarnTxStatus(TxInfo.TransactionStatus.Unconfirmed),
+                explorerUrl = if (done.result.isExplorerShown) {
+                    links.explorerUrl(done.ref, params.product.currency)
+                } else {
+                    null
+                },
             )
         }
         moveTo(EarnFlowStep.Result)
