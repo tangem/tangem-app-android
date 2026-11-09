@@ -45,8 +45,8 @@ Rules of "Predictions" that the code does not make evident. Read the domain inva
 - Signing uses the `PreparedPrediction` frozen at the tap, never the live screen: nothing may requote or reload
   the position under the signature, NFC pause/resume included.
 - A quote older than 30 s at the tap is refused, as on iOS.
-- A sell's size is the whole position at on-chain precision (6 decimals), not the 2-decimal grid: the BFF quotes a
-  whole-position sale at the position's own precision.
+- The most a sell can take is the whole position at on-chain precision (6 decimals), not floored to the 2-decimal
+  grid: the BFF quotes a full close at the position's own precision, so 100 % reaches the last fraction.
 - A transport or inconclusive error does not prove rejection: never resubmit automatically, the order may already
   be live.
 - `/positions/outcome` answers `null` for several seconds after a fill, even for an outcome already held.
