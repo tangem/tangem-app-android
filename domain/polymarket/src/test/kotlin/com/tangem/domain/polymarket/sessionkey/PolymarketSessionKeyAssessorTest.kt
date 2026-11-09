@@ -280,6 +280,20 @@ internal class PolymarketSessionKeyAssessorTest {
         }
 
         @Test
+        fun `GIVEN a renewed key listed after its revoked record WHEN assess THEN the newest record decides`() {
+            // Arrange
+            val revoked = key(Owner.OTHER_DEVICE, PolymarketSessionKeyStatus.REVOKED)
+            val renewed = key(Owner.OTHER_DEVICE).copy(createdAt = NOW - Duration.ofHours(1))
+            val snapshot = snapshot(keys = listOf(revoked, renewed), signers = listOf(matching(renewed)))
+
+            // Act
+            val actual = PolymarketSessionKeyAssessor.assess(snapshot).reconciliation
+
+            // Assert
+            assertThat((actual as Checked).foreignSigners).isEmpty()
+        }
+
+        @Test
         fun `GIVEN the exchange's signers WHEN assess THEN every listed address is reported lowercased`() {
             // Arrange
             val ownFailed = key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)
