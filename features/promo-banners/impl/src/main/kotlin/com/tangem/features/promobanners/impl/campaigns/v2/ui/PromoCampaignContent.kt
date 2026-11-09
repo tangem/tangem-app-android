@@ -187,12 +187,14 @@ private fun PromoTokenSelector(state: PromoTokenSelectorUM) {
                 PromoSelectedTokenRow(
                     selectedTokenRow = selectedTokenRow,
                     selectedAccount = state.selectedAccount,
+                    isBalanceHidden = state.isBalanceHidden,
                     modifier = itemModifier.clickable(onClick = state.onClick),
                 )
             } else {
                 PromoSelectedTokenItem(
                     selectedToken = state.selectedToken,
                     selectedAccount = state.selectedAccount,
+                    isBalanceHidden = state.isBalanceHidden,
                     modifier = itemModifier.clickable(onClick = state.onClick),
                 )
             }
@@ -204,6 +206,7 @@ private fun PromoTokenSelector(state: PromoTokenSelectorUM) {
 private fun PromoSelectedTokenRow(
     selectedTokenRow: TangemTokenRow.State,
     selectedAccount: PromoSelectedAccountUM?,
+    isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -216,7 +219,7 @@ private fun PromoSelectedTokenRow(
                 ),
             )
         }
-        TangemTokenRow(state = selectedTokenRow)
+        TangemTokenRow(state = selectedTokenRow, isBalanceHidden = isBalanceHidden)
     }
 }
 
@@ -225,6 +228,7 @@ private fun PromoSelectedTokenRow(
 private fun PromoSelectedTokenItem(
     selectedToken: TokenItemState,
     selectedAccount: PromoSelectedAccountUM?,
+    isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -276,7 +280,7 @@ private fun PromoSelectedTokenItem(
 
         TokenItem(
             state = selectedToken,
-            isBalanceHidden = false,
+            isBalanceHidden = isBalanceHidden,
             itemPaddingValues = PaddingValues(horizontal = 16.dp),
         )
     }

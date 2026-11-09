@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.common.ui.tokens.TokenRowStateConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -19,6 +20,7 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -60,10 +62,12 @@ import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import java.math.BigDecimal
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -86,6 +90,8 @@ internal class PromoCampaignModelTest {
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val walletFeatureToggles: WalletFeatureToggles = mockk()
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
+    private val isBalanceHidden = MutableStateFlow(false)
 
     private val mainWallet = MockUserWalletFactory.create()
     private val linkedWallet = MockUserWalletFactory.create().copy(walletId = UserWalletId("0b"), name = "Linked")
@@ -112,7 +118,10 @@ internal class PromoCampaignModelTest {
             messageSender,
             analyticsEventHandler,
             walletFeatureToggles,
+            getBalanceHidingSettingsUseCase,
         )
+        isBalanceHidden.value = false
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHidden
         every { walletFeatureToggles.isRedesignedTokenRowsEnabled } returns false
         val bridge = mockk<ChooseTokenBridge>(relaxed = true) {
             every { onCurrencyChosen } returns this@PromoCampaignModelTest.onCurrencyChosen
@@ -196,6 +205,57 @@ internal class PromoCampaignModelTest {
         val row = model.uiState.value.tokenSelector?.selectedTokenRow
         assertThat(row).isNotNull()
         assertThat(row?.id).isEqualTo(result.currency.currency.id.value)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN redesigned token rows enabled AND euro app currency WHEN token chosen THEN row formatted in euro`() =
+        runTest {
+            // Arrange
+            every { walletFeatureToggles.isRedesignedTokenRowsEnabled } returns true
+            every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns flowOf(euro)
+            val model = createModel(isPayoutNeeded = true)
+            advanceUntilIdle()
+            model.uiState.value.tokenSelector?.onClick?.invoke()
+            val result = chooseTokenResult(value = loadedValue())
+
+            // Act
+            onCurrencyChosen.send(result)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.tokenSelector?.selectedTokenRow).isEqualTo(
+                TokenRowStateConverter(euro).convert(currencyStatus = result.currency, onClick = null),
+            )
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN balance hidden WHEN model created THEN token selector hides balance`() = runTest {
+        // Arrange
+        isBalanceHidden.value = true
+
+        // Act
+        val model = createModel(isPayoutNeeded = true)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.tokenSelector?.isBalanceHidden).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance shown WHEN balance hidden THEN token selector hides balance`() = runTest {
+        // Arrange
+        val model = createModel(isPayoutNeeded = true)
+        advanceUntilIdle()
+
+        // Act
+        isBalanceHidden.value = true
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.tokenSelector?.isBalanceHidden).isTrue()
         model.onDestroy()
     }
 
@@ -641,19 +701,34 @@ internal class PromoCampaignModelTest {
     private fun chooseTokenResult(
         wallet: UserWallet = mainWallet,
         address: String? = "0xUser",
+        value: CryptoCurrencyStatus.Value = CryptoCurrencyStatus.Unreachable(
+            priceChange = null,
+            fiatRate = null,
+            networkAddress = address?.let {
+                NetworkAddress.Single(NetworkAddress.Address(value = it, type = NetworkAddress.Address.Type.Primary))
+            },
+        ),
     ): ChooseTokenResult {
         val status = CryptoCurrencyStatus(
             currency = cryptoCurrencyFactory.createToken(blockchain = Blockchain.Ethereum, contractAddress = "0xToken"),
-            value = CryptoCurrencyStatus.Unreachable(
-                priceChange = null,
-                fiatRate = null,
-                networkAddress = address?.let {
-                    NetworkAddress.Single(NetworkAddress.Address(value = it, type = NetworkAddress.Address.Type.Primary))
-                },
-            ),
+            value = value,
         )
         return ChooseTokenResult(currency = status, account = mockk(relaxed = true), wallet = wallet)
     }
+
+    private fun loadedValue() = CryptoCurrencyStatus.Loaded(
+        amount = BigDecimal.ONE,
+        fiatAmount = BigDecimal.TEN,
+        fiatRate = BigDecimal.TEN,
+        priceChange = BigDecimal.ZERO,
+        networkAddress = NetworkAddress.Single(
+            NetworkAddress.Address(value = "0xUser", type = NetworkAddress.Address.Type.Primary),
+        ),
+        yieldSupplyStatus = null,
+        hasCurrentNetworkTransactions = false,
+        pendingTransactions = emptySet(),
+        sources = CryptoCurrencyStatus.Sources(),
+    )
 
     private fun TestScope.createModel(
         isPayoutNeeded: Boolean,
@@ -681,5 +756,11 @@ internal class PromoCampaignModelTest {
         messageSender = messageSender,
         analyticsEventHandler = analyticsEventHandler,
         walletFeatureToggles = walletFeatureToggles,
+        getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+        getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
     )
+
+    private companion object {
+        val euro = AppCurrency(code = "EUR", name = "Euro", symbol = "€")
+    }
 }
