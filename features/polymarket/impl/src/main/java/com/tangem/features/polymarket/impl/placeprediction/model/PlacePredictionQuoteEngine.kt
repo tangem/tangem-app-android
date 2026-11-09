@@ -136,6 +136,8 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private var isResumed = false
 
+    private var isResolutionDateRead = false
+
     private var isHeld = false
 
     private var isResumeSkipped = false
@@ -374,13 +376,14 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private fun loadResolutionDate(position: PolymarketPosition.Open) {
         val eventId = position.eventId ?: return
-        if (resolutionDateJobHolder.isActive) return
+        if (isResolutionDateRead || resolutionDateJobHolder.isActive) return
 
         scope.launch {
             val event = withContext(dispatchers.default) {
                 getPolymarketEventUseCase(userWalletId = params.userWalletId, eventId = eventId).getOrNull()
             } ?: return@launch
             val endInstant = event.findMarket(position)?.endInstantOrNull() ?: return@launch
+            isResolutionDateRead = true
             uiState.update(SetResolutionDateTransformer(resolutionDateMillis = endInstant.toEpochMilli()))
         }.saveIn(resolutionDateJobHolder)
     }

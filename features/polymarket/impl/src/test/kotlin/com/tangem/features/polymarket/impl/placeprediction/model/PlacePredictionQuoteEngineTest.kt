@@ -354,6 +354,37 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         }
 
     @Test
+    fun `GIVEN sell resolution date read WHEN position reloaded THEN the event is not read again`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createPolymarketEvent(
+            id = EVENT_ID,
+            markets = listOf(
+                createPolymarketMarket(
+                    id = MARKET_ID,
+                    conditionId = CONDITION_ID,
+                    eventId = EVENT_ID,
+                    endDate = "2028-11-08T04:59:00Z",
+                ),
+            ),
+        ).right()
+        val (engine, _) = createEngine(params = SELL_PARAMS)
+        advanceUntilIdle()
+
+        // Act
+        engine.holdDuring {
+            engine.onResume()
+            runCurrent()
+        }
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+        coVerify(exactly = 1) { getEventUseCase(any(), eventId = EVENT_ID) }
+
+        engine.onPause()
+    }
+
+    @Test
     fun `GIVEN sell event read fails WHEN engine starts THEN resolution date is the position day in Eastern time`() =
         runTest {
             // Arrange
