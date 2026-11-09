@@ -361,8 +361,7 @@ internal class SwapNotificationsFactory(
         val fromCurrency = fromSwapCurrency.currency
         val balanceStatus = quoteModel.preparedSwapConfigState.balanceStatus
         val insufficientFee = balanceStatus as? SwapBalanceStatus.InsufficientFee
-        val shouldShowCoverWarning = quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
-            feeCryptoCurrencyStatus.currency != fromCurrency
+        val isPermissionResolved = quoteModel.permissionState !is PermissionDataState.PermissionLoading
 
         // A DEX-typed provider whose quote returned txType=SEND executes as a CEX-style transfer,
         // so it must follow the same gasless suppression rule as a real CEX provider.
@@ -377,7 +376,7 @@ internal class SwapNotificationsFactory(
         // and must be surfaced. On networks without gasless support the warning always shows.
         val isFeeTokenUnresolved = swapFee == null &&
             isEvmGaslessFeeSupportedForNetwork(fromCurrency.network) && isCexLikeFlow
-        if (shouldShowCoverWarning && !isFeeTokenUnresolved && isNotEnoughFee) {
+        if (isPermissionResolved && !isFeeTokenUnresolved && isNotEnoughFee) {
             add(
                 if (fromCurrency.id == feeCryptoCurrencyStatus.currency.id) {
                     SwapNotificationUM.Error.InsufficientFunds
