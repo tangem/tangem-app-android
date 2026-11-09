@@ -569,6 +569,7 @@ internal class ChildFactory @Inject constructor(
                     params = AddExistingWalletComponent.Params(
                         mode = route.mode,
                         shouldSendOnboardingStarted = route.shouldSendOnboardingStarted,
+                        analyticsSource = route.analyticsSource,
                     ),
                     componentFactory = addExistingWalletComponentFactory,
                 )
