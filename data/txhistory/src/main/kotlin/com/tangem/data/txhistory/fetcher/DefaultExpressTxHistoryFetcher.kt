@@ -172,7 +172,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
         }
     }
 
-    private fun launchPulling(walletId: UserWalletId, id: ExpressOperationId): Job = fetcherScope.launch {
+    private fun launchPulling(walletId: UserWalletId, id: ExpressOperationId) = fetcherScope.launch {
         while (isActive) {
             expressHistoryRepository.refreshActiveStatuses(walletId, id)
             delay(POLL_INTERVAL)

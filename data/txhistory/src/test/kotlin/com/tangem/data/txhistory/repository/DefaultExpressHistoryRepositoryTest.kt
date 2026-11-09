@@ -22,14 +22,23 @@ import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.store.datasource.txhistory.db.dao.HistorySyncStateDao
 import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
 import com.tangem.store.datasource.txhistory.db.entity.HistoryIndexEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressProviderEntity
 import com.tangem.store.datasource.txhistory.db.entity.sync.HistorySyncStateEntity
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.express.models.ExpressAsset
+import com.tangem.domain.express.models.ExpressProviderType
+import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.blockchain.common.address.Address
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.test.mock.MockAccounts
 import com.tangem.domain.models.wallet.UserWallet
 import arrow.core.Either
 import com.tangem.grow.datasource.express.ExpressUtils
@@ -61,6 +70,8 @@ internal class DefaultExpressHistoryRepositoryTest {
     private val walletManagersFacade: WalletManagersFacade = mockk()
     private val expressUtils: ExpressUtils = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase = mockk()
 
     private val database: TxHistoryDatabase = mockk()
 
@@ -75,6 +86,8 @@ internal class DefaultExpressHistoryRepositoryTest {
         expressUtils = expressUtils,
         database = database,
         getUserWalletUseCase = getUserWalletUseCase,
+        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        manageCryptoCurrenciesUseCase = manageCryptoCurrenciesUseCase,
     )
 
     @BeforeEach
@@ -89,6 +102,8 @@ internal class DefaultExpressHistoryRepositoryTest {
             walletManagersFacade,
             expressUtils,
             getUserWalletUseCase,
+            singleAccountStatusListSupplier,
+            manageCryptoCurrenciesUseCase,
         )
         // Run the withTransaction block inline so the DAO writes inside it actually happen and can be verified.
         mockkStatic("androidx.room.RoomDatabaseKt")
@@ -447,6 +462,120 @@ internal class DefaultExpressHistoryRepositoryTest {
     }
 
     @Test
+    fun `GIVEN a refunded dex-bridge swap WHEN refreshActiveStatuses THEN the refund token is added`() = runTest {
+        // Arrange
+        val exchange = createExchangeItem(txId = ACTIVE_EXCHANGE_TX_ID)
+            .copy(status = "refunded", refundNetwork = REFUND_NETWORK, refundContractAddress = REFUND_CONTRACT)
+        stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = emptyList())
+        stubExchangeStatus(ACTIVE_EXCHANGE_TX_ID, ApiResponse.Success(exchange))
+        stubProvider(ExpressProviderType.DEX_BRIDGE)
+        stubPayInAccount()
+        coEvery { manageCryptoCurrenciesUseCase.add(any(), any(), any(), any()) } returns Either.Right(mockk())
+
+        // Act
+        repository.refreshActiveStatuses(
+            userWalletId = USER_WALLET_ID,
+            activeId = ExpressOperationId(ACTIVE_EXCHANGE_TX_ID, ExpressOperationType.Swap),
+        )
+
+        // Assert
+        coVerify(exactly = 1) {
+            manageCryptoCurrenciesUseCase.add(
+                accountId = ACCOUNT.accountId,
+                networkId = REFUND_NETWORK,
+                contractAddress = REFUND_CONTRACT,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN a refunded cex swap WHEN refreshActiveStatuses THEN no token is added`() = runTest {
+        // Arrange
+        val exchange = createExchangeItem(txId = ACTIVE_EXCHANGE_TX_ID)
+            .copy(status = "refunded", refundNetwork = REFUND_NETWORK, refundContractAddress = REFUND_CONTRACT)
+        stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = emptyList())
+        stubExchangeStatus(ACTIVE_EXCHANGE_TX_ID, ApiResponse.Success(exchange))
+        stubProvider(ExpressProviderType.CEX)
+
+        // Act
+        repository.refreshActiveStatuses(
+            userWalletId = USER_WALLET_ID,
+            activeId = ExpressOperationId(ACTIVE_EXCHANGE_TX_ID, ExpressOperationType.Swap),
+        )
+
+        // Assert
+        coVerify(exactly = 0) { manageCryptoCurrenciesUseCase.add(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a dex-bridge swap without refund WHEN refreshActiveStatuses THEN no token is added`() = runTest {
+        // Arrange
+        val exchange = createExchangeItem(txId = ACTIVE_EXCHANGE_TX_ID).copy(status = "confirming")
+        stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = emptyList())
+        stubExchangeStatus(ACTIVE_EXCHANGE_TX_ID, ApiResponse.Success(exchange))
+
+        // Act
+        repository.refreshActiveStatuses(
+            userWalletId = USER_WALLET_ID,
+            activeId = ExpressOperationId(ACTIVE_EXCHANGE_TX_ID, ExpressOperationType.Swap),
+        )
+
+        // Assert
+        coVerify(exactly = 0) { manageCryptoCurrenciesUseCase.add(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a stored pending swap WHEN the delta turns it refunded THEN the refund token is added`() = runTest {
+        // Arrange
+        val refunded = refundedExchangeItem()
+        stubDelta(refunded)
+        stubStoredExchange(refunded.copy(status = "confirming"))
+        stubProvider(ExpressProviderType.DEX_BRIDGE)
+        stubPayInAccount()
+        coEvery { manageCryptoCurrenciesUseCase.add(any(), any(), any(), any()) } returns Either.Right(mockk())
+
+        // Act
+        repository.fetchExchangeHistoryDelta(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        coVerify(exactly = 1) {
+            manageCryptoCurrenciesUseCase.add(
+                accountId = ACCOUNT.accountId,
+                networkId = REFUND_NETWORK,
+                contractAddress = REFUND_CONTRACT,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN no stored swap WHEN the delta brings a refunded one THEN no token is added`() = runTest {
+        // Arrange — the initial walk and a reinstall look like this; past refunds must not flood the portfolio.
+        val refunded = refundedExchangeItem()
+        stubDelta(refunded)
+        stubStoredExchange(stored = null)
+
+        // Act
+        repository.fetchExchangeHistoryDelta(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        coVerify(exactly = 0) { manageCryptoCurrenciesUseCase.add(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN an already refunded stored swap WHEN the delta repeats it THEN no token is added`() = runTest {
+        // Arrange
+        val refunded = refundedExchangeItem()
+        stubDelta(refunded)
+        stubStoredExchange(refunded)
+
+        // Act
+        repository.fetchExchangeHistoryDelta(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        coVerify(exactly = 0) { manageCryptoCurrenciesUseCase.add(any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN the status request fails WHEN refreshActiveStatuses THEN nothing is persisted`() = runTest {
         // Arrange
         stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = emptyList())
@@ -498,6 +627,63 @@ internal class DefaultExpressHistoryRepositoryTest {
         every { userWallet.walletId } returns USER_WALLET_ID
         every { getUserWalletUseCase(USER_WALLET_ID) } returns Either.Right(userWallet)
         coEvery { expressUtils.getRefCode(userWallet) } returns REF_CODE
+    }
+
+    private fun refundedExchangeItem() = createExchangeItem(txId = ACTIVE_EXCHANGE_TX_ID)
+        .copy(status = "refunded", refundNetwork = REFUND_NETWORK, refundContractAddress = REFUND_CONTRACT)
+
+    private fun stubDelta(vararg items: ExchangeItemResponse) {
+        stubSyncState(HistorySyncStateEntity.Type.EXCHANGE, syncState(deltaCursor = DELTA_CURSOR))
+        coEvery {
+            exchangeApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, cursor = DELTA_CURSOR, limit = any())
+        } returns ApiResponse.Success(
+            ExchangeHistoryDeltaResponse(items = items.toList(), pagination = paginationDelta()),
+        )
+    }
+
+    private fun stubStoredExchange(stored: ExchangeItemResponse?) {
+        every { expressHistoryDao.observeExchangeById(ACTIVE_EXCHANGE_TX_ID) } returns flowOf(stored?.toEntity())
+    }
+
+    private fun stubProvider(type: ExpressProviderType) {
+        val provider = ExpressProviderEntity(
+            id = PROVIDER_ID,
+            name = "provider",
+            type = type.name,
+            imageLarge = "large",
+            imageSmall = "small",
+            termsOfUse = null,
+            privacyPolicy = null,
+            isRecommended = false,
+            slippage = null,
+            isExchangeOnlyWithinSingleAddress = false,
+            isExtraIdSupported = false,
+            isCustomSlippageSupported = false,
+        )
+        every { expressHistoryDao.getProvidersById() } returns flowOf(mapOf(PROVIDER_ID to provider))
+    }
+
+    /** One portfolio account holding [CURRENCY] at [ADDRESS] — the pay-in leg the refund token follows. */
+    private fun stubPayInAccount() {
+        val networkAddress = NetworkAddress.Single(
+            defaultAddress = NetworkAddress.Address(
+                value = SWAP_FROM_ADDRESS,
+                type = NetworkAddress.Address.Type.Primary,
+            ),
+        )
+        val currencyStatus: CryptoCurrencyStatus = mockk()
+        every { currencyStatus.currency } returns CURRENCY
+        val value: CryptoCurrencyStatus.Value = mockk()
+        every { currencyStatus.value } returns value
+        every { value.networkAddress } returns networkAddress
+
+        val accountStatus: AccountStatus.Personal = mockk()
+        every { accountStatus.accountId } returns ACCOUNT.accountId
+        every { accountStatus.flattenCurrencies() } returns listOf(currencyStatus)
+
+        val list: AccountStatusList = mockk()
+        every { list.accountStatuses } returns listOf(accountStatus)
+        coEvery { singleAccountStatusListSupplier.getSyncOrNull(USER_WALLET_ID) } returns list
     }
 
     private fun stubExchangeStatus(txId: String, response: ApiResponse<ExchangeItemResponse>) {
@@ -583,6 +769,11 @@ internal class DefaultExpressHistoryRepositoryTest {
         const val REF_CODE = "ref-code"
         const val ACTIVE_EXCHANGE_TX_ID = "active-exchange-tx"
         const val ACTIVE_ONRAMP_TX_ID = "active-onramp-tx"
+        const val PROVIDER_ID = "changelly"
+        const val SWAP_FROM_ADDRESS = "0xfrom"
+        const val REFUND_NETWORK = "polygon"
+        const val REFUND_CONTRACT = "0xrefund"
+        val ACCOUNT = MockAccounts.createAccounts(count = 1).first()
         val CURRENCY = MockCryptoCurrencyFactory().ethereum
     }
 }
