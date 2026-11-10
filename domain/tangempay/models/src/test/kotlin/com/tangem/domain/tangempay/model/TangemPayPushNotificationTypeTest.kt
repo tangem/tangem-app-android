@@ -13,53 +13,62 @@ internal class TangemPayPushNotificationTypeTest {
     @ParameterizedTest
     @MethodSource("provideTypes")
     fun `GIVEN backend type value WHEN fromValue THEN resolves to the expected action`(case: TypeCase) {
-        // GIVEN
+        // Act
         val type = TangemPayPushNotificationType.fromValue(case.value)
 
-        // THEN
+        // Assert
         assertThat(type).isNotNull()
         assertThat(type?.action()).isEqualTo(case.action)
     }
 
     @Test
     fun `GIVEN all types WHEN reading values THEN every value is unique`() {
-        // GIVEN
+        // Arrange
         val typesCount = TangemPayPushNotificationType.entries.size
 
-        // THEN
-        assertThat(TangemPayPushNotificationType.all).hasSize(typesCount)
+        // Act
+        val values = TangemPayPushNotificationType.all
+
+        // Assert
+        assertThat(values).hasSize(typesCount)
     }
 
     @Test
     fun `GIVEN all types WHEN reading values THEN the whole set is covered by the test cases`() {
-        // GIVEN
+        // Arrange
         val covered = provideTypes().map { it.value }.toSet()
 
-        // THEN
-        assertThat(covered).isEqualTo(TangemPayPushNotificationType.all)
-    }
-
-    @Test
-    fun `GIVEN type in another case WHEN fromValue THEN resolves ignoring case`() {
         // Act
-        val type = TangemPayPushNotificationType.fromValue("Transaction_Spend")
+        val values = TangemPayPushNotificationType.all
 
         // Assert
-        assertThat(type).isEqualTo(TangemPayPushNotificationType.TRANSACTION_SPEND)
+        assertThat(covered).isEqualTo(values)
     }
 
-    @Test
-    fun `GIVEN unknown type WHEN fromValue THEN returns null`() {
-        // GIVEN
-        val value = TangemPayPushNotificationType.fromValue("declined_reason18")
+    @ParameterizedTest
+    @MethodSource("provideFromValueCases")
+    fun `GIVEN type in another case or unknown type WHEN fromValue THEN resolves ignoring case or returns null`(
+        case: FromValueCase,
+    ) {
+        // Act
+        val type = TangemPayPushNotificationType.fromValue(case.value)
 
-        // THEN
-        assertThat(value).isNull()
+        // Assert
+        assertThat(type).isEqualTo(case.expected)
     }
 
     internal data class TypeCase(val value: String, val action: Action) {
         override fun toString(): String = "$value -> $action"
     }
+
+    internal data class FromValueCase(val value: String, val expected: TangemPayPushNotificationType?) {
+        override fun toString(): String = "$value -> $expected"
+    }
+
+    private fun provideFromValueCases() = listOf(
+        FromValueCase("Transaction_Spend", TangemPayPushNotificationType.TRANSACTION_SPEND),
+        FromValueCase("declined_reason18", null),
+    )
 
     private fun provideTypes() = listOf(
         TypeCase("card_ready", Action.CARD_DETAILS),

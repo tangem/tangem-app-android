@@ -1,9 +1,7 @@
 package com.tangem.features.tangempay.multichain.receive
 
 import com.tangem.common.ui.extensions.networkIconResId
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.models.account.AccountStatus
@@ -15,6 +13,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -29,13 +28,11 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class PaymentReceiveModelTest {
+internal class PaymentReceiveModelTest : TangemPayModelTestBase() {
 
     private val supplier: PaymentAccountStatusSupplier = mockk()
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
 

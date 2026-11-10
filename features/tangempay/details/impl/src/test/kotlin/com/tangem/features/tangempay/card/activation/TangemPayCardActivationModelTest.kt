@@ -4,15 +4,8 @@ import androidx.annotation.StringRes
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.BottomSheetMessage
-import com.tangem.core.ui.message.EventMessage
 import com.tangem.domain.models.tangempay.TangemPayCard
 import com.tangem.domain.models.tangempay.TangemPayImage
 import com.tangem.domain.models.wallet.UserWalletId
@@ -21,6 +14,7 @@ import com.tangem.domain.tangempay.model.CardActivationOrder
 import com.tangem.domain.tangempay.usecase.ActivatePlasticCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
@@ -30,7 +24,6 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.TestScope
@@ -45,13 +38,10 @@ import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.core.ui.R as CoreUiR
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class TangemPayCardActivationModelTest {
+internal class TangemPayCardActivationModelTest : TangemPayModelTestBase() {
 
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
-    private val router: Router = mockk(relaxed = true)
     private val activatePlasticCard: ActivatePlasticCardUseCase = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
     private var model: TangemPayCardActivationModel? = null
 
@@ -401,21 +391,6 @@ internal class TangemPayCardActivationModelTest {
         // Assert
         assertThat(model.state().lastDigits).isEqualTo("8252")
         assertThat(model.state().isLoading).isTrue()
-    }
-
-    private fun lastMessageTitle(): TextReference? {
-        val slot = slot<EventMessage>()
-        verify { uiMessageSender.send(capture(slot)) }
-        return (slot.captured as BottomSheetMessage).messageBottomSheetUM.elements
-            .filterIsInstance<MessageBottomSheetUM.InfoBlock>()
-            .firstNotNullOfOrNull { it.title }
-    }
-
-    private fun closeLastMessage() {
-        val slot = slot<EventMessage>()
-        verify { uiMessageSender.send(capture(slot)) }
-        val sheet = (slot.captured as BottomSheetMessage).messageBottomSheetUM
-        sheet.elements.filterIsInstance<MessageBottomSheetUM.Button>().first().onClick?.invoke(sheet.closeScope)
     }
 
     private fun submit(model: TangemPayCardActivationModel, lastDigits: String) {
