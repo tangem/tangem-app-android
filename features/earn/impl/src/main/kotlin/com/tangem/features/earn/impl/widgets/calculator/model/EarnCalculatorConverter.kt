@@ -1,18 +1,13 @@
 package com.tangem.features.earn.impl.widgets.calculator.model
 
-import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.earn.api.overview.EarnProductRate
-import com.tangem.features.earn.impl.R
+import com.tangem.features.earn.impl.ui.toIncentiveBadge
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnCalculatorUM
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnHorizonItemUM
@@ -39,7 +34,7 @@ internal class EarnCalculatorConverter @Inject constructor() {
         onTopUpStep: (Int) -> Unit,
         onHorizonSelect: (EarnHorizon) -> Unit,
     ): EarnCalculatorUM = EarnCalculatorUM(
-        incentive = incentiveBadge(incentiveRate),
+        incentive = incentiveRate.toIncentiveBadge(),
         total = stringReference(result.total.format { fiat(appCurrency.code, appCurrency.symbol) }),
         earned = stringReference(
             StringsSigns.PLUS + result.earned.format { fiat(appCurrency.code, appCurrency.symbol) },
@@ -63,20 +58,6 @@ internal class EarnCalculatorConverter @Inject constructor() {
             onStep = onTopUpStep,
         ),
     )
-
-    /** A campaign without a reward component has nothing to announce, so a zero rate shows no badge. */
-    private fun incentiveBadge(rate: EarnProductRate?): TangemBadgeUM? {
-        val fraction = rate?.fraction?.takeIf { it.signum() > 0 } ?: return null
-
-        return TangemBadgeUM(
-            text = resourceReference(
-                id = R.string.yield_module_promo_screen_incentivised_chip,
-                formatArgs = wrappedList(fraction.format { percent(minFractionDigits = 0, canBeLower = true) }),
-            ),
-            status = TangemBadge.Status.Info,
-            size = TangemBadge.Size.X6,
-        )
-    }
 
     private fun horizonSelect(selected: EarnHorizon, onSelect: (EarnHorizon) -> Unit) = EarnHorizonSelectUM(
         selected = EarnCalculatorTexts.horizon(selected),
