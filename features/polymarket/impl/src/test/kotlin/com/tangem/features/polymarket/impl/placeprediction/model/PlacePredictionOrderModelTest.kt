@@ -1737,11 +1737,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         return model
     }
 
-    private fun createEventEndingAt(end: Instant): PolymarketEvent {
-        val event = createEvent()
-        return event.copy(markets = event.markets.map { it.copy(endDate = end.toString()) })
-    }
-
     private fun TestScope.createQuotedModel(
         params: PlacePredictionComponent.Params = BUY_PARAMS,
     ): PlacePredictionOrderModel {

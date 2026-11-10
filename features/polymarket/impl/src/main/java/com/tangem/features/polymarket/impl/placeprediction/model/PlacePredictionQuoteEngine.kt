@@ -212,7 +212,13 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         if (!state.isReadyToPlace) return null
 
         cancelQuote()
-        return PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk, positionId = positionId)
+        return PreparedPrediction(
+            params = params,
+            state = state,
+            isNegRisk = isNegRisk,
+            positionId = positionId,
+            readLiveResolutionDateMillis = { uiState.value.market.resolutionDateMillis },
+        )
     }
 
     fun requote() {
