@@ -1,17 +1,10 @@
 package com.tangem.features.onramp.redirect.ui
 
-import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,52 +13,48 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.ds2.loader.TangemLoader
-import com.tangem.core.ui.ds2.loader.TangemLoaderSize
-import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
-import com.tangem.core.ui.ds2.shimmers.TangemShimmer
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.redirect.entity.OnrampRedirectTopBarUM
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectUM
+import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 internal fun OnrampRedirectContent(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors3.bg.primary)
-            .imePadding(),
-    ) {
-        TangemTopNavigation(
-            title = state.topBarConfig.title,
-            contentAlign = TangemTopNavigation.ContentAlign.Start,
-            blurBackground = false,
-            fadeEnabled = false,
-            onClose = state.topBarConfig.startButtonUM.onClicked,
-        )
-        Content(
-            state = state,
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 16.dp),
-        )
-    }
+    Scaffold(
+        modifier = modifier.imePadding(),
+        contentWindowInsets = WindowInsetsZero,
+        containerColor = TangemTheme.colors3.bg.primary,
+        topBar = {
+            TangemTopAppBar(
+                modifier = Modifier.statusBarsPadding(),
+                startButton = state.topBarConfig.startButtonUM,
+                title = state.topBarConfig.title.resolveReference(),
+            )
+        },
+        content = { innerPadding ->
+            Content(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                state = state,
+            )
+        },
+    )
 }
 
 @Composable
 private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -73,14 +62,13 @@ private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
         Text(
             modifier = Modifier.padding(top = 24.dp),
             text = state.title.resolveReference(),
-            style = TangemTheme.typography3.heading.medium,
+            style = TangemTheme.typography.h3,
             color = TangemTheme.colors3.text.primary,
-            textAlign = TextAlign.Center,
         )
         Text(
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 12.dp),
             text = state.subtitle.resolveReference(),
-            style = TangemTheme.typography3.caption.medium,
+            style = TangemTheme.typography.body2,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
@@ -94,62 +82,56 @@ private fun LogoBlock(providerImageUrl: String, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
+        Icon(
             modifier = Modifier
-                .size(LOGO_SIZE)
-                .clip(CircleShape)
-                .background(TangemTheme.colors3.bg.secondary),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                modifier = Modifier.size(24.dp),
-                painter = painterResource(id = R.drawable.ic_tangem_24),
-                tint = TangemTheme.colors3.icon.secondary,
-                contentDescription = null,
-            )
-        }
-        TangemLoader(
-            color = TangemTheme.colors3.icon.secondary,
-            size = TangemLoaderSize.X20,
+                .size(64.dp)
+                .clip(TangemTheme.shapes.roundedCorners8)
+                .background(TangemTheme.colors3.bg.secondary)
+                .padding(vertical = 8.dp, horizontal = 12.dp),
+            painter = painterResource(id = R.drawable.ic_tangem_24),
+            tint = TangemTheme.colors3.icon.primary,
+            contentDescription = null,
         )
+        LoadingDots()
         SubcomposeAsyncImage(
             modifier = Modifier
-                .size(LOGO_SIZE)
-                .clip(CircleShape),
+                .size(size = 64.dp)
+                .clip(TangemTheme.shapes.roundedCorners8),
             model = ImageRequest.Builder(context = LocalContext.current)
                 .data(providerImageUrl)
                 .crossfade(enable = true)
                 .allowHardware(false)
                 .build(),
-            loading = {
-                ProvideTangemShimmer {
-                    TangemShimmer(modifier = Modifier.size(LOGO_SIZE), radius = LOGO_SIZE / 2)
-                }
-            },
+            loading = { RectangleShimmer(radius = 8.dp) },
             contentDescription = null,
         )
     }
 }
 
-private val LOGO_SIZE = 72.dp
-
-@Preview(widthDp = 360, heightDp = 640, showBackground = true)
-@Preview(widthDp = 360, heightDp = 640, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_OnrampRedirectContent() {
-    TangemThemePreviewRedesign {
-        OnrampRedirectContent(
-            state = OnrampRedirectUM(
-                topBarConfig = OnrampRedirectTopBarUM(
-                    title = stringReference("Buy Tether"),
-                    startButtonUM = TopAppBarButtonUM.Back(onBackClicked = {}),
-                ),
-                providerImageUrl = "",
-                title = stringReference("Redirecting to Mercuryo..."),
-                subtitle = stringReference(
-                    "You will be able to complete your transaction on the third-party provider, Mercuryo",
-                ),
-            ),
+private fun LoadingDots(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(color = TangemTheme.colors3.bg.accent.blue.copy(alpha = 0.75F)),
+        )
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(color = TangemTheme.colors3.bg.accent.blue.copy(alpha = 0.45F)),
+        )
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(color = TangemTheme.colors3.bg.accent.blue),
         )
     }
 }

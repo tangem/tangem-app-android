@@ -8,9 +8,7 @@ import androidx.compose.ui.Modifier
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import com.tangem.features.onramp.redirect.model.OnrampRedirectModel
-import com.tangem.features.onramp.redirect.ui.LegacyOnrampRedirectContent
 import com.tangem.features.onramp.redirect.ui.OnrampRedirectContent
 import com.tangem.features.onramp.success.OnrampSuccessScreenTrigger
 import dagger.assisted.Assisted
@@ -22,7 +20,6 @@ internal class DefaultOnrampRedirectComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: OnrampRedirectComponent.Params,
     private val onrampSuccessScreenTrigger: OnrampSuccessScreenTrigger,
-    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : OnrampRedirectComponent, AppComponentContext by appComponentContext {
 
     private val model: OnrampRedirectModel = getOrCreateModel(params)
@@ -43,11 +40,7 @@ internal class DefaultOnrampRedirectComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         BackHandler(onBack = params.onBack)
-        if (onrampFeatureToggles.isNewDesignSystemEnabled) {
-            OnrampRedirectContent(modifier = modifier, state = model.state)
-        } else {
-            LegacyOnrampRedirectContent(modifier = modifier, state = model.state)
-        }
+        OnrampRedirectContent(modifier = modifier, state = model.state)
 
         val isSystemInDarkTheme = isSystemInDarkTheme()
         LaunchedEffect(model.state) {
