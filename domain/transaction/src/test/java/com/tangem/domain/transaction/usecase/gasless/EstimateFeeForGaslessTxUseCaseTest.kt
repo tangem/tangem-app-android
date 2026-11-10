@@ -363,7 +363,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
             // Assert
             val feeExtended = result.getOrNull()
             assertThat(feeExtended?.feeTokenId).isEqualTo(usdc.id)
-            assertThat(feeExtended?.mainTransactionGasLimit).isEqualTo(BigInteger("140000"))
+            assertThat(feeExtended?.callGasLimits).isEqualTo(listOf(BigInteger("140000")))
             assertThat(feeExtended?.nativeFee).isEqualTo(upgradeAllowedFee)
         }
 
@@ -385,39 +385,6 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
 
         // Assert
         assertThat(result.getOrNull()?.nativeFee?.normal).isEqualTo(INITIAL_FEE)
-        coVerify(exactly = 1) {
-            walletManagersFacade.estimateFee(
-                amount = any(),
-                userWalletId = any(),
-                network = any(),
-                isYieldModuleUpgradeAllowed = any(),
-            )
-        }
-    }
-
-    @Test
-    fun `GIVEN yield send and module V3 toggle off WHEN estimate THEN fee is estimated once`() = runTest {
-        // Arrange
-        val bareFee = ethereumFee(gasLimit = 100_000L, value = "0.000004")
-        givenEstimates(bare = bareFee, wrappedAllowed = ethereumFee(gasLimit = 160_000L, value = "0.000006"))
-        givenAccountStatusList(
-            nativeBalance = BigDecimal("1"),
-            tokenBalance = SWAP_AMOUNT,
-            yieldSupplyStatus = null,
-        )
-
-        // Act
-        val result = createUseCase(isToggleEnabled = false).invoke(
-            userWallet = userWallet,
-            amount = SWAP_AMOUNT,
-            sendingTokenCurrencyStatus = tokenStatus(
-                balance = SWAP_AMOUNT,
-                yieldSupplyStatus = activeYieldStatus(effectiveProtocolBalance = SWAP_AMOUNT),
-            ),
-        )
-
-        // Assert
-        assertThat(result.getOrNull()?.nativeFee?.normal).isEqualTo(bareFee.normal)
         coVerify(exactly = 1) {
             walletManagersFacade.estimateFee(
                 amount = any(),
@@ -460,7 +427,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         ),
     )
 
-    private fun createUseCase(isToggleEnabled: Boolean = true) = EstimateFeeForGaslessTxUseCase(
+    private fun createUseCase() = EstimateFeeForGaslessTxUseCase(
         walletManagersFacade = walletManagersFacade,
         demoConfig = mockk { every { isDemoCardId(any()) } returns false },
         gaslessTransactionRepository = gaslessTransactionRepository,
@@ -470,7 +437,6 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         estimateFeeUseCase = estimateFeeUseCase,
         currencyChecksRepository = currencyChecksRepository,
         resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns isToggleEnabled },
     )
 
     private fun givenAccountStatusList(

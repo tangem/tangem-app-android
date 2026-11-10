@@ -64,6 +64,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
 import com.tangem.domain.onramp.OnrampGetDefaultCurrencyUseCase
@@ -515,7 +516,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun subscribeOnYieldSupplyBalanceIfActive(status: CryptoCurrencyStatus) {
-        if (status.value.yieldSupplyStatus?.isActive == true) {
+        if (status.value.yieldSupply?.isActive == true) {
             if (yieldSupplyBalanceJobHolder.isActive && status.value.sources.networkSource != StatusSource.ACTUAL) {
                 return
             }
@@ -1180,6 +1181,7 @@ internal class TokenDetailsModel @Inject constructor(
                                 is SendTransactionError.TangemSdkError,
                                 is SendTransactionError.DemoCardError,
                                 is SendTransactionError.GaslessFeeIncreased,
+                                is SendTransactionError.SolanaGasless,
                                 -> null
                                 is SendTransactionError.DataError -> error.message
                                 is SendTransactionError.BlockchainSdkError -> error.message
@@ -1225,6 +1227,7 @@ internal class TokenDetailsModel @Inject constructor(
                             is SendTransactionError.TangemSdkError,
                             is SendTransactionError.DemoCardError,
                             is SendTransactionError.GaslessFeeIncreased,
+                            is SendTransactionError.SolanaGasless,
                             -> null
                             is SendTransactionError.DataError -> error.message
                             is SendTransactionError.BlockchainSdkError -> error.message
@@ -1473,7 +1476,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun isActiveYieldSupply(): Boolean {
-        return cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
+        return cryptoCurrencyStatus?.value?.yieldSupply?.isActive == true
     }
 
     override fun onYieldSupplyWarningAcknowledged(tokenAction: TokenAction) {

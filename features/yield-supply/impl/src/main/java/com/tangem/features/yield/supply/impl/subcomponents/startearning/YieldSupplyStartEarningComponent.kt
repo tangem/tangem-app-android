@@ -28,7 +28,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.YieldSupplyTestTags
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeCurrencySelector
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.ui.YieldSupplyActionContent
@@ -54,6 +56,13 @@ internal class YieldSupplyStartEarningComponent(
         ),
     )
 
+    private val feeCurrencySelector = YieldSupplyFeeCurrencySelector(
+        context = this,
+        feeSelectorComponentFactory = params.feeSelectorComponentFactory,
+        createParams = model::createFeeSelectorParams,
+        onPicked = model::onFeeCurrencyPicked,
+    )
+
     init {
         model.uiState.onEach(params.callback::onResult).launchIn(componentScope)
     }
@@ -76,6 +85,7 @@ internal class YieldSupplyStartEarningComponent(
             onFooterClick = params.callback::onFeePolicyClick,
             enableFooterClick = state.yieldSupplyFeeUM is YieldSupplyFeeUM.Content,
             yieldSupplyNotificationsComponent = yieldSupplyNotificationsComponent,
+            onFeeClick = feeCurrencySelector::show,
             modifier = modifier,
         ) {
             Box(
@@ -103,6 +113,7 @@ internal class YieldSupplyStartEarningComponent(
                 )
             }
         }
+        feeCurrencySelector.BottomSheet()
     }
 
     @Composable
@@ -144,6 +155,7 @@ internal class YieldSupplyStartEarningComponent(
         val cryptoCurrency: CryptoCurrency,
         val yieldSupplyActionUM: YieldSupplyActionUM,
         val callback: ModelCallback,
+        val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
     )
 
     interface ModelCallback {

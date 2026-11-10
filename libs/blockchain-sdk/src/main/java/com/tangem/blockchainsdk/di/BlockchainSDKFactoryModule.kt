@@ -14,6 +14,7 @@ import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.DefaultBlockchainSDKFactory
 import com.tangem.blockchainsdk.WalletManagerFactoryCreator
+import com.tangem.blockchainsdk.analytics.BlockchainExceptionHandler
 import com.tangem.blockchainsdk.accountcreator.DefaultAccountCreator
 import com.tangem.blockchainsdk.datastorage.DefaultBlockchainDataStorage
 import com.tangem.blockchainsdk.providers.BlockchainProviderTypesStore
@@ -112,12 +113,14 @@ internal object BlockchainSDKFactoryModule {
         blockchainSdkConfig: BlockchainSdkConfig,
         blockchainProvidersTypesManager: BlockchainProvidersTypesManager,
         walletManagerFactoryCreator: WalletManagerFactoryCreator,
+        blockchainExceptionHandler: BlockchainExceptionHandler,
         dispatchers: CoroutineDispatcherProvider,
     ): BlockchainSDKFactory {
         return DefaultBlockchainSDKFactory(
             blockchainSdkConfig = blockchainSdkConfig,
             blockchainProvidersTypesManager = blockchainProvidersTypesManager,
             walletManagerFactoryCreator = walletManagerFactoryCreator,
+            blockchainExceptionHandler = blockchainExceptionHandler,
             dispatchers = dispatchers,
         )
     }
@@ -177,15 +180,11 @@ internal object BlockchainSDKFactoryModule {
             blockchainSDKLogger = blockchainSDKLogger,
             featureToggleValues = WalletManagerFactoryCreator.FeatureToggleValues(
                 isYieldModeSwapEnabled = true,
-                isMonadEnabled = featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.TWI_1520_MERKL_INCENTIVES_ENABLED,
-                ),
-                isYieldModuleV3Enabled = featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.AND_18834_YIELD_MODULE_V3_ENABLED,
-                ),
-                isSolanaCoreNftEnabled = featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.TWI_1822_SOLANA_PNFT_AND_METAPLEX_CORE_ENABLED,
-                ),
+                isYieldModuleV3Enabled = true,
+                isSolanaCoreNftEnabled = true,
+                isYieldBalanceSeparated = featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED,
+                ) && featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1948_YIELD_CONTRIBUTION_ENABLED),
             ),
         )
     }

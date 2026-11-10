@@ -647,6 +647,11 @@ internal class SdkTransactionTypeConverterTest {
                 recognized = TxInfo.TransactionType.YieldSupply.Enter(address = USDT_CONTRACT),
             ),
             YieldModuleCallModel(
+                methodId = ENTER_WITH_AMOUNT_METHOD_ID,
+                name = "EnterProtocolByOwner",
+                recognized = TxInfo.TransactionType.YieldSupply.Enter(address = USDT_CONTRACT),
+            ),
+            YieldModuleCallModel(
                 methodId = EXIT_METHOD_ID,
                 name = "WithdrawAndDeactivate",
                 recognized = TxInfo.TransactionType.YieldSupply.Exit(address = USDT_CONTRACT),
@@ -673,9 +678,18 @@ internal class SdkTransactionTypeConverterTest {
             ),
         )
 
-        /** Every yield-module call carries the token it acts on in its first ABI word. */
-        private fun yieldCallData(methodId: String): String =
-            methodId + USDT_CONTRACT.removePrefix("0x").padStart(WORD_HEX_LENGTH, '0')
+        /**
+         * Every yield-module call carries the token it acts on in its first ABI word; the amount-aware enter
+         * selector carries a second word for the amount.
+         */
+        private fun yieldCallData(methodId: String): String {
+            val addressWord = USDT_CONTRACT.removePrefix("0x").padStart(WORD_HEX_LENGTH, '0')
+            return if (methodId == ENTER_WITH_AMOUNT_METHOD_ID) {
+                methodId + addressWord + ZERO_WORD
+            } else {
+                methodId + addressWord
+            }
+        }
     }
 
     @Nested
@@ -751,6 +765,15 @@ internal class SdkTransactionTypeConverterTest {
                 expected = TxInfo.TransactionType.YieldSupply.Enter(address = USDT_CONTRACT),
             ),
             UpgradeToAndCallModel(
+                name = "enter with amount inside",
+                callData = upgradeToAndCallData(
+                    innerCallData = ENTER_WITH_AMOUNT_METHOD_ID +
+                        USDT_CONTRACT.removePrefix("0x").padStart(WORD_HEX_LENGTH, '0') +
+                        ZERO_WORD,
+                ),
+                expected = TxInfo.TransactionType.YieldSupply.Enter(address = USDT_CONTRACT),
+            ),
+            UpgradeToAndCallModel(
                 name = "swap inside",
                 callData = upgradeToAndCallData(innerCallData = YIELD_SWAP_METHOD_ID + ZERO_WORD),
                 expected = TxInfo.TransactionType.Swap,
@@ -773,6 +796,65 @@ internal class SdkTransactionTypeConverterTest {
                 expected = TxInfo.TransactionType.UnknownOperation,
             ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class NativeYieldModuleCall {
+
+        private val converter = createConverter(currency = currencyFactory.createCoin(Blockchain.Ethereum))
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: NativeYieldModuleCallModel) {
+            // Arrange
+            val item = item(
+                destination = singleContract(YIELD_MODULE_CONTRACT),
+                methodId = if (model.isWrappedInUpgrade) {
+                    EthereumYieldSupplyUpgradeToAndCallCallData.METHOD_ID
+                } else {
+                    model.methodId
+                },
+                callData = if (model.isWrappedInUpgrade) {
+                    upgradeToAndCallData(innerCallData = model.callData)
+                } else {
+                    model.callData
+                },
+                amount = model.amount,
+            )
+
+            // Act
+            val actual = converter.convert(item)
+
+            // Assert
+            assertThat(actual).isEqualTo(TxInfo.TransactionType.Operation(name = model.expectedName))
+        }
+
+        private fun provideTestModels() = listOf(false, true).flatMap { isWrappedInUpgrade ->
+            listOf(
+                NativeYieldModuleCallModel(
+                    methodId = ENTER_NATIVE_METHOD_ID,
+                    callData = ENTER_NATIVE_METHOD_ID,
+                    amount = BigDecimal.ONE,
+                    isWrappedInUpgrade = isWrappedInUpgrade,
+                    expectedName = "EnterProtocolByOwnerWithNative",
+                ),
+                NativeYieldModuleCallModel(
+                    methodId = WITHDRAW_NATIVE_METHOD_ID,
+                    callData = WITHDRAW_NATIVE_METHOD_ID + ZERO_WORD,
+                    amount = BigDecimal.ZERO,
+                    isWrappedInUpgrade = isWrappedInUpgrade,
+                    expectedName = "WithdrawNative",
+                ),
+                NativeYieldModuleCallModel(
+                    methodId = EXIT_NATIVE_METHOD_ID,
+                    callData = EXIT_NATIVE_METHOD_ID,
+                    amount = BigDecimal.ZERO,
+                    isWrappedInUpgrade = isWrappedInUpgrade,
+                    expectedName = "WithdrawAndDeactivateNative",
+                ),
+            )
+        }
     }
 
     @Nested
@@ -1028,6 +1110,8 @@ internal class SdkTransactionTypeConverterTest {
             APPROVE_METHOD_ID to SmartContractMethod(info = null, source = null, name = "approve"),
             TRANSFER_METHOD_ID to SmartContractMethod(info = null, source = null, name = "transfer"),
             ENTER_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "enterProtocolByOwner"),
+            ENTER_WITH_AMOUNT_METHOD_ID to
+                SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "enterProtocolByOwner"),
             EXIT_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "withdrawAndDeactivate"),
             TOPUP_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "supplyTopUp"),
             DEPLOY_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "deployYieldModule"),
@@ -1036,6 +1120,21 @@ internal class SdkTransactionTypeConverterTest {
             CLAIM_OWNER_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "claimMerklRewardsOwner"),
             CLAIM_PROCESSOR_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "claimMerklRewards"),
             YIELD_SWAP_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "swap"),
+            ENTER_NATIVE_METHOD_ID to SmartContractMethod(
+                info = YIELD_MODULE_INFO,
+                source = null,
+                name = "enterProtocolByOwnerWithNative",
+            ),
+            WITHDRAW_NATIVE_METHOD_ID to SmartContractMethod(
+                info = YIELD_MODULE_INFO,
+                source = null,
+                name = "withdrawNative",
+            ),
+            EXIT_NATIVE_METHOD_ID to SmartContractMethod(
+                info = YIELD_MODULE_INFO,
+                source = null,
+                name = "withdrawAndDeactivateNative",
+            ),
         ),
         yieldSupplyAddresses = emptySet(),
         gaslessFeeAddresses = gaslessFeeAddresses,
@@ -1099,6 +1198,14 @@ internal class SdkTransactionTypeConverterTest {
         val name: String,
         val callData: String?,
         val expected: TxInfo.TransactionType,
+    )
+
+    internal data class NativeYieldModuleCallModel(
+        val methodId: String,
+        val callData: String,
+        val amount: BigDecimal,
+        val isWrappedInUpgrade: Boolean,
+        val expectedName: String,
     )
 
     internal data class YieldModuleCallModel(
@@ -1241,6 +1348,7 @@ internal class SdkTransactionTypeConverterTest {
         const val USDT_CONTRACT = "0xdac17f958d2ee523a2206206994597c13d831ec7"
 
         const val ENTER_METHOD_ID = "0x79be55f7"
+        const val ENTER_WITH_AMOUNT_METHOD_ID = "0x3e44dfd2"
         const val EXIT_METHOD_ID = "0xc65e6dcf"
         const val TOPUP_METHOD_ID = "0xb9de6a93"
         const val DEPLOY_METHOD_ID = "0xcbeda14c"
@@ -1249,6 +1357,9 @@ internal class SdkTransactionTypeConverterTest {
         const val CLAIM_OWNER_METHOD_ID = "0xb4701e3e"
         const val CLAIM_PROCESSOR_METHOD_ID = "0xbebc896c"
         const val YIELD_SWAP_METHOD_ID = "0x4c3f521d"
+        const val ENTER_NATIVE_METHOD_ID = "0x0921ecd4"
+        const val WITHDRAW_NATIVE_METHOD_ID = "0x84276d81"
+        const val EXIT_NATIVE_METHOD_ID = "0x4423380d"
         const val NEW_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
         const val ZERO_WORD = "0000000000000000000000000000000000000000000000000000000000000000"
         const val YIELD_MODULE_CONTRACT = "0x4444444444444444444444444444444444444444"

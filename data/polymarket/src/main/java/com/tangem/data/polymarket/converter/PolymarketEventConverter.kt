@@ -74,7 +74,7 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
             imageUrl = dto.image,
             status = convertStatus(status = dto.status),
             isNegRisk = dto.isNegRisk,
-            isAcceptingOrders = dto.isAcceptingOrders != false,
+            isAcceptingOrders = dto.isAcceptingOrders == true,
             startDate = dto.startDate,
             endDate = dto.endDate,
             startDateIso = dto.startDateIso,

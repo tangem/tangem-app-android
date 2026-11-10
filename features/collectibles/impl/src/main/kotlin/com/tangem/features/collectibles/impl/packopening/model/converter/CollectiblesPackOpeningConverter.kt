@@ -3,13 +3,12 @@ package com.tangem.features.collectibles.impl.packopening.model.converter
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.collectibles.account.covers
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.OpenPackStep
 import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.features.collectibles.impl.common.formatter.formatUsd
+import com.tangem.features.collectibles.impl.common.formatter.formatUsdc
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.ButtonUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.OrderUM
@@ -54,7 +53,7 @@ internal class CollectiblesPackOpeningConverter(
                 ),
                 PriceRowUM(
                     labelRef = resourceReference(R.string.collectibles_confirm_order_total),
-                    value = total.format { crypto(cryptoCurrency = value.vaultBalance.usdcToken) },
+                    value = total.formatUsdc(minDecimals = 0),
                     isEmphasised = true,
                     hasDivider = false,
                 ),

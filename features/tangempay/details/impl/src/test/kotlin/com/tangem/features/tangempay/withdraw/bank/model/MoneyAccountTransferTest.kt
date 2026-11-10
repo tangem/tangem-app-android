@@ -316,6 +316,7 @@ internal class MoneyAccountTransferTest {
                     val value: CryptoCurrencyStatus.Value = mockk {
                         every { amount } returns null
                         every { yieldSupplyStatus } returns null
+                        every { contributions } returns emptyList()
                     }
                     coEvery { getMoneyAccountCryptoCurrencyStatusUseCase.invokeSync(userWalletId, token) } returns
                         (Account.Money(userWalletId) to CryptoCurrencyStatus(currency = token, value = value)).some()

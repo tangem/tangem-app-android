@@ -1,7 +1,9 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.BSC_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.USDC_BASE
@@ -51,6 +53,40 @@ internal class BankWithdrawOptionsFactoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(bankWithdrawOptions(sources = sources))
+    }
+
+    @Test
+    fun `GIVEN SPEI and percentage-fee rails WHEN create THEN only fixed-fee ACH and wire rails offered`() {
+        // Arrange
+        val ach = offrampDestination(rail = BankRail.ACH)
+        val wire = offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"))
+        val rails = listOf(
+            offrampDestination(rail = BankRail.SPEI),
+            ach,
+            offrampDestination(rail = BankRail.WIRE, calculationType = AccountFee.CalculationType.PERCENTAGE),
+            wire,
+        )
+        val sources = listOf(bankWithdrawSource(token = usdcPolygon))
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(rails, sources, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual).isEqualTo(bankWithdrawOptions(sources = sources, destinations = listOf(ach, wire)))
+    }
+
+    @Test
+    fun `GIVEN a SPEI rail priced in MXN first and no account currency WHEN create THEN the ACH rail currency used`() {
+        // Arrange
+        val ach = offrampDestination(rail = BankRail.ACH)
+        val rails = listOf(offrampDestination(rail = BankRail.SPEI, feeCurrency = "MXN"), ach)
+        val sources = listOf(bankWithdrawSource(token = usdcPolygon))
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(rails, sources, balanceCurrencyCode = null)
+
+        // Assert
+        assertThat(actual).isEqualTo(bankWithdrawOptions(sources = sources, destinations = listOf(ach)))
     }
 
     @ParameterizedTest
@@ -149,6 +185,14 @@ internal class BankWithdrawOptionsFactoryTest {
         NoOptionsModel(
             description = "no rail",
             destinations = emptyList(),
+            sources = listOf(bankWithdrawSource(token = usdcPolygon)),
+        ),
+        NoOptionsModel(
+            description = "only a SPEI rail and a percentage-fee rail",
+            destinations = listOf(
+                offrampDestination(rail = BankRail.SPEI),
+                offrampDestination(calculationType = AccountFee.CalculationType.PERCENTAGE),
+            ),
             sources = listOf(bankWithdrawSource(token = usdcPolygon)),
         ),
         NoOptionsModel(

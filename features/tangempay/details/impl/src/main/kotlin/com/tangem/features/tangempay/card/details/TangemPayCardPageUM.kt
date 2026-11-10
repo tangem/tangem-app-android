@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.card.details
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardState
 import com.tangem.features.tangempay.card.gpay.AddToGoogleWalletButtonState
 import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
@@ -16,6 +16,7 @@ internal data class TangemPayCardPageUM(
     val dailyLimitState: TangemPayDailyLimitBlockState,
     val addToWalletBlockState: AddToWalletBlockState? = null,
     val addToGoogleWalletButtonState: AddToGoogleWalletButtonState? = null,
+    val isAddedToGoogleWallet: Boolean = false,
     val cardState: TangemPayCardState = TangemPayCardState.Active,
     val menuItems: ImmutableList<TangemPayDropDownItemUM>,
     val delivery: TangemPayCardDeliveryUM? = null,

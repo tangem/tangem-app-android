@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.cashback.impl.model
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.pay.model.CashbackDocument
+import com.tangem.domain.tangempay.model.CashbackDocument
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackAccrualsUM
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf

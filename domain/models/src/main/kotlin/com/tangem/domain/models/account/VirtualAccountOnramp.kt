@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface VirtualAccountOnramp {
 
-    /** No VA product instance yet, but the wallet is eligible to add funds (channel `VISA_VIRTUAL_ACCOUNT`). */
+    /** No VA product instance yet, but the wallet is eligible to add funds (channel `VIRTUAL_ACCOUNT`). */
     @Serializable
     data object Eligible : VirtualAccountOnramp
 

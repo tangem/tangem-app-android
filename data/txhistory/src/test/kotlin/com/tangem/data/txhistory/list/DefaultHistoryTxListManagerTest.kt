@@ -6,6 +6,7 @@ import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.data.txhistory.list.chain.Action
 import com.tangem.data.txhistory.list.chain.BsdkOnChainHistory
 import com.tangem.data.txhistory.list.chain.IndexTableOnChainHistory
@@ -19,7 +20,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
-import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.tangempay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistorySources
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryState
 import com.tangem.domain.txhistory.list.HistoryTxListManager.OnChainSource
@@ -53,6 +54,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 /**
  * Verifies the orchestration in [DefaultHistoryTxListManager]: which on-chain backbone is chosen, availability gating,
@@ -73,6 +75,7 @@ internal class DefaultHistoryTxListManagerTest {
     private val txHistoryItemsCountUseCase = mockk<GetTxHistoryItemsCountUseCase>()
     private val analyticsExceptionHandler = mockk<AnalyticsExceptionHandler>(relaxed = true)
     private val txHistoryRepositoryV2 = mockk<TxHistoryRepositoryV2>()
+    private val networkConnectionManager = mockk<NetworkConnectionManager>()
 
     private val bsdk = mockk<BsdkOnChainHistory>(relaxed = true)
     private val tangemPay = mockk<TangemPayOnChainHistory>(relaxed = true)
@@ -91,6 +94,7 @@ internal class DefaultHistoryTxListManagerTest {
             txHistoryItemsCountUseCase,
             analyticsExceptionHandler,
             txHistoryRepositoryV2,
+            networkConnectionManager,
             bsdk,
             tangemPay,
             indexTable,
@@ -98,6 +102,7 @@ internal class DefaultHistoryTxListManagerTest {
             tangemPayFactory,
             indexTableFactory,
         )
+        every { networkConnectionManager.isOnlineSync } returns true
         every { bsdkFactory.create(any()) } returns bsdk
         every { tangemPayFactory.create(any()) } returns tangemPay
         every { indexTableFactory.create(any()) } returns indexTable
@@ -126,12 +131,15 @@ internal class DefaultHistoryTxListManagerTest {
             if (model.isMoneyAccount) (mockk<Account.Money>() to mockk<CryptoCurrencyStatus>()).some() else none()
         coEvery { paymentAccountCurrency.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns
             if (model.isPayment) (mockk<Account.Payment>() to mockk<CryptoCurrencyStatus>()).some() else none()
+        every { networkConnectionManager.isOnlineSync } returns model.isOnline
 
         // Act
-        val scope = runManager()
+        val scope = runManager(shouldUseCacheWhenOffline = model.shouldUseCacheWhenOffline)
 
         // Assert
-        verify(exactly = if (model.expected == OnChainSource.BSDK) 1 else 0) { bsdkFactory.create(any()) }
+        verify(exactly = if (model.expected == OnChainSource.BSDK) 1 else 0) {
+            bsdkFactory.create(match { it.shouldUseCacheWhenOffline == model.shouldUseCacheWhenOffline })
+        }
         verify(exactly = if (model.expected == OnChainSource.TangemPay) 1 else 0) { tangemPayFactory.create(any()) }
         verify(exactly = if (model.expected == OnChainSource.IndexTable) 1 else 0) { indexTableFactory.create(any()) }
         scope.cancel()
@@ -178,6 +186,23 @@ internal class DefaultHistoryTxListManagerTest {
             expected = OnChainSource.IndexTable,
         ),
         ResolutionModel(
+            name = "money account with tx history and offline cache",
+            isCryptoPortfolio = false,
+            isMoneyAccount = true,
+            itemsCount = 5.right(),
+            shouldUseCacheWhenOffline = true,
+            expected = OnChainSource.BSDK,
+        ),
+        ResolutionModel(
+            name = "money account offline with offline cache",
+            isCryptoPortfolio = false,
+            isMoneyAccount = true,
+            itemsCount = Either.Left(TxHistoryStateError.DataError(RuntimeException("offline"))),
+            isOnline = false,
+            shouldUseCacheWhenOffline = true,
+            expected = OnChainSource.BSDK,
+        ),
+        ResolutionModel(
             name = "payment account",
             isCryptoPortfolio = false,
             isPayment = true,
@@ -189,6 +214,33 @@ internal class DefaultHistoryTxListManagerTest {
             isPayment = false,
             expected = OnChainSource.IndexTable,
         ),
+    )
+
+    @ParameterizedTest
+    @MethodSource("provideCacheNotApplicableModels")
+    fun `GIVEN items count fails WHEN offline cache not applicable THEN Error`(model: CacheNotApplicableModel) =
+        runTest {
+            // Arrange
+            coEvery { moneyAccountCurrency.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns
+                (mockk<Account.Money>() to mockk<CryptoCurrencyStatus>()).some()
+            coEvery { txHistoryItemsCountUseCase(any(), any()) } returns
+                Either.Left(TxHistoryStateError.DataError(RuntimeException("count")))
+            every { networkConnectionManager.isOnlineSync } returns model.isOnline
+
+            // Act
+            val scope = CoroutineScope(StandardTestDispatcher(testScheduler))
+            val states = getEmittedValues(createManager(scope, model.shouldUseCacheWhenOffline).state)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(states.last()).isEqualTo(HistoryState.Error)
+            verify(exactly = 0) { bsdkFactory.create(any()) }
+            scope.cancel()
+        }
+
+    private fun provideCacheNotApplicableModels() = listOf(
+        CacheNotApplicableModel(isOnline = true, shouldUseCacheWhenOffline = true),
+        CacheNotApplicableModel(isOnline = false, shouldUseCacheWhenOffline = false),
     )
 
     // endregion
@@ -426,15 +478,18 @@ internal class DefaultHistoryTxListManagerTest {
 
     // endregion
 
-    private fun TestScope.runManager(): CoroutineScope {
+    private fun TestScope.runManager(shouldUseCacheWhenOffline: Boolean = false): CoroutineScope {
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler))
-        val manager = createManager(scope)
+        val manager = createManager(scope, shouldUseCacheWhenOffline)
         getEmittedValues(manager.state)
         advanceUntilIdle()
         return scope
     }
 
-    private fun TestScope.createManager(modelScope: CoroutineScope) = DefaultHistoryTxListManager(
+    private fun TestScope.createManager(
+        modelScope: CoroutineScope,
+        shouldUseCacheWhenOffline: Boolean = false,
+    ) = DefaultHistoryTxListManager(
         dispatchers = testDispatchers(),
         expressServiceFetcher = expressServiceFetcher,
         paymentAccountCurrency = paymentAccountCurrency,
@@ -446,9 +501,11 @@ internal class DefaultHistoryTxListManagerTest {
         tangemPayOnChainHistoryFactory = tangemPayFactory,
         indexTableOnChainHistoryFactory = indexTableFactory,
         txHistoryRepositoryV2 = txHistoryRepositoryV2,
+        networkConnectionManager = networkConnectionManager,
         userWalletId = userWalletId,
         currency = currency,
         modelScope = modelScope,
+        shouldUseCacheWhenOffline = shouldUseCacheWhenOffline,
     )
 
     private fun TestScope.testDispatchers(): CoroutineDispatcherProvider {
@@ -476,8 +533,12 @@ internal class DefaultHistoryTxListManagerTest {
         val itemsCount: Either<TxHistoryStateError, Int>? = null,
         val isMoneyAccount: Boolean = false,
         val isPayment: Boolean = false,
+        val isOnline: Boolean = true,
+        val shouldUseCacheWhenOffline: Boolean = false,
         val expected: OnChainSource,
     ) {
         override fun toString(): String = name
     }
+
+    internal data class CacheNotApplicableModel(val isOnline: Boolean, val shouldUseCacheWhenOffline: Boolean)
 }

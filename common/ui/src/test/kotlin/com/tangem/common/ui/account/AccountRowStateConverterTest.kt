@@ -3,9 +3,14 @@ package com.tangem.common.ui.account
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.ui.R
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.models.StatusSource
@@ -16,12 +21,14 @@ import com.tangem.domain.models.account.Account.Personal.Companion.createMainAcc
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -103,7 +110,11 @@ internal class AccountRowStateConverterTest {
             val actual = accountStatus.account.toAvatarState()
 
             // Assert
-            assertThat((actual as TangemAvatar.UiState.Account).color).isEqualTo(model.expected)
+            val expected = TangemAvatar.UiState.Account(
+                imageVector = CryptoPortfolioIcon.Icon.Star.toAvatarIcon(),
+                color = model.expected,
+            )
+            assertThat(actual).isEqualTo(expected)
         }
 
         private fun provideTestModels() = listOf(
@@ -178,6 +189,61 @@ internal class AccountRowStateConverterTest {
                 accountName = name,
                 icon = CryptoPortfolioIcon.ofCustomAccount(value = icon, color = CryptoPortfolioIcon.Color.Azure),
                 derivationIndex = mainAccount.derivationIndex,
+            )
+        }
+    }
+
+    @Nested
+    inner class Payment {
+
+        private val account = Account.Payment(userWalletId)
+
+        @Test
+        fun `GIVEN payment account loading WHEN convert THEN shimmer row`() {
+            // Arrange
+            val status = AccountStatus.Payment(account = account, value = PaymentAccountStatusValue.Loading)
+
+            // Act
+            val actual = converter.convert(value = status, tokensCount = 1, onClick = null)
+
+            // Assert
+            assertThat(actual).isEqualTo(TangemAccountRow.State.Shimmer(id = account.accountId.value))
+        }
+
+        @Test
+        fun `GIVEN payment account with balance WHEN convert THEN content row with tokens count`() {
+            // Arrange
+            val status = AccountStatus.Payment(account = account, value = PaymentAccountStatusValue.Empty)
+
+            // Act
+            val actual = converter.convert(value = status, tokensCount = 2, onClick = null)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                TangemAccountRow.State.Content(
+                    id = account.accountId.value,
+                    title = stringReference("Payment"),
+                    label = pluralReference(R.plurals.common_tokens_count, count = 2, formatArgs = wrappedList(2)),
+                    balance = stringReference(
+                        BigDecimal.ZERO.format {
+                            fiat(
+                                fiatCurrencyCode = AppCurrency.Default.code,
+                                fiatCurrencySymbol = AppCurrency.Default.symbol,
+                            )
+                        },
+                    ),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN payment account WHEN toAvatarState THEN Visa avatar`() {
+            // Act
+            val actual = account.toAvatarState()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                TangemAvatar.UiState.Account(kind = TangemAvatar.AccountKind.Visa),
             )
         }
     }

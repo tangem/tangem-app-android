@@ -27,8 +27,11 @@ class IsWalletAlreadySavedUseCase(
 
         val userWalletId = UserWalletIdBuilder.walletPublicKey(publicKey = masterPublicKey)
 
-        userWalletsListRepository.userWalletsSync()
-            .any { it.walletId == userWalletId }
+        val userWallets = Either.catch { userWalletsListRepository.userWalletsSync() }
+            .mapLeft { SaveWalletError.DataError(messageId = null) }
+            .bind()
+
+        userWallets.any { it.walletId == userWalletId }
     }
 
     private fun deriveMasterPublicKey(mnemonic: Mnemonic, passphrase: String?): ByteArray {

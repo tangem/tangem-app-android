@@ -2,6 +2,7 @@ package com.tangem.features.hotwallet.sociallogin
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.RecoveryKey
@@ -21,7 +22,9 @@ import com.tangem.domain.sociallogin.usecase.SignInWithSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.SignOutFromSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.WriteSocialBackupUseCase
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
+import com.tangem.domain.wallets.models.HotWalletAdditionRestriction
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
+import com.tangem.domain.wallets.usecase.GetHotWalletAdditionRestrictionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
@@ -67,6 +70,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private val exportSeedPhraseUseCase: ExportSeedPhraseUseCase,
     private val mnemonicRepository: MnemonicRepository,
     private val hotWalletImporter: HotWalletImporter,
+    private val getHotWalletAdditionRestrictionUseCase: GetHotWalletAdditionRestrictionUseCase,
     private val appCoroutineScope: AppCoroutineScope,
 ) : SocialLoginUseCase {
 
@@ -158,8 +162,14 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                     return Either.Left(error)
                 }
 
-                saveSocialWallet(userWallet) {
-                    hotWalletImporter.save(appCoroutineScope, it, isSeedPhraseBackedUp = false)
+                saveSocialWallet(userWallet) { wallet ->
+                    hotWalletImporter.save(appCoroutineScope, wallet, isSeedPhraseBackedUp = false).mapLeft { error ->
+                        if (error == HotWalletImportError.LimitReached) {
+                            SocialLoginError.HotWalletsLimitReached
+                        } else {
+                            SocialLoginError.Unknown()
+                        }
+                    }
                 }.getOrElse { return Either.Left(it) }
 
                 Either.Right(SocialLoginOutcome.WalletRestored(userWallet.walletId))
@@ -181,6 +191,15 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     ): Either<SocialLoginError, SocialLoginOutcome> {
         onStageChanged(SocialLoginStage.CreatingWallet)
 
+        val restriction = runSuspendCatching { getHotWalletAdditionRestrictionUseCase() }
+            .getOrElse { error ->
+                TangemLogger.e("Unable to check the hot wallets limit", error)
+                return Either.Left(SocialLoginError.Unknown(error))
+            }
+        if (restriction == HotWalletAdditionRestriction.LimitReached) {
+            return Either.Left(SocialLoginError.HotWalletsLimitReached)
+        }
+
         val userWallet = createHotWallet().getOrElse { return Either.Left(it) }
 
         return discardOnCancel(userWallet) {
@@ -189,7 +208,15 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                 return Either.Left(error)
             }
 
-            saveSocialWallet(userWallet) { saveWalletUseCase(it).map { } }.getOrElse { return Either.Left(it) }
+            saveSocialWallet(userWallet) { wallet ->
+                saveWalletUseCase(wallet).map { }.mapLeft { error ->
+                    if (error is SaveWalletError.HotWalletsLimitReached) {
+                        SocialLoginError.HotWalletsLimitReached
+                    } else {
+                        SocialLoginError.Unknown()
+                    }
+                }
+            }.getOrElse { return Either.Left(it) }
 
             Either.Right(SocialLoginOutcome.WalletCreated(userWallet.walletId))
         }
@@ -259,15 +286,14 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
      */
     private suspend fun saveSocialWallet(
         userWallet: UserWallet.Hot,
-        save: suspend (UserWallet.Hot) -> Either<*, Unit>,
+        save: suspend (UserWallet.Hot) -> Either<SocialLoginError, Unit>,
     ): Either<SocialLoginError, Unit> = withContext(NonCancellable) {
         // the record reaches storage before the in-memory list, which isListedWithItsKeys reads
         save(userWallet.copy(isSocialBackupCompleted = true))
     }
-        .onLeft { error -> TangemLogger.e("Failed to save the social login wallet: $error") }
-        .mapLeft {
+        .onLeft { error ->
+            TangemLogger.e("Failed to save the social login wallet: $error")
             if (!isListedWithItsKeys(userWallet)) discardFromSdk(userWallet)
-            SocialLoginError.Unknown()
         }
 
     // the same seed may have been listed meanwhile under another Hot SDK id
@@ -333,6 +359,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                 // unreachable: the list was checked above, and the import passes no passphrase
                 HotWalletImportError.AlreadySaved -> SocialLoginError.WalletAlreadySaved
                 is HotWalletImportError.PassphraseTooLong -> SocialLoginError.Unknown()
+                HotWalletImportError.LimitReached -> SocialLoginError.HotWalletsLimitReached
             }
         }
     }

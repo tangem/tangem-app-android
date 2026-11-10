@@ -3,7 +3,9 @@ package com.tangem.features.onramp.tokenlist.entity
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Token list UM
@@ -22,6 +24,8 @@ internal data class TokenListUM(
     val tokensListData: TokenListUMData,
     val isBalanceHidden: Boolean,
     val warning: NotificationUM? = null,
+    @RemoveWithToggle(toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED", description = "Drop the default")
+    val groups: ImmutableList<OnrampTokenGroupUM> = persistentListOf(),
 )
 
 internal sealed interface TokenListUMData {

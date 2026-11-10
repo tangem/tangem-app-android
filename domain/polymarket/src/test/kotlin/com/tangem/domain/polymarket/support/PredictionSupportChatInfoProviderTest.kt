@@ -6,7 +6,6 @@ import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -24,19 +23,16 @@ import java.math.BigDecimal
 internal class PredictionSupportChatInfoProviderTest {
 
     private val statusSupplier: PredictionAccountStatusSupplier = mockk()
-    private val positionsSupplier: PredictionPositionsValueSupplier = mockk()
     private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
 
     private val provider = PredictionSupportChatInfoProvider(
         predictionAccountStatusSupplier = statusSupplier,
-        predictionPositionsValueSupplier = positionsSupplier,
         derivePolymarketAddressesUseCase = deriveAddresses,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(statusSupplier, positionsSupplier, deriveAddresses)
-        every { positionsSupplier(WALLET_ID) } returns flowOf(PredictionPositionsValue.Unknown)
+        clearMocks(statusSupplier, deriveAddresses)
         coEvery { deriveAddresses.stored(WALLET_ID) } returns ADDRESSES
     }
 
@@ -44,9 +40,11 @@ internal class PredictionSupportChatInfoProviderTest {
     fun `GIVEN an active account with known positions WHEN getInfo THEN reports state, addresses and balances`() =
         runTest {
             // Arrange
-            every { statusSupplier(WALLET_ID) } returns flowOf(activeStatus(depositAddress = BRIDGE_ADDRESS))
-            every { positionsSupplier(WALLET_ID) } returns flowOf(
-                PredictionPositionsValue.Known(amount = BigDecimal("7.5"), source = StatusSource.ACTUAL),
+            every { statusSupplier(WALLET_ID) } returns flowOf(
+                activeStatus(
+                    depositAddress = BRIDGE_ADDRESS,
+                    positions = PredictionPositionsValue.Known(amount = BigDecimal("7.5"), source = StatusSource.ACTUAL),
+                ),
             )
 
             // Act
@@ -119,7 +117,6 @@ internal class PredictionSupportChatInfoProviderTest {
     fun `GIVEN the status never emits WHEN getInfo THEN the state is reported as not loaded`() = runTest {
         // Arrange
         every { statusSupplier(WALLET_ID) } returns emptyFlow()
-        every { positionsSupplier(WALLET_ID) } returns emptyFlow()
 
         // Act
         val actual = provider.getInfo(WALLET_ID)
@@ -128,12 +125,16 @@ internal class PredictionSupportChatInfoProviderTest {
         assertThat(actual).contains("Polymarket account state: [not loaded]")
     }
 
-    private fun activeStatus(depositAddress: String?) = PredictionAccountStatusValue.Active(
+    private fun activeStatus(
+        depositAddress: String?,
+        positions: PredictionPositionsValue = PredictionPositionsValue.Unknown,
+    ) = PredictionAccountStatusValue.Active(
         source = StatusSource.ACTUAL,
         balance = BigDecimal("12.5"),
         fiatRate = BigDecimal.ONE,
         depositCurrency = COLLATERAL,
         depositAddress = depositAddress,
+        positions = positions,
     )
 
     private companion object {

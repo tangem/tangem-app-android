@@ -12,62 +12,10 @@ sealed class Settings(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
-    class ScreenOpened : Settings(event = "Settings Screen Opened")
-    class ButtonStartWalletConnectSession : Settings(event = "Button - Start Wallet Connect Session")
-    class ButtonStopWalletConnectSession : Settings(event = "Button - Stop Wallet Connect Session")
-
-    sealed class CardSettings(
-        event: String,
-        params: Map<String, String> = emptyMap(),
-    ) : Settings("Settings / Card Settings", event, params) {
-
-        class ButtonFactoryReset : CardSettings("Button - Factory Reset")
-        class FactoryResetFinished(cardsCount: Int? = null) : CardSettings(
-            event = "Factory Reset Finished",
-            params = buildMap {
-                cardsCount?.let { put("Cards Count", "$it") }
-            },
-        )
-
-        class FactoryResetCanceled(cardsCount: Int) : CardSettings(
-            event = "Factory Reset Canceled",
-            params = mapOf("Cards Count" to "$cardsCount"),
-        )
-
-        class UserCodeChanged : CardSettings("User Code Changed")
-        class ButtonChangeSecurityMode : CardSettings("Button - Change Security Mode")
-
-        class ButtonChangeUserCode(type: AnalyticsParam.UserCode) : CardSettings(
-            event = "Button - Change User Code",
-            params = mapOf("Type" to type.value),
-        )
-
-        class SecurityModeChanged(mode: Mode) : CardSettings(
-            event = "Security Mode Changed",
-            params = mapOf("Mode" to mode.value),
-        ) {
-            enum class Mode(val value: String) {
-                AccessCode("Access Code"),
-                Passcode("Passcode"),
-                LongTap("Long Tap"),
-            }
-        }
-
-        class AccessCodeRecoveryChanged(status: AnalyticsParam.AccessCodeRecoveryStatus) : CardSettings(
-            event = "Access Code Recovery Changed",
-            params = mapOf(status.key to status.value),
-        )
-    }
-
     sealed class AppSettings(
         event: String,
         params: Map<String, String> = emptyMap(),
     ) : Settings(category = "Settings / App Settings", event = event, params = params) {
-
-        class SaveWalletSwitcherChanged(state: AnalyticsParam.OnOffState) : AppSettings(
-            event = "Save Wallet Switcher Changed",
-            params = mapOf("State" to state.value),
-        )
 
         class SaveAccessCodeSwitcherChanged(state: AnalyticsParam.OnOffState) : AppSettings(
             event = "Save Access Code Switcher Changed",

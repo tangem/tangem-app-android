@@ -202,10 +202,10 @@ dependencyAnalysis {
                     "org.jetbrains.kotlinx:kotlinx-coroutines-test",
                     "org.junit.jupiter:junit-jupiter",
                 )
-                // wire-runtime (protobuf) and jakarta.inject-api are deep transitives of the Visa /
-                // WalletConnect (reown) SDKs. A few generated/SDK-facing types reference them, but they're
-                // never declared directly — they always arrive with their owning SDK. Don't advise
-                // declaring them per-module.
+                // wire-runtime (protobuf) and jakarta.inject-api are deep transitives of other libraries
+                // (the blockchain SDK, OpenTelemetry disk buffering, Dagger). A few generated/SDK-facing types
+                // reference them, but they're never declared directly — they always arrive with their owning
+                // library. Don't advise declaring them per-module.
                 exclude(
                     "com.squareup.wire:wire-runtime",
                     "jakarta.inject:jakarta.inject-api",
@@ -247,6 +247,13 @@ dependencyAnalysis {
                 // provider repository). Nothing references it by type until the social login feature
                 // modules land.
                 exclude(":data:social-login")
+                // Same reason: the Earn impl modules are wired for Hilt only, nothing references them by type.
+                exclude(
+                    ":features:earn:impl",
+                    ":features:earn:flow:impl",
+                    ":features:earn:staking:impl",
+                    ":features:earn:yield:impl",
+                )
                 // CameraX is split into runtime-wired artifacts: camera-lifecycle and camera-view back
                 // the preview/ProcessCameraProvider machinery that camera2 (runtimeOnly) drives.
                 exclude(
@@ -358,14 +365,6 @@ dependencyAnalysis {
                 exclude("com.google.android.material:material")
             }
         }
-        // core:error exposes UniversalError, a supertype of VisaActivationError that card consumes via
-        // domain:visa:models. The compiler needs the supertype on the classpath, but DAGP sees no direct
-        // reference and flags it unused — false positive, keep it `implementation`.
-        project(":domain:card") {
-            onUnusedDependencies {
-                exclude(":core:error")
-            }
-        }
         // The processor tests compile source snippets that import com.tangem.core.socket with kctfork's
         // inheritClassPath, so :core:socket is needed on the test classpath without any bytecode reference.
         project(":core:socket:processor") {
@@ -385,66 +384,57 @@ interface Injected {
     val fs: FileSystemOperations
 }
 
-// Test task to run unit tests for debug/googleDebug variant (Android) and all JVM modules
+// Test task to run unit tests for debug/googleDebug variant (Android), all JVM modules and the convention plugin
 val unitTest by tasks.registering {
     group = "verification"
-    description = "Run unit tests for debug/googleDebug variant and all JVM modules"
+    description = "Run unit tests for debug/googleDebug variant, all JVM modules and the convention plugin"
+    // An included build is not a subproject, so the subprojects wiring below misses its tests
+    dependsOn(gradle.includedBuild("configuration").task(":test"))
 }
 
-// Implementation modules such as :core:datasource-impl are wired in only by :app (like a feature `impl`).
-// This guard keeps them out of every other module's dependencies, so modules keep compiling against the
-// contracts and never against an implementation.
-fun registerAppOnlyDependencyCheck(taskName: String, targets: Set<String>, contractHint: String) =
-    tasks.register(taskName) {
-        group = "verification"
-        description = "Fails if any module other than :app depends on ${targets.joinToString()}"
-        notCompatibleWithConfigurationCache("Reads the declared dependencies of every project")
+// Implementation modules wired in only by :app (like a feature `impl`), each mapped to the hint shown on a
+// violation. This guard keeps them out of every other module's dependencies, so modules keep compiling against
+// the contracts and never against an implementation.
+val appOnlyModules = mapOf(
+    ":core:datasource-impl" to "Depend on the contracts in :core:local / :core:remote instead.",
+    ":core:analytics:impl" to "Depend on the contracts in :core:analytics / :core:analytics:models instead.",
+    ":spend:push-provisioning:impl" to "Depend on :spend:push-provisioning:api instead.",
+    ":spend:push-provisioning:mock" to "Depend on :spend:push-provisioning:api instead.",
+    ":spend:push-provisioning:no-op" to "Depend on :spend:push-provisioning:api instead.",
+)
 
-        doLast {
-            val allowedDependents = setOf(":app")
+tasks.register("verifyAppOnlyModules") {
+    group = "verification"
+    description = "Fails if any module other than :app depends on ${appOnlyModules.keys.joinToString()}"
+    notCompatibleWithConfigurationCache("Reads the declared dependencies of every project")
 
-            targets.forEach { target ->
-                val offenders = rootProject.subprojects
-                    .filter { it.path !in targets && it.path !in allowedDependents }
-                    .filter { module ->
-                        module.configurations.any { configuration ->
-                            configuration.dependencies.any { dependency ->
-                                dependency is ProjectDependency && dependency.path == target
-                            }
+    doLast {
+        val violations = appOnlyModules.mapNotNull { (target, contractHint) ->
+            val offenders = rootProject.subprojects
+                .filter { it.path != target && it.path != ":app" }
+                .filter { module ->
+                    module.configurations.any { configuration ->
+                        configuration.dependencies.any { dependency ->
+                            dependency is ProjectDependency && dependency.path == target
                         }
                     }
-                    .map { it.path }
-                    .sorted()
-
-                if (offenders.isNotEmpty()) {
-                    throw GradleException(
-                        buildString {
-                            appendLine("$target is an implementation module — only :app may depend on it.")
-                            appendLine(contractHint)
-                            appendLine("Offending modules:")
-                            offenders.forEach { appendLine("  - $it") }
-                        }.trim(),
-                    )
                 }
-            }
+                .map { it.path }
+                .sorted()
+
+            if (offenders.isEmpty()) return@mapNotNull null
+
+            buildString {
+                appendLine("$target is an implementation module — only :app may depend on it.")
+                appendLine(contractHint)
+                appendLine("Offending modules:")
+                offenders.forEach { appendLine("  - $it") }
+            }.trim()
         }
+
+        if (violations.isNotEmpty()) throw GradleException(violations.joinToString(separator = "\n\n"))
     }
-
-registerAppOnlyDependencyCheck(
-    taskName = "verifyDatasourceImplIsolation",
-    targets = setOf(":core:datasource-impl"),
-    contractHint = "Depend on the contracts in :core:local / :core:remote instead.",
-)
-
-registerAppOnlyDependencyCheck(
-    taskName = "verifyPushProvisioningIsolation",
-    targets = setOf(
-        ":spend:push-provisioning:impl",
-        ":spend:push-provisioning:mock",
-        ":spend:push-provisioning:no-op",
-    ),
-    contractHint = "Depend on :spend:push-provisioning:api instead.",
-)
+}
 
 subprojects {
     // Dependency Analysis (DAGP) registers `projectHealth`/`reason` on each module. In 3.x the

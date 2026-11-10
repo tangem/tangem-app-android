@@ -22,6 +22,7 @@ import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
+import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import io.github.kakaocup.kakao.common.utilities.getResourceString
@@ -231,6 +232,29 @@ fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
             step("Assert fee amount is equal to 'Fast' fee:'$selectedFeeAmount'") {
                 onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
             }
+        }
+    }
+}
+
+fun BaseTestCase.selectGaslessSwapFeeSpeed(currentSpeed: String, newSpeed: String, selectedFeeAmount: String) {
+    step("Open the 'Network fee' bottom sheet") {
+        openSwapNetworkFeeSelector()
+    }
+    step("Open 'Choose speed' by clicking on '$currentSpeed' fee row") {
+        onSendFeeSelectorBottomSheet { feeSpeedItemTitle(currentSpeed).performClick() }
+    }
+    step("Click on '$newSpeed' item") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(newSpeed).performClick() }
+        }
+    }
+    step("Click on 'Apply' button") {
+        waitForIdle()
+        onSendFeeSelectorBottomSheet { applyButton.performClick() }
+    }
+    step("Assert fee amount is equal to '$newSpeed' fee:'$selectedFeeAmount'") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
         }
     }
 }
@@ -673,6 +697,21 @@ fun BaseTestCase.holdToConfirmTransfer() {
     waitForIdle()
 }
 
+fun BaseTestCase.holdToConfirmTransferUntilInProgress() {
+    val inProgressTitle = hasTestTag(TransactionSuccessScreenTestTags.TITLE) and
+        hasText(getResourceString(CoreUiR.string.transfer_in_progress_title))
+
+    fun isInProgressShown(): Boolean =
+        composeTestRule.onAllNodes(inProgressTitle, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+
+    var attemptsLeft = HOLD_ATTEMPTS
+    while (attemptsLeft > 0 && !isInProgressShown()) {
+        attemptsLeft--
+        runCatching { holdToConfirmTransfer() }
+        runCatching { composeTestRule.waitUntil(HOLD_CONFIRMATION_TIMEOUT) { isInProgressShown() } }
+    }
+}
+
 sealed class SwapEntryPoint {
     object MainScreen : SwapEntryPoint()
     object TokenDetails : SwapEntryPoint()
@@ -683,6 +722,27 @@ sealed class SwapEntryPoint {
 enum class FeeType {
     Market,
     Fast
+}
+
+fun BaseTestCase.clickSwapMaxAmountButton() {
+    step("Focus the amount input until 'Max' button is displayed") {
+        var isShown = false
+        onSwapTokenScreen { isShown = isMaxAmountButtonShown() }
+        var attemptsLeft = MAX_BUTTON_FOCUS_ATTEMPTS
+        while (!isShown && attemptsLeft-- > 0) {
+            onSwapTokenScreen { textInput.performClick() }
+            runCatching {
+                composeTestRule.waitUntil(KEYBOARD_OPEN_TIMEOUT_MILLIS) {
+                    onSwapTokenScreen { isShown = isMaxAmountButtonShown() }
+                    isShown
+                }
+            }
+        }
+        onSwapTokenScreen { maxAmountButton.assertIsDisplayed() }
+    }
+    step("Click on 'Max' button") {
+        onSwapTokenScreen { maxAmountButton.performClick() }
+    }
 }
 
 fun BaseTestCase.inputAmount(amount: String) {
@@ -827,3 +887,6 @@ fun BaseTestCase.checkProviderSlippageSheet(slippagePercent: String) {
         onSwapSlippageBottomSheet { providerSlippageInfo(slippagePercent).assertDoesNotExist() }
     }
 }
+
+private const val MAX_BUTTON_FOCUS_ATTEMPTS = 5
+private const val KEYBOARD_OPEN_TIMEOUT_MILLIS = 3_000L

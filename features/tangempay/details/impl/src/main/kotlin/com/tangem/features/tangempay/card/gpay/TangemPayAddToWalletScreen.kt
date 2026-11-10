@@ -26,7 +26,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.card.view.TangemPayCard
 import com.tangem.features.tangempay.card.view.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.details.impl.R

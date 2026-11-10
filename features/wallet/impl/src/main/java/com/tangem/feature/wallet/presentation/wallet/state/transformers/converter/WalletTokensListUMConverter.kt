@@ -16,18 +16,18 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
-import com.tangem.domain.models.account.filterCryptoPortfolio
-import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.account.isShown
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.isSingleCurrency
+import com.tangem.features.earn.api.overview.EarnOverviews
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
@@ -40,10 +40,12 @@ internal class WalletTokensListUMConverter(
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val isAccountsModeEnabled: Boolean,
     private val expandedAccounts: Set<AccountId>,
-    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+    private val earnOverviews: EarnOverviews,
     shouldShowMainPromo: Boolean,
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
     private val isRedesignedAccountRowsEnabled: Boolean = false,
+    @RemoveWithToggle(toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED", description = "Inline true")
+    private val isRedesignedTokenRowsEnabled: Boolean = false,
 ) : Converter<AccountStatusList, WalletTokensListUM> {
 
     private val jointAccountRowConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -76,6 +78,13 @@ internal class WalletTokensListUMConverter(
         )
     }
 
+    private val collectiblesAccountRowConverter by lazy(LazyThreadSafetyMode.NONE) {
+        WalletCollectiblesAccountItemConverter(
+            appCurrency = appCurrency,
+            onAccountClick = clickIntents::onCollectiblesAccountClick,
+        )
+    }
+
     private val yieldSupplyPromoBannerConverter by lazy(LazyThreadSafetyMode.NONE) {
         YieldSupplyPromoBannerConverter(
             yieldModuleApyMap,
@@ -83,6 +92,17 @@ internal class WalletTokensListUMConverter(
         )
     }
 
+    /**
+     * Joint and collectibles accounts carry a row of their own while they hold no tokens, so an otherwise empty
+     * wallet must not fall into the empty state and hide them
+     */
+    private val AccountStatus.isTokenlessAccountRow: Boolean
+        get() = this is AccountStatus.Joint || this is AccountStatus.Collectibles && value.isShown
+
+    @RemoveWithToggle(
+        toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED",
+        description = "Also backs legacy portfolio rows until AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED is removed",
+    )
     private fun currencyRowConverter(
         accountId: AccountId,
         shouldShowPromo: Boolean,
@@ -92,7 +112,7 @@ internal class WalletTokensListUMConverter(
             accountId = accountId,
             shouldShowPromo = shouldShowPromo,
             yieldModuleApyMap = yieldModuleApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
+            earnOverviews = earnOverviews,
             clickIntents = clickIntents,
             userWalletId = selectedWallet.walletId,
             jointPendingOperations = jointPendingOperations.filter { it.account.accountId == accountId },
@@ -105,7 +125,7 @@ internal class WalletTokensListUMConverter(
             accountId = accountId,
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldModuleApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
+            earnOverviews = earnOverviews,
             userWalletId = selectedWallet.walletId,
             jointPendingOperations = jointPendingOperations.filter { it.account.accountId == accountId },
         )
@@ -113,23 +133,24 @@ internal class WalletTokensListUMConverter(
 
     override fun convert(value: AccountStatusList): WalletTokensListUM {
         val promoCryptoCurrency = yieldSupplyPromoBannerConverter.convert2(value = value)
-        // A joint account carries a row of its own even while it holds nothing, so an otherwise empty wallet
-        // must not fall into the empty state and hide it
-        val hasJointAccount = value.accountStatuses.any { it is AccountStatus.Joint }
-        return if (value.flattenPersonalCurrencies().isEmpty() && !hasJointAccount) {
+        val hasTokenlessAccountRow = value.accountStatuses.any { it.isTokenlessAccountRow }
+
+        return if (value.flattenPersonalCurrencies().isEmpty() && !hasTokenlessAccountRow) {
             WalletTokensListUM.Empty(
                 onEmptyClick = { clickIntents.onManageTokensClick(value.mainAccount.accountId) },
             )
         } else {
-            // In the order the domain sorted the accounts: a joint account is an account, and appending its row
-            // after everything else would move it away from where its list position says it belongs
             val tokenListUM = value.accountStatuses
-                .filterCryptoPortfolio()
                 .asSequence()
                 .flatMap { accountStatus ->
                     when (accountStatus) {
                         is AccountStatus.Personal -> personalItems(accountStatus, promoCryptoCurrency)
                         is AccountStatus.Joint -> jointItems(accountStatus, promoCryptoCurrency)
+                        is AccountStatus.Collectibles -> collectiblesItems(accountStatus)
+                        is AccountStatus.Payment,
+                        is AccountStatus.Money,
+                        is AccountStatus.Prediction,
+                        -> emptySequence()
                     }
                 }.toPersistentList()
 
@@ -144,8 +165,18 @@ internal class WalletTokensListUMConverter(
         accountStatus: AccountStatus.Personal,
         promoCryptoCurrency: CryptoCurrencyStatus?,
     ): Sequence<TokensListItemUM2> {
-        if (!isAccountsModeEnabled) return getTokenListItems(accountStatus, promoCryptoCurrency)
+        if (!isAccountsModeEnabled) {
+            return if (isRedesignedTokenRowsEnabled) {
+                getTokenListItemsV2(accountStatus, promoCryptoCurrency)
+            } else {
+                getTokenListItems(accountStatus, promoCryptoCurrency)
+            }
+        }
         return sequenceOf(portfolioItem(accountStatus, promoCryptoCurrency))
+    }
+
+    private fun collectiblesItems(accountStatus: AccountStatus.Collectibles): Sequence<TokensListItemUM2> {
+        return listOfNotNull(collectiblesAccountRowConverter.convert(accountStatus)).asSequence()
     }
 
     private fun jointItems(
@@ -178,6 +209,10 @@ internal class WalletTokensListUMConverter(
         )
     }
 
+    @RemoveWithToggle(
+        toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED",
+        description = "Also backs legacy portfolio rows until AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED is removed",
+    )
     private fun getTokenListItems(
         accountStatus: AccountStatus.CryptoPortfolio,
         promoCryptoCurrency: CryptoCurrencyStatus?,

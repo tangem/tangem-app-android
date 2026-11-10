@@ -117,6 +117,19 @@ internal class PolymarketWalletBlockConverterTest {
     }
 
     @Test
+    fun `GIVEN positions that failed with nothing cached WHEN convert THEN the row shows a stale dash`() {
+        // Arrange
+        val status = active(positions = PredictionPositionsValue.Unavailable)
+
+        // Act
+        val actual = converter.convert(value = status.toAccountStatus()) as PolymarketWalletBlockUM.Content
+
+        // Assert
+        assertThat(actual.balance).isEqualTo(PolymarketWalletBlockUM.Balance.Unknown)
+        assertThat(actual.isBalanceFromCache).isTrue()
+    }
+
+    @Test
     fun `GIVEN a converted row WHEN clicked THEN the wallet of that account is opened`() {
         // Arrange
         val actual = converter.convert(value = active().toAccountStatus()) as PolymarketWalletBlockUM.Content

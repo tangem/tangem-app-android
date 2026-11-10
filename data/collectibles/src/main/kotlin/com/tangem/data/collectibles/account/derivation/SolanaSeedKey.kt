@@ -9,7 +9,7 @@ import com.tangem.domain.wallets.config.curvesConfig
  *
  * The curve comes from the wallet's own config rather than a constant — Wallet 2 keeps Solana on
  * `Ed25519Slip0010`, older cards on `Ed25519`. Deriving the owner and signing for it must read the same key, or
- * the signature would come from something other than the `cold_owner` the vault stores.
+ * the signature would come from something other than the `owner` the vault stores.
  */
 internal fun UserWallet.solanaSeedKey(): ByteArray? {
     val curve = curvesConfig.primaryCurve(Blockchain.Solana) ?: return null

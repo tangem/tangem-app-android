@@ -9,12 +9,12 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.model.MoneyAccountActivationError
-import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.visa.model.MoneyAccountActivationData
-import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
-import com.tangem.domain.visa.model.TangemPayAuthTokens
-import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.tangempay.datasource.TangemPayAuthDataSource
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.model.MoneyAccountActivationData
+import com.tangem.domain.tangempay.model.MoneyAccountDepositCredentials
+import com.tangem.domain.tangempay.model.TangemPayAuthTokens
+import com.tangem.domain.tangempay.model.TangemPayInitialCredentials
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -124,6 +124,20 @@ internal class DefaultMoneyAccountActivationRepositoryTest {
         assertThat(actual).isEqualTo(MoneyAccountActivationError.Unknown.left())
         coVerify(exactly = 0) { onboardingRepository.storeInitialCredentials(any(), any()) }
         coVerify(exactly = 0) { derivationsRepository.storeDerivedKeys(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN signed data WHEN saving it fails THEN returns persistence failed error`() = runTest {
+        // Arrange
+        coEvery { authDataSource.produceMoneyAccountData(userWallet) } returns activationData.right()
+        coEvery { derivationsRepository.storeDerivedKeys(userWalletId, derivedKeys) } throws
+            IllegalStateException("disk full")
+
+        // Act
+        val actual = repository.activateMoneyAccount(userWalletId)
+
+        // Assert
+        assertThat(actual).isEqualTo(MoneyAccountActivationError.PersistenceFailed.left())
     }
 
     @Test

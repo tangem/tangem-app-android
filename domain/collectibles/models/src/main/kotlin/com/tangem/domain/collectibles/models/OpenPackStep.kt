@@ -14,7 +14,7 @@ sealed interface OpenPackStep {
 
     data class Opened(val pack: OpenedCollectiblePack) : OpenPackStep
 
-    data class AutoBuybacked(val amount: BigDecimal) : OpenPackStep
+    data class AutoBuybacked(val amount: BigDecimal, val pack: OpenedCollectiblePack?) : OpenPackStep
 
     sealed interface Failed : OpenPackStep {
 
@@ -23,14 +23,17 @@ sealed interface OpenPackStep {
         /** Failed before the payment was sent: nothing spent. */
         data object PurchaseFailed : Failed
 
-        /** Failed once the payment was attempted: the pack may be paid for, but it is not opened. */
+        /** Opening failed for a reason a retry may fix: the pack is paid for, but it is not opened. */
         data class PackUnopened(val txId: String) : Failed
 
-        /** The payment never arrived in time, so the purchase is closed. */
-        data object Expired : Failed
+        /** The pack cannot be opened: the purchase expired or the gacha refused it, so a retry cannot help. */
+        data object OpenFailed : Failed
 
         /** The purchase was paid back instead of opened. */
         data object Refunded : Failed
+
+        /** The pack will not be opened and the payment is being returned. */
+        data object Refunding : Failed
 
         /** The purchase ended in a state this flow cannot reach, such as a sold card. */
         data object Unexpected : Failed

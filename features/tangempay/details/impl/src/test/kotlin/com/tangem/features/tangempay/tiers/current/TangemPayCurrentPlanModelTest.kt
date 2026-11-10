@@ -4,10 +4,8 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -17,21 +15,29 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
-import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.usecase.CancelTangemPayOrderUseCase
+import com.tangem.domain.tangempay.usecase.CancelTariffPlanPendingTransitionUseCase
+import com.tangem.domain.tangempay.usecase.CancelTariffTransitionUseCase
+import com.tangem.domain.tangempay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.awaitingDepositOrder
 import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.tariffPlanState
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -45,21 +51,42 @@ import org.joda.time.format.DateTimeFormat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
-internal class TangemPayCurrentPlanModelTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
 
-    private val router: Router = mockk(relaxed = true)
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase = mockk()
     private val cancelTariffTransition: CancelTariffTransitionUseCase = mockk()
+    private val cancelTangemPayOrder: CancelTangemPayOrderUseCase = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
+    private val isCustomerVerified: IsTangemPayCustomerVerifiedUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
     private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
-        clearMocks(router, cancelPendingTransition, cancelTariffTransition, uiMessageSender, analytics, urlOpener)
+        clearMocks(
+            router,
+            cancelPendingTransition,
+            cancelTariffTransition,
+            cancelTangemPayOrder,
+            moneyAccountFeatureToggles,
+            isCustomerVerified,
+            paymentAccountStatusFetcher,
+            moneyAccountStatusFetcher,
+            uiMessageSender,
+            analytics,
+            urlOpener,
+            paymentAccountStatusSupplier,
+        )
         every { paymentAccountStatusSupplier(USER_WALLET_ID) } returns emptyFlow()
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
+        coEvery { paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(USER_WALLET_ID)) } returns Unit.right()
+        coEvery { moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(USER_WALLET_ID)) } returns Unit.right()
         // DateTimeFormatters.dateMMMd resolves the locale pattern through the Android framework,
         // which is unavailable on the JVM — pin it to a fixed joda pattern instead.
         mockkObject(DateTimeFormatters)
@@ -73,10 +100,10 @@ internal class TangemPayCurrentPlanModelTest {
 
     @Test
     fun `GIVEN awaiting deposit order WHEN model created THEN notification shows cancel transition button`() {
-        // GIVEN + WHEN
+        // Act
         val model = createModel(planState = awaitingDepositState())
 
-        // THEN
+        // Assert
         val notification = model.state.value.notification
         assertThat(notification?.text).isEqualTo(
             resourceReference(
@@ -93,80 +120,66 @@ internal class TangemPayCurrentPlanModelTest {
         assertThat(notification?.button?.isProcessing).isFalse()
     }
 
-    @Test
-    fun `GIVEN awaiting deposit order WHEN model created THEN change plan button is hidden`() {
-        // GIVEN + WHEN
-        val model = createModel(planState = awaitingDepositState())
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN plan state WHEN model created THEN change plan button available only without pending changes`(
+        case: ChangePlanModel,
+    ) {
+        // Act
+        val model = createModel(planState = case.planState)
 
-        // THEN
-        assertThat(model.state.value.onChangePlanClick).isNull()
+        // Assert
+        assertThat(model.state.value.onChangePlanClick != null).isEqualTo(case.isChangePlanAvailable)
     }
 
     @Test
-    fun `GIVEN transitioning status WHEN model created THEN change plan button is hidden`() {
-        // GIVEN
-        val planState = tariffPlanState(
-            tariff = customerTariffPlan(status = TangemPayCustomerTariffPlan.Status.TRANSITIONING),
-        )
-
-        // WHEN
-        val model = createModel(planState = planState)
-
-        // THEN
-        assertThat(model.state.value.onChangePlanClick).isNull()
-    }
-
-    @Test
-    fun `GIVEN downgrade pending status WHEN model created THEN change plan button is hidden`() {
-        // GIVEN
-        val planState = tariffPlanState(
-            tariff = customerTariffPlan(
-                status = TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING,
-                pendingPlan = tariffPlan(tierId = "BASIC", isBasicTier = true),
-                nextBillingAt = NEXT_BILLING_AT,
-            ),
-        )
-
-        // WHEN
-        val model = createModel(planState = planState)
-
-        // THEN
-        assertThat(model.state.value.onChangePlanClick).isNull()
-    }
-
-    @Test
-    fun `GIVEN active plan without pending changes WHEN model created THEN change plan button is available`() {
-        // GIVEN + WHEN
+    fun `GIVEN active plan WHEN change plan clicked THEN change plan event sent from the payment account`() {
+        // Arrange
         val model = createModel(planState = tariffPlanState())
 
-        // THEN
-        assertThat(model.state.value.onChangePlanClick).isNotNull()
+        // Act
+        model.state.value.onChangePlanClick?.invoke()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Tiers.ChangePlanClicked()) }
     }
 
     @Test
     fun `GIVEN markdown link WHEN onLinkClick THEN url is opened in app`() {
-        // GIVEN
+        // Arrange
         val model = createModel(planState = tariffPlanState())
 
-        // WHEN
+        // Act
         model.state.value.onLinkClick("https://tangem.com/visa-benefits")
 
-        // THEN
+        // Assert
         verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/visa-benefits") }
     }
 
     @Test
+    fun `GIVEN markdown link to app deep link WHEN onLinkClick THEN nothing is opened`() {
+        // Arrange
+        val model = createModel(planState = tariffPlanState())
+
+        // Act
+        model.state.value.onLinkClick("tangem://wc?uri=wc:topic@2?relay-protocol=irn&symKey=secret")
+
+        // Assert
+        verify(exactly = 0) { urlOpener.openUrl(any()) }
+    }
+
+    @Test
     fun `GIVEN awaiting deposit AND next billing date WHEN model created THEN awaiting deposit notification wins`() {
-        // GIVEN
+        // Arrange
         val planState = tariffPlanState(
             tariff = customerTariffPlan(nextBillingAt = NEXT_BILLING_AT),
             order = awaitingDepositOrder(),
         )
 
-        // WHEN
+        // Act
         val model = createModel(planState = planState)
 
-        // THEN
+        // Assert
         assertThat(model.state.value.notification?.text).isEqualTo(
             resourceReference(
                 R.string.tangempay_current_plan_awaiting_deposit_notification,
@@ -177,14 +190,14 @@ internal class TangemPayCurrentPlanModelTest {
 
     @Test
     fun `GIVEN awaiting deposit WHEN cancel clicked THEN transition cancelled by order id AND analytics sent`() {
-        // GIVEN
+        // Arrange
         coEvery { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
         val model = createModel(planState = awaitingDepositState())
 
-        // WHEN
+        // Act
         model.state.value.notification?.button?.onClick?.invoke()
 
-        // THEN
+        // Assert
         coVerify(exactly = 1) { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) }
         verify(exactly = 1) {
             analytics.send(ofType<TangemPayAnalyticsEvents.Tiers.CancelPlusMoveToBasicClicked>())
@@ -194,61 +207,165 @@ internal class TangemPayCurrentPlanModelTest {
 
     @Test
     fun `GIVEN cancel fails WHEN cancel clicked THEN error message sent AND processing reset`() {
-        // GIVEN
-        coEvery { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) } returns VisaApiError.Unspecified.left()
+        // Arrange
+        coEvery { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(planState = awaitingDepositState())
 
-        // WHEN
+        // Act
         model.state.value.notification?.button?.onClick?.invoke()
 
-        // THEN
+        // Assert
         verify(exactly = 1) { uiMessageSender.send(any()) }
         assertThat(model.state.value.notification?.button?.isProcessing).isFalse()
     }
 
     @Test
     fun `GIVEN cancel in progress WHEN cancel clicked again THEN use case called once AND back is ignored`() {
-        // GIVEN
-        val pending = CompletableDeferred<Either<VisaApiError, Unit>>()
+        // Arrange
+        val pending = CompletableDeferred<Either<TangemPayApiError, Unit>>()
         coEvery { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) } coAnswers { pending.await() }
         val model = createModel(planState = awaitingDepositState())
         model.state.value.notification?.button?.onClick?.invoke()
 
-        // WHEN
+        // Act
         model.state.value.notification?.button?.onClick?.invoke()
         model.state.value.onBackClick()
 
-        // THEN
+        // Assert
         assertThat(model.state.value.notification?.button?.isProcessing).isTrue()
         coVerify(exactly = 1) { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) }
         verify(exactly = 0) { router.pop() }
     }
 
     @Test
+    fun `GIVEN money accounts AND onboarding order AND customer verified WHEN cancel clicked THEN verified opened`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
+        coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
+        coEvery { isCustomerVerified(USER_WALLET_ID) } returns true.right()
+        val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
+
+        // Act
+        model.state.value.notification?.button?.onClick?.invoke()
+
+        // Assert
+        coVerify(exactly = 1) { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) }
+        coVerify(exactly = 0) { cancelTariffTransition(any(), any()) }
+        coVerifyOrder {
+            paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(USER_WALLET_ID))
+            isCustomerVerified(USER_WALLET_ID)
+        }
+        coVerifyOrder {
+            moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+            isCustomerVerified(USER_WALLET_ID)
+        }
+        verify(exactly = 1) {
+            router.replaceAll(
+                AppRoute.Wallet,
+                AppRoute.TangemPayVerified(userWalletId = USER_WALLET_ID),
+                onComplete = any(),
+            )
+        }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN money accounts AND onboarding order AND customer not verified WHEN cancel clicked THEN no navigation`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
+        coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
+        coEvery { isCustomerVerified(USER_WALLET_ID) } returns false.right()
+        val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
+
+        // Act
+        model.state.value.notification?.button?.onClick?.invoke()
+
+        // Assert
+        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        assertThat(model.state.value.notification?.button?.isProcessing).isFalse()
+    }
+
+    @Test
+    fun `GIVEN money accounts AND onboarding order AND summary fails WHEN cancel clicked THEN wallet opened`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
+        coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
+        coEvery { isCustomerVerified(USER_WALLET_ID) } returns TangemPayApiError.Unspecified.left()
+        val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
+
+        // Act
+        model.state.value.notification?.button?.onClick?.invoke()
+
+        // Assert
+        verify(exactly = 1) { router.replaceAll(AppRoute.Wallet, onComplete = any()) }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN money accounts AND upgrade order WHEN cancel clicked THEN order cancelled AND screen kept`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
+        coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
+        val model = createModel(planState = awaitingDepositState())
+
+        // Act
+        model.state.value.notification?.button?.onClick?.invoke()
+
+        // Assert
+        coVerify(exactly = 1) { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) }
+        coVerify(exactly = 0) { isCustomerVerified(any()) }
+        coVerify(exactly = 0) { paymentAccountStatusFetcher(any<PaymentAccountStatusFetcher.Params>()) }
+        coVerify(exactly = 0) { moneyAccountStatusFetcher(any<MoneyAccountStatusFetcher.Params>()) }
+        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+        assertThat(model.state.value.notification?.button?.isProcessing).isFalse()
+    }
+
+    @Test
+    fun `GIVEN money accounts AND cancel fails WHEN cancel clicked THEN error sent AND no navigation`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
+        coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns TangemPayApiError.Unspecified.left()
+        val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
+
+        // Act
+        model.state.value.notification?.button?.onClick?.invoke()
+
+        // Assert
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+        assertThat(model.state.value.notification?.button?.isProcessing).isFalse()
+    }
+
+    @Test
     fun `GIVEN supplier emits cleared order WHEN collected THEN banner hidden AND change plan available`() {
-        // GIVEN
+        // Arrange
         val statuses = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
         every { paymentAccountStatusSupplier(USER_WALLET_ID) } returns statuses
         val model = createModel(planState = awaitingDepositState())
 
-        // WHEN
+        // Act
         statuses.tryEmit(paymentStatus(tariffPlanState()))
 
-        // THEN
+        // Assert
         assertThat(model.state.value.notification).isNull()
         assertThat(model.state.value.onChangePlanClick).isNotNull()
     }
 
     @Test
-    fun `GIVEN any plan WHEN full terms clicked THEN analytics sent AND terms link opened`() {
-        // GIVEN
+    fun `GIVEN any plan WHEN full terms clicked THEN card terms event sent AND terms link opened`() {
+        // Arrange
         val model = createModel(planState = tariffPlanState())
 
-        // WHEN
+        // Act
         model.state.value.onFullTermsClick()
 
-        // THEN
-        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.TermsAndLimitsClicked>()) }
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                TangemPayAnalyticsEvents.TermsAndLimitsClicked(product = TangemPayAnalyticsEvents.Product.CARD),
+            )
+        }
         verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(TangemPayConstants.TERMS_AND_LIMITS_URL) }) }
     }
 
@@ -263,16 +380,23 @@ internal class TangemPayCurrentPlanModelTest {
             dispatchers = TestingCoroutineDispatcherProvider(),
             router = router,
             cancelPendingTransition = cancelPendingTransition,
-            cancelTariffTransition = cancelTariffTransition,
+            cancelTariffTransitionUseCase = cancelTariffTransition,
+            cancelTangemPayOrderUseCase = cancelTangemPayOrder,
+            isTangemPayCustomerVerifiedUseCase = isCustomerVerified,
+            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+            paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
             urlOpener = urlOpener,
         )
     }
 
-    private fun awaitingDepositState(): TangemPayTariffPlanState = tariffPlanState(
-        tariff = customerTariffPlan(plan = tariffPlan(tierId = "BASIC", isBasicTier = true)),
+    private fun awaitingDepositState(
+        source: TangemPayCustomerTariffPlan.Source = TangemPayCustomerTariffPlan.Source.CUSTOMER,
+    ): TangemPayTariffPlanState = tariffPlanState(
+        tariff = customerTariffPlan(plan = tariffPlan(tierId = "BASIC", isBasicTier = true), source = source),
         order = awaitingDepositOrder(orderId = ORDER_ID),
     )
 
@@ -283,6 +407,45 @@ internal class TangemPayCurrentPlanModelTest {
         return mockk(relaxed = true) {
             every { value } returns loaded
         }
+    }
+
+    private fun provideTestModels() = listOf(
+        ChangePlanModel(
+            name = "awaiting deposit order -> hidden",
+            planState = awaitingDepositState(),
+            isChangePlanAvailable = false,
+        ),
+        ChangePlanModel(
+            name = "transitioning -> hidden",
+            planState = tariffPlanState(
+                tariff = customerTariffPlan(status = TangemPayCustomerTariffPlan.Status.TRANSITIONING),
+            ),
+            isChangePlanAvailable = false,
+        ),
+        ChangePlanModel(
+            name = "downgrade pending -> hidden",
+            planState = tariffPlanState(
+                tariff = customerTariffPlan(
+                    status = TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING,
+                    pendingPlan = tariffPlan(tierId = "BASIC", isBasicTier = true),
+                    nextBillingAt = NEXT_BILLING_AT,
+                ),
+            ),
+            isChangePlanAvailable = false,
+        ),
+        ChangePlanModel(
+            name = "active plan without pending changes -> available",
+            planState = tariffPlanState(),
+            isChangePlanAvailable = true,
+        ),
+    )
+
+    internal data class ChangePlanModel(
+        val name: String,
+        val planState: TangemPayTariffPlanState,
+        val isChangePlanAvailable: Boolean,
+    ) {
+        override fun toString(): String = name
     }
 
     private companion object {

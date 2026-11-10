@@ -3,8 +3,8 @@ package com.tangem.domain.collectibles.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
+import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test
 
 internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
 
-    private val hotDelegate: CollectiblesHotDelegate = mockk()
+    private val sessionKey: CollectiblesSessionKey = mockk()
     private val ownerDeriver: CollectiblesOwnerDeriver = mockk()
     private val gachaVaultRepository: GachaVaultRepository = mockk()
     private val accountRepository: CollectiblesAccountRepository = mockk(relaxed = true)
@@ -46,11 +46,11 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(hotDelegate, ownerDeriver, gachaVaultRepository, accountRepository, accountStatusFetcher)
+        clearMocks(sessionKey, ownerDeriver, gachaVaultRepository, accountRepository, accountStatusFetcher)
         coEvery { accountRepository.getStatusSync(any()) } returns null
         coEvery { accountRepository.saveAccount(any(), any()) } returns Unit
-        coEvery { hotDelegate.provision(any()) } returns DELEGATE.right()
-        coEvery { hotDelegate.forget(any()) } just runs
+        coEvery { sessionKey.provision(any()) } returns SESSION_KEY.right()
+        coEvery { sessionKey.forget(any()) } just runs
         coEvery { accountRepository.registerAccount(any()) } returns Unit.right()
     }
 
@@ -65,7 +65,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerify(exactly = 0) {
-            hotDelegate.provision(any())
+            sessionKey.provision(any())
             gachaVaultRepository.initOrUpdateVault(any(), any(), any())
             gachaVaultRepository.deriveOwnerAndSetUpVault(any(), any(), any())
         }
@@ -83,7 +83,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerify(exactly = 1) {
-            gachaVaultRepository.deriveOwnerAndSetUpVault(userWallet, DELEGATE, GachaVaultLimits.Default)
+            gachaVaultRepository.deriveOwnerAndSetUpVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
             accountRepository.saveAccount(WALLET_ID, ONBOARDED)
         }
         // Without the owner key there is no address to read, so nothing is decided before the tap
@@ -93,7 +93,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
     }
 
     @Test
-    fun `GIVEN a wallet WHEN invoked THEN the delegate is provisioned before the vault is touched`() = runTest {
+    fun `GIVEN a wallet WHEN invoked THEN the session key is provisioned before the vault is touched`() = runTest {
         // Arrange
         coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns null
         coEvery { gachaVaultRepository.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
@@ -104,16 +104,16 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerifyOrder {
-            hotDelegate.provision(ACCOUNT_ID)
-            gachaVaultRepository.deriveOwnerAndSetUpVault(userWallet, DELEGATE, GachaVaultLimits.Default)
+            sessionKey.provision(ACCOUNT_ID)
+            gachaVaultRepository.deriveOwnerAndSetUpVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
         }
     }
 
     @Test
     fun `GIVEN provisioning fails WHEN invoked THEN the vault is not read`() = runTest {
         // Arrange
-        val error = CollectiblesAccountError.DelegateKeyCreationFailed(IllegalStateException("keystore is locked"))
-        coEvery { hotDelegate.provision(any()) } returns error.left()
+        val error = CollectiblesAccountError.SessionKeyCreationFailed(IllegalStateException("keystore is locked"))
+        coEvery { sessionKey.provision(any()) } returns error.left()
 
         // Act
         val actual = createUseCase(testScope = this)(userWallet)
@@ -155,9 +155,9 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerifyOrder {
-                hotDelegate.forget(accountId)
-                hotDelegate.provision(accountId)
-                gachaVaultRepository.initOrUpdateVault(userWallet, DELEGATE, GachaVaultLimits.Default)
+                sessionKey.forget(accountId)
+                sessionKey.provision(accountId)
+                gachaVaultRepository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
                 accountRepository.markRelinkSent(WALLET_ID)
                 accountRepository.saveAccount(WALLET_ID, ONBOARDED)
                 accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(WALLET_ID))
@@ -190,7 +190,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
 
         // Assert
         coVerify(exactly = 0) {
-            hotDelegate.forget(any())
+            sessionKey.forget(any())
             accountRepository.markRelinkSent(any())
         }
     }
@@ -235,8 +235,8 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerifyOrder {
-                hotDelegate.provision(any())
-                gachaVaultRepository.initOrUpdateVault(userWallet, DELEGATE, any())
+                sessionKey.provision(any())
+                gachaVaultRepository.initOrUpdateVault(userWallet, SESSION_KEY, any())
                 accountRepository.registerAccount(WALLET_ID)
                 accountRepository.saveAccount(WALLET_ID, ONBOARDED)
             }
@@ -274,7 +274,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
     }
 
     private fun createUseCase(testScope: TestScope) = CreateOrReactivateCollectiblesAccountUseCase(
-        hotDelegate = hotDelegate,
+        sessionKey = sessionKey,
         ownerDeriver = ownerDeriver,
         gachaVaultRepository = gachaVaultRepository,
         accountRepository = accountRepository,
@@ -292,6 +292,6 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         val UPDATE_REQUIRED = CollectiblesAccountStatusValue.UpdateRequired(source = StatusSource.ACTUAL)
         val ACCOUNT_ID = AccountId.forCollectiblesAccount(userWalletId = WALLET_ID)
 
-        val DELEGATE = HotDelegatePublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
+        val SESSION_KEY = SessionKeyPublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
     }
 }

@@ -17,6 +17,9 @@ import com.tangem.core.ui.res.TangemTheme
 /**
  * Item with checkbox for [TangemContextMenu].
  */
+@Deprecated(
+    "Use TangemMenu.Item with isSelected inside a DS3 TangemMenu with isSelectable = true",
+)
 @Composable
 fun TangemContextMenuCheckboxItem(title: TextReference, isChecked: Boolean, onClick: () -> Unit, width: Dp = 238.dp) {
     Row(

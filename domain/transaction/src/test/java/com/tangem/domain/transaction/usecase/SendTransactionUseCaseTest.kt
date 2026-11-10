@@ -1,10 +1,9 @@
 package com.tangem.domain.transaction.usecase
 
-import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.TransactionsSendResult
@@ -13,6 +12,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.network.Network
@@ -32,6 +32,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -44,6 +45,7 @@ internal class SendTransactionUseCaseTest {
     private val transactionRepository: TransactionRepository = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk(relaxed = true)
+    private val balanceContributionsRefresher: BalanceContributionsRefresher = mockk(relaxed = true)
     private val pushNotificationsRepository: PushNotificationsRepository = mockk()
     private val signer: TransactionSigner = mockk()
     private val userWallet: UserWallet.Hot = mockk()
@@ -55,6 +57,7 @@ internal class SendTransactionUseCaseTest {
         transactionRepository = transactionRepository,
         walletManagersFacade = walletManagersFacade,
         singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+        balanceContributionsRefresher = balanceContributionsRefresher,
         parallelUpdatingScope = TestAppCoroutineScope(),
         getHotWalletSigner = { signer },
         pushNotificationsRepository = pushNotificationsRepository,
@@ -62,7 +65,7 @@ internal class SendTransactionUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(transactionRepository, pushNotificationsRepository, userWallet)
+        clearMocks(transactionRepository, pushNotificationsRepository, userWallet, balanceContributionsRefresher)
         every { userWallet.walletId } returns UserWalletId("0123456789ABCDEF")
         coEvery { pushNotificationsRepository.isNotificationsEnabled(any()) } returns false
         coEvery {
@@ -98,6 +101,42 @@ internal class SendTransactionUseCaseTest {
                 )
             }
         }
+
+    @Test
+    fun `GIVEN successful send WHEN send THEN contributions of the network are refreshed`() = runTest {
+        // Arrange
+        val txData = transactionData(mockk<EthereumYieldSupplySendCallData>())
+
+        // Act
+        useCase(txData = txData, userWallet = userWallet, network = network)
+
+        // Assert
+        coVerify(exactly = 1) {
+            balanceContributionsRefresher(userWalletId = UserWalletId("0123456789ABCDEF"), network = network)
+        }
+    }
+
+    @Test
+    fun `GIVEN failed send WHEN send THEN contributions are not refreshed`() = runTest {
+        // Arrange
+        coEvery {
+            transactionRepository.sendMultipleTransactions(
+                txsData = any(),
+                signer = any(),
+                userWalletId = any(),
+                network = any(),
+                sendMode = any(),
+            )
+        } returns Result.Failure(BlockchainSdkError.CustomError("rejected"))
+
+        val txData = transactionData(mockk<EthereumYieldSupplySendCallData>())
+
+        // Act
+        useCase(txData = txData, userWallet = userWallet, network = network)
+
+        // Assert
+        coVerify(exactly = 0) { balanceContributionsRefresher(any(), any()) }
+    }
 
     private fun provideTestModels() = listOf(
         HashReportModel(callData = mockk<EthereumYieldSupplyEnterCallData>(), expectedType = EventTransactionTypeDto.DEPOSIT),

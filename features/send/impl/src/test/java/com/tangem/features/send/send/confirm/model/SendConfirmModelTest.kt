@@ -21,8 +21,15 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.transaction.error.SendIntentError
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate.Verdict
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
+import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase.SubmitResult
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidResult
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
+import com.tangem.features.jointaccount.blockaid.JointBlockaidSheetKind
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -55,6 +62,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -175,6 +183,38 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             CheckFeeResultModel(checkResult = true, expectedSendInitiated = true),
             CheckFeeResultModel(checkResult = false, expectedSendInitiated = false),
         )
+    }
+
+    @Nested
+    inner class CheckFeeResultWithoutAmount {
+
+        @Test
+        fun `GIVEN no entered amount WHEN check reload succeeds THEN sending is switched off`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            val state = normalFeeState().copy(
+                amountUM = AmountState.Empty,
+                confirmUM = ConfirmUM.Content(
+                    isPrimaryButtonEnabled = true,
+                    walletName = mockk(relaxed = true),
+                    isSending = false,
+                    isShowTapHelp = false,
+                    sendingFooter = mockk(relaxed = true),
+                    notifications = persistentListOf(),
+                ),
+            )
+            val sut = createSendConfirmModel(this, confirmParams(state))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            val confirmUM = sut.uiState.value.confirmUM as ConfirmUM.Content
+            assertThat(confirmUM.isSending).isFalse()
+        }
     }
 
     @Nested
@@ -781,7 +821,9 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             val sut = createSendConfirmModel(this, confirmParams(normalFeeState()))
             advanceUntilIdle()
             val editedAmount = mockk<AmountState.Data>(relaxed = true)
-            val editedDestination = mockk<DestinationUM.Content>(relaxed = true)
+            val editedDestination = mockk<DestinationUM.Content>(relaxed = true) {
+                every { isInitialized } returns true
+            }
 
             // Act
             sut.updateEditedState(staleParentState(editedAmount, editedDestination))
@@ -805,7 +847,9 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             sut.updateEditedState(
                 staleParentState(
                     amountUM = mockk<AmountState.Data>(relaxed = true),
-                    destinationUM = mockk<DestinationUM.Content>(relaxed = true),
+                    destinationUM = mockk<DestinationUM.Content>(relaxed = true) {
+                        every { isInitialized } returns true
+                    },
                 ),
             )
             advanceUntilIdle()
@@ -814,6 +858,26 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // parent's Empty, which would disable the confirm blocks; the fee state must survive as is
             assertThat(sut.uiState.value.confirmUM).isInstanceOf(ConfirmUM.Content::class.java)
             assertThat(sut.uiState.value.feeSelectorUM).isEqualTo(feeSelectorUMBefore)
+        }
+
+        @Test
+        fun `GIVEN parent never saw amount or recipient WHEN updateEditedState THEN confirm keeps its own`() = runTest {
+            // Arrange: an intent opens straight on Confirm, so the parent still holds its initial empty state
+            val sut = createSendConfirmModel(this, confirmParams(normalFeeState()))
+            advanceUntilIdle()
+            val amountBefore = sut.uiState.value.amountUM
+            val destinationBefore = sut.uiState.value.destinationUM
+            val uninitializedDestination = mockk<DestinationUM.Content>(relaxed = true) {
+                every { isInitialized } returns false
+            }
+
+            // Act
+            sut.updateEditedState(staleParentState(AmountState.Empty, uninitializedDestination))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sut.uiState.value.amountUM).isEqualTo(amountBefore)
+            assertThat(sut.uiState.value.destinationUM).isEqualTo(destinationBefore)
         }
 
         private fun staleParentState(amountUM: AmountState, destinationUM: DestinationUM) = SendUM(
@@ -828,10 +892,18 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     @Nested
     inner class JointOperation {
 
+        private lateinit var blockchain: String
+
         private val jointAccount: Account.Joint = mockk(relaxed = true)
         private val storedJointAccount: JointAccount = mockk {
             every { threshold } returns 2
             every { membersCount } returns 3
+        }
+
+        @BeforeEach
+        fun stubSubmit() {
+            blockchain = testCryptoCurrency.network.name
+            coEvery { jointSendDelegate.submitOperation(any()) } returns SubmitResult.Created.right()
         }
 
         @Test
@@ -840,7 +912,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             val onSendTransaction: () -> Unit = mockk(relaxed = true)
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
-            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any()) } returns Unit.right()
+            coEvery { jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), any()) } returns prepared().right()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction))
             advanceUntilIdle()
 
@@ -864,7 +936,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             val onCloseFlow: () -> Unit = mockk(relaxed = true)
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
-            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any()) } returns Unit.right()
+            coEvery { jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), any()) } returns prepared().right()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = {}, onCloseFlow = onCloseFlow))
             advanceUntilIdle()
             sut.onSendClick()
@@ -887,8 +959,8 @@ internal class SendConfirmModelTest : SendModelTestBase() {
                 coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
                 val amountSlot = slot<BigDecimal>()
                 coEvery {
-                    jointSendDelegate.createOperation(jointAccount, any(), capture(amountSlot), any(), any())
-                } returns Unit.right()
+                    jointSendDelegate.prepareOperation(jointAccount, any(), capture(amountSlot), any(), any())
+                } returns prepared().right()
                 val params = jointConfirmParams(onSendTransaction = mockk(relaxed = true), enteredAmount = BigDecimal.ONE)
                 val sut = createSendConfirmModel(this, params)
                 advanceUntilIdle()
@@ -909,8 +981,8 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
             val amountSlot = slot<BigDecimal>()
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), capture(amountSlot), any(), any())
-            } returns Unit.right()
+                jointSendDelegate.prepareOperation(jointAccount, any(), capture(amountSlot), any(), any())
+            } returns prepared().right()
             val params = jointConfirmParams(onSendTransaction = mockk(relaxed = true), enteredAmount = BigDecimal("0.5"))
             val sut = createSendConfirmModel(this, params)
             advanceUntilIdle()
@@ -929,7 +1001,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
+                jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.SlotBusy.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -949,7 +1021,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
+                jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.AccountNotReady.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -967,7 +1039,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
+                jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.NetworkStateMoved.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -981,32 +1053,11 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
 
         @Test
-        fun `GIVEN blockaid flags the operation WHEN onSendClick THEN the dangerous transaction alert is shown`() =
-            runTest {
-                // Arrange
-                val onSendTransaction: () -> Unit = mockk(relaxed = true)
-                coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
-                coEvery {
-                    jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
-                } returns JointOperationCreateError.Malicious.left()
-                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = onSendTransaction))
-                advanceUntilIdle()
-
-                // Act
-                sut.onSendClick()
-                advanceUntilIdle()
-
-                // Assert
-                verify(exactly = 1) { sendConfirmAlertFactory.getJointMaliciousState() }
-                verify(exactly = 0) { onSendTransaction() }
-            }
-
-        @Test
         fun `GIVEN the composition mismatches WHEN onSendClick THEN the sending blocked alert is shown`() = runTest {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
+                jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.CompositionMismatch.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -1084,15 +1135,15 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), captureNullable(feeTokens))
-            } returns Unit.right()
+                jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), captureNullable(feeTokens))
+            } returns prepared().right()
         }
 
         @Test
         fun `GIVEN the operation is created WHEN onSendClick THEN send success analytics carry the composition`() =
             runTest {
                 // Arrange
-                stubCreateOperation(result = Unit.right())
+                stubCreateOperation(result = SubmitResult.Created.right())
                 val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
                 advanceUntilIdle()
 
@@ -1116,7 +1167,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         fun `GIVEN the account leaves the store after confirm WHEN created THEN success analytics are still sent`() =
             runTest {
                 // Arrange
-                stubCreateOperation(result = Unit.right())
+                stubCreateOperation(result = SubmitResult.Created.right())
                 coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returnsMany
                     listOf(storedJointAccount, null)
                 val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
@@ -1190,10 +1241,379 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountError>()) }
         }
 
-        private fun stubCreateOperation(result: Either<JointOperationCreateError, Unit>) {
+        @ParameterizedTest
+        @MethodSource("com.tangem.features.send.send.confirm.model.SendConfirmModelTest#blockaidChecks")
+        fun `GIVEN a blockaid verdict WHEN onSendClick THEN Blockaid Check carries its result`(
+            verdict: Verdict,
+            result: BlockaidResult,
+        ) = runTest {
+            // Arrange
+            stubCreateOperation(result = SubmitResult.Created.right(), verdict = verdict)
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    JointAccountAnalyticsEvent.BlockaidCheck(
+                        source = BlockaidSource.CreateOperation,
+                        result = result,
+                        blockchain = blockchain,
+                    ),
+                )
+            }
+        }
+
+        @ParameterizedTest
+        @MethodSource("com.tangem.features.send.send.confirm.model.SendConfirmModelTest#verdictsWithoutSheet")
+        fun `GIVEN a verdict without a sheet WHEN onSendClick THEN the operation is submitted and no notice is sent`(
+            verdict: Verdict,
+        ) = runTest {
+            // Arrange
+            val onSendTransaction: () -> Unit = mockk(relaxed = true)
+            stubCreateOperation(result = SubmitResult.Created.right(), verdict = verdict)
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = onSendTransaction))
+            val shown = sut.shownBlockaidSheets()
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(shown).isEmpty()
+            coVerify(exactly = 1) { jointSendDelegate.submitOperation(any()) }
+            verify(exactly = 1) { onSendTransaction() }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountAnalyticsEvent.NoticeRiskyAddress>()) }
+            verify(exactly = 0) {
+                analyticsEventHandler.send(ofType<JointAccountAnalyticsEvent.NoticeMaliciousTransaction>())
+            }
+        }
+
+        @Test
+        fun `GIVEN a warning WHEN onSendClick THEN the risky sheet is shown and Notice Risky Address is sent`() =
+            runTest {
+                // Arrange
+                stubCreateOperation(result = SubmitResult.Created.right(), verdict = Verdict.Warning)
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                val shown = sut.shownBlockaidSheets()
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(shown).containsExactly(JointBlockaidSheetKind.RISKY)
+                coVerify(exactly = 0) { jointSendDelegate.submitOperation(any()) }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        JointAccountAnalyticsEvent.NoticeRiskyAddress(
+                            source = BlockaidSource.CreateOperation,
+                            blockchain = blockchain,
+                        ),
+                    )
+                }
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountAnalyticsEvent.ButtonSignAnyway>()) }
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountError>()) }
+            }
+
+        @Test
+        fun `GIVEN malicious WHEN onSendClick THEN the malicious sheet is shown and nothing is submitted`() = runTest {
+            // Arrange
+            val onSendTransaction: () -> Unit = mockk(relaxed = true)
+            stubCreateOperation(result = SubmitResult.Created.right(), verdict = Verdict.Malicious)
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = onSendTransaction))
+            val shown = sut.shownBlockaidSheets()
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(shown).containsExactly(JointBlockaidSheetKind.MALICIOUS)
+            coVerify(exactly = 0) { jointSendDelegate.submitOperation(any()) }
+            verify(exactly = 0) { onSendTransaction() }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    JointAccountAnalyticsEvent.NoticeMaliciousTransaction(
+                        source = BlockaidSource.CreateOperation,
+                        blockchain = blockchain,
+                    ),
+                )
+            }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountAnalyticsEvent.NoticeRiskyAddress>()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountError>()) }
+        }
+
+        @Test
+        fun `GIVEN the risky sheet WHEN Create anyway is tapped THEN Sign Anyway is sent and the operation submitted`() =
+            runTest {
+                // Arrange
+                val onSendTransaction: () -> Unit = mockk(relaxed = true)
+                stubCreateOperation(result = SubmitResult.Created.right(), verdict = Verdict.Warning)
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = onSendTransaction))
+                val shown = sut.shownBlockaidSheets()
+                advanceUntilIdle()
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Act
+                sut.jointBlockaidSheetUM(JointBlockaidSheetKind.RISKY).primaryButton.onClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(shown).containsExactly(JointBlockaidSheetKind.RISKY, null).inOrder()
+                coVerify(exactly = 1) { jointSendDelegate.submitOperation(any()) }
+                verify(exactly = 1) { onSendTransaction() }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        JointAccountAnalyticsEvent.ButtonSignAnyway(
+                            source = BlockaidSource.CreateOperation,
+                            blockchain = blockchain,
+                        ),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN the risky sheet WHEN it is cancelled THEN nothing is submitted and the summary is editable`() =
+            runTest {
+                // Arrange
+                stubCreateOperation(result = SubmitResult.Created.right(), verdict = Verdict.Warning)
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                val shown = sut.shownBlockaidSheets()
+                advanceUntilIdle()
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Act
+                sut.jointBlockaidSheetUM(JointBlockaidSheetKind.RISKY).secondaryButton?.onClick?.invoke()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(shown).containsExactly(JointBlockaidSheetKind.RISKY, null).inOrder()
+                assertThat((sut.uiState.value.confirmUM as ConfirmUM.Content).isSending).isFalse()
+                coVerify(exactly = 0) { jointSendDelegate.submitOperation(any()) }
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountAnalyticsEvent.ButtonSignAnyway>()) }
+            }
+
+        @Test
+        fun `GIVEN the malicious sheet WHEN it is closed THEN nothing is submitted and the summary is editable`() =
+            runTest {
+                // Arrange
+                stubCreateOperation(result = SubmitResult.Created.right(), verdict = Verdict.Malicious)
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                val shown = sut.shownBlockaidSheets()
+                advanceUntilIdle()
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Act
+                sut.jointBlockaidSheetUM(JointBlockaidSheetKind.MALICIOUS).onClose()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(shown).containsExactly(JointBlockaidSheetKind.MALICIOUS, null).inOrder()
+                assertThat((sut.uiState.value.confirmUM as ConfirmUM.Content).isSending).isFalse()
+                coVerify(exactly = 0) { jointSendDelegate.submitOperation(any()) }
+            }
+
+        @Test
+        fun `GIVEN submit refuses a malicious operation WHEN onSendClick THEN the malicious sheet is shown`() =
+            runTest {
+                // Arrange
+                stubCreateOperation(result = JointOperationCreateError.Malicious.left())
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                val shown = sut.shownBlockaidSheets()
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(shown).containsExactly(JointBlockaidSheetKind.MALICIOUS)
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<JointAccountAnalyticsEvent.BlockaidCheck>()) }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        JointAccountAnalyticsEvent.NoticeMaliciousTransaction(
+                            source = BlockaidSource.CreateOperation,
+                            blockchain = blockchain,
+                        ),
+                    )
+                }
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountError>()) }
+            }
+
+        @Test
+        fun `GIVEN the retry rebuilt a risky payload WHEN onSendClick THEN it is checked again and the risky sheet shown`() =
+            runTest {
+                // Arrange
+                val rebuilt = prepared(verdict = Verdict.Warning)
+                stubCreateOperation(result = SubmitResult.Rebuilt(prepared = rebuilt).right())
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                val shown = sut.shownBlockaidSheets()
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(shown).containsExactly(JointBlockaidSheetKind.RISKY)
+                assertThat((sut.uiState.value.confirmUM as ConfirmUM.Content).isSending).isTrue()
+                verifyOrder {
+                    analyticsEventHandler.send(blockaidCheck(BlockaidResult.Benign))
+                    analyticsEventHandler.send(blockaidCheck(BlockaidResult.Warning))
+                }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        JointAccountAnalyticsEvent.NoticeRiskyAddress(
+                            source = BlockaidSource.CreateOperation,
+                            blockchain = blockchain,
+                        ),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN the retry rebuilt a malicious payload WHEN onSendClick THEN the malicious sheet is shown`() =
+            runTest {
+                // Arrange
+                val rebuilt = prepared(verdict = Verdict.Malicious)
+                stubCreateOperation(result = SubmitResult.Rebuilt(prepared = rebuilt).right())
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                val shown = sut.shownBlockaidSheets()
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(shown).containsExactly(JointBlockaidSheetKind.MALICIOUS)
+                coVerify(exactly = 0) { jointSendDelegate.submitOperation(rebuilt) }
+                verify(exactly = 1) { analyticsEventHandler.send(blockaidCheck(BlockaidResult.Malicious)) }
+            }
+
+        @Test
+        fun `GIVEN a shown risky sheet WHEN the component is recreated THEN the sheet is restored`() = runTest {
+            // Arrange
+            stubCreateOperation(result = SubmitResult.Created.right(), verdict = Verdict.Warning)
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+            sut.onSendClick()
+            advanceUntilIdle()
+            val restored = sut.shownBlockaidSheets()
+
+            // Act
+            sut.restoreJointBlockaidSheet()
+
+            // Assert
+            assertThat(restored).containsExactly(JointBlockaidSheetKind.RISKY)
+        }
+
+        @Test
+        fun `GIVEN a closed sheet WHEN the component is recreated THEN nothing is restored`() = runTest {
+            // Arrange
+            stubCreateOperation(result = SubmitResult.Created.right(), verdict = Verdict.Warning)
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+            sut.onSendClick()
+            advanceUntilIdle()
+            sut.jointBlockaidSheetUM(JointBlockaidSheetKind.RISKY).onClose()
+            val restored = sut.shownBlockaidSheets()
+
+            // Act
+            sut.restoreJointBlockaidSheet()
+
+            // Assert
+            assertThat(restored).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN the risky sheet after a retry WHEN Create anyway is tapped THEN the rebuilt operation is submitted`() =
+            runTest {
+                // Arrange
+                val onSendTransaction: () -> Unit = mockk(relaxed = true)
+                val rebuilt = prepared(verdict = Verdict.Warning)
+                stubCreateOperation(result = SubmitResult.Rebuilt(prepared = rebuilt).right())
+                coEvery { jointSendDelegate.submitOperation(rebuilt) } returns SubmitResult.Created.right()
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = onSendTransaction))
+                advanceUntilIdle()
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Act
+                sut.jointBlockaidSheetUM(JointBlockaidSheetKind.RISKY).primaryButton.onClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) { jointSendDelegate.submitOperation(rebuilt) }
+                verify(exactly = 1) { onSendTransaction() }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(ofType<JointAccountAnalyticsEvent.ButtonSignAnyway>())
+                }
+            }
+
+        @Test
+        fun `GIVEN the preparation fails WHEN onSendClick THEN no Blockaid event is sent`() = runTest {
+            // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
-            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any()) } returns result
+            coEvery { jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), any()) } returns
+                JointOperationCreateError.SlotBusy.left()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountAnalyticsEvent.BlockaidCheck>()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountAnalyticsEvent.NoticeRiskyAddress>()) }
+            verify(exactly = 0) {
+                analyticsEventHandler.send(ofType<JointAccountAnalyticsEvent.NoticeMaliciousTransaction>())
+            }
+        }
+
+        private fun blockaidCheck(result: BlockaidResult) = JointAccountAnalyticsEvent.BlockaidCheck(
+            source = BlockaidSource.CreateOperation,
+            result = result,
+            blockchain = blockchain,
+        )
+
+        private fun SendConfirmModel.shownBlockaidSheets(): MutableList<JointBlockaidSheetKind?> {
+            val shown = mutableListOf<JointBlockaidSheetKind?>()
+            var current: JointBlockaidSheetKind? = null
+            jointBlockaidNavigation.subscribe { event ->
+                current = event.transformer(current)
+                shown += current
+            }
+            return shown
+        }
+
+        private fun stubCreateOperation(
+            result: Either<JointOperationCreateError, SubmitResult>,
+            verdict: Verdict = Verdict.Safe,
+        ) {
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery { jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), any()) } returns
+                prepared(verdict = verdict).right()
+            coEvery { jointSendDelegate.submitOperation(any()) } returns result
+        }
+
+        private fun prepared(verdict: Verdict = Verdict.Safe): PreparedJointOperation.Creation = mockk {
+            every { this@mockk.verdict } returns verdict
+            every { account } returns this@JointOperation.jointAccount
         }
 
         /** Confirm starts empty so the model builds the real Content with the signatures itself */
@@ -1381,6 +1801,27 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     )
 
     private companion object {
+        @JvmStatic
+        fun blockaidChecks() = listOf(
+            Arguments.of(Verdict.Safe, BlockaidResult.Benign),
+            Arguments.of(Verdict.Warning, BlockaidResult.Warning),
+            Arguments.of(Verdict.Malicious, BlockaidResult.Malicious),
+            Arguments.of(Verdict.NoVerdict(Verdict.NoVerdict.Reason.ERROR), BlockaidResult.Error),
+            Arguments.of(Verdict.NoVerdict(Verdict.NoVerdict.Reason.TIMEOUT), BlockaidResult.Timeout),
+            Arguments.of(
+                Verdict.NoVerdict(Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK),
+                BlockaidResult.UnsupportedNetwork,
+            ),
+        )
+
+        @JvmStatic
+        fun verdictsWithoutSheet() = listOf(
+            Verdict.Safe,
+            Verdict.NoVerdict(Verdict.NoVerdict.Reason.ERROR),
+            Verdict.NoVerdict(Verdict.NoVerdict.Reason.TIMEOUT),
+            Verdict.NoVerdict(Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK),
+        )
+
         val TRON_BALANCE: BigDecimal = BigDecimal("24.929183")
         val TRON_GASLESS_FEE: BigDecimal = BigDecimal("2.51")
         const val DESTINATION_ADDRESS = "destinationAddr"

@@ -36,16 +36,16 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.isPredictionAccountSupported
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.domain.tokens.operations.PriceChangeCalculator
 import com.tangem.domain.tokens.operations.TokenListFactory
 import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
@@ -88,7 +88,6 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
-    private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
     private val networksRepository: NetworksRepository,
@@ -96,6 +95,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
     private val quoteStatusSupplier: MultiQuoteStatusSupplier,
     private val balanceContributionProviders: Set<@JvmSuppressWildcards BalanceContributionProvider>,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) : SingleAccountStatusListProducer {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -309,7 +309,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     }
 
     private fun predictionStatusFlow(userWallet: UserWallet): Flow<PredictionAccountStatusValue> {
-        if (!polymarketFeatureToggles.isPolymarketEnabled || !userWallet.isPredictionAccountSupported) {
+        if (!userWallet.isPredictionAccountSupported) {
             return flowOf(PredictionAccountStatusValue.Error.Unavailable)
         }
 
@@ -429,6 +429,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     }
 
     private fun Box.toCurrencyStatuses(): Map<AccountCurrencyId, CryptoCurrencyStatus> {
+        val isYieldContributionEnabled = tokensFeatureToggles.isYieldContributionEnabled
+
         return flattenCurrencyMap.mapValues { (acId: AccountCurrencyId, currency) ->
             val (_, id) = acId
             val networkStatus: NetworkStatus? = networkStatusMap[currency.network.id]
@@ -442,6 +444,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 maybeNetworkStatus = networkStatus.toOption(),
                 maybeQuoteStatus = quoteStatus.toOption(),
                 contributions = contributions,
+                isYieldContributionEnabled = isYieldContributionEnabled,
             )
         }
     }

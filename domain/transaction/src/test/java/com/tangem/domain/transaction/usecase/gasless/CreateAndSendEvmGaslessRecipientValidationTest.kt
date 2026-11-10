@@ -1,5 +1,6 @@
 package com.tangem.domain.transaction.usecase.gasless
 
+import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
 import com.tangem.blockchain.common.Amount
@@ -8,6 +9,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
@@ -137,6 +139,46 @@ internal class CreateAndSendEvmGaslessRecipientValidationTest {
         // Act & Assert — no exception
         CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
     }
+
+    @Test
+    fun `GIVEN dead address inside upgrade-wrapped yield send WHEN validateTransactionRecipients THEN throws`() {
+        // Arrange
+        val txData = uncompiled(
+            destinationAddress = yieldModule,
+            callData = upgradeWrapped(yieldSend(recipient = deadAddress)),
+        )
+
+        // Act
+        val error = runCatching {
+            CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
+        }.exceptionOrNull()
+
+        // Assert
+        assertThat(error).isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
+    fun `GIVEN valid recipient inside upgrade-wrapped yield send WHEN validateTransactionRecipients THEN passes`() {
+        // Arrange
+        val txData = uncompiled(
+            destinationAddress = yieldModule,
+            callData = upgradeWrapped(yieldSend(recipient = recipient)),
+        )
+
+        // Act & Assert — no exception
+        CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
+    }
+
+    private fun yieldSend(recipient: String) = EthereumYieldSupplySendCallData(
+        tokenContractAddress = tokenContract,
+        destinationAddress = recipient,
+        amount = amount,
+    )
+
+    private fun upgradeWrapped(inner: SmartContractCallData) = EthereumYieldSupplyUpgradeToAndCallCallData(
+        newImplementation = "0x5b38da6a701c568545dcfcb03fcb875f56beddc4",
+        innerCallData = inner,
+    )
 
     @Test
     fun `GIVEN missing call data WHEN validateTransactionRecipients THEN throws`() {

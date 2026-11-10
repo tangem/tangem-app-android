@@ -4,11 +4,15 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
+import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
+import com.tangem.features.polymarket.impl.createPolymarketEvent
+import com.tangem.features.polymarket.impl.createPolymarketMarket
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,6 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
@@ -31,6 +36,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
@@ -275,7 +281,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         engine.onResume()
         engine.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-        assertThat(uiState.value.isPrimaryButtonEnabled).isTrue()
+        assertThat(uiState.value.isReadyToPlace).isTrue()
 
         // Act
         val prepared = engine.holdDuring { engine.prepare() }
@@ -320,6 +326,75 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         assertThat(isAwaitingFunds).isTrue()
     }
 
+    @Test
+    fun `GIVEN sell market ends late evening Eastern WHEN engine starts THEN resolution date is the market end`() =
+        runTest {
+            // Arrange
+            val marketEnd = Instant.parse("2028-11-08T04:59:00Z")
+            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createPolymarketEvent(
+                id = EVENT_ID,
+                markets = listOf(
+                    createPolymarketMarket(
+                        id = MARKET_ID,
+                        conditionId = CONDITION_ID,
+                        eventId = EVENT_ID,
+                        endDate = marketEnd.toString(),
+                    ),
+                ),
+            ).right()
+
+            // Act
+            val (_, uiState) = createEngine(params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(uiState.value.market.resolutionDateMillis).isEqualTo(marketEnd.toEpochMilli())
+        }
+
+    @Test
+    fun `GIVEN sell resolution date read WHEN position reloaded THEN the event is not read again`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createPolymarketEvent(
+            id = EVENT_ID,
+            markets = listOf(
+                createPolymarketMarket(
+                    id = MARKET_ID,
+                    conditionId = CONDITION_ID,
+                    eventId = EVENT_ID,
+                    endDate = "2028-11-08T04:59:00Z",
+                ),
+            ),
+        ).right()
+        val (engine, _) = createEngine(params = SELL_PARAMS)
+        advanceUntilIdle()
+
+        // Act
+        engine.holdDuring {
+            engine.onResume()
+            runCurrent()
+        }
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+        coVerify(exactly = 1) { getEventUseCase(any(), eventId = EVENT_ID) }
+
+        engine.onPause()
+    }
+
+    @Test
+    fun `GIVEN sell event read fails WHEN engine starts THEN resolution date is hidden`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns PolymarketEventError.Network.left()
+
+        // Act
+        val (_, uiState) = createEngine(params = SELL_PARAMS)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(uiState.value.market.resolutionDateMillis).isNull()
+    }
+
     private fun stubFailedResumeSources() {
         coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
         coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Unavailable.left()
@@ -336,5 +411,9 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
             scope = CoroutineScope(dispatchers.mainImmediate + engineJob),
         )
         return engine to uiState
+    }
+
+    private companion object {
+        const val QUOTE_MILLIS = 1_000L
     }
 }

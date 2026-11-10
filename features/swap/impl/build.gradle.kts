@@ -19,6 +19,7 @@ dependencies {
     api(projects.features.swap.domain)
     implementation(projects.features.marketing.api)
     implementation(projects.features.send.impl)
+    implementation(projects.features.txhistory.api)
 
     /** Core modules */
     api(projects.core.analytics)
@@ -54,7 +55,7 @@ dependencies {
     api(projects.domain.transaction)
     api(projects.domain.transaction.models)
     api(projects.domain.txhistory)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.wallets)
     implementation(projects.domain.account)
     implementation(projects.domain.balanceHiding.models)
@@ -70,7 +71,7 @@ dependencies {
     implementation(projects.domain.quotes)
     implementation(projects.domain.stories.models)
     implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.visa.models)
+    implementation(projects.domain.tangempay.models)
     runtimeOnly(projects.domain.staking)
 
     /** AndroidX */

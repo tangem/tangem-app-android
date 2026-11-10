@@ -9,10 +9,12 @@ import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
+import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionPriceError
+import com.tangem.domain.polymarket.model.findMarket
 import com.tangem.domain.polymarket.model.findOutcome
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -20,6 +22,9 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCa
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.features.polymarket.impl.common.endInstantOrNull
+import com.tangem.features.polymarket.impl.common.funding.PredictionFundingRequisites
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
@@ -33,6 +38,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.canPollPrice
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAddFundsAvailabilityTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountFractionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
@@ -45,12 +51,14 @@ import com.tangem.features.polymarket.impl.placeprediction.model.transformers.Se
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetResolutionDateTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSellPositionStateTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetTradingPermissionTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.time.CurrentTimeProvider
 import com.tangem.utils.transformer.update
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -69,12 +77,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.math.BigDecimal
 
 internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 internal const val QUOTE_POLL_INTERVAL_MILLIS = 3_000L
+internal const val RESOLUTION_DATE_WAIT_MILLIS = 3_000L
 
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     @Assisted private val params: PlacePredictionComponent.Params,
     @Assisted private val uiState: MutableStateFlow<PlacePredictionUM>,
@@ -92,12 +102,15 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     private val predictionFundingWindow: PredictionFundingWindow,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
     private val predictionBalancePoller: PredictionBalancePoller,
+    private val currentTimeProvider: CurrentTimeProvider,
     refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
+    receiveSheetFactory: PolymarketReceiveSheetFactory,
 ) {
 
     private val quoteJobHolder = JobHolder()
     private val tradingAllowanceJobHolder = JobHolder()
     private val positionJobHolder = JobHolder()
+    private val resolutionDateJobHolder = JobHolder()
     private val balancePollJobHolder = JobHolder()
 
     private val activeStatus = MutableStateFlow<PredictionAccountStatusValue.Active?>(value = null)
@@ -109,8 +122,12 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         activeStatus = activeStatus,
         router = router,
         messageSender = messageSender,
-        refreshInteractor = refreshPredictionDepositRequisitesInteractor,
-        scope = scope,
+        receiveSheetFactory = receiveSheetFactory,
+        requisites = PredictionFundingRequisites(
+            refreshInteractor = refreshPredictionDepositRequisitesInteractor,
+            userWalletId = params.userWalletId,
+            scope = scope,
+        ),
     )
 
     private var isNegRiskMarket: Boolean? = null
@@ -120,6 +137,8 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     private var isTradedAssetResolved = params is PlacePredictionComponent.Params.Sell
 
     private var isResumed = false
+
+    private var isResolutionDateRead = false
 
     private var isHeld = false
 
@@ -157,7 +176,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     fun onPause() {
         isResumed = false
-        quoteJobHolder.cancel()
+        cancelQuote()
         balancePollJobHolder.cancel()
     }
 
@@ -192,15 +211,29 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
         val state = uiState.value
         val isNegRisk = isNegRiskMarket ?: return null
-        if (!state.isPrimaryButtonEnabled) return null
+        if (!state.isReadyToPlace) return null
 
-        quoteJobHolder.cancel()
-        return PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk, positionId = positionId)
+        cancelQuote()
+        return PreparedPrediction(
+            params = params,
+            state = state,
+            isNegRisk = isNegRisk,
+            positionId = positionId,
+            awaitLiveResolutionDateMillis = ::awaitResolutionDateMillis,
+        )
+    }
+
+    fun requote() {
+        uiState.update { state ->
+            SetAmountTransformer(value = state.amountValue, isAmountFromFraction = state.isAmountFromFraction)
+                .transform(state)
+        }
+        restartQuoteLoop(withDebounce = false)
     }
 
     suspend fun <T> holdDuring(block: suspend () -> T): T {
         isHeld = true
-        quoteJobHolder.cancel()
+        cancelQuote()
         balancePollJobHolder.cancel()
         return try {
             block()
@@ -343,16 +376,41 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
             isNegRiskMarket = position.isNegRisk
 
             uiState.update(SetPositionTransformer(position = position))
+            loadResolutionDate(position = position)
 
             restartQuoteLoop(withDebounce = false)
         }.saveIn(positionJobHolder)
     }
 
-    private fun restartQuoteLoop(withDebounce: Boolean) {
+    private suspend fun awaitResolutionDateMillis(): Long? {
+        withTimeoutOrNull(timeMillis = RESOLUTION_DATE_WAIT_MILLIS) { resolutionDateJobHolder.join() }
+            ?: resolutionDateJobHolder.cancel()
+        return uiState.value.market.resolutionDateMillis
+    }
+
+    private fun loadResolutionDate(position: PolymarketPosition.Open) {
+        val eventId = position.eventId ?: return
+        if (isResolutionDateRead || resolutionDateJobHolder.isActive) return
+
+        scope.launch {
+            val event = withContext(dispatchers.default) {
+                getPolymarketEventUseCase(userWalletId = params.userWalletId, eventId = eventId).getOrNull()
+            } ?: return@launch
+            val endInstant = event.findMarket(position)?.endInstantOrNull() ?: return@launch
+            isResolutionDateRead = true
+            uiState.update(SetResolutionDateTransformer(resolutionDateMillis = endInstant.toEpochMilli()))
+        }.saveIn(resolutionDateJobHolder)
+    }
+
+    private fun cancelQuote() {
         quoteJobHolder.cancel()
+    }
+
+    private fun restartQuoteLoop(withDebounce: Boolean) {
+        cancelQuote()
 
         if (!isResumed || !isTradedAssetResolved || isHeld) return
-        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
+        if (!uiState.value.canPollPrice()) return
 
         scope.launch {
             if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
@@ -408,7 +466,6 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         if (!state.isQuotable()) return
 
         uiState.update(SetQuoteLoadingTransformer)
-
         val result = withContext(dispatchers.default) {
             getPredictionOrderQuoteUseCase(
                 userWalletId = params.userWalletId,
@@ -425,7 +482,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         uiState.update(
             SetQuoteResultTransformer(
                 result = result,
-                receivedAtMillis = System.currentTimeMillis(),
+                receivedAtMillis = currentTimeProvider.nowMillis(),
                 assetId = tradedAssetId,
             ),
         )
