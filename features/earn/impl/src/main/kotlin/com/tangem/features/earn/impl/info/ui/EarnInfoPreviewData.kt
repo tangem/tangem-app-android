@@ -93,8 +93,7 @@ internal object EarnInfoPreviewData {
         rewards = EarnInfoUM.RewardsUM(
             title = EarnInfoTexts.rewardsTitle(amount = "\$30"),
             description = EarnInfoTexts.rewardsDescription,
-            claimLabel = stringReference("Claim"),
-            onClaimClick = {},
+            claim = button(text = "Claim", type = TangemButtonType.Primary),
         ),
     )
 

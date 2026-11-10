@@ -52,6 +52,11 @@ internal class EarnInfoConverter @Inject constructor(
     ): EarnInfoUM? {
         val position = (ready.position as? EarnPositionState.Known)?.position ?: return null
         val rate = status.value.fiatRate
+        val staleSince = listOfNotNull(
+            ready.freshness,
+            position.freshness,
+        ).filter { it.isStale }.minByOrNull { it.asOf }
+        val isStale = staleSince != null
 
         return EarnInfoUM(
             title = product.title,
@@ -62,11 +67,16 @@ internal class EarnInfoConverter @Inject constructor(
                 EarnInfoTexts.earnedChip(getFiatString(earned, rate, appCurrency))
             },
             rewards = position.rewards?.let { rewards ->
-                rewardsBanner(rewards = rewards, rate = rate, appCurrency = appCurrency, callbacks = callbacks)
+                rewardsBanner(
+                    rewards = rewards,
+                    rate = rate,
+                    appCurrency = appCurrency,
+                    isStale = isStale,
+                    callbacks = callbacks,
+                )
             },
-            staleNotice = ready.freshness
-                ?.takeIf { it.isStale }
-                ?.let { EarnInfoTexts.staleNotice(it.formatAsOf(locale, zoneId)) },
+            // The numbers are as old as the oldest stale source
+            staleNotice = staleSince?.let { EarnInfoTexts.staleNotice(it.formatAsOf(locale, zoneId)) },
             tabs = tabs(ready),
             myFunds = EarnInfoUM.MyFundsUM(
                 provider = product.provider.title,
@@ -81,40 +91,41 @@ internal class EarnInfoConverter @Inject constructor(
             benefits = ready.benefits.map { it.toBenefitUM() }.toImmutableList(),
             details = ready.details.map { it.toUM(callbacks.onInfoClick, callbacks.onLinkClick) }.toImmutableList(),
             secondary = ready.secondary.map { item ->
-                button(item = item, type = TangemButtonType.Secondary, ready = ready, callbacks = callbacks)
+                button(item = item, type = TangemButtonType.Secondary, isStale = isStale, callbacks = callbacks)
             }.toImmutableList(),
             primary = button(
                 item = ready.primary,
                 type = TangemButtonType.Primary,
-                ready = ready,
+                isStale = isStale,
                 callbacks = callbacks,
             ),
             onClose = callbacks.onClose,
         )
     }
 
-    private fun button(
-        item: EarnActionItem,
-        type: TangemButtonType,
-        ready: EarnProductState.Ready,
-        callbacks: Callbacks,
-    ) = actions.button(
-        item = item.guardedBy(ready),
-        type = type,
-        onActionClick = callbacks.onActionClick,
-        onBlocked = callbacks.onBlocked,
-    )
+    private fun button(item: EarnActionItem, type: TangemButtonType, isStale: Boolean, callbacks: Callbacks) =
+        actions.button(
+            item = item.guardedBy(isStale = isStale),
+            type = type,
+            onActionClick = callbacks.onActionClick,
+            onBlocked = callbacks.onBlocked,
+        )
 
     private fun rewardsBanner(
         rewards: EarnRewards,
         rate: BigDecimal?,
         appCurrency: AppCurrency,
+        isStale: Boolean,
         callbacks: Callbacks,
     ) = EarnInfoUM.RewardsUM(
         title = EarnInfoTexts.rewardsTitle(getFiatString(rewards.amount, rate, appCurrency)),
         description = EarnInfoTexts.rewardsDescription,
-        claimLabel = rewards.claimAction.label,
-        onClaimClick = { callbacks.onActionClick(rewards.claimAction) },
+        claim = button(
+            item = EarnActionItem(rewards.claimAction),
+            type = TangemButtonType.Primary,
+            isStale = isStale,
+            callbacks = callbacks,
+        ),
     )
 
     private fun tabs(ready: EarnProductState.Ready): ImmutableList<EarnInfoTab> = EarnInfoTab.entries.filter { tab ->
