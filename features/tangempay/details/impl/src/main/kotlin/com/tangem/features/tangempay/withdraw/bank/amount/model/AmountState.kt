@@ -8,8 +8,10 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAmountResul
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
+import com.tangem.features.tangempay.withdraw.bank.amount.state.totalFee
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -36,15 +38,16 @@ internal data class AmountState(
 ) {
 
     fun resolve(draft: BankWithdrawDraft, options: BankWithdrawOptions): AmountSelection {
+        val destinations = draft.recipient?.let { options.destinationsFor(it.details.rail) } ?: options.destinations
         val preferredRail = draft.recipient?.details?.rail ?: selectedRail ?: draft.destination?.rail
-        val destination = options.destinations.firstOrNull { it.rail == preferredRail } ?: options.destinations.first()
+        val destination = destinations.firstOrNull { it.rail == preferredRail } ?: destinations.first()
         val preferredSourceId = selectedSourceId ?: draft.source?.id
         val source = options.sources.firstOrNull { it.isAvailable && it.id == preferredSourceId }
             ?: options.sources.first(BankWithdrawSource::isAvailable)
         val displayValue = displayValue(draft = draft, currency = options.currency)
         val amount = displayValue.parseBigDecimalOrNull()
         val networkFee = (networkFee as? NetworkFeeState.Loaded)?.fee.orZero()
-        val fees = destination.fee.amount + networkFee
+        val fees = destination.totalFee(networkFee)
         val limits = options.amountLimitsFor(destination)
         return AmountSelection(
             currency = options.currency,
@@ -56,7 +59,7 @@ internal data class AmountState(
                 fee = fees,
             ),
             sources = options.sources,
-            destinations = options.destinations,
+            destinations = destinations.toImmutableList(),
             source = source,
             destination = destination,
             networkFee = networkFee,

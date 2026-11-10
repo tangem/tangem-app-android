@@ -15,26 +15,26 @@ internal object BankWithdrawOptionsFactory {
     private val DEFAULT_MIN_AMOUNT = BigDecimal("1.00")
     private val DEFAULT_MAX_AMOUNT = BigDecimal("10000.00")
 
-    private val ROUTE_RAILS = setOf(BankRail.ACH, BankRail.WIRE)
-
     /**
-     * Null when a bank withdrawal cannot start: the off-ramp offers no fixed-fee ACH or wire rail, the account holds
-     * none of the tokens it accepts, or neither the account nor the rail names a currency the platform knows.
+     * Null when a bank withdrawal cannot start: the off-ramp offers no rail the account can take — a fixed-fee ACH or
+     * wire rail, or SPEI where [isSpeiOffered] — the account holds none of the tokens it accepts, or neither the
+     * account nor the rail names a currency the platform knows.
      */
     fun create(
         destinations: List<OfframpDestination>,
         sources: List<BankWithdrawSource>,
         balanceCurrencyCode: String?,
         isLimitedPerRail: Boolean,
+        isSpeiOffered: Boolean,
     ): BankWithdrawOptions? {
-        val routeDestinations = destinations.filter(::isFixedFeeRouteRail)
-        if (routeDestinations.isEmpty() || sources.none(BankWithdrawSource::isAvailable)) return null
+        val offeredDestinations = destinations.filter { destination -> destination.isTakenBy(isSpeiOffered) }
+        if (offeredDestinations.isEmpty() || sources.none(BankWithdrawSource::isAvailable)) return null
         val currency = currencyOrNull(balanceCurrencyCode)
-            ?: currencyOrNull(routeDestinations.first().fee.currency)
+            ?: currencyOrNull(offeredDestinations.first().fee.currency)
             ?: return null
         return BankWithdrawOptions(
             sources = sources.sortedByAvailabilityAndSymbol().toImmutableList(),
-            destinations = routeDestinations.toImmutableList(),
+            destinations = offeredDestinations.toImmutableList(),
             currency = currency,
             defaultAmountLimits = AmountLimits(
                 min = DEFAULT_MIN_AMOUNT,
@@ -61,8 +61,10 @@ internal object BankWithdrawOptionsFactory {
         )
     }
 
-    private fun isFixedFeeRouteRail(destination: OfframpDestination): Boolean =
-        destination.rail in ROUTE_RAILS && destination.fee.calculationType == FeeCalculationType.FIXED
+    private fun OfframpDestination.isTakenBy(isSpeiOffered: Boolean): Boolean = when (rail) {
+        BankRail.ACH, BankRail.WIRE -> fee.calculationType == FeeCalculationType.FIXED
+        BankRail.SPEI -> isSpeiOffered
+    }
 
     private fun currencyOrNull(code: String?): Currency? =
         code?.let { runCatching { Currency.getInstance(it) }.getOrNull() }

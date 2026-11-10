@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankWithdrawModel @Inject constructor(
@@ -34,6 +35,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase,
+    private val speiAvailability: BankWithdrawSpeiAvailability,
     analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -124,7 +126,10 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     /** One request per wizard: the suggestions and the recipient of a [BankWithdrawEntry.Saved] entry share it. */
     private fun loadSavedAccounts() {
         modelScope.launch {
-            getBankAccountsUseCase(params.userWalletId).fold(
+            getBankAccountsUseCase(
+                userWalletId = params.userWalletId,
+                includeSpeiRecipients = speiAvailability.isOffered(params.sourceAccount),
+            ).fold(
                 ifLeft = { error -> TangemLogger.withTag(TAG).e("Failed to load saved bank accounts: $error") },
                 ifRight = { accounts ->
                     savedAccounts.value = accounts
@@ -142,7 +147,10 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     private fun BankWithdrawDraft.withSavedRecipient(account: BankAccount): BankWithdrawDraft = copy(
         recipient = account,
         destination = destination?.let { current ->
-            params.options.value.destinations.firstOrNull { it.rail == account.details.rail } ?: current
+            val allowed = params.options.value.destinationsFor(account.details.rail)
+            allowed.firstOrNull { it.rail == account.details.rail }
+                ?: current.takeIf { it in allowed }
+                ?: allowed.first()
         },
     )
 }

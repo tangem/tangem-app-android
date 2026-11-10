@@ -14,8 +14,12 @@ class GetRecentBankAccountsUseCase(
     private val repository: BankOfframpRepository,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<BankOfframpError, RecentBankAccounts> {
-        return repository.getBankAccounts(userWalletId).map(::withoutSpeiRecipients).map { accounts ->
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        includeSpeiRecipients: Boolean,
+    ): Either<BankOfframpError, RecentBankAccounts> {
+        return repository.getBankAccounts(userWalletId).map { saved ->
+            val accounts = saved.withSpeiRecipientsIf(includeSpeiRecipients)
             RecentBankAccounts(
                 recents = accounts.take(MAX_RECENTS),
                 hasMoreAccounts = accounts.size > MAX_RECENTS,
