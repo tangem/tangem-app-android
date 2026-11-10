@@ -17,6 +17,7 @@ dependencies {
     api(projects.features.commonFeatures.api)
     api(projects.features.onramp.api)
     implementation(projects.features.marketing.api)
+    implementation(projects.features.wallet.api)
     implementation(projects.domain.marketing)
     implementation(projects.domain.marketing.models)
 
@@ -27,6 +28,7 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
 
     /** Project - Common */
     api(projects.common.routing)
@@ -48,6 +50,7 @@ dependencies {
     api(projects.domain.onramp.models)
     api(projects.domain.settings)
     api(projects.domain.tokens)
+    implementation(projects.domain.txhistory)
     api(projects.domain.wallets)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appTheme.models)

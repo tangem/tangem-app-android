@@ -214,6 +214,7 @@ internal open class TxDetailsConverterTestBase {
         payoutAddress: String = PAYOUT_ADDRESS,
         fromCurrency: CryptoCurrency? = null,
         payinHash: String? = null,
+        refundCurrency: CryptoCurrency? = null,
     ): ExpressTx.Swap = ExpressTx.Swap(
         tx = ExchangeTransaction(
             txId = "swap-1",
@@ -240,8 +241,8 @@ internal open class TxDetailsConverterTestBase {
             externalTxId = externalTxId,
             payinAddress = "payin-addr",
             updatedAtMillis = TIMESTAMP,
-            refundAssetId = null,
-            refundCurrency = null,
+            refundAssetId = refundCurrency?.let { ExpressAssetId(cryptoCurrency = it) },
+            refundCurrency = refundCurrency,
             fromAmount = BigDecimal("1.5"),
             toAmount = BigDecimal("0.001"),
             toActualAmount = null,

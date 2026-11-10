@@ -196,7 +196,7 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
 
 @Composable
 private fun MembersHeader(header: JointAccountMembersUM.HeaderUM, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
+    Column(modifier = modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
         AnimatedContent(
             targetState = header.title.resolveReference(),
             transitionSpec = { fadeIn().togetherWith(fadeOut()) },
@@ -213,7 +213,7 @@ private fun MembersHeader(header: JointAccountMembersUM.HeaderUM, modifier: Modi
             SpacerH(8.dp)
             Text(
                 text = subtitle.resolveReference(),
-                style = TangemTheme.typography3.body.medium,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
         }
@@ -405,7 +405,7 @@ private fun SlotAction(action: SlotActionUM) {
 private fun SlotActionButton(textRes: Int, isLoading: Boolean, onClick: () -> Unit) {
     TangemButton(
         variant = TangemButton.Variant.Secondary,
-        size = TangemButton.Size.X9,
+        size = TangemButton.Size.X8,
         isLoading = isLoading,
         text = resourceReference(textRes),
         onClick = onClick,
@@ -418,7 +418,7 @@ private fun FreeSlotAvatar(modifier: Modifier = Modifier) {
         modifier = modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(TangemTheme.colors3.bg.tertiary),
+            .background(TangemTheme.colors3.bg.transparent.secondary),
         contentAlignment = Alignment.Center,
     ) {
         Icon(

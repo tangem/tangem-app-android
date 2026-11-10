@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
@@ -18,7 +19,8 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelector
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.send.feeselector.model.FeeSelectorBlockModel
 import com.tangem.features.send.feeselector.ui.FeeSelectorBlockContent
-import com.tangem.utils.extensions.isSingleItem
+import com.tangem.features.send.feeselector.ui.FeeSelectorRowShape
+import com.tangem.features.send.feeselector.ui.isFeeSelectable
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -86,15 +88,16 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         val isScreenSource = params.feeDisplaySource == FeeSelectorParams.FeeDisplaySource.Screen
-        val isNotSingleFee = (state as? FeeSelectorUM.Content)?.feeItems?.isSingleItem() == false
-        val isGaslessAvailable = (state as? FeeSelectorUM.Content)?.feeExtraInfo
-            ?.let { it.transactionFeeExtended != null || it.sponsoredFee.isAvailable } == true
+        val isFeeSelectable = (state as? FeeSelectorUM.Content)?.isFeeSelectable == true
         FeeSelectorBlockContent(
             state = state,
             onReadMoreClick = model::onReadMoreClicked,
-            isPlain = params.blockAppearance == FeeSelectorParams.BlockAppearance.Plain,
+            appearance = params.blockAppearance,
             modifier = modifier
-                .conditional(isScreenSource && (isNotSingleFee || isGaslessAvailable)) {
+                .conditional(params.blockAppearance == FeeSelectorParams.BlockAppearance.Row) {
+                    Modifier.clip(FeeSelectorRowShape)
+                }
+                .conditional(isScreenSource && isFeeSelectable) {
                     Modifier.clickable {
                         model.showFeeSelector()
                     }

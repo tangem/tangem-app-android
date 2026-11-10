@@ -48,6 +48,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
@@ -59,6 +60,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
+import arrow.core.Either
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventError
+import kotlinx.coroutines.CompletableDeferred
+import java.time.Instant
+import kotlinx.coroutines.test.runCurrent
 
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -369,29 +376,36 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             }
 
         @Test
-        fun `GIVEN a matched order filled no shares WHEN place clicked THEN the flow reports a failure`() = runTest {
-            // Arrange
-            val amountModel = createAmountModel(testScope = this)
-            advanceUntilIdle()
-            amountModel.onResume()
-            amountModel.onAmountChange(value = "10")
-            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-            val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            coEvery { placeOrderUseCase(any(), any(), any()) } returns
-                createPlaceResult(takingAmount = BigDecimal.ZERO).right()
-            amountModel.onPause()
+        fun `GIVEN a matched order filled no shares WHEN close is tapped on the failure dialog THEN the order closes`() =
+            runTest {
+                // Arrange
+                val amountModel = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                amountModel.onResume()
+                amountModel.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val model = createSummaryModel(testScope = this, amountModel = amountModel)
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(takingAmount = BigDecimal.ZERO).right()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                amountModel.onPause()
+                model.tapPlace()
+                advanceUntilIdle()
 
-            // Act
-            model.tapPlace()
-            advanceUntilIdle()
+                // Act
+                dialog.captured.secondAction?.onClick()
 
-            // Assert
-            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-            verify { messageSender.send(any()) }
-            verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>()) }
+                // Assert
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>()) }
+                verifyOrder {
+                    router.popTo(PlacePredictionRoute.Amount)
+                    router.pop()
+                }
 
-            model.onDestroy()
-        }
+                model.onDestroy()
+            }
 
         @Test
         fun `GIVEN no answer from the exchange WHEN place clicked THEN summary shows the support dialog`() =
@@ -715,6 +729,35 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             model.onDestroy()
         }
+
+        @Test
+        fun `GIVEN the market end arrives after the sell is placed WHEN the result opens THEN it shows that date`() =
+            runTest {
+                // Arrange
+                val marketEnd = Instant.parse("2028-11-08T04:59:00Z")
+                val event = CompletableDeferred<Either<PolymarketEventError, PolymarketEvent>>()
+                coEvery { getEventUseCase(any(), eventId = EVENT_ID) } coAnswers { event.await() }
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
+                val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
+                runCurrent()
+                amountModel.onResume()
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val model = createSummaryModel(testScope = this, amountModel = amountModel)
+                val status = slot<PlacePredictionRoute.Status>()
+                every { router.replaceAll(capture(status), onComplete = any()) } returns Unit
+
+                // Act
+                model.tapPlace()
+                advanceTimeBy(delayTimeMillis = RESOLUTION_DATE_WAIT_MILLIS / 2)
+                event.complete(createEventEndingAt(marketEnd).right())
+                runCurrent()
+
+                // Assert
+                assertThat(status.captured.market.resolutionDateMillis).isEqualTo(marketEnd.toEpochMilli())
+
+                model.onDestroy()
+            }
 
         @Test
         fun `GIVEN a cheap quote but too few shares WHEN place clicked THEN the shares leg decides`() = runTest {

@@ -6,17 +6,15 @@ import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
-import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.StakingAvailability
-import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.features.earn.api.overview.EarnOverviewSupplier
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.utils.coroutines.combine9
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -39,7 +37,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
     override val stateController: WalletStateController,
     override val clickIntents: WalletClickIntents,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
-    private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
+    private val earnOverviewSupplier: EarnOverviewSupplier,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getPendingJointOperationsUseCase: GetPendingJointOperationsUseCase,
@@ -61,15 +59,15 @@ internal class AccountListSubscriber @AssistedInject constructor(
                 .log("flow5 yieldSupplyApy") { "(size=${it.size})" },
             flow6 = yieldSupplyGetShouldShowMainPromoFlow()
                 .log("flow6 shouldShowMainPromo") { "=$it" },
-            flow7 = stakingAvailabilityFlow()
-                .log("flow7 stakingAvailability") { "(size=${it.size})" },
+            flow7 = earnOverviewFlow()
+                .log("flow7 earnOverviews") { "(currencies=${it.byCurrency.size}, source=${it.source})" },
             flow8 = isWalletBackedUpUseCase.flow(userWallet).distinctUntilChanged()
                 .log("flow8 isBackedUp") { "=$it" },
             flow9 = jointPendingOperationsFlow()
                 .log("flow9 jointPendingOperations") { "(size=${it.size})" },
         ) {
                 accountList, appCurrency, expandedAccounts, isAccountMode,
-                yieldSupplyApyMap, shouldShowMainPromo, stakingAvailabilityMap, isHotBackedUp,
+                yieldSupplyApyMap, shouldShowMainPromo, earnOverviews, isHotBackedUp,
                 jointPendingOperations,
             ->
             TangemLogger.i(
@@ -80,7 +78,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
                     "isAccountMode=$isAccountMode, " +
                     "apyMap=${yieldSupplyApyMap.size}, " +
                     "promo=$shouldShowMainPromo, " +
-                    "stakingMap=${stakingAvailabilityMap.size}, " +
+                    "earnOverviews=${earnOverviews.byCurrency.size}, " +
                     "isBackedUp=$isHotBackedUp, " +
                     "pendingOperations=${jointPendingOperations.size}",
             )
@@ -90,7 +88,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
                 expandedAccounts = expandedAccounts,
                 isAccountMode = isAccountMode,
                 yieldSupplyApyMap = yieldSupplyApyMap,
-                stakingAvailabilityMap = stakingAvailabilityMap,
+                earnOverviews = earnOverviews,
                 shouldShowMainPromo = shouldShowMainPromo,
                 isHotBackedUp = isHotBackedUp,
                 jointPendingOperations = jointPendingOperations,
@@ -122,16 +120,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
         }
         .distinctUntilChanged()
 
-    private fun stakingAvailabilityFlow(): Flow<Map<CryptoCurrency, StakingAvailability>> = getAccountStatusListFlow()
-        .map { accountList -> accountList.flattenPersonalCurrencies().map(CryptoCurrencyStatus::currency) }
-        .distinctUntilChanged()
-        .mapLatest { flattenCurrencies ->
-            stakingAvailabilityListUseCase.invokeSync(
-                userWalletId = userWallet.walletId,
-                cryptoCurrencyList = flattenCurrencies,
-            )
-        }
-        .distinctUntilChanged()
+    private fun earnOverviewFlow(): Flow<EarnOverviews> = earnOverviewSupplier(userWallet.walletId)
 
     private fun yieldSupplyApyFlow(): Flow<Map<String, BigDecimal>> {
         return yieldSupplyApyFlowUseCase().distinctUntilChanged()

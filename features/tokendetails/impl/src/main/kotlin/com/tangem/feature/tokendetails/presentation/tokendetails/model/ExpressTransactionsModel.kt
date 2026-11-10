@@ -16,6 +16,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
@@ -55,6 +56,7 @@ internal class ExpressTransactionsModel @Inject constructor(
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val expressTransactionsEventListener: ExpressTransactionsEventListener,
     private val updateDelayedNetworkStatusUseCase: UpdateDelayedNetworkStatusUseCase,
+    private val balanceContributionsRefresher: BalanceContributionsRefresher,
 ) : Model(), ExpressTransactionsClickIntents {
 
     private val params = paramsContainer.require<ExpressTransactionsComponent.Params>()
@@ -283,6 +285,7 @@ internal class ExpressTransactionsModel @Inject constructor(
                 userWalletId = userWalletId,
                 network = toCryptoCurrency.network,
             )
+            balanceContributionsRefresher(userWalletId = userWalletId, network = toCryptoCurrency.network)
         }
     }
 

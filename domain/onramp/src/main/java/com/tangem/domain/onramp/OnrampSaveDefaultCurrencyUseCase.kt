@@ -11,6 +11,6 @@ class OnrampSaveDefaultCurrencyUseCase(
 ) {
 
     suspend operator fun invoke(currency: OnrampCurrency) = Either.catch {
-        repository.saveDefaultCurrency(currency)
+        repository.saveSelectedCurrency(currency)
     }.mapLeft(errorResolver::resolve)
 }

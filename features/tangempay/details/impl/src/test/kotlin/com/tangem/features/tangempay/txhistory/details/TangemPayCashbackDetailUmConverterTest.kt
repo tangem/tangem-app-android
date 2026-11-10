@@ -64,26 +64,32 @@ internal class TangemPayCashbackDetailUmConverterTest {
 
     @Test
     fun `GIVEN fetch in flight WHEN convert THEN row is Loading`() {
+        // Act
         val result = convert(cashback = null, loadState = TransactionLoadState.Loading)
 
+        // Assert
         assertThat(result).isEqualTo(CashbackDetailUM.Loading)
     }
 
     @Test
     fun `GIVEN fetch failed WHEN convert THEN row is Error`() {
+        // Act
         val result = convert(cashback = null, loadState = TransactionLoadState.Error)
 
+        // Assert
         assertThat(result).isInstanceOf(CashbackDetailUM.Error::class.java)
     }
 
     @Test
     fun `GIVEN non-spend transaction WHEN convert THEN row is hidden`() {
+        // Act
         val result = convert(
             transaction = paymentTransaction(),
             cashback = cashback(),
             loadState = TransactionLoadState.Loaded,
         )
 
+        // Assert
         assertThat(result).isNull()
     }
 

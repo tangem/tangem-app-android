@@ -134,29 +134,6 @@ private const val ACCOUNT_CONTENT_ANIM_DELAY_MS = 90
 @RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private const val ACCOUNT_BOUNDS_ANIM_MS = 250
 
-private val ChooseTokenFullUM.marketState: SwapMarketState?
-    get() = (chooserBlock as? ChooserBlockUM.Market)?.state
-
-private val ChooseTokenFullUM.isNotFoundState: Boolean
-    get() {
-        if (portfolioBlock == null) return false
-        val marketsBlock = marketState ?: return false
-        return portfolioBlock.tokensListData.tokensList.isEmpty() &&
-            portfolioBlock.isSearching &&
-            marketsBlock !is SwapMarketState.Content &&
-            marketsBlock !is SwapMarketState.Loading
-    }
-
-private val ChooseTokenFullUM.isEmptyState: Boolean
-    get() {
-        if (portfolioBlock == null) return false
-        val marketsBlock = marketState ?: return false
-        return portfolioBlock.tokensListData.tokensList.isEmpty() &&
-            !portfolioBlock.isSearching &&
-            marketsBlock !is SwapMarketState.Content &&
-            marketsBlock !is SwapMarketState.Loading
-    }
-
 @Composable
 internal fun ChooseTokenScreen(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
     Column(
@@ -211,7 +188,11 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
                 )
             }
 
-            assetsTitle(balanceFilterUM = state.portfolioBlock?.balanceFilterUM)
+            val isPortfolioTitleShown = state.isPortfolioTitleShown
+            if (isPortfolioTitleShown) {
+                assetsTitle(balanceFilterUM = state.portfolioBlock?.balanceFilterUM)
+            }
+            val chooserBlockTopSpacing = if (isPortfolioTitleShown) 40.dp else 20.dp
 
             if (state.portfolioBlock != null) {
                 walletListItem(state.portfolioBlock.walletList)
@@ -227,11 +208,11 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
 
                         when (val block = state.chooserBlock) {
                             is ChooserBlockUM.Market -> {
-                                item("markets_title_spacer") { SpacerH(height = 40.dp) }
+                                item("markets_title_spacer") { SpacerH(height = chooserBlockTopSpacing) }
                                 swapMarketsListItems(block.state)
                             }
                             is ChooserBlockUM.Predefined -> {
-                                item("predefined_title_spacer") { SpacerH(height = 40.dp) }
+                                item("predefined_title_spacer") { SpacerH(height = chooserBlockTopSpacing) }
                                 predefinedTokensListItems(block.state)
                             }
                             null -> Unit

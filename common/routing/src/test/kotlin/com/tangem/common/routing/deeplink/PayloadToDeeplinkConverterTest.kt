@@ -359,6 +359,24 @@ internal class PayloadToDeeplinkConverterTest {
     }
 
     @Test
+    fun `GIVEN joint_tokens push payload WHEN convert THEN should return joint_account deeplink without entry`() {
+        // GIVEN
+        val payload = mapOf(
+            TYPE_KEY to "joint_tokens",
+            WALLET_ID_KEY to "wallet123",
+            ACCOUNT_ID_KEY to "account123",
+        )
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isEqualTo(
+            "tangem://joint_account?user_wallet_id=wallet123&account_id=account123&type=joint_tokens",
+        )
+    }
+
+    @Test
     fun `GIVEN joint_members push payload missing account_id WHEN convert THEN should return null`() {
         // GIVEN
         val payload = mapOf(

@@ -2,17 +2,22 @@ package com.tangem.features.tangempay.account
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.features.tangempay.awaitingDepositOrder
 import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.tariffPlanState
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayDetailsNotificationFactoryTest {
 
     private val intents: TangemPayDetailIntents = mockk(relaxed = true)
@@ -26,13 +31,13 @@ internal class TangemPayDetailsNotificationFactoryTest {
 
     @Test
     fun `GIVEN awaiting deposit order WHEN createTiersConfig THEN banner offers add funds instead of cancelling`() {
-        // GIVEN
+        // Arrange
         val planState = tariffPlanState(order = awaitingDepositOrder())
 
-        // WHEN
+        // Act
         val config = factory.createTiersConfig(planState)
 
-        // THEN
+        // Assert
         val button = config?.secondaryButton
         assertThat(button?.text).isEqualTo(resourceReference(R.string.tangempay_card_details_add_funds))
         button?.onClick?.invoke()
@@ -40,26 +45,30 @@ internal class TangemPayDetailsNotificationFactoryTest {
         verify(exactly = 0) { intents.onRenewSession() }
     }
 
-    @Test
-    fun `GIVEN plan without recurring fee WHEN createTiersConfig THEN no banner`() {
-        // GIVEN
-        val planState = tariffPlanState(
-            order = awaitingDepositOrder(toPlan = tariffPlan(tierId = "PLUS", fees = emptyList())),
-        )
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN no pending plan with a recurring fee WHEN createTiersConfig THEN no banner`(case: NoBannerModel) {
+        // Act
+        val config = factory.createTiersConfig(case.planState)
 
-        // WHEN
-        val config = factory.createTiersConfig(planState)
-
-        // THEN
+        // Assert
         assertThat(config).isNull()
     }
 
-    @Test
-    fun `GIVEN active plan without order WHEN createTiersConfig THEN no banner`() {
-        // WHEN
-        val config = factory.createTiersConfig(tariffPlanState(tariff = customerTariffPlan()))
+    private fun provideTestModels() = listOf(
+        NoBannerModel(
+            name = "awaiting deposit for a plan without recurring fee",
+            planState = tariffPlanState(
+                order = awaitingDepositOrder(toPlan = tariffPlan(tierId = "PLUS", fees = emptyList())),
+            ),
+        ),
+        NoBannerModel(
+            name = "active plan without order",
+            planState = tariffPlanState(tariff = customerTariffPlan()),
+        ),
+    )
 
-        // THEN
-        assertThat(config).isNull()
+    internal data class NoBannerModel(val name: String, val planState: TangemPayTariffPlanState) {
+        override fun toString(): String = name
     }
 }

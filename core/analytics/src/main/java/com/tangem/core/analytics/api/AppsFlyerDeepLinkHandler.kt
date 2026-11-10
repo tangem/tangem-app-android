@@ -17,5 +17,6 @@ data class AppsFlyerDeepLink(
     val afDp: String?,
     val deepLinkSub1: String?,
     val deepLinkSub2: String?,
+    val deepLinkSub3: String?,
     val isDeferred: Boolean?,
 )

@@ -26,27 +26,27 @@ internal class CancelTangemPayOrderUseCaseTest {
 
     @Test
     fun `GIVEN cancelOrder fails WHEN invoke THEN returns Left and skips polling`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery { customerOrderRepository.cancelOrder(USER_WALLET_ID, ORDER_ID) } returns TangemPayApiError.Unspecified.left()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, ORDER_ID)
 
-        // THEN
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
         coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any(), any()) }
     }
 
     @Test
     fun `GIVEN cancelOrder succeeds WHEN invoke THEN starts polling with PROCESSING order`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery { customerOrderRepository.cancelOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
         coEvery { startTangemPayOrderPollingUseCase(any(), any(), any()) } returns true
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, ORDER_ID)
 
-        // THEN
+        // Assert
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 1) {
             startTangemPayOrderPollingUseCase(

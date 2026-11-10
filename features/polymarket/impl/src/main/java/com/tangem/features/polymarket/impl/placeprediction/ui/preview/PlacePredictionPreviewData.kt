@@ -110,6 +110,7 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
         )
 }
 
+@Suppress("TooManyFunctions")
 internal object PlacePredictionPreviewIntents :
     PlacePredictionAmountIntents,
     PlacePredictionSummaryIntents,
@@ -133,7 +134,7 @@ internal object PlacePredictionPreviewIntents :
     override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) = Unit
     override fun onBackClick() = Unit
     override fun onCloseClick() = Unit
-    override fun onToMainClick() = Unit
+    override fun onUntradableSheetDismiss() = Unit
     override fun onViewPositionClick() = Unit
 }
 

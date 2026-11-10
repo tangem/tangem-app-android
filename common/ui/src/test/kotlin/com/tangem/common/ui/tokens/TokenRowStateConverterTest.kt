@@ -4,9 +4,14 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -50,6 +55,52 @@ internal class TokenRowStateConverterTest {
 
         // Assert
         assertThat((actual as TangemTokenRow.State.Content).priceChange).isNull()
+    }
+
+    @Test
+    fun `GIVEN quote data WHEN convert currency and quote THEN row shows price and price change without balance`() {
+        // Arrange
+        val quoteStatus = QuoteStatus(
+            rawCurrencyId = coin.id.rawCurrencyId!!,
+            value = QuoteStatus.Data(
+                source = StatusSource.ACTUAL,
+                fiatRate = BigDecimal("2000"),
+                fiatRateUSD = BigDecimal("2000"),
+                priceChange = BigDecimal("0.05"),
+            ),
+        )
+
+        // Act
+        val actual = converter.convert(currency = coin, quoteStatus = quoteStatus, onClick = null)
+            as TangemTokenRow.State.Content
+
+        // Assert
+        assertThat(actual.id).isEqualTo(coin.id.value)
+        assertThat(actual.title).isEqualTo(stringReference(coin.name))
+        assertThat(actual.quote).isEqualTo(
+            stringReference(
+                BigDecimal("2000").format {
+                    fiat(fiatCurrencyCode = AppCurrency.Default.code, fiatCurrencySymbol = AppCurrency.Default.symbol)
+                },
+            ),
+        )
+        assertThat(actual.priceChange).isEqualTo(BigDecimal("0.05").toPriceChangeState())
+        assertThat(actual.fiatBalance).isNull()
+        assertThat(actual.cryptoBalance).isNull()
+    }
+
+    @Test
+    fun `GIVEN empty quote WHEN convert currency and quote THEN row has no price`() {
+        // Act
+        val actual = converter.convert(
+            currency = coin,
+            quoteStatus = QuoteStatus(coin.id.rawCurrencyId!!),
+            onClick = null,
+        ) as TangemTokenRow.State.Content
+
+        // Assert
+        assertThat(actual.quote).isNull()
+        assertThat(actual.priceChange).isNull()
     }
 
     private fun provideTestModels() = listOf(

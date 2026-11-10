@@ -54,6 +54,7 @@ internal class TangemAFDeepLinkListenerTest {
                 afDp = "tangem://onboard-visa",
                 refcode = "refcode",
                 campaign = "campaign",
+                uid = "uid",
                 isDeferred = true,
             ),
             expected = AppsFlyerDeepLink(
@@ -61,6 +62,7 @@ internal class TangemAFDeepLinkListenerTest {
                 afDp = "tangem://onboard-visa",
                 deepLinkSub1 = "refcode",
                 deepLinkSub2 = "campaign",
+                deepLinkSub3 = "uid",
                 isDeferred = true,
             ),
         ),
@@ -70,6 +72,7 @@ internal class TangemAFDeepLinkListenerTest {
                 afDp = null,
                 refcode = null,
                 campaign = null,
+                uid = null,
                 isDeferred = null,
             ),
             expected = AppsFlyerDeepLink(
@@ -77,6 +80,7 @@ internal class TangemAFDeepLinkListenerTest {
                 afDp = null,
                 deepLinkSub1 = null,
                 deepLinkSub2 = null,
+                deepLinkSub3 = null,
                 isDeferred = null,
             ),
         ),
@@ -92,6 +96,7 @@ internal class TangemAFDeepLinkListenerTest {
         afDp: String?,
         refcode: String?,
         campaign: String?,
+        uid: String?,
         isDeferred: Boolean?,
     ): DeepLinkResult {
         val deepLink = mockk<DeepLink> {
@@ -99,6 +104,7 @@ internal class TangemAFDeepLinkListenerTest {
             every { getStringValue("af_dp") } returns afDp
             every { getStringValue("deep_link_sub1") } returns refcode
             every { getStringValue("deep_link_sub2") } returns campaign
+            every { getStringValue("deep_link_sub3") } returns uid
             every { this@mockk.isDeferred } returns isDeferred
             every { clickEvent } returns null
         }

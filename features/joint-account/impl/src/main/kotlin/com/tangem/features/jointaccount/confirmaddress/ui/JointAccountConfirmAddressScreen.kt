@@ -66,16 +66,16 @@ internal fun JointAccountConfirmAddressScreen(state: JointAccountConfirmAddressU
                 ),
         ) {
             Text(
-                modifier = Modifier.padding(horizontal = 8.dp),
+                modifier = Modifier.padding(horizontal = 4.dp),
                 text = stringResourceSafe(CoreUiR.string.joint_account_confirm_shared_address),
                 style = TangemTheme.typography3.heading.medium,
                 color = TangemTheme.colors3.text.primary,
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                modifier = Modifier.padding(horizontal = 8.dp),
+                modifier = Modifier.padding(horizontal = 4.dp),
                 text = stringResourceSafe(CoreUiR.string.joint_account_confirm_account_subtitle),
-                style = TangemTheme.typography3.body.medium,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
             Spacer(Modifier.height(24.dp))
@@ -179,6 +179,7 @@ private fun Footer(state: JointAccountConfirmAddressUM, modifier: Modifier = Mod
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(CoreUiR.string.joint_account_confirm_address_mismatch_button),
+                isEnabled = !state.isConfirming,
                 onClick = state.onMismatchClick,
             )
             TangemButton(

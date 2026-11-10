@@ -17,17 +17,16 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.isShown
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.isSingleCurrency
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
@@ -41,7 +40,7 @@ internal class WalletTokensListUMConverter(
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val isAccountsModeEnabled: Boolean,
     private val expandedAccounts: Set<AccountId>,
-    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+    private val earnOverviews: EarnOverviews,
     shouldShowMainPromo: Boolean,
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
     private val isRedesignedAccountRowsEnabled: Boolean = false,
@@ -113,7 +112,7 @@ internal class WalletTokensListUMConverter(
             accountId = accountId,
             shouldShowPromo = shouldShowPromo,
             yieldModuleApyMap = yieldModuleApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
+            earnOverviews = earnOverviews,
             clickIntents = clickIntents,
             userWalletId = selectedWallet.walletId,
             jointPendingOperations = jointPendingOperations.filter { it.account.accountId == accountId },
@@ -126,7 +125,7 @@ internal class WalletTokensListUMConverter(
             accountId = accountId,
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldModuleApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
+            earnOverviews = earnOverviews,
             userWalletId = selectedWallet.walletId,
             jointPendingOperations = jointPendingOperations.filter { it.account.accountId == accountId },
         )

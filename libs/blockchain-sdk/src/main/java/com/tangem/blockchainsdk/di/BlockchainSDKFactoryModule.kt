@@ -27,6 +27,8 @@ import com.tangem.blockchainsdk.providers.ProdBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.dev.BlockchainProvidersResponseSerializer
 import com.tangem.blockchainsdk.providers.dev.ProviderModelSerializer
 import com.tangem.blockchainsdk.providers.models.ProviderModel
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.local.assets.AssetLoader
 import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.core.remote.RetrofitApiSpec
@@ -170,6 +172,7 @@ internal object BlockchainSDKFactoryModule {
         tangemTechApi: TangemTechApi,
         appPreferencesStore: AppPreferencesStore,
         blockchainSDKLogger: BlockchainSDKLogger,
+        featureTogglesManager: FeatureTogglesManager,
     ): WalletManagerFactoryCreator {
         return WalletManagerFactoryCreator(
             accountCreator = DefaultAccountCreator(tangemTechApi),
@@ -179,6 +182,9 @@ internal object BlockchainSDKFactoryModule {
                 isYieldModeSwapEnabled = true,
                 isYieldModuleV3Enabled = true,
                 isSolanaCoreNftEnabled = true,
+                isYieldBalanceSeparated = featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED,
+                ) && featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1948_YIELD_CONTRIBUTION_ENABLED),
             ),
         )
     }

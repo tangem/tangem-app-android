@@ -6,9 +6,11 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.extensions.pullToRefresh
+import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
@@ -449,8 +451,13 @@ class YieldModeTest : BaseTestCase() {
                     }
                 }
             }
+            step("Swipe up") {
+                swipeVertical(SwipeDirection.UP)
+            }
             step("Assert '$networkFeeTitle' for '$activateFeeSubtitle' is displayed in history") {
-                onTxHistoryScreen { transactionSubtitle(networkFeeTitle, activateFeeSubtitle).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTxHistoryScreen { transactionSubtitle(networkFeeTitle, activateFeeSubtitle).assertIsDisplayed() }
+                }
             }
         }
     }
