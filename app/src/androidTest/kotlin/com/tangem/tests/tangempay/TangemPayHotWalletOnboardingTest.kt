@@ -12,7 +12,7 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.scenarios.exitTangemPayKycScreen
 import com.tangem.scenarios.openMainScreenWithNewHotWallet
 import com.tangem.scenarios.selectTangemPayResidency

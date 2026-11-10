@@ -12,6 +12,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1525_MONEY_ACCOUNT_YIELD_MODE_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
         "version": "undefined"
     },
