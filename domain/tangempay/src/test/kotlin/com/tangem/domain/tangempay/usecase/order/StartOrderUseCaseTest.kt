@@ -1,4 +1,4 @@
-package com.tangem.domain.tangempay.order
+package com.tangem.domain.tangempay.usecase.order
 
 import arrow.core.left
 import arrow.core.right
@@ -10,14 +10,15 @@ import com.tangem.domain.tangempay.model.OrderDetails
 import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.OrderType
 import com.tangem.domain.tangempay.model.TangemPayOrder
-import com.tangem.domain.tangempay.usecase.order.StartOrderUseCase
-import io.mockk.Runs
+import com.tangem.domain.tangempay.order.OrderLaunch
+import com.tangem.domain.tangempay.order.OrderPoller
+import com.tangem.domain.tangempay.order.OrderPollingState
+import com.tangem.domain.tangempay.order.OrderRef
+import com.tangem.domain.tangempay.order.TangemPayOrderRepository
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.coVerifyOrder
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
@@ -28,24 +29,21 @@ import org.junit.jupiter.api.Test
 internal class StartOrderUseCaseTest {
 
     private val orderRepository: TangemPayOrderRepository = mockk()
-    private val ordersStore: OrdersStore = mockk()
     private val orderPoller: OrderPoller = mockk()
 
     private val useCase = StartOrderUseCase(
         orderRepository = orderRepository,
-        ordersStore = ordersStore,
         orderPoller = orderPoller,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(orderRepository, ordersStore, orderPoller)
-        coEvery { ordersStore.save(any()) } just Runs
+        clearMocks(orderRepository, orderPoller)
         every { orderPoller.poll(any()) } returns flowOf(OrderPollingState.Pending)
     }
 
     @Test
-    fun `GIVEN data launch WHEN invoke THEN creates, saves and polls the order`() = runTest {
+    fun `GIVEN data launch WHEN invoke THEN creates and polls the order`() = runTest {
         // Arrange
         coEvery {
             orderRepository.createOrder(USER_WALLET_ID, CREATE_REQUEST, IDEMPOTENCY_KEY)
@@ -63,14 +61,11 @@ internal class StartOrderUseCaseTest {
 
         // Assert
         assertThat(result.getOrNull()?.ref).isEqualTo(expected)
-        coVerifyOrder {
-            ordersStore.save(expected)
-            orderPoller.poll(expected)
-        }
+        verify(exactly = 1) { orderPoller.poll(expected) }
     }
 
     @Test
-    fun `GIVEN create fails WHEN invoke THEN returns the error without saving or polling`() = runTest {
+    fun `GIVEN create fails WHEN invoke THEN returns the error without polling`() = runTest {
         // Arrange
         coEvery {
             orderRepository.createOrder(USER_WALLET_ID, CREATE_REQUEST, IDEMPOTENCY_KEY)
@@ -87,12 +82,11 @@ internal class StartOrderUseCaseTest {
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
-        coVerify(exactly = 0) { ordersStore.save(any()) }
         verify(exactly = 0) { orderPoller.poll(any()) }
     }
 
     @Test
-    fun `GIVEN id launch WHEN invoke THEN saves and polls without creating`() = runTest {
+    fun `GIVEN id launch WHEN invoke THEN polls without creating`() = runTest {
         // Arrange
         val expected = OrderRef(userWalletId = USER_WALLET_ID, id = ORDER_ID)
 
@@ -105,10 +99,7 @@ internal class StartOrderUseCaseTest {
         // Assert
         assertThat(result.getOrNull()?.ref).isEqualTo(expected)
         coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
-        coVerifyOrder {
-            ordersStore.save(expected)
-            orderPoller.poll(expected)
-        }
+        verify(exactly = 1) { orderPoller.poll(expected) }
     }
 
     private fun createdOrder() = TangemPayOrder(

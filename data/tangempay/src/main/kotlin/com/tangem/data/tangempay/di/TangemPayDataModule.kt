@@ -331,12 +331,10 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideStartOrderUseCase(
             orderRepository: TangemPayOrderRepository,
-            ordersStore: OrdersStore,
             orderPoller: OrderPoller,
         ): StartOrderUseCase {
             return StartOrderUseCase(
                 orderRepository = orderRepository,
-                ordersStore = ordersStore,
                 orderPoller = orderPoller,
             )
         }
