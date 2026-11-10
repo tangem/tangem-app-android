@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.core.ui.components.haze.ProvideHaze
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
@@ -61,32 +60,33 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeletonHeight
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBar
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
+import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketScrollIdleEffect
+import com.tangem.features.polymarket.impl.common.feed.ui.toTangemTabItemUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketCategoryTabUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketEventRowUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketEventUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketOutcomeUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.math.ceil
 import java.math.BigDecimal
+import com.tangem.features.polymarket.impl.common.feed.ui.POLYMARKET_FEED_STATUS_KEY
+import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketVisibleEventsEffect
+import com.tangem.features.polymarket.impl.common.feed.ui.polymarketEventsSection
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
 
 // Feed layout: the scrolling header is item 0, the tab band — while loading or with categories — is item 1.
 private const val TAB_BAND_INDEX = 1
 private const val KEY_HEADER = "header"
 private const val KEY_TAB_BAND = "tab_band"
-
-private val ScrollIdleDebounce = 500.milliseconds
 
 private val ScrollRestoreTimeout = 2.seconds
 
@@ -312,26 +312,6 @@ private fun FeedList(
     }
 }
 
-@Composable
-internal fun PolymarketScrollIdleEffect(
-    listState: LazyListState,
-    feedKey: PolymarketEventsListConfig?,
-    onScrollIdle: (Int, Int) -> Unit,
-) {
-    val currentOnScrollIdle by rememberUpdatedState(onScrollIdle)
-
-    // Keyed by category and filter: a pending report belongs to the selection that is gone.
-    LaunchedEffect(listState, feedKey) {
-        snapshotFlow { listState.isScrollInProgress }
-            .collectLatest { isScrollInProgress ->
-                if (isScrollInProgress) return@collectLatest
-
-                delay(ScrollIdleDebounce)
-                currentOnScrollIdle(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
-            }
-    }
-}
-
 /** Waits for the layout before scrolling: an index the list does not hold yet silently clamps to the top. */
 @Composable
 private fun CategorySwitchEffect(
@@ -437,14 +417,6 @@ private fun KeepItemComposed() {
 private fun loadingTabs(): ImmutableList<TangemTabItemUM> =
     List(LOADING_TAB_COUNT) { index -> TangemTabItemUM.Loading(id = "loading_$index") }.toImmutableList()
 
-internal fun PolymarketCategoryTabUM.toTangemTabItemUM() = TangemTabItemUM.Content(
-    id = id.toString(),
-    label = label,
-    iconStart = icon?.let { TangemIconUM.Icon(imageVector = it.tabIcon) },
-    isSelected = isSelected,
-    onClick = onClick,
-)
-
 @Preview(name = "Content Light", showBackground = true, widthDp = 360)
 @Preview(
     name = "Content Dark",
@@ -459,7 +431,7 @@ private fun PolymarketMainScreenContentPreview() {
             state = PolymarketMainUM(
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
-                content = PolymarketMainUM.ContentUM.Content(
+                content = PolymarketFeedContentUM.Content(
                     events = previewEvents(),
                     footer = PolymarketFeedFooterUM.Loading,
                 ),
@@ -494,7 +466,7 @@ private fun PolymarketMainScreenAwaitingFundsPreview() {
             state = PolymarketMainUM(
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
-                content = PolymarketMainUM.ContentUM.Content(
+                content = PolymarketFeedContentUM.Content(
                     events = previewEvents(),
                     footer = PolymarketFeedFooterUM.Loading,
                 ),
@@ -532,7 +504,7 @@ private fun PolymarketMainScreenErrorPreview() {
             state = PolymarketMainUM(
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
-                content = PolymarketMainUM.ContentUM.Error(onReloadClick = {}),
+                content = PolymarketFeedContentUM.Error(onReloadClick = {}),
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
             positions = null,
@@ -563,7 +535,7 @@ private fun PolymarketMainScreenEmptyPreview() {
             state = PolymarketMainUM(
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
-                content = PolymarketMainUM.ContentUM.Empty,
+                content = PolymarketFeedContentUM.Empty,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
             positions = null,
@@ -596,7 +568,7 @@ private fun PolymarketMainScreenLoadingPreview() {
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = persistentListOf(),
                 isCategoriesLoading = true,
-                content = PolymarketMainUM.ContentUM.Loading,
+                content = PolymarketFeedContentUM.Loading,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
             positions = { modifier ->

@@ -22,10 +22,10 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.features.polymarket.impl.category.ui.state.PolymarketCategoryUM
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
-import com.tangem.features.polymarket.impl.main.ui.PolymarketScrollIdleEffect
-import com.tangem.features.polymarket.impl.main.ui.PolymarketVisibleEventsEffect
-import com.tangem.features.polymarket.impl.main.ui.polymarketEventsSection
-import com.tangem.features.polymarket.impl.main.ui.toTangemTabItemUM
+import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketScrollIdleEffect
+import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketVisibleEventsEffect
+import com.tangem.features.polymarket.impl.common.feed.ui.polymarketEventsSection
+import com.tangem.features.polymarket.impl.common.feed.ui.toTangemTabItemUM
 import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("LongParameterList")

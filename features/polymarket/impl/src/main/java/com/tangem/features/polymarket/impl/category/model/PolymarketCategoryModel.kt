@@ -15,17 +15,15 @@ import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.category.ui.state.PolymarketCategoryUM
-import com.tangem.features.polymarket.impl.main.model.PolymarketStaleDataReporter
+import com.tangem.features.polymarket.impl.common.feed.model.PolymarketStaleDataReporter
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
-import com.tangem.features.polymarket.impl.main.model.PolymarketFeedController
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryFilterUMConverter
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
+import com.tangem.features.polymarket.impl.common.feed.model.PolymarketFeedController
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryFilterUMConverter
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryTabUMConverter
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -38,6 +36,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
 
 @ModelScoped
 @Suppress("LongParameterList")
@@ -49,12 +48,10 @@ internal class PolymarketCategoryModel @Inject constructor(
     getEvents: GetPolymarketEventsBatchFlowUseCase,
     observeSports: ObservePolymarketSportsStateUseCase,
     observeQuotes: ObservePolymarketLiveQuotesUseCase,
-    featureToggles: PolymarketFeatureToggles,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketCategoryComponent.Params>()
-    private val isEnabled = featureToggles.isPolymarketPhaseTwoEnabled
     private var selectedSubcategoryId: Int? = null
     private var selectedFilter = availableFilters().firstOrNull()
     private val tabConverter = PolymarketCategoryTabUMConverter(::selectSubcategory)
@@ -79,26 +76,20 @@ internal class PolymarketCategoryModel @Inject constructor(
         getEvents = getEvents,
         observeSports = observeSports,
         observeQuotes = observeQuotes,
-        isPhaseTwoEnabled = isEnabled,
-        eventConverter = PolymarketEventUMConverter(::openEvent, ::openOutcome, isPhaseTwoEnabled = isEnabled),
+        isPhaseTwoEnabled = true,
+        eventConverter = PolymarketEventUMConverter(::openEvent, ::openOutcome, isPhaseTwoEnabled = true),
         onStaleData = staleReporter::report,
         shouldCacheFeeds = false,
     )
 
     init {
-        if (isEnabled) {
-            feed.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
-            selectFeed()
-        } else {
-            modelScope.launch { router.pop() }
-        }
+        feed.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
+        selectFeed()
     }
 
     fun onBack() = router.pop()
 
-    fun onResume() {
-        if (isEnabled) feed.resume()
-    }
+    fun onResume() = feed.resume()
 
     fun onPause() = feed.pause()
 
@@ -111,12 +102,11 @@ internal class PolymarketCategoryModel @Inject constructor(
     private fun selectedCategory() = params.category.subcategories.firstOrNull { it.id == selectedSubcategoryId }
         ?: params.category
 
-    private fun availableFilters() = PolymarketCategoryFilterUMConverter.available(selectedCategory())
+    private fun availableFilters() = selectedCategory().selectableFilters
 
     private fun selection() = PolymarketEventsListConfig(selectedCategory().id, selectedFilter)
 
     private fun selectSubcategory(id: Int) {
-        if (!isEnabled) return
         if (id != params.category.id && params.category.subcategories.none { it.id == id }) return
         val selected = id.takeUnless { it == params.category.id }
         if (selected == selectedSubcategoryId) return
@@ -126,7 +116,7 @@ internal class PolymarketCategoryModel @Inject constructor(
     }
 
     private fun selectFilter(filter: PolymarketCategoryFilter) {
-        if (!isEnabled || filter == selectedFilter || filter !in availableFilters()) return
+        if (filter == selectedFilter || filter !in availableFilters()) return
         selectedFilter = filter
         selectFeed()
     }
@@ -137,7 +127,7 @@ internal class PolymarketCategoryModel @Inject constructor(
         uiState.update { state ->
             state.copy(
                 selection = selection,
-                content = PolymarketMainUM.ContentUM.Loading,
+                content = PolymarketFeedContentUM.Loading,
                 subcategories = tabConverter.subcategories(params.category, selectedSubcategoryId),
                 filters = PolymarketCategoryFilterUMConverter.convert(
                     category = selectedCategory(),
@@ -151,7 +141,7 @@ internal class PolymarketCategoryModel @Inject constructor(
     }
 
     private fun refresh() {
-        if (!isEnabled || uiState.value.pullToRefreshConfig.isRefreshing) return
+        if (uiState.value.pullToRefreshConfig.isRefreshing) return
         setRefreshing(true)
         modelScope.launch {
             try {

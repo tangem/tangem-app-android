@@ -21,8 +21,7 @@ import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
 import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.createPolymarketEvent
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -49,6 +48,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketCategoryModelTest {
@@ -132,21 +132,6 @@ internal class PolymarketCategoryModelTest {
     }
 
     @Test
-    fun `GIVEN D2 disabled WHEN category route is opened THEN it closes without fetching or sports observers`() = runTest {
-        // Act
-        val model = createModel(isEnabled = false)
-        model.onResume()
-        runCurrent()
-
-        // Assert
-        assertThat(feeds).isEmpty()
-        assertThat(model.uiState.value.subcategories).isEmpty()
-        assertThat(model.uiState.value.filters).isEmpty()
-        verify(exactly = 1) { router.pop() }
-        verify(exactly = 0) { observeSports(any(), any()) }
-    }
-
-    @Test
     fun `GIVEN loaded child event WHEN event and outcome tapped THEN routes preserve wallet and selected category`() = runTest {
         // Arrange
         val model = createModel()
@@ -227,7 +212,7 @@ internal class PolymarketCategoryModelTest {
 
         // Assert
         assertThat(model.cards().map { it.id }).containsExactly("old")
-        assertThat((model.uiState.value.content as PolymarketMainUM.ContentUM.Content).footer)
+        assertThat((model.uiState.value.content as PolymarketFeedContentUM.Content).footer)
             .isInstanceOf(PolymarketFeedFooterUM.Error::class.java)
         assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
         assertThat(feeds.last().scope.coroutineContext[Job]?.isActive).isFalse()
@@ -295,7 +280,7 @@ internal class PolymarketCategoryModelTest {
             emptyList(), PaginationStatus.InitialLoadingError(IllegalStateException("offline")),
         )
         runCurrent()
-        val footer = (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).footer
+        val footer = (model.uiState.value.content as PolymarketFeedContentUM.Content).footer
         (footer as PolymarketFeedFooterUM.Error).onRetryClick()
         runCurrent()
         val retry = feeds.last()
@@ -315,11 +300,10 @@ internal class PolymarketCategoryModelTest {
         (uiState.value.filters.single { it.id == id } as TangemTabItemUM.Content).onClick()
     }
 
-    private fun PolymarketCategoryModel.cards() = (uiState.value.content as PolymarketMainUM.ContentUM.Content).events
+    private fun PolymarketCategoryModel.cards() = (uiState.value.content as PolymarketFeedContentUM.Content).events
 
     private fun TestScope.createModel(
         parent: PolymarketCategory = category(),
-        isEnabled: Boolean = true,
     ): PolymarketCategoryModel {
         every { getEvents(any(), any(), any()) } answers {
             val context = secondArg<PolymarketEventsBatchingContext>()
@@ -336,7 +320,6 @@ internal class PolymarketCategoryModelTest {
             getEvents = getEvents,
             observeSports = observeSports,
             observeQuotes = mockk(),
-            featureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns isEnabled },
             dispatchers = createTestingCoroutineDispatcherProvider(),
         ).also { model = it }
     }
