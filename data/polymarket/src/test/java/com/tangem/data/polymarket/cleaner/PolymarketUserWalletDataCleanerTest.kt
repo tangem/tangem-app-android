@@ -298,6 +298,7 @@ internal class PolymarketUserWalletDataCleanerTest {
 
         // Assert
         coVerify(exactly = 1) { sessionKeyStore.delete(WALLET_B) }
+        coVerify(exactly = 1) { fastTradingBannerStore.clear(WALLET_A) }
         coVerify(exactly = 1) { credentialsStore.clear(WALLET_B) }
     }
 
