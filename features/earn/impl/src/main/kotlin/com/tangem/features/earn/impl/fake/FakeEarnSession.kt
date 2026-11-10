@@ -92,10 +92,11 @@ internal class FakeEarnSession(
 
         val ref = fakeTxRef(preset, fakePlan.actionId)
         emit(EarnSigningStep.Sent(ref))
-        val result = if (fakePlan.actionId == Withdraw.ID) {
-            fakeWithdrawResult(title = resultTitle(fakePlan), period = withdrawPeriod())
-        } else {
-            fakeResult(title = resultTitle(fakePlan), provider = providerName())
+        val title = resultTitle(fakePlan)
+        val result = when (fakePlan.actionId) {
+            Deposit.ID -> fakeDepositResult(title = title, provider = providerName())
+            Withdraw.ID -> fakeWithdrawResult(title = title, period = withdrawPeriod(), fee = fakePlan.fee)
+            else -> fakeClaimResult(title = title)
         }
         emit(EarnSigningStep.Done(ref, result))
     }

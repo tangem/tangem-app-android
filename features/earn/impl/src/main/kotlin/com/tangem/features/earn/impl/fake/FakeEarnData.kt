@@ -52,22 +52,30 @@ internal fun fakeTxRef(preset: FakeEarnSessionPreset, actionId: String): EarnTxR
     analytics = fakeTxAnalytics(actionId),
 )
 
-internal fun fakeResult(title: String, provider: String): EarnResult = EarnResult(
-    title = stringReference(title),
+internal fun fakeDepositResult(title: String, provider: String): EarnResult = fakeClaimResult(title).copy(
     subtitle = stringReference("Your ETH in Main account is now earning in $provider"),
     chip = stringReference("Current 5.5% APY"),
+)
+
+internal fun fakeClaimResult(title: String): EarnResult = EarnResult(
+    title = stringReference(title),
+    subtitle = null,
+    chip = null,
     rows = emptyList(),
     primary = EarnResultButton(stringReference("Go to yield"), EarnFlowExit.ToYield),
     secondary = EarnResultButton(stringReference("Go to token"), EarnFlowExit.ToToken),
 )
 
-internal fun fakeWithdrawResult(title: String, period: String): EarnResult = EarnResult(
+internal fun fakeWithdrawResult(title: String, period: String, fee: Fee): EarnResult = EarnResult(
     title = stringReference(title),
     subtitle = null,
     chip = null,
     rows = listOf(
         EarnRow(label = stringReference("Withdrawal period"), value = EarnValue.Text(stringReference(period))),
-        EarnRow(label = stringReference("Network fee"), value = EarnValue.Text(stringReference("$FAKE_FEE_ETH ETH"))),
+        EarnRow(
+            label = stringReference("Network fee"),
+            value = EarnValue.Text(stringReference("${fee.amount.value?.toPlainString()} ETH")),
+        ),
     ),
     primary = EarnResultButton(stringReference("Done"), EarnFlowExit.Done),
     secondary = null,
