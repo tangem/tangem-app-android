@@ -134,6 +134,7 @@ internal fun offrampDestination(
     feeCurrency: String = "USD",
     minDays: Int = 1,
     maxDays: Int = 3,
+    fixedFeeAmount: BigDecimal? = null,
 ): OfframpDestination = OfframpDestination(
     rail = rail,
     currency = "USD",
@@ -143,6 +144,7 @@ internal fun offrampDestination(
         amount = fee,
         currency = feeCurrency,
         description = null,
+        fixedAmount = fixedFeeAmount,
     ),
     eta = OfframpEta(minDays = minDays, maxDays = maxDays),
 )

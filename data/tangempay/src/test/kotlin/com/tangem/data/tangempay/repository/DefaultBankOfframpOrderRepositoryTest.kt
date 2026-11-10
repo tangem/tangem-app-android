@@ -405,6 +405,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
             name = "ACH",
             calculationType = "FIXED",
             amount = BigDecimal("1.50"),
+            fixedAmount = null,
             currency = "USD",
             description = "ACH offramp fee",
         )
@@ -607,6 +608,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
                 name = "SPEI",
                 calculationType = "PERCENTAGE",
                 amount = BigDecimal("1"),
+                fixedAmount = null,
                 currency = "USD",
                 description = "SPEI offramp fee",
             ),
