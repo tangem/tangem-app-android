@@ -1,17 +1,40 @@
 package com.tangem.core.ui.ds2.button
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.LineHeightStyle
@@ -25,9 +48,213 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
+import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.BaseButtonTestTags
+import kotlinx.coroutines.launch
+
+/**
+ * Shared body of [TangemButton] and [TangemButton.HoldToConfirm]: the [TangemSurface] shell with
+ * semantics, focus ring and disabled fade around [TangemButtonInternal].
+ *
+ * Exactly one of [onClick] and [hold] drives the interaction. With [hold] the surface is not
+ * clickable (no press ripple — the hold overlay is the press feedback), the background is painted
+ * here so the overlay can sit between it and the content, and the confirm action is exposed to
+ * accessibility services as the click action.
+ */
+@Suppress("LongParameterList", "LongMethod")
+@Composable
+internal fun TangemButtonContainer(
+    variant: TangemButton.Variant,
+    size: TangemButton.Size,
+    isLoading: Boolean,
+    isEnabled: Boolean,
+    isDimmed: Boolean,
+    iconStart: TangemIconUM?,
+    iconEnd: TangemIconUM?,
+    text: TextReference?,
+    loadingText: TextReference?,
+    contentDescription: String?,
+    interactionSource: MutableInteractionSource,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    hold: HoldToConfirmSpec? = null,
+) {
+    val isLoaderInline = isLoading && loadingText != null
+    val isIconOnly = text == null && !isLoaderInline
+    val shouldShowLoader = isLoading || iconStart == null && iconEnd == null && text == null
+    val colorTokens = variant.tokens()
+    val sizeTokens = size.tokens()
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val hasEnabledAppearance = isEnabled && !isDimmed
+    val disabledAlpha = if (hasEnabledAppearance) 1f else colorTokens.disabledAlpha
+    val backgroundColor =
+        if (hasEnabledAppearance) colorTokens.backgroundColor else colorTokens.disabledBackgroundColor
+    val accessibilityLabel = contentDescription ?: resolveLoadingLabel(shouldShowLoader, loadingText, text)
+
+    TangemSurface(
+        modifier = modifier
+            .buttonSemantics(isEnabled = isEnabled, label = accessibilityLabel, hold = hold)
+            .conditional(isFocused) {
+                border(width = 2.dp, color = colorTokens.focusRingColor, shape = CircleShape)
+            }
+            .alpha(disabledAlpha)
+            .then(
+                if (hold != null) {
+                    Modifier.holdChrome(
+                        hold = hold,
+                        backgroundColor = backgroundColor,
+                        isEnabled = isEnabled,
+                        interactionSource = interactionSource,
+                    )
+                } else {
+                    Modifier
+                },
+            ),
+        onClick = onClick,
+        enabled = isEnabled,
+        color = if (hold != null) Color.Transparent else backgroundColor,
+        border = colorTokens.defaultBorderColor?.let { BorderStroke(width = 1.dp, color = it) },
+        shape = CircleShape,
+        interactionSource = interactionSource,
+        isMaterial = variant == TangemButton.Variant.Material,
+    ) {
+        TangemButtonInternal(
+            isIconOnly = isIconOnly,
+            isEnabled = hasEnabledAppearance,
+            isLoading = shouldShowLoader,
+            isLoaderInline = isLoaderInline,
+            iconStart = iconStart,
+            iconEnd = iconEnd,
+            text = if (isLoaderInline) loadingText else text,
+            colorTokens = colorTokens,
+            sizeTokens = sizeTokens,
+        )
+    }
+}
+
+private fun Modifier.buttonSemantics(isEnabled: Boolean, label: String?, hold: HoldToConfirmSpec?): Modifier =
+    semantics(mergeDescendants = true) {
+        role = Role.Button
+        if (!isEnabled) disabled()
+        label?.let { contentDescription = it }
+        if (hold?.isActionEnabled == true) {
+            onClick(
+                action = {
+                    hold.onConfirm()
+                    true
+                },
+            )
+        }
+    }
+
+/**
+ * Focusability, background and hold overlay of a hold-to-confirm button. The background is painted
+ * here rather than by [TangemSurface] so the overlay lands between the fill and the content.
+ */
+private fun Modifier.holdChrome(
+    hold: HoldToConfirmSpec,
+    backgroundColor: Color,
+    isEnabled: Boolean,
+    interactionSource: MutableInteractionSource,
+): Modifier = focusable(enabled = isEnabled, interactionSource = interactionSource)
+    .clip(CircleShape)
+    .background(backgroundColor)
+    .drawBehind {
+        val progress = hold.progress().coerceIn(0f, 1f)
+        if (progress > 0f) {
+            drawRect(color = hold.overlayColor, size = size.copy(width = size.width * progress))
+        }
+    }
+
+@Composable
+private fun resolveLoadingLabel(isLoading: Boolean, loadingText: TextReference?, text: TextReference?): String? {
+    return if (isLoading) (loadingText ?: text)?.resolveReference() else null
+}
+
+/**
+ * Hold-to-confirm wiring for [TangemButtonContainer].
+ *
+ * @property progress Hold progress in `0..1`, read at draw time; the overlay covers that fraction
+ *   of the width from the start edge.
+ * @property isActionEnabled Whether accessibility services may trigger [onConfirm] directly.
+ */
+@Immutable
+internal class HoldToConfirmSpec(
+    val progress: () -> Float,
+    val overlayColor: Color,
+    val isActionEnabled: Boolean,
+    val onConfirm: () -> Unit,
+)
+
+/**
+ * Press-and-hold gesture driving [progress]: the fill runs `0 → 1` over [HOLD_DURATION_MS] while
+ * the pointer stays down, then [onConfirm] fires and the fill resets. Releasing (or a parent
+ * scroll stealing the pointer) before the end retracts the fill and confirms nothing.
+ *
+ * The fill runs in a scope outside the pointer handler, so turning [isEnabled] off mid-hold has to
+ * stop it explicitly — otherwise a button that just became disabled or loading could still confirm.
+ */
+@Composable
+internal fun rememberHoldToConfirmGesture(
+    isEnabled: Boolean,
+    progress: Animatable<Float, AnimationVector1D>,
+    onConfirm: () -> Unit,
+): Modifier {
+    val scope = rememberCoroutineScope()
+    val hapticManager = LocalHapticManager.current
+    val currentOnConfirm by rememberUpdatedState(onConfirm)
+
+    LaunchedEffect(isEnabled) {
+        if (!isEnabled) {
+            progress.stop()
+            progress.snapTo(0f)
+        }
+    }
+
+    return Modifier.pointerInput(isEnabled) {
+        if (!isEnabled) return@pointerInput
+        awaitEachGesture {
+            awaitFirstDown()
+            val fillJob = scope.launch {
+                progress.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = HOLD_DURATION_MS, easing = LinearEasing),
+                )
+                hapticManager.perform(TangemHapticEffect.View.Confirm)
+                currentOnConfirm()
+                progress.snapTo(0f)
+            }
+            waitForUpOrCancellation()
+            if (fillJob.isActive) {
+                fillJob.cancel()
+                hapticManager.perform(TangemHapticEffect.View.Reject)
+                scope.launch {
+                    progress.animateTo(targetValue = 0f, animationSpec = tween(durationMillis = RETRACT_DURATION_MS))
+                }
+            }
+        }
+    }
+}
+
+private const val HOLD_DURATION_MS = 1500
+private const val RETRACT_DURATION_MS = 200
+
+internal fun TangemButton.HoldVariant.toVariant(): TangemButton.Variant = when (this) {
+    TangemButton.HoldVariant.Brand -> TangemButton.Variant.Brand
+    TangemButton.HoldVariant.Primary -> TangemButton.Variant.Primary
+}
+
+@Composable
+@ReadOnlyComposable
+internal fun TangemButton.HoldVariant.holdOverlayColor(): Color = when (this) {
+    TangemButton.HoldVariant.Brand -> TangemTheme.colors3.interaction.press.staticLight
+    TangemButton.HoldVariant.Primary -> TangemTheme.colors3.interaction.press.inverse
+}
 
 /**
  * Inner content of [TangemButton]: an icon-text-icon row with a cross-fading loader overlay. With
