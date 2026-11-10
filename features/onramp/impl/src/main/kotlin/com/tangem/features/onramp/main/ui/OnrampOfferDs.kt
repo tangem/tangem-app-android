@@ -1,47 +1,31 @@
 package com.tangem.features.onramp.main.ui
 
-import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEach
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.OnrampOffersBlockTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
-import com.tangem.domain.onramp.model.PaymentMethodType
-import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.paymentmethod.ui.themedImageUrl
 import com.tangem.utils.annotations.RemoveWithToggle
-import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
@@ -104,6 +88,7 @@ internal fun OfferDs(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier
 }
 
 @Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 private fun PaymentBlockInOfferDs(paymentMethod: OnrampPaymentMethod, providerName: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(

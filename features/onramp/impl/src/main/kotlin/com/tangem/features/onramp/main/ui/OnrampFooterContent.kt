@@ -19,8 +19,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.keyboardAsState
-import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.main.entity.OnrampAmountButtonUM
@@ -81,7 +79,11 @@ private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
                             items = state.amountButtons,
                             key = OnrampAmountButtonUM::value,
                         ) {
-                            AmountButton(button = it)
+                            if (LocalOnrampDesignSystemEnabled.current) {
+                                OnrampAmountButtonDs(button = it)
+                            } else {
+                                AmountButton(button = it)
+                            }
                         }
                     }
                 }
@@ -92,32 +94,8 @@ private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
 }
 
 @Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 private fun AmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modifier) {
-    if (LocalOnrampDesignSystemEnabled.current) {
-        NewAmountButton(button = button, modifier = modifier)
-    } else {
-        LegacyAmountButton(button = button, modifier = modifier)
-    }
-}
-
-@Composable
-private fun NewAmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modifier) {
-    val focusManager = LocalFocusManager.current
-    TangemButton(
-        modifier = modifier,
-        variant = TangemButton.Variant.Secondary,
-        size = TangemButton.Size.X8,
-        text = stringReference("${button.value}${button.currency}"),
-        onClick = {
-            focusManager.clearFocus()
-            button.onClick()
-        },
-    )
-}
-
-@Composable
-@RemoveWithToggle("AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
-private fun LegacyAmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modifier) {
     val focusManager = LocalFocusManager.current
     Box(
         modifier = modifier
