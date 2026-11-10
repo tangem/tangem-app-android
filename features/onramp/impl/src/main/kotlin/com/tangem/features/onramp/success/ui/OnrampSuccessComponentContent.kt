@@ -1,3 +1,5 @@
+@file:RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
+
 package com.tangem.features.onramp.success.ui
 
 import android.content.res.Configuration
@@ -38,6 +40,7 @@ import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.core.ui.utils.toTimeFormat
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
 import com.tangem.features.onramp.success.entity.previewdata.OnrampSuccessComponentUMPreviewData

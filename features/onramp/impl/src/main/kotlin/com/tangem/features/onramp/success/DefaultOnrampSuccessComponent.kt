@@ -12,6 +12,7 @@ import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import com.tangem.features.onramp.success.model.OnrampSuccessComponentModel
 import com.tangem.features.onramp.success.ui.OnrampStatusScreenContent
 import com.tangem.features.onramp.success.ui.OnrampSuccessComponentContent
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -35,6 +36,7 @@ internal class DefaultOnrampSuccessComponent @AssistedInject constructor(
                 onCloseClick = router::pop,
             )
         } else {
+            @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
             OnrampSuccessComponentContent(
                 state = state,
                 onBackClick = router::pop,
