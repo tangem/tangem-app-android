@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,6 +38,7 @@ internal fun loadedStatus(
     currency: CryptoCurrency,
     fiatRate: BigDecimal = BigDecimal.ONE,
     balance: BigDecimal = BigDecimal.ONE,
+    contributions: List<BalanceContribution> = emptyList(),
 ): CryptoCurrencyStatus = CryptoCurrencyStatus(
     currency = currency,
     value = CryptoCurrencyStatus.Loaded(
@@ -51,6 +53,7 @@ internal fun loadedStatus(
             NetworkAddress.Address(value = "address", type = NetworkAddress.Address.Type.Primary),
         ),
         sources = CryptoCurrencyStatus.Sources(),
+        contributions = contributions,
     ),
 )
 
