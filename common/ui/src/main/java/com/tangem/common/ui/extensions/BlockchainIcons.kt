@@ -304,6 +304,7 @@ private fun iconSetOf(blockchain: Blockchain): IconSet? = when (blockchain) {
     Blockchain.ZkSyncEra,
     Blockchain.ZkSyncEraTestnet,
     -> IconSet(active = R.drawable.img_zksync_22, greyedOut = R.drawable.ic_zksync_22)
+    Blockchain.Zeniq -> IconSet(active = R.drawable.img_zeniq_22, greyedOut = R.drawable.ic_zeniq_22)
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
     Blockchain.Unknown,

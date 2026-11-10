@@ -42,5 +42,9 @@
     {
         "name": "public-masterpiece",
         "version": "6.5"
+    },
+    {
+        "name": "zeniq",
+        "version": "6.9"
     }
 ]

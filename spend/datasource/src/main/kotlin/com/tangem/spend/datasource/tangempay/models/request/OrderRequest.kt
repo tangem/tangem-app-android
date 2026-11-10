@@ -83,7 +83,7 @@ data class OrderRequest(
     @SerialName("SMART_CONTRACT_ISSUE_RAIN")
     data class SmartContractIssue(
         @SerialName("customer_wallet_address") val customerWalletAddress: String,
-        @SerialName("chain_id") val chainId: Int,
+        @SerialName("chain_id") val chainId: Long,
     ) : Data
 
     @Serializable

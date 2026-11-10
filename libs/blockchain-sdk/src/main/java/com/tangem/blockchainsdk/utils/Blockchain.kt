@@ -190,6 +190,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "onyx" -> Blockchain.Onyx
         "onyx/test" -> Blockchain.OnyxTestnet
         "public-masterpiece" -> Blockchain.PublicMasterpiece
+        "zeniq" -> Blockchain.Zeniq
         "monad" -> Blockchain.Monad
         "monad/test" -> Blockchain.MonadTestnet
         else -> null
@@ -379,6 +380,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Onyx -> "onyx"
         Blockchain.OnyxTestnet -> "onyx/test"
         Blockchain.PublicMasterpiece -> "public-masterpiece"
+        Blockchain.Zeniq -> "zeniq"
         Blockchain.Monad -> "monad"
         Blockchain.MonadTestnet -> "monad/test"
     }
@@ -498,6 +500,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Arc, Blockchain.ArcTestnet -> "usd-coin"
         Blockchain.Onyx, Blockchain.OnyxTestnet -> "chain-2"
         Blockchain.PublicMasterpiece -> "public-meme-token"
+        Blockchain.Zeniq -> "zeniq"
         Blockchain.Monad, Blockchain.MonadTestnet -> "monad"
     }
 }

@@ -136,6 +136,7 @@ internal class BlockchainIconsTest {
                 Blockchain.Xodex -> R.drawable.img_xodex_22
                 Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> R.drawable.img_zklink_22
                 Blockchain.ZkSyncEra, Blockchain.ZkSyncEraTestnet -> R.drawable.img_zksync_22
+                Blockchain.Zeniq -> R.drawable.img_zeniq_22
                 Blockchain.Nexa, Blockchain.NexaTestnet, Blockchain.Unknown -> R.drawable.ic_alert_24
             }
             TestModel(blockchain, expected)
@@ -266,6 +267,7 @@ internal class BlockchainIconsTest {
                 Blockchain.Xodex -> R.drawable.ic_xodex_22
                 Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> R.drawable.ic_zklink_22
                 Blockchain.ZkSyncEra, Blockchain.ZkSyncEraTestnet -> R.drawable.ic_zksync_22
+                Blockchain.Zeniq -> R.drawable.ic_zeniq_22
                 Blockchain.Nexa, Blockchain.NexaTestnet, Blockchain.Unknown -> R.drawable.ic_alert_24
             }
             TestModel(blockchain, expected)

@@ -173,5 +173,6 @@ public val Blockchain.mercuryoNetwork: String?
             Blockchain.Arc, Blockchain.ArcTestnet -> null
             Blockchain.Onyx, Blockchain.OnyxTestnet -> null
             Blockchain.PublicMasterpiece -> null
+            Blockchain.Zeniq -> null
         }
     }

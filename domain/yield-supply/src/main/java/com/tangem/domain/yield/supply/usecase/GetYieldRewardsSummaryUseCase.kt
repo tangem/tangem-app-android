@@ -25,7 +25,7 @@ class GetYieldRewardsSummaryUseCase(
 
     private fun summarise(incentives: YieldIncentives): YieldRewardsSummary {
         val moduleAddress = incentives.moduleAddress?.takeIf(String::isNotBlank) ?: return YieldRewardsSummary.None
-        val blockchain = Blockchain.fromChainId(incentives.chainId) ?: return YieldRewardsSummary.None
+        val blockchain = Blockchain.fromChainId(incentives.chainId.toLong()) ?: return YieldRewardsSummary.None
         val isCaseInsensitive = BlockchainUtils.isCaseInsensitiveContractAddress(blockchain.toNetworkId())
 
         // A claim pays out a token's whole cumulative amount, so one unroutable row for a token makes every row of
