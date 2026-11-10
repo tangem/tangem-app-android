@@ -1,6 +1,5 @@
 package com.tangem.features.onramp.selectcountry.ui
 
-import com.tangem.utils.annotations.RemoveWithToggle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,6 +31,7 @@ import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcountry.entity.CountryItemState
 import com.tangem.features.onramp.selectcountry.entity.CountryListUM
+import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
 @RemoveWithToggle("AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
