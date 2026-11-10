@@ -179,6 +179,7 @@ fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtrasType {
         Blockchain.Zeniq,
         Blockchain.Katana, Blockchain.KatanaTestnet,
         Blockchain.XLayer, Blockchain.XLayerTestnet,
+        Blockchain.Ink, Blockchain.InkTestnet,
         -> Network.TransactionExtrasType.NONE
         // endregion
     }
