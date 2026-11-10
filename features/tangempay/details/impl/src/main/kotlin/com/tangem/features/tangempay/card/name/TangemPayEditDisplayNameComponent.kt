@@ -8,7 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCard
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.card.view.DisplayNameState
 

@@ -4,6 +4,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnBannerOverview
 import com.tangem.features.earn.api.overview.EarnHeadline
 import com.tangem.features.earn.api.overview.EarnOverview
@@ -26,6 +27,7 @@ fun fakeEarnOverviews(): EarnOverviews = EarnOverviews(
                 rate = fakeRate(),
                 isActive = false,
                 badge = stringReference("APY 5.50%"),
+                badgeAccent = EarnBadgeAccent.Success,
                 route = null,
             ),
             banner = EarnBannerOverview(rate = fakeRate(), activeCount = 0, totalPosition = null),

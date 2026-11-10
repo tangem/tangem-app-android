@@ -9,7 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsUMConverter.Input
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -41,7 +41,7 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
 
     private var input = Input()
 
-    private val prefetchedBankCredentials: Deferred<Either<VisaApiError, List<BankCredentials>>>? =
+    private val prefetchedBankCredentials: Deferred<Either<TangemPayApiError, List<BankCredentials>>>? =
         if (moneyAccountFeatureToggles.isMxnEnabled) modelScope.async { loadBankCredentials() } else null
 
     val uiState: StateFlow<MoneyAccountAddFundsOptionsUM>
@@ -81,7 +81,7 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
         }
     }
 
-    private fun showRailsWhenLoaded(request: Deferred<Either<VisaApiError, List<BankCredentials>>>) {
+    private fun showRailsWhenLoaded(request: Deferred<Either<TangemPayApiError, List<BankCredentials>>>) {
         modelScope.launch {
             request.await().onRight { credentials ->
                 updateInput { current -> current.copy(hasSpei = credentials.any(BankCredentials::isSpei)) }
@@ -89,7 +89,7 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
         }
     }
 
-    private suspend fun loadBankCredentials(): Either<VisaApiError, List<BankCredentials>> {
+    private suspend fun loadBankCredentials(): Either<TangemPayApiError, List<BankCredentials>> {
         return getMoneyAccountBankCredentialsUseCase(
             userWalletId = params.userWalletId,
             includeAllRails = moneyAccountFeatureToggles.isMxnEnabled,

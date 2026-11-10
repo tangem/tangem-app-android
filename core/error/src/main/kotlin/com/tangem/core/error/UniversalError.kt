@@ -13,7 +13,7 @@ package com.tangem.core.error
  * `101` - TangemSdkError
  * `102` - BlockchainSdkError
  * `103` - Express
- * `104` - Visa
+ * `104` - Tangem Pay
  * `105` - Staking
  * `106` - NFT
  * `107` - WalletConnect

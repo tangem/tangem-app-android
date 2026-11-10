@@ -20,7 +20,6 @@ import com.tangem.domain.marketing.models.matchesUsdAmount
 import com.tangem.domain.marketing.models.nextWindowTransition
 import com.tangem.domain.marketing.models.validateDates
 import com.tangem.domain.quotes.GetFiatUSDRateUseCase
-import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
@@ -63,7 +62,6 @@ internal class MarketingBannerModel @Inject constructor(
     private val marketingUidBindingRepository: MarketingUidBindingRepository,
     private val appCoroutineScope: AppCoroutineScope,
     private val urlOpener: UrlOpener,
-    private val useDeskFeatureToggles: UseDeskFeatureToggles,
     private val clock: Clock,
 ) : Model() {
 
@@ -253,9 +251,8 @@ internal class MarketingBannerModel @Inject constructor(
 
     private fun classifyCtaLinks(campaigns: List<MarketingCampaign>): Map<String?, CtaBannerLink> {
         if (params !is MarketingBannerComponent.Params.Cta) return emptyMap()
-        val isSupportChatEnabled = useDeskFeatureToggles.isSupportChatDeepLinkEnabled
         return campaigns.map { it.banner.deeplink }.distinct().associateWith { link ->
-            resolveCtaBannerLink(link?.trim(), isSupportChatEnabled)
+            resolveCtaBannerLink(link?.trim())
         }
     }
 

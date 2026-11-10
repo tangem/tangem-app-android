@@ -13,6 +13,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.registration.WalletLinkError
 import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.lib.auth.session.AuthError
+import com.tangem.lib.auth.session.PreparedWalletRegistration
+import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletRegistrationResult
@@ -69,6 +71,7 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
         wallet.copy(scanResponse = wallet.scanResponse.copy(card = card.copy(wallets = ed25519Wallets)))
     }
     private val unsupportedColdWallets = listOf(twinWallet, ed25519Wallet)
+    private val nonce: WalletNonce = mockk()
     private val hotWallet: UserWallet.Hot = mockk {
         every { walletId } returns UserWalletId(HOT_WALLET_ID_HEX)
     }
@@ -204,19 +207,58 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
         }
 
         @Test
-        fun `GIVEN cold wallet WHEN link THEN registers its Base64 id with the card signer`() = runTest {
+        fun `GIVEN cold wallet WHEN link THEN signs a cold nonce with the card signer and submits it`() = runTest {
             // Arrange
             val signer = mockk<WalletSigner>()
+            val prepared = mockk<PreparedWalletRegistration>()
             every { coldSigner.signerFor(coldWallet) } returns signer
-            coEvery { walletRegistrar.register(any(), any()) } returns WalletRegistrationResult.Registered.right()
-            val expectedWalletId = coldWallet.base64Id()
+            coEvery { walletRegistrar.isRegistered(any()) } returns false
+            coEvery { walletRegistrar.requestNonce() } returns nonce.right()
+            coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns prepared.right()
+            coEvery { walletRegistrar.submit(prepared) } returns WalletRegistrationResult.Registered.right()
 
             // Act
             val actual = repository.link(coldWallet)
 
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
-            coVerify(exactly = 1) { walletRegistrar.register(walletId = expectedWalletId, signer = signer) }
+            coVerify(exactly = 1) {
+                walletRegistrar.prepare(walletId = coldWallet.base64Id(), nonce = nonce, signer = signer)
+            }
+            coVerify(exactly = 0) { walletRegistrar.register(any(), any()) }
+            verify(exactly = 1) { analyticsEventHandler.send(BackendAuthAnalyticsEvent.WalletLinked()) }
+        }
+
+        @Test
+        fun `GIVEN cold wallet already registered WHEN link THEN succeeds without requesting a nonce`() = runTest {
+            // Arrange
+            every { coldSigner.signerFor(coldWallet) } returns mockk()
+            coEvery { walletRegistrar.isRegistered(coldWallet.base64Id()) } returns true
+
+            // Act
+            val actual = repository.link(coldWallet)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 0) { walletRegistrar.requestNonce() }
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+        }
+
+        @Test
+        fun `GIVEN cold wallet registered meanwhile WHEN prepare skips it THEN succeeds without submitting`() = runTest {
+            // Arrange
+            every { coldSigner.signerFor(coldWallet) } returns mockk()
+            coEvery { walletRegistrar.isRegistered(any()) } returns false
+            coEvery { walletRegistrar.requestNonce() } returns nonce.right()
+            coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns null.right()
+
+            // Act
+            val actual = repository.link(coldWallet)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 0) { walletRegistrar.submit(any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
         }
 
         @ParameterizedTest
@@ -279,26 +321,54 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
             assertThat(sentEvents).containsExactlyElementsIn(expectedEvents)
         }
 
-        @Test
-        fun `GIVEN cold registration fails WHEN link THEN failure is reported with the cold wallet type`() = runTest {
+        @ParameterizedTest
+        @EnumSource(value = WalletRegistrationFailed.Stage::class, names = ["Nonce", "Prepare", "Submit"])
+        fun `GIVEN cold phase fails WHEN link THEN failure is reported with that stage`(
+            stage: WalletRegistrationFailed.Stage,
+        ) = runTest {
             // Arrange
-            val error = WalletRegistrationError.NoActiveSession
+            val error = WalletRegistrationError.Api(AuthError.Forbidden(problem = null))
+            val prepared = mockk<PreparedWalletRegistration>()
             every { coldSigner.signerFor(coldWallet) } returns mockk()
-            coEvery { walletRegistrar.register(any(), any()) } returns error.left()
+            coEvery { walletRegistrar.isRegistered(any()) } returns false
+            coEvery { walletRegistrar.requestNonce() } returns
+                if (stage == WalletRegistrationFailed.Stage.Nonce) error.left() else nonce.right()
+            coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns
+                if (stage == WalletRegistrationFailed.Stage.Prepare) error.left() else prepared.right()
+            coEvery { walletRegistrar.submit(prepared) } returns error.left()
 
             // Act
-            repository.link(coldWallet)
+            val actual = repository.link(coldWallet)
 
             // Assert
-            verify(exactly = 1) {
-                analyticsEventHandler.send(
-                    WalletRegistrationFailed(
-                        walletType = WalletRegistrationFailed.WalletType.Cold,
-                        stage = WalletRegistrationFailed.Stage.Register,
-                        reason = error.toString(),
-                    ),
-                )
-            }
+            assertThat(actual).isEqualTo(WalletLinkError.Failed(reason = error.toString()).left())
+            val sentEvents = mutableListOf<AnalyticsEvent>()
+            verify(atLeast = 0) { analyticsEventHandler.send(capture(sentEvents)) }
+            assertThat(sentEvents).containsExactly(
+                WalletRegistrationFailed(
+                    walletType = WalletRegistrationFailed.WalletType.Cold,
+                    stage = stage,
+                    reason = error.toString(),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN card tap cancelled WHEN link THEN returns Cancelled without reporting a failure`() = runTest {
+            // Arrange
+            every { coldSigner.signerFor(coldWallet) } returns mockk()
+            coEvery { walletRegistrar.isRegistered(any()) } returns false
+            coEvery { walletRegistrar.requestNonce() } returns nonce.right()
+            coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns
+                WalletRegistrationError.SigningFailed(TangemSdkError.UserCancelled()).left()
+
+            // Act
+            val actual = repository.link(coldWallet)
+
+            // Assert
+            assertThat(actual).isEqualTo(WalletLinkError.Cancelled.left())
+            coVerify(exactly = 0) { walletRegistrar.submit(any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
         }
 
         private fun provideTestModels(): List<ErrorMappingModel> {

@@ -21,4 +21,7 @@ internal sealed interface CollectiblesRoute : Route {
 
     @Serializable
     data class ConfirmOrder(val externalId: String, val isTurboEnabled: Boolean) : CollectiblesRoute
+
+    @Serializable
+    data object PackOpenFailed : CollectiblesRoute
 }

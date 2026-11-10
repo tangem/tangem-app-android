@@ -36,23 +36,23 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.findCardWithId
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.TangemPayCardType
-import com.tangem.domain.models.pay.isAwaitingActivation
-import com.tangem.domain.models.pay.isFrozen
-import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.TangemPayTopUpData
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
-import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardLimitPeriod
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardType
+import com.tangem.domain.models.tangempay.isAwaitingActivation
+import com.tangem.domain.models.tangempay.isFrozen
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.TangemPayTopUpData
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.usecase.ChangeCardFrozenStateUseCase
+import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.closure.CloseCardListener
@@ -415,7 +415,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 id = TangemPayCardPageSetting.Id.Details,
                 title = TextReference.Res(R.string.tangempay_card_details_title),
                 onClick = ::onClickViewDetails,
-                iconRes = CoreUiR.drawable.ic_visa_card_details_24,
+                iconRes = CoreUiR.drawable.ic_tangem_pay_card_details_24,
                 testTag = TangemPayTestTags.SHOW_DETAILS_ROW,
                 isEnabled = frozenState == TangemPayCardFrozenState.Unfrozen && !isDetailsShown,
             ),
@@ -658,7 +658,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
-    suspend fun retryBankCredentials(productInstanceId: String): Either<VisaApiError, Unit> =
+    suspend fun retryBankCredentials(productInstanceId: String): Either<TangemPayApiError, Unit> =
         getBankCredentialsUseCase(userWalletId = userWalletId, productInstanceId = productInstanceId)
             .map(::onVaBankingDetailsResolved)
 
@@ -673,7 +673,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         val customerId = currentStatus.value.ifLoadedOrNull { it.customerId } ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase.invoke(
-                type = FeedbackEmailType.Visa.FeatureIsBeta(
+                type = FeedbackEmailType.TangemPay.FeatureIsBeta(
                     walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                     customerId = customerId,
                 ),

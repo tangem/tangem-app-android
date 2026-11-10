@@ -9,7 +9,7 @@ import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCard
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal class TangemPayAddToWalletComponent(

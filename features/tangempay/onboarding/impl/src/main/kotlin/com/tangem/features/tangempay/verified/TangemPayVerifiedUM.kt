@@ -15,7 +15,7 @@ internal sealed interface TangemPayVerifiedUM {
     data class Content(
         val description: TextReference,
         val moneyAccount: ProductUM,
-        val visaCard: ProductUM,
+        val paymentAccount: ProductUM,
         val primaryButton: ButtonUM,
         override val onCloseClick: () -> Unit,
     ) : TangemPayVerifiedUM

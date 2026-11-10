@@ -12,11 +12,11 @@ import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.isPlanTransitioningState
-import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.IssueAdditionalCardError
-import com.tangem.domain.pay.usecase.IssueAdditionalCardUseCase
+import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.IssueAdditionalCardError
+import com.tangem.domain.tangempay.usecase.IssueAdditionalCardUseCase
 import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.tariffPlanState

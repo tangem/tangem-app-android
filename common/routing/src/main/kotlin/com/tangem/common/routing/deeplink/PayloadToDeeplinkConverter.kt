@@ -16,7 +16,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.domain.notifications.models.NotificationType
-import com.tangem.domain.visa.model.TangemPayPushNotificationType
+import com.tangem.domain.tangempay.model.TangemPayPushNotificationType
 import com.tangem.utils.converter.Converter
 
 /**

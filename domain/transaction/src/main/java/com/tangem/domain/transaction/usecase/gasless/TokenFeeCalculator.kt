@@ -103,10 +103,9 @@ internal class TokenFeeCalculator(
         amount: BigDecimal,
         txTokenCurrencyStatus: CryptoCurrencyStatus,
         initialFee: TransactionFee,
-        isYieldModuleV3Enabled: Boolean,
     ): Either<GetFeeError, TransactionFee> {
         val isYieldSend = amount.convertToSdkAmount(txTokenCurrencyStatus).type is AmountType.TokenYieldSupply
-        if (!isYieldModuleV3Enabled || !isYieldSend) return Either.Right(initialFee)
+        if (!isYieldSend) return Either.Right(initialFee)
 
         return estimateFee(
             userWallet = userWallet,

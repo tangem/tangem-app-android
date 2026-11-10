@@ -8,9 +8,9 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
-import com.tangem.domain.pay.model.bankofframp.OfframpEta
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
 import com.tangem.features.tangempay.details.impl.R
 import java.math.BigDecimal
 import java.util.Currency

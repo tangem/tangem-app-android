@@ -14,7 +14,6 @@ android {
 dependencies {
     /** Project - API */
     implementation(projects.features.marketing.api)
-    implementation(projects.features.usedesk.api)
 
     /** Domain */
     implementation(projects.domain.marketing)

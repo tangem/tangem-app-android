@@ -66,6 +66,7 @@ import com.tangem.features.foryou.impl.model.converter.ForYouWalletHeaderConvert
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
 import com.tangem.features.foryou.impl.model.converter.earnOpportunities.items
 import com.tangem.features.foryou.model.ForYouPeriod
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
@@ -74,6 +75,7 @@ import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.StringsSigns.THREE_STARS
 import io.mockk.*
+import io.mockk.every
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -104,6 +106,9 @@ internal class ForYouModelTest {
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk(relaxed = true)
     private val router: Router = mockk(relaxUnitFun = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
+    private val walletFeatureToggles: WalletFeatureToggles = mockk {
+        every { isRedesignedTokenRowsEnabled } returns false
+    }
 
     // A working controller fake: selecting accounts pushes them into the flow the model observes.
     private val selectedAccountsFlow = MutableStateFlow<Set<AccountId>>(emptySet())
@@ -1121,6 +1126,7 @@ internal class ForYouModelTest {
             portfolioSelectorController = portfolioSelectorController,
             walletHeaderConverter = walletHeaderConverter,
             analyticsEventHandler = analyticsEventHandler,
+            walletFeatureToggles = walletFeatureToggles,
         ).also { model = it }
     }
 

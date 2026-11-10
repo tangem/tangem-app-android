@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.form.model
 
-import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.features.tangempay.withdraw.toShortName
 
 /**

@@ -11,7 +11,7 @@ import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayOnboardDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -35,7 +35,7 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val appRouter: AppRouter,
-    private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
+    private val tangemPayOnboardDeepLink: TangemPayOnboardDeepLinkHandler.Factory,
 ) {
 
     fun observe(scope: CoroutineScope, currentRoute: Flow<AppRoute?>) {
@@ -80,7 +80,7 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
 
         if (dispatchedUri.getAndSet(uri) != uri) {
             TangemLogger.i("[Deferred] Dispatching AppsFlyer deep link URI: $uri")
-            onboardVisaDeepLink.create(uri.toUri())
+            tangemPayOnboardDeepLink.create(uri.toUri())
         }
         clearAppsFlyerDeeplinkUseCase()
     }
@@ -175,8 +175,8 @@ internal fun isNavigationBlocked(currentRoute: AppRoute?): Boolean = when (curre
 internal fun isIdleEntryPoint(currentRoute: AppRoute?): Boolean =
     currentRoute is AppRoute.Home || currentRoute is AppRoute.Stories || currentRoute is AppRoute.Wallet
 
-private val ONBOARD_VISA_DEEPLINK = "${DeepLinkScheme.Tangem.scheme}://${DeepLinkRoute.OnboardVisa.host}"
+private val TANGEM_PAY_ONBOARD_DEEPLINK = "${DeepLinkScheme.Tangem.scheme}://${DeepLinkRoute.TangemPayOnboard.host}"
 
-internal fun isSupportedDeferredDeeplink(uri: String): Boolean = uri == ONBOARD_VISA_DEEPLINK ||
-    uri.startsWith("$ONBOARD_VISA_DEEPLINK?") ||
-    uri.startsWith("$ONBOARD_VISA_DEEPLINK/")
+internal fun isSupportedDeferredDeeplink(uri: String): Boolean = uri == TANGEM_PAY_ONBOARD_DEEPLINK ||
+    uri.startsWith("$TANGEM_PAY_ONBOARD_DEEPLINK?") ||
+    uri.startsWith("$TANGEM_PAY_ONBOARD_DEEPLINK/")

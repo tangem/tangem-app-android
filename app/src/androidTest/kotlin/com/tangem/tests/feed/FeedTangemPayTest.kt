@@ -10,8 +10,8 @@ import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.scenarios.addNewCardWallet
 import com.tangem.scenarios.awaitTangemPayStatusOfSelectedWallet
 import com.tangem.scenarios.expandFeed

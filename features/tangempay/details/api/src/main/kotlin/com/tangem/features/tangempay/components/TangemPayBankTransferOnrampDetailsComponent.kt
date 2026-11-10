@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.components
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 
 interface TangemPayBankTransferOnrampDetailsComponent : ComposableContentComponent {

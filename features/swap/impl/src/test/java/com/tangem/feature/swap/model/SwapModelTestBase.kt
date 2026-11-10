@@ -29,8 +29,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
-import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
+import com.tangem.domain.tangempay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionDepositCurrencyStatusesUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
@@ -52,6 +52,7 @@ import com.tangem.domain.swap.usecase.CalculateAmountUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -94,6 +95,7 @@ internal abstract class SwapModelTestBase {
     protected val analyticsErrorEventHandler: AnalyticsErrorHandler = mockk(relaxed = true)
     protected val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk(relaxed = true)
     protected val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase = mockk(relaxed = true)
+    protected val balanceContributionsRefresher: BalanceContributionsRefresher = mockk(relaxed = true)
     protected val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase =
         mockk(relaxed = true)
     protected val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk(relaxed = true)
@@ -258,6 +260,7 @@ internal abstract class SwapModelTestBase {
         analyticsErrorEventHandler = analyticsErrorEventHandler,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         updateDelayedCurrencyStatusUseCase = updateDelayedCurrencyStatusUseCase,
+        balanceContributionsRefresher = balanceContributionsRefresher,
         getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
         getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
         saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,

@@ -11,6 +11,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
@@ -84,6 +85,7 @@ internal class TestEarnProduct(
     override val hasLegacyBlock: Boolean = false,
     private val summariesFlow: Flow<Map<CryptoCurrency.ID, EarnProductSummary>> = emptyFlow(),
     private val refreshResult: Either<Throwable, Unit> = Unit.right(),
+    override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success,
     delegate: EarnProduct = createFakeEarnProduct(FakeEarnProductPreset.Lending),
 ) : EarnProduct by delegate {
 
@@ -126,6 +128,7 @@ internal class TestEarnRateSource(
     override val id: EarnProductId,
     override val rank: Int = 0,
     private val ratesFlow: Flow<Map<CryptoCurrency.ID, EarnRateEntry>> = emptyFlow(),
+    override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success,
 ) : EarnRateSource {
 
     private val ratesWalletIdsLog = mutableListOf<UserWalletId>()

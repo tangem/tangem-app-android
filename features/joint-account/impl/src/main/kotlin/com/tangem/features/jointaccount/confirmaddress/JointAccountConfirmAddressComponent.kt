@@ -35,5 +35,6 @@ internal class JointAccountConfirmAddressComponent(
     data class Params(
         val userWalletId: UserWalletId,
         val cryptoAccountId: String,
+        val onActivated: () -> Unit,
     )
 }

@@ -19,11 +19,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.TangemPayEligibilityManager
+import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
@@ -54,15 +53,12 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val uiMessageSender: UiMessageSender,
-    tangemPayFeatureToggles: TangemPayFeatureToggles,
     videoFactory: LoopingVideoController.Factory,
 ) : Model(), TangemPayWalletSelectorComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
 
-    private val video = if (
-        tangemPayFeatureToggles.isPayBundleIntroductionEnabled && moneyAccountFeatureToggles.isMoneyAccountsEnabled
-    ) {
+    private val video = if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
         videoFactory.createPayBundleVideo(scope = modelScope)
     } else {
         null

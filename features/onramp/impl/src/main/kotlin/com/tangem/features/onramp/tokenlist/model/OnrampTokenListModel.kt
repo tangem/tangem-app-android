@@ -22,6 +22,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.tokens.GetAssetRequirementsUseCase
@@ -38,6 +39,7 @@ import com.tangem.features.onramp.utils.ClearSearchBarTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isZero
 import kotlinx.coroutines.async
@@ -63,6 +65,7 @@ internal class OnrampTokenListModel @Inject constructor(
     private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : Model() {
 
     val state: StateFlow<TokenListUM> = tokenListUMController.state
@@ -108,6 +111,7 @@ internal class OnrampTokenListModel @Inject constructor(
                         appCurrency = appCurrency,
                         accountList = accountList.portfoliosForOperation(),
                         isAccountsMode = isAccountsMode,
+                        isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
                     ),
                 )
                 updateTokenListUM(
@@ -122,6 +126,7 @@ internal class OnrampTokenListModel @Inject constructor(
                             isInsufficientBalanceForSell = accountList.isInsufficientBalanceForSell(),
                         ),
                         isAccountsMode = isAccountsMode,
+                        isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
                     ),
                 )
             }
@@ -311,7 +316,7 @@ internal class OnrampTokenListModel @Inject constructor(
             OnrampOperation.SWAP -> {
                 val isAvailable = !status.currency.isCustom
 
-                val supplyStatus = status.value.yieldSupplyStatus
+                val supplyStatus = status.value.yieldSupply
                 val isUnavailableByYieldSupply = supplyStatus?.isAllowedToSpend == false && supplyStatus.isActive
 
                 isAvailable && status.value !is CryptoCurrencyStatus.NoQuote && !isUnavailableByYieldSupply

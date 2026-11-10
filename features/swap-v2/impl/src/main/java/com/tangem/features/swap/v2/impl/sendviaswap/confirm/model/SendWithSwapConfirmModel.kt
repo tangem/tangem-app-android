@@ -51,7 +51,6 @@ import com.tangem.features.send.api.subcomponents.notifications.SendNotification
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
-import com.tangem.features.swap.v2.api.SwapV2FeatureToggles
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
@@ -110,7 +109,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val swapAlertFactory: SwapAlertFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appScope: AppCoroutineScope,
-    private val swapV2FeatureToggles: SwapV2FeatureToggles,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
 ) : Model(), FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
@@ -351,10 +349,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 confirmData = confirmData,
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 onExpressError = { expressError ->
-                    val isHideRejectedProviderEnabled = swapV2FeatureToggles.isHideRejectedCexProviderEnabled
-                    if (isHideRejectedProviderEnabled) {
-                        hideProviderIfRejected(provider = provider, error = expressError)
-                    }
+                    hideProviderIfRejected(provider = provider, error = expressError)
                     uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
                     val fromCurrency = confirmData.fromCryptoCurrencyStatus?.currency
                     val toCurrency = confirmData.toCryptoCurrencyStatus?.currency
@@ -375,7 +370,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     swapAlertFactory.getGenericErrorState(
                         expressError = expressError,
                         isSwapAttemptAlert = true,
-                        providerName = provider.name.takeIf { isHideRejectedProviderEnabled },
+                        providerName = provider.name,
                         amountCurrency = amountCurrency,
                         onFailedTxEmailClick = {
                             modelScope.launch {

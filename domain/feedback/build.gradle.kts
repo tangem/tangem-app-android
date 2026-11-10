@@ -22,7 +22,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.models)
-    implementation(projects.domain.visa.models)
+    implementation(projects.domain.tangempay.models)
     // endregion
 
     // region Domain models

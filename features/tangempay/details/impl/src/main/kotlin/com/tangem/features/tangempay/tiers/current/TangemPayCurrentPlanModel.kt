@@ -15,17 +15,18 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.*
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.usecase.CancelTangemPayOrderUseCase
-import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
-import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
-import com.tangem.domain.pay.usecase.IsTangemPayCustomerVerifiedUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.usecase.CancelTangemPayOrderUseCase
+import com.tangem.domain.tangempay.usecase.CancelTariffPlanPendingTransitionUseCase
+import com.tangem.domain.tangempay.usecase.CancelTariffTransitionUseCase
+import com.tangem.domain.tangempay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
+import com.tangem.features.tangempay.common.openTrustedLink
 import com.tangem.features.tangempay.common.tariffPlanState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
@@ -104,7 +105,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
             currentPlanState.tariff.status != TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING &&
                 !currentPlanState.isPlanTransitioningState
         },
-        onLinkClick = urlOpener::openUrl,
+        onLinkClick = urlOpener::openTrustedLink,
         onFullTermsClick = ::onFullTermsClick,
     )
 

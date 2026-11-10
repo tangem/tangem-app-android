@@ -49,7 +49,11 @@ internal class OrderFormFieldTest {
     fun `GIVEN a typed value WHEN checked THEN non-Latin letters and other disallowed symbols get own errors`(
         model: CharsetErrorModel,
     ) {
-        assertThat(OrderFormField.City.charsetError(model.value)).isEqualTo(model.expected)
+        // Act
+        val actual = OrderFormField.City.charsetError(model.value)
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
     }
 
     @Test

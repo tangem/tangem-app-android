@@ -237,7 +237,7 @@ internal class PlaceResultUMConverterTest {
         assertThat(actual).isEqualTo(model.expected)
     }
 
-    internal data class ReadBackModel(val name: String, val order: PredictionOrderState, val expected: PlaceResultUM?) {
+    internal data class ReadBackModel(val name: String, val order: PredictionOrderState, val expected: PlaceOutcome) {
         override fun toString(): String = name
     }
 
@@ -245,50 +245,56 @@ internal class PlaceResultUMConverterTest {
         ReadBackModel(
             name = "the whole size matched is a full fill spent at the order's price",
             order = readBack(sizeMatched = ORDERED_SHARES),
-            expected = PlaceResultUM.Filled(
-                placedAt = PLACED_AT,
-                collateralAmount = BigDecimal("73.50"),
-                shares = ORDERED_SHARES,
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.Filled(
+                    placedAt = PLACED_AT,
+                    collateralAmount = BigDecimal("73.50"),
+                    shares = ORDERED_SHARES,
+                ),
             ),
         ),
         ReadBackModel(
             name = "more than the size is still a full fill",
             order = readBack(sizeMatched = ORDERED_SHARES + BigDecimal.ONE),
-            expected = PlaceResultUM.Filled(
-                placedAt = PLACED_AT,
-                collateralAmount = BigDecimal("74.24"),
-                shares = ORDERED_SHARES + BigDecimal.ONE,
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.Filled(
+                    placedAt = PLACED_AT,
+                    collateralAmount = BigDecimal("74.24"),
+                    shares = ORDERED_SHARES + BigDecimal.ONE,
+                ),
             ),
         ),
         ReadBackModel(
             name = "a partial fill is spent at the order's price, half up to cents",
             order = readBack(sizeMatched = BigDecimal("33.333333")),
-            expected = PlaceResultUM.PartiallyFilled(
-                placedAt = PLACED_AT,
-                filledCollateral = BigDecimal("24.50"),
-                requestedCollateral = QUOTED_AMOUNT,
-                shares = BigDecimal("33.333333"),
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = BigDecimal("24.50"),
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = BigDecimal("33.333333"),
+                ),
             ),
         ),
         ReadBackModel(
-            name = "a matched order with nothing filled is no fill",
+            name = "a matched order with nothing filled is an anomaly",
             order = readBack(sizeMatched = BigDecimal.ZERO),
-            expected = PlaceResultUM.NotFilled(placedAt = PLACED_AT),
+            expected = PlaceOutcome.Anomalous(reason = ZERO_SHARES_REASON),
         ),
         ReadBackModel(
-            name = "a fill whose size cannot be read has no result",
+            name = "a fill whose size cannot be read is no fill",
             order = readBack(sizeMatched = null),
-            expected = null,
+            expected = PlaceOutcome.Anomalous(reason = ZERO_SHARES_REASON),
         ),
         ReadBackModel(
-            name = "an order whose size cannot be read has no result",
+            name = "an order whose size cannot be read is an anomaly",
             order = readBack(sizeMatched = BigDecimal.TEN, originalSize = null),
-            expected = null,
+            expected = PlaceOutcome.Anomalous(reason = UNREADABLE_FILL_REASON),
         ),
         ReadBackModel(
-            name = "a fill without a price cannot be spent and has no result",
+            name = "a fill without a price cannot be spent and is an anomaly",
             order = readBack(sizeMatched = BigDecimal.TEN, price = null),
-            expected = null,
+            expected = PlaceOutcome.Anomalous(reason = UNREADABLE_FILL_REASON),
         ),
     )
 
@@ -308,6 +314,7 @@ internal class PlaceResultUMConverterTest {
         val QUOTED_SHARES: BigDecimal = BigDecimal("97.959184")
         const val PLACED_AT = 1_787_300_000_000L
         const val ZERO_SHARES_REASON = "The exchange matched the order and filled no shares"
+        const val UNREADABLE_FILL_REASON = "The exchange matched the order, but its fill cannot be read"
 
         fun BigDecimal.half(): BigDecimal = divide(BigDecimal("2"))
 
