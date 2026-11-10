@@ -31,10 +31,14 @@ internal data class NewRecipientDraft(
     }
 }
 
-internal fun NewRecipientDraft.isComplete(isBusiness: Boolean): Boolean {
-    if (isThirdParty == null || accountType == null) return false
-    val formFields = BankWithdrawFormFields.recipientDetails(isBusiness = isBusiness) +
-        BankWithdrawFormFields.bankDetails
+internal fun NewRecipientDraft.isComplete(isBusiness: Boolean, rail: BankRail): Boolean {
+    val formFields = if (rail == BankRail.SPEI) {
+        BankWithdrawFormFields.recipientDetails(isBusiness = isBusiness, rail = rail)
+    } else {
+        if (isThirdParty == null || accountType == null) return false
+        BankWithdrawFormFields.recipientDetails(isBusiness = isBusiness, rail = rail) +
+            BankWithdrawFormFields.bankDetails
+    }
     return formFields.all { field -> !fields[field].isNullOrBlank() }
 }
 
@@ -42,12 +46,12 @@ internal fun NewRecipientDraft.isComplete(isBusiness: Boolean): Boolean {
 internal fun BankWithdrawDraft.toNewBankAccountDetails(): BankAccountDetails? {
     val isBusiness = entry == BankWithdrawEntry.NewBusiness
     val rail = destination?.rail ?: return null
-    if (!newRecipient.isComplete(isBusiness = isBusiness)) return null
+    if (!newRecipient.isComplete(isBusiness = isBusiness, rail = rail)) return null
     return newRecipient.toBankAccountDetails(rail = rail, isBusiness = isBusiness)
 }
 
 internal fun NewRecipientDraft.toBankAccountDetails(rail: BankRail, isBusiness: Boolean): BankAccountDetails {
-    require(isComplete(isBusiness = isBusiness)) { "New recipient draft is incomplete" }
+    require(isComplete(isBusiness = isBusiness, rail = rail)) { "New recipient draft is incomplete" }
     val beneficiary = if (isBusiness) {
         Beneficiary.Business(name = value(BankWithdrawFormField.BusinessName))
     } else {
@@ -56,6 +60,7 @@ internal fun NewRecipientDraft.toBankAccountDetails(rail: BankRail, isBusiness: 
             lastName = value(BankWithdrawFormField.LastName),
         )
     }
+    if (rail == BankRail.SPEI) return toSpeiBankAccountDetails(beneficiary)
     return BankAccountDetails(
         currency = USD_CURRENCY,
         rail = rail,
@@ -73,6 +78,19 @@ internal fun NewRecipientDraft.toBankAccountDetails(rail: BankRail, isBusiness: 
         accountType = requireNotNull(accountType),
     )
 }
+
+private fun NewRecipientDraft.toSpeiBankAccountDetails(beneficiary: Beneficiary) = BankAccountDetails(
+    currency = MXN_CURRENCY,
+    rail = BankRail.SPEI,
+    isThirdParty = false,
+    beneficiary = beneficiary,
+    beneficiaryAddress = null,
+    bankName = null,
+    bankAddress = null,
+    accountNumber = value(BankWithdrawFormField.Clabe),
+    routingNumber = null,
+    accountType = null,
+)
 
 private fun NewRecipientDraft.postalAddress(address: AddressFields, countryCode: String): PostalAddress {
     val region = fields[address.region].orEmpty().trim()
@@ -110,3 +128,4 @@ private val BANK_ADDRESS = AddressFields(
 )
 
 private const val USD_CURRENCY = "USD"
+private const val MXN_CURRENCY = "MXN"

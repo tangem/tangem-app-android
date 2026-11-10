@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.form.model
 
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -17,21 +18,33 @@ internal object BankWithdrawFormFields {
         BankWithdrawFormField.BankPostalCode,
     )
 
-    fun recipientDetails(isBusiness: Boolean): ImmutableList<BankWithdrawFormField> = buildList {
+    fun recipientDetails(isBusiness: Boolean, rail: BankRail?): ImmutableList<BankWithdrawFormField> =
+        if (rail == BankRail.SPEI) speiRecipientDetails(isBusiness) else usRecipientDetails(isBusiness)
+
+    private fun speiRecipientDetails(isBusiness: Boolean): ImmutableList<BankWithdrawFormField> = buildList {
+        add(BankWithdrawFormField.Clabe)
+        addNames(isBusiness)
+    }.toImmutableList()
+
+    private fun usRecipientDetails(isBusiness: Boolean): ImmutableList<BankWithdrawFormField> = buildList {
         add(BankWithdrawFormField.AccountNumber)
         add(BankWithdrawFormField.RoutingNumber)
-        if (isBusiness) {
-            add(BankWithdrawFormField.BusinessName)
-        } else {
-            add(BankWithdrawFormField.FirstName)
-            add(BankWithdrawFormField.LastName)
-        }
+        addNames(isBusiness)
         add(BankWithdrawFormField.Country)
         add(BankWithdrawFormField.Region)
         add(BankWithdrawFormField.City)
         add(BankWithdrawFormField.AddressLine1)
         add(BankWithdrawFormField.PostalCode)
     }.toImmutableList()
+
+    private fun MutableList<BankWithdrawFormField>.addNames(isBusiness: Boolean) {
+        if (isBusiness) {
+            add(BankWithdrawFormField.BusinessName)
+        } else {
+            add(BankWithdrawFormField.FirstName)
+            add(BankWithdrawFormField.LastName)
+        }
+    }
 
     /** Rain wants a two-letter state code for a US address; the rest of the world sends a free-text region. */
     fun isUsRecipientCountry(values: Map<BankWithdrawFormField, String>): Boolean =

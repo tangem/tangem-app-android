@@ -58,6 +58,10 @@ internal class BankWithdrawFormValidatorTest {
     )
 
     private fun provideTestModels() = listOf(
+        single(BankWithdrawFormField.Clabe, "002010077777777771", expected = null),
+        single(BankWithdrawFormField.Clabe, "002010077777777772", expected = BankWithdrawFieldError.InvalidFormat),
+        single(BankWithdrawFormField.Clabe, "00201007777777777", expected = BankWithdrawFieldError.InvalidFormat),
+        single(BankWithdrawFormField.Clabe, "", expected = BankWithdrawFieldError.Required),
         single(BankWithdrawFormField.AccountNumber, "4830", expected = null),
         single(BankWithdrawFormField.AccountNumber, "12345678901234567", expected = null),
         single(BankWithdrawFormField.AccountNumber, "483", expected = BankWithdrawFieldError.InvalidFormat),

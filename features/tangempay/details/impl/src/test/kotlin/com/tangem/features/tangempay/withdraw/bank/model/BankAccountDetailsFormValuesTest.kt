@@ -89,6 +89,25 @@ internal class BankAccountDetailsFormValuesTest {
     }
 
     @Test
+    fun `GIVEN SPEI details WHEN toFormValues THEN the number is the CLABE and nothing else but the name`() {
+        // Arrange
+        val details = bankAccount(id = "acc-1", accountNumber = "002010077777777771", rail = BankRail.SPEI).details
+            .copy(beneficiaryAddress = null, bankName = null, bankAddress = null, routingNumber = null)
+
+        // Act
+        val actual = details.toFormValues()
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            mapOf(
+                BankWithdrawFormField.Clabe to "002010077777777771",
+                BankWithdrawFormField.FirstName to "Andrei",
+                BankWithdrawFormField.LastName to "Melnikov",
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN details without a bank address WHEN toFormValues THEN bank rows absent`() {
         // Arrange
         val details = bankAccount().details.copy(bankName = null, bankAddress = null)
