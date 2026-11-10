@@ -9,7 +9,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.serialization.BigDecimalSerializer
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.details.TokenAction
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.serialization.Serializable

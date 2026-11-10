@@ -2,15 +2,20 @@ package com.tangem.feature.wallet.di
 
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.wallets.registration.WalletLinkRequester
 import com.tangem.feature.wallet.DefaultWalletEntryComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.featuretoggles.DefaultWalletFeatureToggles
+import com.tangem.feature.wallet.link.DefaultWalletLinkComponent
+import com.tangem.feature.wallet.link.WalletLinkModel
+import com.tangem.feature.wallet.link.WalletLinkRequesterProxy
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedModel
+import com.tangem.feature.wallet.presentation.wallet.ui.components.tangempay.KycRejectedModel
 import com.tangem.feature.wallet.utils.DefaultUserWalletImageFetcher
 import com.tangem.feature.wallet.utils.DefaultUserWalletsFetcher
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.wallet.WalletFeatureToggles
+import com.tangem.features.wallet.WalletLinkComponent
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import dagger.Binds
@@ -53,4 +58,16 @@ internal interface WalletFeatureModule {
     @IntoMap
     @ClassKey(KycRejectedModel::class)
     fun bindKycRejectedModel(model: KycRejectedModel): Model
+
+    @Binds
+    fun bindWalletLinkComponentFactory(impl: DefaultWalletLinkComponent.Factory): WalletLinkComponent.Factory
+
+    @Binds
+    @IntoMap
+    @ClassKey(WalletLinkModel::class)
+    fun bindWalletLinkModel(model: WalletLinkModel): Model
+
+    @Binds
+    @Singleton
+    fun bindWalletLinkRequester(impl: WalletLinkRequesterProxy): WalletLinkRequester
 }

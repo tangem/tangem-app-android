@@ -13,6 +13,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
@@ -82,7 +83,7 @@ internal class SetBalanceTransformer(
 
         val totalCryptoAmount = computeTotal(status.value.amount, stakingCryptoAmount)
 
-        val isYieldSupplyActive = status.value.yieldSupplyStatus?.isActive == true
+        val isYieldSupplyActive = status.value.yieldSupply?.isActive == true
         val prevContent = prev as? TokenDetailsBalanceBlockUM.Content
 
         return TokenDetailsBalanceBlockUM.Content(

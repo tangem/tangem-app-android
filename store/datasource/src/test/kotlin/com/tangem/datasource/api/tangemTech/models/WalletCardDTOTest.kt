@@ -128,6 +128,20 @@ internal class WalletCardDTOTest {
         }
 
         @Test
+        fun `GIVEN json without role WHEN parsed THEN role is null`() {
+            // Arrange
+            val json = """
+                { "cardId": "AC01", "cardPublicKey": "0400", "backupStatus": "cardLinked", "curves": [] }
+            """.trimIndent()
+
+            // Act
+            val actual = adapter.fromJson(json)!!
+
+            // Assert
+            assertThat(actual.role).isNull()
+        }
+
+        @Test
         fun `GIVEN json with unknown role WHEN parsed THEN fails`() {
             // Arrange
             val json = """
@@ -211,6 +225,15 @@ internal class WalletCardDTOTest {
                 "backupStatus", "active",
                 "curves", emptyList<String>(),
             )
+        }
+
+        @Test
+        fun `GIVEN card without role WHEN encoded THEN role omitted`() {
+            // Act
+            val actual = encode(card(role = null))
+
+            // Assert
+            assertThat(actual).doesNotContainKey("role")
         }
 
         @Test
@@ -319,7 +342,6 @@ internal class WalletCardDTOTest {
         val FULL_FIELDS = mapOf(
             "cardId" to "\"AC01\"",
             "cardPublicKey" to "\"0400\"",
-            "role" to "\"primary\"",
             "backupStatus" to "\"active\"",
             "curves" to "[]",
         )
@@ -332,7 +354,7 @@ internal class WalletCardDTOTest {
         """.trimIndent()
 
         fun card(
-            role: WalletCardDTO.Role = WalletCardDTO.Role.PRIMARY,
+            role: WalletCardDTO.Role? = WalletCardDTO.Role.PRIMARY,
             backupStatus: WalletCardDTO.BackupStatus = WalletCardDTO.BackupStatus.ACTIVE,
         ): WalletCardDTO = WalletCardDTO(
             cardId = "AC01",

@@ -62,6 +62,7 @@ internal class MoneyAccountStatusValueTest {
         val activating = MoneyAccountStatusValue.Onboarding.Activating(
             source = StatusSource.ACTUAL,
             customerId = "customer-1",
+            step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
         )
 
         // Act & Assert

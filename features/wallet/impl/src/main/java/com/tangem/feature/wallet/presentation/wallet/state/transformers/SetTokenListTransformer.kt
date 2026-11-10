@@ -6,18 +6,17 @@ import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createWalletActionButtons
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
-import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
@@ -28,12 +27,14 @@ internal class SetTokenListTransformer(
     private val appCurrency: AppCurrency,
     private val clickIntents: WalletClickIntents,
     private val yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
-    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
+    private val earnOverviews: EarnOverviews = EarnOverviews.Empty,
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
     private val isHotBackedUp: Boolean? = null,
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
     private val isRedesignedAccountRowsEnabled: Boolean = false,
+    @RemoveWithToggle(toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED", description = "Inline true")
+    private val isRedesignedTokenRowsEnabled: Boolean = false,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
@@ -48,10 +49,6 @@ internal class SetTokenListTransformer(
         PolymarketWalletBlockConverter(appCurrency = appCurrency, clickIntents = clickIntents)
     }
 
-    private val collectiblesConverter by lazy {
-        CollectiblesWalletBlockConverter(appCurrency = appCurrency, clickIntents = clickIntents)
-    }
-
     override fun transform(prevState: WalletState): WalletState {
         return when (prevState) {
             is WalletState.MultiCurrency.Content -> {
@@ -61,7 +58,6 @@ internal class SetTokenListTransformer(
                     tangemPayMainUM = prevState.tangemPayMainUM.toLoadedState(),
                     moneyAccountMainUM = prevState.moneyAccountMainUM.toLoadedMoneyAccountState(),
                     polymarketWalletBlockUM = predictionBlockState(),
-                    collectiblesWalletBlockUM = collectiblesBlockState(),
                     buttons = prevState.enableButtons(),
                 )
             }
@@ -88,7 +84,6 @@ internal class SetTokenListTransformer(
                     tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
                     moneyAccountMainUM = walletUM.moneyAccountMainUM.toLoadedMoneyAccountState(),
                     polymarketWalletBlockUM = predictionBlockState(),
-                    collectiblesWalletBlockUM = collectiblesBlockState(),
                     tokensListUM = tokensListUM,
                     areActionsAvailable = areActionsAvailable,
                     buttons = createWalletActionButtons(
@@ -151,7 +146,7 @@ internal class SetTokenListTransformer(
             appCurrency = appCurrency,
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldSupplyApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
+            earnOverviews = earnOverviews,
             shouldShowMainPromo = shouldShowMainPromo,
         ).convert(value = this)
     }
@@ -176,17 +171,6 @@ internal class SetTokenListTransformer(
         } ?: return this
 
         return moneyAccountConverter.convert(moneyAccountStatus)
-    }
-
-    private fun collectiblesBlockState(): CollectiblesWalletBlockUM {
-        val collectiblesAccountStatus = when (params) {
-            is TokenConverterParams.Account -> params.accountList.accountStatuses
-                .filterIsInstance<AccountStatus.Collectibles>()
-                .firstOrNull()
-            is TokenConverterParams.Wallet -> return CollectiblesWalletBlockUM.Hidden
-        } ?: return CollectiblesWalletBlockUM.Hidden
-
-        return collectiblesConverter.convert(collectiblesAccountStatus)
     }
 
     private fun predictionBlockState(): PolymarketWalletBlockUM {
@@ -214,12 +198,13 @@ internal class SetTokenListTransformer(
             appCurrency = appCurrency,
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldSupplyApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
+            earnOverviews = earnOverviews,
             shouldShowMainPromo = shouldShowMainPromo,
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
             jointPendingOperations = jointPendingOperations,
             isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
+            isRedesignedTokenRowsEnabled = isRedesignedTokenRowsEnabled,
         ).convert(value = params.accountList)
     }
 }

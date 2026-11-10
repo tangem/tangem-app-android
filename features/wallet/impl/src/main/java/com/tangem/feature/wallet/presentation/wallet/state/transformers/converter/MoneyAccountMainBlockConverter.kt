@@ -25,13 +25,29 @@ internal class MoneyAccountMainBlockConverter(
             is MoneyAccountStatusValue.Error.ExposedDevice,
             -> MoneyAccountMainUM.Empty
             is MoneyAccountStatusValue.Onboarding.Activating -> MoneyAccountMainUM.Onboarding(
-                subtitle = resourceReference(R.string.money_account_main_status_activating),
+                subtitle = resourceReference(statusValue.step.subtitleRes()),
                 onClick = moneyAccountIntents::onMoneyAccountActivatingClicked,
+            )
+            is MoneyAccountStatusValue.Onboarding.Failed -> MoneyAccountMainUM.Failed(
+                subtitle = resourceReference(R.string.money_account_main_status_failed),
+                onClick = {
+                    moneyAccountIntents.onMoneyAccountFailedClicked(
+                        userWalletId = userWalletId,
+                        customerId = statusValue.customerId,
+                    )
+                },
             )
             is MoneyAccountStatusValue.Account.Active -> statusValue.toUM(userWalletId)
             is MoneyAccountStatusValue.Error.Unavailable,
             is MoneyAccountStatusValue.Error.NotSynced,
             -> MoneyAccountMainUM.Unavailable
+        }
+    }
+
+    private fun MoneyAccountStatusValue.Onboarding.Activating.Step.subtitleRes(): Int = when (this) {
+        MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING -> R.string.money_account_main_status_activating
+        MoneyAccountStatusValue.Onboarding.Activating.Step.AWAITING_DEPOSIT -> {
+            R.string.money_account_main_status_awaiting_deposit
         }
     }
 

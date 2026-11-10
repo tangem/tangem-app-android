@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -36,5 +37,6 @@ internal class AddExistingWalletImportComponent @AssistedInject constructor(
 
     data class Params(
         val callbacks: ModelCallbacks,
+        val analyticsSource: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.ImportWallet,
     )
 }

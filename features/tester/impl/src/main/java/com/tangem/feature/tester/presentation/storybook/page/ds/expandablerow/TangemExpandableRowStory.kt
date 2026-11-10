@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.expandable.expandableRowReveal
 import com.tangem.core.ui.ds2.expandablerow.EmptyBody
@@ -34,6 +33,8 @@ import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.assets.il_account_airplane
+import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.feature.tester.presentation.storybook.entity.TangemExpandableRowStory
 
 private const val SAMPLE_ICON_URL = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/bitcoin.png"
@@ -80,7 +81,7 @@ private fun ComponentPreview(state: TangemExpandableRowStory) {
 @Composable
 private fun ExpandableRowPreview(state: TangemExpandableRowStory) {
     val avatar = TangemAvatar.UiState.Account(
-        iconRes = R.drawable.ic_airplane_mode_24,
+        imageVector = Icons.il_account_airplane,
         color = TangemAvatar.FillColor.AzureBlue,
     )
     val title = stringReference(if (state.longTitle) LONG_TITLE else SHORT_TITLE)

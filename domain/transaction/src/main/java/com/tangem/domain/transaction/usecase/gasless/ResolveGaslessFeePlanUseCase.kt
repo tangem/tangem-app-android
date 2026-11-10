@@ -11,9 +11,11 @@ import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndetermina
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -24,12 +26,14 @@ class ResolveGaslessFeePlanUseCase(
     private val gaslessYieldRepository: GaslessYieldRepository,
 ) {
 
+    @Suppress("LongParameterList", "LongMethod")
     suspend operator fun invoke(
         userWallet: UserWallet,
         tokenStatus: CryptoCurrencyStatus,
         tokenFee: Fee.Ethereum.TokenCurrency,
         isYieldActive: Boolean,
         sendAmountInFeeToken: BigDecimal,
+        approval: GaslessApproval? = null,
     ): Either<GetFeeError, GaslessFeePlan> = either {
         val token = tokenStatus.currency as? CryptoCurrency.Token
             ?: raise(GaslessError.DataError(IllegalStateException("fee currency must be a token")))
@@ -47,7 +51,7 @@ class ResolveGaslessFeePlanUseCase(
                 .coerceAtLeast(BigDecimal.ZERO)
 
             return@either if (liquidBalance >= required) {
-                GaslessFeePlan.TokenPay(feeToken = token, fee = tokenFee)
+                createTokenPayPlan(token = token, tokenFee = tokenFee, approval = approval)
             } else {
                 raise(GaslessError.NotEnoughFunds)
             }
@@ -112,6 +116,16 @@ class ResolveGaslessFeePlanUseCase(
         )
     }
 
+    private fun createTokenPayPlan(
+        token: CryptoCurrency.Token,
+        tokenFee: Fee.Ethereum.TokenCurrency,
+        approval: GaslessApproval?,
+    ): GaslessFeePlan = if (approval != null) {
+        GaslessFeePlan.TokenPayWithApproval(feeToken = token, fee = tokenFee, approval = approval)
+    } else {
+        GaslessFeePlan.TokenPay(feeToken = token, fee = tokenFee)
+    }
+
     private fun resolveRequiredBalance(
         sendAmountInFeeToken: BigDecimal,
         feeAmount: BigDecimal,
@@ -129,7 +143,7 @@ class ResolveGaslessFeePlanUseCase(
         tokenStatus: CryptoCurrencyStatus,
         token: CryptoCurrency.Token,
     ): BigDecimal {
-        val yieldSupplyStatus = tokenStatus.value.yieldSupplyStatus
+        val yieldSupplyStatus = tokenStatus.value.yieldSupply
 
         yieldSupplyStatus?.effectiveProtocolBalance?.let { return it }
         if (yieldSupplyStatus?.isInitialized == false) return BigDecimal.ZERO

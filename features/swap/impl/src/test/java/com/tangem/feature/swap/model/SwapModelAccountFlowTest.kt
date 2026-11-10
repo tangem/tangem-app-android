@@ -46,7 +46,7 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.WithdrawalResult
+import com.tangem.domain.tangempay.WithdrawalResult
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
@@ -1107,7 +1107,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN a money withdraw WHEN the transfer is sent THEN the account is read again`() = runTest {
+    fun `GIVEN a money withdraw WHEN the transfer is sent THEN the account and its history are read again`() = runTest {
         // Arrange
         val model = createTopUpTransferModel(
             accountFlow = AccountFlow.MoneyWithdraw,
@@ -1121,6 +1121,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
         // Assert
         coVerify(exactly = 1) { moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(userWalletId)) }
+        coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
         model.onDestroy()
     }
 
@@ -1362,6 +1363,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWalletId))
         }
         coVerify(exactly = topUp.moneyReads) { moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(userWalletId)) }
+        coVerify(exactly = topUp.moneyReads) { txHistoryContentUpdateEmitter.triggerUpdate() }
         model.onDestroy()
     }
 
@@ -1385,6 +1387,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWalletId))
         }
         coVerify(exactly = topUp.moneyReads) { moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(userWalletId)) }
+        coVerify(exactly = topUp.moneyReads) { txHistoryContentUpdateEmitter.triggerUpdate() }
         model.onDestroy()
     }
 
@@ -1397,6 +1400,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 reads++
                 Unit.right()
             }
+            var historyReloads = 0
+            coEvery { txHistoryContentUpdateEmitter.triggerUpdate() } coAnswers { historyReloads++ }
             val model = createTopUpTransferModel(
                 accountFlow = AccountFlow.MoneyTopUp,
                 toAccount = Account.Money(userWalletId),
@@ -1409,12 +1414,15 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             advanceTimeBy(ACCOUNT_REFRESH_DELAY_MILLIS - 1)
             runCurrent()
             val readsBeforeDelay = reads
+            val historyReloadsBeforeDelay = historyReloads
             advanceTimeBy(1)
             runCurrent()
 
             // Assert
             assertThat(readsBeforeDelay).isEqualTo(0)
             assertThat(reads).isEqualTo(1)
+            assertThat(historyReloadsBeforeDelay).isEqualTo(0)
+            assertThat(historyReloads).isEqualTo(1)
         }
 
     @ParameterizedTest

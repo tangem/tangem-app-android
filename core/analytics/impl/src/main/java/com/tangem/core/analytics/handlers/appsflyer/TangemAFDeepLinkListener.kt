@@ -32,6 +32,7 @@ internal class TangemAFDeepLinkListener @Inject constructor(
         afDp = getStringValue(AF_DP),
         deepLinkSub1 = getStringValue(DEEP_LINK_SUB_1),
         deepLinkSub2 = getStringValue(DEEP_LINK_SUB_2),
+        deepLinkSub3 = getStringValue(DEEP_LINK_SUB_3),
         isDeferred = isDeferred,
     )
 
@@ -39,5 +40,6 @@ internal class TangemAFDeepLinkListener @Inject constructor(
         const val AF_DP = "af_dp"
         const val DEEP_LINK_SUB_1 = "deep_link_sub1"
         const val DEEP_LINK_SUB_2 = "deep_link_sub2"
+        const val DEEP_LINK_SUB_3 = "deep_link_sub3"
     }
 }

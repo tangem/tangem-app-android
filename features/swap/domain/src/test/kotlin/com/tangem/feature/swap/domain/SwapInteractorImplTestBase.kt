@@ -22,7 +22,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
+import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -34,7 +34,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
-import com.tangem.domain.transaction.usecase.gasless.CreateAndSendSolanaGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -104,8 +103,6 @@ internal open class SwapInteractorImplTestBase {
         mockk(relaxed = true)
     protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
     protected val solanaGaslessSwapResolver: SolanaGaslessSwapResolver = mockk()
-    protected val createAndSendSolanaGaslessTransactionUseCase: CreateAndSendSolanaGaslessTransactionUseCase =
-        mockk(relaxed = true)
 
     // endregion
 
@@ -146,7 +143,6 @@ internal open class SwapInteractorImplTestBase {
             createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
             solanaGaslessSwapResolver = solanaGaslessSwapResolver,
-            createAndSendSolanaGaslessTransactionUseCase = createAndSendSolanaGaslessTransactionUseCase,
         )
     }
 

@@ -8,12 +8,14 @@ import com.tangem.domain.card.BuildConfig
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.derivations.DerivationsHelper
+import com.tangem.lib.auth.session.DeviceRegistrar
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
-import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
-import com.tangem.tap.domain.tasks.visa.TangemPayGenerateMoneyAccountAddressTask
+import com.tangem.tap.domain.tasks.tangempay.TangemPayGenerateAddressAndSignChallengeTask
+import com.tangem.tap.domain.tasks.tangempay.TangemPayGenerateMoneyAccountAddressTask
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import dagger.Lazy
 import dagger.Module
@@ -40,10 +42,12 @@ internal class TangemSdkManagerModule {
         cardRepository: CardRepository,
         derivationsHelper: DerivationsHelper,
         walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
+        deviceRegistrar: Lazy<DeviceRegistrar>,
+        walletRegistrar: Lazy<WalletRegistrar>,
         foregroundActivityProvider: ForegroundActivityProvider,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
-            MockTangemSdkManager(foregroundActivityProvider)
+            MockTangemSdkManager(foregroundActivityProvider, deviceRegistrar, walletRegistrar)
         } else {
             DefaultTangemSdkManager(
                 cardSdkConfigRepository = cardSdkConfigRepository,

@@ -8,14 +8,15 @@ import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
-import com.tangem.domain.pay.model.bankofframp.OfframpEta
-import com.tangem.domain.pay.model.bankofframp.OfframpFee
-import com.tangem.domain.pay.model.bankofframp.OfframpSource
-import com.tangem.domain.pay.model.bankofframp.OfframpToken
+import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
+import com.tangem.domain.tangempay.model.bankofframp.OfframpFee
+import com.tangem.domain.tangempay.model.bankofframp.OfframpSource
+import com.tangem.domain.tangempay.model.bankofframp.OfframpToken
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
@@ -129,11 +130,20 @@ internal fun offrampDestination(
     rail: BankRail = BankRail.ACH,
     fee: BigDecimal = BigDecimal("1.00"),
     feeName: String? = null,
+    calculationType: AccountFee.CalculationType = AccountFee.CalculationType.FIXED,
+    feeCurrency: String = "USD",
     minDays: Int = 1,
     maxDays: Int = 3,
 ): OfframpDestination = OfframpDestination(
     rail = rail,
-    fee = OfframpFee(name = feeName, amount = fee, currency = "USD", description = null),
+    currency = "USD",
+    fee = OfframpFee(
+        name = feeName,
+        calculationType = calculationType,
+        amount = fee,
+        currency = feeCurrency,
+        description = null,
+    ),
     eta = OfframpEta(minDays = minDays, maxDays = maxDays),
 )
 

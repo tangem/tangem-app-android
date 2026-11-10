@@ -7,10 +7,10 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.model.MoneyAccountActivationError
-import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
-import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.datasource.TangemPayAuthDataSource
+import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
-import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
+import com.tangem.domain.tangempay.model.MoneyAccountDepositCredentials
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -44,7 +44,7 @@ internal class DefaultMoneyAccountActivationRepository @Inject constructor(
                     userWalletId = userWalletId,
                     derivedKeys = activationData.derivedKeys,
                 )
-            }.getOrElse { raise(it.toActivationError()) }
+            }.getOrElse { raise(MoneyAccountActivationError.PersistenceFailed) }
 
             MoneyAccountDepositCredentials(
                 address = activationData.address,

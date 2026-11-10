@@ -1,22 +1,28 @@
 package com.tangem.features.tangempay.card.details
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController.Entry as GoogleWalletEntry
+import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.bankCredentials
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.trackSlot
@@ -35,14 +41,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
-internal class TangemPayCardPageModelTest {
+internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("123")
     private val firstCard = tangemPayCard(id = "card_a")
     private val secondCard = tangemPayCard(id = "card_b")
 
     private val eventListener = DefaultCardDetailsEventListener()
-    private val router: Router = mockk(relaxed = true)
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
     private val supplier: PaymentAccountStatusSupplier = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)
@@ -195,33 +200,38 @@ internal class TangemPayCardPageModelTest {
     }
 
     @Test
-    fun `GIVEN banking details error sheet WHEN retry loads credentials THEN product instance credentials returned`() =
-        runTest {
-            // Arrange
-            coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
-            val model = createModel()
-
-            // Act
-            val actual = model.loadBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
-
-            // Assert
-            assertThat(actual).isEqualTo(BANK_CREDENTIALS.right())
-        }
-
-    @Test
-    fun `GIVEN loaded status WHEN banking details resolved on retry THEN account details screen opens`() = runTest {
+    fun `GIVEN credentials load WHEN banking details retried THEN account details screen opens`() = runTest {
         // Arrange
+        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
         val model = createModel()
         statusFlow.emit(paymentStatus)
         runCurrent()
 
         // Act
-        model.onVaBankingDetailsResolved(BANK_CREDENTIALS)
+        val actual = model.retryBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
 
         // Assert
+        assertThat(actual).isEqualTo(Unit.right())
         verify(exactly = 1) {
             router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(BANK_CREDENTIALS), any())
         }
+    }
+
+    @Test
+    fun `GIVEN credentials fail WHEN banking details retried THEN error returned and nothing opened`() = runTest {
+        // Arrange
+        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns
+            TangemPayApiError.Unspecified.left()
+        val model = createModel()
+        statusFlow.emit(paymentStatus)
+        runCurrent()
+
+        // Act
+        val actual = model.retryBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(TangemPayApiError.Unspecified.left())
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Nested
@@ -267,6 +277,10 @@ internal class TangemPayCardPageModelTest {
             AddToWalletBlocksModel(
                 entry = GoogleWalletEntry.Button(isLoading = true),
                 expected = AddToWalletBlocks(isBannerShown = false, button = ButtonState(isLoading = true)),
+            ),
+            AddToWalletBlocksModel(
+                entry = GoogleWalletEntry.Added,
+                expected = AddToWalletBlocks(isBannerShown = false, button = null, isAddedStatusShown = true),
             ),
         )
 
@@ -359,13 +373,71 @@ internal class TangemPayCardPageModelTest {
             AddToWalletBlocks(
                 isBannerShown = state.addToWalletBlockState != null,
                 button = state.addToGoogleWalletButtonState?.let { ButtonState(isLoading = it.isLoading) },
+                isAddedStatusShown = state.isAddedToGoogleWallet,
             )
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class MenuItems {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN selected card state WHEN actual status emitted THEN menu items follow card activation`(
+            model: MenuItemsModel,
+        ) = runTest {
+            // Arrange
+            every { loadedStatus.cards } returns listOf(firstCard.copy(state = model.cardState), secondCard)
+            val pageModel = createModel()
+
+            // Act
+            statusFlow.emit(paymentStatus)
+            runCurrent()
+
+            // Assert
+            assertThat(pageModel.menuItemTitles()).isEqualTo(model.expected)
+            pageModel.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            MenuItemsModel(cardState = TangemPayCardState.Active, expected = listOf(REISSUE_TITLE, CLOSE_TITLE)),
+            MenuItemsModel(cardState = TangemPayCardState.Delivering, expected = emptyList()),
+            MenuItemsModel(cardState = TangemPayCardState.Activating, expected = emptyList()),
+        )
+
+        @Test
+        fun `GIVEN cached status with card awaiting activation WHEN model created THEN menu is empty`() = runTest {
+            // Arrange
+            val cachedStatus: AccountStatus.Payment = mockk(relaxed = true) {
+                every { account } returns Account.Payment(userWalletId)
+                every { value } returns mockk<PaymentAccountStatusValue.Loaded>(relaxed = true) {
+                    every { source } returns StatusSource.ONLY_CACHE
+                    every { cards } returns listOf(firstCard.copy(state = TangemPayCardState.Delivering), secondCard)
+                }
+            }
+
+            // Act
+            val pageModel = createModel(initialStatus = cachedStatus)
+
+            // Assert
+            assertThat(pageModel.menuItemTitles()).isEmpty()
+            pageModel.onDestroy()
+        }
+
+        private fun TangemPayCardPageModel.menuItemTitles(): List<TextReference> =
+            uiState.value.menuItems.map(TangemPayDropDownItemUM::title)
+    }
+
+    internal data class MenuItemsModel(val cardState: TangemPayCardState, val expected: List<TextReference>)
+
     internal data class AddToWalletBlocksModel(val entry: GoogleWalletEntry, val expected: AddToWalletBlocks)
 
-    internal data class AddToWalletBlocks(val isBannerShown: Boolean, val button: ButtonState?)
+    internal data class AddToWalletBlocks(
+        val isBannerShown: Boolean,
+        val button: ButtonState?,
+        val isAddedStatusShown: Boolean = false,
+    )
 
     internal data class ButtonState(val isLoading: Boolean)
 
@@ -398,5 +470,7 @@ internal class TangemPayCardPageModelTest {
         const val PRODUCT_INSTANCE_ID = "pi_account"
 
         val BANK_CREDENTIALS = bankCredentials()
+        val REISSUE_TITLE: TextReference = TextReference.Res(R.string.tangempay_card_details_reissue_card)
+        val CLOSE_TITLE: TextReference = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title)
     }
 }

@@ -35,6 +35,9 @@ interface OnrampRepository {
 
     // cache
     suspend fun saveDefaultCurrency(currency: OnrampCurrency)
+    suspend fun saveSelectedCurrency(currency: OnrampCurrency)
+    suspend fun getSelectedCurrencySync(): OnrampCurrency?
+    suspend fun clearDefaultCountry()
     suspend fun getDefaultCurrencySync(): OnrampCurrency?
     fun getDefaultCurrency(): Flow<OnrampCurrency?>
     suspend fun saveDefaultCountry(country: OnrampCountry)

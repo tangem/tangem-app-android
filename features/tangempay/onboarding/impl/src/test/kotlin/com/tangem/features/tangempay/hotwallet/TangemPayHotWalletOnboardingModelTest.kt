@@ -15,10 +15,10 @@ import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.wallets.models.CreateHotWalletError
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.onboarding.impl.R
 import com.tangem.hot.sdk.model.HotAuth
@@ -47,7 +47,6 @@ internal class TangemPayHotWalletOnboardingModelTest {
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk(relaxed = true)
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val video: LoopingVideoController = mockk(relaxed = true)
@@ -160,7 +159,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
                 every { isHotWalletCreationSupported() } returns true
                 coEvery {
                     createHotWalletUseCase(HotAuth.NoAuth, MnemonicType.Words12)
-                } returns RuntimeException("error").left()
+                } returns CreateHotWalletError.Failed(RuntimeException("error")).left()
                 val model = createModel(testScope = this)
 
                 // Act
@@ -198,7 +197,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
             every { isHotWalletCreationSupported() } returns true
             coEvery {
                 createHotWalletUseCase(HotAuth.NoAuth, MnemonicType.Words12)
-            } returns RuntimeException("error").left()
+            } returns CreateHotWalletError.Failed(RuntimeException("error")).left()
             val model = createModel(testScope = this)
             model.uiState.value.onGetCardClick.invoke()
             advanceUntilIdle()
@@ -259,10 +258,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
     inner class Video {
 
         @Test
-        fun `GIVEN pay bundle introduction on WHEN model created THEN the bundle video is created`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isPayBundleIntroductionEnabled } returns true
-
+        fun `GIVEN hot wallet onboarding WHEN model created THEN the bundle video is created`() = runTest {
             // Act
             val model = createModel(testScope = this)
 
@@ -279,26 +275,11 @@ internal class TangemPayHotWalletOnboardingModelTest {
             model.onDestroy()
         }
 
-        @Test
-        fun `GIVEN pay bundle introduction off WHEN model created THEN no player is created`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isPayBundleIntroductionEnabled } returns false
-
-            // Act
-            val model = createModel(testScope = this)
-
-            // Assert
-            verify(exactly = 0) { videoFactory.create(any(), any(), any(), any(), any()) }
-            assertThat(model.videoState).isNull()
-            model.onDestroy()
-        }
-
         @ParameterizedTest
         @ValueSource(booleans = [true, false])
         fun `GIVEN the bundle video WHEN the screen resumes or pauses THEN the video is told`(isRunning: Boolean) =
             runTest {
                 // Arrange
-                every { tangemPayFeatureToggles.isPayBundleIntroductionEnabled } returns true
                 val model = createModel(testScope = this)
 
                 // Act
@@ -312,7 +293,6 @@ internal class TangemPayHotWalletOnboardingModelTest {
         @Test
         fun `GIVEN the bundle video WHEN model destroyed THEN the video is released`() = runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isPayBundleIntroductionEnabled } returns true
             val model = createModel(testScope = this)
 
             // Act
@@ -355,9 +335,9 @@ internal class TangemPayHotWalletOnboardingModelTest {
                 getCustomerOffersUseCase = mockk(relaxed = true),
                 createHotWalletUseCase = createHotWalletUseCase,
                 isHotWalletCreationSupported = isHotWalletCreationSupported,
+                analyticsEventHandler = mockk(relaxed = true),
             ),
             analytics = analytics,
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
             moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             videoFactory = videoFactory,
         )

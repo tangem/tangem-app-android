@@ -1,172 +1,93 @@
 # Polymarket — domain
 
-Rules of the prediction account that the code does not make evident. Read before touching anything that
-signs, deploys or moves funds. Wire contract and its Notion sources: `data/polymarket/CLAUDE.md`.
+Rules of the prediction account the code does not make evident. Read before touching anything that signs,
+deploys or moves funds. Wire contract: `data/polymarket/CLAUDE.md`.
 
 ## Identities
 
 One Tangem wallet ↔ one Polymarket account; confusing these three is the classic defect.
 
-- **Owner EOA** — key on `m/44'/60'/999899'/0/0`. Signs everything (ClobAuth, approvals, orders,
-  withdrawals, claims). The path is hardened and belongs to no network, so a wallet needs nothing in its
-  portfolio to onboard. It must match iOS and the SDK byte for byte.
-- **Deposit wallet** — CREATE2 beacon proxy on Polygon derived from the owner EOA. Holds the funds; the
-  `maker`/`signer` of every order.
-- **`walletId`** = `UserWalletId.stringValue` (64 hex, no `0x`). A BFF correlation key only — never a
-  derivation input, never sent to the bridge (the bridge gets addresses plus the builder code that
-  `GET /configuration` returns for the wallet id). Every BFF call carries it as the `wallet-id` header,
-  discovery included (the wallet of the screen), and `GET /wallet` is read by `walletId`: only that lookup
-  returns `sessionKeys`. Onboarding falls back to one `ownerAddress` read only when the `walletId` read answers
-  `NOT_CREATED` or fails (`404` included) — any other status, `DEPLOYMENT_FAILED` and `UNKNOWN` too, is kept —
-  and then answers with the owner read, its error included: a deposit wallet deployed before the BFF bound it to
-  a wallet id is found only so.
+- **Owner EOA** — `m/44'/60'/999899'/0/0`, signs everything. Hardened, no network: onboarding needs nothing in the
+  portfolio. Must match iOS and the SDK byte for byte.
+- **Deposit wallet** — CREATE2 proxy on Polygon from the owner EOA. Holds the funds; `maker`/`signer` of orders.
+- **`walletId`** = `UserWalletId.stringValue`. BFF correlation key only (`wallet-id` header on every call), never a
+  derivation input, never sent to the bridge. Only `GET /wallet` by `walletId` returns `sessionKeys`.
+- Onboarding falls back to one read by `ownerAddress` only when the `walletId` read is `NOT_CREATED` or fails:
+  wallets deployed before the BFF bound them to a wallet id are found only so.
 
 ## Invariants — expensive to break
 
-1. **Opening a screen prompts for nothing.** Deriving the owner key opens a card session (Cold) or unlocks
-   the seed (Hot); background refreshes and screen opens use only the `stored` / `withoutPrompting`
-   variants. Their `null` means "not derived on this device", never "no account" — a wallet onboarded on
-   another phone answers `null` too.
-2. **One tap per onboarding run.** Deriving a missing owner key, the status and nonce reads and the signature
-   share one card session (Cold) or one unlock (Hot) — `PolymarketSigningSession`. The key is stored as soon as
-   it is derived, so a run that fails later still costs one tap on retry. The signed set depends on the state:
-   ClobAuth only without stored credentials, the approvals batch only while approvals are owed; a future
-   relayer batch (session keys) is one more `PolymarketTypedPayload` in the same list.
-3. **Approvals are only really checked on a fresh wallet.** The BFF reads on-chain allowances before it
-   validates our batch, so an already-approved deposit wallet answers `READY_TO_TRADE` to *any* batch.
-   Test approvals changes on a brand-new wallet.
-4. **The 17-call approvals batch is not pinned by the backend.** It is validated as a set of
-   `{target, selector, spender}` and grew from 6 to 13 without notice (August 2026), then to 17 with the V2
-   exchange (October 2026); the next change breaks the app with a BFF `400` until a release ships.
-5. **Collateral ≠ top-up token.** `COLLATERAL` is pUSD — what orders spend and the CLOB balance reports.
-   Deposits are USDC; the bridge converts. The default is native USDC on Polygon (`USDC_TOKEN_ADDRESS`); the
-   swap top-up also takes every `PolymarketDepositAsset.CATALOG` row the bridge lists with the same contract,
-   decimals and a minimum (`PolymarketDepositRequisites.options`, iOS parity). A listed asset outside the
-   catalogue is never offered: a wrong token or chain is lost.
-6. **The region is read by the flow that commits, never supplied by its entry route.** An unreadable region
-   never locks a user out of an existing account (browse, withdraw stay open) but refuses what would commit
-   them: no new deploy (`UNDETERMINED`), order gate shut as "unknown", not "restricted". Fail-closed edge:
-   when the BFF status read fails, the new-account check asks the geoblock anyway, so an existing account
-   without a local confirmation record is gated like a new one until the BFF answers. The order flow does
-   not re-read the region right before signing — a new trading flow needs its own read.
-   `PolymarketAccessMode.READ_ONLY` comes from the geoblock alone; a second restriction cause needs its own
-   signal, or the UI explains it as a region restriction.
-7. **The prediction account never blocks the other accounts.** Its status supplier is `combine`d with every
-   other account on the wallet screen, and `combine` waits for all sources. So the store emits on
-   subscription even when empty, the producer starts with a pending rate, and a failed refresh keeps the
-   cached value. Never show `Loading` when the store already holds a value.
-8. **A ready backend status is not enough to trade.** L2 credentials live only on this device. Reinstall,
-   new phone or a re-added wallet → `READY_TO_TRADE` with nothing to sign with → `PolymarketEntry.Reconnect`:
-   the same onboarding run signs only ClobAuth (a nonce read ahead is discarded), re-derives the credentials, deploys and
-   approves nothing. A CLOB `401` on balance or order drops only the credentials, never
-   `PolymarketOnboardedStore`, so the gate offers Reconnect, not a full onboarding. Reading, clearing and
-   re-deriving one wallet's credentials share one non-reentrant `PolymarketCredentialsLock`, so a late `401`
-   cannot wipe a set a Reconnect has just stored.
-   A session key's credentials (`PolymarketClobIdentity.Session`) are never stored and take no part in that
-   lock: `PolymarketSessionCredentialsProvider` derives them in memory from a ClobAuth the key signs itself, and a
-   `401` on them is answered with `invalidate`, which leaves the owner's credentials alone.
-9. **A withdrawal is persisted before it is submitted.** The relayer keys submissions on
-   `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. The record is cleared
-   on a terminal receipt or on a rejection of the submit itself (`RelayerRejected`, `InvalidRequest` — the
-   relayer recorded nothing), never on an ambiguous error. A double withdrawal is worse than a stuck record.
-10. **The local confirmation is a fallback, not the answer.** The backend can demote a ready wallet to
-    `DEPLOYED` — the V2 approvals set did it to every wallet — so the entry gate re-reads `GET /wallet` whenever
-    the addresses are stored, and `DEPLOYED` sends the user back to the approvals step: one signing session, no
-    deploy, stored credentials kept, and the run is not a new account (no welcome story). The record answers alone only without stored addresses or when the read
-    fails transiently or takes over five seconds; a mismatching deposit wallet or a rejected request fails the
-    entry like any other. `DEPLOYED` never clears the record, `NOT_CREATED` does (as the account status refresh
-    already does) — the Prediction account in the account list hangs on it.
+1. **Opening a screen prompts for nothing.** Background reads use `stored` / `withoutPrompting`; their `null` means
+   "not derived here", never "no account".
+2. **One tap per onboarding run** (`PolymarketSigningSession`): derivation, reads and every signature share one
+   card session / unlock. The derived key is stored at once, so a retry costs one tap too.
+3. **Approvals are really checked only on a fresh wallet** — an approved one answers `READY_TO_TRADE` to any batch.
+4. **The approvals batch is not pinned by the backend** (6 → 13 → 17 calls without notice); a change breaks the
+   app with a BFF `400` until a release ships.
+5. **Collateral (pUSD) ≠ top-up token (USDC).** Only `PolymarketDepositAsset.CATALOG` assets the bridge lists with
+   the same contract and decimals are offered: a wrong token or chain is lost.
+6. **The region is read by the flow that commits**, never passed by the route. Unreadable → existing account
+   stays browsable and withdrawable, nothing new commits. `READ_ONLY` means geoblock only.
+7. **The prediction account never blocks other accounts**: its supplier is `combine`d on the wallet screen, so it
+   emits on subscription even when empty and never shows `Loading` over a stored value.
+8. **Ready backend status ≠ able to trade.** Credentials live only on this device → `Reconnect` signs ClobAuth
+   only. A CLOB `401` drops the credentials, never `PolymarketOnboardedStore`. Session key credentials are derived
+   in memory and never touch the owner's (`PolymarketCredentialsLock` is the owner's only).
+9. **A withdrawal is persisted before it is submitted**; cleared only on a terminal receipt or a rejected submit.
+   A double withdrawal is worse than a stuck record.
+10. **The local confirmation is a fallback.** The entry gate re-reads `GET /wallet`; `DEPLOYED` sends the user to
+    the approvals step (not a new account), `NOT_CREATED` clears the record.
 
 ## Onboarding
 
-- `PolymarketWalletStatus.UNKNOWN` (anything the BFF adds later) means "keep polling", not a breaking
-  change. The run has no deadline and resumes from whatever status the backend reports.
-- Credentials: derive-api-key first, create only on "no key yet".
-- `PolymarketOnboardedStore` mirrors backend reads: `READY_TO_TRADE` records the wallet, `NOT_CREATED`
-  withdraws it, any other status leaves it alone. Without stored addresses nothing is asked: the record
-  alone answers `Onboarded` with credentials, `Reconnect` without, its absence `Undetermined`.
+- `PolymarketWalletStatus.UNKNOWN` = keep polling. The run has no deadline and resumes from the reported status.
+- Credentials: derive first, create only on "no key yet".
+- `PolymarketOnboardedStore` follows backend reads: `READY_TO_TRADE` records, `NOT_CREATED` clears, others keep.
 
-## Signing and orders
+## Orders
 
-- Relayer batches (approvals, withdrawal, claim) carry `deadline = now + 600 s`. Session key batches signed
-  together take 600 s for the first one and 1200 s for each follow-up, which waits for the first one to
-  settle. Known gap: the tracker's `resend` of a persisted withdrawal skips the expiry check that `confirm`
-  does.
-- Orders use `signatureType = 3` (deposit wallet) wrapped in ERC-7739. The exchange and its domain version
-  come from the quote, but only as `PolymarketExchangeDomain.of(quote.version, isNegRisk)` allows: V1 →
-  CTF or neg-risk CTF exchange, domain `"2"`; V2 → ExchangeV3, domain `"3"`; unknown → never signed. Any
-  other `exchange` / `signingDomainVersion` is refused while the draft is built — before the card is asked —
-  and the draft carries the table's constants, never the quoted strings. The signed order is re-validated
-  against the draft, the domain, the deposit wallet, the market and the quote age (60 s) before it is sent,
-  and the repository checks the signature tail against the domain once more.
-- An order on `PredictionOrderSigningRoute.Session` keeps `maker = signer = deposit wallet`: the session key signs
-  the same ERC-7739 digest, and the wrapped signature goes into `PolymarketSessionKeyEnvelope`. Validation and the
-  repository unwrap it and refuse an envelope the placing identity's key did not make — or any envelope on the
-  owner route. The order is placed and read back under the route's session identity. Choosing the route is the
-  caller's.
-- `SubmitPredictionOrderInteractor` takes the route from `PolymarketOrderSigningRouter` (guide §3.3, strict: a BFF
-  record is required, unlike iOS) unless the preference is `OWNER_ONLY` — Session Keys toggle off or "Sign with
-  card". The readiness check after authorization and the last reconciliation live in
-  `PolymarketSessionKeyTradingStore`; the readiness is keyed by `validUntil`, so a renewal needs a new check. A
-  CLOB `401` on a session order counts as a refusal, and so does any other `4xx` whose `error` message names the
-  signature, the signer, an authorization or the API key (`ClobSignerRefusalParser`, data layer — the CLOB sends
-  no error code); a bare `403`, a geoblock for one, is a normal failure. A session key that cannot sign the order
-  or an order that cannot be sent (`NotSent`) counts as a refusal too, as on iOS (a signing failure is not
-  reconciled); a cancelled signing does not. On a refusal the
-  key is marked refused and its stored readiness dropped before the same order is signed with the owner key, so it
-  stays out of trading until a new authorization (enable, renew, replace) marks it ready or the app restarts, as on
-  iOS — a reconciliation that finds it listed does not lift it; the wallet is reconciled in the app scope,
-  after the owner result is returned. Market, liquidity and balance errors are final. The owner route maps those
-  responses as before.
-- Every relayer batch takes the next deposit-wallet nonce, so claim, withdrawal confirm/resend and the session key
-  lifecycle (`ManagePolymarketSessionKeyInteractor`) share `PolymarketDepositWalletLock` from signing until the
-  relayer accepted the batch. On top of that, one lifecycle operation (enable, renew, replace, revoke)
-  runs per wallet: a second one ends at once in `OperationInProgress`, nothing signed; toggling is not guarded, as
-  on iOS. Progress is emitted
-  outside the lock. Renewal and replacement release the lock while the revocation settles and take it again to
-  send the pre-signed authorization; a claim in between takes that nonce. Nothing is signed twice without the
-  user: a batch refused for its signature (`NONCE_ALREADY_USED`, `INVALID_DEADLINE`, `INVALID_VALID_UNTIL`,
-  `RELAYER_REJECTED`) or a pre-signed authorization expired before it is sent ends in `StaleSignature`, and the
-  user starts the operation again; only an unanswered or `502` send is repeated, with the same body. The one
-  exception: the authorization sent after a revocation is resent up to 5 times, 3 s apart, on `RELAYER_REJECTED`
-  — the BFF reports the key `REVOKED` while the revocation is still in flight and rejects the next batch with
-  "wallet has in-flight action" (seen on prod 26.10.2026; iOS does not resend).
-  A withdrawal reads its nonce in `prepare`, outside the lock: a lifecycle operation in between costs it a
-  `RelayerRejected`.
+- Relayer batches expire in 600 s; a follow-up session key batch in 1200 s. Known gap: withdrawal `resend` skips
+  the expiry check.
+- `signatureType = 3` (deposit wallet) in ERC-7739. Exchange and domain only via `PolymarketExchangeDomain.of`;
+  anything else is refused before the card is asked. The signed order is re-validated before it is sent.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
-- A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
-  them against the position: one adapter `redeemPositions` call on the root collection of the condition for
-  V1 (the only redeem function either adapter exposes; at most one index set per outcome, nothing after
-  them), one Router `redeem` per held outcome naming the position's asset id for V2, `value` zero
-  everywhere, addresses compared ignoring case.
-  The position's `version` decides which rules apply; a position that arrived without one is re-read, and
-  one still without it, or `UNKNOWN`, is never signed. A refusal reaches the user as the generic claim error.
+- Session route: `maker = signer = deposit wallet`, signature in `PolymarketSessionKeyEnvelope`; an envelope on the
+  owner route is refused. The route comes from `PolymarketOrderSigningRouter` (a BFF record is required, unlike iOS)
+  unless the preference is `OWNER_ONLY`.
+- A session key refused by the CLOB (`401`, a signer/authorization `4xx` message, `NotSent`) stays out of trading
+  until a new authorization or restart; the order is re-signed with the owner key. A bare `403` is a geoblock, not
+  a refusal.
+
+## Session key lifecycle
+
+- Every relayer batch takes the next deposit-wallet nonce → claim, withdrawal and lifecycle share
+  `PolymarketDepositWalletLock`. A withdrawal reads its nonce outside it (a lifecycle op in between →
+  `RelayerRejected`).
+- One lifecycle operation per wallet; the UI starts them only through `PolymarketSessionKeyOperationRunner` (app
+  scope — leaving the screen must not drop a pre-signed authorization). `Activate` picks enable / renew / replace.
+- Nothing is signed twice without the user: a refused or expired signature → `StaleSignature`. Only an unanswered or
+  `502` send is repeated. Exception: the authorization after a revocation is resent on `RELAYER_REJECTED` (BFF says
+  `REVOKED` while the revocation is in flight; iOS does not resend).
+- A key the BFF stops listing while `REVOKING` counts as revoked only once Polymarket no longer lists the signer;
+  otherwise the outcome is unsettled and the next refresh shows the truth.
+- The outcome stays in the runner until the host acknowledges it; no Activate banner while an operation runs.
+
+## Claims
+
+- Only BFF-served redeem calls that `PredictionRedeemCallValidator` accepted are signed; a position without a known
+  `version` is never claimed.
 
 ## Funds
 
-- **Requisites** are written **after** the deposit address, so callers may treat requisites becoming
-  available as proof the status carries a confirmed address.
-- **Balance**: `syncBalanceAllowance` must precede `getBalanceAllowance` — the CLOB serves a cached figure it
-  recomputes only when asked, so a wallet funded after onboarding would report zero forever. The sync is
-  best-effort.
-  A SELL refreshes the cache of the shares it spends (`CONDITIONAL` for a V1 market, `CONDITIONAL-V2` for V2,
-  with the token id) right before the order, inside the credentials lock; a failure there is logged and the order
-  is sent anyway, and its `401` drops nothing — only the order's own `401` does.
-
-- **Funding window** (5 s polling instead of 30 s, up to 90 s like iOS) opens only on a send this app made; an
-  external transfer's timing is unknown.
-- **Positions value** is fetched and stored apart from the account status: it needs only the deposit-wallet
-  address (public data API), and a failed read must not touch the balance. The status producer mixes it into
-  `Active.positions` like the rate, and the wallet total and the wallet-screen row count collateral plus
-  positions (iOS parity, [REDACTED_TASK_KEY]). `PredictionTotalBalance.of` is the one place the two are added. The value
-  is persisted per wallet and restored as `CACHE`; never read → the collateral alone, flagged `CACHE`; failed
-  with nothing cached → the collateral alone, flagged `ONLY_CACHE` — never `Loading` or `Failed` (invariant 7).
-  The funding-window poll skips it, so a total right after a send pairs fresh collateral with the last value.
-- **Withdraw destinations** are filtered to USDC · Polygon (phase 1, owner decision 15.09.2026).
-- **Withdraw has no minimum** by design (guide §7.1); `minCheckoutUsd` is deposit-only.
-- **Withdrawal tracker** is started from the swap withdraw flow only, not on cold start (known gap).
+- Requisites are written after the deposit address: requisites available ⇒ the address is confirmed.
+- `syncBalanceAllowance` before `getBalanceAllowance` — the CLOB caches the figure; a SELL syncs its shares first
+  (best-effort).
+- Funding window (5 s polling, up to 90 s) opens only on a send this app made.
+- Positions value is read beside the collateral and persisted with the status; one failed read never hides the
+  other's answer (deviation from iOS). `PredictionTotalBalance.of` is the only place they are added.
+- Withdraw: USDC · Polygon only, no minimum; the tracker starts from the withdraw flow only (known gap).
 
 ## Account support
 
-`UserWallet.isPredictionAccountSupported` (= `isMultiCurrency`) ignores the lock — the account is part of
-the wallet's structure. Only `GetPolymarketEligibleWalletsUseCase` (the wallet picker) respects the lock.
+`isPredictionAccountSupported` ignores the lock; only `GetPolymarketEligibleWalletsUseCase` (wallet picker) respects
+it.

@@ -31,5 +31,6 @@ internal sealed interface PlacePredictionRoute : Route {
         val side: PredictionOrderSide,
         val userWalletId: UserWalletId,
         val positionId: PolymarketPositionId?,
+        val isPositionClosed: Boolean = false,
     ) : PlacePredictionRoute
 }

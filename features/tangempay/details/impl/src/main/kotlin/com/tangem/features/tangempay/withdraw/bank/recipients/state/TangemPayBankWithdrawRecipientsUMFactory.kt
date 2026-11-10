@@ -5,9 +5,9 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.recipients.model.BankRecipientSearch
 import com.tangem.features.tangempay.withdraw.bank.recipients.model.RecipientsState

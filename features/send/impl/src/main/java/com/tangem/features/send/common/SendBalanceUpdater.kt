@@ -2,6 +2,7 @@ package com.tangem.features.send.common
 
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.RefreshAllNFTUseCase
@@ -25,6 +26,7 @@ internal class SendBalanceUpdater @AssistedInject constructor(
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val refreshAllNFTUseCase: RefreshAllNFTUseCase,
     private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
+    private val balanceContributionsRefresher: BalanceContributionsRefresher,
     private val coroutineScope: AppCoroutineScope,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrency: CryptoCurrency,
@@ -69,6 +71,7 @@ internal class SendBalanceUpdater @AssistedInject constructor(
             network = cryptoCurrency.network,
             delayMillis = delay,
         )
+        balanceContributionsRefresher(userWalletId = userWallet.walletId, network = cryptoCurrency.network)
     }
 
     private suspend fun refreshNonPortfolioCurrencies() {

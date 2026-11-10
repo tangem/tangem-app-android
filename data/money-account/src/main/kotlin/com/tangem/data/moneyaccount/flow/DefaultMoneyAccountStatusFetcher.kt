@@ -2,23 +2,24 @@ package com.tangem.data.moneyaccount.flow
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
-import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.tangempay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
-import com.tangem.domain.pay.model.CachePolicy
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
-import com.tangem.domain.pay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.CachePolicy
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.tangempay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -38,6 +39,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
     private val resolveMoneyAccountStatusFromSummaryUseCase: ResolveMoneyAccountStatusFromSummaryUseCase,
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
+    private val networkConnectionManager: NetworkConnectionManager,
 ) : MoneyAccountStatusFetcher {
 
     override suspend fun invoke(params: MoneyAccountStatusFetcher.Params): Either<Throwable, Unit> {
@@ -112,18 +114,23 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
             else -> MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
                 customerId = customerInfo.customerId,
+                step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
             )
         }
     }
 
-    private suspend fun VisaApiError.toCachedStatusOrEmpty(userWalletId: UserWalletId): MoneyAccountStatusValue {
-        return getCachedAccountOrNull(
-            userWalletId = userWalletId,
-            error = when (this) {
-                is VisaApiError.RefreshTokenExpired -> MoneyAccountStatusValue.Error.NotSynced
-                else -> MoneyAccountStatusValue.Error.Unavailable
-            },
-        ) ?: MoneyAccountStatusValue.Empty
+    private suspend fun TangemPayApiError.toCachedStatusOrEmpty(userWalletId: UserWalletId): MoneyAccountStatusValue {
+        return getCachedAccountOrNull(userWalletId = userWalletId, error = toAccountError())
+            ?: MoneyAccountStatusValue.Empty
+    }
+
+    private fun TangemPayApiError.toAccountError(): MoneyAccountStatusValue.Error {
+        val isSessionExpired = this is TangemPayApiError.RefreshTokenExpired && networkConnectionManager.isOnlineSync
+        return if (isSessionExpired) {
+            MoneyAccountStatusValue.Error.NotSynced
+        } else {
+            MoneyAccountStatusValue.Error.Unavailable
+        }
     }
 
     private suspend fun getCachedAccountOrNull(

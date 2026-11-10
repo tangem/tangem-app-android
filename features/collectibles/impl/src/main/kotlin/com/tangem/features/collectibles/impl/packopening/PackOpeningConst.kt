@@ -11,7 +11,6 @@ internal object PackOpeningConst {
     /** How long the reveal video may show no new frame before the card takes over. */
     const val VIDEO_STALL_TIMEOUT_MS = 2_000L
 
-    /** How long the short version waits for the card's images before it throws the pack anyway. */
     const val CARD_IMAGES_TIMEOUT_MS = 3_000L
 
     /** `cameraDistance` is in camera inches, projected at 72 px each. */

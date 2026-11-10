@@ -16,7 +16,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
 import com.tangem.domain.yield.supply.YieldSupplyError
+import com.tangem.domain.yield.supply.increaseGasLimitBy
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimValidationError
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
@@ -131,7 +133,9 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         // Assert
         assertThat(actual).isEqualTo(
             YieldPreClaim.Ready(
-                transactionData = claimTransaction().copy(fee = fee(CLAIM_FEE)),
+                transactionData = claimTransaction().copy(
+                    fee = fee(CLAIM_FEE).increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
+                ),
                 chainId = CHAIN_ID,
                 userAddress = USER_ADDRESS,
                 token = token(),
@@ -159,7 +163,9 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
             // Assert
             assertThat(actual).isEqualTo(
                 YieldPreClaim.Ready(
-                    transactionData = claimTransaction().copy(fee = tokenFee),
+                    transactionData = claimTransaction().copy(
+                        fee = tokenFee.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
+                    ),
                     chainId = CHAIN_ID,
                     userAddress = USER_ADDRESS,
                     token = token(),

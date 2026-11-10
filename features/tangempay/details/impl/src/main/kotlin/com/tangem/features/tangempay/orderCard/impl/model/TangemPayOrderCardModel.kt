@@ -8,9 +8,9 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.common.balanceOrNull

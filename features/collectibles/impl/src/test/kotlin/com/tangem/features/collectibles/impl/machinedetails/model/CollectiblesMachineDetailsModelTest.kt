@@ -10,6 +10,9 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchAction
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchFlow
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
@@ -223,7 +226,7 @@ internal class CollectiblesMachineDetailsModelTest {
         // Assert
         val footer = (model.uiState.value as CollectiblesMachineDetailsUM.Content).footer
         assertThat(footer.buyButtonText).isEqualTo(
-            resourceReference(R.string.collectibles_machine_open_button, wrappedList("50 USDC")),
+            resourceReference(R.string.collectibles_machine_open_button, wrappedList(usdc("50"))),
         )
         assertThat(footer.expectedValue).isEqualTo(stringReference("$53.95"))
     }
@@ -474,6 +477,9 @@ internal class CollectiblesMachineDetailsModelTest {
         batches = listOf(listOf(createNft())),
         status = PaginationStatus.EndOfPagination,
     )
+
+    private fun usdc(amount: String) =
+        BigDecimal(amount).format { crypto(symbol = "USDC", decimals = 6, ignoreSymbolPosition = true).anyDecimals(minDecimals = 0) }
 
     /** The model is destroyed inside [runTest]: its closing advanceUntilIdle would spin on the never-idle polling. */
     private fun runModelTest(testBody: suspend TestScope.() -> Unit) = runTest {

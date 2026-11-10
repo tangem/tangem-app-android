@@ -10,20 +10,20 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayCountry
-import com.tangem.domain.models.pay.TangemPayProduct
-import com.tangem.domain.models.pay.TangemPayRegion
-import com.tangem.domain.models.pay.TangemPayCustomerResidency
+import com.tangem.domain.models.tangempay.TangemPayCountry
+import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayRegion
+import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.ClearTangemPayCustomerResidencyUseCase
-import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
-import com.tangem.domain.pay.usecase.GetTangemPayProductsAvailabilityForCountryUseCase
-import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
-import com.tangem.domain.pay.usecase.StoreTangemPayCustomerResidencyUseCase
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.ClearTangemPayCustomerResidencyUseCase
+import com.tangem.domain.tangempay.usecase.GetTangemPayCountriesUseCase
+import com.tangem.domain.tangempay.usecase.GetTangemPayProductsAvailabilityForCountryUseCase
+import com.tangem.domain.tangempay.usecase.GetTangemPayRegionsUseCase
+import com.tangem.domain.tangempay.usecase.StoreTangemPayCustomerResidencyUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.eligibility.EligibilityInnerRoute
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -146,11 +146,33 @@ internal class ResidencyListModelTest {
     }
 
     @Test
+    fun `GIVEN availability check fails WHEN country clicked THEN early filter retry event sent`() = runTest {
+        // Arrange
+        coEvery { getProductsAvailabilityUseCase(GERMANY.code, null) } returns TangemPayApiError.ServerUnavailable.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.item(GERMANY.code).onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                TangemPayAnalyticsEvents.EligibilityRetryScreenOpened(
+                    stage = TangemPayAnalyticsEvents.EligibilityStage.EARLY_FILTER,
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN customer info request fails WHEN country clicked THEN error shown AND item loading released`() =
         runTest {
             // Arrange
             coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns
-                VisaApiError.ServerUnavailable.left()
+                TangemPayApiError.ServerUnavailable.left()
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -195,7 +217,7 @@ internal class ResidencyListModelTest {
             assertThat(sentEvents.filterIsInstance<TangemPayAnalyticsEvents.Eligibility.EligibilityCheckResult>())
                 .containsExactly(
                     TangemPayAnalyticsEvents.Eligibility.EligibilityCheckResult(
-                        isEligible = true,
+                        availableProducts = setOf(TangemPayProduct.BANKING_ACCOUNT),
                         country = USA.name,
                         state = TEXAS.name,
                     ),

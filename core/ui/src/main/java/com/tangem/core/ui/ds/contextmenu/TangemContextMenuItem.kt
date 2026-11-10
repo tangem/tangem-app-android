@@ -25,6 +25,15 @@ import com.tangem.core.ui.test.PopUpMenuTestTags
  * Plain row of [TangemContextMenu]: an optional leading [icon] and a [title]. [isDestructive] tints the row with the
  * error color; a disabled row is muted and ignores taps.
  */
+@Deprecated(
+    message = "Use TangemMenu.Item inside the DS3 TangemMenu",
+    replaceWith = ReplaceWith(
+        "TangemMenu.Item(label = title, onClick = onClick, modifier = modifier, iconStart = icon, " +
+            "variant = if (isDestructive) TangemMenu.ItemVariant.Error else TangemMenu.ItemVariant.Default, " +
+            "isEnabled = isEnabled)",
+        "com.tangem.core.ui.ds2.menu.TangemMenu",
+    ),
+)
 @Composable
 fun TangemContextMenuItem(
     title: TextReference,

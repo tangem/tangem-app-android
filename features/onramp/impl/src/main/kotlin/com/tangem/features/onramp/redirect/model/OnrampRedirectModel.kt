@@ -18,6 +18,8 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.onramp.GetOnrampRedirectUrlUseCase
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
+import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.redirect.OnrampRedirectComponent
@@ -44,6 +46,7 @@ internal class OnrampRedirectModel @Inject constructor(
     private val onrampSuccessScreenListener: OnrampSuccessScreenListener,
     private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     private val router: Router,
+    private val appTxHistoryFetcher: AppTxHistoryFetcher,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
@@ -99,6 +102,12 @@ internal class OnrampRedirectModel @Inject constructor(
                 .onLeft(::handleError)
                 .onRight { transaction ->
                     latestOnrampTransaction = transaction
+                    appTxHistoryFetcher.invoke(
+                        TxHistoryFetchTrigger.OnExpressOperationExecute(
+                            walletId = params.userWalletId,
+                            type = TxHistoryFetchTrigger.OnExpressOperationExecute.Onramp,
+                        ),
+                    )
 
                     // Workaround to open Unlimit provider in external browser instead of chrome custom tabs
                     if (params.onrampProviderWithQuote.provider.id.equals(UNLIMIT_PROVIDER_ID, ignoreCase = true)) {

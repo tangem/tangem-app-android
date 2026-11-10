@@ -42,4 +42,15 @@ interface BalanceContribution {
      * Extra balances are not uniformly additive, so implementations differ
      */
     fun totalDeltaCryptoAmount(): BigDecimal
+
+    /**
+     * Crypto amount this balance lets the user **send**, which `CryptoCurrencyStatusFactory` folds into
+     * [com.tangem.domain.models.currency.CryptoCurrencyStatus.Value.amount]. `amount` therefore keeps meaning "what can
+     * be sent", and [totalDeltaCryptoAmount] counts only what comes on top of it, so the folded part must not be
+     * counted there again.
+     *
+     * Zero by default: most extra balances (a stake, for one) can't be spent directly. May be negative when it
+     * corrects a network amount observed at another moment than the balance it belongs to.
+     */
+    fun spendableDeltaCryptoAmount(): BigDecimal = BigDecimal.ZERO
 }

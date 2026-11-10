@@ -29,7 +29,6 @@ import com.tangem.datasource.api.tangemTech.models.TransactionEventBody
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TransactionRepository
-import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.models.EventTransactionTypeDto
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -44,7 +43,6 @@ internal class DefaultTransactionRepository(
     private val tangemTechApi: TangemTechApi,
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) : TransactionRepository {
 
     override suspend fun createTransaction(
@@ -147,9 +145,7 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
     ): SmartContractCallData {
-        val isUpgradeApplicable = yieldModuleFeatureToggles.isYieldModuleV3Enabled &&
-            amount.type is AmountType.TokenYieldSupply
-        if (!isUpgradeApplicable) return callData
+        if (amount.type !is AmountType.TokenYieldSupply) return callData
 
         return walletManagersFacade.wrapYieldSendWithModuleUpgrade(
             userWalletId = userWalletId,

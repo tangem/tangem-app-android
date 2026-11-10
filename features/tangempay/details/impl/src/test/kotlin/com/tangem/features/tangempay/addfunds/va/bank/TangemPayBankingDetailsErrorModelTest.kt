@@ -5,12 +5,9 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.bankCredentials
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
-import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,21 +26,35 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayBankingDetailsErrorModelTest {
 
-    private val retry: suspend () -> Either<VisaApiError, BankCredentials> = mockk()
+    private val retry: suspend () -> Either<TangemPayApiError, Unit> = mockk()
     private val onDismiss: () -> Unit = mockk(relaxed = true)
     private val onContactSupport: () -> Unit = mockk(relaxed = true)
-    private val onResolved: (BankCredentials) -> Unit = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(retry, onDismiss, onContactSupport, onResolved)
+        clearMocks(retry, onDismiss, onContactSupport)
     }
 
     @Test
-    fun `GIVEN retry succeeds WHEN retry clicked THEN credentials handed to onResolved`() = runTest {
+    fun `GIVEN retry succeeds WHEN retry clicked THEN retried once and loading kept until the sheet closes`() =
+        runTest {
+            // Arrange
+            coEvery { retry() } returns Unit.right()
+            val model = createModel()
+
+            // Act
+            model.uiState.value.onRetryClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { retry() }
+            assertThat(model.uiState.value.isRetryLoading).isTrue()
+        }
+
+    @Test
+    fun `GIVEN retry fails WHEN retry clicked THEN loading reset`() = runTest {
         // Arrange
-        val credentials = bankCredentials()
-        coEvery { retry() } returns credentials.right()
+        coEvery { retry() } returns TangemPayApiError.Unspecified.left()
         val model = createModel()
 
         // Act
@@ -51,28 +62,13 @@ internal class TangemPayBankingDetailsErrorModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { onResolved(credentials) }
-    }
-
-    @Test
-    fun `GIVEN retry fails WHEN retry clicked THEN onResolved not called and loading reset`() = runTest {
-        // Arrange
-        coEvery { retry() } returns VisaApiError.Unspecified.left()
-        val model = createModel()
-
-        // Act
-        model.uiState.value.onRetryClick()
-        advanceUntilIdle()
-
-        // Assert
-        verify { onResolved wasNot Called }
         assertThat(model.uiState.value.isRetryLoading).isFalse()
     }
 
     @Test
     fun `GIVEN retry in flight WHEN retry clicked twice THEN retried once and loading shown`() = runTest {
         // Arrange
-        val pending = CompletableDeferred<Either<VisaApiError, BankCredentials>>()
+        val pending = CompletableDeferred<Either<TangemPayApiError, Unit>>()
         coEvery { retry() } coAnswers { pending.await() }
         val model = createModel()
 
@@ -85,7 +81,7 @@ internal class TangemPayBankingDetailsErrorModelTest {
         // Assert
         assertThat(model.uiState.value.isRetryLoading).isTrue()
         coVerify(exactly = 1) { retry() }
-        pending.complete(bankCredentials().right())
+        pending.complete(Unit.right())
         advanceUntilIdle()
     }
 
@@ -109,7 +105,6 @@ internal class TangemPayBankingDetailsErrorModelTest {
                 retry = retry,
                 onDismiss = onDismiss,
                 onContactSupport = onContactSupport,
-                onResolved = onResolved,
             ),
         ),
         dispatchers = createTestingCoroutineDispatcherProvider(),

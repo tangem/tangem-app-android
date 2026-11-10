@@ -12,10 +12,6 @@ sealed class DeepLinkRoute {
         override val host: String = "redirect_sell"
     }
 
-    data object Sell : DeepLinkRoute() {
-        override val host: String = "sell"
-    }
-
     data object BuyRedirect : DeepLinkRoute() {
         override val host: String = "redirect"
     }
@@ -24,24 +20,8 @@ sealed class DeepLinkRoute {
         override val host: String = "buy"
     }
 
-    data object Referral : DeepLinkRoute() {
-        override val host: String = "referral"
-    }
-
-    data object Wallet : DeepLinkRoute() {
-        override val host: String = "main"
-    }
-
     data object TokenDetails : DeepLinkRoute() {
         override val host: String = "token"
-    }
-
-    data object Staking : DeepLinkRoute() {
-        override val host: String = "staking"
-    }
-
-    data object Markets : DeepLinkRoute() {
-        override val host: String = "markets"
     }
 
     data object MarketTokenDetail : DeepLinkRoute() {
@@ -56,15 +36,7 @@ sealed class DeepLinkRoute {
         override val host: String = "wc"
     }
 
-    data object Promo : DeepLinkRoute() {
-        override val host: String = "promo"
-    }
-
-    data object TokenExchanges : DeepLinkRoute() {
-        override val host: String = "token_exchanges"
-    }
-
-    data object OnboardVisa : DeepLinkRoute() {
+    data object TangemPayOnboard : DeepLinkRoute() {
         override val host: String = "onboard-visa"
     }
 
@@ -72,49 +44,16 @@ sealed class DeepLinkRoute {
         override val host: String = "tangem.com"
     }
 
-    data object News : DeepLinkRoute() {
-        override val host: String = "news"
-    }
-
-    data object Earn : DeepLinkRoute() {
-        override val host: String = "earn"
-    }
-
-    data object Yield : DeepLinkRoute() {
-        override val host: String = "yield"
-    }
-
-    /** Feed hub of the wallet screen — a section of it, optionally pre-filtered. */
-    data object Discover : DeepLinkRoute() {
-        override val host: String = "discover"
-    }
-
     data object PayAppMain : DeepLinkRoute() {
         override val host: String = "pay-app-main"
     }
 
-    data object PayAccount : DeepLinkRoute() {
-        override val host: String = "pay-account"
-    }
-
-    data object Survey : DeepLinkRoute() {
-        override val host: String = "survey"
-    }
-
-    data object Support : DeepLinkRoute() {
-        override val host: String = "support"
-    }
-
-    data object Campaigns : DeepLinkRoute() {
-        override val host: String = "campaigns"
+    data object PromoPage : DeepLinkRoute() {
+        override val host: String = "promo_page"
     }
 
     data object McpAuthorization : DeepLinkRoute() {
         override val host: String = "mcp.authorization"
-    }
-
-    data object Intent : DeepLinkRoute() {
-        override val host: String = "intent"
     }
 
     data object JointAccount : DeepLinkRoute() {

@@ -16,51 +16,81 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import java.math.BigDecimal
 
 class AccountRowStateConverter(private val appCurrency: AppCurrency) {
 
     fun convert(value: AccountStatus.CryptoPortfolio, onClick: (() -> Unit)?): TangemAccountRow.State {
         val account = value.account
-        val id = account.accountId.value
-        val title = account.accountName.toUM().value
-        val label = tokensCount(account.tokensCount)
-        val description = membersCount(value)
-
-        return when (val balance = value.tokenList.totalFiatBalance) {
-            TotalFiatBalance.Loading -> TangemAccountRow.State.Shimmer(id = id)
-            is TotalFiatBalance.Loaded -> TangemAccountRow.State.Content(
-                id = id,
-                title = title,
-                label = label,
-                description = description,
-                balance = stringReference(
-                    balance.amount.format {
-                        fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
-                    },
-                ),
-                priceChange = value.priceChangeLce.getOrNull()?.value?.toPriceChangeState(),
-                shouldShowUpdateWarning = balance.source == StatusSource.ONLY_CACHE,
-                isBalanceFlickering = balance.source == StatusSource.CACHE,
+        return convert(
+            header = Header(
+                id = account.accountId.value,
+                title = account.accountName.toUM().value,
+                label = tokensCount(account.tokensCount),
+                description = membersCount(value),
                 onClick = onClick,
+            ),
+            balance = value.tokenList.totalFiatBalance,
+            priceChange = value.priceChangeLce.getOrNull()?.value,
+            isUnreachableOnly = { value.hasUnreachableCurrencyOnly() },
+        )
+    }
+
+    fun convert(value: AccountStatus.Payment, tokensCount: Int, onClick: (() -> Unit)?): TangemAccountRow.State {
+        val account = value.account
+        return convert(
+            header = Header(
+                id = account.accountId.value,
+                title = account.accountName.toUM().value,
+                label = tokensCount(tokensCount),
+                description = null,
+                onClick = onClick,
+            ),
+            balance = value.value.totalFiatBalance,
+            priceChange = null,
+            isUnreachableOnly = { false },
+        )
+    }
+
+    private fun convert(
+        header: Header,
+        balance: TotalFiatBalance,
+        priceChange: BigDecimal?,
+        isUnreachableOnly: () -> Boolean,
+    ): TangemAccountRow.State = when (balance) {
+        TotalFiatBalance.Loading -> TangemAccountRow.State.Shimmer(id = header.id)
+        is TotalFiatBalance.Loaded -> TangemAccountRow.State.Content(
+            id = header.id,
+            title = header.title,
+            label = header.label,
+            description = header.description,
+            balance = stringReference(
+                balance.amount.format {
+                    fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                },
+            ),
+            priceChange = priceChange?.toPriceChangeState(),
+            shouldShowUpdateWarning = balance.source == StatusSource.ONLY_CACHE,
+            isBalanceFlickering = balance.source == StatusSource.CACHE,
+            onClick = header.onClick,
+        )
+        TotalFiatBalance.Failed -> if (isUnreachableOnly()) {
+            TangemAccountRow.State.Unreachable(
+                id = header.id,
+                title = header.title,
+                badge = resourceReference(R.string.common_unreachable),
+                label = header.label,
+                description = header.description,
+                onClick = header.onClick,
             )
-            TotalFiatBalance.Failed -> if (value.hasUnreachableCurrencyOnly()) {
-                TangemAccountRow.State.Unreachable(
-                    id = id,
-                    title = title,
-                    badge = resourceReference(R.string.common_unreachable),
-                    label = label,
-                    description = description,
-                    onClick = onClick,
-                )
-            } else {
-                TangemAccountRow.State.BalanceError(
-                    id = id,
-                    title = title,
-                    label = label,
-                    description = description,
-                    onClick = onClick,
-                )
-            }
+        } else {
+            TangemAccountRow.State.BalanceError(
+                id = header.id,
+                title = header.title,
+                label = header.label,
+                description = header.description,
+                onClick = header.onClick,
+            )
         }
     }
 
@@ -84,4 +114,12 @@ class AccountRowStateConverter(private val appCurrency: AppCurrency) {
             formatArgs = wrappedList(activeJoint.totalMembers),
         )
     }
+
+    private class Header(
+        val id: String,
+        val title: TextReference,
+        val label: TextReference,
+        val description: TextReference?,
+        val onClick: (() -> Unit)?,
+    )
 }

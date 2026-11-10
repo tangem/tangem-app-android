@@ -32,13 +32,13 @@ internal class DefaultTangemPayHotWalletOnboardingComponent @AssistedInject cons
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val video = model.videoState?.collectAsStateWithLifecycle()?.value
+        val video = model.videoState.collectAsStateWithLifecycle().value
         SystemBarsIconsDisposable(darkIcons = false)
         CompositionLocalProvider(LocalIsInDarkTheme provides true) {
             TangemThemeRedesign {
                 TangemPayHotWalletOnboardingScreen(
                     state = state,
-                    video = video?.surface,
+                    video = video.surface,
                     modifier = modifier,
                 )
             }

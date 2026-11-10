@@ -28,15 +28,18 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
 
     private val evmUseCase: CreateAndSendEvmGaslessTransactionUseCase = mockk()
     private val tronUseCase: CreateAndSendTronGaslessTransactionUseCase = mockk()
+    private val solanaUseCase: CreateAndSendSolanaGaslessTransactionUseCase = mockk()
 
     private val useCase = CreateAndSendGaslessTransactionUseCase(
         createAndSendEvmGaslessTransactionUseCase = evmUseCase,
         createAndSendTronGaslessTransactionUseCase = tronUseCase,
+        createAndSendSolanaGaslessTransactionUseCase = solanaUseCase,
     )
 
     private val userWallet: UserWallet = mockk()
     private val transactionData: TransactionData = mockk()
     private val usdtContract = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+    private val solCurrency = MockCryptoCurrencyFactory().createCoin(Blockchain.Solana)
     private val usdtCurrency = MockCryptoCurrencyFactory().createToken(
         blockchain = Blockchain.Tron,
         contractAddress = usdtContract,
@@ -78,7 +81,7 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(TX_HASH.right())
-        coVerify(exactly = 0) { evmUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) { evmUseCase(any(), any<TransactionData>(), any()) }
     }
 
     @Test
@@ -100,6 +103,27 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
     }
 
     @Test
+    fun `GIVEN a Solana sponsored fee WHEN invoke THEN the Solana flow sends it`() = runTest {
+        // Arrange
+        val fee = TransactionFeeExtended(
+            transactionFee = TransactionFee.Single(
+                normal = Fee.Common(amount = Amount(blockchain = Blockchain.Solana, value = BigDecimal.ZERO)),
+            ),
+            feeTokenId = solCurrency.id,
+            gaslessProtocolData = GaslessProtocolData.Solana(feePayer = "FeePayer", network = mockk()),
+        )
+        coEvery { solanaUseCase(userWallet, transactionData, fee) } returns TX_HASH.right()
+
+        // Act
+        val actual = useCase(userWallet = userWallet, transactionData = transactionData, fee = fee)
+
+        // Assert
+        assertThat(actual).isEqualTo(TX_HASH.right())
+        coVerify(exactly = 0) { evmUseCase(any(), any<TransactionData>(), any()) }
+        coVerify(exactly = 0) { tronUseCase(any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN a native fee WHEN invoke THEN neither flow runs`() = runTest {
         // Arrange — a native fee belongs to SendTransactionUseCase, not here.
         val fee = TransactionFeeExtended(
@@ -114,8 +138,9 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(SendTransactionError.DataError("Gasless send called with a native fee").left())
-        coVerify(exactly = 0) { evmUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) { evmUseCase(any(), any<TransactionData>(), any()) }
         coVerify(exactly = 0) { tronUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) { solanaUseCase(any(), any(), any()) }
     }
 
     @Test

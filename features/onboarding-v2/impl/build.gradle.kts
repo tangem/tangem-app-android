@@ -49,6 +49,7 @@ dependencies {
     api(projects.domain.tokens)
     api(projects.domain.wallets)
     implementation(projects.domain.feedback.models)
+    implementation(projects.domain.staking.models)
     implementation(projects.domain.wallets.models)
     runtimeOnly(projects.domain.onramp)
     runtimeOnly(projects.domain.transaction)

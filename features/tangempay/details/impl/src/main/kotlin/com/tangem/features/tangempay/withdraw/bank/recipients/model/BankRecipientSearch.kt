@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.recipients.model
 
-import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.features.tangempay.withdraw.toFullName
 
 /** Client-side search over saved recipients by the name shown or account number; a blank query keeps every account. */

@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.verified
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,10 +13,11 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
 import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -34,6 +36,7 @@ internal class TangemPayVerifiedModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val getTangemPayProductsAvailabilityUseCase: GetTangemPayProductsAvailabilityUseCase,
     private val startTangemPayOnboardingUseCase: StartTangemPayOnboardingUseCase,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayVerifiedComponent.Params>()
@@ -63,6 +66,7 @@ internal class TangemPayVerifiedModel @Inject constructor(
             getTangemPayProductsAvailabilityUseCase(userWalletId = params.userWalletId)
                 .onRight { products ->
                     availableProducts = products
+                    analytics.send(TangemPayAnalyticsEvents.VerificationResultReceived(availableProducts = products))
                     uiState.value = stateFactory.create(products)
                 }
                 .onLeft { showRetryDialog() }
@@ -70,6 +74,11 @@ internal class TangemPayVerifiedModel @Inject constructor(
     }
 
     private fun showRetryDialog() {
+        analytics.send(
+            TangemPayAnalyticsEvents.EligibilityRetryScreenOpened(
+                stage = TangemPayAnalyticsEvents.EligibilityStage.AFTER_VERIFICATION,
+            ),
+        )
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(R.string.common_something_went_wrong),

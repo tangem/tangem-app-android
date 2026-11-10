@@ -73,7 +73,7 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.core.analytics.models)
     implementation(projects.domain.core)
-    implementation(projects.domain.visa)
+    implementation(projects.domain.tangempay)
     implementation(projects.domain.mcp)
     implementation(projects.domain.mcp.models)
 
@@ -103,7 +103,6 @@ dependencies {
     kapt(deps.hilt.kapt)
     
     testImplementation(projects.common.test)
-    testImplementation(projects.core.remote)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.arrow.core)

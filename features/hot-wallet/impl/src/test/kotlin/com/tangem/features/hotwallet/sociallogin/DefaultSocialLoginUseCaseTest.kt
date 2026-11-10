@@ -25,8 +25,10 @@ import com.tangem.domain.sociallogin.usecase.SignInWithSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.SignOutFromSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.WriteSocialBackupUseCase
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
+import com.tangem.domain.wallets.models.HotWalletAdditionRestriction
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
+import com.tangem.domain.wallets.usecase.GetHotWalletAdditionRestrictionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
@@ -81,6 +83,7 @@ internal class DefaultSocialLoginUseCaseTest {
     private val registerRestoredWalletUseCase: RegisterRestoredWalletUseCase = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val revokeSocialRecoveryUseCase: RevokeSocialRecoveryUseCase = mockk()
+    private val getHotWalletAdditionRestrictionUseCase: GetHotWalletAdditionRestrictionUseCase = mockk()
 
     private val hotWalletId: HotWalletId = mockk()
     private val userWallet = UserWallet.Hot(
@@ -121,6 +124,7 @@ internal class DefaultSocialLoginUseCaseTest {
         exportSeedPhraseUseCase = exportSeedPhraseUseCase,
         mnemonicRepository = mnemonicRepository,
         hotWalletImporter = hotWalletImporter,
+        getHotWalletAdditionRestrictionUseCase = getHotWalletAdditionRestrictionUseCase,
         appCoroutineScope = mockk<AppCoroutineScope>(relaxed = true),
     )
 
@@ -143,6 +147,7 @@ internal class DefaultSocialLoginUseCaseTest {
             registerRestoredWalletUseCase,
             getUserWalletUseCase,
             revokeSocialRecoveryUseCase,
+            getHotWalletAdditionRestrictionUseCase,
         )
 
         useCase = createUseCase()
@@ -172,6 +177,7 @@ internal class DefaultSocialLoginUseCaseTest {
         coEvery { hotWalletImporter.materialize(any(), any(), any()) } returns restoredWallet.right()
         coEvery { hotWalletImporter.save(any(), savedRestoredWallet, any()) } returns Unit.right()
         coEvery { registerRestoredWalletUseCase(restoredWallet) } returns Unit.right()
+        coEvery { getHotWalletAdditionRestrictionUseCase() } returns null
     }
 
     private fun restoredBackup() = RestoredSocialBackup(
@@ -669,6 +675,86 @@ internal class DefaultSocialLoginUseCaseTest {
         ).inOrder()
         assertThat(wasConsentAsked).isFalse()
     }
+
+    @Test
+    fun `GIVEN hot wallets limit reached WHEN signIn creates a wallet THEN limit error without generating`() =
+        runTest {
+            // Arrange
+            coEvery {
+                getHotWalletAdditionRestrictionUseCase()
+            } returns HotWalletAdditionRestriction.LimitReached
+
+            // Act
+            val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginError.HotWalletsLimitReached.left())
+            coVerify(exactly = 0) {
+                tangemHotSdk.generateWallet(any(), any())
+                registerSocialRecoveryUseCase(any(), any(), any())
+            }
+        }
+
+    @Test
+    fun `GIVEN the limit check throws WHEN signIn creates a wallet THEN Unknown without generating`() = runTest {
+        // Arrange
+        val cause = IllegalStateException("wallets not loaded")
+        coEvery { getHotWalletAdditionRestrictionUseCase() } throws cause
+
+        // Act
+        val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.Unknown(cause).left())
+        coVerify(exactly = 0) { tangemHotSdk.generateWallet(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN save hits hot wallets limit WHEN signIn creates a wallet THEN limit error AND wallet deleted`() =
+        runTest {
+            // Arrange
+            coEvery { saveWalletUseCase(savedWallet) } returns SaveWalletError.HotWalletsLimitReached(null).left()
+
+            // Act
+            val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginError.HotWalletsLimitReached.left())
+            coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
+        }
+
+    @Test
+    fun `GIVEN import hits hot wallets limit WHEN signIn restores a wallet THEN limit error`() = runTest {
+        // Arrange
+        bindIdentity()
+        coEvery { hotWalletImporter.materialize(any(), any(), any()) } returns HotWalletImportError.LimitReached.left()
+
+        // Act
+        val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.HotWalletsLimitReached.left())
+        coVerify(exactly = 0) {
+            registerRestoredWalletUseCase(any())
+            hotWalletImporter.save(any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `GIVEN save hits hot wallets limit WHEN signIn restores a wallet THEN limit error AND wallet deleted`() =
+        runTest {
+            // Arrange
+            bindIdentity()
+            coEvery { hotWalletImporter.save(any(), savedRestoredWallet, any()) } returns
+                HotWalletImportError.LimitReached.left()
+
+            // Act
+            val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginError.HotWalletsLimitReached.left())
+            coVerify(exactly = 1) { tangemHotSdk.delete(restoredHotWalletId) }
+        }
 
     private companion object {
         val PROVIDER = SocialLoginProvider.Google

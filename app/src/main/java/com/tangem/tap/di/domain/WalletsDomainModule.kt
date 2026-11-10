@@ -24,14 +24,17 @@ import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.tap.domain.DefaultUserWalletSelectedHandler
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -119,6 +122,30 @@ internal object WalletsDomainModule {
         return IsWalletAlreadySavedUseCase(
             userWalletsListRepository = userWalletsListRepository,
             dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesGetHotWalletAdditionRestrictionUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
+    ): GetHotWalletAdditionRestrictionUseCase {
+        return GetHotWalletAdditionRestrictionUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            isMultipleHotWalletsEnabled = { hotWalletFeatureToggles.isMultipleHotWalletsEnabled },
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesDiscardUnsavedHotWalletUseCase(
+        tangemHotSdk: TangemHotSdk,
+        userWalletsListRepository: UserWalletsListRepository,
+    ): DiscardUnsavedHotWalletUseCase {
+        return DiscardUnsavedHotWalletUseCase(
+            tangemHotSdk = tangemHotSdk,
+            userWalletsListRepository = userWalletsListRepository,
         )
     }
 
@@ -463,6 +490,45 @@ internal object WalletsDomainModule {
         walletCardsBackupRepository: WalletCardsBackupRepository,
     ): ReportWalletCardsBackupUseCase {
         return ReportWalletCardsBackupUseCase(walletCardsBackupRepository = walletCardsBackupRepository)
+    }
+
+    @Provides
+    @Singleton
+    @RemoveWithToggle("TWI_1586_CARD_LINKED_STATUS_UPDATE_V2")
+    fun provideReportCardLinkedWalletsBackupUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+        reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase,
+    ): ReportCardLinkedWalletsBackupUseCase {
+        return ReportCardLinkedWalletsBackupUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            walletCardsBackupRepository = walletCardsBackupRepository,
+            reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportSeenWalletCardUseCase(
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+        isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    ): ReportSeenWalletCardUseCase {
+        return ReportSeenWalletCardUseCase(
+            walletCardsBackupRepository = walletCardsBackupRepository,
+            isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportSavedWalletsBackupUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        reportSeenWalletCardUseCase: ReportSeenWalletCardUseCase,
+    ): ReportSavedWalletsBackupUseCase {
+        return ReportSavedWalletsBackupUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            reportSeenWalletCardUseCase = reportSeenWalletCardUseCase,
+        )
     }
 
     @Provides

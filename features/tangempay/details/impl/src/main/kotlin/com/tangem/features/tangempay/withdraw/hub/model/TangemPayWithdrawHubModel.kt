@@ -10,19 +10,19 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
-import com.tangem.domain.pay.model.recents.TokenTransferJournal
-import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
-import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
-import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.tangempay.model.recents.TokenTransferJournal
+import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.tangempay.usecase.bankofframp.GetBankOfframpOptionsUseCase
+import com.tangem.domain.tangempay.usecase.bankofframp.GetRecentBankAccountsUseCase
+import com.tangem.domain.tangempay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
@@ -33,6 +33,7 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSourcesObse
 import com.tangem.features.tangempay.withdraw.buildWithdrawSwapRoute
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUMFactory
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -69,6 +70,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val bankWithdrawSourcesObserver: BankWithdrawSourcesObserver,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -200,6 +202,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
                 is BankWithdrawSourceAccount.Payment -> paymentAccountStatusFetcher(params.userWalletId)
                 is BankWithdrawSourceAccount.Money -> withContext(NonCancellable) {
                     delay(ON_CHAIN_REFRESH_DELAY_MILLIS)
+                    txHistoryContentUpdateEmitter.triggerUpdate()
                     moneyAccountStatusFetcher(params.userWalletId)
                 }
             }.onLeft { error ->

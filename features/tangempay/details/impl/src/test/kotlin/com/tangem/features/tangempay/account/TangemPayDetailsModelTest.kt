@@ -6,10 +6,7 @@ import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.core.ui.message.BottomSheetMessage
@@ -24,35 +21,35 @@ import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.account.VirtualAccountOnramp
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.CashbackDisplayMode
-import com.tangem.domain.pay.model.CashbackSummary
-import com.tangem.domain.pay.model.TangemPayCashback
-import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
-import com.tangem.domain.pay.usecase.DismissVirtualAccountOrderFailureUseCase
-import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
-import com.tangem.domain.pay.usecase.GetCashbackDeactivationDismissedUseCase
-import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
-import com.tangem.domain.pay.usecase.ObserveCashbackSummaryUseCase
-import com.tangem.domain.pay.usecase.SetCashbackDeactivationDismissedUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.CashbackDisplayMode
+import com.tangem.domain.tangempay.model.CashbackSummary
+import com.tangem.domain.tangempay.model.TangemPayCashback
+import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.tangempay.usecase.DismissVirtualAccountOrderFailureUseCase
+import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.tangempay.usecase.GetCashbackDeactivationDismissedUseCase
+import com.tangem.domain.tangempay.usecase.GetCashbackSummaryUseCase
+import com.tangem.domain.tangempay.usecase.ObserveCashbackSummaryUseCase
+import com.tangem.domain.tangempay.usecase.SetCashbackDeactivationDismissedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.pay.model.CardIssueOffers
-import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.model.Order
-import com.tangem.domain.pay.model.OrderStatus
-import com.tangem.domain.pay.model.OrderStep
-import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
-import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.CardIssueOffers
+import com.tangem.domain.tangempay.model.Offer
+import com.tangem.domain.tangempay.model.Order
+import com.tangem.domain.tangempay.model.OrderStatus
+import com.tangem.domain.tangempay.model.OrderStep
+import com.tangem.domain.tangempay.model.OrderType
+import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.customerTariffPlan
@@ -94,13 +91,12 @@ import java.util.Currency
 import com.tangem.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class TangemPayDetailsModelTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("123")
 
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
-    private val router: Router = mockk(relaxed = true)
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase = mockk(relaxed = true)
     private val observeCashbackSummaryUseCase: ObserveCashbackSummaryUseCase = mockk()
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase = mockk()
@@ -108,13 +104,10 @@ internal class TangemPayDetailsModelTest {
     private val cachedSummary = MutableStateFlow<CashbackSummary?>(null)
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk(relaxed = true)
     private val getCustomerOffers: GetCustomerOffersUseCase = mockk(relaxed = true)
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository = mockk(relaxed = true)
     private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase = mockk()
-    private val cashbackBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk {
-        every { isBalanceHidden() } returns flowOf(false)
-    }
+    private val cashbackBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val cashbackControllerFactory = object : TangemPayCashbackController.Factory {
         override fun create(scope: CoroutineScope, accountStatus: StateFlow<AccountStatus.Payment>) =
             TangemPayCashbackController(
@@ -133,24 +126,29 @@ internal class TangemPayDetailsModelTest {
         mockk(relaxUnitFun = true)
 
     @BeforeEach
-    fun resetCashbackMocks() {
+    fun setUp() {
         clearMocks(
             analytics,
             router,
+            uiMessageSender,
+            paymentAccountStatusSupplier,
             getCashbackSummaryUseCase,
             observeCashbackSummaryUseCase,
             getCashbackDeactivationDismissedUseCase,
             setCashbackDeactivationDismissedUseCase,
             getBankCredentialsUseCase,
+            getCustomerOffers,
             sendFeedbackEmailUseCase,
             tangemPayWithdrawRepository,
             findActiveBankOfframpOrderUseCase,
+            cashbackBalanceHidingSettingsUseCase,
             dismissVirtualAccountOrderFailureUseCase,
         )
         coEvery { findActiveBankOfframpOrderUseCase(any()) } returns null.right()
         cachedSummary.value = null
         every { observeCashbackSummaryUseCase(any()) } returns cachedSummary
         coEvery { getCashbackDeactivationDismissedUseCase(any()) } returns false
+        every { cashbackBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
     }
 
     @Nested
@@ -300,7 +298,7 @@ internal class TangemPayDetailsModelTest {
         @Test
         fun `GIVEN nothing cached WHEN refresh fails THEN error block shown`() = runTest {
             // Arrange
-            givenRefreshReturns(VisaApiError.Unspecified.left())
+            givenRefreshReturns(TangemPayApiError.Unspecified.left())
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -328,251 +326,434 @@ internal class TangemPayDetailsModelTest {
         override fun toString(): String = name
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `GIVEN balance hiding setting WHEN status re-emits THEN balance visibility follows the setting`(
-        isBalanceHidden: Boolean,
-    ) = runTest {
-        // Arrange
-        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
-        val model = createModel(testScope = this, statusFlow = statusFlow, isBalanceHidden = isBalanceHidden)
-        advanceUntilIdle()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Balance {
 
-        // Act
-        statusFlow.value = paymentStatus(loadedStatus(availableForWithdrawal = BigDecimal.TEN))
-        advanceUntilIdle()
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN balance hiding setting WHEN status re-emits THEN balance visibility follows the setting`(
+            isBalanceHidden: Boolean,
+        ) = runTest {
+            // Arrange
+            val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+            val model = createModel(testScope = this, statusFlow = statusFlow, isBalanceHidden = isBalanceHidden)
+            advanceUntilIdle()
 
-        // Assert
-        assertThat(model.uiState.value.isBalanceHidden).isEqualTo(isBalanceHidden)
-        model.onDestroy()
-    }
+            // Act
+            statusFlow.value = paymentStatus(loadedStatus(availableForWithdrawal = BigDecimal.TEN))
+            advanceUntilIdle()
 
-    @ParameterizedTest
-    @MethodSource("provideMutedCases")
-    fun `GIVEN status source WHEN status loaded THEN balance is muted only when cached`(case: MutedCase) = runTest {
-        // Arrange + Act
-        val model = createModel(
-            testScope = this,
-            statusSource = case.statusSource,
-            availableForWithdrawal = BigDecimal.ZERO,
-            accountError = case.accountError,
-        )
-        advanceUntilIdle()
-
-        // Assert
-        val balanceState = model.uiState.value.balanceBlockState
-        assertThat(balanceState).isInstanceOf(TangemPayDetailsBalanceBlockState.Content::class.java)
-        assertThat((balanceState as TangemPayDetailsBalanceBlockState.Content).isMuted).isEqualTo(case.expectedMuted)
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideTransactionClickCases")
-    fun `GIVEN status WHEN transaction clicked THEN opens details only when customerId present`(
-        case: TransactionClickCase,
-    ) = runTest {
-        // Arrange
-        val model = createModel(testScope = this, statusValue = case.status)
-        advanceUntilIdle()
-
-        // Act
-        model.onTransactionClick(mockk<TangemPayTxHistoryItem.Payment>(relaxed = true))
-
-        // Assert
-        verify(exactly = if (case.expectedOpened) 1 else 0) {
-            analytics.send(ofType<TangemPayAnalyticsEvents.TransactionInListClicked>())
+            // Assert
+            assertThat(model.uiState.value.isBalanceHidden).isEqualTo(isBalanceHidden)
+            model.onDestroy()
         }
-        model.onDestroy()
+
+        @ParameterizedTest
+        @MethodSource("provideMutedCases")
+        fun `GIVEN status source WHEN status loaded THEN balance is muted only when cached`(case: MutedCase) = runTest {
+            // Act
+            val model = createModel(
+                testScope = this,
+                statusSource = case.statusSource,
+                availableForWithdrawal = BigDecimal.ZERO,
+                accountError = case.accountError,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            val balanceState = model.uiState.value.balanceBlockState
+            assertThat(balanceState).isInstanceOf(TangemPayDetailsBalanceBlockState.Content::class.java)
+            assertThat((balanceState as TangemPayDetailsBalanceBlockState.Content).isMuted).isEqualTo(case.expectedMuted)
+            model.onDestroy()
+        }
+
+        private fun provideMutedCases() = listOf(
+            MutedCase(statusSource = StatusSource.ACTUAL, expectedMuted = false),
+            MutedCase(statusSource = StatusSource.CACHE, expectedMuted = true),
+            MutedCase(statusSource = StatusSource.ONLY_CACHE, expectedMuted = true),
+            // ACTUAL but errored is still not fresh -> muted (guards !isFresh, not just source != ACTUAL)
+            MutedCase(
+                statusSource = StatusSource.ACTUAL,
+                accountError = PaymentAccountStatusValue.Error.Unavailable,
+                expectedMuted = true,
+            ),
+        )
     }
 
-    @Test
-    fun `GIVEN banking details error sheet WHEN retry loads credentials THEN product instance credentials returned`() =
-        runTest {
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Navigation {
+
+        @ParameterizedTest
+        @MethodSource("provideTransactionClickCases")
+        fun `GIVEN status WHEN transaction clicked THEN opens details only when customerId present`(
+            case: TransactionClickCase,
+        ) = runTest {
+            // Arrange
+            val model = createModel(testScope = this, statusValue = case.status)
+            advanceUntilIdle()
+
+            // Act
+            model.onTransactionClick(mockk<TangemPayTxHistoryItem.Payment>(relaxed = true))
+
+            // Assert
+            verify(exactly = if (case.expectedOpened) 1 else 0) {
+                analytics.send(
+                    TangemPayAnalyticsEvents.TransactionInListClicked(
+                        product = TangemPayAnalyticsEvents.Product.CARD,
+                        type = "payment",
+                        status = "unknown",
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN account WHEN current plan clicked THEN payment account plan event sent`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onClickCurrentPlan(mockk())
+
+            // Assert
+            verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Tiers.CurrentPlanClicked()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN credentials load WHEN banking details retried THEN account details screen opens`() = runTest {
             // Arrange
             coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
             // Act
-            val actual = model.loadBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
+            val actual = model.retryBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
 
             // Assert
-            assertThat(actual).isEqualTo(BANK_CREDENTIALS.right())
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN loaded status WHEN banking details error shown THEN details error event sent`() = runTest {
-        // GIVEN
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // WHEN
-        model.showVaBankingDetailsError(productInstanceId = "pi_account")
-
-        // THEN
-        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaDetailsErrorShowed>()) }
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideInitialAddFundsCases")
-    fun `GIVEN initial route WHEN status loaded twice THEN add funds opened only for ADD_FUNDS and only once`(
-        case: InitialAddFundsCase,
-    ) = runTest {
-        // GIVEN
-        // The status flow keeps emitting while the screen is alive, so two emissions pin that the sheet
-        // requested by the top-up push is opened once and not reopened on every refresh.
-        val model = createModel(testScope = this, initialRoute = case.initialRoute, statusEmissions = 2)
-        val openedSheets = model.bottomSheetNavigation.trackSlot()
-
-        // WHEN
-        advanceUntilIdle()
-
-        // THEN
-        assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.AddFunds>())
-            .hasSize(case.expectedAddFundsSheets)
-        // The push path opens the sheet directly, so the "user tapped Add funds" event must not be sent
-        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.AddFundsClicked>()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN plan is awaited WHEN screen started THEN plan selection replaces the stack`() = runTest {
-        // GIVEN
-        val awaitingPlanSelection = awaitingPlanSelectionStatus()
-        val model = createModel(testScope = this, statusValue = awaitingPlanSelection)
-        advanceUntilIdle()
-
-        // WHEN
-        model.onStart()
-        advanceUntilIdle()
-
-        // THEN
-        verify(exactly = 1) { router.replaceAll(routes = selectPlanRoutes(), onComplete = any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN screen is stopped WHEN plan becomes awaited THEN stack is not replaced`() = runTest {
-        // GIVEN
-        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
-        val model = createModel(testScope = this, statusFlow = statusFlow)
-        model.onStart()
-        advanceUntilIdle()
-        // the plan flow is pushed on top of the details screen
-        model.onStop()
-
-        // WHEN
-        // canceling the Plus transition drops its order before the Basic one is created
-        statusFlow.value = paymentStatus(awaitingPlanSelectionStatus())
-        advanceUntilIdle()
-        // the Basic order is created, the account has a plan again
-        statusFlow.value = paymentStatus(loadedStatus())
-        advanceUntilIdle()
-
-        // THEN
-        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN plan stayed awaited while stopped WHEN screen started again THEN plan selection replaces the stack`() =
-        runTest {
-            // GIVEN
-            val awaitingPlanSelection = awaitingPlanSelectionStatus()
-            val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
-            val model = createModel(testScope = this, statusFlow = statusFlow)
-            model.onStart()
-            advanceUntilIdle()
-            model.onStop()
-            statusFlow.value = paymentStatus(awaitingPlanSelection)
-            advanceUntilIdle()
-
-            // WHEN
-            model.onStart()
-            advanceUntilIdle()
-
-            // THEN
+            assertThat(actual).isEqualTo(Unit.right())
             verify(exactly = 1) {
-                router.replaceAll(routes = selectPlanRoutes(), onComplete = any())
+                router.push(
+                    route = TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(BANK_CREDENTIALS),
+                    onComplete = any(),
+                )
             }
             model.onDestroy()
         }
 
-    @Test
-    fun `GIVEN card issue failed WHEN screen started THEN failure is shown and the stack is not replaced`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this, statusValue = cardIssueFailedStatus())
-        advanceUntilIdle()
+        @Test
+        fun `GIVEN credentials fail WHEN banking details retried THEN error returned and nothing opened`() = runTest {
+            // Arrange
+            coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns
+                TangemPayApiError.Unspecified.left()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
 
-        // Act
-        model.onStart()
-        advanceUntilIdle()
+            // Act
+            val actual = model.retryBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
 
-        // Assert
-        assertThat(model.uiState.value.messageBanner?.state?.title)
-            .isEqualTo(resourceReference(R.string.tangempay_failed_to_issue_card))
-        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
-        model.onDestroy()
+            // Assert
+            assertThat(actual).isEqualTo(TangemPayApiError.Unspecified.left())
+            verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN loaded status WHEN banking details error shown THEN details error event sent`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.showVaBankingDetailsError(productInstanceId = "pi_account")
+
+            // Assert
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaDetailsErrorShowed>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN plan is awaited WHEN screen started THEN plan selection replaces the stack`() = runTest {
+            // Arrange
+            val awaitingPlanSelection = awaitingPlanSelectionStatus()
+            val model = createModel(testScope = this, statusValue = awaitingPlanSelection)
+            advanceUntilIdle()
+
+            // Act
+            model.onStart()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.replaceAll(routes = selectPlanRoutes(), onComplete = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN screen is stopped WHEN plan becomes awaited THEN stack is not replaced`() = runTest {
+            // Arrange
+            val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+            val model = createModel(testScope = this, statusFlow = statusFlow)
+            model.onStart()
+            advanceUntilIdle()
+            // the plan flow is pushed on top of the details screen
+            model.onStop()
+
+            // Act
+            // canceling the Plus transition drops its order before the Basic one is created
+            statusFlow.value = paymentStatus(awaitingPlanSelectionStatus())
+            advanceUntilIdle()
+            // the Basic order is created, the account has a plan again
+            statusFlow.value = paymentStatus(loadedStatus())
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN plan stayed awaited while stopped WHEN screen started again THEN plan selection replaces the stack`() =
+            runTest {
+                // Arrange
+                val awaitingPlanSelection = awaitingPlanSelectionStatus()
+                val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+                val model = createModel(testScope = this, statusFlow = statusFlow)
+                model.onStart()
+                advanceUntilIdle()
+                model.onStop()
+                statusFlow.value = paymentStatus(awaitingPlanSelection)
+                advanceUntilIdle()
+
+                // Act
+                model.onStart()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    router.replaceAll(routes = selectPlanRoutes(), onComplete = any())
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN other networks sheet WHEN dismissed THEN choose network is reopened instead of closing the slot`() =
+            runTest {
+                // Arrange
+                // Both sheets share one slot, so "Other networks" replaces its opener; closing it must not drop the
+                // user out to the account screen.
+                val model = createModel(testScope = this)
+                val openedSheets = model.bottomSheetNavigation.trackSlot()
+                advanceUntilIdle()
+
+                // Act
+                model.onSelectDisabled()
+                model.onOtherNetworksDismiss()
+
+                // Assert
+                assertThat(openedSheets.filterNotNull()).containsExactly(
+                    TangemPayDetailsNavigation.OtherNetworks,
+                    TangemPayDetailsNavigation.ChooseNetwork(walletId = userWalletId),
+                ).inOrder()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN deactivated account WHEN add funds clicked THEN add funds sheet opened`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this, statusValue = deactivatedStatus(id = "customer-id"))
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+            advanceUntilIdle()
+
+            // Act
+            model.onClickAddFunds()
+
+            // Assert
+            assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.AddFunds>()).hasSize(1)
+            model.onDestroy()
+        }
+
+        private fun provideTransactionClickCases() = listOf(
+            TransactionClickCase(
+                name = "deactivated account (has customerId) -> opens",
+                status = deactivatedStatus(id = "customer-id"),
+                expectedOpened = true,
+            ),
+            TransactionClickCase(
+                name = "loaded account (has customerId) -> opens",
+                status = null,
+                expectedOpened = true,
+            ),
+            TransactionClickCase(
+                name = "loading status (no customerId) -> ignored",
+                status = PaymentAccountStatusValue.Loading,
+                expectedOpened = false,
+            ),
+            TransactionClickCase(
+                name = "not created status (no customerId) -> ignored",
+                status = PaymentAccountStatusValue.NotCreated,
+                expectedOpened = false,
+            ),
+        )
     }
 
-    @Test
-    fun `GIVEN failed banking details banner WHEN dismissed THEN failure dismissed for the wallet`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this, virtualAccount = VirtualAccountOnramp.Failed)
-        advanceUntilIdle()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Banners {
 
-        // Act
-        requireNotNull(model.uiState.value.bankTransferOnrampBanner?.onClose).invoke()
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 1) { dismissVirtualAccountOrderFailureUseCase(userWalletId) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN dismissed banner WHEN the failure status re-emits THEN the banner stays hidden`() = runTest {
-        // Arrange
-        val statusFlow = MutableStateFlow(paymentStatus(cardIssueFailedStatus()))
-        val model = createModel(testScope = this, statusFlow = statusFlow)
-        advanceUntilIdle()
-
-        // Act
-        model.onCardIssueFailedBannerDismissed()
-        statusFlow.value = paymentStatus(cardIssueFailedStatus())
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.uiState.value.messageBanner).isNull()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN dismissed banner WHEN the account recovers and fails again THEN the banner reappears`() = runTest {
-        // Arrange
-        val statusFlow = MutableStateFlow(paymentStatus(cardIssueFailedStatus()))
-        val model = createModel(testScope = this, statusFlow = statusFlow)
-        advanceUntilIdle()
-        model.onCardIssueFailedBannerDismissed()
-
-        // Act
-        statusFlow.value = paymentStatus(loadedStatus())
-        advanceUntilIdle()
-        statusFlow.value = paymentStatus(cardIssueFailedStatus())
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.uiState.value.messageBanner).isNotNull()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN card issue failed WHEN generic support clicked THEN feedback is sent for the failed account`() =
-        runTest {
+        @Test
+        fun `GIVEN card issue failed WHEN screen started THEN failure is shown and the stack is not replaced`() = runTest {
             // Arrange
             val model = createModel(testScope = this, statusValue = cardIssueFailedStatus())
+            advanceUntilIdle()
+
+            // Act
+            model.onStart()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.messageBanner?.state?.title)
+                .isEqualTo(resourceReference(R.string.tangempay_failed_to_issue_card))
+            verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN failed banking details banner WHEN dismissed THEN failure dismissed for the wallet`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this, virtualAccount = VirtualAccountOnramp.Failed)
+            advanceUntilIdle()
+
+            // Act
+            requireNotNull(model.uiState.value.bankTransferOnrampBanner?.onClose).invoke()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { dismissVirtualAccountOrderFailureUseCase(userWalletId) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN dismissed banner WHEN the failure status re-emits THEN the banner stays hidden`() = runTest {
+            // Arrange
+            val statusFlow = MutableStateFlow(paymentStatus(cardIssueFailedStatus()))
+            val model = createModel(testScope = this, statusFlow = statusFlow)
+            advanceUntilIdle()
+
+            // Act
+            model.onCardIssueFailedBannerDismissed()
+            statusFlow.value = paymentStatus(cardIssueFailedStatus())
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.messageBanner).isNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN dismissed banner WHEN the account recovers and fails again THEN the banner reappears`() = runTest {
+            // Arrange
+            val statusFlow = MutableStateFlow(paymentStatus(cardIssueFailedStatus()))
+            val model = createModel(testScope = this, statusFlow = statusFlow)
+            advanceUntilIdle()
+            model.onCardIssueFailedBannerDismissed()
+
+            // Act
+            statusFlow.value = paymentStatus(loadedStatus())
+            advanceUntilIdle()
+            statusFlow.value = paymentStatus(cardIssueFailedStatus())
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.messageBanner).isNotNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a delivering card WHEN the status re-emits THEN the in-transit banner event is sent once`() = runTest {
+            // Arrange
+            val statusFlow = MutableStateFlow(paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering)))
+            val model = createModel(testScope = this, statusFlow = statusFlow)
+            advanceUntilIdle()
+
+            // Act
+            statusFlow.value = paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an active card WHEN it starts delivering THEN the in-transit banner event is sent`() = runTest {
+            // Arrange
+            val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+            val model = createModel(testScope = this, statusFlow = statusFlow)
+            advanceUntilIdle()
+            verify(exactly = 0) {
+                analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
+            }
+
+            // Act
+            statusFlow.value = paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the delivery banner WHEN Activate card is tapped THEN the banner button event is sent`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onActivateCardClick(cardId = "card_1")
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.ActivateCardBannerButtonClicked>())
+            }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Support {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN card issue failed WHEN a support entry clicked THEN its feedback is sent for the failed account`(
+            case: SupportClickCase,
+        ) = runTest {
+            // Arrange
+            val model = createModel(testScope = this, statusValue = cardIssueFailedStatus())
+            advanceUntilIdle()
+
+            // Act
+            case.click(model)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { sendFeedbackEmailUseCase.invoke(type = case.expectedFeedback) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a status without a customer id WHEN generic support clicked THEN no feedback is sent`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this, statusValue = awaitingPlanSelectionStatus())
             advanceUntilIdle()
 
             // Act
@@ -580,52 +761,217 @@ internal class TangemPayDetailsModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) {
-                sendFeedbackEmailUseCase.invoke(
-                    type = FeedbackEmailType.Visa.FeatureIsBeta(
-                        walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
-                        customerId = "customer-id",
-                    ),
-                )
-            }
+            coVerify(exactly = 0) { sendFeedbackEmailUseCase.invoke(any()) }
             model.onDestroy()
         }
 
-    @Test
-    fun `GIVEN a status without a customer id WHEN generic support clicked THEN no feedback is sent`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this, statusValue = awaitingPlanSelectionStatus())
-        advanceUntilIdle()
-
-        // Act
-        model.onContactSupportClicked()
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 0) { sendFeedbackEmailUseCase.invoke(any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN card issue failed WHEN support clicked THEN failed issue feedback is sent`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this, statusValue = cardIssueFailedStatus())
-        advanceUntilIdle()
-
-        // Act
-        model.onCardIssueFailedSupportClick()
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 1) {
-            sendFeedbackEmailUseCase.invoke(
-                type = FeedbackEmailType.Visa.FailedIssueCard(
+        private fun provideTestModels() = listOf(
+            SupportClickCase(
+                name = "generic support",
+                click = { it.onContactSupportClicked() },
+                expectedFeedback = FeedbackEmailType.TangemPay.FeatureIsBeta(
                     walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                     customerId = "customer-id",
                 ),
-            )
+            ),
+            SupportClickCase(
+                name = "card issue failed banner support",
+                click = { it.onCardIssueFailedSupportClick() },
+                expectedFeedback = FeedbackEmailType.TangemPay.FailedIssueCard(
+                    walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
+                    customerId = "customer-id",
+                ),
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Withdraw {
+
+        @Test
+        fun `GIVEN bank offramp available WHEN withdraw clicked THEN hub screen pushed and swap not pushed`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
+            advanceUntilIdle()
+
+            // Act
+            model.onClickWithdraw()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+            verify(exactly = 0) { router.push(ofType<AppRoute.Swap>()) }
+            coVerify(exactly = 0) { tangemPayWithdrawRepository.hasWithdrawOrder(any()) }
+            model.onDestroy()
         }
-        model.onDestroy()
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN bank offramp channel missing or not known yet WHEN withdraw clicked THEN swap pushed instead of the hub`(
+            isBankOfframpAvailable: Boolean?,
+        ) = runTest {
+            // Arrange
+            val model = createModel(
+                testScope = this,
+                availableForWithdrawal = BigDecimal.TEN,
+                isBankOfframpAvailable = isBankOfframpAvailable,
+            )
+            advanceUntilIdle()
+
+            // Act
+            model.onClickWithdraw()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+            verify(exactly = 1) { router.push(ofType<AppRoute.Swap>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an active bank offramp order WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
+            runTest {
+                // Arrange
+                coEvery { findActiveBankOfframpOrderUseCase(any()) } returns bankOfframpOrder().right()
+                val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
+                advanceUntilIdle()
+
+                // Act
+                model.onClickWithdraw()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
+                verify(exactly = 0) { router.push(any()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the active order lookup fails WHEN withdraw clicked THEN hub pushed without in progress error`() =
+            runTest {
+                // Arrange
+                coEvery { findActiveBankOfframpOrderUseCase(any()) } returns TangemPayApiError.Unspecified.left()
+                val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
+                advanceUntilIdle()
+
+                // Act
+                model.onClickWithdraw()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+                verify(exactly = 0) { uiMessageSender.send(any<BottomSheetMessage>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN active withdrawal and bank offramp channel missing WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
+            runTest {
+                // Arrange
+                coEvery { tangemPayWithdrawRepository.hasWithdrawOrder(any()) } returns true
+                val model = createModel(
+                    testScope = this,
+                    availableForWithdrawal = BigDecimal.TEN,
+                    isBankOfframpAvailable = false,
+                )
+                advanceUntilIdle()
+
+                // Act
+                model.onClickWithdraw()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
+                verify(exactly = 0) { router.push(any()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN no deposit address WHEN withdraw clicked THEN service unavailable sheet shown and nothing pushed`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    testScope = this,
+                    statusValue = loadedStatus(statusNetworks = emptyList(), isBankOfframpAvailable = false),
+                )
+                advanceUntilIdle()
+
+                // Act
+                model.onClickWithdraw()
+                advanceUntilIdle()
+
+                // Assert
+                val infoBlock = sentMessageInfoBlock()
+                assertThat(infoBlock.title).isEqualTo(resourceReference(CoreUiR.string.tangempay_service_unavailable_title))
+                assertThat(infoBlock.body)
+                    .isEqualTo(resourceReference(CoreUiR.string.tangempay_card_details_receive_error_description))
+                verify(exactly = 0) { router.push(any()) }
+                coVerify(exactly = 0) { tangemPayWithdrawRepository.hasWithdrawOrder(any()) }
+                model.onDestroy()
+            }
+
+        private fun provideTestModels() = listOf(false, null)
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AddCard {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN no card offer can be issued WHEN add card clicked THEN a message is shown and nothing is opened`(
+            case: OffersCase,
+        ) = runTest {
+            // Arrange
+            coEvery { getCustomerOffers.cardIssueOffers(any()) } returns case.offers
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onAddCardClick(tariffState = null)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
+            verify(exactly = 0) { router.push(any<TangemPayAccountDetailsInnerRoute.OrderCard>()) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideSingleOffers")
+        fun `GIVEN a single card offer WHEN add card clicked THEN the order screen is opened`(case: OffersCase) =
+            runTest {
+                // Arrange
+                coEvery { getCustomerOffers.cardIssueOffers(any()) } returns case.offers
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Act
+                model.onAddCardClick(tariffState = null)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.OrderCard()) }
+                verify(exactly = 0) { uiMessageSender.send(any<BottomSheetMessage>()) }
+                model.onDestroy()
+            }
+
+        private fun provideTestModels() = listOf(
+            OffersCase(name = "offers request fails", offers = TangemPayApiError.ServerUnavailable.left()),
+            OffersCase(name = "no offers", offers = CardIssueOffers(virtual = null, plastic = null).right()),
+        )
+
+        private fun provideSingleOffers() = listOf(
+            OffersCase(
+                name = "only a virtual offer",
+                offers = CardIssueOffers(virtual = virtualOffer(), plastic = null).right(),
+            ),
+            OffersCase(
+                name = "only a plastic offer",
+                offers = CardIssueOffers(virtual = null, plastic = plasticOffer()).right(),
+            ),
+        )
     }
 
     private fun cardIssueFailedStatus(planState: TangemPayTariffPlanState? = tariffPlanState()) =
@@ -649,183 +995,6 @@ internal class TangemPayDetailsModelTest {
         TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.TIERS_ONBOARDING),
     )
 
-    @Test
-    fun `GIVEN other networks sheet WHEN dismissed THEN choose network is reopened instead of closing the slot`() =
-        runTest {
-            // Arrange
-            // Both sheets share one slot, so "Other networks" replaces its opener; closing it must not drop the
-            // user out to the account screen.
-            val model = createModel(testScope = this)
-            val openedSheets = model.bottomSheetNavigation.trackSlot()
-            advanceUntilIdle()
-
-            // Act
-            model.onSelectDisabled()
-            model.onOtherNetworksDismiss()
-
-            // Assert
-            assertThat(openedSheets.filterNotNull()).containsExactly(
-                TangemPayDetailsNavigation.OtherNetworks,
-                TangemPayDetailsNavigation.ChooseNetwork(walletId = userWalletId),
-            ).inOrder()
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN deactivated account WHEN add funds clicked THEN add funds sheet opened`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this, statusValue = deactivatedStatus(id = "customer-id"))
-        val openedSheets = model.bottomSheetNavigation.trackSlot()
-        advanceUntilIdle()
-
-        // Act
-        model.onClickAddFunds()
-
-        // Assert
-        assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.AddFunds>()).hasSize(1)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank offramp available WHEN withdraw clicked THEN hub screen pushed and swap not pushed`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
-        advanceUntilIdle()
-
-        // Act
-        model.onClickWithdraw()
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
-        verify(exactly = 0) { router.push(ofType<AppRoute.Swap>()) }
-        coVerify(exactly = 0) { tangemPayWithdrawRepository.hasWithdrawOrder(any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank offramp channel missing WHEN withdraw clicked THEN swap pushed instead of the hub`() = runTest {
-        // Arrange
-        val model = createModel(
-            testScope = this,
-            availableForWithdrawal = BigDecimal.TEN,
-            isBankOfframpAvailable = false,
-        )
-        advanceUntilIdle()
-
-        // Act
-        model.onClickWithdraw()
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 0) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
-        verify(exactly = 1) { router.push(ofType<AppRoute.Swap>()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank offramp channel not known yet WHEN withdraw clicked THEN swap pushed instead of the hub`() =
-        runTest {
-            // Arrange
-            val model = createModel(
-                testScope = this,
-                availableForWithdrawal = BigDecimal.TEN,
-                isBankOfframpAvailable = null,
-            )
-            advanceUntilIdle()
-
-            // Act
-            model.onClickWithdraw()
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 0) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
-            verify(exactly = 1) { router.push(ofType<AppRoute.Swap>()) }
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN an active bank offramp order WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
-        runTest {
-            // Arrange
-            coEvery { findActiveBankOfframpOrderUseCase(any()) } returns bankOfframpOrder().right()
-            val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
-            advanceUntilIdle()
-
-            // Act
-            model.onClickWithdraw()
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
-            verify(exactly = 0) { router.push(any()) }
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN the active order lookup fails WHEN withdraw clicked THEN hub pushed without in progress error`() =
-        runTest {
-            // Arrange
-            coEvery { findActiveBankOfframpOrderUseCase(any()) } returns VisaApiError.Unspecified.left()
-            val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
-            advanceUntilIdle()
-
-            // Act
-            model.onClickWithdraw()
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
-            verify(exactly = 0) { uiMessageSender.send(any<BottomSheetMessage>()) }
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN active withdrawal and bank offramp channel missing WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
-        runTest {
-            // Arrange
-            coEvery { tangemPayWithdrawRepository.hasWithdrawOrder(any()) } returns true
-            val model = createModel(
-                testScope = this,
-                availableForWithdrawal = BigDecimal.TEN,
-                isBankOfframpAvailable = false,
-            )
-            advanceUntilIdle()
-
-            // Act
-            model.onClickWithdraw()
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
-            verify(exactly = 0) { router.push(any()) }
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN no deposit address WHEN withdraw clicked THEN service unavailable sheet shown and nothing pushed`() =
-        runTest {
-            // Arrange
-            val model = createModel(
-                testScope = this,
-                statusValue = loadedStatus(statusNetworks = emptyList(), isBankOfframpAvailable = false),
-            )
-            advanceUntilIdle()
-
-            // Act
-            model.onClickWithdraw()
-            advanceUntilIdle()
-
-            // Assert
-            val infoBlock = sentMessageInfoBlock()
-            assertThat(infoBlock.title).isEqualTo(resourceReference(CoreUiR.string.tangempay_service_unavailable_title))
-            assertThat(infoBlock.body)
-                .isEqualTo(resourceReference(CoreUiR.string.tangempay_card_details_receive_error_description))
-            verify(exactly = 0) { router.push(any()) }
-            coVerify(exactly = 0) { tangemPayWithdrawRepository.hasWithdrawOrder(any()) }
-            model.onDestroy()
-        }
-
     private fun sentMessageInfoBlock(): MessageBottomSheetUM.InfoBlock {
         val message = slot<BottomSheetMessage>()
         verify(exactly = 1) { uiMessageSender.send(capture(message)) }
@@ -839,140 +1008,6 @@ internal class TangemPayDetailsModelTest {
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
         return tracked
     }
-
-    @Test
-    fun `GIVEN a delivering card WHEN the status re-emits THEN the in-transit banner event is sent once`() = runTest {
-        // Arrange
-        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering)))
-        val model = createModel(testScope = this, statusFlow = statusFlow)
-        advanceUntilIdle()
-
-        // Act
-        statusFlow.value = paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering))
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) {
-            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
-        }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN an active card WHEN it starts delivering THEN the in-transit banner event is sent`() = runTest {
-        // Arrange
-        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
-        val model = createModel(testScope = this, statusFlow = statusFlow)
-        advanceUntilIdle()
-        verify(exactly = 0) {
-            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
-        }
-
-        // Act
-        statusFlow.value = paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering))
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) {
-            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
-        }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN the delivery banner WHEN Activate card is tapped THEN the banner button event is sent`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Act
-        model.onActivateCardClick(cardId = "card_1")
-
-        // Assert
-        verify(exactly = 1) {
-            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.ActivateCardBannerButtonClicked>())
-        }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN the offers request fails WHEN add card clicked THEN a message is shown and nothing is opened`() =
-        runTest {
-            // Arrange
-            coEvery { getCustomerOffers.cardIssueOffers(any()) } returns VisaApiError.ServerUnavailable.left()
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Act
-            model.onAddCardClick(tariffState = null)
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
-            verify(exactly = 0) { router.push(any<TangemPayAccountDetailsInnerRoute.OrderCard>()) }
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN no offers WHEN add card clicked THEN a message is shown and nothing is opened`() = runTest {
-        // Arrange
-        coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
-            CardIssueOffers(virtual = null, plastic = null).right()
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Act
-        model.onAddCardClick(tariffState = null)
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
-        verify(exactly = 0) { router.push(any<TangemPayAccountDetailsInnerRoute.OrderCard>()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN only a virtual offer WHEN add card clicked THEN the order screen is opened`() = runTest {
-        // Arrange
-        coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
-            CardIssueOffers(virtual = virtualOffer(), plastic = null).right()
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Act
-        model.onAddCardClick(tariffState = null)
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.OrderCard()) }
-        verify(exactly = 0) { uiMessageSender.send(any<BottomSheetMessage>()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN only a plastic offer WHEN add card clicked THEN the order screen is opened`() = runTest {
-        // Arrange
-        coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
-            CardIssueOffers(virtual = null, plastic = plasticOffer()).right()
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Act
-        model.onAddCardClick(tariffState = null)
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.OrderCard()) }
-        verify(exactly = 0) { uiMessageSender.send(any<BottomSheetMessage>()) }
-        model.onDestroy()
-    }
-
-    private val availableNetwork = PaymentNetworkStatus.Available(
-        network = mockk(relaxed = true),
-        depositAddress = "0xDEPOSIT",
-        chainId = 137L,
-        cryptoCurrencyStatuses = emptyList(),
-    )
 
     private fun plasticOffer() = Offer(
         type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
@@ -1038,7 +1073,7 @@ internal class TangemPayDetailsModelTest {
             cashbackControllerFactory = cashbackControllerFactory,
             dismissVirtualAccountOrderFailureUseCase = dismissVirtualAccountOrderFailureUseCase,
             tangemPayCurrencyFactory = mockk(relaxed = true),
-        )
+        ).destroyAfterTest()
     }
 
     private fun bankOfframpOrder(id: String = "order-1"): Order = Order(
@@ -1077,7 +1112,7 @@ internal class TangemPayDetailsModelTest {
         ),
     )
 
-    private fun givenRefreshReturns(result: Either<VisaApiError, CashbackSummary>) {
+    private fun givenRefreshReturns(result: Either<TangemPayApiError, CashbackSummary>) {
         coEvery { getCashbackSummaryUseCase(any()) } coAnswers {
             result.onRight { summary ->
                 cachedSummary.value = summary.takeIf {
@@ -1125,14 +1160,6 @@ internal class TangemPayDetailsModelTest {
         }
     }
 
-    internal data class FreezeCase(
-        val statusSource: StatusSource,
-        val frozenState: TangemPayCardFrozenState,
-        val availableForWithdrawal: BigDecimal,
-        val expectedAddFundsEnabled: Boolean,
-        val expectedWithdrawEnabled: Boolean,
-    )
-
     internal data class MutedCase(
         val statusSource: StatusSource,
         val expectedMuted: Boolean,
@@ -1155,71 +1182,22 @@ internal class TangemPayDetailsModelTest {
         override fun toString(): String = name
     }
 
+    internal data class SupportClickCase(
+        val name: String,
+        val click: (TangemPayDetailsModel) -> Unit,
+        val expectedFeedback: FeedbackEmailType,
+    ) {
+        override fun toString(): String = name
+    }
+
+    internal data class OffersCase(
+        val name: String,
+        val offers: Either<TangemPayApiError, CardIssueOffers>,
+    ) {
+        override fun toString(): String = name
+    }
+
     private companion object {
-        @JvmStatic
-        fun provideFreezeCases() = listOf(
-            FreezeCase(
-                statusSource = StatusSource.ACTUAL,
-                frozenState = TangemPayCardFrozenState.Unfrozen,
-                availableForWithdrawal = BigDecimal.ZERO,
-                expectedAddFundsEnabled = true,
-                expectedWithdrawEnabled = false,
-            ),
-            FreezeCase(
-                statusSource = StatusSource.ACTUAL,
-                frozenState = TangemPayCardFrozenState.Unfrozen,
-                availableForWithdrawal = BigDecimal.TEN,
-                expectedAddFundsEnabled = true,
-                expectedWithdrawEnabled = true,
-            ),
-            FreezeCase(
-                statusSource = StatusSource.ACTUAL,
-                frozenState = TangemPayCardFrozenState.Frozen,
-                availableForWithdrawal = BigDecimal.TEN,
-                expectedAddFundsEnabled = false,
-                expectedWithdrawEnabled = false,
-            ),
-            FreezeCase(
-                statusSource = StatusSource.CACHE,
-                frozenState = TangemPayCardFrozenState.Unfrozen,
-                availableForWithdrawal = BigDecimal.TEN,
-                expectedAddFundsEnabled = false,
-                expectedWithdrawEnabled = false,
-            ),
-        )
-
-        @JvmStatic
-        fun provideMutedCases() = listOf(
-            MutedCase(statusSource = StatusSource.ACTUAL, expectedMuted = false),
-            MutedCase(statusSource = StatusSource.CACHE, expectedMuted = true),
-            MutedCase(statusSource = StatusSource.ONLY_CACHE, expectedMuted = true),
-            // ACTUAL but errored is still not fresh -> muted (guards !isFresh, not just source != ACTUAL)
-            MutedCase(
-                statusSource = StatusSource.ACTUAL,
-                accountError = PaymentAccountStatusValue.Error.Unavailable,
-                expectedMuted = true,
-            ),
-        )
-
-        @JvmStatic
-        fun provideInitialAddFundsCases() = listOf(
-            InitialAddFundsCase(
-                name = "top-up push route -> sheet opened once",
-                initialRoute = TangemPayDetailsInitialRoute.ADD_FUNDS,
-                expectedAddFundsSheets = 1,
-            ),
-            InitialAddFundsCase(
-                name = "default route -> sheet not opened",
-                initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
-                expectedAddFundsSheets = 0,
-            ),
-            InitialAddFundsCase(
-                name = "tiers route -> sheet not opened",
-                initialRoute = TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
-                expectedAddFundsSheets = 0,
-            ),
-        )
-
         const val PRODUCT_INSTANCE_ID = "pi_account"
 
         val DEEPLINK_PLAN_STATE: TangemPayTariffPlanState = tariffPlanState()
@@ -1236,30 +1214,6 @@ internal class TangemPayDetailsModelTest {
             transferMessage = null,
             depositFee = null,
             depositLimit = null,
-        )
-
-        @JvmStatic
-        fun provideTransactionClickCases() = listOf(
-            TransactionClickCase(
-                name = "deactivated account (has customerId) -> opens",
-                status = deactivatedStatus(id = "customer-id"),
-                expectedOpened = true,
-            ),
-            TransactionClickCase(
-                name = "loaded account (has customerId) -> opens",
-                status = null,
-                expectedOpened = true,
-            ),
-            TransactionClickCase(
-                name = "loading status (no customerId) -> ignored",
-                status = PaymentAccountStatusValue.Loading,
-                expectedOpened = false,
-            ),
-            TransactionClickCase(
-                name = "not created status (no customerId) -> ignored",
-                status = PaymentAccountStatusValue.NotCreated,
-                expectedOpened = false,
-            ),
         )
 
         private fun availableNetwork(): PaymentNetworkStatus.Available = mockk(relaxed = true)
@@ -1288,6 +1242,28 @@ internal class TangemPayDetailsModelTest {
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class DeepLinkInitialRoute {
+
+        @ParameterizedTest
+        @MethodSource("provideInitialAddFundsCases")
+        fun `GIVEN initial route WHEN status loaded twice THEN add funds opened only for ADD_FUNDS and only once`(
+            case: InitialAddFundsCase,
+        ) = runTest {
+            // Arrange
+            // The status flow keeps emitting while the screen is alive, so two emissions pin that the sheet
+            // requested by the top-up push is opened once and not reopened on every refresh.
+            val model = createModel(testScope = this, initialRoute = case.initialRoute, statusEmissions = 2)
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.AddFunds>())
+                .hasSize(case.expectedAddFundsSheets)
+            // The push path opens the sheet directly, so the "user tapped Add funds" event must not be sent
+            verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.AddFundsClicked>()) }
+            model.onDestroy()
+        }
 
         @ParameterizedTest
         @ProvideTestModels
@@ -1344,7 +1320,7 @@ internal class TangemPayDetailsModelTest {
         fun `GIVEN banking details fail WHEN va onramp deeplink handled THEN details error sheet opens`() =
             runTest {
                 // Arrange
-                coEvery { getBankCredentialsUseCase(any(), any()) } returns mockk<VisaApiError>(relaxed = true).left()
+                coEvery { getBankCredentialsUseCase(any(), any()) } returns mockk<TangemPayApiError>(relaxed = true).left()
                 val payModel = createModel(
                     testScope = this,
                     initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
@@ -1363,25 +1339,6 @@ internal class TangemPayDetailsModelTest {
                 verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
                 payModel.onDestroy()
             }
-
-        @Test
-        fun `GIVEN loaded status WHEN banking details resolved on retry THEN account details screen opens`() = runTest {
-            // Arrange
-            val payModel = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Act
-            payModel.onVaBankingDetailsResolved(BANK_CREDENTIALS)
-
-            // Assert
-            verify(exactly = 1) {
-                router.push(
-                    route = TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(BANK_CREDENTIALS),
-                    onComplete = any(),
-                )
-            }
-            payModel.onDestroy()
-        }
 
         @ParameterizedTest
         @MethodSource("provideOnboardingDeepLinks")
@@ -1477,6 +1434,24 @@ internal class TangemPayDetailsModelTest {
                 expectedRoute = TangemPayAccountDetailsInnerRoute.SelectPlan(
                     source = TangemPaySelectPlanSource.CHANGE_PLAN,
                 ),
+            ),
+        )
+
+        private fun provideInitialAddFundsCases() = listOf(
+            InitialAddFundsCase(
+                name = "top-up push route -> sheet opened once",
+                initialRoute = TangemPayDetailsInitialRoute.ADD_FUNDS,
+                expectedAddFundsSheets = 1,
+            ),
+            InitialAddFundsCase(
+                name = "default route -> sheet not opened",
+                initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+                expectedAddFundsSheets = 0,
+            ),
+            InitialAddFundsCase(
+                name = "tiers route -> sheet not opened",
+                initialRoute = TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
+                expectedAddFundsSheets = 0,
             ),
         )
     }
