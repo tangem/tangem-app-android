@@ -410,7 +410,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         cancelQuote()
 
         if (!isResumed || !isTradedAssetResolved || isHeld) return
-        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
+        if (!uiState.value.canPollPrice()) return
 
         scope.launch {
             if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
