@@ -2,10 +2,8 @@ package com.tangem.features.jointaccount.confirmaddress.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -121,21 +119,14 @@ private fun AddressCard(address: String?, onShareClick: () -> Unit, modifier: Mo
             )
         }
         Spacer(Modifier.width(12.dp))
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(TangemTheme.colors3.bg.tertiary)
-                .clickable(enabled = address != null, onClick = onShareClick),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.ic_share_android_20,
-                tint = TangemTheme.colors3.icon.primary,
-                contentDescription = stringResourceSafe(CoreUiR.string.common_share),
-                modifier = Modifier.size(20.dp),
-            )
-        }
+        TangemButton(
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X9,
+            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_share_android_20),
+            isEnabled = address != null,
+            contentDescription = stringResourceSafe(CoreUiR.string.common_share),
+            onClick = onShareClick,
+        )
     }
 }
 
