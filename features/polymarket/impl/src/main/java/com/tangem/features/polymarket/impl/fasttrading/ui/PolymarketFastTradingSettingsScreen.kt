@@ -56,8 +56,6 @@ internal fun PolymarketFastTradingSettingsScreen(
                     title = resourceReference(R.string.prediction_session_key_settings_title),
                     contentAlign = TangemTopNavigation.ContentAlign.Center,
                     onBack = state.onBackClick,
-                    blurBackground = false,
-                    fadeEnabled = false,
                 )
             },
         ) { contentPadding ->
