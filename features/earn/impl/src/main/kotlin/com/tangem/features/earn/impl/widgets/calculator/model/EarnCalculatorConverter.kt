@@ -7,7 +7,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.earn.api.overview.EarnProductRate
-import com.tangem.features.earn.impl.ui.toIncentiveBadge
+import com.tangem.features.earn.impl.ui.toIncentiveUM
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnCalculatorUM
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnHorizonItemUM
@@ -30,11 +30,12 @@ internal class EarnCalculatorConverter @Inject constructor() {
         input: CalculatorInput,
         appCurrency: AppCurrency,
         incentiveRate: EarnProductRate?,
+        onIncentiveClick: () -> Unit,
         onInitialStep: (Int) -> Unit,
         onTopUpStep: (Int) -> Unit,
         onHorizonSelect: (EarnHorizon) -> Unit,
     ): EarnCalculatorUM = EarnCalculatorUM(
-        incentive = incentiveRate.toIncentiveBadge(),
+        incentive = incentiveRate.toIncentiveUM(onClick = onIncentiveClick),
         total = stringReference(result.total.format { fiat(appCurrency.code, appCurrency.symbol) }),
         earned = stringReference(
             StringsSigns.PLUS + result.earned.format { fiat(appCurrency.code, appCurrency.symbol) },

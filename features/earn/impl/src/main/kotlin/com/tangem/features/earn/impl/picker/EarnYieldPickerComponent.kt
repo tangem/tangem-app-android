@@ -31,6 +31,7 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
         params = EarnCalculatorComponent.Params(
             projection = model.projection,
             incentiveRate = model.incentiveRate,
+            callback = model,
         ),
     )
 

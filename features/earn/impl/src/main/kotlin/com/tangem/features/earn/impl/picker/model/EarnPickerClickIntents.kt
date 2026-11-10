@@ -21,6 +21,8 @@ internal interface EarnPickerClickIntents {
 
     fun onOverviewRetryClick()
 
+    fun onIncentiveClick()
+
     fun onInfoClick(block: EarnTextBlock)
 
     fun onLinkClick(url: String)

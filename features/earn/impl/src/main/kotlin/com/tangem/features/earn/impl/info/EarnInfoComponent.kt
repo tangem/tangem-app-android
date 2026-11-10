@@ -40,6 +40,10 @@ internal class EarnInfoComponent @AssistedInject constructor(
         params = EarnCalculatorComponent.Params(
             projection = model.projection,
             incentiveRate = model.incentiveRate,
+            // The Info screen does not open the incentive sheet yet.
+            callback = object : EarnCalculatorComponent.ModelCallback {
+                override fun onIncentiveClick() = Unit
+            },
         ),
     )
 
