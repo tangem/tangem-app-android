@@ -12,7 +12,7 @@ import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOpe
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.core.ui.R as CoreUiR
 
-internal object PolymarketSessionKeyToastFactory {
+internal object PolymarketSessionKeyMessagesFactory {
 
     private val BUSY_ERRORS = setOf(
         PolymarketSessionKeyLifecycleError.OperationInProgress,
