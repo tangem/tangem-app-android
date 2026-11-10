@@ -9,6 +9,7 @@ import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.model.AccountFeeGroupType
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -67,7 +68,7 @@ internal class GetAccountFeesUseCaseTest {
         name = "ACH",
         paymentMethodId = "ACH",
         group = group,
-        calculationType = AccountFee.CalculationType.FIXED,
+        calculationType = FeeCalculationType.FIXED,
         amount = BigDecimal.ONE,
         currency = "USD",
     )

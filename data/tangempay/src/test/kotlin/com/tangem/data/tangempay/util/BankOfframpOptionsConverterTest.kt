@@ -1,7 +1,7 @@
 package com.tangem.data.tangempay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
@@ -40,7 +40,7 @@ internal class BankOfframpOptionsConverterTest {
                 currency = "USD",
                 fee = OfframpFee(
                     name = "ACH",
-                    calculationType = AccountFee.CalculationType.FIXED,
+                    calculationType = FeeCalculationType.FIXED,
                     amount = BigDecimal("1.50"),
                     currency = "USD",
                     description = "ACH offramp fee",
@@ -83,7 +83,7 @@ internal class BankOfframpOptionsConverterTest {
                 currency = "USD",
                 fee = OfframpFee(
                     name = "Wire",
-                    calculationType = AccountFee.CalculationType.FIXED,
+                    calculationType = FeeCalculationType.FIXED,
                     amount = BigDecimal("1.50"),
                     currency = "USD",
                     description = "ACH offramp fee",
@@ -114,7 +114,7 @@ internal class BankOfframpOptionsConverterTest {
                 currency = "USD",
                 fee = OfframpFee(
                     name = "ACH",
-                    calculationType = AccountFee.CalculationType.FIXED,
+                    calculationType = FeeCalculationType.FIXED,
                     amount = BigDecimal("1.50"),
                     currency = "USD",
                     description = "ACH offramp fee",
@@ -126,7 +126,7 @@ internal class BankOfframpOptionsConverterTest {
                 currency = "MXN",
                 fee = OfframpFee(
                     name = "SPEI",
-                    calculationType = AccountFee.CalculationType.PERCENTAGE,
+                    calculationType = FeeCalculationType.PERCENTAGE,
                     amount = BigDecimal("1.50"),
                     currency = "USD",
                     description = "SPEI offramp fee",
@@ -264,15 +264,15 @@ internal class BankOfframpOptionsConverterTest {
     )
 
     private fun provideTestModels() = listOf(
-        CalculationTypeModel(calculationType = "FIXED", expected = AccountFee.CalculationType.FIXED),
-        CalculationTypeModel(calculationType = "percentage", expected = AccountFee.CalculationType.PERCENTAGE),
-        CalculationTypeModel(calculationType = null, expected = AccountFee.CalculationType.FIXED),
+        CalculationTypeModel(calculationType = "FIXED", expected = FeeCalculationType.FIXED),
+        CalculationTypeModel(calculationType = "percentage", expected = FeeCalculationType.PERCENTAGE),
+        CalculationTypeModel(calculationType = null, expected = FeeCalculationType.FIXED),
         CalculationTypeModel(calculationType = "TIERED", expected = null),
     )
 
     internal data class CalculationTypeModel(
         val calculationType: String?,
-        val expected: AccountFee.CalculationType?,
+        val expected: FeeCalculationType?,
     )
 
     private companion object {
