@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
@@ -95,7 +96,7 @@ private fun CountryListContent(state: CountryListUM.Content, modifier: Modifier 
         modifier = modifier
             .fillMaxSize()
             .testTag(SelectCountryBottomSheetTestTags.LAZY_LIST),
-        contentPadding = PaddingValues(bottom = FOOTER_INSET),
+        contentPadding = PaddingValues(bottom = FOOTER_INSET + navigationBarBottomInset()),
     ) {
         if (selectedItems.isNotEmpty()) {
             item(key = "selected_header") {
@@ -251,11 +252,14 @@ private fun CountryListError(state: CountryListUM.Error, modifier: Modifier = Mo
 }
 
 @Composable
+private fun navigationBarBottomInset(): Dp = WindowInsets.navigationBars
+    .exclude(WindowInsets.ime)
+    .asPaddingValues()
+    .calculateBottomPadding()
+
+@Composable
 private fun CountrySearchFooter(state: TangemSearch.State, modifier: Modifier = Modifier) {
-    val navigationBarInset = WindowInsets.navigationBars
-        .exclude(WindowInsets.ime)
-        .asPaddingValues()
-        .calculateBottomPadding()
+    val navigationBarInset = navigationBarBottomInset()
 
     Box(
         modifier = modifier
