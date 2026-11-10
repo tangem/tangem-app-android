@@ -7,6 +7,7 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -42,6 +43,7 @@ internal class PolymarketUserWalletDataCleaner @Inject constructor(
     private val withdrawalStore: PredictionWithdrawalStore,
     private val sessionKeyStore: PolymarketSessionKeyStore,
     private val sessionKeyTradingStore: PolymarketSessionKeyTradingStore,
+    private val fastTradingBannerStore: PolymarketFastTradingBannerStore,
 ) : UserWalletDataCleaner {
 
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
@@ -62,6 +64,8 @@ internal class PolymarketUserWalletDataCleaner @Inject constructor(
                 .onFailure { TangemLogger.e("Failed to clear the withdrawal record of $userWalletId", it) }
 
             sessionKeyTradingStore.clear(userWalletId)
+
+            fastTradingBannerStore.clear(userWalletId)
 
             sessionKeyStore.delete(userWalletId)
                 .onLeft { TangemLogger.e("Failed to delete the session key of $userWalletId: $it") }
