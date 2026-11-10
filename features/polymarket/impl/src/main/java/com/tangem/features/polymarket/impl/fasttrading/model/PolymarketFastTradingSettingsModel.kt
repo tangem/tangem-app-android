@@ -124,7 +124,7 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
 
     private fun start(request: PolymarketSessionKeyOperationRequest) {
         val start = startOperation(params.userWalletId, request)
-        PolymarketSessionKeyToastFactory.create(start)?.let(messageSender::send)
+        PolymarketSessionKeyMessagesFactory.create(start)?.let(messageSender::send)
     }
 
     private fun refresh() {
