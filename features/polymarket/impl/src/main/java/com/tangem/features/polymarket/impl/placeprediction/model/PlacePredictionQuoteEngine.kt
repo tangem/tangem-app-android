@@ -77,10 +77,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.math.BigDecimal
 
 internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 internal const val QUOTE_POLL_INTERVAL_MILLIS = 3_000L
+internal const val RESOLUTION_DATE_WAIT_MILLIS = 3_000L
 
 @Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 internal class PlacePredictionQuoteEngine @AssistedInject constructor(
@@ -217,7 +219,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
             state = state,
             isNegRisk = isNegRisk,
             positionId = positionId,
-            readLiveResolutionDateMillis = { uiState.value.market.resolutionDateMillis },
+            awaitLiveResolutionDateMillis = ::awaitResolutionDateMillis,
         )
     }
 
@@ -378,6 +380,12 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
             restartQuoteLoop(withDebounce = false)
         }.saveIn(positionJobHolder)
+    }
+
+    private suspend fun awaitResolutionDateMillis(): Long? {
+        withTimeoutOrNull(timeMillis = RESOLUTION_DATE_WAIT_MILLIS) { resolutionDateJobHolder.join() }
+            ?: resolutionDateJobHolder.cancel()
+        return uiState.value.market.resolutionDateMillis
     }
 
     private fun loadResolutionDate(position: PolymarketPosition.Open) {
