@@ -1,18 +1,22 @@
 package com.tangem.features.onramp.tokenlist.entity.transformer
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
 internal class SetLoadingAccountTokenListTransformer(
-    appCurrency: AppCurrency,
+    private val appCurrency: AppCurrency,
     private val accountList: List<AccountStatus.CryptoPortfolio>,
     private val isAccountsMode: Boolean,
+    @RemoveWithToggle(toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED", description = "Inline true")
+    private val isRedesignedTokenRowsEnabled: Boolean = false,
 ) : TokenListUMTransformer {
 
     private val accountListItemConverter = LoadingAccountTokenItemConverter(appCurrency)
@@ -39,6 +43,13 @@ internal class SetLoadingAccountTokenListTransformer(
                 )
             },
             warning = null,
+            groups = if (isRedesignedTokenRowsEnabled) {
+                OnrampTokenGroupConverter(appCurrency, TextReference.EMPTY) { _, _ -> }
+                    .convertLoading(accountList = accountList, isAccountsMode = isAccountsMode)
+                    .toPersistentList()
+            } else {
+                persistentListOf()
+            },
         )
     }
 }
