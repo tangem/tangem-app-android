@@ -40,7 +40,7 @@ internal class DefaultTangemPayOrderRepository @Inject constructor(
             orderApi.findOrders(
                 authHeader = authHeader,
                 orderTypes = types.map { it.toTypeId() },
-                orderStatuses = statuses.map { it.toStatusId() },
+                orderStatuses = statuses.mapNotNull { it.toStatusId() },
             )
         }.map { response ->
             response.result.map(TangemPayOrderConverter::convert)
