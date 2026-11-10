@@ -43,7 +43,8 @@ internal class MockAwareCustomerSummaryRepository @Inject constructor(
     private suspend fun deriveMoneyAccountKeyIfMissing(userWalletId: UserWalletId) {
         val userWallet = userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
         if (userWallet !is UserWallet.Hot) return
-        if (userWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword) return
+        val isAccessCodeDerivationAllowed = System.getProperty(UITEST_DERIVE_WITH_ACCESS_CODE_KEY) == "1"
+        if (userWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword && !isAccessCodeDerivationAllowed) return
 
         runSuspendCatching {
             val currency = moneyAccountCurrencyFactory.create(userWalletId)
@@ -52,5 +53,9 @@ internal class MockAwareCustomerSummaryRepository @Inject constructor(
                 derivationsRepository.derivePublicKeysByNetworks(userWalletId, listOf(currency.network))
             }
         }.onFailure { TangemLogger.e("Mock money account key derivation failed for $userWalletId", it) }
+    }
+
+    companion object {
+        const val UITEST_DERIVE_WITH_ACCESS_CODE_KEY = "uitest.moneyaccount.derive_with_access_code"
     }
 }

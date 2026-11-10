@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -56,12 +58,18 @@ internal fun BankRouteRow(
     ) {
         BankRailIcon(rail = rail, size = 20.dp)
         Text(
-            modifier = Modifier.weight(1f),
             text = title.resolveReference(),
             style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
-        TangemBadge(text = eta, size = TangemBadge.Size.X6)
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterEnd,
+        ) {
+            TangemBadge(text = eta, size = TangemBadge.Size.X6, maxLines = Int.MAX_VALUE)
+        }
         Text(
             text = fee,
             style = TangemTheme.typography3.body.medium,

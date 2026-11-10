@@ -83,12 +83,14 @@ fun BaseTestCase.clickDisplayedTokenOnMain(tokenName: String) {
 fun BaseTestCase.switchToPreviousWallet() {
     step("Swipe wallet card to the previous wallet") {
         onMainScreen { swipeToAdjacentWallet(toPrevious = true) }
+        awaitSuccess { onMainScreen { assertOnScreenPageSettled() } }
     }
 }
 
 fun BaseTestCase.switchToNextWallet() {
     step("Swipe wallet card to the next wallet") {
         onMainScreen { swipeToAdjacentWallet(toPrevious = false) }
+        awaitSuccess { onMainScreen { assertOnScreenPageSettled() } }
     }
 }
 

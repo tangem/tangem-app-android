@@ -190,6 +190,7 @@ internal interface TangemPayDataModule {
             scope: AppCoroutineScope,
             converter: PaymentAccountStatusValueDMConverter,
             dataStoreFactory: AppDataStoreFactory,
+            userWalletsListRepository: UserWalletsListRepository,
         ): PaymentAccountStatusesStore {
             return PaymentAccountStatusesStore(
                 runtimeStore = RuntimeSharedStore(),
@@ -206,6 +207,7 @@ internal interface TangemPayDataModule {
                     scope = scope,
                 ),
                 converter = converter,
+                userWalletsListRepository = userWalletsListRepository,
                 scope = scope,
             )
         }
