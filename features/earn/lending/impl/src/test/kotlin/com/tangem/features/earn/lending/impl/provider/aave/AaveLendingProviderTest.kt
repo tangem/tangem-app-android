@@ -381,6 +381,30 @@ internal class AaveLendingProviderTest {
         assertThat(actual.isLeft()).isTrue()
     }
 
+    @Test
+    fun `GIVEN status refresh succeeds WHEN refreshPosition THEN Right without markets update`() = runTest {
+        // Act
+        val actual = provider.refreshPosition(userWalletId, asset)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 0) { yieldSupplyRepository.updateMarkets() }
+        coVerify(exactly = 1) { statusFetcher(YieldModuleStatusFetcher.Params(userWalletId, setOf(weth))) }
+    }
+
+    @Test
+    fun `GIVEN status refresh fails WHEN refreshPosition THEN Left`() = runTest {
+        // Arrange
+        val error = IllegalStateException("rpc")
+        coEvery { statusFetcher(any()) } returns error.left()
+
+        // Act
+        val actual = provider.refreshPosition(userWalletId, asset)
+
+        // Assert
+        assertThat(actual).isEqualTo(error.left())
+    }
+
     private fun wethMarket(isActive: Boolean = true, campaign: YieldIncentiveCampaign? = null) = YieldMarketToken(
         tokenAddress = WETH,
         chainId = 1,
