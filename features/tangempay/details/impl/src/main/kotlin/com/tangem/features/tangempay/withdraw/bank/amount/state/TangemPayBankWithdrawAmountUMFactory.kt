@@ -100,14 +100,20 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         Result.Empty,
         Result.Valid,
         -> null
-        Result.OutOfRange -> resourceReference(
-            R.string.tangempay_withdraw_bank_amount_error_range,
-            wrappedList(
-                selection.minAmount.formatFiat(selection.currency),
-                selection.maxAmount.formatFiat(selection.currency),
-            ),
-        )
+        Result.OutOfRange -> createRangeError(selection)
         Result.NotEnoughFunds -> resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds)
+    }
+
+    private fun createRangeError(selection: AmountSelection): TextReference {
+        val minAmount = selection.minAmount.formatFiat(selection.currency)
+        val maxAmount = selection.maxAmount ?: return resourceReference(
+            R.string.tangempay_withdraw_bank_amount_error_min,
+            wrappedList(minAmount),
+        )
+        return resourceReference(
+            R.string.tangempay_withdraw_bank_amount_error_range,
+            wrappedList(minAmount, maxAmount.formatFiat(selection.currency)),
+        )
     }
 
     private fun createSourceRow(
