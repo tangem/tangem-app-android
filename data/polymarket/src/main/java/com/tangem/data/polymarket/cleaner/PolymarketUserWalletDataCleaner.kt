@@ -17,7 +17,7 @@ import javax.inject.Inject
 /**
  * Removes the Polymarket CLOB credentials, the cached prediction account status and positions value, the
  * onboarding confirmation record, the funding requisites, the in-flight withdrawal record, the session key and its
- * readiness and refusals of deleted wallets.
+ * readiness and refusals, and the fast trading banner dismissals of deleted wallets.
  *
  * [UserWalletId] is derived from the wallet key, so re-adding the same wallet reproduces the storage key.
  * Without this, the credentials of a deleted wallet are handed back to it: the onboarding run returns any
@@ -65,10 +65,10 @@ internal class PolymarketUserWalletDataCleaner @Inject constructor(
 
             sessionKeyTradingStore.clear(userWalletId)
 
-            fastTradingBannerStore.clear(userWalletId)
-
             sessionKeyStore.delete(userWalletId)
                 .onLeft { TangemLogger.e("Failed to delete the session key of $userWalletId: $it") }
+
+            fastTradingBannerStore.clear(userWalletId)
         }
     }
 }

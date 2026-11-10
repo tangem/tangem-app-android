@@ -92,7 +92,7 @@ internal class DefaultPolymarketFastTradingBannerStoreTest {
     @Test
     fun `GIVEN both kinds dismissed for two wallets WHEN clear THEN only that wallet loses both`() = runTest {
         // Arrange
-        val dataStore = MockStateDataStore<Map<String, Long>>(default = emptyMap())
+        val dataStore = MockStateDataStore<Map<String, Map<String, Long>>>(default = emptyMap())
         val store = DefaultPolymarketFastTradingBannerStore(dataStore = dataStore)
         PolymarketFastTradingBannerKind.entries.forEach { kind ->
             store.dismiss(WALLET_A, kind, at = DISMISSED_AT)
@@ -107,7 +107,7 @@ internal class DefaultPolymarketFastTradingBannerStoreTest {
             assertThat(store.dismissedAt(WALLET_A, kind).first()).isNull()
             assertThat(store.dismissedAt(WALLET_B, kind).first()).isEqualTo(DISMISSED_AT)
         }
-        assertThat(dataStore.data.first()).hasSize(PolymarketFastTradingBannerKind.entries.size)
+        assertThat(dataStore.data.first().keys).containsExactly(WALLET_B.stringValue)
     }
 
     @Test
@@ -131,11 +131,12 @@ internal class DefaultPolymarketFastTradingBannerStoreTest {
         dataStore = MockStateDataStore(default = emptyMap()),
     )
 
-    private class FailingDataStore : DataStore<Map<String, Long>> {
-        override val data: Flow<Map<String, Long>> = flow { throw IOException("disk unavailable") }
+    private class FailingDataStore : DataStore<Map<String, Map<String, Long>>> {
+        override val data: Flow<Map<String, Map<String, Long>>> = flow { throw IOException("disk unavailable") }
 
-        override suspend fun updateData(transform: suspend (t: Map<String, Long>) -> Map<String, Long>) =
-            throw IOException("disk unavailable")
+        override suspend fun updateData(
+            transform: suspend (t: Map<String, Map<String, Long>>) -> Map<String, Map<String, Long>>,
+        ) = throw IOException("disk unavailable")
     }
 
     private companion object {

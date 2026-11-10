@@ -134,7 +134,10 @@ internal object PolymarketStorageModule {
                     defaultValue = emptyMap(),
                     serializer = MapSerializer(
                         keySerializer = String.serializer(),
-                        valueSerializer = Long.serializer(),
+                        valueSerializer = MapSerializer(
+                            keySerializer = String.serializer(),
+                            valueSerializer = Long.serializer(),
+                        ),
                     ),
                 ),
                 produceFile = { context.dataStoreFile(fileName = "polymarket_fast_trading_banner_dismissals") },
