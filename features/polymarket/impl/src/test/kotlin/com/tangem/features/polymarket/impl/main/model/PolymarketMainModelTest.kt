@@ -183,6 +183,7 @@ internal class PolymarketMainModelTest {
         every { fundingWindow.isOpen(USER_WALLET_ID) } returns isFundingOpen
         clearMocks(walletLinkGate)
         coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } returns true
+        fastTradingBanner.value = null
     }
 
     init {
