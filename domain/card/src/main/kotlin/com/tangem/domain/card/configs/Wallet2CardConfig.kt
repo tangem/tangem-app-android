@@ -236,6 +236,8 @@ data object Wallet2CardConfig : CardConfig {
             Blockchain.OnyxTestnet -> EllipticCurve.Secp256k1
             Blockchain.PublicMasterpiece -> EllipticCurve.Secp256k1
             Blockchain.Zeniq -> EllipticCurve.Secp256k1
+            Blockchain.Katana -> EllipticCurve.Secp256k1
+            Blockchain.KatanaTestnet -> EllipticCurve.Secp256k1
         }
     }
 }

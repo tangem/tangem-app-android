@@ -192,6 +192,8 @@ class Wallet2CardConfigTest {
         Blockchain.OnyxTestnet to EllipticCurve.Secp256k1,
         Blockchain.PublicMasterpiece to EllipticCurve.Secp256k1,
         Blockchain.Zeniq to EllipticCurve.Secp256k1,
+        Blockchain.Katana to EllipticCurve.Secp256k1,
+        Blockchain.KatanaTestnet to EllipticCurve.Secp256k1,
     )
 
     @Test
