@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
 
-/** Placeholder of an Earn screen that is not built yet: Info (A-2.6) and the flow (A-3.2) replace it. */
+/** Placeholder of an Earn screen that is not built yet: the flow (A-3.2) replaces it. */
 internal class EarnStubComponent(private val title: String) : ComposableContentComponent {
 
     @Composable

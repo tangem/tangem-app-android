@@ -17,6 +17,7 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.earn.api.EarnEntryComponent
+import com.tangem.features.earn.impl.info.EarnInfoComponent
 import com.tangem.features.earn.impl.picker.EarnYieldPickerComponent
 import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
@@ -30,6 +31,7 @@ internal class DefaultEarnEntryComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: EarnEntryComponent.Params,
     private val pickerComponentFactory: EarnYieldPickerComponent.Factory,
+    private val infoComponentFactory: EarnInfoComponent.Factory,
 ) : EarnEntryComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<EarnRoute>()
@@ -80,8 +82,15 @@ internal class DefaultEarnEntryComponent @AssistedInject constructor(
                     shouldRedirectToActive = route.shouldRedirectToActive,
                 ),
             )
+            is EarnInfoRoute -> infoComponentFactory.create(
+                context = childContext,
+                params = EarnInfoComponent.Params(
+                    userWalletId = params.userWalletId,
+                    cryptoCurrency = params.cryptoCurrency,
+                    productId = route.productId,
+                ),
+            )
             // Temporary plain text: replace with localized string resources.
-            is EarnInfoRoute -> EarnStubComponent(title = "Earn Info")
             is EarnFlowRoute -> EarnStubComponent(title = "Earn flow")
         }
     }

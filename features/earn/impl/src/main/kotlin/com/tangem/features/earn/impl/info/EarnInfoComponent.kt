@@ -1,0 +1,107 @@
+package com.tangem.features.earn.impl.info
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.childSlot
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
+import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.earn.EarnProductId
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.impl.info.model.EarnInfoModel
+import com.tangem.features.earn.impl.info.ui.EarnInfoContent
+import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
+import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetComponent
+import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+
+/** The position of the user in one Earn product: balance, rewards, APY chart, calculator and the product details. */
+internal class EarnInfoComponent @AssistedInject constructor(
+    @Assisted context: AppComponentContext,
+    @Assisted params: Params,
+    private val chartFactory: EarnApyChartComponent.Factory,
+    calculatorFactory: EarnCalculatorComponent.Factory,
+    private val calculatorSheetFactory: EarnCalculatorSheetComponent.Factory,
+) : ComposableContentComponent, AppComponentContext by context {
+
+    private val model: EarnInfoModel = getOrCreateModel(params)
+
+    /** Created with the screen, not with the sheet: its model computes before the tap and the sheet opens filled. */
+    private val calculator = calculatorFactory.create(
+        context = child(key = EarnCalculatorComponent.KEY),
+        params = EarnCalculatorComponent.Params(
+            projection = model.projection,
+            incentiveRate = model.incentiveRate,
+        ),
+    )
+
+    private val chartSlot = childSlot(
+        key = EarnApyChartComponent.KEY,
+        source = model.chartNavigation,
+        serializer = null,
+        initialConfiguration = { EarnInfoChartConfig.takeIf { model.isChartActivated } },
+        handleBackButton = false,
+        childFactory = { _, factoryContext ->
+            chartFactory.create(
+                context = childByContext(factoryContext),
+                params = model.chartParams(),
+            )
+        },
+    )
+
+    private val calculatorSheetSlot = childSlot(
+        key = EarnCalculatorSheetComponent.KEY,
+        source = model.calculatorSheetNavigation,
+        serializer = null,
+        handleBackButton = false,
+        childFactory = { _, factoryContext ->
+            calculatorSheetFactory.create(
+                context = childByContext(factoryContext),
+                params = EarnCalculatorSheetComponent.Params(
+                    calculator = calculator,
+                    callback = model,
+                ),
+            )
+        },
+    )
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        val state by model.uiState.collectAsStateWithLifecycle()
+        val chart = chartSlot.subscribeAsState().value.child?.instance
+        val calculatorSheet = calculatorSheetSlot.subscribeAsState().value.child?.instance
+
+        Box(modifier = modifier.fillMaxSize()) {
+            EarnInfoContent(
+                state = state,
+                chart = chart?.let { component -> { component.Content(modifier = Modifier) } },
+                modifier = Modifier.fillMaxSize(),
+            )
+
+            calculatorSheet?.BottomSheet()
+        }
+    }
+
+    data class Params(
+        val userWalletId: UserWalletId,
+        val cryptoCurrency: CryptoCurrency,
+        val productId: EarnProductId,
+    )
+
+    @AssistedFactory
+    interface Factory {
+        fun create(context: AppComponentContext, params: Params): EarnInfoComponent
+    }
+}
+
+internal data object EarnInfoChartConfig
