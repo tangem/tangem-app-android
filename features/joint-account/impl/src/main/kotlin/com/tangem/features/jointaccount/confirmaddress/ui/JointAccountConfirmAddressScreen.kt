@@ -179,6 +179,7 @@ private fun Footer(state: JointAccountConfirmAddressUM, modifier: Modifier = Mod
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(CoreUiR.string.joint_account_confirm_address_mismatch_button),
+                isEnabled = !state.isConfirming,
                 onClick = state.onMismatchClick,
             )
             TangemButton(

@@ -7,4 +7,5 @@ internal data class JointAccountMembersListParams(
     val userWalletId: UserWalletId,
     val cryptoAccountId: String?,
     val onCloseFlow: () -> Unit,
+    val onActivated: () -> Unit,
 )
