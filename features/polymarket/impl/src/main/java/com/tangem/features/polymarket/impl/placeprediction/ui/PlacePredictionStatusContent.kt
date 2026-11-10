@@ -15,7 +15,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
@@ -62,12 +61,16 @@ internal fun PlacePredictionStatusContent(
         modifier = modifier,
         variant = result.variant(),
         title = result.title(side = side),
-        description = stringReference(result.placedAt.formatPlacedAt()),
+        description = result.description(),
         asset = { ResultIcon(result = result) },
-        details = {
-            ResultBanner(result = result)
-            PredictionMarketBlock(state = market)
-            ResultRows(result = result, market = market, side = side)
+        details = if (result is PlaceResultUM.StillProcessing) {
+            null
+        } else {
+            {
+                ResultBanner(result = result)
+                PredictionMarketBlock(state = market)
+                ResultRows(result = result, market = market, side = side)
+            }
         },
         footer = { ResultFooter(viewPosition = viewPosition, intents = intents) },
     )
@@ -83,26 +86,19 @@ private fun ResultFooter(viewPosition: ViewPositionUM, intents: PlacePredictionS
         ViewPositionUM.Hidden -> TangemButton(
             modifier = modifier,
             size = TangemButton.Size.X12,
-            text = resourceReference(R.string.prediction_place_result_to_main),
-            onClick = intents::onToMainClick,
+            text = resourceReference(R.string.common_got_it),
+            onClick = intents::onCloseClick,
         )
         ViewPositionUM.Awaiting,
         ViewPositionUM.Available,
-        -> TangemButtonGroup(modifier = modifier, orientation = TangemButtonGroup.Orientation.Horizontal) {
-            TangemButton(
-                variant = TangemButton.Variant.Secondary,
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.prediction_place_result_to_main),
-                onClick = intents::onToMainClick,
-            )
-            TangemButton(
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.prediction_place_result_view_position),
-                isLoading = viewPosition == ViewPositionUM.Awaiting,
-                isEnabled = viewPosition == ViewPositionUM.Available,
-                onClick = intents::onViewPositionClick,
-            )
-        }
+        -> TangemButton(
+            modifier = modifier,
+            size = TangemButton.Size.X12,
+            text = resourceReference(R.string.prediction_place_result_view_position),
+            isLoading = viewPosition == ViewPositionUM.Awaiting,
+            isEnabled = viewPosition == ViewPositionUM.Available,
+            onClick = intents::onViewPositionClick,
+        )
     }
 }
 
@@ -120,13 +116,16 @@ private fun ResultIcon(result: PlaceResultUM) {
             tint = TangemTheme.colors3.icon.status.warning,
         )
         is PlaceResultUM.NotFilled -> TangemStatusIcon(kind = TangemStatusIcon.Kind.HeartBroken, modifier = modifier)
+        is PlaceResultUM.StillProcessing -> TangemStatusIcon(kind = TangemStatusIcon.Kind.Info, modifier = modifier)
     }
 }
 
 @Composable
 private fun ResultBanner(result: PlaceResultUM) {
     when (result) {
-        is PlaceResultUM.Filled -> Unit
+        is PlaceResultUM.Filled,
+        is PlaceResultUM.StillProcessing,
+        -> Unit
         is PlaceResultUM.PartiallyFilled,
         is PlaceResultUM.Submitted,
         -> TangemMessageBanner(
@@ -161,6 +160,7 @@ private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM, side: Pred
         is PlaceResultUM.PartiallyFilled -> result.shares
         is PlaceResultUM.NotFilled,
         is PlaceResultUM.Submitted,
+        is PlaceResultUM.StillProcessing,
         -> return
     }
 
@@ -202,6 +202,7 @@ private fun PlaceResultUM.variant(): TangemStatusScreen.Variant = when (this) {
     is PlaceResultUM.Submitted,
     -> TangemStatusScreen.Variant.Warning
     is PlaceResultUM.NotFilled -> TangemStatusScreen.Variant.Error
+    is PlaceResultUM.StillProcessing -> TangemStatusScreen.Variant.Neutral
 }
 
 private fun PlaceResultUM.title(side: PredictionOrderSide): TextReference = when (this) {
@@ -230,6 +231,16 @@ private fun PlaceResultUM.title(side: PredictionOrderSide): TextReference = when
         },
     )
     is PlaceResultUM.Submitted -> resourceReference(R.string.prediction_place_result_partial_title)
+    is PlaceResultUM.StillProcessing -> resourceReference(R.string.prediction_place_delayed_timeout_title)
+}
+
+private fun PlaceResultUM.description(): TextReference = when (this) {
+    is PlaceResultUM.StillProcessing -> resourceReference(R.string.prediction_place_delayed_timeout_description)
+    is PlaceResultUM.Filled,
+    is PlaceResultUM.PartiallyFilled,
+    is PlaceResultUM.NotFilled,
+    is PlaceResultUM.Submitted,
+    -> stringReference(placedAt.formatPlacedAt())
 }
 
 @StringRes
@@ -261,6 +272,7 @@ private fun PlacePredictionStatusContentPreview(
                 is PlaceResultUM.PartiallyFilled -> ViewPositionUM.Awaiting
                 is PlaceResultUM.NotFilled,
                 is PlaceResultUM.Submitted,
+                is PlaceResultUM.StillProcessing,
                 -> ViewPositionUM.Hidden
             },
             side = PredictionOrderSide.BUY,

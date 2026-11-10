@@ -7,6 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.extensions.toHexString
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.data.common.quote.QuotesFetcher
+import com.tangem.core.error.UniversalError
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.spend.datasource.tangempay.TangemPayApi
@@ -141,55 +142,60 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
 
     @Test
     fun `GIVEN amountInCents is null WHEN withdrawWithSwap THEN return WithdrawalDataError`() = runTest {
+        // Arrange
         coEvery {
             quotesFetcher.fetch(fiatCurrencyId = any(), currencyId = any(), field = any())
         } returns QuotesFetcher.Error.CacheOperationError.left()
 
+        // Act
         val result = createRepository().withdrawWithSwap()
 
+        // Assert
         Assertions.assertEquals(TangemPayApiError.WithdrawalDataError.left(), result)
         coVerify(exactly = 0) { tangemPayApi.getWithdrawData(any(), any()) }
     }
 
     @Test
     fun `GIVEN getWithdrawData result is null WHEN withdrawWithSwap THEN return WithdrawalDataError`() = runTest {
+        // Arrange
         coEvery { tangemPayApi.getWithdrawData(any(), any()) } returns ApiResponse.Success(
             WithdrawDataResponse(result = null),
         )
 
+        // Act
         val result = createRepository().withdrawWithSwap()
 
+        // Assert
         Assertions.assertEquals(TangemPayApiError.WithdrawalDataError.left(), result)
         coVerify(exactly = 0) { authDataSource.getWithdrawalSignature(any(), any()) }
     }
 
-    @Test
-    fun `GIVEN withdrawal signature is null WHEN withdrawWithSwap THEN return SignWithdrawError`() = runTest {
-        coEvery { authDataSource.getWithdrawalSignature(any(), any()) } returns RuntimeException("error").left()
+    @ParameterizedTest
+    @MethodSource("provideSignatureOutcomes")
+    fun `GIVEN withdrawal signature fails or is Cancelled WHEN withdrawWithSwap THEN mapped result and no withdraw`(
+        model: SignatureOutcomeModel,
+    ) = runTest {
+        // Arrange
+        coEvery { authDataSource.getWithdrawalSignature(any(), any()) } returns model.signature
 
+        // Act
         val result = createRepository().withdrawWithSwap()
 
-        Assertions.assertEquals(TangemPayApiError.SignWithdrawError.left(), result)
-        coVerify(exactly = 0) { tangemPayApi.withdraw(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN withdrawal signature is Cancelled WHEN withdrawWithSwap THEN return Cancelled`() = runTest {
-        coEvery { authDataSource.getWithdrawalSignature(any(), any()) } returns WithdrawalSignatureResult.Cancelled.right()
-
-        val result = createRepository().withdrawWithSwap()
-
-        Assertions.assertEquals(WithdrawalResult.Cancelled.right(), result)
+        // Assert
+        Assertions.assertEquals(model.expected, result)
         coVerify(exactly = 0) { tangemPayApi.withdraw(any(), any()) }
     }
 
     @Test
     fun `GIVEN withdraw returns error WHEN withdrawWithSwap THEN return WithdrawError`() = runTest {
+        // Arrange
         coEvery { tangemPayApi.withdraw(any(), any()) } returns
             ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<WithdrawResponse>
 
+        // Act
         val result = createRepository().withdrawWithSwap()
 
+        // Assert
         Assertions.assertEquals(TangemPayApiError.WithdrawError.left(), result)
         coVerify(exactly = 0) { orderRepository.getOrderData(any(), any()) }
     }
@@ -323,18 +329,23 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
 
     @Test
     fun `GIVEN withdrawal signature is Cancelled WHEN withdraw THEN return Cancelled`() = runTest {
+        // Arrange
         coEvery { authDataSource.getWithdrawalSignature(any(), any()) } returns WithdrawalSignatureResult.Cancelled.right()
 
+        // Act
         val result = createRepository().withdraw()
 
+        // Assert
         Assertions.assertEquals(WithdrawalResult.Cancelled.right(), result)
         coVerify(exactly = 0) { tangemPayApi.withdraw(any(), any()) }
     }
 
     @Test
     fun `GIVEN withdraw succeeds WHEN withdraw THEN return Success`() = runTest {
+        // Act
         val result = createRepository().withdraw()
 
+        // Assert
         Assertions.assertEquals(WithdrawalResult.Success.right(), result)
         coVerify { tangemPayApi.withdraw(any(), any()) }
     }
@@ -390,36 +401,45 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
 
     @Test
     fun `GIVEN no active order id WHEN hasWithdrawOrder THEN return false`() = runTest {
+        // Arrange
         coEvery { tangemPayStorage.getActiveWithdrawOrderId(userWalletId) } returns null
 
+        // Act
         val result = createRepository().hasWithdrawOrder(userWalletId)
 
+        // Assert
         Assertions.assertFalse(result)
         coVerify(exactly = 0) { orderRepository.getOrderData(any(), any()) }
     }
 
     @Test
     fun `GIVEN order is not active WHEN hasWithdrawOrder THEN delete active order and return false`() = runTest {
+        // Arrange
         coEvery { tangemPayStorage.getActiveWithdrawOrderId(userWalletId) } returns ORDER_ID
         coEvery {
             orderRepository.getOrderData(userWalletId, ORDER_ID)
         } returns orderWithoutHash.copy(status = OrderStatus.COMPLETED).right()
 
+        // Act
         val result = createRepository().hasWithdrawOrder(userWalletId)
 
+        // Assert
         Assertions.assertFalse(result)
         coVerify { tangemPayStorage.deleteActiveWithdrawOrder(userWalletId) }
     }
 
     @Test
     fun `GIVEN order is active WHEN hasWithdrawOrder THEN return true and keep active order`() = runTest {
+        // Arrange
         coEvery { tangemPayStorage.getActiveWithdrawOrderId(userWalletId) } returns ORDER_ID
         coEvery {
             orderRepository.getOrderData(userWalletId, ORDER_ID)
         } returns orderWithoutHash.copy(status = OrderStatus.NEW).right()
 
+        // Act
         val result = createRepository().hasWithdrawOrder(userWalletId)
 
+        // Assert
         Assertions.assertTrue(result)
         coVerify(exactly = 0) { tangemPayStorage.deleteActiveWithdrawOrder(userWalletId) }
     }
@@ -502,11 +522,14 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
 
     @Test
     fun `GIVEN stored hash has value WHEN poll THEN finalize without fetching the order`() = runTest {
+        // Arrange
         coEvery { tangemPayStorage.getWithdrawOrders(userWalletId) } returns listOf(storedOrder(txHash = TX_HASH))
 
+        // Act
         createRepository().pollWithdrawOrdersIfNeeds(userWallet)
         advanceUntilIdle()
 
+        // Assert
         coVerify(exactly = 0) { orderRepository.getOrderData(any(), any()) }
         assertExchangeSent()
         coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
@@ -514,15 +537,18 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
 
     @Test
     fun `GIVEN two identical orders WHEN poll THEN only a single polling job runs for the same order`() = runTest {
+        // Arrange
         val duplicatedOrder = storedOrder(txHash = null)
         coEvery {
             tangemPayStorage.getWithdrawOrders(userWalletId)
         } returns listOf(duplicatedOrder, duplicatedOrder)
         coEvery { orderRepository.getOrderData(any(), any()) } returns orderWithoutHash.right()
 
+        // Act
         createRepository().pollWithdrawOrdersIfNeeds(userWallet)
         advanceUntilIdle()
 
+        // Assert
         coVerify(exactly = POLLS_IN_WINDOW) { orderRepository.getOrderData(userWalletId, ORDER_ID) }
         coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
     }
@@ -576,10 +602,8 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
             advanceUntilIdle()
 
             // Assert
-            Assertions.assertEquals(CHAIN_ID, dataRequest.captured.chainId)
-            Assertions.assertEquals(CONTRACT_ADDRESS, dataRequest.captured.tokenContractAddress)
-            Assertions.assertEquals(CHAIN_ID, withdrawRequest.captured.chainId)
-            Assertions.assertEquals(CONTRACT_ADDRESS, withdrawRequest.captured.tokenContractAddress)
+            assertThat(dataRequest.captured).isEqualTo(expectedWithdrawDataRequest())
+            assertThat(withdrawRequest.captured).isEqualTo(expectedWithdrawRequest())
         }
 
     @Test
@@ -630,10 +654,8 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
             advanceUntilIdle()
 
             // Assert
-            Assertions.assertEquals(CHAIN_ID, dataRequest.captured.chainId)
-            Assertions.assertEquals(CONTRACT_ADDRESS, dataRequest.captured.tokenContractAddress)
-            Assertions.assertEquals(CHAIN_ID, withdrawRequest.captured.chainId)
-            Assertions.assertEquals(CONTRACT_ADDRESS, withdrawRequest.captured.tokenContractAddress)
+            assertThat(dataRequest.captured).isEqualTo(expectedWithdrawDataRequest())
+            assertThat(withdrawRequest.captured).isEqualTo(expectedWithdrawRequest())
         }
 
     @Test
@@ -658,8 +680,8 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
             advanceUntilIdle()
 
             // Assert
-            Assertions.assertEquals(null, dataRequest.captured.chainId)
-            Assertions.assertEquals(null, dataRequest.captured.tokenContractAddress)
+            val expected = expectedWithdrawDataRequest().copy(chainId = null, tokenContractAddress = null)
+            assertThat(dataRequest.captured).isEqualTo(expected)
         }
 
     @Test
@@ -690,6 +712,23 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
             coVerify(exactly = 0) { tangemPayApi.getWithdrawData(any(), any()) }
         }
 
+    private fun expectedWithdrawDataRequest() = WithdrawDataRequest(
+        amountInCents = AMOUNT_IN_CENTS,
+        recipientAddress = RECEIVER_ADDRESS,
+        chainId = CHAIN_ID,
+        tokenContractAddress = CONTRACT_ADDRESS,
+    )
+
+    private fun expectedWithdrawRequest() = WithdrawRequest(
+        amountInCents = AMOUNT_IN_CENTS,
+        recipientAddress = RECEIVER_ADDRESS,
+        adminSignature = SIGNATURE,
+        adminSalt = "salt",
+        senderAddress = "sender",
+        chainId = CHAIN_ID,
+        tokenContractAddress = CONTRACT_ADDRESS,
+    )
+
     private suspend fun DefaultTangemPayWithdrawRepository.withdrawWithSwap() = withdrawWithSwap(
         userWallet = userWallet,
         receiverAddress = RECEIVER_ADDRESS,
@@ -718,6 +757,11 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         currentTimeMillis = { START_MILLIS + testScheduler.currentTime },
     )
 
+    internal data class SignatureOutcomeModel(
+        val signature: Either<Throwable, WithdrawalSignatureResult>,
+        val expected: Either<UniversalError, WithdrawalResult>,
+    )
+
     companion object {
         private const val START_MILLIS = 1_700_000_000_000L
         private const val POLLING_WINDOW_MILLIS = 300_000L
@@ -732,6 +776,7 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         private const val OTHER_ADDRESS = "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2"
         private const val CHAIN_ID = 137L
         private const val TOKEN_AMOUNT = "1500000"
+        private const val AMOUNT_IN_CENTS = "150"
 
         @JvmStatic
         fun provideTestModels() = listOf(
@@ -747,6 +792,18 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         fun provideFinalResponsesWithoutHash(): List<Either<TangemPayApiError, OrderData>> = listOf(
             TangemPayApiError.WithdrawError.left(),
             OrderData(customerId = "customer", status = OrderStatus.PROCESSING, withdrawTxHash = null).right(),
+        )
+
+        @JvmStatic
+        fun provideSignatureOutcomes() = listOf(
+            SignatureOutcomeModel(
+                signature = RuntimeException("error").left(),
+                expected = TangemPayApiError.SignWithdrawError.left(),
+            ),
+            SignatureOutcomeModel(
+                signature = WithdrawalSignatureResult.Cancelled.right(),
+                expected = WithdrawalResult.Cancelled.right(),
+            ),
         )
 
         private fun withdrawData(

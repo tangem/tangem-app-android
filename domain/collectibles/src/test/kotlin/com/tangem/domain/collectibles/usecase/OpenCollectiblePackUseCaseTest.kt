@@ -9,6 +9,7 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetc
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
+import com.tangem.domain.collectibles.flow.CollectiblesActiveTxsFetcher
 import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.CollectiblePurchaseTx
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
@@ -51,6 +52,7 @@ internal class OpenCollectiblePackUseCaseTest {
     private val gachaVaultRepository: GachaVaultRepository = mockk()
     private val ownerDeriver: CollectiblesOwnerDeriver = mockk()
     private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
+    private val activeTxsFetcher: CollectiblesActiveTxsFetcher = mockk()
     private val accountRepository: CollectiblesAccountRepository = mockk()
     private val sessionKey: CollectiblesSessionKey = mockk()
 
@@ -61,6 +63,7 @@ internal class OpenCollectiblePackUseCaseTest {
         gachaVaultRepository = gachaVaultRepository,
         ownerDeriver = ownerDeriver,
         accountStatusFetcher = accountStatusFetcher,
+        activeTxsFetcher = activeTxsFetcher,
         accountRepository = accountRepository,
         sessionKey = sessionKey,
     )
@@ -72,6 +75,7 @@ internal class OpenCollectiblePackUseCaseTest {
             gachaVaultRepository,
             ownerDeriver,
             accountStatusFetcher,
+            activeTxsFetcher,
             accountRepository,
             sessionKey,
         )
@@ -82,6 +86,7 @@ internal class OpenCollectiblePackUseCaseTest {
         coEvery { accountRepository.saveAccount(any(), any()) } just runs
         every { accountRepository.isRelinkPending(WALLET_ID) } returns false
         coEvery { accountStatusFetcher(any()) } returns Unit.right()
+        coEvery { activeTxsFetcher(any()) } returns Unit.right()
         coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns OWNER
         coEvery { collectiblesRepository.generatePurchaseTx(WALLET_ID, any()) } returns PURCHASE
         coEvery { gachaVaultRepository.sendPurchasePack(userWallet, AMOUNT, FEE_AMOUNT, MEMO) } returns
@@ -113,6 +118,41 @@ internal class OpenCollectiblePackUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
         coVerify(exactly = 1) { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN the pack opens WHEN invoked THEN the active purchases are re-read`() = runTest {
+        // Act
+        useCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = false).toList()
+
+        // Assert
+        coVerify(exactly = 1) { activeTxsFetcher(CollectiblesActiveTxsFetcher.Params(WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN the opening fails WHEN invoked THEN the active purchases are re-read anyway`() = runTest {
+        // Arrange
+        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) } returns
+            state(CollectibleTxStatus.PACK_OPENING_ERROR)
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = false).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Failed.OpenFailed)
+        coVerify(exactly = 1) { activeTxsFetcher(CollectiblesActiveTxsFetcher.Params(WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN the active purchases read fails WHEN invoked THEN the pack still opens`() = runTest {
+        // Arrange
+        coEvery { activeTxsFetcher(any()) } returns IllegalStateException().left()
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Opened(PACK))
     }
 
     @Test
@@ -495,7 +535,7 @@ internal class OpenCollectiblePackUseCaseTest {
         ClosedStatusModel(CollectibleTxStatus.REFUNDED, OpenPackStep.Failed.Refunded),
         ClosedStatusModel(CollectibleTxStatus.PACK_OPENING_ERROR, OpenPackStep.Failed.OpenFailed),
         ClosedStatusModel(CollectibleTxStatus.REFUNDING, OpenPackStep.Failed.Refunding),
-        ClosedStatusModel(CollectibleTxStatus.PAUSED, OpenPackStep.Failed.PackUnopened(TX_ID)),
+        ClosedStatusModel(CollectibleTxStatus.PAUSED, OpenPackStep.Failed.OpenFailed),
         ClosedStatusModel(CollectibleTxStatus.AUTO_BUYBACKED, OpenPackStep.Failed.Unexpected),
         ClosedStatusModel(CollectibleTxStatus.MANUALLY_BUYBACKED, OpenPackStep.Failed.Unexpected),
     )

@@ -5,10 +5,10 @@ import com.tangem.spend.datasource.tangempay.models.response.TransactionCashback
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem.Cashback.Status
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -16,7 +16,7 @@ import java.util.Currency
 internal class PayTransactionCashbackConverterTest {
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun convert(model: ConvertModel) {
         // Act
         val actual = PayTransactionCashbackConverter.convert(model.dto)
@@ -30,7 +30,7 @@ internal class PayTransactionCashbackConverterTest {
     inner class ConvertSpendCashback {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun convertSpendCashback(model: SpendCashbackModel) {
             // Act
             val actual = PayTransactionCashbackConverter.convertSpendCashback(

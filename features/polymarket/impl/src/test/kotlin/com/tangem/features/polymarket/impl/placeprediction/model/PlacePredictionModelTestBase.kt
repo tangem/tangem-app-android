@@ -268,10 +268,12 @@ internal abstract class PlacePredictionModelTestBase {
             params: PlacePredictionComponent.Params,
             uiState: MutableStateFlow<PlacePredictionUM>,
             scope: CoroutineScope,
+            closeOrder: () -> Unit,
         ) = PlacePredictionOrderSubmitter(
             params = params,
             uiState = uiState,
             scope = scope,
+            closeOrder = closeOrder,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             messageSender = messageSender,

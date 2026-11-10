@@ -48,6 +48,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
@@ -369,29 +370,36 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             }
 
         @Test
-        fun `GIVEN a matched order filled no shares WHEN place clicked THEN the flow reports a failure`() = runTest {
-            // Arrange
-            val amountModel = createAmountModel(testScope = this)
-            advanceUntilIdle()
-            amountModel.onResume()
-            amountModel.onAmountChange(value = "10")
-            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-            val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            coEvery { placeOrderUseCase(any(), any(), any()) } returns
-                createPlaceResult(takingAmount = BigDecimal.ZERO).right()
-            amountModel.onPause()
+        fun `GIVEN a matched order filled no shares WHEN close is tapped on the failure dialog THEN the order closes`() =
+            runTest {
+                // Arrange
+                val amountModel = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                amountModel.onResume()
+                amountModel.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val model = createSummaryModel(testScope = this, amountModel = amountModel)
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(takingAmount = BigDecimal.ZERO).right()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                amountModel.onPause()
+                model.tapPlace()
+                advanceUntilIdle()
 
-            // Act
-            model.tapPlace()
-            advanceUntilIdle()
+                // Act
+                dialog.captured.secondAction?.onClick()
 
-            // Assert
-            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-            verify { messageSender.send(any()) }
-            verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>()) }
+                // Assert
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>()) }
+                verifyOrder {
+                    router.popTo(PlacePredictionRoute.Amount)
+                    router.pop()
+                }
 
-            model.onDestroy()
-        }
+                model.onDestroy()
+            }
 
         @Test
         fun `GIVEN no answer from the exchange WHEN place clicked THEN summary shows the support dialog`() =
@@ -508,7 +516,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             }
 
         @Test
-        fun `GIVEN the reads of a delayed order run out WHEN the wait ends THEN a dialog returns the summary to idle`() =
+        fun `GIVEN the reads of a delayed order run out WHEN the wait ends THEN the still-processing result is shown`() =
             runTest {
                 // Arrange
                 val amountModel = createAmountModel(testScope = this)
@@ -527,9 +535,10 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-                verify(exactly = 1) { messageSender.send(any()) }
-                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
+                val submit = model.uiState.value.submit as SubmitUM.Result
+                assertThat(submit.result).isEqualTo(PlaceResultUM.StillProcessing(placedAt = submit.result.placedAt))
+                verify(exactly = 0) { messageSender.send(any()) }
+                verify(exactly = 1) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
                 coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
 
                 model.onDestroy()
@@ -563,7 +572,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             verify(exactly = 0) { router.pop(onComplete = any()) }
             verify(exactly = 0) { router.popTo(any<PolymarketRoute.Main>(), onComplete = any()) }
             advanceUntilIdle()
-            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
 
             model.onDestroy()
         }

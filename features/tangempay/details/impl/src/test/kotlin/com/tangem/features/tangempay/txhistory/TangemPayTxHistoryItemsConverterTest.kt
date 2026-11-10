@@ -14,6 +14,7 @@ import com.tangem.features.tangempay.cashback
 import com.tangem.features.tangempay.collateralTransaction
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.spendTransaction
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -42,7 +43,7 @@ internal class TangemPayTxHistoryItemsConverterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun `GIVEN spend cashback WHEN convert THEN badge matches expected`(model: CashbackModel) {
         // Arrange
         val converter = TangemPayTxHistoryItemsConverter(txHistoryUiActions = uiActions)

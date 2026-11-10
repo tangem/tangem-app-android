@@ -7,14 +7,13 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.store.features.cardsettings.impl.coderecovery.AccessCodeRecoveryScreenState
+import com.tangem.store.features.cardsettings.impl.coderecovery.ui.state.AccessCodeRecoveryUM
 import com.tangem.store.features.cardsettings.impl.common.CardSettingsAnalyticsEvent
-import com.tangem.store.features.cardsettings.impl.common.utils.isAccessCodeRecoveryEnabled
 import com.tangem.store.features.cardsettings.impl.domain.CardSettingsInteractor
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,20 +28,15 @@ internal class AccessCodeRecoveryModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
-    private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
-        ?: error("Scan response is null")
+    private val scannedScanResponse = cardSettingsInteractor.requireScanResponse()
 
-    val screenState = MutableStateFlow(
-        value = getInitialState(),
-    )
+    val uiState: StateFlow<AccessCodeRecoveryUM>
+        field = MutableStateFlow(getInitialState())
 
-    private fun getInitialState(): AccessCodeRecoveryScreenState {
-        val isEnabled = isAccessCodeRecoveryEnabled(
-            typeResolver = scannedScanResponse.cardTypesResolver,
-            card = scannedScanResponse.card,
-        )
+    private fun getInitialState(): AccessCodeRecoveryUM {
+        val isEnabled = cardSettingsInteractor.isAccessCodeRecoveryEnabled(scannedScanResponse)
 
-        return AccessCodeRecoveryScreenState(
+        return AccessCodeRecoveryUM(
             isEnabledOnCard = isEnabled,
             isEnabledSelection = isEnabled,
             isSaveChangesEnabled = false,
@@ -52,7 +46,7 @@ internal class AccessCodeRecoveryModel @Inject constructor(
     }
 
     private fun saveChanges() = modelScope.launch {
-        val isEnabled = screenState.value.isEnabledSelection
+        val isEnabled = uiState.value.isEnabledSelection
 
         tangemSdkManager
             .setAccessCodeRecoveryEnabled(scannedScanResponse.card.cardId, isEnabled)
@@ -63,22 +57,14 @@ internal class AccessCodeRecoveryModel @Inject constructor(
                     ),
                 )
 
-                cardSettingsInteractor.update { scanResponse ->
-                    scanResponse.copy(
-                        card = scanResponse.card.copy(
-                            userSettings = scanResponse.card.userSettings?.copy(
-                                isUserCodeRecoveryAllowed = isEnabled,
-                            ),
-                        ),
-                    )
-                }
+                cardSettingsInteractor.updateAccessCodeRecovery(isEnabled)
 
                 router.pop()
             }
     }
 
     private fun selectOption(isEnabled: Boolean) {
-        screenState.update { state ->
+        uiState.update { state ->
             state.copy(
                 isEnabledSelection = isEnabled,
                 isSaveChangesEnabled = isEnabled != state.isEnabledOnCard,

@@ -43,6 +43,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
     @Test
     fun `GIVEN active contract order WHEN invoke THEN does not create a new order and polls the existing one`() =
         runTest {
+            // Arrange
             val activeOrder = order(id = "active-order", status = OrderStatus.PROCESSING)
             coEvery {
                 customerOrderRepository.findOrders(
@@ -53,8 +54,10 @@ internal class CreatePaymentNetworkContractUseCaseTest {
             } returns listOf(activeOrder).right()
             coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } returns true
 
+            // Act
             val result = useCase(userWalletId, network, IDEMPOTENCY_KEY)
 
+            // Assert
             assertThat(result.isRight()).isTrue()
             coVerify(exactly = 0) {
                 customerOrderRepository.createOrder(any(), any(), any())
@@ -72,6 +75,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
 
     @Test
     fun `GIVEN no active order and create succeeds WHEN invoke THEN creates the order once and polls it`() = runTest {
+        // Arrange
         coEvery {
             customerOrderRepository.findOrders(
                 userWalletId = userWalletId,
@@ -89,8 +93,10 @@ internal class CreatePaymentNetworkContractUseCaseTest {
         } returns createdOrder.right()
         coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } returns true
 
+        // Act
         val result = useCase(userWalletId, network, IDEMPOTENCY_KEY)
 
+        // Assert
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 1) {
             customerOrderRepository.createOrder(
@@ -112,6 +118,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
 
     @Test
     fun `GIVEN active order WHEN invoke THEN returns before polling completes`() = runTest {
+        // Arrange
         val activeOrder = order(id = "active-order", status = OrderStatus.PROCESSING)
         coEvery {
             customerOrderRepository.findOrders(
@@ -124,15 +131,19 @@ internal class CreatePaymentNetworkContractUseCaseTest {
             awaitCancellation() // a poll that never terminates must not block invoke
         }
 
+        // Act
         val result = useCase(userWalletId, network, IDEMPOTENCY_KEY)
 
+        // Assert
         assertThat(result.isRight()).isTrue()
     }
 
     @Test
     fun `GIVEN network without derivable chain id WHEN invoke THEN returns Left without backend calls`() = runTest {
+        // Act
         val result = useCase(userWalletId, network(Blockchain.Tron), IDEMPOTENCY_KEY)
 
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
         coVerify(exactly = 0) { customerOrderRepository.findOrders(any(), any(), any()) }
         coVerify(exactly = 0) {
@@ -144,6 +155,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
     @Test
     fun `GIVEN no active order and create fails with a 4xx error WHEN invoke THEN returns Left without retry`() =
         runTest {
+            // Arrange
             coEvery {
                 customerOrderRepository.findOrders(
                     userWalletId = userWalletId,
@@ -159,8 +171,10 @@ internal class CreatePaymentNetworkContractUseCaseTest {
                 )
             } returns TangemPayApiError.CustomerIsBlocked.left()
 
+            // Act
             val result = useCase(userWalletId, network, IDEMPOTENCY_KEY)
 
+            // Assert
             assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.CustomerIsBlocked)
             coVerify(exactly = 1) {
                 customerOrderRepository.createOrder(
@@ -175,6 +189,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
     @Test
     fun `GIVEN create fails with 5xx twice then succeeds WHEN invoke THEN retries with the same key and polls`() =
         runTest {
+            // Arrange
             coEvery {
                 customerOrderRepository.findOrders(
                     userWalletId = userWalletId,
@@ -197,8 +212,10 @@ internal class CreatePaymentNetworkContractUseCaseTest {
             )
             coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } returns true
 
+            // Act
             val result = useCase(userWalletId, network, IDEMPOTENCY_KEY)
 
+            // Assert
             assertThat(result.isRight()).isTrue()
             assertThat(idempotencyKeys).containsExactly(IDEMPOTENCY_KEY, IDEMPOTENCY_KEY, IDEMPOTENCY_KEY)
             coVerify(exactly = 3) {

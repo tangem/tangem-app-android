@@ -24,11 +24,14 @@ import com.tangem.domain.models.currency.shouldShowNotSuppliedNotification
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.models.yield.supply.yieldSupply
+import com.tangem.domain.models.yield.supply.yieldSupplySource
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.stories.models.StoryContentIds
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
+import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.*
@@ -61,6 +64,8 @@ internal class YieldSupplyModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+    private val yieldModuleStatusFetcher: YieldModuleStatusFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
@@ -110,8 +115,18 @@ internal class YieldSupplyModel @Inject constructor(
                         network = cryptoCurrency.network,
                     ),
                 )
+                fetchYieldModuleStatus()
             }
         }
+    }
+
+    private suspend fun fetchYieldModuleStatus() {
+        val token = cryptoCurrency as? CryptoCurrency.Token ?: return
+        if (!tokensFeatureToggles.isYieldContributionEnabled) return
+
+        yieldModuleStatusFetcher(
+            params = YieldModuleStatusFetcher.Params(userWalletId = params.userWalletId, tokens = setOf(token)),
+        )
     }
 
     private fun loadUserWalletData() {
@@ -356,6 +371,9 @@ internal class YieldSupplyModel @Inject constructor(
         // Only mirror a status the chain actually confirmed. A cached one can be stale and an absent one says
         // nothing, and either would announce a state the chain does not have.
         if (cryptoCurrencyStatus.value.sources.networkSource != StatusSource.ACTUAL) return
+        // Under the Yield Module positions source the status comes from the position, which has its own freshness
+        val yieldSupplySource = cryptoCurrencyStatus.value.yieldSupplySource
+        if (yieldSupplySource != null && yieldSupplySource != StatusSource.ACTUAL) return
         val isActive = cryptoCurrencyStatus.value.yieldSupply?.isActive ?: return
 
         modelScope.launch(dispatchers.default) {
