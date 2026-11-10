@@ -43,12 +43,14 @@ import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
 import com.tangem.features.onramp.success.entity.previewdata.OnrampSuccessComponentUMPreviewData
 
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 @Composable
 internal fun OnrampStatusScreenContent(
     state: OnrampSuccessComponentUM,

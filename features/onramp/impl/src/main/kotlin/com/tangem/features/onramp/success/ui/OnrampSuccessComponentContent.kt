@@ -1,5 +1,3 @@
-@file:RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
-
 package com.tangem.features.onramp.success.ui
 
 import android.content.res.Configuration
@@ -45,6 +43,7 @@ import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
 import com.tangem.features.onramp.success.entity.previewdata.OnrampSuccessComponentUMPreviewData
 
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 @Composable
 internal fun OnrampSuccessComponentContent(
     state: OnrampSuccessComponentUM,
