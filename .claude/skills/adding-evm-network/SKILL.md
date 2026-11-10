@@ -13,16 +13,18 @@ The chain itself lives in **blockchain-sdk-kotlin** — follow its `adding-evm-n
 Android these are two repos and two PRs.
 
 **Most app edit points are exhaustive `when`s — bumping the SDK breaks the build until they're
-covered. Three are not** (`fromNetworkId` → `else -> null`, `CardSdk.isBlockchainUnsupported` →
-`else -> false`, `excluded_blockchains_config.json`), and a wrong *value* in an exhaustive branch
-(coin id, MoonPay code) compiles just as well. A green build proves only that every branch exists.
+covered. Four are not** (`fromNetworkId` and `BlockAidChainNameConverter` → `else -> null`,
+`CardSdk.isBlockchainUnsupported` → `else -> false`, `excluded_blockchains_config.json`), and a
+wrong *value* in an exhaustive branch (coin id, MoonPay code) compiles just as well. A green build proves only that every branch exists.
 
 **Derive the file set mechanically, never from memory:**
 
 ```bash
-git grep -l "Electroneum" -- '*.kt' '*.json'   # last plain EVM chain — full occurrence list
+git grep -l "Electroneum" -- '*.kt' '*.json'   # plain EVM reference chain — full occurrence list
 git show --stat dd6bd007e6                      # [REDACTED_TASK_KEY] Electroneum, the reference addition
-git show --stat 6e458067a3                      # [REDACTED_TASK_KEY] Robinhood: + QuickNode creds + SDK bump
+git show --stat 5c8e5256da                      # [REDACTED_TASK_KEY] Onyx: same set + SDK bump
+git show --stat b593a7d3f3                      # [REDACTED_TASK_KEY] Public Masterpiece: mainnet only
+git show --stat 6e458067a3                      # [REDACTED_TASK_KEY] Robinhood: + QuickNode creds
 ```
 
 ## Step 0 — Inputs
@@ -32,11 +34,11 @@ Take them from the SDK PR and the task; do not invent them.
 | Input | Used in | Note |
 |---|---|---|
 | SDK version with the chain | `gradle/tangem_dependencies.toml` → `tangemBlockchainSdk` | Build of the merged SDK PR (`develop-XXXX` / `releases-X.Y-XXXX`) |
-| network id, mainnet + testnet | `fromNetworkId` / `toNetworkId` | Same as the SDK `Blockchain.id` and the backend network id (`foo` / `foo/test`) |
+| network id, mainnet + testnet | `fromNetworkId` / `toNetworkId` | Same as the SDK `Blockchain.id` and the backend network id (`foo` / `foo/test`). No testnet in the SDK → mainnet entries only |
 | coin id | `toCoinId` | Backend/CoinGecko coin id of the **native** coin — ask backend, don't derive from the name |
 | icons | `core/ui/src/main/res/drawable` | From Figma (Blockchains page — active, Logo page — greyed out) |
 | release version | `excluded_blockchains_config.json` | First app version where the network is visible |
-| private RPC credentials | `GeneratedEnvironmentConfigConverter` | Only if the SDK added `quickNodeFooCredentials` |
+| private RPC credentials | `GeneratedEnvironmentConfigConverter` | Only if the SDK added `quickNodeFooCredentials`; the keys must already be in `tangem-app-config`, see trap #7 |
 
 ## Registration checklist
 
@@ -58,19 +60,23 @@ Take them from the SDK PR and the task; do not invent them.
 | 12 | `core/config-toggles/src/main/assets/configs/excluded_blockchains_config.json` | `{ "name": "foo", "version": "<release>" }` | ❌ without it the network ships visible right away |
 | 13 | `domain/card/.../common/extensions/CardSdk.kt` — `isBlockchainUnsupported()` | **only by product decision**, see trap #4 | ❌ `else -> false` |
 | 14 | `core/datasource-impl/.../converter/GeneratedEnvironmentConfigConverter.kt` | `quickNodeFooCredentials = QuickNodeCredentials(...)` — only if the SDK has the field | — |
+| 15 | `libs/blockchain-sdk/.../utils/BlockAidChainNameConverter.kt` | Blockaid chain name — only if Blockaid supports the chain | ❌ `else -> null` — WalletConnect transactions go unscanned |
 
 Not needed for a plain EVM chain (unlike iOS): tokens, NFT, custom tokens and tx history are
 resolved inside the SDK from `isEvm()`, and `AccountNodeRecognizer.getAccountNodeIndex` handles any
-EVM chain with the `m/44'/60'` path.
+EVM chain with the `m/44'/60'` path. Feature-specific network lists (joint account, Polymarket,
+gasless, Tangem Pay, staking/swap notifications) are opt-in per feature — a new network doesn't go
+there unless the task says so.
 
 ## Silent traps
 
 **1. `fromNetworkId` forgotten.** Backend responses (tokens list, markets, swap) carry the network id;
 without the mapping the network is dropped as unknown. The SDK bump does not break the build.
 
-**2. Wrong coin id.** Rates, charts and markets are keyed by coin id. A name-derived guess
-(`"foo-ethereum"`) compiles and shows no price. For an ETH L2 the coin id is the network's own
-(`"base-ethereum"`, `"linea-ethereum"`), not `"ethereum"`.
+**2. Wrong coin id.** Rates, charts and markets are keyed by coin id. There is no naming pattern
+(`"arbitrum-one"`, `"base-ethereum"`, `"igra-bridged-kaspa"`), so a guess compiles and shows no
+price. Check that the backend knows the id in both quotes **and** markets — they are separate
+services, and an id can live in one only.
 
 **3. MoonPay / Mercuryo codes guessed.** Fetch https://api.moonpay.com/v3/currencies and map the chain
 only if it is in the response; otherwise `null`. Same for Mercuryo — `null` unless the provider lists it.
@@ -80,23 +86,27 @@ firmware `<= HDWalletAvailable`. Robinhood was added there and removed again in 
 ([REDACTED_TASK_KEY]). Default: don't add it; only on an explicit product decision, and then update
 `SupportedBlockchainsTest`.
 
-**5. `excluded_blockchains_config.json` semantics.** `name` is the SDK `Blockchain.id`; the network is
-hidden while the app version is below `version` (`"undefined"` = hidden forever). Testnet entries are
-usually not needed — test cards see testnets. Toggle per network in the Tester menu → Excluded
-blockchains.
+**5. `excluded_blockchains_config.json` semantics.** `name` is the SDK `Blockchain.id`, matched
+exactly — a typo resolves to `Blockchain.Unknown` and the network ships **visible**. It is hidden
+while the app version is below `version` (`"undefined"` = hidden forever). Don't add a testnet
+entry: `ExcludedBlockchains` excludes the mainnet's `getTestnetVersion()` along with it. Toggle per
+network in the Tester menu → Excluded blockchains.
 
 **6. Raster inside an icon.** Convert the Figma SVG to a vector drawable. If the SVG contains an
 `<image>` element it carries a raster layer, often hidden under the shapes: **don't** commit the icon —
 stop and ask the developer to have designers remove the raster from the Figma component and re-export.
 
-**7. QuickNode keys.** The `quiknodeFoo*` fields come from `tangem-app-config`; don't add empty
-credential keys there — admins fill them in themselves. The app PR only wires the converter.
+**7. QuickNode keys.** `GeneratedEnvironmentConfig` is generated from the keys of the
+`tangem-app-config` JSON, so `quiknodeFooApiKey` / `quiknodeFooSubdomain` exist only once they are in
+that config — before that the converter doesn't compile. Don't add empty credential keys there
+yourself: ask the admins to add them first, then wire the converter.
 
 ## Tests
 
 - `libs/blockchain-sdk/src/test/.../utils/FooBlockchainMappingTest.kt` — mirror
   `ElectroneumBlockchainMappingTest`: `fromNetworkId`, `fromId`, `toNetworkId`, `toCoinId` for mainnet
-  and testnet, expected values as string literals.
+  and testnet (mainnet only: `PublicMasterpieceBlockchainMappingTest`), expected values as string
+  literals.
 - `common/ui/src/test/.../BlockchainIconsTest.kt` — add the chain to both expected maps.
 - `domain/card/src/test/.../Wallet2CardConfigTest.kt` — add both entries.
 - `SupportedBlockchainsTest` — only if `CardSdk.kt` was touched.
@@ -114,9 +124,11 @@ credential keys there — admins fill them in themselves. The app PR only wires 
 Then diff the registration set against the reference chain:
 
 ```bash
-for f in $(git grep -l "Electroneum" -- '*.kt' '*.json'); do
+for f in $(git grep -l "Electroneum" -- '*.kt' '*.json' | grep -vi "electroneum[^/]*$"); do
   grep -q "Foo" "$f" || echo "MISSING: $f"
 done
+grep -q '"name": "foo"' core/config-toggles/src/main/assets/configs/excluded_blockchains_config.json \
+  || echo "MISSING: excluded_blockchains_config.json"
 ```
 
 Empty output = every shared point is covered. Any `MISSING:` line is a forgotten edit point — fix it
