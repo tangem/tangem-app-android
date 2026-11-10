@@ -2,30 +2,25 @@ package com.tangem.features.feed.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.CATEGORY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.utils.popToIfCovered
 import com.tangem.domain.models.earn.PreselectedEarnType
-import com.tangem.features.feed.entry.deeplink.DiscoverDeepLinkHandler
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryRequest
 import com.tangem.features.feed.v2.FeedSection
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import javax.inject.Inject
 
-internal class DefaultDiscoverDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val queryParams: Map<String, String>,
+internal class DiscoverDeepLinkHandler @Inject constructor(
     private val feedEntryController: FeedEntryController,
     private val appRouter: AppRouter,
-) : DiscoverDeepLinkHandler {
+) : DeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
-
-    private fun handleDeepLink() {
+    override fun handle(request: DeepLinkRequest) {
+        val queryParams = request.queryParams
         // published before navigating: the hub reads the request when it is built, which on a cold
         // start is a consequence of the navigation below
         feedEntryController.request(
@@ -37,11 +32,6 @@ internal class DefaultDiscoverDeepLinkHandler @AssistedInject constructor(
         )
 
         appRouter.popToIfCovered(AppRoute.Wallet)
-    }
-
-    @AssistedFactory
-    interface Factory : DiscoverDeepLinkHandler.Factory {
-        override fun create(queryParams: Map<String, String>): DefaultDiscoverDeepLinkHandler
     }
 
     companion object {
