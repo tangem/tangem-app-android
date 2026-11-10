@@ -78,6 +78,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         onRefresh = ::onRefresh,
         onTxHistoryReload = ::onTxHistoryReload,
         onRenewSession = ::onRenewSession,
+        isYieldModeEnabled = moneyAccountFeatureToggles.isYieldModeEnabled,
     )
     val uiState: StateFlow<MoneyAccountDetailsUM>
         field = MutableStateFlow(stateFactory.createInitialState())
