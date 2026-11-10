@@ -56,9 +56,12 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val completion = completionFactory.create(
         sourceAccount = params.sourceAccount,
         scope = modelScope,
-        onOrderCreated = params.onOrderCreated,
-        onDestinationChanged = params.onDestinationChanged,
-        onNetworkFeeChanged = params.onNetworkFeeChanged,
+        callbacks = BankWithdrawCompletionFactory.Callbacks(
+            onOrderCreated = params.onOrderCreated,
+            onDestinationChanged = params.onDestinationChanged,
+            onNetworkFeeChanged = params.onNetworkFeeChanged,
+            onQuoteChanged = params.onQuoteChanged,
+        ),
     )
 
     private val umFactory = TangemPayBankWithdrawPreviewUMFactory(
@@ -90,6 +93,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
             .onEach { isBalanceHidden -> state.update { it.copy(isBalanceHidden = isBalanceHidden) } }
             .launchIn(modelScope)
         withdrawAnalytics.onConfirmationScreenOpened()
+        modelScope.launch { completion.prepare(params.draft.value) }.saveIn(sendJobHolder)
     }
 
     /** The wallet cannot change while the wizard is open, and a lookup failure keeps the historic card icon. */

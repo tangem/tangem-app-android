@@ -5,6 +5,8 @@ import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
 
 internal interface BankWithdrawCompletion {
 
+    suspend fun prepare(draft: BankWithdrawDraft) {}
+
     suspend fun complete(draft: BankWithdrawDraft, onState: (CompletionState) -> Unit)
 }
 

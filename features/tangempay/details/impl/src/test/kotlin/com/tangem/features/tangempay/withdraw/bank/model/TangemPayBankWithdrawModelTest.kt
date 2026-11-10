@@ -19,6 +19,7 @@ import com.tangem.domain.tangempay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.tangempay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
@@ -42,6 +43,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.joda.time.DateTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -307,6 +309,23 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
                 networkFee = BigDecimal("0.03"),
             ),
         )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount confirmed WHEN quote changed THEN draft keeps the quote until the amount is confirmed again`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onAmountConfirmed(achAmountResult())
+
+        // Act
+        model.onQuoteChanged(speiQuote())
+        val quoted = model.draft.value.quote
+        model.onAmountConfirmed(achAmountResult())
+
+        // Assert
+        assertThat(quoted).isEqualTo(speiQuote())
+        assertThat(model.draft.value.quote).isNull()
         model.onDestroy()
     }
 
@@ -620,6 +639,19 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
         val sourceAccount: BankWithdrawSourceAccount,
         val isMxnEnabled: Boolean,
         val expectedIncludeSpei: Boolean,
+    )
+
+    private fun speiQuote() = BankOfframpQuote(
+        quoteId = "quote-1",
+        bankAccountId = "acc-1",
+        feeAmount = BigDecimal("5.50"),
+        sourceAmount = BigDecimal("500.00"),
+        destinationAmount = BigDecimal("8530.13"),
+        destinationCurrency = "MXN",
+        exchangeRate = BigDecimal("17.25"),
+        fee = offrampDestination().fee,
+        eta = offrampDestination().eta,
+        expiresAt = DateTime.parse("2099-01-01T00:00:00Z"),
     )
 
     private fun createModel(
