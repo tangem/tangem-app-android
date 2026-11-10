@@ -17,12 +17,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 /**
- * The chips of the sections: a click scrolls the section just below the pinned chips, the lit one follows the page.
- * Item offsets start under the navigation, where the chips are pinned, so the pinned chips end at [chipsHeightPx] and
- * a section scrolled to `-chipsHeightPx` sits right under them.
- *
- * A short tail never lets its section reach the chips: the page ends first and the end selects the last section. So
- * the clicked chip stays lit until the list rests at a different position, see [ClickedSection].
+ * Item offsets start under the navigation where the chips are pinned, so a section scrolled to `-chipsHeightPx` sits
+ * right under them.
  */
 @Composable
 internal fun rememberSectionChips(

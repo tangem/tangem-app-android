@@ -59,14 +59,7 @@ import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.picker.ui.PAGE_MARGIN
 import kotlinx.collections.immutable.ImmutableList
 
-/**
- * The page of a position: one list fills the screen and scrolls under the navigation on top and the buttons at the
- * bottom, both overlays with their fades. The chips are anchors (a click scrolls to the section, the lit chip follows
- * the scroll) and pin under the navigation. The list is the haze source: the glass buttons of the overlays and the
- * calculator's sheet blur it.
- *
- * @param chart the APY chart of the product, a slot of the component; `null` without a chart
- */
+/** The list is the haze source: the glass buttons of the overlays and the calculator's sheet blur it. */
 @Composable
 internal fun EarnInfoContent(state: EarnInfoUM?, chart: (@Composable () -> Unit)?, modifier: Modifier = Modifier) {
     Box(
@@ -81,13 +74,8 @@ internal fun EarnInfoContent(state: EarnInfoUM?, chart: (@Composable () -> Unit)
 }
 
 /**
- * The list's content paddings are the measured heights of the overlays: item offsets start under the navigation, and
- * the last item ends above the footer.
- *
- * The chips are one row floating over the list, outside its haze source, so their glass pill has the list to blur
- * wherever the row is; the list keeps an empty item of the row's height. The row follows that item and stops under
- * the navigation (a sticky header would stick behind the navigation: Foundation's StickToTopPlacement places it at
- * -beforeContentPadding), and vertical drags on it scroll the list.
+ * The chips float over the list, outside its haze source, so their glass pill has something to blur; a sticky header
+ * would stick behind the navigation (Foundation's StickToTopPlacement places it at -beforeContentPadding).
  */
 @Composable
 private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?) {
@@ -146,6 +134,7 @@ private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?) {
                 .align(Alignment.TopCenter)
                 .onSizeChanged { navigationHeightPx = it.height }
                 .semantics {
+                    // The overlays follow the list in the tree: without this TalkBack reads them after the page
                     isTraversalGroup = true
                     traversalIndex = NAVIGATION_TRAVERSAL_INDEX
                 },
@@ -178,13 +167,7 @@ private fun LazyListScope.pageContent(
     }
 }
 
-/**
- * With the chips pinned one fade covers the navigation and the chips, as in the design, and the navigation's own fade
- * gives way to it. It is there at once under the pinned chips and fades out after them. It is a haze source above the
- * list's, like the navigation's own fade: the glass buttons and the pill sample it instead of punching holes in it.
- *
- * @param heightPx the navigation and the chips; the fade ends a little below them, its gradient starts in the chips
- */
+/** A haze source above the list's: the glass buttons and the pill sample the fade instead of punching holes in it. */
 @Composable
 private fun PinnedFade(isPinned: Boolean, heightPx: Int) {
     val fadeOutAlpha by animateFloatAsState(
@@ -193,7 +176,7 @@ private fun PinnedFade(isPinned: Boolean, heightPx: Int) {
         label = "EarnInfo.pinnedFadeAlpha",
     )
     val isBlurred by remember(isPinned) { derivedStateOf { isPinned || fadeOutAlpha > 0f } }
-    val height = with(LocalDensity.current) { heightPx.toDp() } + PINNED_FADE_OVERSHOOT
+    val height = with(LocalDensity.current) { heightPx.toDp() } + 2.dp
 
     Box(
         modifier = Modifier
@@ -228,7 +211,7 @@ private fun FloatingChips(
             .scrollable(state = listState, orientation = Orientation.Vertical, reverseDirection = true)
             .semantics {
                 isTraversalGroup = true
-                traversalIndex = CHIPS_TRAVERSAL_INDEX
+                traversalIndex = -1f
             },
     )
 }
@@ -247,7 +230,7 @@ private fun BalanceBlock(state: EarnInfoUM) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = PAGE_MARGIN, end = PAGE_MARGIN, top = BALANCE_TOP_PADDING, bottom = SECTION_GAP),
+            .padding(start = PAGE_MARGIN, end = PAGE_MARGIN, top = 48.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -272,7 +255,7 @@ private fun BalanceBlock(state: EarnInfoUM) {
 @Composable
 private fun StaleNotice(description: TextReference) {
     TangemMessageBanner(
-        modifier = Modifier.padding(start = BLOCK_MARGIN, end = BLOCK_MARGIN, bottom = BLOCK_MARGIN),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
         title = resourceReference(R.string.warning_outdated_data_title),
         description = description,
         variant = TangemMessageBanner.Variant.Warning,
@@ -285,10 +268,10 @@ private fun Rewards(item: PageItem.Rewards) {
     TangemMessageBanner(
         title = rewards.title,
         modifier = Modifier.padding(
-            start = BLOCK_MARGIN,
-            end = BLOCK_MARGIN,
-            top = if (item.isUnderStaleNotice) 0.dp else BANNER_TOP_PADDING,
-            bottom = if (item.isAboveChart) BANNER_BOTTOM_PADDING else SECTION_GAP,
+            start = 16.dp,
+            end = 16.dp,
+            top = if (item.isUnderStaleNotice) 0.dp else 12.dp,
+            bottom = if (item.isAboveChart) 36.dp else 24.dp,
         ),
         variant = TangemMessageBanner.Variant.Info,
         description = rewards.description,
@@ -305,7 +288,7 @@ private fun Rewards(item: PageItem.Rewards) {
 
 @Composable
 private fun ChartSlot(chart: (@Composable () -> Unit)?) {
-    Box(modifier = Modifier.padding(start = BLOCK_MARGIN, end = BLOCK_MARGIN, bottom = SECTION_GAP)) {
+    Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
         chart?.invoke()
     }
 }
@@ -315,7 +298,7 @@ private fun Chips(chips: ImmutableList<TangemTabItemUM>, modifier: Modifier = Mo
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TABS_VERTICAL_PADDING),
+            .padding(vertical = 12.dp),
     ) {
         TangemTabNavigation(tabs = chips, contentPadding = PaddingValues(horizontal = PAGE_MARGIN))
     }
@@ -323,7 +306,7 @@ private fun Chips(chips: ImmutableList<TangemTabItemUM>, modifier: Modifier = Mo
 
 @Composable
 private fun SectionItem(tab: EarnInfoTab, state: EarnInfoUM) {
-    val modifier = Modifier.padding(vertical = SECTION_PADDING)
+    val modifier = Modifier.padding(vertical = 12.dp)
 
     when (tab) {
         EarnInfoTab.MyFunds -> MyFundsSection(state = state.myFunds, modifier = modifier)
@@ -332,10 +315,7 @@ private fun SectionItem(tab: EarnInfoTab, state: EarnInfoUM) {
     }
 }
 
-/**
- * The DS button ignores [TangemButtonUM.type], so the style follows the position: the primary action is filled, the
- * others are tonal.
- */
+/** The DS button ignores [TangemButtonUM.type], so the style follows the position. */
 @Composable
 private fun Footer(secondary: ImmutableList<TangemButtonUM>, primary: TangemButtonUM, modifier: Modifier = Modifier) {
     TangemFooter(modifier = modifier) {
@@ -361,39 +341,10 @@ private fun ActionButton(button: TangemButtonUM, variant: TangemButton.Variant) 
     )
 }
 
-private val BLOCK_MARGIN = 16.dp
-private val SECTION_GAP = 24.dp
-private val BALANCE_TOP_PADDING = 48.dp
-
-/**
- * Above the rewards banner under the balance: 12 dp on top of the balance block's 24. Under the stale notice the
- * banner has none, the notice's own 16 dp is the gap.
- */
-private val BANNER_TOP_PADDING = 12.dp
-
-/** Under the rewards banner when the chart follows: the 24 dp gap plus the 12 dp the design adds above its switch. */
-private val BANNER_BOTTOM_PADDING = 36.dp
-
-/**
- * Above and below a section: two of them are the 24 dp gap between sections. The top one also puts the title 12 dp
- * lower under the pinned chips, and the bottom one leaves 12 dp above the footer's own 8 over its buttons.
- */
-private val SECTION_PADDING = 12.dp
-
-/** Above and below the chip row, the 60 dp block of the design. */
-private val TABS_VERTICAL_PADDING = 12.dp
-
-/**
- * The overlays come after the list in the tree, so TalkBack would read the chips after the whole page. Against the
- * rest of the page (the list and the footer buttons, default index 0) these read the navigation first, then the chips.
- */
+/** Before the chips' -1: a named constant only because detekt's MagicNumber rejects the literal. */
 private const val NAVIGATION_TRAVERSAL_INDEX = -2f
-private const val CHIPS_TRAVERSAL_INDEX = -1f
 
-/** The design's fade over the navigation and the pinned chips ends 2 dp under the chip block. */
-private val PINNED_FADE_OVERSHOOT = 2.dp
-
-/** What the list is made of, in order. One entry is one list item, so the position in the list is the list index. */
+/** One entry is one list item, so the position in this list is the list index the scroll maths uses. */
 private sealed interface PageItem {
 
     val key: String
