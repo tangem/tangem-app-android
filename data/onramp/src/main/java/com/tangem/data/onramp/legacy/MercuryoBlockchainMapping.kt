@@ -175,5 +175,6 @@ public val Blockchain.mercuryoNetwork: String?
             Blockchain.PublicMasterpiece -> null
             Blockchain.Zeniq -> null
             Blockchain.Katana, Blockchain.KatanaTestnet -> null
+            Blockchain.XLayer, Blockchain.XLayerTestnet -> null
         }
     }
