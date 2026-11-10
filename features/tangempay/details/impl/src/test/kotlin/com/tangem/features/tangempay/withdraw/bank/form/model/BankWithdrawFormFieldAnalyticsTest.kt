@@ -33,6 +33,7 @@ internal class BankWithdrawFormFieldAnalyticsTest {
     private fun provideTestModels() = listOf(
         NameModel(field = BankWithdrawFormField.AccountNumber, expected = "Account Number"),
         NameModel(field = BankWithdrawFormField.RoutingNumber, expected = "Routing Number"),
+        NameModel(field = BankWithdrawFormField.Clabe, expected = "CLABE"),
         NameModel(field = BankWithdrawFormField.FirstName, expected = "First Name"),
         NameModel(field = BankWithdrawFormField.LastName, expected = "Last Name"),
         NameModel(field = BankWithdrawFormField.BusinessName, expected = "Business Name"),

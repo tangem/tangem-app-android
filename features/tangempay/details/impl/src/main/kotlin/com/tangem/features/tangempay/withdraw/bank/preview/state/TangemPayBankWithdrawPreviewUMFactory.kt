@@ -39,7 +39,11 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.util.Currency
 
-private val ACCOUNT_FIELDS = setOf(BankWithdrawFormField.AccountNumber, BankWithdrawFormField.RoutingNumber)
+private val ACCOUNT_FIELDS = setOf(
+    BankWithdrawFormField.AccountNumber,
+    BankWithdrawFormField.RoutingNumber,
+    BankWithdrawFormField.Clabe,
+)
 
 internal class TangemPayBankWithdrawPreviewUMFactory(
     sourceAccount: BankWithdrawSourceAccount,
@@ -148,6 +152,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(
         val values = details.toFormValues()
         val recipientFields = BankWithdrawFormFields.recipientDetails(
             isBusiness = details.beneficiary is Beneficiary.Business,
+            rail = details.rail,
         )
         val cards = listOf(
             recipientFields.filter { it in ACCOUNT_FIELDS } to BankWithdrawEditTarget.RecipientDetails,

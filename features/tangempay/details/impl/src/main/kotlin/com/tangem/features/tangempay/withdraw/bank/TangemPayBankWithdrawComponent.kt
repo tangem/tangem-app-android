@@ -235,6 +235,7 @@ internal class TangemPayBankWithdrawComponent(
 
     private fun recipientFields(): ImmutableList<BankWithdrawFormField> = BankWithdrawFormFields.recipientDetails(
         isBusiness = params.entry == BankWithdrawEntry.NewBusiness,
+        rail = model.draft.value.destination?.rail,
     )
 
     private fun onOrderSigned() {
