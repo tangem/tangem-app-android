@@ -12,11 +12,11 @@ internal class TangemPayApiIdempotencyHeaderTest {
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN a keyed Pay request WHEN its headers are read THEN the key goes in X-Idempotency-Key`(
-        methodName: String,
+        model: HeaderModel,
     ) {
         // Act
-        val headers = TangemPayApi::class.java.methods
-            .single { it.name == methodName }
+        val headers = model.api.methods
+            .single { it.name == model.methodName }
             .parameterAnnotations
             .flatMap { annotations -> annotations.filterIsInstance<Header>() }
             .map(Header::value)
@@ -26,11 +26,16 @@ internal class TangemPayApiIdempotencyHeaderTest {
     }
 
     private fun provideTestModels() = listOf(
-        "createOrder",
-        "createBankOfframpOrder",
-        "submitBankOfframpSignature",
-        "createBankOfframpRoute",
-        "createBankOfframpQuote",
-        "joinWaitlist",
+        HeaderModel(api = TangemPayApi::class.java, methodName = "createOrder"),
+        HeaderModel(api = TangemPayApi::class.java, methodName = "createBankOfframpOrder"),
+        HeaderModel(api = TangemPayApi::class.java, methodName = "submitBankOfframpSignature"),
+        HeaderModel(api = TangemPayApi::class.java, methodName = "createBankOfframpRoute"),
+        HeaderModel(api = TangemPayApi::class.java, methodName = "createBankOfframpQuote"),
+        HeaderModel(api = TangemPayApi::class.java, methodName = "joinWaitlist"),
+        HeaderModel(api = TangemPayOrderApi::class.java, methodName = "createOrder"),
     )
+
+    internal data class HeaderModel(val api: Class<*>, val methodName: String) {
+        override fun toString(): String = "${api.simpleName}.$methodName"
+    }
 }
