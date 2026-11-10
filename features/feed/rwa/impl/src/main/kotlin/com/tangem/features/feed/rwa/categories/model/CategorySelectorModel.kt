@@ -9,7 +9,6 @@ import com.tangem.domain.markets.GetCoinCategoriesUseCase
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
-import com.tangem.features.feed.rwa.categories.RwaDefaultCategory
 import com.tangem.features.feed.rwa.categories.model.transformer.CategorySelectorTransformer
 import com.tangem.features.feed.rwa.model.UserCountryResolver
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorUM
@@ -22,7 +21,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Tracks the draft selection separately from the applied one, so nothing reaches the tab until Apply.
+ * A tap applies and closes, unless it picks a category with a sector choice: that one becomes a draft
+ * the Sectors rail refines, and only Apply hands the category + sector pair to the tab. With "All" as a
+ * category row there is nothing for a Reset to do.
  *
  * Two categories are not plain filters. The `featured-assets` one is excluded: it populates the tab's
  * Featured rail. The `real-world-assets` umbrella leads the list titled "All": it is the tab's default
@@ -40,7 +41,6 @@ internal class CategorySelectorModel @Inject constructor(
     private val params = paramsContainer.require<CategorySelectorRoute>()
 
     private var categories: List<CoinCategory> = emptyList()
-    private var country: String? = null
     private var draftSelection = params.categorySelection
 
     val uiState: StateFlow<CategorySelectorUM>
@@ -54,9 +54,7 @@ internal class CategorySelectorModel @Inject constructor(
         uiState.update { CategorySelectorUM.Loading }
 
         modelScope.launch {
-            country = userCountryResolver.resolve()
-
-            getCoinCategoriesUseCase(country = country).fold(
+            getCoinCategoriesUseCase(country = userCountryResolver.resolve()).fold(
                 ifLeft = {
                     uiState.update { CategorySelectorUM.Error(onRetry = ::loadCategories) }
                 },
@@ -68,7 +66,7 @@ internal class CategorySelectorModel @Inject constructor(
                         .filter { it.isVisible || it.code == ReservedCategoryCodes.REAL_WORLD_ASSETS }
                         .sortedBy { it.displayOrder }
 
-                    updateState(selection = params.categorySelection, isEdited = false)
+                    updateState()
                 },
             )
         }
@@ -80,37 +78,32 @@ internal class CategorySelectorModel @Inject constructor(
      * empty selection, and a sector tap arrives with its category already attached.
      */
     private fun onSelectionChange(selection: CategorySelection) {
-        draftSelection = selection
+        val category = categories.firstOrNull { it.id == selection.category?.id }
 
-        updateState(selection = selection, isEdited = selection != params.categorySelection)
-    }
-
-    /**
-     * Reset goes back to the scope the region opens on, not to the scope the screen was opened with — a
-     * user in a restricted region lands on the regional default, everyone else on the unfiltered list.
-     */
-    private fun onReset() {
-        draftSelection = RwaDefaultCategory.resolve(
-            categories = categories,
-            country = country,
-            hasUserSelection = false,
-        ) ?: CategorySelection()
-
-        updateState(selection = draftSelection, isEdited = draftSelection != params.categorySelection)
+        if (category?.hasSectorChoice == true) {
+            draftSelection = selection
+            updateState()
+        } else {
+            applyAndClose(selection)
+        }
     }
 
     private fun onApply() {
-        params.callback.onCategorySelect(draftSelection)
+        applyAndClose(draftSelection)
+    }
+
+    /** An unchanged filter is not a pick: the tab would reload for nothing and report a `Select Category`. */
+    private fun applyAndClose(selection: CategorySelection) {
+        if (selection != params.categorySelection) params.callback.onCategorySelect(selection)
         router.pop()
     }
 
-    private fun updateState(selection: CategorySelection, isEdited: Boolean) {
+    private fun updateState() {
         uiState.update(
             transformer = CategorySelectorTransformer(
                 categoryList = categories,
-                categorySelection = selection,
-                isEdited = isEdited,
-                onReset = ::onReset,
+                categorySelection = draftSelection,
+                isApplyVisible = draftSelection != params.categorySelection,
                 onApply = ::onApply,
                 onSelectionChange = ::onSelectionChange,
             ),
