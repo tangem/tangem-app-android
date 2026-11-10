@@ -136,13 +136,8 @@ internal class RestoreOrdersUseCaseTest {
 
     private fun order(id: String) = TangemPayOrder(
         id = id,
-        customerId = "customer-1",
         status = TangemPayOrder.Status.PROCESSING,
         step = OrderStep.UNKNOWN,
-        stepChangeCode = 0,
-        createdAt = "2026-11-09T10:00:00Z",
-        updatedAt = "2026-11-09T10:00:00Z",
-        errorCode = null,
         details = OrderDetails.CardFreeze(productInstanceId = "pi-1"),
     )
 
