@@ -1,7 +1,6 @@
 package com.tangem.feature.tester.presentation.testpush.viewmodel.transformers.markettokens
 
 import androidx.compose.ui.text.input.TextFieldValue
-import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.feature.tester.presentation.testpush.entity.TestPushUM
@@ -15,8 +14,7 @@ internal class TestPushMarketTokenClickBottomSheetTransformer(
             data = prevState.data.plus(
                 TextFieldValue(DEEPLINK_KEY) to TextFieldValue(
                     buildString {
-                        append("tangem://")
-                        append(DeepLinkRoute.MarketTokenDetail.host)
+                        append("tangem://token_chart")
                         append("?token_id=")
                         append(tokenMarket.id)
                         append("&type=promo")

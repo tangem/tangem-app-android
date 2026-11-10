@@ -5,8 +5,6 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.DeepLinkRoute
-import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.routing.deeplink.DeeplinkConst.USER_CODE_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -42,6 +40,7 @@ import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
 import com.tangem.features.mcp.api.McpFeatureToggles
+import com.tangem.features.mcp.api.deeplink.McpDeepLinkHandler
 import com.tangem.features.walletconnect.connections.components.WcConnectionsComponent
 import com.tangem.features.walletconnect.connections.entity.WcConnections
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
@@ -140,8 +139,7 @@ internal class WcConnectionsModel @Inject constructor(
         if (!mcpFeatureToggles.isMcpEnabled) return null
 
         val uri = runCatching { Uri.parse(qrCode) }.getOrNull() ?: return null
-        if (uri.scheme != DeepLinkScheme.Tangem.scheme) return null
-        if (uri.host != DeepLinkRoute.McpAuthorization.host) return null
+        if (!McpDeepLinkHandler.canHandle(uri)) return null
 
         return runCatching { uri.getQueryParameter(USER_CODE_KEY) }.getOrNull()?.takeIf { it.isNotBlank() }
     }

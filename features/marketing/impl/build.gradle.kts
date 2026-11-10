@@ -14,6 +14,7 @@ android {
 dependencies {
     /** Project - API */
     implementation(projects.features.marketing.api)
+    implementation(projects.features.onramp.api)
 
     /** Domain */
     implementation(projects.domain.marketing)

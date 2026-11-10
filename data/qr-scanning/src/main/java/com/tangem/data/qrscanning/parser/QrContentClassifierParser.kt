@@ -82,8 +82,8 @@ internal class QrContentClassifierParser(
 
     /**
      * The MCP gateway encodes the pairing link into a QR as well as into a deep link, so the same URI arrives here
-     * unparsed. The prefix and the parameter mirror `DeepLinkRoute.McpAuthorization` / `DeeplinkConst.USER_CODE_KEY`,
-     * which the data layer cannot reference without depending on the routing module.
+     * unparsed. The prefix and the parameter mirror `McpDeepLinkHandler.DEEPLINK_KEY` / `DeeplinkConst.USER_CODE_KEY`,
+     * which the data layer cannot reference without depending on the feature and routing modules.
      */
     private fun parseMcpUserCode(qrCode: String): String? {
         if (!qrCode.startsWith(MCP_AUTHORIZATION_PREFIX)) return null

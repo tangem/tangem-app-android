@@ -1,10 +1,16 @@
 package com.tangem.features.onramp.deeplink
 
-import kotlinx.coroutines.CoroutineScope
+import java.net.URI
 
 interface OnrampDeepLinkHandler {
 
-    interface Factory {
-        fun create(coroutineScope: CoroutineScope, queryParams: Map<String, String>): OnrampDeepLinkHandler
+    companion object {
+        private const val SCHEME = "tangem"
+        private const val HOST = "onramp"
+
+        const val DEEPLINK_KEY = "$SCHEME://$HOST"
+
+        /** Whether [uri] is an onramp deep link: `tangem://onramp`. */
+        fun canHandle(uri: URI): Boolean = uri.scheme == SCHEME && uri.host == HOST
     }
 }
