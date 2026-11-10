@@ -41,6 +41,7 @@ enum class AccountIconSize {
     Small,
     ExtraSmall,
     ContactLarge,
+    ContactMedium,
     ContactDefault,
 }
 
@@ -180,6 +181,7 @@ fun AccountCharIcon(char: Char, color: Color, size: AccountIconSize, modifier: M
         AccountIconSize.Small -> TangemTheme.typography.subtitle2
         AccountIconSize.ExtraSmall -> TangemTheme.typography2.captionMedium11
         AccountIconSize.ContactLarge -> TangemTheme.typography3.heading.medium
+        AccountIconSize.ContactMedium -> TangemTheme.typography3.heading.medium
         AccountIconSize.ContactDefault -> TangemTheme.typography3.body.medium
     }
 
@@ -214,6 +216,7 @@ private fun AccountIconSize.iconSizeInDp(): Dp = when (this) {
     AccountIconSize.Small -> 12.dp
     AccountIconSize.ExtraSmall -> 8.dp
     AccountIconSize.ContactLarge -> 32.dp
+    AccountIconSize.ContactMedium -> 32.dp
     AccountIconSize.ContactDefault -> 20.dp
 }
 
@@ -262,6 +265,7 @@ fun AccountIconSize.toBoxSize(): Dp = when (this) {
     AccountIconSize.Small -> 20.dp
     AccountIconSize.ExtraSmall -> 16.dp
     AccountIconSize.ContactLarge -> 80.dp
+    AccountIconSize.ContactMedium -> 72.dp
     AccountIconSize.ContactDefault -> 40.dp
 }
 
@@ -272,6 +276,7 @@ private fun AccountIconSize.boxShapeSizeInDp(): Dp = when (this) {
     AccountIconSize.Small -> 6.dp
     AccountIconSize.ExtraSmall -> 6.dp
     AccountIconSize.ContactLarge -> 80.dp
+    AccountIconSize.ContactMedium -> 72.dp
     AccountIconSize.ContactDefault -> 100.dp
 }
 
@@ -314,7 +319,8 @@ private fun Sample() {
                 AccountIconSize.Medium -> AccountIconSize.Small
                 AccountIconSize.Small -> AccountIconSize.ExtraSmall
                 AccountIconSize.ExtraSmall -> AccountIconSize.ContactLarge
-                AccountIconSize.ContactLarge -> AccountIconSize.ContactDefault
+                AccountIconSize.ContactLarge -> AccountIconSize.ContactMedium
+                AccountIconSize.ContactMedium -> AccountIconSize.ContactDefault
                 AccountIconSize.ContactDefault -> AccountIconSize.Default
             }
         }) { Text("Change") }
