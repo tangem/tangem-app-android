@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 
 /**
  * Rail mark from the Figma rail rows: a rounded square in the rail's brand colour with a short label. The fills are

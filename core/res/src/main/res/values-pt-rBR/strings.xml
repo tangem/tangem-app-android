@@ -1155,6 +1155,8 @@
   <string name="hw_upgrade_title">Faça upgrade para nossa carteira de hardware.</string>
   <string name="hw_upgrade_to_cold_banner_description">Proteja suas criptomoedas com a carteira de hardware de alta qualidade da Tangem.</string>
   <string name="hw_upgrade_to_cold_banner_title">Atualize a segurança da sua carteira para hardware.</string>
+  <string name="hw_wallets_limit_alert_message">Você pode ter até %1$s carteiras móveis na Tangem. Para adicionar outra, remova primeiro uma das suas carteiras móveis atuais.</string>
+  <string name="hw_wallets_limit_alert_title">Limite de carteiras móveis atingido</string>
   <string name="information_generated_with_ai">Esta informação foi gerada com IA.\nToque aqui se encontrar algum erro.</string>
   <string name="initial_message_change_access_code_body">Para alterar o código de acesso, aproxime o cartão ou anel conforme mostrado acima e não o remova até o final da operação.</string>
   <string name="initial_message_change_passcode_body">Para alterar a senha, aproxime o cartão conforme mostrado acima e não o remova até o final da operação.</string>

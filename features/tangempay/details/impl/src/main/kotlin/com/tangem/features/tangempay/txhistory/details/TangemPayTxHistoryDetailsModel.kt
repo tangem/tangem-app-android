@@ -12,10 +12,10 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.pay.repository.CashbackRepository
+import com.tangem.domain.tangempay.repository.CashbackRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Job
@@ -160,7 +160,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
             val walletMetaInfo = getWalletMetaInfoUseCase.invoke(params.userWalletId).getOrNull() ?: return@launch
 
             sendFeedbackEmailUseCase.invoke(
-                FeedbackEmailType.Visa.Dispute(
+                FeedbackEmailType.TangemPay.Dispute(
                     item = params.transaction,
                     walletMetaInfo = walletMetaInfo,
                     customerId = customerId,

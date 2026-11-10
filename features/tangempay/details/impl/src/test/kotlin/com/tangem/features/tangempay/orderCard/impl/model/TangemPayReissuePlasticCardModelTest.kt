@@ -3,19 +3,20 @@ package com.tangem.features.tangempay.orderCard.impl.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.model.Offer
+import com.tangem.domain.tangempay.model.OrderType
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.orderCard.impl.TangemPayReissuePlasticCardComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayReissuePlasticCardUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -29,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -38,13 +38,12 @@ private const val SOURCE_PRODUCT_INSTANCE_ID = "pi_source_0001"
 private const val DELIVERY_ETA_MAX_DAYS = 20
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class TangemPayReissuePlasticCardModelTest {
+internal class TangemPayReissuePlasticCardModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("123")
 
     private val getCustomerOffers: GetCustomerOffersUseCase = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     private var isDismissed: Boolean = false
     private var confirmedEta: Int? = null
@@ -112,7 +111,7 @@ internal class TangemPayReissuePlasticCardModelTest {
         }
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun `GIVEN incomplete data WHEN model created THEN error state`(model: LoadErrorModel) = runTest {
         // Arrange
         model.arrange()
@@ -139,7 +138,7 @@ internal class TangemPayReissuePlasticCardModelTest {
         // Arrange
         coEvery {
             getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID)
-        } returns VisaApiError.ServerUnavailable.left()
+        } returns TangemPayApiError.ServerUnavailable.left()
         val model = createLoadedModel()
         val error = model.state.value as TangemPayReissuePlasticCardUM.Error
         coEvery {
@@ -240,7 +239,7 @@ internal class TangemPayReissuePlasticCardModelTest {
         LoadErrorModel(name = "offers request fails") {
             coEvery {
                 getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID)
-            } returns VisaApiError.ServerUnavailable.left()
+            } returns TangemPayApiError.ServerUnavailable.left()
         },
         LoadErrorModel(name = "no reissue offer for the product instance") {
             coEvery {
@@ -254,7 +253,7 @@ internal class TangemPayReissuePlasticCardModelTest {
         },
         LoadErrorModel(name = "customer info request fails") {
             coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
-                VisaApiError.ServerUnavailable.left()
+                TangemPayApiError.ServerUnavailable.left()
         },
         LoadErrorModel(name = "blank kyc country") {
             coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns

@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
@@ -35,6 +36,8 @@ internal class FakeEarnProduct(
     override val id: EarnProductId = spec.id
 
     override val rank: Int = spec.rank
+
+    override val badgeAccent: EarnBadgeAccent = spec.badgeAccent
 
     override val title: TextReference = spec.title
 

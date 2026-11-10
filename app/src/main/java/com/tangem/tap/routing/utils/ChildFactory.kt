@@ -12,6 +12,7 @@ import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.addressbook.AddressBookComponent
+import com.tangem.features.allservices.api.AllServicesComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.createwalletstart.CreateWalletStartComponent
 import com.tangem.features.details.component.DetailsComponent
@@ -57,12 +58,9 @@ import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
+import com.tangem.store.features.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
-import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
-import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCodeRecoveryComponent
-import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
-import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
@@ -91,13 +89,10 @@ internal class ChildFactory @Inject constructor(
     private val introductionComponentFactory: IntroductionComponent.Factory,
     private val tokenDetailsComponentFactory: TokenDetailsComponent.Factory,
     private val qrScanningComponentFactory: QrScanningComponent.Factory,
-    private val accessCodeRecoveryComponentFactory: AccessCodeRecoveryComponent.Factory,
     private val cardSettingsComponentFactory: CardSettingsComponent.Factory,
     private val appCurrencySelectorComponentFactory: AppCurrencySelectorComponent.Factory,
     private val appSettingsComponentFactory: AppSettingsComponent.Factory,
     private val collectiblesEntryComponentFactory: CollectiblesEntryComponent.Factory,
-    private val securityModeComponentFactory: SecurityModeComponent.Factory,
-    private val resetCardComponentFactory: ResetCardComponent.Factory,
     private val referralComponentFactory: ReferralComponent.Factory,
     private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
     private val pushNotificationSettingsComponentFactory: PushNotificationSettingsComponent.Factory,
@@ -127,6 +122,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
+    private val allServicesComponentFactory: AllServicesComponent.Factory,
     private val tangemPayCampaignComponentFactory: TangemPayCampaignComponent.Factory,
     private val moneyAccountDetailsComponentFactory: MoneyAccountDetailsComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
@@ -418,13 +414,6 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = qrScanningComponentFactory,
                 )
             }
-            is AppRoute.AccessCodeRecovery -> {
-                createComponentChild(
-                    context = context,
-                    params = Unit,
-                    componentFactory = accessCodeRecoveryComponentFactory,
-                )
-            }
             is AppRoute.CardSettings -> {
                 createComponentChild(
                     context = context,
@@ -454,28 +443,6 @@ internal class ChildFactory @Inject constructor(
                         startRoute = route.startRoute,
                     ),
                     componentFactory = collectiblesEntryComponentFactory,
-                )
-            }
-            is AppRoute.DetailsSecurity -> {
-                createComponentChild(
-                    context = context,
-                    params = SecurityModeComponent.Params(
-                        userWalletId = route.userWalletId,
-                    ),
-                    componentFactory = securityModeComponentFactory,
-                )
-            }
-            is AppRoute.ResetToFactory -> {
-                createComponentChild(
-                    context = context,
-                    params = ResetCardComponent.Params(
-                        userWalletId = route.userWalletId,
-                        cardId = route.cardId,
-                        isActiveBackupStatus = route.isActiveBackupStatus,
-                        backupCardsCount = route.backupCardsCount,
-                        hasTangemPay = route.hasTangemPay,
-                    ),
-                    componentFactory = resetCardComponentFactory,
                 )
             }
             is AppRoute.ReferralProgram -> {
@@ -604,6 +571,7 @@ internal class ChildFactory @Inject constructor(
                     params = AddExistingWalletComponent.Params(
                         mode = route.mode,
                         shouldSendOnboardingStarted = route.shouldSendOnboardingStarted,
+                        analyticsSource = route.analyticsSource,
                     ),
                     componentFactory = addExistingWalletComponentFactory,
                 )
@@ -783,6 +751,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = tangemPayWalletOnboardingComponentFactory,
+                )
+            }
+            is AppRoute.AllServices -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = allServicesComponentFactory,
                 )
             }
             is AppRoute.TangemPayCampaign -> {

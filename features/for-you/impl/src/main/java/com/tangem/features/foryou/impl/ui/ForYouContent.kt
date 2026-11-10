@@ -88,6 +88,7 @@ internal fun ForYouContent(
             portfolioReviewUM = forYouUM.portfolioReviewUM,
             periodPickerUM = forYouUM.periodPickerUM,
             portfolioFilter = forYouUM.portfolioFilter,
+            isRedesignedTokenRowsEnabled = forYouUM.isRedesignedTokenRowsEnabled,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
 
@@ -95,6 +96,7 @@ internal fun ForYouContent(
 
         ForYouEarnOpportunities(
             earnOpportunitiesUM = forYouUM.earnOpportunities,
+            isRedesignedTokenRowsEnabled = forYouUM.isRedesignedTokenRowsEnabled,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
 

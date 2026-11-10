@@ -2,8 +2,12 @@ package com.tangem.features.foryou.impl.model.converter.earnOpportunities
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.R
+import com.tangem.common.ui.account.toAvatarState
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -69,6 +73,75 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         assertThat(item.isExpandable).isTrue()
         assertThat(item.isExpanded).isFalse()
         assertThat(item.tokenList.map { it.id }).containsExactly("token-a", "token-b")
+    }
+
+    @Test
+    fun `GIVEN accounts mode on WHEN convert THEN account row carries the DS3 account state`() {
+        // Arrange
+        val account = MockAccounts.createAccount(derivationIndex = 1, name = "Earn account")
+        val earnData = createEarnOpportunities(
+            account = account,
+            earnCurrencies = listOf("token-a", "token-b").associate { currencyId ->
+                createStatus(
+                    createEarnCurrency(tokenId = currencyId, currencyId = currencyId),
+                    createRowLoadedValue(),
+                ) to createEarnApyInfo(isActive = false)
+            },
+        )
+        val converter = createConverter(isAccountsModeEnabled = true)
+
+        // Act
+        val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
+
+        // Assert
+        val item = result.items.single()
+        val accountRow = requireNotNull(item.accountRow)
+        assertThat(accountRow.avatar).isEqualTo(account.toAvatarState())
+        val state = accountRow.state as TangemAccountRow.State.Content
+        assertThat(state.id).isEqualTo(account.accountId.value)
+        assertThat(state.title).isEqualTo(stringReference("Earn account"))
+        assertThat(state.label).isEqualTo(
+            pluralReference(R.plurals.common_tokens_count, count = 2, formatArgs = wrappedList(2)),
+        )
+        assertThat(state.balance).isEqualTo((item.tokenRowUM as TangemTokenRowUM.Content).topEndContentUM.text())
+    }
+
+    @Test
+    fun `GIVEN accounts mode on WHEN account row state clicked THEN expand callback receives account id`() {
+        // Arrange
+        val account = MockAccounts.createAccount(derivationIndex = 1)
+        val earnData = createEarnOpportunities(
+            account = account,
+            earnCurrencies = mapOf(
+                createStatus(createEarnCurrency(), createRowLoadedValue()) to createEarnApyInfo(isActive = false),
+            ),
+        )
+        var clickedAssetId: String? = null
+        val converter = createConverter(isAccountsModeEnabled = true, expandClick = { clickedAssetId = it })
+
+        // Act
+        val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
+        (result.items.single().accountRow?.state as TangemAccountRow.State.Content).onClick?.invoke()
+
+        // Assert
+        assertThat(clickedAssetId).isEqualTo(account.accountId.value)
+    }
+
+    @Test
+    fun `GIVEN accounts mode off WHEN convert THEN rows carry no account state`() {
+        // Arrange
+        val earnData = createEarnOpportunities(
+            earnCurrencies = mapOf(
+                createStatus(createEarnCurrency(), createRowLoadedValue()) to createEarnApyInfo(isActive = false),
+            ),
+        )
+        val converter = createConverter(isAccountsModeEnabled = false)
+
+        // Act
+        val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
+
+        // Assert
+        assertThat(result.items.map { it.accountRow }).containsExactly(null)
     }
 
     @Test
@@ -202,4 +275,6 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         onAllEarnTokensClick = {},
         walletHeaders = walletHeaders,
     )
+
+    private fun TangemTokenRowUM.EndContentUM.text() = (this as TangemTokenRowUM.EndContentUM.Content).text
 }

@@ -3,16 +3,15 @@ package com.tangem.features.tangempay.addfunds
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.bankCredentials
 import com.tangem.features.tangempay.details.impl.R
@@ -37,13 +36,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class TangemPayAddFundsModelTest {
+internal class TangemPayAddFundsModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
 
     private val listener: AddFundsListener = mockk(relaxed = true)
-    private val router: Router = mockk(relaxed = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk()
 
     @BeforeEach
@@ -93,7 +90,7 @@ internal class TangemPayAddFundsModelTest {
     @Test
     fun `GIVEN banking details fail WHEN bank transfer clicked THEN host shows the error`() = runTest {
         // Arrange
-        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns VisaApiError.Unspecified.left()
+        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID))
 
         // Act

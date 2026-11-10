@@ -72,7 +72,19 @@ internal class PredictionOrderStateConverterTest {
         StatusModel(raw = "ORDER_STATUS_LIVE", expected = PredictionOrderStatus.Other(raw = "ORDER_STATUS_LIVE")),
         StatusModel(
             raw = "ORDER_STATUS_CANCELED",
-            expected = PredictionOrderStatus.Other(raw = "ORDER_STATUS_CANCELED"),
+            expected = PredictionOrderStatus.Rejected(raw = "ORDER_STATUS_CANCELED"),
+        ),
+        StatusModel(
+            raw = "ORDER_STATUS_CANCELED_MARKET_RESOLVED",
+            expected = PredictionOrderStatus.Rejected(raw = "ORDER_STATUS_CANCELED_MARKET_RESOLVED"),
+        ),
+        StatusModel(
+            raw = " ORDER_STATUS_INVALID ",
+            expected = PredictionOrderStatus.Rejected(raw = "ORDER_STATUS_INVALID"),
+        ),
+        StatusModel(
+            raw = "ORDER_STATUS_UNMATCHED",
+            expected = PredictionOrderStatus.Other(raw = "ORDER_STATUS_UNMATCHED"),
         ),
         StatusModel(raw = "matched", expected = PredictionOrderStatus.Other(raw = "matched")),
         StatusModel(raw = null, expected = PredictionOrderStatus.Other(raw = null)),

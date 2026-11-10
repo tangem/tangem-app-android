@@ -2,7 +2,6 @@ package com.tangem.features.mcp.impl.di
 
 import android.net.Uri
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.mcp.api.deeplink.McpIntentDeepLinkHandler
@@ -30,7 +29,7 @@ internal class McpDeepLinkModuleTest {
     @Test
     fun `WHEN intent handler is registered THEN it is keyed by the intent deep link host`() {
         // Assert
-        assertThat(DefaultMcpIntentDeepLinkHandler.DEEPLINK_KEY).isEqualTo("tangem://${DeepLinkRoute.Intent.host}")
+        assertThat(DefaultMcpIntentDeepLinkHandler.DEEPLINK_KEY).isEqualTo("tangem://intent")
     }
 
     @Test

@@ -28,12 +28,14 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                 context = childContext,
                 params = AddExistingWalletImportComponent.Params(
                     callbacks = model.addExistingWalletImportModelCallbacks,
+                    analyticsSource = model.importAnalyticsSource,
                 ),
             )
             is AddExistingWalletRoute.RestoreCloudBackup -> RestoreCloudBackupComponent(
                 context = childContext,
                 params = RestoreCloudBackupComponent.Params(
                     callbacks = model.restoreCloudBackupModelCallbacks,
+                    analyticsSource = model.importAnalyticsSource,
                 ),
             )
             is AddExistingWalletRoute.BackupCompleted -> ManualBackupCompletedComponent(

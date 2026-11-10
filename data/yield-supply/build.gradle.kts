@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -50,8 +51,10 @@ dependencies {
     api(projects.domain.transaction)
     api(projects.domain.walletManager)
     api(projects.domain.yieldSupply)
+    implementation(projects.domain.common)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.tokens)
     // endregion
 
     // region Domain models
@@ -65,5 +68,6 @@ dependencies {
     // region tests
     testImplementation(deps.arrow.core)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     // endregion
 }

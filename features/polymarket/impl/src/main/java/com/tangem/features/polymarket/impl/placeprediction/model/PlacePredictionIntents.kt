@@ -79,7 +79,7 @@ internal interface PlacePredictionSlippageIntents {
 
 internal interface PlacePredictionStatusIntents {
 
-    fun onToMainClick()
+    fun onCloseClick()
 
     fun onViewPositionClick()
 }

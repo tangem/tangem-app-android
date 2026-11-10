@@ -13,11 +13,11 @@ import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.qrscanning.usecases.ResolveQrSendTargetsUseCase
 import com.tangem.tap.common.deeplink.DefaultQrDeepLinkMatcher
-import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -69,12 +69,8 @@ internal object QrScanningDomainModule {
     @Provides
     @Singleton
     fun provideQrDeepLinkMatcher(
-        deepLinkHandlers: Map<String, @JvmSuppressWildcards DeepLinkHandler>,
-        deepLinkFeatureToggles: DeepLinkFeatureToggles,
+        deepLinkHandlers: Map<String, @JvmSuppressWildcards Provider<DeepLinkHandler>>,
     ): QrDeepLinkMatcher {
-        return DefaultQrDeepLinkMatcher(
-            deepLinkHandlerRegistry = DeepLinkHandlerRegistry(deepLinkHandlers),
-            deepLinkFeatureToggles = deepLinkFeatureToggles,
-        )
+        return DefaultQrDeepLinkMatcher(deepLinkHandlerRegistry = DeepLinkHandlerRegistry(deepLinkHandlers))
     }
 }

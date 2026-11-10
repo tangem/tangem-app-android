@@ -33,9 +33,9 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.features.tangempay.card.gpay.AddToGoogleWalletButtonState
 import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletButton
@@ -474,7 +474,7 @@ private fun previewSettings(): ImmutableList<TangemPayCardPageSetting> = persist
         id = TangemPayCardPageSetting.Id.Details,
         title = resourceReference(R.string.details_title),
         onClick = {},
-        iconRes = CoreUiR.drawable.ic_visa_card_details_24,
+        iconRes = CoreUiR.drawable.ic_tangem_pay_card_details_24,
     ),
     TangemPayCardPageSetting(
         id = TangemPayCardPageSetting.Id.Freeze,

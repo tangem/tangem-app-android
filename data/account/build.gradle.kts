@@ -51,7 +51,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.polymarket)
-    runtimeOnly(projects.domain.visa)
+    runtimeOnly(projects.domain.tangempay)
     runtimeOnly(projects.domain.wallets)
     // endregion
 

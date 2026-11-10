@@ -8,7 +8,8 @@ import java.math.BigDecimal
  * Yield supply seen as a [BalanceContribution].
  *
  * A wrapper rather than making [YieldSupplyStatus] itself a contribution: the status is assembled from blockchain
- * SDK data and carries no freshness of its own, so [source] has to come from the network status it arrived with.
+ * SDK data and carries no freshness of its own, so [source] has to come from what delivered it: the network status
+ * or the Yield Module position.
  *
  * @property status the wrapped status — the partition and APY information ("Axis 2") lives here and is reached by
  * downcasting to this type.

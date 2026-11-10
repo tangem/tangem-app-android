@@ -1,14 +1,14 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.completion
 
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.bankofframp.BankOfframpError
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
-import com.tangem.domain.pay.model.bankofframp.BankOfframpSignResult
-import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCase
-import com.tangem.domain.pay.usecase.bankofframp.CancelBankOfframpOrderUseCase
-import com.tangem.domain.pay.usecase.bankofframp.CreateBankOfframpOrderUseCase
-import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderRequest
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpSignResult
+import com.tangem.domain.tangempay.usecase.bankofframp.AwaitBankOfframpSignatureUseCase
+import com.tangem.domain.tangempay.usecase.bankofframp.CancelBankOfframpOrderUseCase
+import com.tangem.domain.tangempay.usecase.bankofframp.CreateBankOfframpOrderUseCase
+import com.tangem.domain.tangempay.usecase.bankofframp.SignBankOfframpOrderUseCase
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.preview.model.toFailure
 import com.tangem.features.tangempay.withdraw.bank.preview.model.toOrderRequest

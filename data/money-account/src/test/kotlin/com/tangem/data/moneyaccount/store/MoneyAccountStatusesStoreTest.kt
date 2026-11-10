@@ -13,7 +13,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
-import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
+import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.DelayedReadDataStore
 import com.tangem.test.core.datastore.MockStateDataStore

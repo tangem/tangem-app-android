@@ -15,14 +15,11 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketCategory
-import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
-import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
@@ -43,14 +40,9 @@ import com.tangem.features.polymarket.impl.main.addfunds.dismissIfShown
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
-import com.tangem.features.polymarket.impl.main.model.transformer.PolymarketFeedContentTransformer
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
-import com.tangem.pagination.BatchAction
-import com.tangem.pagination.BatchFetchResult
-import com.tangem.pagination.PaginationStatus
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -58,17 +50,11 @@ import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -148,6 +134,8 @@ internal class PolymarketMainModel @Inject constructor(
             ),
         )
 
+    private val isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled
+
     private val eventUMConverter = PolymarketEventUMConverter(
         onEventClick = ::onEventClick,
         onOutcomeClick = ::onOutcomeClick,
@@ -205,22 +193,18 @@ internal class PolymarketMainModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    // Kept for as long as the screen lives: coming back to a tab must not cost a reload.
-    private val feeds = mutableMapOf<Int, PolymarketCategoryFeed>()
-
-    private val activeFeed = MutableStateFlow<PolymarketCategoryFeed?>(value = null)
-
     private var categories: List<PolymarketCategory> = emptyList()
     private var selectedCategoryId: Int? = null
-    private val isScreenResumed = MutableStateFlow(false)
-    private val feedSports = PolymarketFeedSports(
+    private val feedController = PolymarketFeedController(
+        scope = modelScope,
+        dispatchers = dispatchers,
+        userWalletId = params.userWalletId,
+        getEvents = getPolymarketEventsBatchFlowUseCase,
         observeSports = observePolymarketSportsStateUseCase,
-        isEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
-    )
-
-    private val feedQuotes = PolymarketFeedQuotes(
         observeQuotes = observePolymarketLiveQuotesUseCase,
-        isEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
+        isPhaseTwoEnabled = isPhaseTwoEnabled,
+        eventConverter = eventUMConverter,
+        onStaleData = staleDataReporter::report,
     )
 
     private val categoriesJob = JobHolder()
@@ -228,7 +212,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val balancePollJobHolder = JobHolder()
 
     init {
-        observeEvents()
+        feedController.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
         loadCategories()
         modelScope.launch { regionAccess.refresh() }
     }
@@ -260,41 +244,18 @@ internal class PolymarketMainModel @Inject constructor(
         }
     }
 
-    fun onLoadMore() {
-        val feed = activeFeed.value ?: return
+    fun onLoadMore() = feedController.loadMore()
 
-        modelScope.launch {
-            when (val status = feed.batchFlow.state.value.status) {
-                is PaginationStatus.Paginating -> {
-                    val lastResult = status.lastResult
-                    val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.isLast
-                    if (canLoadMore) feed.actionsFlow.emit(BatchAction.LoadMore())
-                }
-                else -> Unit
-            }
-        }
-    }
+    fun onVisibleEventsChange(eventIds: Set<String>) = feedController.setVisibleEvents(eventIds)
 
-    fun onVisibleEventsChange(eventIds: Set<String>) {
-        val feed = activeFeed.value ?: return
-        feed.visibleEventIds.value = eventIds
-        feed.poller.setVisibleEventIds(eventIds)
-    }
-
-    fun onScrollIdle(index: Int, offset: Int) {
-        val feed = activeFeed.value ?: return
-
-        feed.scrollPosition = PolymarketFeedScrollPosition(index = index, offset = offset)
-        feed.poller.onScrollIdle()
-    }
+    fun onScrollIdle(index: Int, offset: Int) = feedController.onScrollIdle(index, offset)
 
     fun onScrollPositionRestore() {
         uiState.update { it.copy(pendingScrollPosition = null) }
     }
 
     fun onResume() {
-        isScreenResumed.value = true
-        activeFeed.value?.poller?.resume()
+        feedController.resume()
         fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
             .launchIn(modelScope)
@@ -307,8 +268,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     fun onPause() {
-        isScreenResumed.value = false
-        activeFeed.value?.poller?.pause()
+        feedController.pause()
         balancePollJobHolder.cancel()
     }
 
@@ -342,83 +302,13 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun selectFeed(categoryId: Int, reloadVisited: Boolean = false) {
-        activeFeed.value?.poller?.pause()
-
-        val visited = feeds[categoryId]
-        val feed = visited ?: createFeed(config = PolymarketEventsListConfig(category = categoryId))
-            .also { feeds[categoryId] = it }
-
-        activeFeed.value = feed
-        uiState.update { it.copy(pendingScrollPosition = feed.scrollPosition) }
-
-        if (visited == null || reloadVisited) reloadEvents(feed = feed)
-        if (isScreenResumed.value) feed.poller.resume()
-    }
-
-    private fun createFeed(config: PolymarketEventsListConfig): PolymarketCategoryFeed {
-        // replay = 1: the first Reload is emitted before the pagination subscribes.
-        val actionsFlow = MutableSharedFlow<PolymarketEventsBatchAction>(replay = 1)
-        val batchFlow = getPolymarketEventsBatchFlowUseCase(
-            userWalletId = params.userWalletId,
-            context = PolymarketEventsBatchingContext(actionsFlow = actionsFlow, coroutineScope = modelScope),
-        )
-        val poller = PolymarketFeedPoller(
-            scope = modelScope,
-            batchFlow = batchFlow,
-            actionsFlow = actionsFlow,
-            onStaleData = staleDataReporter::report,
-        )
-        poller.start()
-
-        return PolymarketCategoryFeed(
-            config = config,
-            actionsFlow = actionsFlow,
-            batchFlow = batchFlow,
-            poller = poller,
-        )
+        val scrollPosition = feedController.select(PolymarketEventsListConfig(category = categoryId), reloadVisited)
+        uiState.update { it.copy(pendingScrollPosition = scrollPosition) }
     }
 
     private fun reload() {
         uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Loading) }
-        if (categories.isEmpty()) loadCategories() else activeFeed.value?.let(::reloadEvents)
-    }
-
-    private fun reloadEvents(feed: PolymarketCategoryFeed) {
-        modelScope.launch {
-            feed.poller.onFeedReloaded(feed.config)
-            feed.actionsFlow.emit(BatchAction.Reload(requestParams = feed.config))
-        }
-    }
-
-    private fun observeEvents() {
-        activeFeed
-            .filterNotNull()
-            .flatMapLatest { feed ->
-                channelFlow {
-                    val sports = feedSports.observe(feed, isScreenResumed).stateIn(
-                        scope = this,
-                        started = SharingStarted.WhileSubscribed(),
-                        initialValue = PolymarketSportsState(emptyMap()),
-                    )
-                    combine(
-                        feed.batchFlow.state,
-                        sports,
-                        feedQuotes.observe(feed, sports, isScreenResumed),
-                    ) { batchState, games, quotes ->
-                        PolymarketFeedContentTransformer(
-                            batchListState = batchState,
-                            eventUMConverter = eventUMConverter,
-                            onReloadClick = ::reload,
-                            onNextPageRetryClick = ::onLoadMore,
-                            sports = games,
-                            quotes = quotes,
-                        )
-                    }.collect { send(it) }
-                }
-            }
-            .onEach { transformer -> uiState.update(transformer::transform) }
-            .flowOn(dispatchers.default)
-            .launchIn(modelScope)
+        if (categories.isEmpty()) loadCategories() else feedController.reload()
     }
 
     private fun buildTabs() = categoryTabConverter.convert(

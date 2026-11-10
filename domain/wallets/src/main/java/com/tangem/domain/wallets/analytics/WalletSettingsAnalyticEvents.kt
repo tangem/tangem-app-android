@@ -339,6 +339,7 @@ private fun SocialLoginError.deletionMessage(): String = when (this) {
     SocialLoginError.InvalidBackupFile,
     is SocialLoginError.UnsupportedBackupVersion,
     SocialLoginError.WalletAlreadySaved,
+    SocialLoginError.HotWalletsLimitReached,
     SocialLoginError.PassphraseNotSupported,
     SocialLoginError.BackupAbandoned,
     is SocialLoginError.Unknown,

@@ -10,6 +10,8 @@ import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.EarnToken
 import com.tangem.domain.models.earn.EarnYieldOffers
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.yield.supply.yieldSupply
+import com.tangem.domain.models.yield.supply.yieldSupplySource
 import com.tangem.features.yield.supply.api.promobottomsheet.ResolveYieldModePromoUseCase
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoResolution
@@ -38,7 +40,7 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
         // Yield Mode can stay active on a token whose market left the catalog, so all tokens of its networks count
         val yieldModeTokens = tokens.filter { it.currency.network.isYieldModeSupported() }
         if (yieldModeTokens.any { it.isLoading() }) return YieldModePromoResolution.Waiting
-        if (yieldModeTokens.any { it.value.yieldSupplyStatus?.isActive == true }) {
+        if (yieldModeTokens.any { it.value.yieldSupply?.isActive == true }) {
             return YieldModePromoResolution.NoEligibleToken
         }
         // A failed status carries no Yield Mode state, so it can't rule out Yield Mode active on that token
@@ -83,7 +85,8 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
     private fun CryptoCurrencyStatus.isLoading(): Boolean {
         return value is CryptoCurrencyStatus.Loading ||
             value.sources.networkSource == StatusSource.CACHE ||
-            value.sources.quoteSource == StatusSource.CACHE
+            value.sources.quoteSource == StatusSource.CACHE ||
+            value.yieldSupplySource == StatusSource.CACHE
     }
 
     /**
@@ -92,7 +95,9 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
      */
     private fun CryptoCurrencyStatus.isFailed(): Boolean {
         val isFailedState = value.isError && value !is CryptoCurrencyStatus.MissedDerivation
-        return isFailedState || value.sources.networkSource == StatusSource.ONLY_CACHE
+        return isFailedState ||
+            value.sources.networkSource == StatusSource.ONLY_CACHE ||
+            value.yieldSupplySource == StatusSource.ONLY_CACHE
     }
 
     private fun Network.isYieldModeSupported(): Boolean {

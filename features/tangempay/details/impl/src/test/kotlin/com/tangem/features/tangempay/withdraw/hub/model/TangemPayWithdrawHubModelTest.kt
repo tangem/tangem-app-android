@@ -6,37 +6,36 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
-import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
-import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.bankofframp.BankOfframpError
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
-import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
-import com.tangem.domain.pay.model.recents.RecentTokenTransfer
-import com.tangem.domain.pay.model.recents.TokenTransferJournal
-import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
-import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
-import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.RecentBankAccounts
+import com.tangem.domain.tangempay.model.recents.RecentTokenTransfer
+import com.tangem.domain.tangempay.model.recents.TokenTransferJournal
+import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.tangempay.usecase.bankofframp.GetBankOfframpOptionsUseCase
+import com.tangem.domain.tangempay.usecase.bankofframp.GetRecentBankAccountsUseCase
+import com.tangem.domain.tangempay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.activeMoneyAccount
@@ -72,6 +71,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -79,16 +79,14 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class TangemPayWithdrawHubModelTest {
+internal class TangemPayWithdrawHubModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("123")
     private val token: CryptoCurrency.Token = mockk(relaxed = true)
     private val moneyToken: CryptoCurrency.Token = mockk(relaxed = true)
-    private val router: Router = mockk(relaxed = true)
     private val currencyFactory: TangemPayCurrencyFactory = mockk()
     private val moneyCurrencyFactory: MoneyAccountCurrencyFactory = mockk()
     private val withdrawRepository: TangemPayWithdrawRepository = mockk()
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase = mockk()
     private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase = mockk()
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase = mockk()
@@ -97,10 +95,9 @@ internal class TangemPayWithdrawHubModelTest {
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxUnitFun = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
-    private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
+    private lateinit var statusFlow: MutableSharedFlow<AccountStatus.Payment>
     private val tokenRecentsFlow = MutableStateFlow<List<RecentTokenTransfer>>(emptyList())
     private val moneyTokenRecentsFlow = MutableStateFlow<List<RecentTokenTransfer>>(emptyList())
     private val opened = mutableListOf<Pair<BankWithdrawEntry, StateFlow<BankWithdrawOptions>>>()
@@ -115,6 +112,8 @@ internal class TangemPayWithdrawHubModelTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(
+            token,
+            moneyToken,
             router,
             currencyFactory,
             moneyCurrencyFactory,
@@ -130,7 +129,7 @@ internal class TangemPayWithdrawHubModelTest {
             txHistoryContentUpdateEmitter,
             analytics,
         )
-        statusFlow.resetReplayCache()
+        statusFlow = MutableSharedFlow(replay = 1)
         tokenRecentsFlow.value = emptyList()
         moneyTokenRecentsFlow.value = emptyList()
         opened.clear()
@@ -152,650 +151,731 @@ internal class TangemPayWithdrawHubModelTest {
         emitStatus()
     }
 
-    @Test
-    fun `GIVEN model WHEN back clicked THEN router pops`() {
-        // Arrange
-        val model = createModel()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Navigation {
 
-        // Act
-        model.uiState.value.onBackClick()
-
-        // Assert
-        verify(exactly = 1) { router.pop() }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN model WHEN within portfolio clicked THEN withdraw swap pushed over the hub`() {
-        // Arrange
-        val model = createModel()
-        val expectedRoute = AppRoute.Swap(
-            userWalletId = userWalletId,
-            fromCryptoCurrency = token,
-            screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
-            fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
-            accountFlow = AccountFlow.Withdraw,
-        )
-
-        // Act
-        model.swapSection().withinPortfolio.onClick()
-
-        // Assert
-        verify(exactly = 1) { router.push(expectedRoute) }
-        verify(exactly = 0) { router.pop() }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN active withdrawal WHEN within portfolio clicked THEN in progress message shown and no navigation`() {
-        // Arrange
-        coEvery { withdrawRepository.hasWithdrawOrder(userWalletId) } returns true
-        val model = createModel()
-
-        // Act
-        model.swapSection().withinPortfolio.onClick()
-
-        // Assert
-        verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
-        verify(exactly = 0) { router.pop() }
-        verify(exactly = 0) { router.push(any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN no recent tokens WHEN model created THEN swap recents empty`() {
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.swapSection().recents).isEqualTo(TokenRecentsUM.Empty)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN recent tokens emitted WHEN model created THEN swap recents content`() {
-        // Arrange
-        tokenRecentsFlow.value = listOf(recentTransfer())
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        val recents = model.swapSection().recents
-        assertThat(recents).isInstanceOf(TokenRecentsUM.Content::class.java)
-        assertThat((recents as TokenRecentsUM.Content).tokens.map { it.id })
-            .containsExactly(RECENT_CURRENCY_ID_VALUE)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN a recent token WHEN it is clicked THEN swap pushed over the hub with that token as TO`() {
-        // Arrange
-        val transfer = recentTransfer()
-        tokenRecentsFlow.value = listOf(transfer)
-        val model = createModel()
-        val expectedRoute = AppRoute.Swap(
-            userWalletId = userWalletId,
-            fromCryptoCurrency = token,
-            screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
-            fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
-            accountFlow = AccountFlow.Withdraw,
-            toCryptoCurrency = transfer.currency,
-        )
-
-        // Act
-        model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
-
-        // Assert
-        verify(exactly = 1) { router.push(expectedRoute) }
-        verify(exactly = 0) { router.pop() }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN an active withdrawal WHEN a recent token is clicked THEN in progress message shown and no push`() {
-        // Arrange
-        coEvery { withdrawRepository.hasWithdrawOrder(userWalletId) } returns true
-        tokenRecentsFlow.value = listOf(recentTransfer())
-        val model = createModel()
-
-        // Act
-        model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
-
-        // Assert
-        verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
-        verify(exactly = 0) { router.pop() }
-        verify(exactly = 0) { router.push(any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN a recent token WHEN it is clicked THEN the recents feed is not reordered`() {
-        // Arrange
-        tokenRecentsFlow.value = listOf(recentTransfer())
-        val model = createModel()
-        val before = model.tokenRecents().tokens
-
-        // Act
-        model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
-
-        // Assert
-        assertThat(model.tokenRecents().tokens).isEqualTo(before)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN offramp options fail WHEN model created THEN bank section unavailable`() {
-        // Arrange
-        coEvery { getBankOfframpOptionsUseCase(userWalletId, any()) } returns optionsFailure
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.bankContent().isAvailable).isFalse()
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN source account WHEN model created THEN options requested for its product`(testModel: ProductModel) {
-        // Act
-        val model = createModel(sourceAccount = testModel.sourceAccount)
-
-        // Assert
-        coVerify(exactly = 1) { getBankOfframpOptionsUseCase(userWalletId, testModel.expectedProduct) }
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideRefreshModels")
-    fun `GIVEN source account WHEN withdraw sent THEN that account refreshed once its balance can change`(
-        testModel: RefreshModel,
-    ) = runTest {
-        // Arrange
-        val model = createModel(
-            sourceAccount = testModel.sourceAccount,
-            dispatchers = createTestingCoroutineDispatcherProvider(),
-        )
-
-        // Act
-        model.onWithdrawSent()
-        advanceTimeBy(testModel.elapsedMillis)
-        runCurrent()
-
-        // Assert
-        coVerify(exactly = testModel.expectedPaymentRefreshes) { paymentAccountStatusFetcher(userWalletId) }
-        coVerify(exactly = testModel.expectedMoneyRefreshes) { moneyAccountStatusFetcher(userWalletId) }
-        coVerify(exactly = testModel.expectedHistoryReloads) { txHistoryContentUpdateEmitter.triggerUpdate() }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN money account withdraw sent WHEN hub destroyed before the delay THEN status and history still fetched`() =
-        runTest {
+        @Test
+        fun `GIVEN model WHEN back clicked THEN router pops`() {
             // Arrange
-            val model = createModel(
-                sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
-                dispatchers = createTestingCoroutineDispatcherProvider(),
-            )
-            model.onWithdrawSent()
-            runCurrent()
+            val model = createModel()
 
             // Act
+            model.uiState.value.onBackClick()
+
+            // Assert
+            verify(exactly = 1) { router.pop() }
             model.onDestroy()
-            advanceTimeBy(ON_CHAIN_REFRESH_DELAY_MILLIS)
+        }
+
+        @Test
+        fun `GIVEN model WHEN to personal account clicked THEN wizard opened with prepared options`() {
+            // Arrange
+            val model = createModel()
+
+            // Act
+            model.bankContent().toPersonalAccount.onClick()
+
+            // Assert
+            val (entry, options) = opened.single()
+            assertThat(entry).isEqualTo(BankWithdrawEntry.NewPersonal)
+            assertThat(options.value.sources.map { it.token }).containsExactly(paymentToken())
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a bank option WHEN it is clicked THEN wizard opened with its entry`(
+            testModel: BankOptionClickModel<BankWithdrawEntry>,
+        ) {
+            // Arrange
+            coEvery { getRecentBankAccountsUseCase(userWalletId) } returns testModel.recents.right()
+            val model = createModel()
+
+            // Act
+            testModel.click(model)
+
+            // Assert
+            assertThat(opened.single().first).isEqualTo(testModel.expected)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN wizard opened WHEN balances change THEN its options keep up`() {
+            // Arrange
+            val model = createModel()
+            model.bankContent().toPersonalAccount.onClick()
+            val options = opened.single().second
+            assertThat(options.value.sources.single().fiatBalance).isEqualTo(BigDecimal("2325.55"))
+
+            // Act
+            emitStatus(balance = BigDecimal("100"))
+
+            // Assert
+            assertThat(options.value.sources.single().fiatBalance).isEqualTo(BigDecimal("100"))
+            model.onDestroy()
+        }
+
+        private fun provideTestModels(): List<BankOptionClickModel<BankWithdrawEntry>> = listOf(
+            BankOptionClickModel(
+                name = "to business account",
+                recents = recentBankAccounts(),
+                click = { it.bankContent().toBusinessAccount.onClick() },
+                expected = BankWithdrawEntry.NewBusiness,
+            ),
+            BankOptionClickModel(
+                name = "saved recipient",
+                recents = recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))),
+                click = { (it.recents() as RecentsUM.Content).onRecipientClick("acc-1") },
+                expected = BankWithdrawEntry.Saved(bankAccountId = "acc-1"),
+            ),
+            BankOptionClickModel(
+                name = "see all",
+                recents = recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true),
+                click = { requireNotNull((it.recents() as RecentsUM.Content).onSeeAllClick).invoke() },
+                expected = BankWithdrawEntry.SeeAll,
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SwapSection {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a swap entry WHEN it is clicked THEN withdraw swap pushed over the hub with its TO token`(
+            testModel: SwapEntryModel,
+        ) {
+            // Arrange
+            tokenRecentsFlow.value = testModel.recents
+            val model = createModel()
+            val expectedRoute = AppRoute.Swap(
+                userWalletId = userWalletId,
+                fromCryptoCurrency = token,
+                screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
+                accountFlow = AccountFlow.Withdraw,
+                toCryptoCurrency = testModel.expectedToCurrency,
+            )
+
+            // Act
+            testModel.click(model)
+
+            // Assert
+            verify(exactly = 1) { router.push(expectedRoute) }
+            verify(exactly = 0) { router.pop() }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an active withdrawal WHEN a swap entry is clicked THEN in progress message shown and no navigation`(
+            testModel: SwapEntryModel,
+        ) {
+            // Arrange
+            coEvery { withdrawRepository.hasWithdrawOrder(userWalletId) } returns true
+            tokenRecentsFlow.value = testModel.recents
+            val model = createModel()
+
+            // Act
+            testModel.click(model)
+
+            // Assert
+            verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
+            verify(exactly = 0) { router.pop() }
+            verify(exactly = 0) { router.push(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no recent tokens WHEN model created THEN swap recents empty`() {
+            // Act
+            val model = createModel()
+
+            // Assert
+            assertThat(model.swapSection().recents).isEqualTo(TokenRecentsUM.Empty)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN recent tokens emitted WHEN model created THEN swap recents content`() {
+            // Arrange
+            tokenRecentsFlow.value = listOf(recentTransfer())
+
+            // Act
+            val model = createModel()
+
+            // Assert
+            val recents = model.swapSection().recents
+            assertThat(recents).isInstanceOf(TokenRecentsUM.Content::class.java)
+            assertThat((recents as TokenRecentsUM.Content).tokens.map { it.id })
+                .containsExactly(RECENT_CURRENCY_ID_VALUE)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a recent token WHEN it is clicked THEN the recents feed is not reordered`() {
+            // Arrange
+            tokenRecentsFlow.value = listOf(recentTransfer())
+            val model = createModel()
+            val before = model.tokenRecents().tokens
+
+            // Act
+            model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
+
+            // Assert
+            assertThat(model.tokenRecents().tokens).isEqualTo(before)
+            model.onDestroy()
+        }
+
+        private fun provideTestModels(): List<SwapEntryModel> {
+            val transfer = recentTransfer()
+            return listOf(
+                SwapEntryModel(
+                    name = "within portfolio",
+                    recents = emptyList(),
+                    click = { it.swapSection().withinPortfolio.onClick() },
+                    expectedToCurrency = null,
+                ),
+                SwapEntryModel(
+                    name = "recent token",
+                    recents = listOf(transfer),
+                    click = { it.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE) },
+                    expectedToCurrency = transfer.currency,
+                ),
+            )
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BankSection {
+
+        @Test
+        fun `GIVEN offramp options fail WHEN model created THEN bank section unavailable`() {
+            // Arrange
+            coEvery { getBankOfframpOptionsUseCase(userWalletId, any()) } returns optionsFailure
+
+            // Act
+            val model = createModel()
+
+            // Assert
+            assertThat(model.bankContent().isAvailable).isFalse()
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN source account WHEN model created THEN options requested for its product`(testModel: ProductModel) {
+            // Act
+            val model = createModel(sourceAccount = testModel.sourceAccount)
+
+            // Assert
+            coVerify(exactly = 1) { getBankOfframpOptionsUseCase(userWalletId, testModel.expectedProduct) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no token with balance WHEN model created THEN bank section unavailable`() {
+            // Arrange
+            statusFlow.resetReplayCache()
+            emitStatus(balance = BigDecimal.ZERO)
+
+            // Act
+            val model = createModel()
+
+            // Assert
+            assertThat(model.bankContent().isAvailable).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the account cannot be resolved WHEN status emitted THEN bank section unavailable`() {
+            // Arrange
+            emitStatusValue(PaymentAccountStatusValue.Error.Unavailable)
+
+            // Act
+            val model = createModel()
+
+            // Assert
+            assertThat(model.bankContent().isAvailable).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the account is still loading WHEN status emitted THEN bank section keeps loading`() {
+            // Arrange
+            emitStatusValue(PaymentAccountStatusValue.Loading)
+
+            // Act
+            val model = createModel()
+
+            // Assert
+            assertThat(model.uiState.value.bankSection).isEqualTo(BankSectionUM.Loading)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN last token spent WHEN account status updates THEN bank section unavailable`() {
+            // Arrange
+            val model = createModel()
+            assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Content::class.java)
+
+            // Act
+            emitStatus(balance = BigDecimal.ZERO)
+
+            // Assert
+            assertThat(model.bankContent().isAvailable).isFalse()
+            model.onDestroy()
+        }
+
+        private fun provideTestModels(): List<ProductModel> = listOf(
+            ProductModel(
+                sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+                expectedProduct = TangemPayProduct.PAYMENT_ACCOUNT,
+            ),
+            ProductModel(
+                sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
+                expectedProduct = TangemPayProduct.BANKING_ACCOUNT,
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BankRecents {
+
+        @Test
+        fun `GIVEN recent accounts WHEN model created THEN recents content in usage order`() {
+            // Arrange
+            coEvery { getRecentBankAccountsUseCase(userWalletId) } returns recentBankAccounts(
+                recents = listOf(
+                    bankAccount(id = "acc-2", beneficiary = Beneficiary.Business(name = "Raxanax")),
+                    bankAccount(id = "acc-1"),
+                ),
+            ).right()
+
+            // Act
+            val model = createModel()
+
+            // Assert
+            val recents = model.recents()
+            assertThat(recents).isInstanceOf(RecentsUM.Content::class.java)
+            assertThat((recents as RecentsUM.Content).recipients.map { it.id }).containsExactly("acc-2", "acc-1").inOrder()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN model created WHEN recents loaded THEN bank accounts requested once`() {
+            // Act
+            val model = createModel()
+
+            // Assert
+            assertThat(model.recents()).isInstanceOf(RecentsUM.Empty::class.java)
+            coVerify(exactly = 1) { getRecentBankAccountsUseCase(userWalletId) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no saved accounts WHEN model created THEN recents empty`() {
+            // Act
+            val model = createModel()
+
+            // Assert
+            assertThat(model.recents()).isEqualTo(RecentsUM.Empty)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN every saved account shown WHEN model created THEN recents content without see all`() {
+            // Arrange
+            coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
+                recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = false).right()
+
+            // Act
+            val model = createModel()
+
+            // Assert
+            assertThat((model.recents() as RecentsUM.Content).onSeeAllClick).isNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN recents load fails WHEN model created THEN recents error`() {
+            // Arrange
+            coEvery { getRecentBankAccountsUseCase(userWalletId) } returns loadFailure
+
+            // Act
+            val model = createModel()
+
+            // Assert
+            assertThat(model.recents()).isInstanceOf(RecentsUM.Error::class.java)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN recents error WHEN retry clicked THEN recents reloaded`() {
+            // Arrange
+            coEvery { getRecentBankAccountsUseCase(userWalletId) } returnsMany listOf(
+                loadFailure,
+                recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right(),
+            )
+            val model = createModel()
+
+            // Act
+            (model.recents() as RecentsUM.Error).onRetryClick()
+
+            // Assert
+            assertThat(model.recents()).isInstanceOf(RecentsUM.Content::class.java)
+            coVerify(exactly = 2) { getRecentBankAccountsUseCase(userWalletId) }
+            coVerify(exactly = 1) { getBankOfframpOptionsUseCase(userWalletId, any()) }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class WithdrawSent {
+
+        @ParameterizedTest
+        @MethodSource("provideRefreshModels")
+        fun `GIVEN source account WHEN withdraw sent THEN that account refreshed once its balance can change`(
+            testModel: RefreshModel,
+        ) = runTest {
+            // Arrange
+            val model = createModel(
+                sourceAccount = testModel.sourceAccount,
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+            )
+
+            // Act
+            model.onWithdrawSent()
+            advanceTimeBy(testModel.elapsedMillis)
             runCurrent()
 
             // Assert
-            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
-            coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            coVerify(exactly = testModel.expectedPaymentRefreshes) { paymentAccountStatusFetcher(userWalletId) }
+            coVerify(exactly = testModel.expectedMoneyRefreshes) { moneyAccountStatusFetcher(userWalletId) }
+            coVerify(exactly = testModel.expectedHistoryReloads) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            model.onDestroy()
         }
 
-    @Test
-    fun `GIVEN money account with balance WHEN to personal account clicked THEN wizard opened with its USDC`() {
-        // Arrange
-        val model = createModel(sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID))
+        @Test
+        fun `GIVEN money account withdraw sent WHEN hub destroyed before the delay THEN status and history still fetched`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
+                    dispatchers = createTestingCoroutineDispatcherProvider(),
+                )
+                model.onWithdrawSent()
+                runCurrent()
 
-        // Act
-        model.bankContent().toPersonalAccount.onClick()
+                // Act
+                model.onDestroy()
+                advanceTimeBy(ON_CHAIN_REFRESH_DELAY_MILLIS)
+                runCurrent()
 
-        // Assert
-        assertThat(opened.single().second.value).isEqualTo(bankWithdrawOptions())
-        model.onDestroy()
-    }
+                // Assert
+                coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+                coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            }
 
-    @Test
-    fun `GIVEN no token with balance WHEN model created THEN bank section unavailable`() {
-        // Arrange
-        statusFlow.resetReplayCache()
-        emitStatus(balance = BigDecimal.ZERO)
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.bankContent().isAvailable).isFalse()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN wizard opened WHEN balances change THEN its options keep up`() {
-        // Arrange
-        val model = createModel()
-        model.bankContent().toPersonalAccount.onClick()
-        val options = opened.single().second
-        assertThat(options.value.sources.single().fiatBalance).isEqualTo(BigDecimal("2325.55"))
-
-        // Act
-        emitStatus(balance = BigDecimal("100"))
-
-        // Assert
-        assertThat(options.value.sources.single().fiatBalance).isEqualTo(BigDecimal("100"))
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN the account cannot be resolved WHEN status emitted THEN bank section unavailable`() {
-        // Arrange
-        emitStatusValue(PaymentAccountStatusValue.Error.Unavailable)
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.bankContent().isAvailable).isFalse()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN the account is still loading WHEN status emitted THEN bank section keeps loading`() {
-        // Arrange
-        emitStatusValue(PaymentAccountStatusValue.Loading)
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.uiState.value.bankSection).isEqualTo(BankSectionUM.Loading)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN last token spent WHEN account status updates THEN bank section unavailable`() {
-        // Arrange
-        val model = createModel()
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Content::class.java)
-
-        // Act
-        emitStatus(balance = BigDecimal.ZERO)
-
-        // Assert
-        assertThat(model.bankContent().isAvailable).isFalse()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN recent accounts WHEN model created THEN recents content in usage order`() {
-        // Arrange
-        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns recentBankAccounts(
-            recents = listOf(
-                bankAccount(id = "acc-2", beneficiary = Beneficiary.Business(name = "Raxanax")),
-                bankAccount(id = "acc-1"),
+        private fun provideRefreshModels(): List<RefreshModel> = listOf(
+            RefreshModel(
+                sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+                elapsedMillis = 0,
+                expectedPaymentRefreshes = 1,
+                expectedMoneyRefreshes = 0,
+                expectedHistoryReloads = 0,
             ),
-        ).right()
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        val recents = model.recents()
-        assertThat(recents).isInstanceOf(RecentsUM.Content::class.java)
-        assertThat((recents as RecentsUM.Content).recipients.map { it.id }).containsExactly("acc-2", "acc-1").inOrder()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN model created WHEN recents loaded THEN bank accounts requested once`() {
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.recents()).isInstanceOf(RecentsUM.Empty::class.java)
-        coVerify(exactly = 1) { getRecentBankAccountsUseCase(userWalletId) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN no saved accounts WHEN model created THEN recents empty`() {
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.recents()).isEqualTo(RecentsUM.Empty)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN every saved account shown WHEN model created THEN recents content without see all`() {
-        // Arrange
-        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = false).right()
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat((model.recents() as RecentsUM.Content).onSeeAllClick).isNull()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN recents load fails WHEN model created THEN recents error`() {
-        // Arrange
-        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns loadFailure
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.recents()).isInstanceOf(RecentsUM.Error::class.java)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN recents error WHEN retry clicked THEN recents reloaded`() {
-        // Arrange
-        coEvery { getRecentBankAccountsUseCase(userWalletId) } returnsMany listOf(
-            loadFailure,
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right(),
+            RefreshModel(
+                sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
+                elapsedMillis = ON_CHAIN_REFRESH_DELAY_MILLIS - 1,
+                expectedPaymentRefreshes = 0,
+                expectedMoneyRefreshes = 0,
+                expectedHistoryReloads = 0,
+            ),
+            RefreshModel(
+                sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
+                elapsedMillis = ON_CHAIN_REFRESH_DELAY_MILLIS,
+                expectedPaymentRefreshes = 0,
+                expectedMoneyRefreshes = 1,
+                expectedHistoryReloads = 1,
+            ),
         )
-        val model = createModel()
-
-        // Act
-        (model.recents() as RecentsUM.Error).onRetryClick()
-
-        // Assert
-        assertThat(model.recents()).isInstanceOf(RecentsUM.Content::class.java)
-        coVerify(exactly = 2) { getRecentBankAccountsUseCase(userWalletId) }
-        coVerify(exactly = 1) { getBankOfframpOptionsUseCase(userWalletId, any()) }
-        model.onDestroy()
     }
 
-    @Test
-    fun `GIVEN model WHEN to personal account clicked THEN wizard opened with prepared options`() {
-        // Arrange
-        val model = createModel()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
 
-        // Act
-        model.bankContent().toPersonalAccount.onClick()
+        @Test
+        fun `GIVEN hub WHEN model created THEN BankTransferSheetOpened is sent`() {
+            // Act
+            val model = createModel()
 
-        // Assert
-        val (entry, options) = opened.single()
-        assertThat(entry).isEqualTo(BankWithdrawEntry.NewPersonal)
-        assertThat(options.value.sources.map { it.token }).containsExactly(paymentToken())
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN model WHEN to business account clicked THEN wizard opened with new business entry`() {
-        // Arrange
-        val model = createModel()
-
-        // Act
-        model.bankContent().toBusinessAccount.onClick()
-
-        // Assert
-        assertThat(opened.single().first).isEqualTo(BankWithdrawEntry.NewBusiness)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN recents content WHEN recipient clicked THEN saved entry opened`() {
-        // Arrange
-        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right()
-        val model = createModel()
-
-        // Act
-        (model.recents() as RecentsUM.Content).onRecipientClick("acc-1")
-
-        // Assert
-        assertThat(opened.single().first).isEqualTo(BankWithdrawEntry.Saved(bankAccountId = "acc-1"))
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN more saved accounts than shown WHEN see all clicked THEN wizard opened with see all entry`() {
-        // Arrange
-        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true).right()
-        val model = createModel()
-
-        // Act
-        requireNotNull((model.recents() as RecentsUM.Content).onSeeAllClick).invoke()
-
-        // Assert
-        assertThat(opened.single().first).isEqualTo(BankWithdrawEntry.SeeAll)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN hub WHEN model created THEN BankTransferSheetOpened is sent`() {
-        // Act
-        val model = createModel()
-
-        // Assert
-        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.BankTransferSheetOpened()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN model WHEN to personal account clicked THEN ToPersonalAccountClicked is sent`() {
-        // Arrange
-        val model = createModel()
-
-        // Act
-        model.bankContent().toPersonalAccount.onClick()
-
-        // Assert
-        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.ToPersonalAccountClicked()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN model WHEN to business account clicked THEN ToBusinessAccountClicked is sent`() {
-        // Arrange
-        val model = createModel()
-
-        // Act
-        model.bankContent().toBusinessAccount.onClick()
-
-        // Assert
-        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.ToBusinessAccountClicked()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN more saved accounts than shown WHEN see all clicked THEN SavedContactsSeeAllClicked is sent`() {
-        // Arrange
-        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true).right()
-        val model = createModel()
-
-        // Act
-        requireNotNull((model.recents() as RecentsUM.Content).onSeeAllClick).invoke()
-
-        // Assert
-        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactsSeeAllClicked()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN recents content WHEN recipient clicked THEN SavedContactClicked is sent`() {
-        // Arrange
-        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right()
-        val model = createModel()
-
-        // Act
-        (model.recents() as RecentsUM.Content).onRecipientClick("acc-1")
-
-        // Assert
-        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactClicked()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN options no longer ready WHEN to personal account clicked THEN ToPersonalAccountClicked is sent`() {
-        // Arrange
-        val model = createModel()
-        val toPersonalAccount = model.bankContent().toPersonalAccount
-
-        // Act
-        emitStatus(balance = BigDecimal.ZERO)
-        toPersonalAccount.onClick()
-
-        // Assert
-        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.ToPersonalAccountClicked()) }
-        assertThat(opened).isEmpty()
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideMoneyBankOptionModels")
-    fun `GIVEN money account WHEN a bank option clicked THEN withdraw option selected is sent and wizard opened`(
-        testModel: MoneyBankOptionModel,
-    ) {
-        // Arrange
-        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true).right()
-        val model = createModel(sourceAccount = moneySourceAccount)
-
-        // Act
-        testModel.click(model)
-
-        // Assert
-        verify(exactly = 1) {
-            analytics.send(
-                MoneyAccountAnalyticsEvents.WithdrawOptionSelected(
-                    method = MoneyAccountAnalyticsEvents.WithdrawMethod.BANK_TRANSFER,
-                ),
-            )
+            // Assert
+            verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.BankTransferSheetOpened()) }
+            model.onDestroy()
         }
-        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents>()) }
-        assertThat(opened.single().first).isEqualTo(testModel.expectedEntry)
-        model.onDestroy()
-    }
 
-    @Test
-    fun `GIVEN money account WHEN model created THEN swap section without subtitle shows recents of the account`() {
-        // Arrange
-        moneyTokenRecentsFlow.value = listOf(recentTransfer())
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a bank option WHEN it is clicked THEN its click event is sent`(
+            testModel: BankOptionClickModel<AnalyticsEvent>,
+        ) {
+            // Arrange
+            coEvery { getRecentBankAccountsUseCase(userWalletId) } returns testModel.recents.right()
+            val model = createModel()
 
-        // Act
-        val model = createModel(sourceAccount = moneySourceAccount)
+            // Act
+            testModel.click(model)
 
-        // Assert
-        assertThat(model.swapSection().subtitle).isNull()
-        assertThat(model.tokenRecents().tokens.map { it.id }).containsExactly(RECENT_CURRENCY_ID_VALUE)
-        verify(exactly = 0) { getRecentTokenTransfersUseCase(any(), TokenTransferJournal.PAYMENT_ACCOUNT) }
-        verify(exactly = 0) { analytics.send(any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN money account WHEN within portfolio clicked THEN swap from the account pushed`() {
-        // Arrange
-        val model = createModel(sourceAccount = moneySourceAccount)
-        val expectedRoute = AppRoute.Swap(
-            userWalletId = userWalletId,
-            fromCryptoCurrency = moneyToken,
-            screenSource = MONEY_ACCOUNT_SWAP_SCREEN_SOURCE,
-            fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
-            accountFlow = AccountFlow.MoneyWithdraw,
-        )
-
-        // Act
-        model.swapSection().withinPortfolio.onClick()
-
-        // Assert
-        verify(exactly = 1) { router.push(expectedRoute) }
-        coVerify(exactly = 0) { withdrawRepository.hasWithdrawOrder(any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN money account recent token WHEN it is clicked THEN swap from the account pushed with that token as TO`() {
-        // Arrange
-        val transfer = recentTransfer()
-        moneyTokenRecentsFlow.value = listOf(transfer)
-        val model = createModel(sourceAccount = moneySourceAccount)
-        val expectedRoute = AppRoute.Swap(
-            userWalletId = userWalletId,
-            fromCryptoCurrency = moneyToken,
-            screenSource = MONEY_ACCOUNT_SWAP_SCREEN_SOURCE,
-            fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
-            accountFlow = AccountFlow.MoneyWithdraw,
-            toCryptoCurrency = transfer.currency,
-        )
-
-        // Act
-        model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
-
-        // Assert
-        verify(exactly = 1) { router.push(expectedRoute) }
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideSwapOptionModels")
-    fun `GIVEN source account WHEN swap option clicked THEN on chain option reported for money account only`(
-        testModel: SwapOptionModel,
-    ) {
-        // Arrange
-        tokenRecentsFlow.value = listOf(recentTransfer())
-        moneyTokenRecentsFlow.value = listOf(recentTransfer())
-        val model = createModel(sourceAccount = testModel.sourceAccount)
-
-        // Act
-        testModel.click(model)
-
-        // Assert
-        verify(exactly = testModel.expectedOnChainEvents) {
-            analytics.send(
-                MoneyAccountAnalyticsEvents.WithdrawOptionSelected(
-                    method = MoneyAccountAnalyticsEvents.WithdrawMethod.ON_CHAIN,
-                ),
-            )
+            // Assert
+            verify(exactly = 1) { analytics.send(testModel.expected) }
+            model.onDestroy()
         }
-        model.onDestroy()
+
+        @Test
+        fun `GIVEN options no longer ready WHEN to personal account clicked THEN ToPersonalAccountClicked is sent`() {
+            // Arrange
+            val model = createModel()
+            val toPersonalAccount = model.bankContent().toPersonalAccount
+
+            // Act
+            emitStatus(balance = BigDecimal.ZERO)
+            toPersonalAccount.onClick()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.ToPersonalAccountClicked()) }
+            assertThat(opened).isEmpty()
+            model.onDestroy()
+        }
+
+        private fun provideTestModels(): List<BankOptionClickModel<AnalyticsEvent>> = listOf(
+            BankOptionClickModel(
+                name = "to personal account",
+                recents = recentBankAccounts(),
+                click = { it.bankContent().toPersonalAccount.onClick() },
+                expected = TangemPayAnalyticsEvents.Offramp.ToPersonalAccountClicked(),
+            ),
+            BankOptionClickModel(
+                name = "to business account",
+                recents = recentBankAccounts(),
+                click = { it.bankContent().toBusinessAccount.onClick() },
+                expected = TangemPayAnalyticsEvents.Offramp.ToBusinessAccountClicked(),
+            ),
+            BankOptionClickModel(
+                name = "see all",
+                recents = recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true),
+                click = { requireNotNull((it.recents() as RecentsUM.Content).onSeeAllClick).invoke() },
+                expected = TangemPayAnalyticsEvents.Offramp.SavedContactsSeeAllClicked(),
+            ),
+            BankOptionClickModel(
+                name = "saved recipient",
+                recents = recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))),
+                click = { (it.recents() as RecentsUM.Content).onRecipientClick("acc-1") },
+                expected = TangemPayAnalyticsEvents.Offramp.SavedContactClicked(),
+            ),
+        )
     }
 
-    @Test
-    fun `GIVEN money account without bank transfer WHEN model created THEN no bank section and nothing requested`() {
-        // Act
-        val model = createModel(sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = null))
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class MoneyAccount {
 
-        // Assert
-        assertThat(model.uiState.value.bankSection).isNull()
-        coVerify(exactly = 0) { getBankOfframpOptionsUseCase(any(), any()) }
-        coVerify(exactly = 0) { getRecentBankAccountsUseCase(any()) }
-        model.onDestroy()
-    }
+        @Test
+        fun `GIVEN money account with balance WHEN to personal account clicked THEN wizard opened with its USDC`() {
+            // Arrange
+            val model = createModel(sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID))
 
-    @Test
-    fun `GIVEN money account without bank off-ramp channel WHEN model created THEN bank section unavailable`() {
-        // Arrange
-        every { moneyAccountStatusSupplier(userWalletId) } returns
-            flowOf(moneyAccountStatus(userWalletId, activeMoneyAccount(isBankOfframpAvailable = false)))
+            // Act
+            model.bankContent().toPersonalAccount.onClick()
 
-        // Act
-        val model = createModel(sourceAccount = moneySourceAccount)
+            // Assert
+            assertThat(opened.single().second.value).isEqualTo(bankWithdrawOptions())
+            model.onDestroy()
+        }
 
-        // Assert
-        assertThat(model.bankContent().isAvailable).isFalse()
-        model.onDestroy()
+        @ParameterizedTest
+        @MethodSource("provideMoneyBankOptionModels")
+        fun `GIVEN money account WHEN a bank option clicked THEN withdraw option selected is sent and wizard opened`(
+            testModel: MoneyBankOptionModel,
+        ) {
+            // Arrange
+            coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
+                recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true).right()
+            val model = createModel(sourceAccount = moneySourceAccount)
+
+            // Act
+            testModel.click(model)
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(
+                    MoneyAccountAnalyticsEvents.WithdrawOptionSelected(
+                        method = MoneyAccountAnalyticsEvents.WithdrawMethod.BANK_TRANSFER,
+                    ),
+                )
+            }
+            verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents>()) }
+            assertThat(opened.single().first).isEqualTo(testModel.expectedEntry)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account WHEN model created THEN swap section without subtitle shows recents of the account`() {
+            // Arrange
+            moneyTokenRecentsFlow.value = listOf(recentTransfer())
+
+            // Act
+            val model = createModel(sourceAccount = moneySourceAccount)
+
+            // Assert
+            assertThat(model.swapSection().subtitle).isNull()
+            assertThat(model.tokenRecents().tokens.map { it.id }).containsExactly(RECENT_CURRENCY_ID_VALUE)
+            verify(exactly = 0) { getRecentTokenTransfersUseCase(any(), TokenTransferJournal.PAYMENT_ACCOUNT) }
+            verify(exactly = 0) { analytics.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account WHEN within portfolio clicked THEN swap from the account pushed`() {
+            // Arrange
+            val model = createModel(sourceAccount = moneySourceAccount)
+            val expectedRoute = AppRoute.Swap(
+                userWalletId = userWalletId,
+                fromCryptoCurrency = moneyToken,
+                screenSource = MONEY_ACCOUNT_SWAP_SCREEN_SOURCE,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
+                accountFlow = AccountFlow.MoneyWithdraw,
+            )
+
+            // Act
+            model.swapSection().withinPortfolio.onClick()
+
+            // Assert
+            verify(exactly = 1) { router.push(expectedRoute) }
+            coVerify(exactly = 0) { withdrawRepository.hasWithdrawOrder(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account recent token WHEN it is clicked THEN swap from the account pushed with that token as TO`() {
+            // Arrange
+            val transfer = recentTransfer()
+            moneyTokenRecentsFlow.value = listOf(transfer)
+            val model = createModel(sourceAccount = moneySourceAccount)
+            val expectedRoute = AppRoute.Swap(
+                userWalletId = userWalletId,
+                fromCryptoCurrency = moneyToken,
+                screenSource = MONEY_ACCOUNT_SWAP_SCREEN_SOURCE,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
+                accountFlow = AccountFlow.MoneyWithdraw,
+                toCryptoCurrency = transfer.currency,
+            )
+
+            // Act
+            model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
+
+            // Assert
+            verify(exactly = 1) { router.push(expectedRoute) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideSwapOptionModels")
+        fun `GIVEN source account WHEN swap option clicked THEN on chain option reported for money account only`(
+            testModel: SwapOptionModel,
+        ) {
+            // Arrange
+            tokenRecentsFlow.value = listOf(recentTransfer())
+            moneyTokenRecentsFlow.value = listOf(recentTransfer())
+            val model = createModel(sourceAccount = testModel.sourceAccount)
+
+            // Act
+            testModel.click(model)
+
+            // Assert
+            verify(exactly = testModel.expectedOnChainEvents) {
+                analytics.send(
+                    MoneyAccountAnalyticsEvents.WithdrawOptionSelected(
+                        method = MoneyAccountAnalyticsEvents.WithdrawMethod.ON_CHAIN,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account without bank transfer WHEN model created THEN no bank section and nothing requested`() {
+            // Act
+            val model = createModel(sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = null))
+
+            // Assert
+            assertThat(model.uiState.value.bankSection).isNull()
+            coVerify(exactly = 0) { getBankOfframpOptionsUseCase(any(), any()) }
+            coVerify(exactly = 0) { getRecentBankAccountsUseCase(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account without bank off-ramp channel WHEN model created THEN bank section unavailable`() {
+            // Arrange
+            every { moneyAccountStatusSupplier(userWalletId) } returns
+                flowOf(moneyAccountStatus(userWalletId, activeMoneyAccount(isBankOfframpAvailable = false)))
+
+            // Act
+            val model = createModel(sourceAccount = moneySourceAccount)
+
+            // Assert
+            assertThat(model.bankContent().isAvailable).isFalse()
+            model.onDestroy()
+        }
+
+        private fun provideMoneyBankOptionModels(): List<MoneyBankOptionModel> = listOf(
+            MoneyBankOptionModel(
+                click = { it.bankContent().toPersonalAccount.onClick() },
+                expectedEntry = BankWithdrawEntry.NewPersonal,
+            ),
+            MoneyBankOptionModel(
+                click = { it.bankContent().toBusinessAccount.onClick() },
+                expectedEntry = BankWithdrawEntry.NewBusiness,
+            ),
+            MoneyBankOptionModel(
+                click = { (it.recents() as RecentsUM.Content).onRecipientClick("acc-1") },
+                expectedEntry = BankWithdrawEntry.Saved(bankAccountId = "acc-1"),
+            ),
+            MoneyBankOptionModel(
+                click = { requireNotNull((it.recents() as RecentsUM.Content).onSeeAllClick).invoke() },
+                expectedEntry = BankWithdrawEntry.SeeAll,
+            ),
+        )
+
+        private fun provideSwapOptionModels(): List<SwapOptionModel> = listOf(
+            SwapOptionModel(
+                sourceAccount = moneySourceAccount,
+                click = { it.swapSection().withinPortfolio.onClick() },
+                expectedOnChainEvents = 1,
+            ),
+            SwapOptionModel(
+                sourceAccount = moneySourceAccount,
+                click = { it.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE) },
+                expectedOnChainEvents = 1,
+            ),
+            SwapOptionModel(
+                sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+                click = { it.swapSection().withinPortfolio.onClick() },
+                expectedOnChainEvents = 0,
+            ),
+            SwapOptionModel(
+                sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+                click = { it.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE) },
+                expectedOnChainEvents = 0,
+            ),
+        )
     }
 
     private fun emitStatusValue(value: PaymentAccountStatusValue) {
@@ -882,31 +962,7 @@ internal class TangemPayWithdrawHubModelTest {
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
         analytics = analytics,
-    )
-
-    private fun provideRefreshModels(): List<RefreshModel> = listOf(
-        RefreshModel(
-            sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
-            elapsedMillis = 0,
-            expectedPaymentRefreshes = 1,
-            expectedMoneyRefreshes = 0,
-            expectedHistoryReloads = 0,
-        ),
-        RefreshModel(
-            sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
-            elapsedMillis = ON_CHAIN_REFRESH_DELAY_MILLIS - 1,
-            expectedPaymentRefreshes = 0,
-            expectedMoneyRefreshes = 0,
-            expectedHistoryReloads = 0,
-        ),
-        RefreshModel(
-            sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
-            elapsedMillis = ON_CHAIN_REFRESH_DELAY_MILLIS,
-            expectedPaymentRefreshes = 0,
-            expectedMoneyRefreshes = 1,
-            expectedHistoryReloads = 1,
-        ),
-    )
+    ).destroyAfterTest()
 
     internal data class RefreshModel(
         val sourceAccount: BankWithdrawSourceAccount,
@@ -916,62 +972,9 @@ internal class TangemPayWithdrawHubModelTest {
         val expectedHistoryReloads: Int,
     )
 
-    private fun provideTestModels(): List<ProductModel> = listOf(
-        ProductModel(
-            sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
-            expectedProduct = TangemPayProduct.PAYMENT_ACCOUNT,
-        ),
-        ProductModel(
-            sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
-            expectedProduct = TangemPayProduct.BANKING_ACCOUNT,
-        ),
-    )
-
-    private fun provideMoneyBankOptionModels(): List<MoneyBankOptionModel> = listOf(
-        MoneyBankOptionModel(
-            click = { it.bankContent().toPersonalAccount.onClick() },
-            expectedEntry = BankWithdrawEntry.NewPersonal,
-        ),
-        MoneyBankOptionModel(
-            click = { it.bankContent().toBusinessAccount.onClick() },
-            expectedEntry = BankWithdrawEntry.NewBusiness,
-        ),
-        MoneyBankOptionModel(
-            click = { (it.recents() as RecentsUM.Content).onRecipientClick("acc-1") },
-            expectedEntry = BankWithdrawEntry.Saved(bankAccountId = "acc-1"),
-        ),
-        MoneyBankOptionModel(
-            click = { requireNotNull((it.recents() as RecentsUM.Content).onSeeAllClick).invoke() },
-            expectedEntry = BankWithdrawEntry.SeeAll,
-        ),
-    )
-
     internal data class MoneyBankOptionModel(
         val click: (TangemPayWithdrawHubModel) -> Unit,
         val expectedEntry: BankWithdrawEntry,
-    )
-
-    private fun provideSwapOptionModels(): List<SwapOptionModel> = listOf(
-        SwapOptionModel(
-            sourceAccount = moneySourceAccount,
-            click = { it.swapSection().withinPortfolio.onClick() },
-            expectedOnChainEvents = 1,
-        ),
-        SwapOptionModel(
-            sourceAccount = moneySourceAccount,
-            click = { it.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE) },
-            expectedOnChainEvents = 1,
-        ),
-        SwapOptionModel(
-            sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
-            click = { it.swapSection().withinPortfolio.onClick() },
-            expectedOnChainEvents = 0,
-        ),
-        SwapOptionModel(
-            sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
-            click = { it.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE) },
-            expectedOnChainEvents = 0,
-        ),
     )
 
     internal data class SwapOptionModel(
@@ -984,6 +987,24 @@ internal class TangemPayWithdrawHubModelTest {
         val sourceAccount: BankWithdrawSourceAccount,
         val expectedProduct: TangemPayProduct,
     )
+
+    internal data class SwapEntryModel(
+        val name: String,
+        val recents: List<RecentTokenTransfer>,
+        val click: (TangemPayWithdrawHubModel) -> Unit,
+        val expectedToCurrency: CryptoCurrency?,
+    ) {
+        override fun toString(): String = name
+    }
+
+    internal data class BankOptionClickModel<T>(
+        val name: String,
+        val recents: RecentBankAccounts,
+        val click: (TangemPayWithdrawHubModel) -> Unit,
+        val expected: T,
+    ) {
+        override fun toString(): String = name
+    }
 
     private companion object {
         const val RECENT_CURRENCY_ID_VALUE = "coin⟨polygon-pos⟩matic-network"

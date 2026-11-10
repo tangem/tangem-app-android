@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.earn.EarnProductId
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
@@ -34,6 +35,10 @@ import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
+import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.features.earn.product.api.product.ProductAvailability
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -47,6 +52,7 @@ private const val FAKE_APY_POINTS = 3
 internal data class FakeEarnProductSpec(
     val id: EarnProductId,
     val rank: Int,
+    val badgeAccent: EarnBadgeAccent,
     val title: TextReference,
     val provider: EarnProvider,
     val analytics: EarnProductAnalytics,
@@ -68,7 +74,7 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
             title = "Pooled staking",
             provider = "P2P",
             product = "Staking",
-        ).copy(hasLegacyBlock = true)
+        ).copy(badgeAccent = EarnBadgeAccent.Info, hasLegacyBlock = true)
         FakeEarnProductPreset.Vault -> fakeSpec(
             id = "vault",
             rank = 2,
@@ -142,15 +148,35 @@ internal fun fakeReadyState(preset: FakeEarnProductPreset, position: FakeEarnPos
     val isStaking = preset == FakeEarnProductPreset.Staking
     return EarnProductState.Ready(
         rate = fakeRate(),
-        description = stringReference("Earn interest on your ETH while keeping it liquid"),
+        description = stringReference(
+            if (preset == FakeEarnProductPreset.Lending) {
+                "Earn variable yield on ETH by lending it directly on Aave, an on-chain self-custodial lending " +
+                    "protocol. Withdrawals are usually instant."
+            } else {
+                "Earn interest on your ETH while keeping it liquid"
+            },
+        ),
         projection = FakeEarnProjection().takeUnless { isStaking },
         benefits = listOf(
-            EarnTextBlock(stringReference("No lock-ups"), stringReference("Send, swap, or sell your funds anytime")),
-            EarnTextBlock(stringReference("Withdraw anytime"), stringReference("Subject to protocol liquidity")),
+            EarnTextBlock(
+                title = stringReference("No lock-ups."),
+                description = stringReference("Send, swap, or sell your funds anytime"),
+                icon = TangemIconUM.Icon(Icons.ic_lightning_20),
+            ),
+            EarnTextBlock(
+                title = stringReference("Withdraw anytime."),
+                description = stringReference("Subject to protocol liquidity"),
+                icon = TangemIconUM.Icon(Icons.ic_arrow_refresh_20),
+            ),
         ),
         howItWorks = fakeHowItWorks().takeUnless { isStaking },
         details = listOf(
             fakeRow("Risk", "Low", info = "How risky the product is"),
+            EarnRow(
+                label = stringReference("Protocol"),
+                value = EarnValue.Link(text = stringReference("Aave"), url = "https://aave.com"),
+            ),
+            fakeRow("Withdrawals", "Usually instant", info = "How fast you can withdraw"),
             fakeRow("Performance fee", "15% of yield", info = "Taken from the earned yield"),
         ),
         limits = EarnLimits(
@@ -162,6 +188,8 @@ internal fun fakeReadyState(preset: FakeEarnProductPreset, position: FakeEarnPos
         secondary = fakeSecondary(preset, position),
         freshness = null,
         position = fakePositionState(preset, position),
+        incentiveRate = EarnProductRate(fraction = BigDecimal("0.014"), type = EarnRateType.APY)
+            .takeIf { preset == FakeEarnProductPreset.Lending },
     )
 }
 
@@ -180,6 +208,7 @@ internal fun fakeApyHistory(period: EarnPeriod): Either<Throwable, EarnApyHistor
 private fun fakeSpec(id: String, rank: Int, title: String, provider: String, product: String) = FakeEarnProductSpec(
     id = EarnProductId(id),
     rank = rank,
+    badgeAccent = EarnBadgeAccent.Success,
     title = stringReference(title),
     provider = EarnProvider(
         title = stringReference(provider),

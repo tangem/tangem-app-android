@@ -1,6 +1,6 @@
 package com.tangem.domain.feedback.models
 
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 
 /**
  * Email feedback type
@@ -66,45 +66,45 @@ sealed interface FeedbackEmailType {
         override val walletMetaInfo: WalletMetaInfo? = null
     }
 
-    sealed class Visa : FeedbackEmailType {
+    sealed class TangemPay : FeedbackEmailType {
         abstract val customerId: String
 
         data class DirectUserRequest(
             override val walletMetaInfo: WalletMetaInfo,
             override val customerId: String,
-        ) : Visa()
+        ) : TangemPay()
 
         data class MoneyAccountRequest(
             override val walletMetaInfo: WalletMetaInfo,
             override val customerId: String,
-        ) : Visa()
+        ) : TangemPay()
 
         data class FailedIssueCard(
             override val walletMetaInfo: WalletMetaInfo,
             override val customerId: String,
-        ) : Visa()
+        ) : TangemPay()
 
         data class Dispute(
             val item: TangemPayTxHistoryItem,
             override val walletMetaInfo: WalletMetaInfo,
             override val customerId: String,
-        ) : Visa()
+        ) : TangemPay()
 
         data class Withdrawal(
             override val walletMetaInfo: WalletMetaInfo,
             override val customerId: String,
             val providerName: String,
             val txId: String,
-        ) : Visa()
+        ) : TangemPay()
 
         data class FeatureIsBeta(
             override val walletMetaInfo: WalletMetaInfo,
             override val customerId: String,
-        ) : Visa()
+        ) : TangemPay()
 
         data class KycRejected(
             override val walletMetaInfo: WalletMetaInfo,
             override val customerId: String,
-        ) : Visa()
+        ) : TangemPay()
     }
 }

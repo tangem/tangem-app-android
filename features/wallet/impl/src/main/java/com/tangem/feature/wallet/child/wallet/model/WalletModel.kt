@@ -42,8 +42,8 @@ import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.onboarding.repository.OnboardingRepository as WalletOnboardingRepository
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.pushnotificationpreferences.PreloadWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import com.tangem.domain.qrscanning.models.QrResultSource
@@ -77,7 +77,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.Dem
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
+import com.tangem.feature.wallet.presentation.wallet.ui.components.tangempay.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.mcp.api.McpFeatureToggles

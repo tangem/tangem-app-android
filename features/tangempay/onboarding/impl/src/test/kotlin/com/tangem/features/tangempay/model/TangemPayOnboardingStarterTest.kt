@@ -14,17 +14,17 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.CustomerOrderRequest
-import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.model.CustomerOrderRequest
+import com.tangem.domain.tangempay.model.Offer
+import com.tangem.domain.tangempay.model.OrderType
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.domain.wallets.models.CreateHotWalletError
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
@@ -117,7 +117,7 @@ internal class TangemPayOnboardingStarterTest {
                 } returns campaignOffer().right()
                 coEvery {
                     repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, capture(idempotencyKeys))
-                } returns VisaApiError.ServerUnavailable.left()
+                } returns TangemPayApiError.ServerUnavailable.left()
                 starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
 
                 // Act
@@ -138,7 +138,7 @@ internal class TangemPayOnboardingStarterTest {
                 } returns campaignOffer().right()
                 coEvery {
                     repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, capture(idempotencyKeys))
-                } returns VisaApiError.CardIssueActiveOrderExists.left()
+                } returns TangemPayApiError.CardIssueActiveOrderExists.left()
                 starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
 
                 // Act
@@ -180,7 +180,7 @@ internal class TangemPayOnboardingStarterTest {
                 } returnsMany listOf(campaignOffer().right(), campaignOffer(OTHER_SPECIFICATION_NAME).right())
                 coEvery {
                     repository.createOrder(USER_WALLET_ID, any(), capture(idempotencyKeys))
-                } returns VisaApiError.ServerUnavailable.left()
+                } returns TangemPayApiError.ServerUnavailable.left()
                 starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
 
                 // Act
@@ -205,7 +205,7 @@ internal class TangemPayOnboardingStarterTest {
                 } returns campaignOffer().right()
                 coEvery {
                     repository.createOrder(any(), CAMPAIGN_REQUEST, capture(idempotencyKeys))
-                } returns VisaApiError.ServerUnavailable.left()
+                } returns TangemPayApiError.ServerUnavailable.left()
                 starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
                 starter.startOnboarding(OTHER_USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
 
@@ -255,7 +255,7 @@ internal class TangemPayOnboardingStarterTest {
                 // Arrange
                 coEvery {
                     getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
-                } returns VisaApiError.Unspecified.left()
+                } returns TangemPayApiError.Unspecified.left()
 
                 // Act
                 starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
@@ -276,7 +276,7 @@ internal class TangemPayOnboardingStarterTest {
                 } returns campaignOffer().right()
                 coEvery {
                     repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
-                } returns VisaApiError.Unspecified.left()
+                } returns TangemPayApiError.Unspecified.left()
 
                 // Act
                 starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
@@ -448,7 +448,7 @@ internal class TangemPayOnboardingStarterTest {
         fun `GIVEN customer info fails after re-auth WHEN startOnboarding THEN snackbar shown AND KYC not opened`() =
             runTest {
                 // Arrange
-                coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns VisaApiError.ServerUnavailable.left()
+                coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns TangemPayApiError.ServerUnavailable.left()
 
                 // Act
                 starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)

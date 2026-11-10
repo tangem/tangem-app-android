@@ -2,10 +2,12 @@ package com.tangem.features.foryou.impl.model.converter.earnOpportunities
 
 import com.tangem.common.ui.R
 import com.tangem.common.ui.account.AccountIconItemStateConverter
+import com.tangem.common.ui.account.toAvatarState
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -14,6 +16,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
+import com.tangem.features.foryou.impl.entity.ForYouAccountRowUM
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.ForYouWalletGroupUM
@@ -99,6 +102,16 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
                     isExpanded = false,
                     isExpandable = true,
                     segmentColor = null,
+                    accountRow = ForYouAccountRowUM(
+                        state = TangemAccountRow.State.Content(
+                            id = earnData.account.accountId.value,
+                            title = earnData.account.accountName.toUM().value,
+                            label = tokensCount(earnData.earnCurrencies.size),
+                            balance = potentialRewardText(earnData.accountPotentialReward),
+                            onClick = { expandClick(earnData.account.accountId.value) },
+                        ),
+                        avatar = earnData.account.toAvatarState(),
+                    ),
                 ),
             )
         } else {
@@ -128,36 +141,36 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
             titleUM = TangemTokenRowUM.TitleUM.Content(
                 text = account.accountName.toUM().value,
             ),
-            subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
-                text = pluralReference(
-                    R.plurals.common_tokens_count,
-                    count = tokenCount,
-                    formatArgs = wrappedList(tokenCount),
-                ),
-            ),
-            topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
-                text = combinedReference(
-                    if (!isBalanceHidden) {
-                        stringReference(StringsSigns.PLUS + StringsSigns.WHITE_SPACE)
-                    } else {
-                        TextReference.EMPTY
-                    },
-                    resourceReference(
-                        R.string.for_you_earn_per_year,
-                        wrappedList(
-                            potentialReward.format {
-                                fiat(
-                                    fiatCurrencySymbol = appCurrency.symbol,
-                                    fiatCurrencyCode = appCurrency.code,
-                                )
-                            }.orMaskWithStars(isBalanceHidden),
-                        ),
-                    ),
-                ),
-            ),
+            subtitleUM = TangemTokenRowUM.SubtitleUM.Content(text = tokensCount(tokenCount)),
+            topEndContentUM = TangemTokenRowUM.EndContentUM.Content(text = potentialRewardText(potentialReward)),
             bottomEndContentUM = TangemTokenRowUM.EndContentUM.Empty,
             onItemClick = { expandClick(account.accountId.value) },
             onItemLongClick = null,
         )
     }
+
+    private fun tokensCount(count: Int): TextReference = pluralReference(
+        R.plurals.common_tokens_count,
+        count = count,
+        formatArgs = wrappedList(count),
+    )
+
+    private fun potentialRewardText(potentialReward: BigDecimal?): TextReference = combinedReference(
+        if (!isBalanceHidden) {
+            stringReference(StringsSigns.PLUS + StringsSigns.WHITE_SPACE)
+        } else {
+            TextReference.EMPTY
+        },
+        resourceReference(
+            R.string.for_you_earn_per_year,
+            wrappedList(
+                potentialReward.format {
+                    fiat(
+                        fiatCurrencySymbol = appCurrency.symbol,
+                        fiatCurrencyCode = appCurrency.code,
+                    )
+                }.orMaskWithStars(isBalanceHidden),
+            ),
+        ),
+    )
 }

@@ -6,7 +6,7 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupp
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.isCreated
 import com.tangem.domain.models.account.isShown
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
