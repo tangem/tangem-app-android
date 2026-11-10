@@ -1,8 +1,9 @@
 package com.tangem.features.polymarket.impl.common.feed.model.converter
 
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketCategoryFilter
 import kotlinx.collections.immutable.ImmutableList
@@ -25,8 +26,8 @@ internal object PolymarketCategoryFilterUMConverter {
     }.toImmutableList()
 
     private fun PolymarketCategoryFilter.label(): TextReference? = when (this) {
-        PolymarketCategoryFilter.Games -> stringReference("Games")
-        PolymarketCategoryFilter.Props -> stringReference("Questions")
+        PolymarketCategoryFilter.Games -> resourceReference(R.string.prediction_filter_games)
+        PolymarketCategoryFilter.Props -> resourceReference(R.string.prediction_filter_questions)
         is PolymarketCategoryFilter.Unknown -> null
     }
 }
