@@ -37,9 +37,9 @@ import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsCompo
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.features.polymarket.impl.main.addfunds.dismissIfShown
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -67,6 +67,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.tangem.features.polymarket.impl.common.feed.model.PolymarketFeedController
+import com.tangem.features.polymarket.impl.common.feed.model.PolymarketStaleDataReporter
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
 
 /** Model of the Discovery feed screen. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -129,18 +132,18 @@ internal class PolymarketMainModel @Inject constructor(
                     ),
                 ),
                 categories = persistentListOf(),
-                content = PolymarketMainUM.ContentUM.Loading,
+                content = PolymarketFeedContentUM.Loading,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
             ),
         )
+
+    private val isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled
 
     private val eventUMConverter = PolymarketEventUMConverter(
         onEventClick = ::onEventClick,
         onOutcomeClick = ::onOutcomeClick,
         isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
     )
-
-    private val isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled
 
     private val categoryTabConverter = PolymarketCategoryTabUMConverter(onCategoryClick = ::onCategorySelected)
 
@@ -288,7 +291,7 @@ internal class PolymarketMainModel @Inject constructor(
             val categoryId = selectedCategoryId
             if (categoryId == null) {
                 TangemLogger.e("Main: no category to request the feed for, categories answered $result")
-                uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Error(onReloadClick = ::reload)) }
+                uiState.update { it.copy(content = PolymarketFeedContentUM.Error(onReloadClick = ::reload)) }
             } else {
                 selectFeed(categoryId = categoryId, reloadVisited = true)
             }
@@ -313,9 +316,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun openCategory() {
-        if (!isPhaseTwoEnabled) return
-        val category = categories.firstOrNull { it.id == selectedCategoryId } ?: return
-        if (category.subcategories.isEmpty()) return
+        val category = selectedFeedCategory() ?: return
         router.push(PolymarketRoute.Category(userWalletId = params.userWalletId, category = category))
     }
 
@@ -326,7 +327,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun reload() {
-        uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Loading) }
+        uiState.update { it.copy(content = PolymarketFeedContentUM.Loading) }
         if (categories.isEmpty()) loadCategories() else feedController.reload()
     }
 
@@ -380,8 +381,8 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun setRefreshing(isRefreshing: Boolean) {
-        uiState.update { state ->
-            state.copy(pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = isRefreshing))
+        uiState.update {
+            it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = isRefreshing))
         }
     }
 
