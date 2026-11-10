@@ -6,7 +6,7 @@ import com.tangem.utils.info.AppInfoProvider
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -60,12 +60,12 @@ internal class TangemPayConfigTest {
         }
 
         @Test
-        fun `GIVEN config WHEN read PROD headers THEN expected headers`() {
+        fun `GIVEN config WHEN read PROD headers THEN expected headers`() = runTest {
             // Arrange
             val prod = config.environmentConfigs.first { it.environment == ApiEnvironment.PROD }
 
             // Act
-            val actual = prod.headers.mapValues { runBlocking { it.value() } }
+            val actual = prod.headers.mapValues { it.value() }
 
             // Assert
             assertExpectedHeaders(actual, expectedApiKey = PROD_TOKEN)
@@ -103,12 +103,12 @@ internal class TangemPayConfigTest {
         }
 
         @Test
-        fun `GIVEN config WHEN read DEV headers THEN expected headers`() {
+        fun `GIVEN config WHEN read DEV headers THEN expected headers`() = runTest {
             // Arrange
             val dev = config.environmentConfigs.first { it.environment == ApiEnvironment.DEV }
 
             // Act
-            val actual = dev.headers.mapValues { runBlocking { it.value() } }
+            val actual = dev.headers.mapValues { it.value() }
 
             // Assert
             assertExpectedHeaders(actual, expectedApiKey = DEV_TOKEN)
