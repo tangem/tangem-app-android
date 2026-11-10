@@ -13,7 +13,7 @@ internal enum class DeeplinkSource {
     External,
 
     /**
-     * Reconstructed from a push payload ([com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter]).
+     * Reconstructed from a push payload ([com.tangem.tap.common.pushes.PayloadToDeeplinkConverter]).
      * A URI that matches no route may still be a marketing web page, so it falls back to the browser when
      * its host is trusted.
      */
