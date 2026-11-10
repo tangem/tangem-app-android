@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.model.AmountLimits
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
@@ -378,6 +379,48 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class AmountInput {
+
+        @Test
+        fun `GIVEN money account rail with a minimum and no maximum WHEN amount below it entered THEN minimum error`() {
+            // Arrange
+            val options = bankWithdrawOptions(
+                sources = listOf(bankWithdrawSource(fiatBalance = BigDecimal("20000"))),
+                destinations = listOf(offrampDestination(amountLimits = MONEY_ACCOUNT_LIMITS)),
+                isLimitedPerRail = true,
+            )
+            val model = createModel(sourceAccount = moneyAccount, options = options)
+
+            // Act
+            model.content().amount.onValueChange("9.99")
+
+            // Assert
+            val state = model.content()
+            assertThat(state.amount.error).isEqualTo(
+                resourceReference(R.string.tangempay_withdraw_bank_amount_error_min, wrappedList("$10")),
+            )
+            assertThat(state.isContinueEnabled).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account rail without a maximum WHEN amount above the default maximum entered THEN accepted`() {
+            // Arrange
+            val options = bankWithdrawOptions(
+                sources = listOf(bankWithdrawSource(fiatBalance = BigDecimal("20000"))),
+                destinations = listOf(offrampDestination(amountLimits = MONEY_ACCOUNT_LIMITS)),
+                isLimitedPerRail = true,
+            )
+            val model = createModel(sourceAccount = moneyAccount, options = options)
+
+            // Act
+            model.content().amount.onValueChange("15000")
+
+            // Assert
+            val state = model.content()
+            assertThat(state.amount.error).isNull()
+            assertThat(state.isContinueEnabled).isTrue()
+            model.onDestroy()
+        }
 
         @ParameterizedTest
         @ProvideTestModels
@@ -1088,6 +1131,7 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
 
     private companion object {
         val NETWORK_FEE = BigDecimal("0.04")
+        val MONEY_ACCOUNT_LIMITS = AmountLimits(min = BigDecimal("10"), max = null, currency = "USD")
         val RANGE_ERROR = resourceReference(
             R.string.tangempay_withdraw_bank_amount_error_range,
             wrappedList("$1", "$10,000"),

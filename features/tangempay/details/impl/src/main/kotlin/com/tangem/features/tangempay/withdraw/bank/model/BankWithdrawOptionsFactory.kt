@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.model.AmountLimits
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
@@ -11,9 +12,8 @@ import java.util.Currency
 /** Turns the off-ramp's rails and the source account's tokens into the wizard's [BankWithdrawOptions]. */
 internal object BankWithdrawOptionsFactory {
 
-    /** The off-ramp options carry no bounds, so the withdrawal range agreed with the backend lives here. */
-    private val MIN_AMOUNT = BigDecimal("1.00")
-    private val MAX_AMOUNT = BigDecimal("10000.00")
+    private val DEFAULT_MIN_AMOUNT = BigDecimal("1.00")
+    private val DEFAULT_MAX_AMOUNT = BigDecimal("10000.00")
 
     private val ROUTE_RAILS = setOf(BankRail.ACH, BankRail.WIRE)
 
@@ -25,6 +25,7 @@ internal object BankWithdrawOptionsFactory {
         destinations: List<OfframpDestination>,
         sources: List<BankWithdrawSource>,
         balanceCurrencyCode: String?,
+        isLimitedPerRail: Boolean,
     ): BankWithdrawOptions? {
         val routeDestinations = destinations.filter(::isFixedFeeRouteRail)
         if (routeDestinations.isEmpty() || sources.none(BankWithdrawSource::isAvailable)) return null
@@ -34,9 +35,13 @@ internal object BankWithdrawOptionsFactory {
         return BankWithdrawOptions(
             sources = sources.sortedByAvailabilityAndSymbol().toImmutableList(),
             destinations = routeDestinations.toImmutableList(),
-            minAmount = MIN_AMOUNT,
-            maxAmount = MAX_AMOUNT,
             currency = currency,
+            defaultAmountLimits = AmountLimits(
+                min = DEFAULT_MIN_AMOUNT,
+                max = DEFAULT_MAX_AMOUNT,
+                currency = currency.currencyCode,
+            ),
+            isLimitedPerRail = isLimitedPerRail,
         )
     }
 

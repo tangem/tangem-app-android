@@ -16,23 +16,23 @@ internal object BankWithdrawAmountValidator {
     fun validate(
         amount: BigDecimal?,
         minAmount: BigDecimal,
-        maxAmount: BigDecimal,
+        maxAmount: BigDecimal?,
         balance: BigDecimal,
         fee: BigDecimal,
     ): Result = when {
         amount == null || amount.isZero() -> Result.Empty
-        amount < minAmount || amount > maxAmount -> Result.OutOfRange
+        amount < minAmount || maxAmount != null && amount > maxAmount -> Result.OutOfRange
         amount + fee > balance -> Result.NotEnoughFunds
         else -> Result.Valid
     }
 
     /**
-     * What Max fills in: balance minus the rail fee, capped by [maxAmount]. A balance that does not cover the fee is
-     * filled in whole, so the amount error explains why it cannot be sent.
+     * What Max fills in: balance minus the rail fee, capped by [maxAmount] when there is one. A balance that does not
+     * cover the fee is filled in whole, so the amount error explains why it cannot be sent.
      */
-    fun maxInputAmount(maxAmount: BigDecimal, balance: BigDecimal, fee: BigDecimal): BigDecimal {
+    fun maxInputAmount(maxAmount: BigDecimal?, balance: BigDecimal, fee: BigDecimal): BigDecimal {
         val balanceAfterFee = balance - fee
         val amount = if (balanceAfterFee.isPositive()) balanceAfterFee else balance
-        return amount.min(maxAmount).max(BigDecimal.ZERO)
+        return (maxAmount?.let(amount::min) ?: amount).max(BigDecimal.ZERO)
     }
 }

@@ -49,10 +49,37 @@ internal class BankWithdrawOptionsFactoryTest {
         )
 
         // Act
-        val actual = BankWithdrawOptionsFactory.create(destinations, sources, balanceCurrencyCode = "USD")
+        val actual = BankWithdrawOptionsFactory.create(
+            destinations = destinations,
+            sources = sources,
+            balanceCurrencyCode = "USD",
+            isLimitedPerRail = false,
+        )
 
         // Assert
         assertThat(actual).isEqualTo(bankWithdrawOptions(sources = sources))
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN source account limits rule WHEN create THEN options carry it with the default range`(
+        isLimitedPerRail: Boolean,
+    ) {
+        // Arrange
+        val sources = listOf(bankWithdrawSource(token = usdcPolygon))
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(
+            destinations = destinations,
+            sources = sources,
+            balanceCurrencyCode = "USD",
+            isLimitedPerRail = isLimitedPerRail,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            bankWithdrawOptions(sources = sources, isLimitedPerRail = isLimitedPerRail),
+        )
     }
 
     @Test
@@ -69,7 +96,12 @@ internal class BankWithdrawOptionsFactoryTest {
         val sources = listOf(bankWithdrawSource(token = usdcPolygon))
 
         // Act
-        val actual = BankWithdrawOptionsFactory.create(rails, sources, balanceCurrencyCode = "USD")
+        val actual = BankWithdrawOptionsFactory.create(
+            destinations = rails,
+            sources = sources,
+            balanceCurrencyCode = "USD",
+            isLimitedPerRail = false,
+        )
 
         // Assert
         assertThat(actual).isEqualTo(bankWithdrawOptions(sources = sources, destinations = listOf(ach, wire)))
@@ -83,7 +115,12 @@ internal class BankWithdrawOptionsFactoryTest {
         val sources = listOf(bankWithdrawSource(token = usdcPolygon))
 
         // Act
-        val actual = BankWithdrawOptionsFactory.create(rails, sources, balanceCurrencyCode = null)
+        val actual = BankWithdrawOptionsFactory.create(
+            destinations = rails,
+            sources = sources,
+            balanceCurrencyCode = null,
+            isLimitedPerRail = false,
+        )
 
         // Assert
         assertThat(actual).isEqualTo(bankWithdrawOptions(sources = sources, destinations = listOf(ach)))
@@ -95,7 +132,12 @@ internal class BankWithdrawOptionsFactoryTest {
         model: SortModel,
     ) {
         // Act
-        val actual = BankWithdrawOptionsFactory.create(destinations, model.sources, balanceCurrencyCode = "USD")
+        val actual = BankWithdrawOptionsFactory.create(
+            destinations = destinations,
+            sources = model.sources,
+            balanceCurrencyCode = "USD",
+            isLimitedPerRail = false,
+        )
 
         // Assert
         assertThat(actual).isEqualTo(bankWithdrawOptions(sources = model.expected))
@@ -105,7 +147,12 @@ internal class BankWithdrawOptionsFactoryTest {
     @MethodSource("provideNoOptionsModels")
     fun `GIVEN no rail or no available source WHEN create THEN null`(model: NoOptionsModel) {
         // Act
-        val actual = BankWithdrawOptionsFactory.create(model.destinations, model.sources, balanceCurrencyCode = "USD")
+        val actual = BankWithdrawOptionsFactory.create(
+            destinations = model.destinations,
+            sources = model.sources,
+            balanceCurrencyCode = "USD",
+            isLimitedPerRail = false,
+        )
 
         // Assert
         assertThat(actual).isNull()
@@ -122,7 +169,12 @@ internal class BankWithdrawOptionsFactoryTest {
         val rails = listOf(offrampDestination())
 
         // Act
-        val actual = BankWithdrawOptionsFactory.create(rails, sources, balanceCurrencyCode)
+        val actual = BankWithdrawOptionsFactory.create(
+            destinations = rails,
+            sources = sources,
+            balanceCurrencyCode = balanceCurrencyCode,
+            isLimitedPerRail = false,
+        )
 
         // Assert
         assertThat(actual).isEqualTo(bankWithdrawOptions(sources = sources, destinations = rails))

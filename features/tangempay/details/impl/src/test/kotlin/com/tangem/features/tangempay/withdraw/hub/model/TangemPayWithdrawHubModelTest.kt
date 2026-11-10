@@ -695,7 +695,7 @@ internal class TangemPayWithdrawHubModelTest : TangemPayModelTestBase() {
             model.bankContent().toPersonalAccount.onClick()
 
             // Assert
-            assertThat(opened.single().second.value).isEqualTo(bankWithdrawOptions())
+            assertThat(opened.single().second.value).isEqualTo(bankWithdrawOptions(isLimitedPerRail = true))
             model.onDestroy()
         }
 

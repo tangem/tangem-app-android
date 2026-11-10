@@ -52,6 +52,7 @@ internal class BankWithdrawSourcesObserver @Inject constructor(
                     }
                 },
                 balanceCurrencyCode = status.balanceOrNull()?.fiatBalance?.currency,
+                isLimitedPerRail = false,
             )
         }
 
@@ -74,6 +75,7 @@ internal class BankWithdrawSourcesObserver @Inject constructor(
                     ),
                 ),
                 balanceCurrencyCode = active.balance?.currencyCode,
+                isLimitedPerRail = true,
             )
         }
 
