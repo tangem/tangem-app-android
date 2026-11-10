@@ -116,6 +116,8 @@ private const val COLUMN_ROUNDNESS_PERCENT = 40
 
 @Composable
 internal fun EarnApyPlot(state: EarnApyChartUM, modifier: Modifier = Modifier) {
+    // Fixed height on purpose: the plot is hosted in a TangemModal, which probes the intrinsic height
+    // of its content and rejects an unconstrained BoxWithConstraints
     val plotModifier = modifier
         .fillMaxWidth()
         .height(CHART_HEIGHT)
