@@ -42,6 +42,28 @@ internal class DefaultPolymarketFastTradingBannerStoreTest {
     }
 
     @Test
+    fun `GIVEN dismissals persisted under the iOS kind keys WHEN dismissedAt THEN emits them`() = runTest {
+        // Arrange
+        val store = DefaultPolymarketFastTradingBannerStore(
+            dataStore = MockStateDataStore(
+                default = mapOf(
+                    WALLET_A.stringValue to mapOf(
+                        "activate_banner" to DISMISSED_AT.toEpochMilli(),
+                        "extend_banner" to EXTEND_DISMISSED_AT.toEpochMilli(),
+                    ),
+                ),
+            ),
+        )
+
+        // Act
+        val activate = store.dismissedAt(WALLET_A, PolymarketFastTradingBannerKind.ACTIVATE).first()
+        val extend = store.dismissedAt(WALLET_A, PolymarketFastTradingBannerKind.EXTEND).first()
+
+        // Assert
+        assertThat(listOf(activate, extend)).containsExactly(DISMISSED_AT, EXTEND_DISMISSED_AT).inOrder()
+    }
+
+    @Test
     fun `GIVEN one kind dismissed WHEN dismissedAt of the other kind THEN emits null`() = runTest {
         // Arrange
         val store = createStore()
@@ -143,5 +165,6 @@ internal class DefaultPolymarketFastTradingBannerStoreTest {
         val WALLET_A = UserWalletId("011")
         val WALLET_B = UserWalletId("022")
         val DISMISSED_AT: Instant = Instant.ofEpochMilli(1_762_776_000_000)
+        val EXTEND_DISMISSED_AT: Instant = Instant.ofEpochMilli(1_762_862_400_000)
     }
 }
