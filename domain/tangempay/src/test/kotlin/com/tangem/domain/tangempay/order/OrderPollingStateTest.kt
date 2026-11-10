@@ -35,13 +35,8 @@ internal class OrderPollingStateTest {
     private fun loaded(status: TangemPayOrder.Status) = OrderPollingState.Loaded(
         TangemPayOrder(
             id = "order-1",
-            customerId = "customer-1",
             status = status,
             step = OrderStep.UNKNOWN,
-            stepChangeCode = 0,
-            createdAt = "2026-11-09T10:00:00Z",
-            updatedAt = "2026-11-09T10:00:00Z",
-            errorCode = null,
             details = OrderDetails.Unknown,
         ),
     )

@@ -269,13 +269,8 @@ internal class OrderPollerTest {
 
     private fun order(status: TangemPayOrder.Status, step: OrderStep = OrderStep.UNKNOWN) = TangemPayOrder(
         id = ORDER_ID,
-        customerId = "customer-1",
         status = status,
         step = step,
-        stepChangeCode = 0,
-        createdAt = "2026-11-09T10:00:00Z",
-        updatedAt = "2026-11-09T10:00:00Z",
-        errorCode = null,
         details = OrderDetails.CardFreeze(productInstanceId = "pi-1"),
     )
 
