@@ -55,7 +55,6 @@ internal fun MyFundsSection(state: EarnInfoUM.MyFundsUM, modifier: Modifier = Mo
                     .padding(start = PAGE_MARGIN, end = PAGE_MARGIN, top = 8.dp, bottom = 12.dp),
             )
         }
-        // Only this card is padded in the design: the rows of More details start right under the heading
         DetailRows(rows = state.rows, modifier = Modifier.padding(vertical = 8.dp))
     }
 }
@@ -79,7 +78,6 @@ internal fun DetailsSection(details: ImmutableList<EarnRowUM>, modifier: Modifie
     }
 }
 
-/** The rows keep 8 dp of the page margin and 16 dp of their own: their text lines up with the heading. */
 @Composable
 private fun DetailRows(rows: ImmutableList<EarnRowUM>, modifier: Modifier = Modifier) {
     if (rows.isEmpty()) return

@@ -9,12 +9,8 @@ import com.tangem.features.earn.impl.info.ui.state.EarnInfoTab
 internal data class ListPosition(val index: Int, val scrollOffset: Int)
 
 /**
- * The chip the user tapped. A short tail cannot scroll its section to the chips, so the scroll alone would pick another
- * chip: the tapped one stays [tab] until the list rests somewhere else than where the tap's scroll left it.
- *
- * The scroll of the tap is not a user scroll: positions reported before [onScrollEnded] are ignored. A drag that
- * moves nothing (the list is at its end) keeps the chip. A scroll interrupted by the user releases it.
- * A newer tap replaces the older one, and reports of the older tap's scroll are told apart by the tap id.
+ * A short tail cannot scroll its section to the chips, so the tapped chip stays [tab] until the list rests somewhere
+ * else than where the tap's scroll left it, or the user interrupts that scroll.
  */
 internal class ClickedSection {
 

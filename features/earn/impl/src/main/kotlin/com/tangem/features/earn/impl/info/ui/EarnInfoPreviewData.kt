@@ -122,7 +122,7 @@ private fun ChartPlaceholder() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(CHART_PLACEHOLDER_HEIGHT)
+            .height(240.dp)
             .background(color = TangemTheme.colors3.bg.secondary, shape = RoundedCornerShape(24.dp)),
     )
 }
@@ -133,8 +133,6 @@ private fun PreviewContent(state: EarnInfoUM, chart: (@Composable () -> Unit)? =
         EarnInfoContent(state = state, chart = chart)
     }
 }
-
-private val CHART_PLACEHOLDER_HEIGHT = 240.dp
 
 @Preview(name = "Light")
 @Preview(name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)

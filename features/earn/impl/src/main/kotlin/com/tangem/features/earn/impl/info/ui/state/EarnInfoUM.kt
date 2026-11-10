@@ -9,11 +9,8 @@ import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * @property earned the Earned chip, `null` while the product reports no earnings
- * @property rewards the claimable rewards banner, `null` without rewards
+ * @property earned `null` while the product reports no earnings
  * @property staleNotice when the data was last updated, `null` while the data is fresh
- * @property tabs the sections present on the page in their order; the chips are anchors to them
- * @property secondary the buttons next to the primary one, in the order of the product
  */
 @Immutable
 internal data class EarnInfoUM(
