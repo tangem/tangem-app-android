@@ -5,8 +5,6 @@ import com.tangem.features.earn.impl.info.ui.state.EarnInfoTab
 internal const val ABOVE_VIEWPORT = Int.MIN_VALUE
 internal const val BELOW_VIEWPORT = Int.MAX_VALUE
 
-private const val REFERENCE_LINE_SHARE = 3
-
 /**
  * The last section whose top has reached [referenceLine], else the first one; [sectionTops] is ordered and not empty.
  * A short last section can never reach the line, so the end of the page selects it.
@@ -24,8 +22,9 @@ internal fun selectedSection(sectionTops: Map<EarnInfoTab, Int>, referenceLine: 
  * A third of the space under the chips: unlike the edge right under them, a short tail can still reach it.
  * [viewportHeight] is the bottom of the visible content in item offsets, see [visibleListHeight].
  */
+@Suppress("MagicNumber")
 internal fun referenceLine(chipsBottom: Int, viewportHeight: Int): Int =
-    chipsBottom + (viewportHeight - chipsBottom) / REFERENCE_LINE_SHARE
+    chipsBottom + (viewportHeight - chipsBottom) / 3
 
 /** Item offsets start under the header (the top content padding), so the footer's top edge is at this offset. */
 internal fun visibleListHeight(viewportHeight: Int, beforeContentPadding: Int, afterContentPadding: Int): Int =
