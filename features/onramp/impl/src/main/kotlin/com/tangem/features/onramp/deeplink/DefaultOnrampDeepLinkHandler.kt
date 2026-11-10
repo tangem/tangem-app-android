@@ -2,26 +2,23 @@ package com.tangem.features.onramp.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.OnrampDeeplinkTarget
 import com.tangem.common.routing.deeplink.resolveOnrampDeeplinkTarget
 import com.tangem.features.onramp.success.OnrampSuccessScreenTrigger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
-    @Assisted scope: CoroutineScope,
-    @Assisted queryParams: Map<String, String>,
-    appRouter: AppRouter,
-    onrampSuccessScreenTrigger: OnrampSuccessScreenTrigger,
-    conciergeWaitlistTrigger: ConciergeWaitlistTrigger,
-) : OnrampDeepLinkHandler {
+internal class DefaultOnrampDeepLinkHandler @Inject constructor(
+    private val appRouter: AppRouter,
+    private val onrampSuccessScreenTrigger: OnrampSuccessScreenTrigger,
+    private val conciergeWaitlistTrigger: ConciergeWaitlistTrigger,
+) : DeepLinkHandler, OnrampDeepLinkHandler {
 
-    init {
-        when (val target = resolveOnrampDeeplinkTarget(queryParams)) {
+    override fun handle(request: DeepLinkRequest) {
+        when (val target = resolveOnrampDeeplinkTarget(request.queryParams)) {
             is OnrampDeeplinkTarget.Transaction -> {
                 // finish current onramp flow and show onramp success screen
                 val replaceOnrampScreens = appRouter.stack
@@ -31,31 +28,19 @@ internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
                 appRouter.replaceAll(*replaceOnrampScreens.toTypedArray())
             }
             is OnrampDeeplinkTarget.Redirect -> {
-                scope.launch { onrampSuccessScreenTrigger.triggerOnrampSuccess(target.isSuccess) }
+                request.scope.launch { onrampSuccessScreenTrigger.triggerOnrampSuccess(target.isSuccess) }
             }
             OnrampDeeplinkTarget.ConciergeWaitlist -> {
-                scope.launch { conciergeWaitlistTrigger.triggerOpenWaitlist() }
+                request.scope.launch { conciergeWaitlistTrigger.triggerOpenWaitlist() }
             }
             OnrampDeeplinkTarget.Invalid -> {
                 TangemLogger.e(
                     """
                        Invalid parameters for ONRAMP deeplink
-                       |- Params: $queryParams
+                       |- Params: ${request.queryParams}
                     """.trimIndent(),
                 )
             }
         }
-    }
-
-    @AssistedFactory
-    interface Factory : OnrampDeepLinkHandler.Factory {
-        override fun create(
-            coroutineScope: CoroutineScope,
-            queryParams: Map<String, String>,
-        ): DefaultOnrampDeepLinkHandler
-    }
-
-    companion object {
-        const val DEEPLINK_KEY = "tangem://onramp"
     }
 }

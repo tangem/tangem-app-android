@@ -4,13 +4,12 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.DeepLinkRoute
-import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.uri.PromoPageUrlValidator
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.PromoPageRepository
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.features.marketing.api.promopage.PromoPageDeepLinkHandler
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
@@ -29,9 +28,7 @@ internal class PromoPageRouter @Inject constructor(
 ) {
 
     fun savePage(deeplinkUri: Uri) {
-        val isPromoPageLink = deeplinkUri.scheme == DeepLinkScheme.Tangem.scheme &&
-            deeplinkUri.host == DeepLinkRoute.PromoPage.host
-        if (!marketingFeatureToggles.isPromoPageEnabled || !isPromoPageLink) return
+        if (!marketingFeatureToggles.isPromoPageEnabled || !PromoPageDeepLinkHandler.canHandle(deeplinkUri)) return
 
         // Not getQueryParameter: it decodes + as a space
         val page = deeplinkUri.getQueryParameters(PAGE_PARAM).firstOrNull(String::isNotEmpty)

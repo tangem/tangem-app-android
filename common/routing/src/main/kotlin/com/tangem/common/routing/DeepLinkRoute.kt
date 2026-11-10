@@ -4,16 +4,8 @@ sealed class DeepLinkRoute {
 
     abstract val host: String
 
-    data object Onramp : DeepLinkRoute() {
-        override val host: String = "onramp"
-    }
-
     data object TokenDetails : DeepLinkRoute() {
         override val host: String = "token"
-    }
-
-    data object MarketTokenDetail : DeepLinkRoute() {
-        override val host: String = "token_chart"
     }
 
     data object TangemPayOnboard : DeepLinkRoute() {
@@ -26,14 +18,6 @@ sealed class DeepLinkRoute {
 
     data object PayAppMain : DeepLinkRoute() {
         override val host: String = "pay-app-main"
-    }
-
-    data object PromoPage : DeepLinkRoute() {
-        override val host: String = "promo_page"
-    }
-
-    data object McpAuthorization : DeepLinkRoute() {
-        override val host: String = "mcp.authorization"
     }
 
     data object JointAccount : DeepLinkRoute() {
