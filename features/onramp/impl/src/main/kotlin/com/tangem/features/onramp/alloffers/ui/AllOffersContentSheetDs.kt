@@ -33,6 +33,7 @@ import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
+import com.tangem.core.ui.ds2.modal.reportMeasuredHeight
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemThemePreview
@@ -143,11 +144,13 @@ private fun AllOffersSheetContentDs(
                     is AllOffersStateUM.Content -> {
                         if (shouldShowOffersScreen) {
                             state.currentMethod?.let { method ->
-                                OffersBasedOnPaymentMethodContentDs(
-                                    offers = method.offers,
-                                    linkedMarketingBannerComponent = linkedMarketingBannerComponent,
-                                    notification = state.restrictedNotification,
-                                )
+                                IntrinsicFreeBoxDs {
+                                    OffersBasedOnPaymentMethodContentDs(
+                                        offers = method.offers,
+                                        linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+                                        notification = state.restrictedNotification,
+                                    )
+                                }
                             }
                         } else {
                             PaymentMethodsContentDs(
@@ -162,11 +165,15 @@ private fun AllOffersSheetContentDs(
     }
 }
 
-// The banner can be a pager, which throws on the intrinsic-size queries TangemModal makes.
+// The banner pager and the offers' subcomposing images throw on the intrinsic-size queries TangemModal makes.
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 @Composable
 private fun IntrinsicFreeBoxDs(content: @Composable () -> Unit) {
-    Layout(content = content, measurePolicy = IntrinsicFreeMeasurePolicyDs)
+    Layout(
+        content = content,
+        modifier = Modifier.reportMeasuredHeight(),
+        measurePolicy = IntrinsicFreeMeasurePolicyDs,
+    )
 }
 
 private object IntrinsicFreeMeasurePolicyDs : MeasurePolicy {
