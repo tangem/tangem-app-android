@@ -19,7 +19,10 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.main.entity.OnrampAmountButtonUM
 import com.tangem.features.onramp.main.entity.OnrampAmountButtonUMState
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
@@ -90,26 +93,39 @@ private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
 @Composable
 private fun AmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modifier) {
     val focusManager = LocalFocusManager.current
-    Box(
-        modifier = modifier
-            .sizeIn(minHeight = 24.dp, minWidth = 62.dp)
-            .background(
-                color = TangemTheme.colors3.bg.tertiary,
-                shape = RoundedCornerShape(16.dp),
-            )
-            .clickable(
-                onClick = {
-                    focusManager.clearFocus()
-                    button.onClick()
-                },
-            )
-            .padding(vertical = 4.dp, horizontal = 20.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "${button.value}${button.currency}",
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors3.text.primary,
+    if (LocalOnrampDesignSystemEnabled.current) {
+        TangemButton(
+            modifier = modifier,
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X8,
+            text = stringReference("${button.value}${button.currency}"),
+            onClick = {
+                focusManager.clearFocus()
+                button.onClick()
+            },
         )
+    } else {
+        Box(
+            modifier = modifier
+                .sizeIn(minHeight = 24.dp, minWidth = 62.dp)
+                .background(
+                    color = TangemTheme.colors3.bg.tertiary,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .clickable(
+                    onClick = {
+                        focusManager.clearFocus()
+                        button.onClick()
+                    },
+                )
+                .padding(vertical = 4.dp, horizontal = 20.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "${button.value}${button.currency}",
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors3.text.primary,
+            )
+        }
     }
 }

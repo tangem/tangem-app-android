@@ -26,6 +26,8 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -34,6 +36,7 @@ import com.tangem.core.ui.test.OnrampOffersBlockTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.marketing.api.MarketingBannerComponent
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.paymentmethod.ui.themedImageUrl
@@ -84,11 +87,20 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBann
 
                 if (state.onrampAllOffersButtonConfig != null) {
                     SpacerH(12.dp)
-                    SecondaryButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = state.onrampAllOffersButtonConfig.title.resolveReference(),
-                        onClick = state.onrampAllOffersButtonConfig.onClick,
-                    )
+                    if (LocalOnrampDesignSystemEnabled.current) {
+                        TangemButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            variant = TangemButton.Variant.Secondary,
+                            text = state.onrampAllOffersButtonConfig.title,
+                            onClick = state.onrampAllOffersButtonConfig.onClick,
+                        )
+                    } else {
+                        SecondaryButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = state.onrampAllOffersButtonConfig.title.resolveReference(),
+                            onClick = state.onrampAllOffersButtonConfig.onClick,
+                        )
+                    }
                 }
             }
         }
@@ -127,15 +139,30 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, 
     } else {
         RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)
     }
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                color = TangemTheme.colors3.bg.secondary,
-                shape = shape,
-            )
-            .padding(12.dp),
-    ) {
+    if (LocalOnrampDesignSystemEnabled.current) {
+        TangemSurface(
+            modifier = modifier.fillMaxWidth(),
+            color = TangemTheme.colors3.bg.secondary,
+            shape = shape,
+        ) {
+            OfferContent(onrampOfferUM = onrampOfferUM, modifier = Modifier.fillMaxWidth().padding(12.dp))
+        }
+    } else {
+        OfferContent(
+            onrampOfferUM = onrampOfferUM,
+            modifier = modifier
+                .fillMaxWidth()
+                .background(color = TangemTheme.colors3.bg.secondary, shape = shape)
+                .padding(12.dp),
+        )
+    }
+}
+
+@Composable
+private fun OfferContent(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier) {
+    val isBuyEnabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
+        onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted
+    Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -150,13 +177,22 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, 
                 )
             }
             SpacerWMax()
-            PrimaryButton(
-                size = TangemButtonSize.RoundedAction,
-                text = stringResourceSafe(R.string.common_buy),
-                onClick = onrampOfferUM.onBuyClicked,
-                enabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
-                    onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted,
-            )
+            if (LocalOnrampDesignSystemEnabled.current) {
+                TangemButton(
+                    variant = TangemButton.Variant.Secondary,
+                    size = TangemButton.Size.X9,
+                    text = resourceReference(R.string.common_buy),
+                    onClick = onrampOfferUM.onBuyClicked,
+                    isEnabled = isBuyEnabled,
+                )
+            } else {
+                PrimaryButton(
+                    size = TangemButtonSize.RoundedAction,
+                    text = stringResourceSafe(R.string.common_buy),
+                    onClick = onrampOfferUM.onBuyClicked,
+                    enabled = isBuyEnabled,
+                )
+            }
         }
         SpacerH(10.dp)
         HorizontalDivider(color = TangemTheme.colors3.border.secondary)
@@ -310,8 +346,15 @@ private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName
 
         SubcomposeAsyncImage(
             modifier = Modifier
-                .sizeIn(maxWidth = 38.dp, maxHeight = 16.dp)
+                .then(
+                    if (LocalOnrampDesignSystemEnabled.current) {
+                        Modifier.size(width = 38.dp, height = 16.dp)
+                    } else {
+                        Modifier.sizeIn(maxWidth = 38.dp, maxHeight = 16.dp)
+                    },
+                )
                 .testTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON),
+            alignment = if (LocalOnrampDesignSystemEnabled.current) Alignment.CenterEnd else Alignment.Center,
             model = ImageRequest.Builder(context = LocalContext.current)
                 .data(paymentMethod.themedImageUrl())
                 .crossfade(enable = true)

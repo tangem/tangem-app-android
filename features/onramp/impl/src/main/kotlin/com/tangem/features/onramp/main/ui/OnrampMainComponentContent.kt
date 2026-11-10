@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
+import com.tangem.common.ui.notifications.MessageBanner
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
@@ -35,6 +36,7 @@ import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.marketing.api.MarketingBannerComponent
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampCountryButtonUM
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
@@ -238,7 +240,11 @@ private fun Content(
             ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        OnrampAmountContent(state = state)
+        if (LocalOnrampDesignSystemEnabled.current) {
+            OnrampAmountContent(state = state)
+        } else {
+            LegacyOnrampAmountContent(state = state)
+        }
 
         TangemThemeRedesign {
             marketingBannerComponent.Content(Modifier.fillMaxWidth())
@@ -259,7 +265,11 @@ private fun OnrampNotifications(state: OnrampMainComponentUM, modifier: Modifier
     val buyNotSupportedMessage = state.buyNotSupportedMessage
     val errorNotification = state.errorNotification
     when {
-        buyNotSupportedMessage != null -> TangemMessage(messageUM = buyNotSupportedMessage, modifier = modifier)
+        buyNotSupportedMessage != null -> if (LocalOnrampDesignSystemEnabled.current) {
+            MessageBanner(messageUM = buyNotSupportedMessage, modifier = modifier)
+        } else {
+            TangemMessage(messageUM = buyNotSupportedMessage, modifier = modifier)
+        }
         errorNotification != null -> Notification(config = errorNotification.config, modifier = modifier)
     }
 }
