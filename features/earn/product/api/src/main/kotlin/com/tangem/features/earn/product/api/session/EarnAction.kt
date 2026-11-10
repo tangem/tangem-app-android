@@ -20,7 +20,13 @@ interface EarnFlowAction : EarnAction {
 
     val isGaslessAllowed: Boolean
 
+    /** Shown under the amount from the first screen on, before the session prepares a plan with its own notice. */
+    val notice: TextReference?
+        get() = null
+
     fun title(productTitle: TextReference): TextReference
+
+    fun confirmTitle(productTitle: TextReference): TextReference = productTitle
 }
 
 sealed interface EarnActionInput {
@@ -50,7 +56,10 @@ data class Deposit(override val isGaslessAllowed: Boolean = false) : EarnFlowAct
     }
 }
 
-data class Withdraw(override val isGaslessAllowed: Boolean = false) : EarnFlowAction {
+data class Withdraw(
+    override val isGaslessAllowed: Boolean = false,
+    override val notice: TextReference? = null,
+) : EarnFlowAction {
 
     override val id: String = ID
 
@@ -59,8 +68,9 @@ data class Withdraw(override val isGaslessAllowed: Boolean = false) : EarnFlowAc
     // Temporary plain text: replace with a localized string resource.
     override val label: TextReference = stringReference("Withdraw")
 
-    override fun title(productTitle: TextReference): TextReference =
-        combinedReference(stringReference("Withdraw from "), productTitle)
+    override fun title(productTitle: TextReference): TextReference = stringReference("Withdrawal")
+
+    override fun confirmTitle(productTitle: TextReference): TextReference = stringReference("Withdrawal")
 
     companion object {
         const val ID = "withdraw"

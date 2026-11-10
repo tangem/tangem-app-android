@@ -92,7 +92,13 @@ internal class FakeEarnSession(
 
         val ref = fakeTxRef(preset, fakePlan.actionId)
         emit(EarnSigningStep.Sent(ref))
-        emit(EarnSigningStep.Done(ref, fakeResult(resultTitle(fakePlan))))
+        val title = resultTitle(fakePlan)
+        val result = when (fakePlan.actionId) {
+            Deposit.ID -> fakeDepositResult(title = title, provider = providerName())
+            Withdraw.ID -> fakeWithdrawResult(title = title, period = withdrawPeriod(), fee = fakePlan.fee)
+            else -> fakeClaimResult(title = title)
+        }
+        emit(EarnSigningStep.Done(ref, result))
     }
 
     override fun track(ref: EarnTxRef): Flow<EarnTxStatus> {
@@ -109,6 +115,11 @@ internal class FakeEarnSession(
                 EarnTxStatus(TxInfo.TransactionStatus.Confirmed),
             )
         }
+    }
+
+    private fun providerName(): String = when (preset) {
+        FakeEarnSessionPreset.Lending -> "Aave"
+        FakeEarnSessionPreset.Vault -> "Gauntlet"
     }
 
     private fun EarnFlowAction.isSupported(): Boolean = this is Deposit || this is Withdraw || this is FakeClaim
@@ -143,7 +154,7 @@ internal class FakeEarnSession(
             FakeEarnSessionPreset.Vault -> WithdrawMode.Queued(FAKE_INSTANT)
         },
         quoteTtl = if (preset == FakeEarnSessionPreset.Vault) FAKE_QUOTE_TTL else null,
-        notice = null,
+        notice = stringReference(fakeWithdrawNotice(preset)),
         isEstimate = false,
         actionId = Withdraw.ID,
     )
@@ -170,6 +181,11 @@ internal class FakeEarnSession(
             }
             else -> "Claimed"
         }
+    }
+
+    private fun withdrawPeriod(): String = when (preset) {
+        FakeEarnSessionPreset.Lending -> "Usually instant"
+        FakeEarnSessionPreset.Vault -> "Up to 7 days"
     }
 
     private fun row(label: String, value: String) = EarnRow(
