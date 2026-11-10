@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.models
 
+import androidx.annotation.StringRes
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
@@ -41,7 +42,16 @@ internal fun SwapStateHolder.withAccountFlowPresentation(
     val titledState = reversedState.copy(titleId = flow.titleId())
 
     return when (flow) {
-        is AccountFlow.PredictionWithdraw -> titledState.withPredictionWithdrawCards(accountBalance)
+        is AccountFlow.PredictionWithdraw -> titledState.withAccountWithdrawCards(
+            iconState = CurrencyIconState.PredictionAccount(),
+            balance = accountBalance,
+            buttonTitleId = R.string.prediction_main_withdraw,
+        )
+        is AccountFlow.CollectiblesWithdraw -> titledState.withAccountWithdrawCards(
+            iconState = CurrencyIconState.CollectiblesAccount(),
+            balance = accountBalance,
+            buttonTitleId = R.string.collectibles_main_withdraw,
+        )
         is AccountFlow.PredictionTopUp -> titledState.withAccountTopUpReceiveCard(
             iconState = CurrencyIconState.PredictionAccount(),
             accountBalance = accountBalance,
@@ -61,19 +71,24 @@ private fun AccountFlow.titleId(): Int = when (this) {
     is AccountFlow.TopUp -> R.string.tangempay_card_details_add_funds
     is AccountFlow.Withdraw, is AccountFlow.MoneyWithdraw -> R.string.tangempay_card_details_withdraw
     is AccountFlow.PredictionWithdraw -> R.string.prediction_main_withdraw
+    is AccountFlow.CollectiblesWithdraw -> R.string.collectibles_main_withdraw
     is AccountFlow.PredictionTopUp -> R.string.common_add_funds
     is AccountFlow.CollectiblesTopUp -> R.string.common_add_funds
     is AccountFlow.MoneyTopUp -> R.string.common_add_funds
 }
 
-private fun SwapStateHolder.withPredictionWithdrawCards(collateralBalance: BigDecimal?): SwapStateHolder = copy(
-    swapButton = swapButton.asWithdrawButton(),
+private fun SwapStateHolder.withAccountWithdrawCards(
+    iconState: CurrencyIconState,
+    balance: BigDecimal?,
+    @StringRes buttonTitleId: Int,
+): SwapStateHolder = copy(
+    swapButton = swapButton.asWithdrawButton(buttonTitleId),
     sendCardData = when (val sendCard = sendCardData) {
         is SwapCardState.SwapCardData -> sendCard.copy(
-            currencyIconState = CurrencyIconState.PredictionAccount(),
+            currencyIconState = iconState,
             fiatSymbolOverride = AppCurrency.Default.code,
             amountCurrencyOverride = AppCurrency.Default,
-            balance = collateralBalance.formatWithdrawUsdBalance(),
+            balance = balance.formatWithdrawUsdBalance(),
             isSelectionLocked = true,
         )
         else -> sendCard.withSelectionLocked()
@@ -140,8 +155,8 @@ private fun SwapCardState.withSelectionLocked(): SwapCardState = when (this) {
     is SwapCardState.Loading -> this
 }
 
-private fun SwapButton.asWithdrawButton(): SwapButton = if (isInProgress) {
+private fun SwapButton.asWithdrawButton(@StringRes titleId: Int): SwapButton = if (isInProgress) {
     copy(mode = SwapButton.Mode.TRANSFER_PROGRESSING, title = resourceReference(R.string.common_withdrawing))
 } else {
-    copy(mode = SwapButton.Mode.TRANSFER, title = resourceReference(R.string.prediction_main_withdraw))
+    copy(mode = SwapButton.Mode.TRANSFER, title = resourceReference(titleId))
 }

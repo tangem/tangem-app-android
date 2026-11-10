@@ -2194,6 +2194,9 @@ internal class DefaultInitialCurrenciesResolverTest {
         AccountTokenCase(accountFlow = AccountFlow.MoneyWithdraw, source = "empty money") { token ->
             createMoneySource(token)
         },
+        AccountTokenCase(accountFlow = AccountFlow.CollectiblesWithdraw, source = "empty collectibles") { token ->
+            createCollectiblesSource(token, fiatAmount = BigDecimal.ZERO)
+        },
     )
 
     private fun provideAccountWithdrawals() = listOf(
@@ -2203,11 +2206,18 @@ internal class DefaultInitialCurrenciesResolverTest {
         AccountTokenCase(accountFlow = AccountFlow.MoneyWithdraw, source = "money") { token ->
             createMoneySource(token)
         },
+        AccountTokenCase(accountFlow = AccountFlow.CollectiblesWithdraw, source = "collectibles") { token ->
+            createCollectiblesSource(token)
+        },
     )
 
     private fun provideAccountTokensOutsideTheirWithdrawal() = listOf(
         AccountTokenCase(accountFlow = null, source = "prediction") { token -> createPredictionSource(token) },
         AccountTokenCase(accountFlow = null, source = "money") { token -> createMoneySource(token) },
+        AccountTokenCase(accountFlow = null, source = "collectibles") { token -> createCollectiblesSource(token) },
+        AccountTokenCase(accountFlow = AccountFlow.CollectiblesTopUp, source = "collectibles") { token ->
+            createCollectiblesSource(token)
+        },
         AccountTokenCase(accountFlow = AccountFlow.MoneyWithdraw, source = "prediction") { token ->
             createPredictionSource(token)
         },
@@ -2222,6 +2232,14 @@ internal class DefaultInitialCurrenciesResolverTest {
     ): Pair<AccountStatus, CryptoCurrencyStatus> {
         val collateralStatus = createCurrencyStatus(token, fiatAmount = fiatAmount)
         return createPredictionAccountStatus(collateralStatus) to collateralStatus
+    }
+
+    private fun createCollectiblesSource(
+        token: CryptoCurrency.Token,
+        fiatAmount: BigDecimal = BigDecimal("50"),
+    ): Pair<AccountStatus, CryptoCurrencyStatus> {
+        val vaultStatus = createCurrencyStatus(token, fiatAmount = fiatAmount)
+        return createCollectiblesAccountStatus(vaultStatus) to vaultStatus
     }
 
     private fun createMoneySource(token: CryptoCurrency.Token): Pair<AccountStatus, CryptoCurrencyStatus> {

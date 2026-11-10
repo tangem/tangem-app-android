@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -241,8 +242,7 @@ internal class CollectiblesMainModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 fromCryptoCurrency = vault.usdcToken,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
-                // TODO AnalyticsParam.ScreensSources.Collectibles.value ?
-                screenSource = "Collectibles",
+                screenSource = AnalyticsParam.ScreensSources.Collectibles.value,
                 accountFlow = AppRoute.Swap.AccountFlow.CollectiblesTopUp,
             ),
         )
@@ -265,9 +265,18 @@ internal class CollectiblesMainModel @Inject constructor(
         )
     }
 
-    @Suppress("EmptyFunctionBlock")
     private fun onWithdrawalClick() {
-        // TODO([REDACTED_TASK_KEY]): withdrawal flow is not built yet.
+        val vault = vaultStatus ?: return sendUnknownErrorMessage()
+
+        router.push(
+            AppRoute.Swap(
+                userWalletId = params.userWalletId,
+                fromCryptoCurrency = vault.usdcToken,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
+                screenSource = AnalyticsParam.ScreensSources.Collectibles.value,
+                accountFlow = AppRoute.Swap.AccountFlow.CollectiblesWithdraw,
+            ),
+        )
     }
 
     @Suppress("EmptyFunctionBlock")
