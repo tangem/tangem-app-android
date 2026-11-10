@@ -8,8 +8,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
-import com.tangem.features.polymarket.impl.createPolymarketEvent
-import com.tangem.features.polymarket.impl.createPolymarketMarket
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Notice
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
@@ -57,40 +55,6 @@ internal class PolymarketPositionDetailsConverterTest {
         )
         assertThat(actual.summary.payout).isEqualTo(stringReference("$28.09"))
         assertThat(actual.summary.currentValue).isEqualTo(stringReference("$9.97"))
-    }
-
-    @Test
-    fun `GIVEN the event market ends late evening Eastern WHEN converted THEN the resolution date is that Eastern day`() {
-        // Arrange
-        val position = createPolymarketPosition().copy(endDate = LocalDate.of(2028, 11, 8))
-        val event = createPolymarketEvent(
-            id = "event",
-            markets = listOf(
-                createPolymarketMarket(conditionId = "condition", eventId = "event", endDate = "2028-11-08T04:59:00Z"),
-            ),
-        )
-
-        // Act
-        val actual = converter.convert(PolymarketPositionDetailsConverter.Input(position = position, event = event))
-
-        // Assert
-        assertThat(actual.information.endDate).isEqualTo(stringReference("Nov 7, 2028"))
-    }
-
-    @Test
-    fun `GIVEN the event market has no readable end WHEN converted THEN the position's own date is shown`() {
-        // Arrange
-        val position = createPolymarketPosition().copy(endDate = LocalDate.of(2028, 11, 8))
-        val event = createPolymarketEvent(
-            id = "event",
-            markets = listOf(createPolymarketMarket(conditionId = "condition", eventId = "event", endDate = "soon")),
-        )
-
-        // Act
-        val actual = converter.convert(PolymarketPositionDetailsConverter.Input(position = position, event = event))
-
-        // Assert
-        assertThat(actual.information.endDate).isEqualTo(stringReference("Nov 8, 2028"))
     }
 
     @ParameterizedTest

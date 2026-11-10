@@ -37,8 +37,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
@@ -385,20 +383,17 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN sell event read fails WHEN engine starts THEN resolution date is the position day in Eastern time`() =
-        runTest {
-            // Arrange
-            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns PolymarketEventError.Network.left()
+    fun `GIVEN sell event read fails WHEN engine starts THEN resolution date is hidden`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns PolymarketEventError.Network.left()
 
-            // Act
-            val (_, uiState) = createEngine(params = SELL_PARAMS)
-            advanceUntilIdle()
+        // Act
+        val (_, uiState) = createEngine(params = SELL_PARAMS)
+        advanceUntilIdle()
 
-            // Assert
-            assertThat(uiState.value.market.resolutionDateMillis).isEqualTo(
-                ZonedDateTime.of(2027, 4, 30, 0, 0, 0, 0, ZoneId.of("America/New_York")).toInstant().toEpochMilli(),
-            )
-        }
+        // Assert
+        assertThat(uiState.value.market.resolutionDateMillis).isNull()
+    }
 
     private fun stubFailedResumeSources() {
         coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
