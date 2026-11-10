@@ -75,6 +75,8 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     private val positionsUpdateEmitter: PredictionPositionsUpdateEmitter,
 ) {
 
+    private var isAwaitingResultDate = false
+
     /**
      * @param confirmedWith the button the user confirmed the order on; a plain tap allows the session key only
      * @param onKeyLost told when an order confirmed for the session key cannot be signed with it
@@ -88,10 +90,13 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
         val preference = confirmedWith.toSigningPreference(featureToggles.isPolymarketSessionKeysEnabled)
             ?: return onSessionKeyLost(onKeyLost)
-        return place(prepared = prepared, preference = preference, onKeyLost = onKeyLost)
+        val result = place(prepared = prepared, preference = preference, onKeyLost = onKeyLost) ?: return null
+        isAwaitingResultDate = true
+        prepared.awaitLiveResolutionDateMillis()
+        return result
     }
 
-    fun isSubmitting(): Boolean = when (uiState.value.submit) {
+    fun isSubmitting(): Boolean = isAwaitingResultDate || when (uiState.value.submit) {
         is SubmitUM.Signing,
         is SubmitUM.Posting,
         is SubmitUM.AwaitingFill,
