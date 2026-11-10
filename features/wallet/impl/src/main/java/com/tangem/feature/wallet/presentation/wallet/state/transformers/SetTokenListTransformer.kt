@@ -6,14 +6,13 @@ import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createWalletActionButtons
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
@@ -28,7 +27,7 @@ internal class SetTokenListTransformer(
     private val appCurrency: AppCurrency,
     private val clickIntents: WalletClickIntents,
     private val yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
-    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
+    private val earnOverviews: EarnOverviews = EarnOverviews.Empty,
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
     private val isHotBackedUp: Boolean? = null,
@@ -147,7 +146,7 @@ internal class SetTokenListTransformer(
             appCurrency = appCurrency,
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldSupplyApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
+            earnOverviews = earnOverviews,
             shouldShowMainPromo = shouldShowMainPromo,
         ).convert(value = this)
     }
@@ -199,7 +198,7 @@ internal class SetTokenListTransformer(
             appCurrency = appCurrency,
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldSupplyApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
+            earnOverviews = earnOverviews,
             shouldShowMainPromo = shouldShowMainPromo,
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
