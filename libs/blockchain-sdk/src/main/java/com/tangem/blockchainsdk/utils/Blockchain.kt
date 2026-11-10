@@ -195,6 +195,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "katana/test" -> Blockchain.KatanaTestnet
         "x-layer" -> Blockchain.XLayer
         "x-layer/test" -> Blockchain.XLayerTestnet
+        "ink" -> Blockchain.Ink
+        "ink/test" -> Blockchain.InkTestnet
         "monad" -> Blockchain.Monad
         "monad/test" -> Blockchain.MonadTestnet
         else -> null
@@ -389,6 +391,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.KatanaTestnet -> "katana/test"
         Blockchain.XLayer -> "x-layer"
         Blockchain.XLayerTestnet -> "x-layer/test"
+        Blockchain.Ink -> "ink"
+        Blockchain.InkTestnet -> "ink/test"
         Blockchain.Monad -> "monad"
         Blockchain.MonadTestnet -> "monad/test"
     }
@@ -511,6 +515,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Zeniq -> "zeniq"
         Blockchain.Katana, Blockchain.KatanaTestnet -> "katana-ethereum"
         Blockchain.XLayer, Blockchain.XLayerTestnet -> "okb"
+        Blockchain.Ink, Blockchain.InkTestnet -> "ink-ethereum"
         Blockchain.Monad, Blockchain.MonadTestnet -> "monad"
     }
 }

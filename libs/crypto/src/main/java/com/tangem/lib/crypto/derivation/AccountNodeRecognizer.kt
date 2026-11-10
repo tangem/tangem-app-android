@@ -190,6 +190,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             Blockchain.Zeniq,
             Blockchain.Katana,
             Blockchain.XLayer,
+            Blockchain.Ink,
             -> true
             Blockchain.Nexa, // unsupported network
             Blockchain.Chia,
@@ -275,6 +276,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             Blockchain.OnyxTestnet,
             Blockchain.KatanaTestnet,
             Blockchain.XLayerTestnet,
+            Blockchain.InkTestnet,
             -> false
             // endregion
         }
