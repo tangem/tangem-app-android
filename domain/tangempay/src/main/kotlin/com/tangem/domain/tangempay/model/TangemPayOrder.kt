@@ -63,12 +63,12 @@ data class TangemPayOrder(
 
         val isTerminal: Boolean get() = this == COMPLETED || this == CANCELED
 
-        fun toStatusId(): String = when (this) {
+        fun toStatusId(): String? = when (this) {
             NEW -> "NEW"
             PROCESSING -> "PROCESSING"
             COMPLETED -> "COMPLETED"
             CANCELED -> "CANCELED"
-            UNKNOWN -> "UNKNOWN"
+            UNKNOWN -> null
         }
 
         companion object {
