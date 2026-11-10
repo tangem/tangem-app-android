@@ -22,6 +22,7 @@ import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.YieldBalanceItem
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -700,6 +701,149 @@ class CryptoCurrencyStatusFactoryTest {
         val description: String,
         val networkStatus: Option<NetworkStatus>,
         val expectedShape: Class<out CryptoCurrencyStatus.Value>,
+    ) {
+
+        override fun toString(): String = description
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class YieldSupplyStatusSource {
+
+        private val networkYieldStatus = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = true,
+            effectiveProtocolBalance = BigDecimal("4"),
+        )
+        private val positionYieldStatus = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = false,
+            effectiveProtocolBalance = BigDecimal("7"),
+        )
+        private val token = cryptoCurrencyFactory.createToken(blockchain = Blockchain.Ethereum)
+        private val customToken = token.copy(isCustom = true)
+
+        @ParameterizedTest
+        @MethodSource("provideYieldSourceModels")
+        fun `GIVEN yield status in network and contribution WHEN create THEN yield comes from the toggled source`(
+            model: YieldSourceModel,
+        ) {
+            // Arrange
+            val networkStatus = NetworkStatus(
+                network = model.currency.network,
+                value = createVerified(
+                    amounts = mapOf(model.currency.id to Amount.Loaded(value = BigDecimal.TEN)),
+                    yieldSupplyStatuses = mapOf(model.currency.id to networkYieldStatus),
+                ),
+            )
+
+            // Act
+            val actual = CryptoCurrencyStatusFactory.create(
+                currency = model.currency,
+                maybeNetworkStatus = networkStatus.some(),
+                maybeQuoteStatus = QuoteStatus(
+                    rawCurrencyId = model.currency.id.rawCurrencyId!!,
+                    value = model.quote,
+                ).some(),
+                contributions = model.contributions,
+                isYieldContributionEnabled = model.isYieldPositionsSourceEnabled,
+            )
+
+            // Assert
+            Truth.assertThat(actual.value).isInstanceOf(model.expectedShape)
+            Truth.assertThat(actual.value.yieldSupplyStatus).isEqualTo(model.expectedField)
+            Truth.assertThat(actual.value.yieldSupply).isEqualTo(model.expectedYieldSupply)
+        }
+
+        private fun provideYieldSourceModels(): List<YieldSourceModel> {
+            val contribution = YieldSupplyContribution(status = positionYieldStatus, source = StatusSource.ACTUAL)
+
+            return listOf(
+                YieldSourceModel(
+                    description = "disabled, Loaded: the field carries the network status and wins over a contribution",
+                    currency = token,
+                    quote = fullQuote,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = false,
+                    expectedShape = CryptoCurrencyStatus.Loaded::class.java,
+                    expectedField = networkYieldStatus,
+                    expectedYieldSupply = networkYieldStatus,
+                ),
+                YieldSourceModel(
+                    description = "enabled, Loaded: empty field, yield from the contribution",
+                    currency = token,
+                    quote = fullQuote,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = true,
+                    expectedShape = CryptoCurrencyStatus.Loaded::class.java,
+                    expectedField = null,
+                    expectedYieldSupply = positionYieldStatus,
+                ),
+                YieldSourceModel(
+                    description = "enabled, Loaded, no contribution: no fallback to the network status",
+                    currency = token,
+                    quote = fullQuote,
+                    contributions = emptyList(),
+                    isYieldPositionsSourceEnabled = true,
+                    expectedShape = CryptoCurrencyStatus.Loaded::class.java,
+                    expectedField = null,
+                    expectedYieldSupply = null,
+                ),
+                YieldSourceModel(
+                    description = "enabled, NoQuote: empty field, yield from the contribution",
+                    currency = token,
+                    quote = QuoteStatus.Empty,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = true,
+                    expectedShape = CryptoCurrencyStatus.NoQuote::class.java,
+                    expectedField = null,
+                    expectedYieldSupply = positionYieldStatus,
+                ),
+                YieldSourceModel(
+                    description = "disabled, NoQuote: network status",
+                    currency = token,
+                    quote = QuoteStatus.Empty,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = false,
+                    expectedShape = CryptoCurrencyStatus.NoQuote::class.java,
+                    expectedField = networkYieldStatus,
+                    expectedYieldSupply = networkYieldStatus,
+                ),
+                YieldSourceModel(
+                    description = "enabled, Custom: empty field, yield from the contribution",
+                    currency = customToken,
+                    quote = fullQuote,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = true,
+                    expectedShape = CryptoCurrencyStatus.Custom::class.java,
+                    expectedField = null,
+                    expectedYieldSupply = positionYieldStatus,
+                ),
+                YieldSourceModel(
+                    description = "disabled, Custom: network status",
+                    currency = customToken,
+                    quote = fullQuote,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = false,
+                    expectedShape = CryptoCurrencyStatus.Custom::class.java,
+                    expectedField = networkYieldStatus,
+                    expectedYieldSupply = networkYieldStatus,
+                ),
+            )
+        }
+    }
+
+    data class YieldSourceModel(
+        val description: String,
+        val currency: CryptoCurrency,
+        val quote: QuoteStatus.Value,
+        val contributions: List<BalanceContribution>,
+        val isYieldPositionsSourceEnabled: Boolean,
+        val expectedShape: Class<out CryptoCurrencyStatus.Value>,
+        val expectedField: YieldSupplyStatus?,
+        val expectedYieldSupply: YieldSupplyStatus?,
     ) {
 
         override fun toString(): String = description

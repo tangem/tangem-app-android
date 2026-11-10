@@ -6,8 +6,10 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.staking.earn.ResolveEarnRateUseCase
 import com.tangem.features.earn.api.overview.EarnProductRate
@@ -40,7 +42,11 @@ internal class YieldModeRateMapperTest {
         @ProvideTestModels
         fun `GIVEN token in the map WHEN entry THEN rate, activity, source and route per table`(model: ActivityModel) {
             // Arrange
-            val status = currencyStatus(ethereumToken, model.yieldSupplyStatus)
+            val status = currencyStatus(
+                currency = ethereumToken,
+                yieldSupplyStatus = model.yieldSupplyStatus,
+                contributions = model.contributions,
+            )
 
             // Act
             val actual = mapper.entry(userWalletId, status, mapOf(key to BigDecimal("5.5")))
@@ -59,6 +65,12 @@ internal class YieldModeRateMapperTest {
             ActivityModel(name = "active", yieldSupplyStatus = yieldStatus(isActive = true), expectedActive = true),
             ActivityModel(name = "inactive", yieldSupplyStatus = yieldStatus(isActive = false), expectedActive = false),
             ActivityModel(name = "no yield status", yieldSupplyStatus = null, expectedActive = false),
+            ActivityModel(
+                name = "active Yield Module position, no network status",
+                yieldSupplyStatus = null,
+                contributions = listOf(YieldSupplyContribution(yieldStatus(isActive = true), StatusSource.ACTUAL)),
+                expectedActive = true,
+            ),
         )
     }
 
@@ -205,6 +217,7 @@ internal class YieldModeRateMapperTest {
         val name: String,
         val yieldSupplyStatus: YieldSupplyStatus?,
         val expectedActive: Boolean,
+        val contributions: List<BalanceContribution> = emptyList(),
     ) {
         override fun toString(): String = name
     }
