@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.layout.IntrinsicMeasureScope
 import androidx.compose.ui.layout.Layout
@@ -43,6 +44,7 @@ import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.impl.R
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
@@ -80,21 +82,25 @@ internal fun AllOffersContentSheetDs(
         config = config,
         onBack = onBack,
         title = {
-            if (state is AllOffersStateUM.Content && state.currentMethod != null) {
-                ProviderTitleDs(
-                    onCloseClick = onCloseClick,
-                    onBackClick = onBack,
-                )
-            } else {
-                PaymentMethodTitleDs(onCloseClick = onCloseClick)
+            CompositionLocalProvider(LocalOnrampDesignSystemEnabled provides true) {
+                if (state is AllOffersStateUM.Content && state.currentMethod != null) {
+                    ProviderTitleDs(
+                        onCloseClick = onCloseClick,
+                        onBackClick = onBack,
+                    )
+                } else {
+                    PaymentMethodTitleDs(onCloseClick = onCloseClick)
+                }
             }
         },
         content = {
-            AllOffersSheetContentDs(
-                state = state,
-                marketingBannerComponent = marketingBannerComponent,
-                linkedMarketingBannerComponent = linkedMarketingBannerComponent,
-            )
+            CompositionLocalProvider(LocalOnrampDesignSystemEnabled provides true) {
+                AllOffersSheetContentDs(
+                    state = state,
+                    marketingBannerComponent = marketingBannerComponent,
+                    linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+                )
+            }
         },
     )
 }
