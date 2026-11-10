@@ -25,7 +25,9 @@ internal fun PreparedPrediction.toStatusRoute(
     current: PlacePredictionUM,
 ): PlacePredictionRoute.Status = PlacePredictionRoute.Status(
     result = result,
-    market = state.market,
+    market = state.market.copy(
+        resolutionDateMillis = state.market.resolutionDateMillis ?: current.market.resolutionDateMillis,
+    ),
     side = params.side,
     userWalletId = params.userWalletId,
     positionId = positionId,
