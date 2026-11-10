@@ -60,6 +60,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
+import arrow.core.Either
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventError
+import kotlinx.coroutines.CompletableDeferred
+import java.time.Instant
+import kotlinx.coroutines.test.runCurrent
 
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -723,6 +729,35 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             model.onDestroy()
         }
+
+        @Test
+        fun `GIVEN the market end arrives after the sell is placed WHEN the result opens THEN it shows that date`() =
+            runTest {
+                // Arrange
+                val marketEnd = Instant.parse("2028-11-08T04:59:00Z")
+                val event = CompletableDeferred<Either<PolymarketEventError, PolymarketEvent>>()
+                coEvery { getEventUseCase(any(), eventId = EVENT_ID) } coAnswers { event.await() }
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
+                val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
+                runCurrent()
+                amountModel.onResume()
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val model = createSummaryModel(testScope = this, amountModel = amountModel)
+                val status = slot<PlacePredictionRoute.Status>()
+                every { router.replaceAll(capture(status), onComplete = any()) } returns Unit
+
+                // Act
+                model.tapPlace()
+                advanceTimeBy(delayTimeMillis = RESOLUTION_DATE_WAIT_MILLIS / 2)
+                event.complete(createEventEndingAt(marketEnd).right())
+                runCurrent()
+
+                // Assert
+                assertThat(status.captured.market.resolutionDateMillis).isEqualTo(marketEnd.toEpochMilli())
+
+                model.onDestroy()
+            }
 
         @Test
         fun `GIVEN a cheap quote but too few shares WHEN place clicked THEN the shares leg decides`() = runTest {

@@ -174,10 +174,12 @@ private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM, side: Pred
             ),
             value = shares?.formatPolymarketShares() ?: DASH_SIGN,
         )
-        DetailRow(
-            title = resourceReference(R.string.prediction_details_resolution_date),
-            value = market.resolutionDateMillis?.formatResolutionDate() ?: DASH_SIGN,
-        )
+        market.resolutionDateMillis?.let { resolutionDateMillis ->
+            DetailRow(
+                title = resourceReference(R.string.prediction_details_resolution_date),
+                value = resolutionDateMillis.formatResolutionDate(),
+            )
+        }
     }
 }
 

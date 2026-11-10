@@ -11,6 +11,7 @@ internal data class PreparedPrediction(
     val state: PlacePredictionUM,
     val isNegRisk: Boolean,
     val positionId: PolymarketPositionId?,
+    val awaitLiveResolutionDateMillis: suspend () -> Long?,
 ) {
 
     val quote: SignableQuoteUM = requireNotNull((state.quote as? QuoteUM.Content)?.signable)
@@ -20,12 +21,14 @@ internal data class PreparedPrediction(
     }
 }
 
-internal fun PreparedPrediction.toStatusRoute(
+internal suspend fun PreparedPrediction.toStatusRoute(
     result: PlaceResultUM,
     current: PlacePredictionUM,
 ): PlacePredictionRoute.Status = PlacePredictionRoute.Status(
     result = result,
-    market = state.market,
+    market = state.market.copy(
+        resolutionDateMillis = state.market.resolutionDateMillis ?: awaitLiveResolutionDateMillis(),
+    ),
     side = params.side,
     userWalletId = params.userWalletId,
     positionId = positionId,

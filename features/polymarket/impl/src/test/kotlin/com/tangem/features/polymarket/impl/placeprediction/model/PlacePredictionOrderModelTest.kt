@@ -69,6 +69,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import kotlinx.coroutines.CompletableDeferred
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
@@ -963,6 +966,71 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 }
                 coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
                 verify(exactly = 0) { router.push(any<PlacePredictionRoute.Summary>(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the market end arrives after the sell is placed WHEN the result opens THEN it shows that date`() =
+            runOrderTest {
+                // Arrange
+                val marketEnd = Instant.parse("2028-11-08T04:59:00Z")
+                val event = CompletableDeferred<Either<PolymarketEventError, PolymarketEvent>>()
+                coEvery { getEventUseCase(any(), eventId = EVENT_ID) } coAnswers { event.await() }
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote(shares = HELD).right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(makingAmount = HELD, takingAmount = BigDecimal("11.01")).right()
+                val model = createQuotedModel(params = SELL_PARAMS)
+                val status = slot<PlacePredictionRoute.Status>()
+                every { router.replaceAll(capture(status), onComplete = any()) } returns Unit
+
+                // Act
+                model.tapPlace()
+                advanceTimeBy(delayTimeMillis = RESOLUTION_DATE_WAIT_MILLIS / 2)
+                event.complete(createEventEndingAt(marketEnd).right())
+                runCurrent()
+
+                // Assert
+                assertThat(status.captured.market.resolutionDateMillis).isEqualTo(marketEnd.toEpochMilli())
+            }
+
+        @Test
+        fun `GIVEN the market end still loading after the sell is placed WHEN back is checked THEN it is blocked`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getEventUseCase(any(), eventId = EVENT_ID) } coAnswers { awaitCancellation() }
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote(shares = HELD).right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(makingAmount = HELD, takingAmount = BigDecimal("11.01")).right()
+                val model = createQuotedModel(params = SELL_PARAMS)
+
+                // Act
+                model.tapPlace()
+                advanceTimeBy(delayTimeMillis = RESOLUTION_DATE_WAIT_MILLIS / 2)
+
+                // Assert
+                assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
+                assertThat(model.isSubmitting()).isTrue()
+                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN the market end never arrives WHEN a sell is placed THEN the result opens without a date`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getEventUseCase(any(), eventId = EVENT_ID) } coAnswers { awaitCancellation() }
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote(shares = HELD).right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(makingAmount = HELD, takingAmount = BigDecimal("11.01")).right()
+                val model = createQuotedModel(params = SELL_PARAMS)
+                val status = slot<PlacePredictionRoute.Status>()
+                every { router.replaceAll(capture(status), onComplete = any()) } returns Unit
+
+                // Act
+                model.tapPlace()
+                advanceTimeBy(delayTimeMillis = RESOLUTION_DATE_WAIT_MILLIS + 1)
+                runCurrent()
+
+                // Assert
+                assertThat(status.captured.market.resolutionDateMillis).isNull()
             }
 
         @Test
