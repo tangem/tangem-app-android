@@ -20,8 +20,9 @@ internal interface OnrampDeeplinkModule {
     fun bindOnrampDeepLinkHandlerFactory(impl: DefaultOnrampDeepLinkHandler.Factory): OnrampDeepLinkHandler.Factory
 
     @Binds
-    @Singleton
-    fun bindBuyDeepLinkHandler(impl: DefaultBuyDeepLinkHandler.Factory): BuyDeepLinkHandler.Factory
+    @IntoMap
+    @DeepLinkKey(BuyDeepLinkHandler.DEEPLINK_KEY)
+    fun bindBuyDeepLinkHandler(impl: DefaultBuyDeepLinkHandler): DeepLinkHandler
 
     @Binds
     @IntoMap
@@ -47,13 +48,5 @@ internal interface OnrampDeeplinkModule {
             DeepLinkHandler { request ->
                 factory.create(coroutineScope = request.scope, queryParams = request.queryParams)
             }
-
-        // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
-        // bound here as a DeepLinkHandler instead of a lambda over its factory.
-        @Provides
-        @IntoMap
-        @DeepLinkKey(DefaultBuyDeepLinkHandler.DEEPLINK_KEY)
-        fun provideBuyDeepLinkHandler(factory: BuyDeepLinkHandler.Factory): DeepLinkHandler =
-            DeepLinkHandler { factory.create() }
     }
 }

@@ -3,11 +3,9 @@ package com.tangem.features.onramp.main.model
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -226,11 +224,9 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val marketing = resolveMarketingDeeplink(deeplink)
-        if (marketing == MarketingDeeplink.SWAP) return false
         val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = params.cryptoCurrency,
-            screenSource = AnalyticsParam.ScreensSources.Buy,
         ) ?: return false
         router.push(route)
         return true

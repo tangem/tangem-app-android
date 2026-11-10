@@ -932,12 +932,10 @@ internal class TokenDetailsModel @Inject constructor(
 
     /**
      * Routes a tapped marketing-banner deeplink contextually for the current token, reusing the
-     * regular swap/buy intents (availability checks, yield-supply warning, analytics). Returns
-     * `false` for external links and for `tangem://swap`, so the banner falls back to the generic
-     * deeplink launcher (the swap deeplink handler).
+     * regular buy intent (availability checks, yield-supply warning, analytics). Returns `false` for
+     * other links, so the banner falls back to the generic deeplink launcher.
      */
     fun onMarketingBannerDeeplink(deeplink: String): Boolean = when (resolveMarketingDeeplink(deeplink)) {
-        MarketingDeeplink.SWAP -> false
         MarketingDeeplink.BUY -> {
             val reason = latestTokenActions
                 .filterIsInstance<TokenActionsState.ActionState.Buy>()
