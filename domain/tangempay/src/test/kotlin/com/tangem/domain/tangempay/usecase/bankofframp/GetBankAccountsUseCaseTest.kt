@@ -34,26 +34,42 @@ internal class GetBankAccountsUseCaseTest {
         coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns accounts.right()
 
         // Act
-        val actual = useCase(TEST_USER_WALLET_ID)
+        val actual = useCase(TEST_USER_WALLET_ID, includeSpeiRecipients = false)
 
         // Assert
         assertThat(actual).isEqualTo(accounts.right())
     }
 
     @Test
-    fun `GIVEN SPEI recipient among saved accounts WHEN invoke THEN only non-SPEI accounts returned`() = runTest {
-        // Arrange
-        val ach = bankAccount(id = "1", details = bankAccountDetails(rail = BankRail.ACH))
-        val spei = bankAccount(id = "2", details = bankAccountDetails(rail = BankRail.SPEI))
-        val unknownRail = bankAccount(id = "3", details = bankAccountDetails(rail = null))
-        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns listOf(ach, spei, unknownRail).right()
+    fun `GIVEN SPEI recipient among saved accounts WHEN invoke without SPEI THEN only non-SPEI accounts returned`() =
+        runTest {
+            // Arrange
+            val ach = bankAccount(id = "1", details = bankAccountDetails(rail = BankRail.ACH))
+            val spei = bankAccount(id = "2", details = bankAccountDetails(rail = BankRail.SPEI))
+            val unknownRail = bankAccount(id = "3", details = bankAccountDetails(rail = null))
+            coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns listOf(ach, spei, unknownRail).right()
 
-        // Act
-        val actual = useCase(TEST_USER_WALLET_ID)
+            // Act
+            val actual = useCase(TEST_USER_WALLET_ID, includeSpeiRecipients = false)
 
-        // Assert
-        assertThat(actual).isEqualTo(listOf(ach, unknownRail).right())
-    }
+            // Assert
+            assertThat(actual).isEqualTo(listOf(ach, unknownRail).right())
+        }
+
+    @Test
+    fun `GIVEN SPEI recipient among saved accounts WHEN invoke with SPEI THEN every account returned in order`() =
+        runTest {
+            // Arrange
+            val ach = bankAccount(id = "1", details = bankAccountDetails(rail = BankRail.ACH))
+            val spei = bankAccount(id = "2", details = bankAccountDetails(rail = BankRail.SPEI))
+            coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns listOf(spei, ach).right()
+
+            // Act
+            val actual = useCase(TEST_USER_WALLET_ID, includeSpeiRecipients = true)
+
+            // Assert
+            assertThat(actual).isEqualTo(listOf(spei, ach).right())
+        }
 
     @Test
     fun `GIVEN repository error WHEN invoke THEN error is returned`() = runTest {
@@ -61,7 +77,7 @@ internal class GetBankAccountsUseCaseTest {
         coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns BankOfframpError.Unknown(cause = null).left()
 
         // Act
-        val actual = useCase(TEST_USER_WALLET_ID)
+        val actual = useCase(TEST_USER_WALLET_ID, includeSpeiRecipients = false)
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpError.Unknown(cause = null).left())

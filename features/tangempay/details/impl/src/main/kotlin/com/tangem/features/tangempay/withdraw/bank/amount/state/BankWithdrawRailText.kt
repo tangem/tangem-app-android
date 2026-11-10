@@ -38,10 +38,11 @@ internal fun OfframpEta.toTextReference(): TextReference = when {
     else -> resourceReference(R.string.tangempay_order_type_delivery_eta_range, wrappedList(minDays, maxDays))
 }
 
-internal fun OfframpDestination.totalFee(networkFee: BigDecimal): BigDecimal = fee.amount + networkFee
+internal fun OfframpDestination.totalFee(networkFee: BigDecimal): BigDecimal =
+    if (rail == BankRail.SPEI) networkFee else fee.amount + networkFee
 
 internal fun OfframpDestination.totalFeeText(networkFee: BigDecimal): String = when (fee.calculationType) {
-    FeeCalculationType.FIXED -> totalFee(networkFee).formatFiat(Currency.getInstance(fee.currency))
+    FeeCalculationType.FIXED -> (fee.amount + networkFee).formatFiat(Currency.getInstance(fee.currency))
     FeeCalculationType.PERCENTAGE -> formatPercentageFee(
         percentage = fee.amount,
         fixedAmount = fee.fixedAmount.orZero() + networkFee,

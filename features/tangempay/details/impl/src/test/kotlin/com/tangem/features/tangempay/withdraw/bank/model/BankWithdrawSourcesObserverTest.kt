@@ -10,7 +10,10 @@ import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.POLYGON_CHAIN_ID
@@ -22,6 +25,7 @@ import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.currencyStatus
 import com.tangem.features.tangempay.withdraw.bank.moneyAccountBalance
 import com.tangem.features.tangempay.withdraw.bank.moneyAccountStatus
+import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.offrampOptions
 import com.tangem.features.tangempay.withdraw.bank.offrampSource
 import com.tangem.features.tangempay.withdraw.bank.paymentToken
@@ -39,6 +43,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -47,10 +52,13 @@ internal class BankWithdrawSourcesObserverTest {
     private val userWalletId = UserWalletId("011")
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
+    private val speiAvailability = BankWithdrawSpeiAvailability(moneyAccountFeatureToggles)
 
     private val observer = BankWithdrawSourcesObserver(
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
         moneyAccountStatusSupplier = moneyAccountStatusSupplier,
+        speiAvailability = speiAvailability,
     )
 
     private val usdcPolygon = paymentToken()
@@ -62,6 +70,8 @@ internal class BankWithdrawSourcesObserverTest {
 
     @BeforeEach
     fun resetMocks() {
+        clearMocks(moneyAccountFeatureToggles)
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns false
         clearMocks(paymentAccountStatusSupplier, moneyAccountStatusSupplier)
     }
 
@@ -260,6 +270,28 @@ internal class BankWithdrawSourcesObserverTest {
             )
             assertThat(actual).containsExactly(expected)
         }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN SPEI among the rails WHEN observed THEN it is offered only with MXN on`(isMxnEnabled: Boolean) =
+            runTest {
+                // Arrange
+                every { moneyAccountFeatureToggles.isMxnEnabled } returns isMxnEnabled
+                emitMoneyStatus(activeMoneyAccount(token = usdcPolygon, balance = moneyAccountBalance()))
+                val spei = offrampDestination(
+                    rail = BankRail.SPEI,
+                    fee = BigDecimal("1"),
+                    calculationType = FeeCalculationType.PERCENTAGE,
+                )
+
+                // Act
+                val actual = observer.observe(account, offrampOptions(destinations = listOf(offrampDestination(), spei)))
+                    .toList()
+
+                // Assert
+                val expectedRails = if (isMxnEnabled) listOf(BankRail.ACH, BankRail.SPEI) else listOf(BankRail.ACH)
+                assertThat(actual.single()?.destinations?.map { it.rail }).isEqualTo(expectedRails)
+            }
 
         @ParameterizedTest
         @ProvideTestModels

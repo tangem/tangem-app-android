@@ -15,9 +15,11 @@ import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.domain.tangempay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSpeiAvailability
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.ContentUM
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.RecipientUM
@@ -25,6 +27,7 @@ import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifySequence
@@ -38,6 +41,8 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
     private val paymentAccount = BankWithdrawSourceAccount.Payment(userWalletId)
     private val moneyAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1")
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
+    private val speiAvailability = BankWithdrawSpeiAvailability(moneyAccountFeatureToggles)
     private val onRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
@@ -60,6 +65,8 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
 
     @BeforeEach
     fun resetMocks() {
+        clearMocks(moneyAccountFeatureToggles)
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns false
         clearMocks(
             router,
             uiMessageSender,
@@ -68,14 +75,14 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
             onCloseFlow,
             analytics,
         )
-        coEvery { getBankAccountsUseCase(userWalletId) } returns listOf(saburo, basit, raxanax).right()
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns listOf(saburo, basit, raxanax).right()
     }
 
     @Test
     fun `GIVEN accounts not loaded yet WHEN model created THEN content loading and search inactive`() {
         // Arrange
         val pending = CompletableDeferred<List<BankAccount>>()
-        coEvery { getBankAccountsUseCase(userWalletId) } coAnswers { pending.await().right() }
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } coAnswers { pending.await().right() }
 
         // Act
         val model = createModel()
@@ -170,7 +177,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
     @Test
     fun `GIVEN accounts fail to load WHEN model created THEN error message shown and step closed`() {
         // Arrange
-        coEvery { getBankAccountsUseCase(userWalletId) } returns BankOfframpError.Unknown(null).left()
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns BankOfframpError.Unknown(null).left()
 
         // Act
         val model = createModel()
@@ -332,6 +339,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
         router = router,
         uiMessageSender = uiMessageSender,
         getBankAccountsUseCase = getBankAccountsUseCase,
+        speiAvailability = speiAvailability,
         analytics = analytics,
     )
 }
