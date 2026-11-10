@@ -77,7 +77,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val conciergeWaitlistListener: ConciergeWaitlistListener,
     private val observeDemandSurveyCompletedUseCase: ObserveDemandSurveyCompletedUseCase,
-    private val onrampFeatureToggles: OnrampFeatureToggles,
+    onrampFeatureToggles: OnrampFeatureToggles,
     private val appCoroutineScope: AppCoroutineScope,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
@@ -98,7 +98,6 @@ internal class OnrampMainComponentModel @Inject constructor(
             cryptoCurrency = params.cryptoCurrency,
             onrampIntents = this,
             onrampAmountButtonUMStateFactory = onrampAmountButtonUMStateFactory,
-            isNewDesignSystemEnabled = Provider { onrampFeatureToggles.isNewDesignSystemEnabled },
         )
     }
 

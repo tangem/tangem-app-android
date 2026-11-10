@@ -25,14 +25,20 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessage
+import com.tangem.core.ui.ds.message.TangemMessageIconPosition
+import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.marketing.api.MarketingBannerComponent
@@ -42,6 +48,7 @@ import com.tangem.features.onramp.main.entity.OnrampCountryButtonUM
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampMainTopBarUM
 import com.tangem.core.ui.R as CoreUiR
+import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
 internal fun OnrampMainScreen(
@@ -261,14 +268,35 @@ private fun Content(
 }
 
 @Composable
+private fun NewBuyNotSupportedBanner(messageUM: TangemMessageUM, modifier: Modifier = Modifier) {
+    MessageBanner(
+        messageUM = messageUM.copy(
+            variant = TangemMessageBanner.Variant.Warning,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            iconPosition = TangemMessageIconPosition.Trailing,
+        ),
+        modifier = modifier,
+    )
+}
+
+@Composable
+@RemoveWithToggle("AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
+private fun LegacyBuyNotSupportedBanner(messageUM: TangemMessageUM, modifier: Modifier = Modifier) {
+    TangemMessage(messageUM = messageUM, modifier = modifier)
+}
+
+@Composable
 private fun OnrampNotifications(state: OnrampMainComponentUM, modifier: Modifier = Modifier) {
     val buyNotSupportedMessage = state.buyNotSupportedMessage
     val errorNotification = state.errorNotification
     when {
         buyNotSupportedMessage != null -> if (LocalOnrampDesignSystemEnabled.current) {
-            MessageBanner(messageUM = buyNotSupportedMessage, modifier = modifier)
+            NewBuyNotSupportedBanner(messageUM = buyNotSupportedMessage, modifier = modifier)
         } else {
-            TangemMessage(messageUM = buyNotSupportedMessage, modifier = modifier)
+            LegacyBuyNotSupportedBanner(messageUM = buyNotSupportedMessage, modifier = modifier)
         }
         errorNotification != null -> Notification(config = errorNotification.config, modifier = modifier)
     }

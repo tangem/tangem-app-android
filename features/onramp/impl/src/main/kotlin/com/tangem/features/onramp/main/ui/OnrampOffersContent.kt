@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -40,6 +41,7 @@ import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.paymentmethod.ui.themedImageUrl
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -88,18 +90,9 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBann
                 if (state.onrampAllOffersButtonConfig != null) {
                     SpacerH(12.dp)
                     if (LocalOnrampDesignSystemEnabled.current) {
-                        TangemButton(
-                            modifier = Modifier.fillMaxWidth(),
-                            variant = TangemButton.Variant.Secondary,
-                            text = state.onrampAllOffersButtonConfig.title,
-                            onClick = state.onrampAllOffersButtonConfig.onClick,
-                        )
+                        NewAllOffersButton(config = state.onrampAllOffersButtonConfig)
                     } else {
-                        SecondaryButton(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = state.onrampAllOffersButtonConfig.title.resolveReference(),
-                            onClick = state.onrampAllOffersButtonConfig.onClick,
-                        )
+                        LegacyAllOffersButton(config = state.onrampAllOffersButtonConfig)
                     }
                 }
             }
@@ -114,6 +107,26 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBann
         }
         OnrampOffersBlockUM.Empty -> Unit
     }
+}
+
+@Composable
+private fun NewAllOffersButton(config: OnrampAllOffersButtonConfig) {
+    TangemButton(
+        modifier = Modifier.fillMaxWidth(),
+        variant = TangemButton.Variant.Secondary,
+        text = config.title,
+        onClick = config.onClick,
+    )
+}
+
+@Composable
+@RemoveWithToggle("AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
+private fun LegacyAllOffersButton(config: OnrampAllOffersButtonConfig) {
+    SecondaryButton(
+        modifier = Modifier.fillMaxWidth(),
+        text = config.title.resolveReference(),
+        onClick = config.onClick,
+    )
 }
 
 @Composable
@@ -148,14 +161,20 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, 
             OfferContent(onrampOfferUM = onrampOfferUM, modifier = Modifier.fillMaxWidth().padding(12.dp))
         }
     } else {
-        OfferContent(
-            onrampOfferUM = onrampOfferUM,
-            modifier = modifier
-                .fillMaxWidth()
-                .background(color = TangemTheme.colors3.bg.secondary, shape = shape)
-                .padding(12.dp),
-        )
+        LegacyOfferContainer(onrampOfferUM = onrampOfferUM, shape = shape, modifier = modifier)
     }
+}
+
+@Composable
+@RemoveWithToggle("AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
+private fun LegacyOfferContainer(onrampOfferUM: OnrampOfferUM, shape: Shape, modifier: Modifier = Modifier) {
+    OfferContent(
+        onrampOfferUM = onrampOfferUM,
+        modifier = modifier
+            .fillMaxWidth()
+            .background(color = TangemTheme.colors3.bg.secondary, shape = shape)
+            .padding(12.dp),
+    )
 }
 
 @Composable
@@ -178,20 +197,9 @@ private fun OfferContent(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modi
             }
             SpacerWMax()
             if (LocalOnrampDesignSystemEnabled.current) {
-                TangemButton(
-                    variant = TangemButton.Variant.Secondary,
-                    size = TangemButton.Size.X9,
-                    text = resourceReference(R.string.common_buy),
-                    onClick = onrampOfferUM.onBuyClicked,
-                    isEnabled = isBuyEnabled,
-                )
+                NewBuyButton(onClick = onrampOfferUM.onBuyClicked, isEnabled = isBuyEnabled)
             } else {
-                PrimaryButton(
-                    size = TangemButtonSize.RoundedAction,
-                    text = stringResourceSafe(R.string.common_buy),
-                    onClick = onrampOfferUM.onBuyClicked,
-                    enabled = isBuyEnabled,
-                )
+                LegacyBuyButton(onClick = onrampOfferUM.onBuyClicked, isEnabled = isBuyEnabled)
             }
         }
         SpacerH(10.dp)
@@ -202,6 +210,28 @@ private fun OfferContent(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modi
             providerName = onrampOfferUM.providerName,
         )
     }
+}
+
+@Composable
+private fun NewBuyButton(onClick: () -> Unit, isEnabled: Boolean) {
+    TangemButton(
+        variant = TangemButton.Variant.Secondary,
+        size = TangemButton.Size.X9,
+        text = resourceReference(R.string.common_buy),
+        onClick = onClick,
+        isEnabled = isEnabled,
+    )
+}
+
+@Composable
+@RemoveWithToggle("AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
+private fun LegacyBuyButton(onClick: () -> Unit, isEnabled: Boolean) {
+    PrimaryButton(
+        size = TangemButtonSize.RoundedAction,
+        text = stringResourceSafe(R.string.common_buy),
+        onClick = onClick,
+        enabled = isEnabled,
+    )
 }
 
 @Composable
@@ -344,31 +374,56 @@ private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName
 
         SpacerW(4.dp)
 
-        SubcomposeAsyncImage(
-            modifier = Modifier
-                .then(
-                    if (LocalOnrampDesignSystemEnabled.current) {
-                        Modifier.size(width = 38.dp, height = 16.dp)
-                    } else {
-                        Modifier.sizeIn(maxWidth = 38.dp, maxHeight = 16.dp)
-                    },
-                )
-                .testTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON),
-            alignment = if (LocalOnrampDesignSystemEnabled.current) Alignment.CenterEnd else Alignment.Center,
-            model = ImageRequest.Builder(context = LocalContext.current)
-                .data(paymentMethod.themedImageUrl())
-                .crossfade(enable = true)
-                .allowHardware(false)
-                .build(),
-            loading = {
-                TextShimmer(
-                    style = TangemTheme.typography.body1,
-                    modifier = Modifier.width(40.dp),
-                )
-            },
-            contentDescription = null,
-        )
+        if (LocalOnrampDesignSystemEnabled.current) {
+            NewPaymentMethodIcon(paymentMethod = paymentMethod)
+        } else {
+            LegacyPaymentMethodIcon(paymentMethod = paymentMethod)
+        }
     }
+}
+
+@Composable
+private fun NewPaymentMethodIcon(paymentMethod: OnrampPaymentMethod) {
+    SubcomposeAsyncImage(
+        modifier = Modifier
+            .size(width = 38.dp, height = 16.dp)
+            .testTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON),
+        alignment = Alignment.CenterEnd,
+        model = ImageRequest.Builder(context = LocalContext.current)
+            .data(paymentMethod.themedImageUrl())
+            .crossfade(enable = true)
+            .allowHardware(false)
+            .build(),
+        loading = {
+            TextShimmer(
+                style = TangemTheme.typography.body1,
+                modifier = Modifier.width(40.dp),
+            )
+        },
+        contentDescription = null,
+    )
+}
+
+@Composable
+@RemoveWithToggle("AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
+private fun LegacyPaymentMethodIcon(paymentMethod: OnrampPaymentMethod) {
+    SubcomposeAsyncImage(
+        modifier = Modifier
+            .sizeIn(maxWidth = 38.dp, maxHeight = 16.dp)
+            .testTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON),
+        model = ImageRequest.Builder(context = LocalContext.current)
+            .data(paymentMethod.themedImageUrl())
+            .crossfade(enable = true)
+            .allowHardware(false)
+            .build(),
+        loading = {
+            TextShimmer(
+                style = TangemTheme.typography.body1,
+                modifier = Modifier.width(40.dp),
+            )
+        },
+        contentDescription = null,
+    )
 }
 
 @Composable

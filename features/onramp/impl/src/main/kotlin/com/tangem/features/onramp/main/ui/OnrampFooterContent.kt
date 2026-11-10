@@ -27,6 +27,7 @@ import com.tangem.features.onramp.main.entity.OnrampAmountButtonUM
 import com.tangem.features.onramp.main.entity.OnrampAmountButtonUMState
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampOffersBlockUM
+import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
 internal fun BoxScope.OnrampFooterContent(state: OnrampMainComponentUM.Content, modifier: Modifier = Modifier) {
@@ -92,40 +93,52 @@ private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
 
 @Composable
 private fun AmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modifier) {
-    val focusManager = LocalFocusManager.current
     if (LocalOnrampDesignSystemEnabled.current) {
-        TangemButton(
-            modifier = modifier,
-            variant = TangemButton.Variant.Secondary,
-            size = TangemButton.Size.X8,
-            text = stringReference("${button.value}${button.currency}"),
-            onClick = {
-                focusManager.clearFocus()
-                button.onClick()
-            },
-        )
+        NewAmountButton(button = button, modifier = modifier)
     } else {
-        Box(
-            modifier = modifier
-                .sizeIn(minHeight = 24.dp, minWidth = 62.dp)
-                .background(
-                    color = TangemTheme.colors3.bg.tertiary,
-                    shape = RoundedCornerShape(16.dp),
-                )
-                .clickable(
-                    onClick = {
-                        focusManager.clearFocus()
-                        button.onClick()
-                    },
-                )
-                .padding(vertical = 4.dp, horizontal = 20.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "${button.value}${button.currency}",
-                style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors3.text.primary,
+        LegacyAmountButton(button = button, modifier = modifier)
+    }
+}
+
+@Composable
+private fun NewAmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modifier) {
+    val focusManager = LocalFocusManager.current
+    TangemButton(
+        modifier = modifier,
+        variant = TangemButton.Variant.Secondary,
+        size = TangemButton.Size.X8,
+        text = stringReference("${button.value}${button.currency}"),
+        onClick = {
+            focusManager.clearFocus()
+            button.onClick()
+        },
+    )
+}
+
+@Composable
+@RemoveWithToggle("AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
+private fun LegacyAmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modifier) {
+    val focusManager = LocalFocusManager.current
+    Box(
+        modifier = modifier
+            .sizeIn(minHeight = 24.dp, minWidth = 62.dp)
+            .background(
+                color = TangemTheme.colors3.bg.tertiary,
+                shape = RoundedCornerShape(16.dp),
             )
-        }
+            .clickable(
+                onClick = {
+                    focusManager.clearFocus()
+                    button.onClick()
+                },
+            )
+            .padding(vertical = 4.dp, horizontal = 20.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "${button.value}${button.currency}",
+            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors3.text.primary,
+        )
     }
 }

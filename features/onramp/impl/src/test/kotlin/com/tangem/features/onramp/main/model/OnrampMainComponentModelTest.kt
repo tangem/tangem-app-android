@@ -953,7 +953,6 @@ internal class OnrampMainComponentModelTest {
     ): OnrampMainComponentModel {
         every { getOnrampQuotesUseCase.invoke() } returns quotesFlow
         every { onrampFeatureToggles.isCountryByIpEnabled } returns isCountryByIpEnabled
-        every { onrampFeatureToggles.isNewDesignSystemEnabled } returns false
         val params = OnrampMainComponent.Params(
             userWalletId = USER_WALLET_ID,
             cryptoCurrency = cryptoCurrency,

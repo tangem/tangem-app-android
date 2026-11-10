@@ -11,11 +11,8 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.message.TangemMessageIconPosition
 import com.tangem.core.ui.ds.message.TangemMessageUM
-import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.onramp.model.OnrampCurrency
@@ -34,7 +31,6 @@ internal class OnrampStateFactory(
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory,
     private val cryptoCurrency: CryptoCurrency,
     private val onrampIntents: OnrampIntents,
-    private val isNewDesignSystemEnabled: Provider<Boolean> = Provider { false },
 ) {
 
     fun getInitialState(
@@ -202,26 +198,12 @@ internal class OnrampStateFactory(
         title = resourceReference(R.string.onramp_residency_bottomsheet_country_not_supported),
         subtitle = resourceReference(R.string.onramp_settings_residence_description),
         messageEffect = TangemMessageEffect.None,
-        variant = TangemMessageBanner.Variant.Warning.takeIf { isNewDesignSystemEnabled() },
-        iconUM = warningIcon(),
-        iconPosition = if (isNewDesignSystemEnabled()) {
-            TangemMessageIconPosition.Trailing
-        } else {
-            TangemMessageIconPosition.Leading
-        },
-    )
-
-    private fun warningIcon(): TangemIconUM.Icon = if (isNewDesignSystemEnabled()) {
-        TangemIconUM.Icon(
-            imageVector = Icons.ic_info_20,
-            tintReference = { TangemTheme.colors3.icon.primary },
-        )
-    } else {
-        TangemIconUM.Icon(
+        iconUM = TangemIconUM.Icon(
             iconRes = CoreUiR.drawable.ic_attention_default_24,
             tintReference = { TangemTheme.colors3.icon.accent.yellow },
-        )
-    }
+        ),
+        iconPosition = TangemMessageIconPosition.Leading,
+    )
 
     private fun buildBuyNotSupportedMessage(): TangemMessageUM = TangemMessageUM(
         id = "buy_not_supported",
@@ -231,13 +213,11 @@ internal class OnrampStateFactory(
         ),
         subtitle = resourceReference(R.string.onramp_token_is_not_supported_banner_subtitle),
         messageEffect = TangemMessageEffect.None,
-        variant = TangemMessageBanner.Variant.Warning.takeIf { isNewDesignSystemEnabled() },
-        iconUM = warningIcon(),
-        iconPosition = if (isNewDesignSystemEnabled()) {
-            TangemMessageIconPosition.Trailing
-        } else {
-            TangemMessageIconPosition.Leading
-        },
+        iconUM = TangemIconUM.Icon(
+            iconRes = CoreUiR.drawable.ic_attention_default_24,
+            tintReference = { TangemTheme.colors3.icon.accent.yellow },
+        ),
+        iconPosition = TangemMessageIconPosition.Leading,
     )
 
     private fun getNoPairsErrorState(): OnrampMainComponentUM {
