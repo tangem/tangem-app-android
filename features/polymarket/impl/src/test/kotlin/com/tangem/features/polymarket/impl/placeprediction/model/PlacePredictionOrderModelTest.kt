@@ -69,6 +69,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import kotlinx.coroutines.CompletableDeferred
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
@@ -966,6 +969,32 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
+        fun `GIVEN the market end arrives during signing WHEN a sell is placed THEN the result shows that date`() =
+            runOrderTest {
+                // Arrange
+                val marketEnd = Instant.parse("2028-11-08T04:59:00Z")
+                val event = CompletableDeferred<Either<PolymarketEventError, PolymarketEvent>>()
+                coEvery { getEventUseCase(any(), eventId = EVENT_ID) } coAnswers { event.await() }
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote(shares = HELD).right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
+                    event.complete(createEventEndingAt(marketEnd).right())
+                    delay(timeMillis = 1)
+                    createPlaceResult(makingAmount = HELD, takingAmount = BigDecimal("11.01")).right()
+                }
+                val model = createQuotedModel(params = SELL_PARAMS)
+                val status = slot<PlacePredictionRoute.Status>()
+                every { router.replaceAll(capture(status), onComplete = any()) } returns Unit
+
+                // Act
+                model.tapPlace()
+                advanceTimeBy(delayTimeMillis = 2)
+                runCurrent()
+
+                // Assert
+                assertThat(status.captured.market.resolutionDateMillis).isEqualTo(marketEnd.toEpochMilli())
+            }
+
+        @Test
         fun `GIVEN a sell WHEN half the position is entered THEN only that part is quoted`() = runOrderTest {
             // Arrange
             val model = createQuotedModel(params = SELL_PARAMS)
@@ -1706,6 +1735,11 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
         runCurrent()
         return model
+    }
+
+    private fun createEventEndingAt(end: Instant): PolymarketEvent {
+        val event = createEvent()
+        return event.copy(markets = event.markets.map { it.copy(endDate = end.toString()) })
     }
 
     private fun TestScope.createQuotedModel(
