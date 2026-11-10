@@ -46,9 +46,8 @@ import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -104,6 +103,7 @@ import org.junit.jupiter.api.BeforeEach
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketMainModelTest {
@@ -194,13 +194,13 @@ internal class PolymarketMainModelTest {
         // Assert
         assertThat(model.uiState.value.isCategoriesLoading).isTrue()
         assertThat(model.uiState.value.categories).isEmpty()
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketFeedContentUM.Loading)
 
         categoriesReady.complete(Unit)
         advanceUntilIdle()
         assertThat(model.uiState.value.isCategoriesLoading).isFalse()
         assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketFeedContentUM.Loading)
     }
 
     @Test
@@ -233,7 +233,7 @@ internal class PolymarketMainModelTest {
         // Assert
         assertThat(model.uiState.value.categories).isEmpty()
         assertThat(model.uiState.value.isCategoriesLoading).isFalse()
-        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketFeedContentUM.Error::class.java)
         assertThat(dispatchedActions).isEmpty()
         verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any(), any()) }
     }
@@ -250,7 +250,7 @@ internal class PolymarketMainModelTest {
 
             // Assert
             assertThat(model.uiState.value.categories).isEmpty()
-            assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+            assertThat(model.uiState.value.content).isInstanceOf(PolymarketFeedContentUM.Error::class.java)
             assertThat(dispatchedActions).isEmpty()
             verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any(), any()) }
         }
@@ -267,7 +267,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Empty)
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketFeedContentUM.Empty)
     }
 
     @Test
@@ -288,7 +288,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
+        val content = model.uiState.value.content as PolymarketFeedContentUM.Content
         assertThat(content.events.map { it.id }).containsExactly("event-1", "event-2").inOrder()
         assertThat(content.footer).isEqualTo(PolymarketFeedFooterUM.None)
     }
@@ -308,7 +308,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
+        val content = model.uiState.value.content as PolymarketFeedContentUM.Content
         assertThat(content.footer).isEqualTo(PolymarketFeedFooterUM.Loading)
     }
 
@@ -326,7 +326,7 @@ internal class PolymarketMainModelTest {
         dispatchedActions.clear()
 
         // Act
-        val footer = (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).footer
+        val footer = (model.uiState.value.content as PolymarketFeedContentUM.Content).footer
         (footer as PolymarketFeedFooterUM.Error).onRetryClick()
         advanceUntilIdle()
 
@@ -349,7 +349,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketFeedContentUM.Error::class.java)
     }
 
     @Test
@@ -367,7 +367,7 @@ internal class PolymarketMainModelTest {
         val loadedCategories = model.uiState.value.categories
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        (model.uiState.value.content as PolymarketFeedContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
@@ -389,7 +389,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        (model.uiState.value.content as PolymarketFeedContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
@@ -415,13 +415,13 @@ internal class PolymarketMainModelTest {
         dispatchedActions.clear()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        (model.uiState.value.content as PolymarketFeedContentUM.Error).onReloadClick()
 
         // Assert
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketFeedContentUM.Loading)
         assertThat(model.uiState.value.isCategoriesLoading).isTrue()
         runCurrent()
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketFeedContentUM.Loading)
         assertThat(dispatchedActions).isEmpty()
 
         categoriesReady.complete(Unit)
@@ -520,11 +520,11 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        (model.uiState.value.content as PolymarketFeedContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketFeedContentUM.Error::class.java)
         assertThat(dispatchedActions).isEmpty()
         coVerify(exactly = 2) { getCategoriesUseCase(any()) }
     }
@@ -638,7 +638,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).events.single().onClick()
+        (model.uiState.value.content as PolymarketFeedContentUM.Content).events.single().onClick()
 
         // Assert
         verify {
@@ -666,7 +666,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content)
+        (model.uiState.value.content as PolymarketFeedContentUM.Content)
             .events.single()
             .rows.single()
             .outcomes.single()
@@ -1196,7 +1196,7 @@ internal class PolymarketMainModelTest {
         every { messageSender.send(capture(message)) } returns Unit
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content)
+        (model.uiState.value.content as PolymarketFeedContentUM.Content)
             .events.single()
             .rows.single()
             .outcomes.single()
@@ -1777,7 +1777,7 @@ internal class PolymarketMainModelTest {
         ))
         advanceTimeBy(300)
         runCurrent()
-        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
+        val content = model.uiState.value.content as PolymarketFeedContentUM.Content
         model.onPause()
         runCurrent()
 
@@ -1801,6 +1801,44 @@ internal class PolymarketMainModelTest {
         depositAddress = depositAddress,
         positions = positions,
     )
+
+    @Test
+    fun `GIVEN a parent with children WHEN See all tapped THEN the category screen opens`() = runTest {
+        // Arrange
+        val category = PolymarketCategory(
+            id = 6, label = "Sports", icon = null,
+            subcategories = listOf(PolymarketCategory(id = 14, label = "Soccer", icon = null)),
+        )
+        coEvery { getCategoriesUseCase(any()) } returns listOf(category).right()
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+
+        // Act
+        requireNotNull(model.uiState.value.onSeeAllClick).invoke()
+
+        // Assert
+        verify { router.push(PolymarketRoute.Category(USER_WALLET_ID, category)) }
+    }
+
+    @Test
+    fun `GIVEN D2 disabled WHEN parent has children THEN See all stays hidden`() = runTest {
+        // Arrange
+        val category = PolymarketCategory(
+            id = 6, label = "Sports", icon = null,
+            subcategories = listOf(PolymarketCategory(id = 14, label = "Soccer", icon = null)),
+        )
+        coEvery { getCategoriesUseCase(any()) } returns listOf(category).right()
+
+        // Act
+        val model = createModel(this, isPhaseTwoEnabled = false)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.onSeeAllClick).isNull()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 6)),
+        )
+    }
 
     private fun createModel(testScope: TestScope, isPhaseTwoEnabled: Boolean = false): PolymarketMainModel {
         val featureToggles = mockk<PolymarketFeatureToggles> {
@@ -1884,7 +1922,7 @@ internal class PolymarketMainModelTest {
     )
 
     private fun shownEventIds(model: PolymarketMainModel): List<String> =
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).events.map { it.id }
+        (model.uiState.value.content as PolymarketFeedContentUM.Content).events.map { it.id }
 
     private fun batchOf(vararg events: PolymarketEvent) = PolymarketEventsBatch(
         events = events.toList(),

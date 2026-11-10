@@ -1720,6 +1720,8 @@
   <string name="money_account_send_pay_button">Pay %s</string>
   <string name="money_account_send_unavailable_description">Try again in 5 minutes</string>
   <string name="money_account_send_unavailable_title">Operation currently unavailable</string>
+  <string name="money_account_yield_mode_average_apr">Average APR %s</string>
+  <string name="money_account_yield_mode_earn_up_to">Earn up to %s a year</string>
   <string name="news_all_news">All news</string>
   <string name="news_like">Like</string>
   <plurals name="news_published_hours_ago">
@@ -2051,6 +2053,8 @@
   <string name="prediction_fee_sheet_polymarket_fee">Polymarket Fee</string>
   <string name="prediction_fee_sheet_sell_description">Selling %1$s shares at %2$s¢ each. Final shares count (and corresponding %3$s amount executed) may vary within your %4$s slippage limit, depending on what this market can match.</string>
   <string name="prediction_fee_sheet_total">Total</string>
+  <string name="prediction_filter_games">Games</string>
+  <string name="prediction_filter_questions">Questions</string>
   <string name="prediction_history_bought">Bought</string>
   <string name="prediction_history_csv_average_price">Average price</string>
   <string name="prediction_history_csv_date">Date</string>
@@ -3436,6 +3440,7 @@
   <string name="tangempay_withdraw_bank_account_type_saving">Saving</string>
   <string name="tangempay_withdraw_bank_account_type_screen_title">Select account type</string>
   <string name="tangempay_withdraw_bank_account_type_title">Account type</string>
+  <string name="tangempay_withdraw_bank_amount_error_min">The amount to withdraw must be at least %s</string>
   <string name="tangempay_withdraw_bank_amount_error_range">Please set amount from %1$s to %2$s</string>
   <string name="tangempay_withdraw_bank_amount_not_enough_funds">Not enough funds</string>
   <string name="tangempay_withdraw_bank_confirm_title">Confirm transfer</string>
