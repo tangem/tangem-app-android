@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.impl.positiondetails.ui
+package com.tangem.features.polymarket.impl.common.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.padding
@@ -12,32 +12,44 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
-internal fun PolymarketMarketClosedSheet(isShown: Boolean, onDismiss: () -> Unit) {
+internal fun PolymarketNoticeSheet(
+    isShown: Boolean,
+    title: TextReference,
+    description: TextReference,
+    onDismiss: () -> Unit,
+) {
     TangemModal<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = isShown,
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        title = {
-            TangemModal.TopNavigation(
-                title = resourceReference(R.string.prediction_place_notification_market_closed_title),
-            )
-        },
+        title = { TangemModal.TopNavigation(title = title) },
     ) {
         Text(
-            text = stringResourceSafe(R.string.prediction_place_notification_market_closed_description),
+            text = description.resolveReference(),
             style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp),
         )
     }
+}
+
+@Composable
+internal fun PolymarketMarketClosedSheet(isShown: Boolean, onDismiss: () -> Unit) {
+    PolymarketNoticeSheet(
+        isShown = isShown,
+        title = resourceReference(R.string.prediction_place_notification_market_closed_title),
+        description = resourceReference(R.string.prediction_place_notification_market_closed_description),
+        onDismiss = onDismiss,
+    )
 }
 
 @Preview(name = "Light", widthDp = 360, heightDp = 800)

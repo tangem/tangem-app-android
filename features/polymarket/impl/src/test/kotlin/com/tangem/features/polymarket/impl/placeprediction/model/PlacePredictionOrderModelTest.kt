@@ -22,6 +22,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
+import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
@@ -34,6 +35,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
@@ -42,6 +44,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
+import com.tangem.features.polymarket.impl.placeprediction.entity.isTradable
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -1386,6 +1389,64 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Assert
             coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
             assertThat(model.isSubmitting()).isFalse()
+        }
+    }
+
+    @Nested
+    inner class UntradableMarket {
+
+        @Test
+        fun `GIVEN the market takes no orders WHEN an amount is entered THEN it is quoted and the screen cannot trade`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getEventUseCase(any(), eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
+                val model = createOrderModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+
+                // Act
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Assert
+                coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
+                assertThat(model.uiState.value.isTradable()).isFalse()
+                assertThat(model.uiState.value.isReadyToPlace).isFalse()
+            }
+
+        @ParameterizedTest
+        @CsvSource("true, MarketClosed", "false, Unknown")
+        fun `GIVEN the price cannot be read before an amount WHEN polled THEN the screen shows why and stops polling`(
+            isMarketClosed: Boolean,
+            expected: PriceErrorUM,
+        ) = runOrderTest {
+            // Arrange
+            val error = if (isMarketClosed) PredictionPriceError.MarketClosed else PredictionPriceError.InvalidAsset
+            coEvery { getPriceUseCase(assetId = any(), side = any()) } returns error.left()
+            val model = createOrderModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onResume()
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+            // Assert
+            assertThat(model.uiState.value.priceError).isEqualTo(expected)
+            coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
+        }
+
+        @Test
+        fun `GIVEN the untradable sheet WHEN it is dismissed twice THEN the flow is left once`() = runOrderTest {
+            // Arrange
+            val model = createOrderModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onUntradableSheetDismiss()
+            model.onUntradableSheetDismiss()
+
+            // Assert
+            verify(exactly = 1) { router.pop(any()) }
         }
     }
 
