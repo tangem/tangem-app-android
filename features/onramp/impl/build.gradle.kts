@@ -49,6 +49,7 @@ dependencies {
     api(projects.domain.onramp.models)
     api(projects.domain.settings)
     api(projects.domain.tokens)
+    implementation(projects.domain.txhistory)
     api(projects.domain.wallets)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appTheme.models)

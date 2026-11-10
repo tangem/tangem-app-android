@@ -89,6 +89,7 @@ internal class OnrampRedirectModelTest {
             onrampSuccessScreenListener = successListener,
             getAppThemeModeUseCase = mockk(relaxed = true),
             router = mockk(relaxed = true),
+            appTxHistoryFetcher = mockk(relaxed = true),
             paramsContainer = MutableParamsContainer(
                 OnrampRedirectComponent.Params(
                     userWalletId = userWalletId,
