@@ -1,5 +1,7 @@
 package com.tangem.features.mcp.impl.deeplink
 
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.INTENT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SOURCE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
@@ -7,11 +9,9 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
-import com.tangem.features.mcp.api.deeplink.McpIntentDeepLinkHandler
+import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import javax.inject.Inject
 
 /**
  * Handles the `tangem://intent?id=...&source=...&type=...` deep link.
@@ -20,13 +20,17 @@ import dagger.assisted.AssistedInject
  * operation is dropped, so it never takes the place of a supported flow in the request queue. Express links may omit
  * `type`, as the exchange is the only operation it has had so far.
  */
-internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
-    @Assisted queryParams: Map<String, String>,
-    mcpRequestService: McpRequestService,
-    analyticsEventHandler: AnalyticsEventHandler,
-) : McpIntentDeepLinkHandler {
+internal class McpIntentDeepLinkHandler @Inject constructor(
+    private val mcpRequestService: McpRequestService,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val mcpFeatureToggles: McpFeatureToggles,
+) : DeepLinkHandler {
 
-    init {
+    override val isEnabled: Boolean
+        get() = mcpFeatureToggles.isMcpEnabled
+
+    override fun handle(request: DeepLinkRequest) {
+        val queryParams = request.queryParams
         val id = queryParams[INTENT_ID_KEY]?.takeIf { it.isNotBlank() }
         val source = queryParams[SOURCE_KEY]?.takeIf { it.isNotBlank() }
         val type = queryParams[TYPE_KEY]?.takeIf { it.isNotBlank() }
@@ -57,11 +61,6 @@ internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
             .firstOrNull { it.name.lowercase() == type }
             ?.let(McpRequest.Intent.Source::Transaction)
         else -> null
-    }
-
-    @AssistedFactory
-    interface Factory : McpIntentDeepLinkHandler.Factory {
-        override fun create(queryParams: Map<String, String>): DefaultMcpIntentDeepLinkHandler
     }
 
     companion object {

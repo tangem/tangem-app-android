@@ -1,8 +1,10 @@
 package com.tangem.feature.usedesk.deeplink
 
+import android.net.Uri
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -21,7 +23,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class DefaultSupportDeepLinkHandlerTest {
+internal class SupportDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
@@ -56,10 +58,10 @@ internal class DefaultSupportDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN selected wallet and meta info WHEN handler created THEN pushes Usedesk with Deeplink source`() =
+    fun `GIVEN selected wallet and meta info WHEN handled THEN pushes Usedesk with Deeplink source`() =
         runTest {
             // Act
-            createHandler()
+            handle()
             advanceUntilIdle()
 
             // Assert
@@ -67,13 +69,13 @@ internal class DefaultSupportDeepLinkHandlerTest {
         }
 
     @Test
-    fun `GIVEN no selected wallet WHEN handler created THEN does not request meta info and does not push`() =
+    fun `GIVEN no selected wallet WHEN handled THEN does not request meta info and does not push`() =
         runTest {
             // Arrange
             every { getSelectedWalletSyncUseCase() } returns Either.Left(GetUserWalletError.UserWalletNotFound)
 
             // Act
-            createHandler()
+            handle()
             advanceUntilIdle()
 
             // Assert
@@ -83,12 +85,12 @@ internal class DefaultSupportDeepLinkHandlerTest {
         }
 
     @Test
-    fun `GIVEN meta info fails WHEN handler created THEN does not push`() = runTest {
+    fun `GIVEN meta info fails WHEN handled THEN does not push`() = runTest {
         // Arrange
         coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } returns Either.Left(IllegalStateException("No meta"))
 
         // Act
-        createHandler()
+        handle()
         advanceUntilIdle()
 
         // Assert
@@ -97,12 +99,12 @@ internal class DefaultSupportDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN chat on top of stack WHEN handler created THEN neither pushes nor pops`() = runTest {
+    fun `GIVEN chat on top of stack WHEN handled THEN neither pushes nor pops`() = runTest {
         // Arrange
         every { appRouter.stack } returns listOf(AppRoute.Wallet, settingsUsedeskRoute)
 
         // Act
-        createHandler()
+        handle()
         advanceUntilIdle()
 
         // Assert
@@ -111,7 +113,7 @@ internal class DefaultSupportDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN chat covered by another screen WHEN handler created THEN pops back to that chat`() = runTest {
+    fun `GIVEN chat covered by another screen WHEN handled THEN pops back to that chat`() = runTest {
         // Arrange
         every { appRouter.stack } returns listOf(
             AppRoute.Wallet,
@@ -120,7 +122,7 @@ internal class DefaultSupportDeepLinkHandlerTest {
         )
 
         // Act
-        createHandler()
+        handle()
         advanceUntilIdle()
 
         // Assert
@@ -128,11 +130,12 @@ internal class DefaultSupportDeepLinkHandlerTest {
         verify(exactly = 0) { appRouter.push(any(), any()) }
     }
 
-    private fun TestScope.createHandler() = DefaultSupportDeepLinkHandler(
-        coroutineScope = this,
+    private fun TestScope.handle() = SupportDeepLinkHandler(
         appRouter = appRouter,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
+    ).handle(
+        DeepLinkRequest(uri = mockk<Uri>(), queryParams = emptyMap(), scope = this, isFromOnNewIntent = false),
     )
 
     private companion object {
