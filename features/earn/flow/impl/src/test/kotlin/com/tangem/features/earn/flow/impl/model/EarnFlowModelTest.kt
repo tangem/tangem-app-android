@@ -1134,6 +1134,37 @@ internal class EarnFlowModelTest {
         }
 
         @Test
+        fun `GIVEN partly sent attempt failed WHEN retried with new amount THEN result keeps the retry amount`() =
+            runTest {
+                // Arrange
+                val retryPlan = TestPlan(expectedAmount = BigDecimal("0.8"))
+                coEvery { session.verify(plan = any()) } answers {
+                    EarnVerification.Verified(TestVerifiedPlan(firstArg()))
+                }
+                every { session.execute(plan = any()) } returnsMany listOf(
+                    flowOf(
+                        EarnSigningStep.Sent(txRef),
+                        EarnSigningStep.Failed(SendTransactionError.UserCancelledError),
+                    ),
+                    flowOf(EarnSigningStep.Sent(txRef), EarnSigningStep.Done(txRef, testResult())),
+                )
+                val model = createConfirmedModel()
+                model.onConfirmClick()
+                advanceUntilIdle()
+                coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returns retryPlan.right()
+
+                // Act
+                model.onConfirmClick()
+                advanceUntilIdle()
+                model.onConfirmClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.state.value.sentAmount).isEqualTo(retryPlan.expectedAmount)
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN result with subtitle WHEN result shown THEN product subtitle kept`() = runTest {
             // Arrange
             val subtitle = stringReference("Now earning")
