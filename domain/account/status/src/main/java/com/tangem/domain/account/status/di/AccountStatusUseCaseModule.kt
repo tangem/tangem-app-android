@@ -195,7 +195,7 @@ internal object AccountStatusUseCaseModule {
 
     @Provides
     @Singleton
-    fun provideNetworkContributionsRefresher(
+    fun provideBalanceContributionsRefresher(
         singleAccountListSupplier: SingleAccountListSupplier,
         balanceFetchingOperations: BalanceFetchingOperations,
         tokensFeatureToggles: TokensFeatureToggles,
