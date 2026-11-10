@@ -23,3 +23,17 @@ val CryptoCurrencyStatus.Value.yieldSupply: YieldSupplyStatus?
  */
 val CryptoCurrencyStatus.Value.yieldSupplySource: StatusSource?
     get() = contributionOrNull<YieldSupplyContribution>()?.source
+
+/**
+ * [yieldSupplySource] of an active yield supply, whose supplied part is folded into `amount`, so the amount is only as
+ * fresh as this source. `null` when yield supply is not active or carries no source.
+ */
+val CryptoCurrencyStatus.Value.activeYieldSupplySource: StatusSource?
+    get() = yieldSupplySource?.takeIf { yieldSupply?.isActive == true }
+
+/**
+ * Whether `amount` is up to date: the network status it comes from and, when one is folded into it, the active yield
+ * supply ([activeYieldSupplySource]) are both ACTUAL.
+ */
+val CryptoCurrencyStatus.Value.isSpendableAmountActual: Boolean
+    get() = sources.networkSource.isActual() && activeYieldSupplySource?.isActual() != false

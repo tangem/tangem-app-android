@@ -128,7 +128,7 @@ object CryptoCurrencyStatusFactory {
         contributions: List<BalanceContribution>,
         yieldSupplyStatus: YieldSupplyStatus?,
     ): CryptoCurrencyStatus.Value {
-        val amount = when (val amount = status.amounts[currency.id]) {
+        val networkAmount = when (val amount = status.amounts[currency.id]) {
             is NetworkStatus.Amount.Loaded -> amount.value
             is NetworkStatus.Amount.NotFound -> {
                 return createNoAmount(quoteStatus = quoteStatus)
@@ -137,6 +137,7 @@ object CryptoCurrencyStatusFactory {
                 return CryptoCurrencyStatus.Loading
             }
         }
+        val amount = networkAmount.withSpendableContributions(contributions)
 
         if (currency is CryptoCurrency.Token && currency.isCustom) {
             return createCustom(
@@ -270,5 +271,16 @@ object CryptoCurrencyStatusFactory {
 
     private fun calculateFiatAmount(amount: BigDecimal, fiatRate: BigDecimal): BigDecimal {
         return amount * fiatRate
+    }
+
+    /**
+     * Folds what the contributions add to the spendable balance into the network amount, so `amount` and
+     * `fiatAmount` keep meaning "what can be sent" wherever that balance is fetched from. Returns the network amount
+     * untouched, scale included, when nothing spendable is added.
+     */
+    private fun BigDecimal.withSpendableContributions(contributions: List<BalanceContribution>): BigDecimal {
+        val spendableDelta = contributions.sumOf(BalanceContribution::spendableDeltaCryptoAmount)
+
+        return if (spendableDelta.signum() == 0) this else this + spendableDelta
     }
 }
