@@ -9,6 +9,15 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.layout.IntrinsicMeasurable
+import androidx.compose.ui.layout.IntrinsicMeasureScope
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,6 +33,11 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.ds.message.TangemMessage
+import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -36,6 +50,7 @@ import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
@@ -62,15 +77,14 @@ internal fun AllOffersContentSheet(
         }
     }
 
-    TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
-        config = TangemBottomSheetConfig(
-            isShown = true,
-            onDismissRequest = onCloseClick,
-            content = TangemBottomSheetConfigContent.Empty,
-        ),
-        onBack = onBack,
-        containerColor = TangemTheme.colors3.bg.primary,
-        title = {
+    val config = TangemBottomSheetConfig(
+        isShown = true,
+        onDismissRequest = onCloseClick,
+        content = TangemBottomSheetConfigContent.Empty,
+    )
+    val isNewDesignSystemEnabled = LocalOnrampDesignSystemEnabled.current
+    val title: @Composable () -> Unit = {
+        CompositionLocalProvider(LocalOnrampDesignSystemEnabled provides isNewDesignSystemEnabled) {
             if (state is AllOffersStateUM.Content && state.currentMethod != null) {
                 ProviderTitle(
                     onCloseClick = onCloseClick,
@@ -79,15 +93,34 @@ internal fun AllOffersContentSheet(
             } else {
                 PaymentMethodTitle(onCloseClick = onCloseClick)
             }
-        },
-        content = {
+        }
+    }
+    val content: @Composable () -> Unit = {
+        CompositionLocalProvider(LocalOnrampDesignSystemEnabled provides isNewDesignSystemEnabled) {
             AllOffersSheetContent(
                 state = state,
                 marketingBannerComponent = marketingBannerComponent,
                 linkedMarketingBannerComponent = linkedMarketingBannerComponent,
             )
-        },
-    )
+        }
+    }
+
+    if (isNewDesignSystemEnabled) {
+        TangemModal<TangemBottomSheetConfigContent.Empty>(
+            config = config,
+            onBack = onBack,
+            title = { title() },
+            content = { content() },
+        )
+    } else {
+        TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
+            config = config,
+            onBack = onBack,
+            containerColor = TangemTheme.colors3.bg.primary,
+            title = { title() },
+            content = { content() },
+        )
+    }
 }
 
 @Composable
@@ -96,19 +129,21 @@ private fun AllOffersSheetContent(
     marketingBannerComponent: MarketingBannerComponent,
     linkedMarketingBannerComponent: MarketingBannerComponent,
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    val isNewDesignSystemEnabled = LocalOnrampDesignSystemEnabled.current
+    Column(modifier = if (isNewDesignSystemEnabled) Modifier.fillMaxWidth() else Modifier.fillMaxSize()) {
         // Standalone marketing banner at the top of the sheet (DS3 -> wrap in the redesign theme).
         // Renders nothing when no matching campaign, so it adds no space in the common case.
-        TangemThemeRedesign {
-            marketingBannerComponent.Content(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            )
+        IntrinsicFreeBox {
+            TangemThemeRedesign {
+                marketingBannerComponent.Content(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+            }
         }
         Box(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = (if (isNewDesignSystemEnabled) Modifier.fillMaxWidth() else Modifier.fillMaxSize())
                 .padding(vertical = 8.dp),
         ) {
             AnimatedContent(
@@ -144,26 +179,73 @@ private fun AllOffersSheetContent(
     }
 }
 
+// The banner can be a pager, which throws on the intrinsic-size queries TangemModal makes.
+@Composable
+private fun IntrinsicFreeBox(content: @Composable () -> Unit) {
+    Layout(content = content, measurePolicy = IntrinsicFreeMeasurePolicy)
+}
+
+private object IntrinsicFreeMeasurePolicy : MeasurePolicy {
+
+    override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
+        val placeables = measurables.map { it.measure(constraints) }
+        val width = placeables.maxOfOrNull { it.width } ?: constraints.minWidth
+        val height = placeables.sumOf { it.height }
+        return layout(width, height) {
+            var y = 0
+            placeables.forEach {
+                it.placeRelative(x = 0, y = y)
+                y += it.height
+            }
+        }
+    }
+
+    override fun IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int) = 0
+
+    override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int) = 0
+
+    override fun IntrinsicMeasureScope.minIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int) = 0
+
+    override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int) = 0
+}
+
 @Composable
 private fun ProviderTitle(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
-    TangemModalBottomSheetTitle(
-        title = TextReference.Res(R.string.onramp_all_offers_button_title),
-        subtitle = TextReference.Res(R.string.express_choose_providers_title),
-        startIconRes = R.drawable.ic_back_24,
-        onStartClick = onBackClick,
-        endIconRes = com.tangem.core.ui.R.drawable.ic_close_24,
-        onEndClick = onCloseClick,
-    )
+    if (LocalOnrampDesignSystemEnabled.current) {
+        TangemModal.TopNavigation(
+            title = TextReference.Res(R.string.onramp_all_offers_button_title),
+            subtitle = TextReference.Res(R.string.express_choose_providers_title),
+            onBack = onBackClick,
+            onClose = onCloseClick,
+        )
+    } else {
+        TangemModalBottomSheetTitle(
+            title = TextReference.Res(R.string.onramp_all_offers_button_title),
+            subtitle = TextReference.Res(R.string.express_choose_providers_title),
+            startIconRes = R.drawable.ic_back_24,
+            onStartClick = onBackClick,
+            endIconRes = com.tangem.core.ui.R.drawable.ic_close_24,
+            onEndClick = onCloseClick,
+        )
+    }
 }
 
 @Composable
 private fun PaymentMethodTitle(onCloseClick: () -> Unit) {
-    TangemModalBottomSheetTitle(
-        title = TextReference.Res(R.string.onramp_all_offers_button_title),
-        subtitle = TextReference.Res(R.string.onramp_payment_method_subtitle),
-        endIconRes = com.tangem.core.ui.R.drawable.ic_close_24,
-        onEndClick = onCloseClick,
-    )
+    if (LocalOnrampDesignSystemEnabled.current) {
+        TangemModal.TopNavigation(
+            title = TextReference.Res(R.string.onramp_all_offers_button_title),
+            subtitle = TextReference.Res(R.string.onramp_payment_method_subtitle),
+            onClose = onCloseClick,
+        )
+    } else {
+        TangemModalBottomSheetTitle(
+            title = TextReference.Res(R.string.onramp_all_offers_button_title),
+            subtitle = TextReference.Res(R.string.onramp_payment_method_subtitle),
+            endIconRes = com.tangem.core.ui.R.drawable.ic_close_24,
+            onEndClick = onCloseClick,
+        )
+    }
 }
 
 @Composable
@@ -179,7 +261,7 @@ private fun OffersBasedOnPaymentMethodContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (notification != null) {
-            Notification(config = notification.config)
+            OnrampOffersNotification(notification = notification)
             SpacerH(8.dp)
         }
         offers.fastForEach { offer ->
@@ -196,36 +278,51 @@ private fun AllOffersContentLoading() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors3.bg.primary)
+            .then(
+                if (LocalOnrampDesignSystemEnabled.current) {
+                    Modifier
+                } else {
+                    Modifier.background(TangemTheme.colors3.bg.primary)
+                },
+            )
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        RectangleShimmer(
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .fillMaxWidth()
-                .height(96.dp)
-                .size(width = 76.dp, height = 20.dp),
-            radius = 14.dp,
-        )
-        RectangleShimmer(
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .fillMaxWidth()
-                .height(96.dp)
-                .size(width = 76.dp, height = 20.dp),
-            radius = 14.dp,
-        )
-        RectangleShimmer(
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .fillMaxWidth()
-                .height(96.dp)
-                .size(width = 76.dp, height = 20.dp),
-            radius = 14.dp,
-        )
+        repeat(times = LOADING_ITEMS_COUNT) {
+            if (LocalOnrampDesignSystemEnabled.current) {
+                ProvideTangemShimmer {
+                    TangemShimmer(
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .fillMaxWidth()
+                            .height(96.dp),
+                        radius = 14.dp,
+                    )
+                }
+            } else {
+                RectangleShimmer(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth()
+                        .height(96.dp)
+                        .size(width = 76.dp, height = 20.dp),
+                    radius = 14.dp,
+                )
+            }
+        }
     }
 }
+
+@Composable
+private fun OnrampOffersNotification(notification: NotificationUM) {
+    if (LocalOnrampDesignSystemEnabled.current) {
+        TangemMessage(config = notification.config)
+    } else {
+        Notification(config = notification.config)
+    }
+}
+
+private const val LOADING_ITEMS_COUNT = 3
 
 @Composable
 fun AllOffersError(errorNotification: NotificationUM) {
@@ -234,7 +331,7 @@ fun AllOffersError(errorNotification: NotificationUM) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
     ) {
-        Notification(config = errorNotification.config)
+        OnrampOffersNotification(notification = errorNotification)
     }
 }
 

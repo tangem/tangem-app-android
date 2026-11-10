@@ -25,6 +25,8 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.ds.message.TangemMessage
+import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -35,6 +37,7 @@ import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
 import com.tangem.features.onramp.alloffers.entity.OnrampRegionRestrictionNotification
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
@@ -53,7 +56,11 @@ internal fun PaymentMethodsContent(methods: ImmutableList<AllOffersPaymentMethod
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (notification != null) {
-            Notification(config = notification.config)
+            if (LocalOnrampDesignSystemEnabled.current) {
+                TangemMessage(config = notification.config)
+            } else {
+                Notification(config = notification.config)
+            }
             SpacerH(8.dp)
         }
         methods.fastForEach { method ->
@@ -67,26 +74,41 @@ internal fun PaymentMethodsContent(methods: ImmutableList<AllOffersPaymentMethod
 
 @Composable
 private fun PaymentMethod(methodUM: AllOffersPaymentMethodUM, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                color = TangemTheme.colors3.bg.secondary,
-                shape = RoundedCornerShape(14.dp),
+    val contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 14.dp, bottom = 12.dp)
+    if (LocalOnrampDesignSystemEnabled.current) {
+        TangemSurface(
+            modifier = modifier
+                .fillMaxWidth()
+                .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD),
+            color = TangemTheme.colors3.bg.secondary,
+            shape = RoundedCornerShape(14.dp),
+            onClick = methodUM.methodConfig.onClick,
+        ) {
+            PaymentMethodBody(
+                methodUM = methodUM,
+                modifier = Modifier.fillMaxWidth().padding(contentPadding),
             )
-            .clickable(
-                indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = methodUM.methodConfig.onClick,
-            )
-            .padding(
-                start = 12.dp,
-                end = 12.dp,
-                top = 14.dp,
-                bottom = 12.dp,
-            )
-            .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD),
-    ) {
+        }
+    } else {
+        PaymentMethodBody(
+            methodUM = methodUM,
+            modifier = modifier
+                .fillMaxWidth()
+                .background(color = TangemTheme.colors3.bg.secondary, shape = RoundedCornerShape(14.dp))
+                .clickable(
+                    indication = ripple(),
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = methodUM.methodConfig.onClick,
+                )
+                .padding(contentPadding)
+                .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD),
+        )
+    }
+}
+
+@Composable
+private fun PaymentMethodBody(methodUM: AllOffersPaymentMethodUM, modifier: Modifier = Modifier) {
+    Row(modifier = modifier) {
         PaymentMethodIcon(
             modifier = Modifier
                 .size(36.dp)
