@@ -72,7 +72,7 @@ internal class PolymarketModel @Inject constructor(
         observeVisibleWallet(observeSessionKeyOperation::invoke)
             .mapNotNull { operation -> operation?.takeIf { it.isSubmittedRevocation() }?.id }
             .distinctUntilChanged()
-            .onEach { messageSender.send(PolymarketSessionKeyToastFactory.revokingToast()) }
+            .onEach { messageSender.send(PolymarketSessionKeyMessagesFactory.revokingToast()) }
             .launchIn(modelScope)
     }
 
