@@ -1,6 +1,5 @@
 package com.tangem.features.onramp.redirect.ui
 
-import com.tangem.utils.annotations.RemoveWithToggle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +23,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectUM
+import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
 @RemoveWithToggle("AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
