@@ -8,6 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.onramp.alloffers.model.AllOffersModel
 import com.tangem.features.onramp.alloffers.ui.AllOffersContentSheet
+import com.tangem.features.onramp.alloffers.ui.LegacyAllOffersContentSheet
 import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import dagger.assisted.Assisted
@@ -29,10 +30,17 @@ internal class DefaultAllOffersComponent @AssistedInject constructor(
     @Composable
     override fun BottomSheet() {
         val state by model.state.collectAsState()
-        CompositionLocalProvider(
-            LocalOnrampDesignSystemEnabled provides onrampFeatureToggles.isNewDesignSystemEnabled,
-        ) {
-            AllOffersContentSheet(
+        if (onrampFeatureToggles.isNewDesignSystemEnabled) {
+            CompositionLocalProvider(LocalOnrampDesignSystemEnabled provides true) {
+                AllOffersContentSheet(
+                    state = state,
+                    marketingBannerComponent = params.marketingBannerComponent,
+                    linkedMarketingBannerComponent = params.linkedMarketingBannerComponent,
+                    onCloseClick = { dismiss() },
+                )
+            }
+        } else {
+            LegacyAllOffersContentSheet(
                 state = state,
                 marketingBannerComponent = params.marketingBannerComponent,
                 linkedMarketingBannerComponent = params.linkedMarketingBannerComponent,

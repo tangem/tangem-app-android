@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.IntrinsicMeasurable
@@ -17,7 +16,6 @@ import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,13 +24,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
-import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
@@ -40,7 +34,6 @@ import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
@@ -50,7 +43,6 @@ import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
-import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
@@ -82,9 +74,10 @@ internal fun AllOffersContentSheet(
         onDismissRequest = onCloseClick,
         content = TangemBottomSheetConfigContent.Empty,
     )
-    val isNewDesignSystemEnabled = LocalOnrampDesignSystemEnabled.current
-    val title: @Composable () -> Unit = {
-        CompositionLocalProvider(LocalOnrampDesignSystemEnabled provides isNewDesignSystemEnabled) {
+    TangemModal<TangemBottomSheetConfigContent.Empty>(
+        config = config,
+        onBack = onBack,
+        title = {
             if (state is AllOffersStateUM.Content && state.currentMethod != null) {
                 ProviderTitle(
                     onCloseClick = onCloseClick,
@@ -93,34 +86,15 @@ internal fun AllOffersContentSheet(
             } else {
                 PaymentMethodTitle(onCloseClick = onCloseClick)
             }
-        }
-    }
-    val content: @Composable () -> Unit = {
-        CompositionLocalProvider(LocalOnrampDesignSystemEnabled provides isNewDesignSystemEnabled) {
+        },
+        content = {
             AllOffersSheetContent(
                 state = state,
                 marketingBannerComponent = marketingBannerComponent,
                 linkedMarketingBannerComponent = linkedMarketingBannerComponent,
             )
-        }
-    }
-
-    if (isNewDesignSystemEnabled) {
-        TangemModal<TangemBottomSheetConfigContent.Empty>(
-            config = config,
-            onBack = onBack,
-            title = { title() },
-            content = { content() },
-        )
-    } else {
-        TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
-            config = config,
-            onBack = onBack,
-            containerColor = TangemTheme.colors3.bg.primary,
-            title = { title() },
-            content = { content() },
-        )
-    }
+        },
+    )
 }
 
 @Composable
@@ -129,8 +103,7 @@ private fun AllOffersSheetContent(
     marketingBannerComponent: MarketingBannerComponent,
     linkedMarketingBannerComponent: MarketingBannerComponent,
 ) {
-    val isNewDesignSystemEnabled = LocalOnrampDesignSystemEnabled.current
-    Column(modifier = if (isNewDesignSystemEnabled) Modifier.fillMaxWidth() else Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         // Standalone marketing banner at the top of the sheet (DS3 -> wrap in the redesign theme).
         // Renders nothing when no matching campaign, so it adds no space in the common case.
         IntrinsicFreeBox {
@@ -143,7 +116,8 @@ private fun AllOffersSheetContent(
             }
         }
         Box(
-            modifier = (if (isNewDesignSystemEnabled) Modifier.fillMaxWidth() else Modifier.fillMaxSize())
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(vertical = 8.dp),
         ) {
             AnimatedContent(
@@ -211,41 +185,21 @@ private object IntrinsicFreeMeasurePolicy : MeasurePolicy {
 
 @Composable
 private fun ProviderTitle(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
-    if (LocalOnrampDesignSystemEnabled.current) {
-        TangemModal.TopNavigation(
-            title = TextReference.Res(R.string.onramp_all_offers_button_title),
-            subtitle = TextReference.Res(R.string.express_choose_providers_title),
-            onBack = onBackClick,
-            onClose = onCloseClick,
-        )
-    } else {
-        TangemModalBottomSheetTitle(
-            title = TextReference.Res(R.string.onramp_all_offers_button_title),
-            subtitle = TextReference.Res(R.string.express_choose_providers_title),
-            startIconRes = R.drawable.ic_back_24,
-            onStartClick = onBackClick,
-            endIconRes = com.tangem.core.ui.R.drawable.ic_close_24,
-            onEndClick = onCloseClick,
-        )
-    }
+    TangemModal.TopNavigation(
+        title = TextReference.Res(R.string.onramp_all_offers_button_title),
+        subtitle = TextReference.Res(R.string.express_choose_providers_title),
+        onBack = onBackClick,
+        onClose = onCloseClick,
+    )
 }
 
 @Composable
 private fun PaymentMethodTitle(onCloseClick: () -> Unit) {
-    if (LocalOnrampDesignSystemEnabled.current) {
-        TangemModal.TopNavigation(
-            title = TextReference.Res(R.string.onramp_all_offers_button_title),
-            subtitle = TextReference.Res(R.string.onramp_payment_method_subtitle),
-            onClose = onCloseClick,
-        )
-    } else {
-        TangemModalBottomSheetTitle(
-            title = TextReference.Res(R.string.onramp_all_offers_button_title),
-            subtitle = TextReference.Res(R.string.onramp_payment_method_subtitle),
-            endIconRes = com.tangem.core.ui.R.drawable.ic_close_24,
-            onEndClick = onCloseClick,
-        )
-    }
+    TangemModal.TopNavigation(
+        title = TextReference.Res(R.string.onramp_all_offers_button_title),
+        subtitle = TextReference.Res(R.string.onramp_payment_method_subtitle),
+        onClose = onCloseClick,
+    )
 }
 
 @Composable
@@ -261,7 +215,7 @@ private fun OffersBasedOnPaymentMethodContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (notification != null) {
-            OnrampOffersNotification(notification = notification)
+            TangemMessage(config = notification.config)
             SpacerH(8.dp)
         }
         offers.fastForEach { offer ->
@@ -278,34 +232,16 @@ private fun AllOffersContentLoading() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .then(
-                if (LocalOnrampDesignSystemEnabled.current) {
-                    Modifier
-                } else {
-                    Modifier.background(TangemTheme.colors3.bg.primary)
-                },
-            )
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         repeat(times = LOADING_ITEMS_COUNT) {
-            if (LocalOnrampDesignSystemEnabled.current) {
-                ProvideTangemShimmer {
-                    TangemShimmer(
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .fillMaxWidth()
-                            .height(96.dp),
-                        radius = 14.dp,
-                    )
-                }
-            } else {
-                RectangleShimmer(
+            ProvideTangemShimmer {
+                TangemShimmer(
                     modifier = Modifier
                         .padding(top = 8.dp)
                         .fillMaxWidth()
-                        .height(96.dp)
-                        .size(width = 76.dp, height = 20.dp),
+                        .height(96.dp),
                     radius = 14.dp,
                 )
             }
@@ -313,25 +249,16 @@ private fun AllOffersContentLoading() {
     }
 }
 
-@Composable
-private fun OnrampOffersNotification(notification: NotificationUM) {
-    if (LocalOnrampDesignSystemEnabled.current) {
-        TangemMessage(config = notification.config)
-    } else {
-        Notification(config = notification.config)
-    }
-}
-
 private const val LOADING_ITEMS_COUNT = 3
 
 @Composable
-fun AllOffersError(errorNotification: NotificationUM) {
+private fun AllOffersError(errorNotification: NotificationUM) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
     ) {
-        OnrampOffersNotification(notification = errorNotification)
+        TangemMessage(config = errorNotification.config)
     }
 }
 
