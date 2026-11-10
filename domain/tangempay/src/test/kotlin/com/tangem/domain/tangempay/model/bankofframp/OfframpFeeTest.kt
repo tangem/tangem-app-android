@@ -12,7 +12,7 @@ internal class OfframpFeeTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN fee WHEN amountFor transfer amount THEN fee in money is returned`(model: AmountForModel) {
+    fun `GIVEN fee WHEN amountFor transfer amount THEN fee in money with its fixed part is returned`(model: AmountForModel) {
         // Arrange
         val fee = OfframpFee(
             name = "SPEI",
@@ -20,6 +20,7 @@ internal class OfframpFeeTest {
             amount = BigDecimal(model.feeAmount),
             currency = "USD",
             description = null,
+            fixedAmount = model.fixedAmount?.let(::BigDecimal),
         )
 
         // Act
@@ -34,6 +35,7 @@ internal class OfframpFeeTest {
         val feeAmount: String,
         val transferAmount: String,
         val expected: String,
+        val fixedAmount: String? = null,
     )
 
     private fun provideTestModels() = listOf(
@@ -44,5 +46,26 @@ internal class OfframpFeeTest {
         AmountForModel(FeeCalculationType.PERCENTAGE, feeAmount = "1", transferAmount = "0.50", expected = "0.01"),
         AmountForModel(FeeCalculationType.PERCENTAGE, feeAmount = "1", transferAmount = "0.49", expected = "0.00"),
         AmountForModel(FeeCalculationType.PERCENTAGE, feeAmount = "0", transferAmount = "250", expected = "0.00"),
+        AmountForModel(
+            FeeCalculationType.PERCENTAGE,
+            feeAmount = "1",
+            transferAmount = "100",
+            expected = "1.50",
+            fixedAmount = "0.50",
+        ),
+        AmountForModel(
+            FeeCalculationType.PERCENTAGE,
+            feeAmount = "1",
+            transferAmount = "33.33",
+            expected = "0.83",
+            fixedAmount = "0.50",
+        ),
+        AmountForModel(
+            FeeCalculationType.FIXED,
+            feeAmount = "14.00",
+            transferAmount = "100",
+            expected = "14.00",
+            fixedAmount = "0.50",
+        ),
     )
 }

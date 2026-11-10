@@ -11,6 +11,7 @@ import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isPositive
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
@@ -39,3 +40,9 @@ internal fun BigDecimal.formatFiatAmount(currencyCode: String): String {
 }
 
 internal fun BigDecimal.formatPercentageFee(): String = movePointLeft(2).format { percent(minFractionDigits = 0) }
+
+internal fun formatPercentageFee(percentage: BigDecimal, fixedAmount: BigDecimal?, currencyCode: String): String {
+    val percentageText = percentage.formatPercentageFee()
+    val fixedPart = fixedAmount?.takeIf(BigDecimal::isPositive) ?: return percentageText
+    return "${fixedPart.formatFiatAmount(currencyCode)} + $percentageText"
+}
