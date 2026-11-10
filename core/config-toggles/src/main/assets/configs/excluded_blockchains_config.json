@@ -50,5 +50,9 @@
     {
         "name": "katana",
         "version": "6.9"
+    },
+    {
+        "name": "x-layer",
+        "version": "6.9"
     }
 ]

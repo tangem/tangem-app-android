@@ -301,6 +301,9 @@ private fun iconSetOf(blockchain: Blockchain): IconSet? = when (blockchain) {
     -> IconSet(active = R.drawable.img_xrp_22, greyedOut = R.drawable.ic_xrp_22)
     Blockchain.Xodex,
     -> IconSet(active = R.drawable.img_xodex_22, greyedOut = R.drawable.ic_xodex_22)
+    Blockchain.XLayer,
+    Blockchain.XLayerTestnet,
+    -> IconSet(active = R.drawable.img_xlayer_22, greyedOut = R.drawable.ic_xlayer_22)
     Blockchain.ZkLinkNova,
     Blockchain.ZkLinkNovaTestnet,
     -> IconSet(active = R.drawable.img_zklink_22, greyedOut = R.drawable.ic_zklink_22)
