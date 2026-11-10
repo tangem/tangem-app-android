@@ -10,7 +10,7 @@ import com.tangem.features.polymarket.impl.createPolymarketMarket
 import com.tangem.features.polymarket.impl.createPolymarketOutcome
 import com.tangem.features.polymarket.impl.details.model.transformer.PolymarketEventDetailsContentTransformer
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.search.model.transformer.PolymarketSearchContentTransformer
 import com.tangem.features.polymarket.impl.search.ui.state.PolymarketSearchUM
 import com.tangem.pagination.Batch

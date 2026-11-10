@@ -23,6 +23,7 @@ import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsCompone
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
+import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -105,6 +106,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             userWalletId = configuration.userWalletId,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
         )
+        is PolymarketRoute.Category -> createCategory(configuration, factoryContext)
         is PolymarketRoute.History -> PolymarketHistoryComponent(
             appComponentContext = factoryContext,
             params = PolymarketHistoryComponent.Params(userWalletId = configuration.userWalletId),
@@ -160,6 +162,12 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             params = PolymarketPositionResultComponent.Params(configuration.userWalletId, configuration.position),
         )
     }
+
+    private fun createCategory(configuration: PolymarketRoute.Category, factoryContext: AppComponentContext) =
+        PolymarketCategoryComponent(
+            context = factoryContext,
+            params = PolymarketCategoryComponent.Params(configuration.userWalletId, configuration.category),
+        )
 
     private fun createFastTradingSettings(
         configuration: PolymarketRoute.FastTradingSettings,

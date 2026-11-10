@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.navigation
 
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
@@ -31,6 +32,8 @@ internal sealed interface PolymarketRoute : Route {
      *  opened with — the user can choose among several eligible wallets.
      */
     data class Main(val userWalletId: UserWalletId) : PolymarketRoute
+
+    data class Category(val userWalletId: UserWalletId, val category: PolymarketCategory) : PolymarketRoute
 
     data class History(val userWalletId: UserWalletId) : PolymarketRoute
 
