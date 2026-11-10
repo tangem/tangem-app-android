@@ -34,6 +34,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.yield.supply.isSpendableAmountActual
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
@@ -616,7 +617,7 @@ internal class SendModel @Inject constructor(
         this.value is CryptoCurrencyStatus.NoAccount
 
     private fun CryptoCurrencyStatus.isAvailableForSend(): Boolean =
-        this.hasAvailableStatus() && this.value.sources.networkSource.isActual()
+        this.hasAvailableStatus() && this.value.isSpendableAmountActual
 
     private fun CryptoCurrencyStatus.isUnavailableForSend(): Boolean =
         this.hasUnavailableStatus() && this.value.sources.networkSource.isActual()
