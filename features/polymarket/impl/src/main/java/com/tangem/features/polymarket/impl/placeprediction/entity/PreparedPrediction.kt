@@ -11,6 +11,7 @@ internal data class PreparedPrediction(
     val state: PlacePredictionUM,
     val isNegRisk: Boolean,
     val positionId: PolymarketPositionId?,
+    val readLiveResolutionDateMillis: () -> Long?,
 ) {
 
     val quote: SignableQuoteUM = requireNotNull((state.quote as? QuoteUM.Content)?.signable)
@@ -26,7 +27,7 @@ internal fun PreparedPrediction.toStatusRoute(
 ): PlacePredictionRoute.Status = PlacePredictionRoute.Status(
     result = result,
     market = state.market.copy(
-        resolutionDateMillis = state.market.resolutionDateMillis ?: current.market.resolutionDateMillis,
+        resolutionDateMillis = state.market.resolutionDateMillis ?: readLiveResolutionDateMillis(),
     ),
     side = params.side,
     userWalletId = params.userWalletId,
