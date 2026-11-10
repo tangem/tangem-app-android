@@ -136,7 +136,8 @@ private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?) {
                 .semantics {
                     // The overlays follow the list in the tree: without this TalkBack reads them after the page
                     isTraversalGroup = true
-                    traversalIndex = NAVIGATION_TRAVERSAL_INDEX
+                    @Suppress("MagicNumber")
+                    traversalIndex = -2f
                 },
         )
         Footer(
@@ -340,9 +341,6 @@ private fun ActionButton(button: TangemButtonUM, variant: TangemButton.Variant) 
         onClick = button.onClick,
     )
 }
-
-/** Before the chips' -1: a named constant only because detekt's MagicNumber rejects the literal. */
-private const val NAVIGATION_TRAVERSAL_INDEX = -2f
 
 /** One entry is one list item, so the position in this list is the list index the scroll maths uses. */
 private sealed interface PageItem {
