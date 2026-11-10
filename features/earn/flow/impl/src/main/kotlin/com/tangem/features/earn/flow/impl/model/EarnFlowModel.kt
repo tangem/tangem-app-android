@@ -374,6 +374,8 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun execute(plan: VerifiedPlan) {
         executeJob?.cancel()
+        // Taken from this execution: a retry after a partly sent attempt may carry a different amount.
+        val expectedAmount = plan.plan.expectedAmount
         executeJob = session.execute(plan)
             .onEach { step ->
                 when (step) {
@@ -382,7 +384,7 @@ internal class EarnFlowModel @Inject constructor(
                     }
                     // A sent transaction consumed the plan: confirming again needs a fresh prepare.
                     is EarnSigningStep.Sent -> state.update {
-                        it.copy(plan = null, planFee = null, sentAmount = it.sentAmount ?: it.plan?.expectedAmount)
+                        it.copy(plan = null, planFee = null, sentAmount = expectedAmount)
                     }
                     is EarnSigningStep.Done -> showResult(step)
                     is EarnSigningStep.Failed -> onSigningFailed(step.error)
