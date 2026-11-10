@@ -56,6 +56,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Locale
 
 internal class EarnInfoConverterTest {
@@ -230,23 +232,41 @@ internal class EarnInfoConverterTest {
     inner class Rewards {
 
         @Test
-        fun `GIVEN rewards WHEN convert THEN claim label equals claimAction label and claim click calls onActionClick with claimAction`() {
+        fun `GIVEN rewards and fresh data WHEN claim is clicked THEN claim is a Primary button that starts the claim action`() {
             // Arrange
             val rewards = requireNotNull(position.rewards)
 
             // Act
             val actual = requireNotNull(convert()?.rewards)
-            actual.onClaimClick()
+            actual.claim.onClick()
 
             // Assert
             val expected = EarnInfoUM.RewardsUM(
                 title = EarnInfoTexts.rewardsTitle(fiatText(rewards.amount.multiply(RATE))),
                 description = EarnInfoTexts.rewardsDescription,
-                claimLabel = rewards.claimAction.label,
-                onClaimClick = NoOp,
+                claim = TangemButtonUM(text = rewards.claimAction.label, type = TangemButtonType.Primary, onClick = NoOp),
             )
-            assertThat(actual.copy(onClaimClick = NoOp)).isEqualTo(expected)
+            assertThat(actual.copy(claim = actual.claim.noOpClick())).isEqualTo(expected)
             assertThat(calls).containsExactly(Call.Action(rewards.claimAction))
+        }
+
+        @Test
+        fun `GIVEN a stale position WHEN primary, secondary and claim are clicked THEN each reports the out-of-date block`() {
+            // Arrange
+            val state = readyWith(position.copy(freshness = EarnFreshness(asOf = OLDER, isStale = true)))
+
+            // Act
+            val actual = requireNotNull(convert(ready = state))
+            actual.primary.onClick()
+            actual.secondary.single().onClick()
+            requireNotNull(actual.rewards).claim.onClick()
+
+            // Assert
+            assertThat(calls).containsExactly(
+                Call.Blocked(OUT_OF_DATE_BLOCK),
+                Call.Blocked(OUT_OF_DATE_BLOCK),
+                Call.Blocked(OUT_OF_DATE_BLOCK),
+            )
         }
 
         @Test
@@ -300,6 +320,68 @@ internal class EarnInfoConverterTest {
             assertThat(actual.primary.isDimmed).isFalse()
             assertThat(actual.secondary.single().isDimmed).isFalse()
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StaleSources {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN product and position freshness WHEN convert THEN the oldest stale time is shown and every action follows it`(
+            model: StaleModel,
+        ) {
+            // Arrange
+            val state = ready.copy(
+                freshness = model.productFreshness,
+                position = EarnPositionState.Known(position.copy(freshness = model.positionFreshness)),
+            )
+
+            // Act
+            val actual = requireNotNull(convert(ready = state))
+
+            // Assert
+            assertThat(actual.staleState()).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            StaleModel(
+                name = "stale position, fresh product",
+                productFreshness = EarnFreshness(asOf = NEWER, isStale = false),
+                positionFreshness = EarnFreshness(asOf = OLDER, isStale = true),
+                expected = StaleState(notice = noticeAt(OLDER), isDimmed = true),
+            ),
+            StaleModel(
+                name = "stale product newer than the stale position",
+                productFreshness = EarnFreshness(asOf = NEWER, isStale = true),
+                positionFreshness = EarnFreshness(asOf = OLDER, isStale = true),
+                expected = StaleState(notice = noticeAt(OLDER), isDimmed = true),
+            ),
+            StaleModel(
+                name = "stale product older than the stale position",
+                productFreshness = EarnFreshness(asOf = OLDER, isStale = true),
+                positionFreshness = EarnFreshness(asOf = NEWER, isStale = true),
+                expected = StaleState(notice = noticeAt(OLDER), isDimmed = true),
+            ),
+            StaleModel(
+                name = "stale position, no product freshness",
+                productFreshness = null,
+                positionFreshness = EarnFreshness(asOf = OLDER, isStale = true),
+                expected = StaleState(notice = noticeAt(OLDER), isDimmed = true),
+            ),
+            StaleModel(
+                name = "both fresh",
+                productFreshness = EarnFreshness(asOf = NEWER, isStale = false),
+                positionFreshness = EarnFreshness(asOf = OLDER, isStale = false),
+                expected = StaleState(notice = null, isDimmed = false),
+            ),
+            StaleModel(
+                name = "no freshness",
+                productFreshness = null,
+                positionFreshness = null,
+                expected = StaleState(notice = null, isDimmed = false),
+            ),
+        )
     }
 
     @Nested
@@ -632,6 +714,38 @@ internal class EarnInfoConverterTest {
 
     private fun TangemButtonUM.noOpClick() = copy(onClick = NoOp)
 
+    private fun EarnInfoUM.staleState() = StaleState(
+        notice = staleNotice,
+        isPrimaryDimmed = primary.isDimmed,
+        isSecondaryDimmed = secondary.single().isDimmed,
+        isClaimDimmed = requireNotNull(rewards).claim.isDimmed,
+    )
+
+    private fun noticeAt(asOf: Instant): TextReference = EarnInfoTexts.staleNotice(
+        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
+            .withLocale(Locale.US)
+            .withZone(ZoneOffset.UTC)
+            .format(java.time.Instant.ofEpochMilli(asOf.toEpochMilliseconds())),
+    )
+
+    internal data class StaleModel(
+        val name: String,
+        val productFreshness: EarnFreshness?,
+        val positionFreshness: EarnFreshness?,
+        val expected: StaleState,
+    ) {
+        override fun toString(): String = name
+    }
+
+    internal data class StaleState(
+        val notice: TextReference?,
+        val isPrimaryDimmed: Boolean,
+        val isSecondaryDimmed: Boolean,
+        val isClaimDimmed: Boolean,
+    ) {
+        constructor(notice: TextReference?, isDimmed: Boolean) : this(notice, isDimmed, isDimmed, isDimmed)
+    }
+
     internal data class TabsModel(
         val hasBenefits: Boolean,
         val hasDetails: Boolean,
@@ -655,6 +769,8 @@ internal class EarnInfoConverterTest {
 
         val NoOp: () -> Unit = {}
         val RATE = BigDecimal("2000")
+        val OLDER: Instant = Instant.parse("2026-11-09T10:00:00Z")
+        val NEWER: Instant = Instant.parse("2026-11-09T12:00:00Z")
         val PRODUCT_BLOCK = EarnBlock(reason = stringReference("blocked"))
         val OUT_OF_DATE_BLOCK = EarnBlock(
             reason = resourceReference(R.string.token_button_unavailability_reason_out_of_date_balance),

@@ -280,8 +280,10 @@ private fun Rewards(item: PageItem.Rewards) {
             TangemButton(
                 variant = TangemButton.Variant.Primary,
                 size = TangemButton.Size.X9,
-                text = rewards.claimLabel,
-                onClick = rewards.onClaimClick,
+                text = rewards.claim.text,
+                isEnabled = rewards.claim.isEnabled,
+                isDimmed = rewards.claim.isDimmed,
+                onClick = rewards.claim.onClick,
             )
         },
     )

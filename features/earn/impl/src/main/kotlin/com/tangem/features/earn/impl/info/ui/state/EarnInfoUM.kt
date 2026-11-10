@@ -44,8 +44,7 @@ internal data class EarnInfoUM(
     data class RewardsUM(
         val title: TextReference,
         val description: TextReference,
-        val claimLabel: TextReference,
-        val onClaimClick: () -> Unit,
+        val claim: TangemButtonUM,
     )
 }
 
