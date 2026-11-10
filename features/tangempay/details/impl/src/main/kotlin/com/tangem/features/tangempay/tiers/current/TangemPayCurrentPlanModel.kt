@@ -22,7 +22,7 @@ import com.tangem.domain.tangempay.usecase.CancelTariffPlanPendingTransitionUseC
 import com.tangem.domain.tangempay.usecase.CancelTariffTransitionUseCase
 import com.tangem.domain.tangempay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory

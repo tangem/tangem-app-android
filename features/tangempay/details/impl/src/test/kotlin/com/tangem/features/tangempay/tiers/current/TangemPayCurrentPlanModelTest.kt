@@ -24,7 +24,7 @@ import com.tangem.domain.tangempay.usecase.CancelTariffTransitionUseCase
 import com.tangem.domain.tangempay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.awaitingDepositOrder
