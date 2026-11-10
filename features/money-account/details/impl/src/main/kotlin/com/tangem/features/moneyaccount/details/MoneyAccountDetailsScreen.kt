@@ -47,6 +47,7 @@ import com.tangem.features.tangempay.common.TangemPayEmptyTransactionHistoryStat
 import com.tangem.features.tangempay.common.tangemPayTxHistoryNonContentItem
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
+import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
@@ -61,6 +62,7 @@ private const val UNAVAILABLE_BALANCE_ALPHA = 0.4f
 internal fun MoneyAccountDetailsScreen(
     state: MoneyAccountDetailsUM,
     txHistoryComponent: TxHistoryComponent?,
+    yieldSupplyComponent: YieldSupplyComponent?,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -102,6 +104,7 @@ internal fun MoneyAccountDetailsScreen(
                     state = state,
                     listState = listState,
                     txHistory = txHistory,
+                    yieldSupplyComponent = yieldSupplyComponent,
                     buttonsHazeState = buttonsHazeState,
                 )
             }
@@ -119,6 +122,7 @@ private fun LazyListScope.body(
     state: MoneyAccountDetailsUM,
     listState: LazyListState,
     txHistory: TxHistory?,
+    yieldSupplyComponent: YieldSupplyComponent?,
     buttonsHazeState: HazeState,
 ) {
     val balanceAlpha = if (state.isBalanceUnavailable) UNAVAILABLE_BALANCE_ALPHA else 1f
@@ -138,6 +142,16 @@ private fun LazyListScope.body(
         SpacerH24()
         CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
             ActionBlock(state = state, modifier = Modifier.alpha(balanceAlpha))
+        }
+    }
+    if (yieldSupplyComponent != null) {
+        item("yieldSupplyBlock") {
+            SpacerH24()
+            yieldSupplyComponent.Content(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+            )
         }
     }
     if (state.messageBanner != null) {
@@ -324,10 +338,12 @@ private fun MoneyAccountDetailsScreenPreview() {
                 isAddFundsEnabled = true,
                 isSendEnabled = true,
                 txHistoryCurrency = null,
+                yieldSupplyCurrency = null,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
                 onTxHistoryReloadClick = {},
             ),
             txHistoryComponent = PreviewTxHistoryComponent,
+            yieldSupplyComponent = null,
         )
     }
 }
@@ -357,10 +373,12 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
                 isAddFundsEnabled = false,
                 isSendEnabled = false,
                 txHistoryCurrency = null,
+                yieldSupplyCurrency = null,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
                 onTxHistoryReloadClick = {},
             ),
             txHistoryComponent = PreviewTxHistoryComponent,
+            yieldSupplyComponent = null,
         )
     }
 }
