@@ -138,6 +138,39 @@ internal class PolymarketSessionKeyAssessorTest {
                 expected = Reenable(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)),
             ),
             Model(
+                case = "failed local key the exchange lists in another case is repaired by renewal",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)),
+                    signers = listOf(
+                        matching(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED))
+                            .copy(address = checksummed(Owner.LOCAL)),
+                    ),
+                ),
+                expected = RepairByRenewal(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)),
+            ),
+            Model(
+                case = "previous key whose newest record is revoked is not waited for",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING),
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.REVOKED).copy(createdAt = IN_THE_LAST_HOUR),
+                    ),
+                ),
+                expected = OfferEnable,
+            ),
+            Model(
+                case = "previous key renewed after its revoked record listed first is waited for",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.REVOKED),
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING).copy(createdAt = IN_THE_LAST_HOUR),
+                    ),
+                ),
+                expected = WaitingForPrevious(
+                    key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING).copy(createdAt = IN_THE_LAST_HOUR),
+                ),
+            ),
+            Model(
                 case = "pending previous key of this device is waited for",
                 snapshot = snapshot(keys = listOf(key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING))),
                 expected = WaitingForPrevious(key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING)),
@@ -582,6 +615,7 @@ internal class PolymarketSessionKeyAssessorTest {
         val ALMOST_EXPIRED: Instant = NOW + Duration.ofMinutes(9)
         val FRESH: Instant = NOW - Duration.ofMinutes(1)
         val IN_ONE_HOUR: Instant = NOW + Duration.ofHours(1)
+        val IN_THE_LAST_HOUR: Instant = NOW - Duration.ofHours(1)
 
         val UNRECORDED = PolymarketSessionSigner(
             address = "0xf0e1000000000000000000000000000000000009",

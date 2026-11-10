@@ -5,6 +5,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
 import com.tangem.domain.polymarket.interactor.ReconcilePolymarketSessionKeysInteractor
 import com.tangem.domain.polymarket.model.PolymarketWalletError
+import com.tangem.domain.polymarket.model.newestPerAddress
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -187,7 +188,7 @@ class PolymarketSessionKeyStateService(
                 isFailureLogged = false
                 elapsedChangeRetries = 0
                 restarts = 0
-                isSettling = loaded.wallet.sessionKeys.any { key -> key.status.isSettling() }
+                isSettling = loaded.wallet.sessionKeys.newestPerAddress().any { key -> key.status.isSettling() }
                 nextChangeAt = loaded.assessment.nextChangeAt
                 true
             },

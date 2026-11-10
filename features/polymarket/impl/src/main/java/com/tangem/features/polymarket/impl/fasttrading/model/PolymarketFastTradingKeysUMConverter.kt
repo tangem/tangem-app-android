@@ -7,6 +7,7 @@ import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSessionSigner
+import com.tangem.domain.polymarket.model.newestPerAddress
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
@@ -53,13 +54,9 @@ internal class PolymarketFastTradingKeysUMConverter(
             foreignAddresses = foreignSigners.mapTo(mutableSetOf()) { it.address.lowercase() },
         )
         val rows = overview.wallet.sessionKeys
-            .groupBy { it.address.lowercase() }
-            .values
-            .mapNotNull { records ->
-                records.maxBy { it.createdAt }
-                    .takeIf { it.status != PolymarketSessionKeyStatus.REVOKED }
-                    ?.let { key -> keyRowOf(key, context) }
-            }
+            .newestPerAddress()
+            .filter { it.status != PolymarketSessionKeyStatus.REVOKED }
+            .map { key -> keyRowOf(key, context) }
         val isActivationOffered = overview.assessment.deviceState.isActivationOffered()
         val thisDeviceRows = rows
             .filter { it.isThisDevice }
