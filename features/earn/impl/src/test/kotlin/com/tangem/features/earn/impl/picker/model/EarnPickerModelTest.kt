@@ -24,11 +24,15 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.overview.EarnOverviewFetcher
+import com.tangem.features.earn.api.overview.EarnProductRate
+import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnProduct
+import com.tangem.features.earn.impl.fake.fakeApyPeriods
 import com.tangem.features.earn.impl.fake.fakeReadyState
+import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetRequest
 import com.tangem.features.earn.impl.overview.EarnHeadlineSelector
 import com.tangem.features.earn.impl.overview.EarnProductSummaries
 import com.tangem.features.earn.impl.overview.EarnProductSummarySupplier
@@ -80,6 +84,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -787,6 +792,178 @@ internal class EarnPickerModelTest {
             verify(exactly = 1) { router.pop(any()) }
             model.onDestroy()
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IncentiveSheet {
+
+        @Test
+        fun `GIVEN Lending with incentive WHEN the badge is clicked THEN a request carries its rate, periods and history`() =
+            runTest {
+                // Arrange
+                val requests = mutableListOf<EarnIncentiveSheetRequest>()
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                    preselected = lending.id,
+                )
+                backgroundScope.launch { model.incentiveSheetRequests.collect { requests += it } }
+                runCurrent()
+                advanceUntilIdle()
+
+                // Act
+                requireNotNull(model.uiState.value.ready().incentive).onClick()
+                runCurrent()
+
+                // Assert
+                val actual = requests.single()
+                assertThat(actual.rate).isEqualTo(lending.readyState().rate)
+                assertThat(actual.periods).isEqualTo(fakeApyPeriods)
+                assertThat(actual.history(actual.periods.first()).getOrNull()?.average).isEqualTo(BigDecimal("0.052"))
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Ready with empty APY periods WHEN the badge is clicked THEN no request and the error is logged`() =
+            runTest {
+                // Arrange
+                val requests = mutableListOf<EarnIncentiveSheetRequest>()
+                val withoutPeriods = PickerProduct(
+                    delegate = createFakeEarnProduct(FakeEarnProductPreset.Lending),
+                    initialState = readyState(FakeEarnProductPreset.Lending).copy(apyPeriods = emptyList()),
+                )
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(withoutPeriods), summary(vault))),
+                    products = listOf(withoutPeriods, vault),
+                    preselected = withoutPeriods.id,
+                )
+                backgroundScope.launch { model.incentiveSheetRequests.collect { requests += it } }
+                runCurrent()
+                advanceUntilIdle()
+
+                // Act
+                requireNotNull(model.uiState.value.ready().incentive).onClick()
+                runCurrent()
+
+                // Assert
+                assertThat(requests).isEmpty()
+                verify(exactly = 1) { TangemLogger.e(any(), any(), any()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Loading selection WHEN onIncentiveClick THEN no request`() = runTest {
+            // Arrange
+            val requests = mutableListOf<EarnIncentiveSheetRequest>()
+            val pending = PickerProduct(
+                delegate = createFakeEarnProduct(FakeEarnProductPreset.Lending),
+                initialState = readyState(FakeEarnProductPreset.Lending),
+                customState = MutableSharedFlow(),
+            )
+            val model = createModel(
+                frames = MutableStateFlow(frame(summary(pending), summary(vault))),
+                products = listOf(pending, vault),
+                preselected = pending.id,
+            )
+            backgroundScope.launch { model.incentiveSheetRequests.collect { requests += it } }
+            runCurrent()
+            advanceUntilIdle()
+
+            // Act
+            model.onIncentiveClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.content).isEqualTo(ContentUM.Loading)
+            assertThat(requests).isEmpty()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN two products with incentives WHEN the second chip is selected and the badge clicked THEN the request is the second one's`() =
+            runTest {
+                // Arrange
+                val requests = mutableListOf<EarnIncentiveSheetRequest>()
+                val second = PickerProduct(
+                    delegate = createFakeEarnProduct(FakeEarnProductPreset.Vault),
+                    initialState = readyState(FakeEarnProductPreset.Vault).copy(
+                        rate = EarnProductRate(BigDecimal("0.07"), EarnRateType.APY),
+                        incentiveRate = EarnProductRate(BigDecimal("0.02"), EarnRateType.APY),
+                    ),
+                )
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(lending), summary(second))),
+                    products = listOf(lending, second),
+                    preselected = lending.id,
+                )
+                backgroundScope.launch { model.incentiveSheetRequests.collect { requests += it } }
+                runCurrent()
+                advanceUntilIdle()
+                model.uiState.value.card("vault").onClick()
+                advanceUntilIdle()
+
+                // Act
+                requireNotNull(model.uiState.value.ready().incentive).onClick()
+                runCurrent()
+
+                // Assert
+                assertThat(requests.single().rate).isEqualTo(second.readyState().rate)
+                assertThat(requests.single().rate).isNotEqualTo(lending.readyState().rate)
+                assertThat(requests.single().history(fakeApyPeriods.first()).isLeft()).isTrue()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a product whose apyHistory fails WHEN the request history is called THEN it returns Left`() =
+            runTest {
+                // Arrange
+                val requests = mutableListOf<EarnIncentiveSheetRequest>()
+                val failing = PickerProduct(
+                    delegate = createFakeEarnProduct(FakeEarnProductPreset.Vault),
+                    initialState = readyState(FakeEarnProductPreset.Vault).copy(
+                        incentiveRate = EarnProductRate(BigDecimal("0.02"), EarnRateType.APY),
+                    ),
+                )
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(lending), summary(failing))),
+                    products = listOf(lending, failing),
+                    preselected = failing.id,
+                )
+                backgroundScope.launch { model.incentiveSheetRequests.collect { requests += it } }
+                runCurrent()
+                advanceUntilIdle()
+                requireNotNull(model.uiState.value.ready().incentive).onClick()
+                runCurrent()
+
+                // Act
+                val actual = requests.single().history(fakeApyPeriods.first())
+
+                // Assert
+                assertThat(actual.isLeft()).isTrue()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a request emitted without collectors WHEN a collector subscribes later THEN it receives nothing`() =
+            runTest {
+                // Arrange
+                val requests = mutableListOf<EarnIncentiveSheetRequest>()
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                    preselected = lending.id,
+                )
+                advanceUntilIdle()
+                requireNotNull(model.uiState.value.ready().incentive).onClick()
+                runCurrent()
+
+                // Act
+                backgroundScope.launch { model.incentiveSheetRequests.collect { requests += it } }
+                runCurrent()
+
+                // Assert
+                assertThat(requests).isEmpty()
+                model.onDestroy()
+            }
     }
 
     private fun TestScope.createModel(

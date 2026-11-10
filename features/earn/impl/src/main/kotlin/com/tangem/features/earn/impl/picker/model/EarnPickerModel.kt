@@ -14,6 +14,7 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.overview.EarnOverviewFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.impl.InnerEarnNavigator
+import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetRequest
 import com.tangem.features.earn.impl.overview.EarnHeadlineSelector
 import com.tangem.features.earn.impl.overview.EarnProductSummaries
 import com.tangem.features.earn.impl.overview.EarnProductSummarySupplier
@@ -21,6 +22,7 @@ import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.picker.EarnYieldPickerComponent
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.showReason
+import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnBlock
@@ -34,7 +36,9 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -69,7 +73,7 @@ internal class EarnPickerModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
-) : Model(), EarnPickerClickIntents {
+) : Model(), EarnPickerClickIntents, EarnCalculatorComponent.ModelCallback {
 
     private val params: EarnYieldPickerComponent.Params = paramsContainer.require()
 
@@ -119,6 +123,9 @@ internal class EarnPickerModel @Inject constructor(
     val incentiveRate: Flow<EarnProductRate?> = selection
         .map { (it?.state as? EarnProductState.Ready)?.incentiveRate }
         .distinctUntilChanged()
+
+    val incentiveSheetRequests: SharedFlow<EarnIncentiveSheetRequest>
+        field = MutableSharedFlow<EarnIncentiveSheetRequest>(extraBufferCapacity = 1)
 
     val uiState: StateFlow<EarnPickerUM>
         field = MutableStateFlow(converter.initial(intents = this))
@@ -231,6 +238,24 @@ internal class EarnPickerModel @Inject constructor(
             overviewFetcher(EarnOverviewFetcher.Params(params.userWalletId, params.cryptoCurrency)).onLeft {
                 TangemLogger.e("Earn picker: overview fetch failed", it)
             }
+        }
+    }
+
+    override fun onIncentiveClick() {
+        val current = selection.value ?: return
+        val ready = current.state as? EarnProductState.Ready ?: return
+        val product = current.product
+
+        if (ready.apyPeriods.isEmpty()) {
+            TangemLogger.e("Earn picker: ${product.id.value} has an incentive but no APY periods")
+        } else {
+            incentiveSheetRequests.tryEmit(
+                EarnIncentiveSheetRequest(
+                    rate = ready.rate,
+                    periods = ready.apyPeriods,
+                    history = { period -> product.apyHistory(productParams, period) },
+                ),
+            )
         }
     }
 
