@@ -105,6 +105,7 @@ internal class AaveModuleStateTest {
             isInitialized = true,
             isAllowedToSpend = true,
             effectiveProtocolBalance = null,
+            effectiveBalance = null,
             source = StatusSource.ACTUAL,
         )
     }
