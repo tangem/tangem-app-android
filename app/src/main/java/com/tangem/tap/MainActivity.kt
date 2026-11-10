@@ -30,7 +30,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
-import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
@@ -54,6 +53,7 @@ import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
+import com.tangem.tap.common.pushes.PayloadToDeeplinkConverter
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
