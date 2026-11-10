@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
-internal class DefaultSellDeepLinkHandlerTest {
+internal class SellDeepLinkHandlerRegressionTest {
 
     private val router: AppRouter = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
@@ -34,14 +34,14 @@ internal class DefaultSellDeepLinkHandlerTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["0011223344556677", "8899AABBCCDDEEFF"])
-    fun `GIVEN selected wallet WHEN handler created THEN opens sell for that wallet exactly once`(walletId: String) {
+    fun `GIVEN selected wallet WHEN request handled THEN opens sell for that wallet exactly once`(walletId: String) {
         // Arrange
         val userWalletId = UserWalletId(walletId)
         val userWallet: UserWallet = mockk { every { this@mockk.walletId } returns userWalletId }
         every { getSelectedWalletSyncUseCase() } returns Either.Right(userWallet)
 
         // Act
-        DefaultSellDeepLinkHandler(router, getSelectedWalletSyncUseCase)
+        SellDeepLinkHandler(router, getSelectedWalletSyncUseCase).handle(mockk())
 
         // Assert
         verify(exactly = 1) { getSelectedWalletSyncUseCase() }
@@ -51,13 +51,13 @@ internal class DefaultSellDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN no selected wallet WHEN handler created THEN logs error without navigation`() {
+    fun `GIVEN no selected wallet WHEN request handled THEN logs error without navigation`() {
         // Arrange
         val error = GetUserWalletError.UserWalletNotFound
         every { getSelectedWalletSyncUseCase() } returns Either.Left(error)
 
         // Act
-        DefaultSellDeepLinkHandler(router, getSelectedWalletSyncUseCase)
+        SellDeepLinkHandler(router, getSelectedWalletSyncUseCase).handle(mockk())
 
         // Assert
         verify(exactly = 1) { getSelectedWalletSyncUseCase() }
