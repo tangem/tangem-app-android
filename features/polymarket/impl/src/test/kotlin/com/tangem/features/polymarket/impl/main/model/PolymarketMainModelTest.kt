@@ -881,6 +881,23 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN model observing banner WHEN pulled to refresh THEN a recheck is emitted`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val emissions = getEmittedValues(fastTradingRechecks.captured)
+        val before = emissions.size
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(emissions.size).isEqualTo(before + 1)
+        model.onDestroy()
+    }
+
+    @Test
     fun `WHEN pulled to refresh THEN fast trading banner source is refreshed for the wallet`() = runTest {
         // Arrange
         val model = createModel(testScope = this)

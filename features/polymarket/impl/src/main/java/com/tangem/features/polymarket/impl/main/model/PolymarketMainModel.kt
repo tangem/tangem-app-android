@@ -423,6 +423,7 @@ internal class PolymarketMainModel @Inject constructor(
     private fun onRefresh() {
         if (uiState.value.pullToRefreshConfig.isRefreshing) return
         setRefreshing(isRefreshing = true)
+        fastTradingBannerRechecks.tryEmit(Unit)
 
         modelScope.launch {
             runSuspendCatching {

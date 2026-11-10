@@ -31,8 +31,11 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.verify
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -44,6 +47,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PolymarketFastTradingBannerSourceTest {
 
@@ -264,6 +268,49 @@ internal class PolymarketFastTradingBannerSourceTest {
         rechecks.tryEmit(Unit)
 
         // Assert
+        assertThat(actual).containsExactly(null, PolymarketFastTradingBanner.Activate).inOrder()
+    }
+
+    @Test
+    fun `GIVEN another device key pending for 9 minutes WHEN its settling window ends THEN activate appears`() =
+        runTest {
+            // Arrange
+            val pendingKey = keyOf(
+                address = "0xother",
+                status = PolymarketSessionKeyStatus.PENDING,
+                createdAt = NOW.minus(Duration.ofMinutes(9)),
+            )
+            every { observeFastTrading(WALLET_ID) } returns
+                flowOf(stateOf(OFFER_ENABLE, sessionKeys = listOf(pendingKey)))
+            val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit)))
+            runCurrent()
+            val beforeWindowEnds = actual.toList()
+
+            // Act
+            advanceTimeBy(Duration.ofMinutes(1).toMillis())
+            runCurrent()
+
+            // Assert
+            assertThat(beforeWindowEnds).containsExactly(null)
+            assertThat(actual).containsExactly(null, PolymarketFastTradingBanner.Activate).inOrder()
+        }
+
+    @Test
+    fun `GIVEN activate dismissed WHEN its dismissal period ends while observed THEN activate appears`() = runTest {
+        // Arrange
+        every { observeFastTrading(WALLET_ID) } returns flowOf(stateOf(OFFER_ENABLE))
+        every { bannerStore.dismissedAt(WALLET_ID, PolymarketFastTradingBannerKind.ACTIVATE) } returns
+            flowOf(NOW.minus(Duration.ofDays(30)).plus(Duration.ofHours(1)))
+        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit)))
+        runCurrent()
+        val beforePeriodEnds = actual.toList()
+
+        // Act
+        advanceTimeBy(Duration.ofHours(1).toMillis())
+        runCurrent()
+
+        // Assert
+        assertThat(beforePeriodEnds).containsExactly(null)
         assertThat(actual).containsExactly(null, PolymarketFastTradingBanner.Activate).inOrder()
     }
 

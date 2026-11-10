@@ -11,10 +11,13 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliatio
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.transformLatest
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -22,6 +25,7 @@ import javax.inject.Inject
 
 private val PENDING_SETTLING_WINDOW: Duration = Duration.ofMinutes(10)
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketFastTradingBannerSource(
     private val observeFastTrading: ObservePolymarketFastTradingUseCase,
     private val refreshFastTrading: RefreshPolymarketFastTradingUseCase,
@@ -51,9 +55,17 @@ internal class PolymarketFastTradingBannerSource(
             flow = observeFastTrading(userWalletId),
             flow2 = bannerStore.dismissedAt(userWalletId, PolymarketFastTradingBannerKind.ACTIVATE),
             flow3 = rechecks,
-        ) { state, activateDismissedAt, _ ->
-            select(state = state, activateDismissedAt = activateDismissedAt, now = clock.instant())
-        }.distinctUntilChanged()
+        ) { state, activateDismissedAt, _ -> state to activateDismissedAt }
+            .transformLatest { (state, activateDismissedAt) ->
+                var now = clock.instant()
+                while (true) {
+                    emit(select(state = state, activateDismissedAt = activateDismissedAt, now = now))
+                    val boundary = nextBoundary(state, activateDismissedAt, now) ?: break
+                    delay(Duration.between(now, boundary).toMillis())
+                    now = boundary
+                }
+            }
+            .distinctUntilChanged()
     }
 
     suspend fun refresh(userWalletId: UserWalletId) {
@@ -83,6 +95,15 @@ internal class PolymarketFastTradingBannerSource(
         return PolymarketFastTradingBanner.Activate.takeIf {
             state.isActivationOffered && !isSettling && !isDismissed
         }
+    }
+
+    private fun nextBoundary(state: PolymarketFastTradingState, activateDismissedAt: Instant?, now: Instant): Instant? {
+        val wallet = state.overview.getOrNull()?.wallet
+        val pendingEnds = wallet?.sessionKeys.orEmpty().newestPerAddress()
+            .filter { it.status == PolymarketSessionKeyStatus.PENDING }
+            .map { it.createdAt.plus(PENDING_SETTLING_WINDOW) }
+        val dismissalEnd = activateDismissedAt?.plus(PolymarketFastTradingBannerKind.ACTIVATE.dismissalPeriod)
+        return (pendingEnds + listOfNotNull(dismissalEnd)).filter { it > now }.minOrNull()
     }
 
     private fun PolymarketSessionKey.isSettlingAt(now: Instant): Boolean = when (status) {
