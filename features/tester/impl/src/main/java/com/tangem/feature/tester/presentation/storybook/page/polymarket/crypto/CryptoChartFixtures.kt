@@ -13,23 +13,32 @@ import kotlin.math.sin
 internal fun cryptoFixture(sample: Story.Sample, interval: Story.Interval, target: Story.Target): Chart.Snapshot {
     val base = when (sample) {
         Story.Sample.Ethereum -> 2_540.0
+        Story.Sample.Narrowing -> 2_530.0
         Story.Sample.Tiny -> 0.000008
         else -> 75_640.0
     }
     val amplitude = base / 2_000
-    val points = List(61) { index ->
-        val change = if (sample == Story.Sample.Flat) {
-            0.0
-        } else {
-            amplitude * (sin(index * 0.13) + sin(index * 0.7) * 0.12 + index / 40.0)
-        }
-        Chart.Point(
-            timestampMillis = CRYPTO_FIXTURE_START + interval.millis * index / 60,
-            price = base + change,
-            isSegmentStart = sample == Story.Sample.Gap && index == 40,
+    val points = if (sample == Story.Sample.Narrowing) {
+        listOf(
+            Chart.Point(CRYPTO_FIXTURE_START, base - 30),
+            Chart.Point(CRYPTO_FIXTURE_START + 1_000, base),
+            Chart.Point(CRYPTO_FIXTURE_START + interval.millis, base),
         )
-    }.filterIndexed { index, _ ->
-        sample.includes(index)
+    } else {
+        List(61) { index ->
+            val change = if (sample == Story.Sample.Flat) {
+                0.0
+            } else {
+                amplitude * (sin(index * 0.13) + sin(index * 0.7) * 0.12 + index / 40.0)
+            }
+            Chart.Point(
+                timestampMillis = CRYPTO_FIXTURE_START + interval.millis * index / 60,
+                price = base + change,
+                isSegmentStart = sample == Story.Sample.Gap && index == 40,
+            )
+        }.filterIndexed { index, _ ->
+            sample.includes(index)
+        }
     }
     return Chart.Snapshot(
         points = points.toImmutableList(),
@@ -43,12 +52,17 @@ internal fun cryptoFixture(sample: Story.Sample, interval: Story.Interval, targe
     )
 }
 
-internal fun formatCryptoDemoPrice(value: Double, digits: Int): String =
-    NumberFormat.getCurrencyInstance(Locale.US).apply {
-        currency = Currency.getInstance("USD")
-        minimumFractionDigits = digits
-        maximumFractionDigits = digits
+internal class CryptoDemoPriceFormatter {
+    private val formatters = mutableMapOf<Int, NumberFormat>()
+
+    fun format(value: Double, digits: Int): String = formatters.getOrPut(digits) {
+        NumberFormat.getCurrencyInstance(Locale.US).apply {
+            currency = Currency.getInstance("USD")
+            minimumFractionDigits = digits
+            maximumFractionDigits = digits
+        }
     }.format(value)
+}
 
 internal const val CRYPTO_FIXTURE_START = 1_793_613_600_000L
 
@@ -59,3 +73,12 @@ private fun Story.Sample.includes(index: Int): Boolean = when (this) {
     Story.Sample.Stale -> index <= 25
     else -> true
 }
+
+internal fun liveCryptoPoints(snapshot: Chart.Snapshot, revision: Int, mode: Story.UpdateMode) =
+    (snapshot.points + List(revision) { index ->
+        val last = snapshot.points.lastOrNull()?.price ?: 75_000.0
+        val elapsed = index * mode.cadenceMillis
+        val wave = sin(elapsed * 0.0003) * last / 2_000
+        val jump = if (mode == Story.UpdateMode.Jump && elapsed >= 3_000) last * 0.01 else 0.0
+        Chart.Point(snapshot.range.endMillis + elapsed + mode.cadenceMillis, last + wave + jump)
+    }.filterIndexed { index, _ -> mode != Story.UpdateMode.Sparse || index % 6 == 0 }).toImmutableList()
