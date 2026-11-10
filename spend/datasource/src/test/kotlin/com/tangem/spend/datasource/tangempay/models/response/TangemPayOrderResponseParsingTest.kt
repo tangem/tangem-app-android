@@ -6,6 +6,7 @@ import com.tangem.spend.datasource.tangempay.serialization.TangemPaySerializersM
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlin.reflect.KClass
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -86,6 +87,19 @@ internal class TangemPayOrderResponseParsingTest {
         assertThat(actual).isEqualTo(model.expected)
     }
 
+    @Test
+    fun `GIVEN all order data subtypes WHEN listing cases THEN every subtype is covered`() {
+        // Act
+        val covered = provideTestModels().map { it.expected::class }.toSet()
+
+        // Assert
+        assertThat(covered).containsExactlyElementsIn(OrderDataResponse::class.leafSealedSubclasses())
+    }
+
+    private fun KClass<*>.leafSealedSubclasses(): List<KClass<*>> = sealedSubclasses.flatMap { subclass ->
+        if (subclass.isSealed) subclass.leafSealedSubclasses() else listOf(subclass)
+    }
+
     @Suppress("LongMethod")
     private fun provideTestModels() = listOf(
         DataModel(
@@ -119,6 +133,44 @@ internal class TangemPayOrderResponseParsingTest {
         DataModel(
             raw = """
                 {
+                  "type": "CARD_ISSUE_VIRTUAL_RAIN",
+                  "specification_name": "SP_1",
+                  "customer_wallet_address": "0xabc",
+                  "emboss_name": "JOHN DOE",
+                  "product_instance_id": "pi-1",
+                  "payment_account_id": "pa-1"
+                }
+            """.trimIndent(),
+            expected = OrderDataResponse.CardIssueVirtual(
+                specificationName = "SP_1",
+                customerWalletAddress = "0xabc",
+                embossName = "JOHN DOE",
+                productInstanceId = "pi-1",
+                paymentAccountId = "pa-1",
+            ),
+        ),
+        DataModel(
+            raw = """
+                {
+                  "type": "CARD_ISSUE_VIRTUAL_RAIN_KYC",
+                  "specification_name": "SP_1",
+                  "customer_wallet_address": "0xabc",
+                  "emboss_name": "JOHN DOE",
+                  "product_instance_id": "pi-1",
+                  "payment_account_id": "pa-1"
+                }
+            """.trimIndent(),
+            expected = OrderDataResponse.CardIssueVirtualKyc(
+                specificationName = "SP_1",
+                customerWalletAddress = "0xabc",
+                embossName = "JOHN DOE",
+                productInstanceId = "pi-1",
+                paymentAccountId = "pa-1",
+            ),
+        ),
+        DataModel(
+            raw = """
+                {
                   "type": "CARD_ISSUE_VIRTUAL_RAIN_KYC_V2",
                   "specification_name": "SP_1",
                   "customer_wallet_address": "0xabc",
@@ -133,6 +185,41 @@ internal class TangemPayOrderResponseParsingTest {
                 embossName = "JOHN DOE",
                 productInstanceId = "pi-1",
                 paymentAccountId = "pa-1",
+            ),
+        ),
+        DataModel(
+            raw = """
+                {
+                  "type": "CARD_ISSUE_PLASTIC_RAIN",
+                  "specification_name": "SP_1",
+                  "customer_wallet_address": "0xabc",
+                  "emboss_name": "JOHN DOE",
+                  "product_instance_id": "pi-1",
+                  "payment_account_id": "pa-1"
+                }
+            """.trimIndent(),
+            expected = OrderDataResponse.CardIssuePlastic(
+                specificationName = "SP_1",
+                customerWalletAddress = "0xabc",
+                embossName = "JOHN DOE",
+                productInstanceId = "pi-1",
+                paymentAccountId = "pa-1",
+            ),
+        ),
+        DataModel(
+            raw = """
+                {
+                  "type": "ACCOUNT_ISSUE_VIRTUAL_RAIN",
+                  "specification_name": "SP_2",
+                  "deposit_address": "0xdep"
+                }
+            """.trimIndent(),
+            expected = OrderDataResponse.AccountIssueVirtual(
+                specificationName = "SP_2",
+                depositAddress = "0xdep",
+                productInstanceId = null,
+                paymentAccountId = null,
+                automationId = null,
             ),
         ),
         DataModel(

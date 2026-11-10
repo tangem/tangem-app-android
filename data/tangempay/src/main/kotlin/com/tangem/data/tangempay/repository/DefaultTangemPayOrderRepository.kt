@@ -39,8 +39,8 @@ internal class DefaultTangemPayOrderRepository @Inject constructor(
         return requestHelper.performRequest(userWalletId) { authHeader ->
             orderApi.findOrders(
                 authHeader = authHeader,
-                orderTypes = types.map(::toWireType),
-                orderStatuses = statuses.mapNotNull(::toWireStatus),
+                orderTypes = types.map { it.toTypeId() },
+                orderStatuses = statuses.map { it.toStatusId() },
             )
         }.map { response ->
             response.result.map(TangemPayOrderConverter::convert)
@@ -62,35 +62,5 @@ internal class DefaultTangemPayOrderRepository @Inject constructor(
             orderApi.createOrder(authHeader = authHeader, idempotencyKey = idempotencyKey, body = body)
         }.bind()
         TangemPayOrderConverter.convert(response.result)
-    }
-
-    @Suppress("CyclomaticComplexMethod")
-    private fun toWireType(type: TangemPayOrder.Type): String = when (type) {
-        TangemPayOrder.Type.CARD_ISSUE_VIRTUAL -> "CARD_ISSUE_VIRTUAL_RAIN"
-        TangemPayOrder.Type.CARD_ISSUE_VIRTUAL_KYC -> "CARD_ISSUE_VIRTUAL_RAIN_KYC"
-        TangemPayOrder.Type.CARD_ISSUE_VIRTUAL_KYC_V2 -> "CARD_ISSUE_VIRTUAL_RAIN_KYC_V2"
-        TangemPayOrder.Type.CARD_ISSUE_PLASTIC -> "CARD_ISSUE_PLASTIC_RAIN"
-        TangemPayOrder.Type.CARD_ACTIVATION_PLASTIC -> "CARD_ACTIVATION_PLASTIC_RAIN"
-        TangemPayOrder.Type.CARD_REISSUE_PLASTIC -> "CARD_REISSUE_PLASTIC_RAIN"
-        TangemPayOrder.Type.CARD_REISSUE_VIRTUAL -> "CARD_REISSUE_VIRTUAL_RAIN"
-        TangemPayOrder.Type.CARD_FREEZE -> "CARD_FREEZE_RAIN"
-        TangemPayOrder.Type.CARD_UNFREEZE -> "CARD_UNFREEZE_RAIN"
-        TangemPayOrder.Type.CARD_CLOSE -> "CARD_CLOSE_RAIN"
-        TangemPayOrder.Type.ACCOUNT_ISSUE_VIRTUAL -> "ACCOUNT_ISSUE_VIRTUAL_RAIN"
-        TangemPayOrder.Type.ACCOUNT_ISSUE_BANKING -> "ACCOUNT_ISSUE_BANKING_RAIN"
-        TangemPayOrder.Type.WITHDRAWAL -> "WITHDRAWAL_RAIN"
-        TangemPayOrder.Type.BANK_OFFRAMP -> "BANK_OFFRAMP_RAIN"
-        TangemPayOrder.Type.SMART_CONTRACT_ISSUE -> "SMART_CONTRACT_ISSUE_RAIN"
-        TangemPayOrder.Type.TARIFF_PLAN_TRANSITION -> "TARIFF_PLAN_TRANSITION"
-        TangemPayOrder.Type.ONBOARDING -> "ONBOARDING_RAIN"
-        TangemPayOrder.Type.UNDEFINED -> "UNDEFINED"
-    }
-
-    private fun toWireStatus(status: TangemPayOrder.Status): String? = when (status) {
-        TangemPayOrder.Status.NEW -> "NEW"
-        TangemPayOrder.Status.PROCESSING -> "PROCESSING"
-        TangemPayOrder.Status.COMPLETED -> "COMPLETED"
-        TangemPayOrder.Status.CANCELED -> "CANCELED"
-        TangemPayOrder.Status.UNKNOWN -> null
     }
 }
