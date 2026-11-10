@@ -2,7 +2,6 @@ package com.tangem.data.tangempay.util
 
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.tangempay.model.OrderDetails
-import com.tangem.domain.tangempay.model.OrderErrorCode
 import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.TangemPayOrder
 import com.tangem.spend.datasource.tangempay.models.response.OrderDataResponse
@@ -14,13 +13,8 @@ internal object TangemPayOrderConverter : Converter<TangemPayOrderResponse.Resul
     override fun convert(value: TangemPayOrderResponse.Result): TangemPayOrder {
         return TangemPayOrder(
             id = value.id,
-            customerId = value.customerId,
             status = TangemPayOrder.Status.fromString(value.status),
             step = OrderStep.fromString(value.step),
-            stepChangeCode = value.stepChangeCode,
-            createdAt = value.createdAt,
-            updatedAt = value.updatedAt,
-            errorCode = value.errorCode?.let(OrderErrorCode::fromString),
             details = convertDetails(value.data),
         )
     }

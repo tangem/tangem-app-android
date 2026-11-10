@@ -264,27 +264,16 @@ internal class DefaultTangemPayOrderRepositoryTest {
     private fun orderResponse() = TangemPayOrderResponse(
         result = TangemPayOrderResponse.Result(
             id = ORDER_ID,
-            customerId = "customer",
-            type = "CARD_FREEZE_RAIN",
             status = "PROCESSING",
             step = "STARTING",
             data = OrderDataResponse.CardFreeze(productInstanceId = "pi_1"),
-            stepChangeCode = 3,
-            createdAt = "2026-11-09T10:00:00Z",
-            updatedAt = "2026-11-09T10:05:00Z",
-            errorCode = null,
         ),
     )
 
     private fun expectedOrder() = TangemPayOrder(
         id = ORDER_ID,
-        customerId = "customer",
         status = TangemPayOrder.Status.PROCESSING,
         step = OrderStep.STARTING,
-        stepChangeCode = 3,
-        createdAt = "2026-11-09T10:00:00Z",
-        updatedAt = "2026-11-09T10:05:00Z",
-        errorCode = null,
         details = OrderDetails.CardFreeze(productInstanceId = "pi_1"),
     )
 
