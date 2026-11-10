@@ -63,6 +63,7 @@ class OrderPoller(
     }
 
     private suspend fun pollUntilTerminal(orderRef: OrderRef, state: MutableStateFlow<OrderPollingState>) {
+        ordersStore.save(orderRef)
         var previousStep: OrderStep? = null
         while (true) {
             val result = orderRepository.getOrder(userWalletId = orderRef.userWalletId, orderId = orderRef.id)
@@ -99,9 +100,9 @@ class OrderPoller(
         terminalState: OrderPollingState,
     ) {
         activeOrdersRegistry.remove(orderRef)
-        ordersStore.remove(orderRef)
         refreshAccountStatus(orderRef)
         state.value = terminalState
+        ordersStore.remove(orderRef)
     }
 
     private suspend fun refreshAccountStatus(orderRef: OrderRef) {

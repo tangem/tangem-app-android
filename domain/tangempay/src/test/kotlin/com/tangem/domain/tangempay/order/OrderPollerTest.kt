@@ -14,6 +14,7 @@ import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.async
@@ -34,6 +35,7 @@ internal class OrderPollerTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(orderRepository, ordersStore, paymentAccountStatusFetcher)
+        coEvery { ordersStore.save(any()) } just Runs
         coEvery { ordersStore.remove(any()) } just Runs
         coEvery { paymentAccountStatusFetcher(any<UserWalletId>()) } returns Unit.right()
     }
@@ -257,6 +259,23 @@ internal class OrderPollerTest {
 
         // Assert
         assertThat(activeOrdersRegistry.get(USER_WALLET_ID)).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN new order WHEN poll THEN the order is saved before the first request`() = runTest {
+        // Arrange
+        coEvery {
+            orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
+        } returns order(status = TangemPayOrder.Status.COMPLETED).right()
+
+        // Act
+        createPoller().poll(ORDER_REF).toList()
+
+        // Assert
+        coVerifyOrder {
+            ordersStore.save(ORDER_REF)
+            orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
+        }
     }
 
     private fun TestScope.createPoller() = OrderPoller(

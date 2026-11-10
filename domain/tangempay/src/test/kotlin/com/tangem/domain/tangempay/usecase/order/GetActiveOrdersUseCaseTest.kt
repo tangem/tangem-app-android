@@ -1,11 +1,12 @@
-package com.tangem.domain.tangempay.order
+package com.tangem.domain.tangempay.usecase.order
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.OrderDetails
 import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.TangemPayOrder
-import com.tangem.domain.tangempay.usecase.order.GetActiveOrdersUseCase
+import com.tangem.domain.tangempay.order.ActiveOrdersRegistry
+import com.tangem.domain.tangempay.order.OrderRef
 import org.junit.jupiter.api.Test
 
 internal class GetActiveOrdersUseCaseTest {
