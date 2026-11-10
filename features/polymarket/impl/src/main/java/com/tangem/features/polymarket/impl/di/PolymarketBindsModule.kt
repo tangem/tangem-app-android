@@ -22,6 +22,7 @@ import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
 import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
 import com.tangem.features.polymarket.impl.entry.model.PolymarketEntryModel
+import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketFastTradingSettingsModel
 import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.history.model.PolymarketHistoryModel
 import com.tangem.features.polymarket.impl.walletblock.DefaultPolymarketWalletBlockComponent
@@ -86,6 +87,11 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PolymarketHistoryModel::class)
     fun bindPolymarketHistoryModel(impl: PolymarketHistoryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketFastTradingSettingsModel::class)
+    fun bindPolymarketFastTradingSettingsModel(impl: PolymarketFastTradingSettingsModel): Model
 
     @Binds
     @IntoMap
