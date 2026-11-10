@@ -104,12 +104,14 @@ internal object MarketingDataModule {
         cacheStore: MarketingCampaignsCacheStore,
         dismissStore: MarketingDismissStore,
         dispatchers: CoroutineDispatcherProvider,
+        appCoroutineScope: AppCoroutineScope,
     ): MarketingRepository = DefaultMarketingRepository(
         tangemTechApi = tangemTechApi,
         cacheStore = cacheStore,
         dismissStore = dismissStore,
         converter = MarketingCampaignConverter(),
         dispatchers = dispatchers,
+        appCoroutineScope = appCoroutineScope,
     )
 
     @Provides
