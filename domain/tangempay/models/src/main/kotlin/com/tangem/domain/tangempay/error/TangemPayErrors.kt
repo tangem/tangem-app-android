@@ -71,6 +71,12 @@ sealed class TangemPayApiError(
     data object CardReissuePlasticInvalidEmbossName : TangemPayApiError(104140143)
 
     data object BankOfframpUnsupportedConfiguration : TangemPayApiError(104140141)
+    data object BankOfframpQuoteExpired : TangemPayApiError(104140164)
+    data object BankOfframpRegionUnsupported : TangemPayApiError(104140165)
+    data object BankOfframpVerificationIncomplete : TangemPayApiError(104140166)
+    data object BankOfframpConflict : TangemPayApiError(104140167)
+    data object BankOfframpAmountOutOfLimits : TangemPayApiError(104140168)
+    data object BankOfframpRejected : TangemPayApiError(104140169)
 
     data object WaitlistInvalidEmail : TangemPayApiError(-1)
     data object AccountIssueActiveOrderExists : TangemPayApiError(-1)
@@ -110,6 +116,12 @@ sealed class TangemPayApiError(
                 CardReissuePlasticInvalidShippingAddress.errorCode -> CardReissuePlasticInvalidShippingAddress
                 CardReissuePlasticInvalidEmbossName.errorCode -> CardReissuePlasticInvalidEmbossName
                 BankOfframpUnsupportedConfiguration.errorCode -> BankOfframpUnsupportedConfiguration
+                BankOfframpQuoteExpired.errorCode -> BankOfframpQuoteExpired
+                BankOfframpRegionUnsupported.errorCode -> BankOfframpRegionUnsupported
+                BankOfframpVerificationIncomplete.errorCode -> BankOfframpVerificationIncomplete
+                BankOfframpConflict.errorCode -> BankOfframpConflict
+                BankOfframpAmountOutOfLimits.errorCode -> BankOfframpAmountOutOfLimits
+                BankOfframpRejected.errorCode -> BankOfframpRejected
                 else -> Unknown(universalErrorCode)
             }
         }
