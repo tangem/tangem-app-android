@@ -336,10 +336,16 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         }
     }
 
-    private fun showAutoBuyback(step: OpenPackStep.AutoBuybacked) {
+    private suspend fun showAutoBuyback(step: OpenPackStep.AutoBuybacked) {
+        step.pack?.imageFrontUrl?.let { url ->
+            withTimeoutOrNull(PackOpeningConst.CARD_IMAGES_TIMEOUT_MS.milliseconds) {
+                imagePreloader.preload(url).job.await()
+            }
+        }
+
         bottomSheetNavigation.activate(
             CollectiblesAutoBuybackConverter.convert(
-                CollectiblesAutoBuybackConverter.Input(amount = step.amount, price = machine?.total),
+                CollectiblesAutoBuybackConverter.Input(amount = step.amount, price = machine?.total, pack = step.pack),
             ),
         )
     }

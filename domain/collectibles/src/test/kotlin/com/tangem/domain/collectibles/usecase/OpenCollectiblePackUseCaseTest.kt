@@ -566,7 +566,7 @@ internal class OpenCollectiblePackUseCaseTest {
         val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = true).toList().last()
 
         // Assert
-        assertThat(actual).isEqualTo(OpenPackStep.AutoBuybacked(BigDecimal("42.5")))
+        assertThat(actual).isEqualTo(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = PACK))
     }
 
     @Test
@@ -630,7 +630,7 @@ internal class OpenCollectiblePackUseCaseTest {
             // Assert
             assertThat(actual).containsExactly(
                 OpenPackStep.Confirming,
-                OpenPackStep.AutoBuybacked(BigDecimal("42.5")),
+                OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = null),
             ).inOrder()
             coVerify(exactly = 0) { collectiblesRepository.openPack(any(), any(), any()) }
         }

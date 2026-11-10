@@ -238,7 +238,7 @@ class OpenCollectiblePackUseCase @Inject constructor(
         val amount = state.autoBuybackAmount
             ?: fail(OpenPackStep.Failed.Unexpected, cause = "auto-buybacked without a payout")
 
-        return OpenPackStep.AutoBuybacked(amount)
+        return OpenPackStep.AutoBuybacked(amount = amount, pack = state.pack)
     }
 
     private fun Raise<OpenPackStep.Failed>.failIfClosed(status: CollectibleTxStatus) {
