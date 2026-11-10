@@ -26,6 +26,7 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
@@ -152,13 +153,14 @@ private fun DetailRow(
     TangemRow(
         divider = divider,
         onClick = onClick,
+        contentLead = TangemRowContentLead.Start,
         titleSlot = { TangemRowText(text = title, role = TangemRowTextRole.Title) },
         valueSlot = {
             Text(
                 text = value.resolveReference(),
                 style = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.primary,
-                maxLines = 1,
+                textAlign = TextAlign.End,
             )
         },
     )
