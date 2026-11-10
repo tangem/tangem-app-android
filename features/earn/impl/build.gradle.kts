@@ -59,6 +59,7 @@ dependencies {
     /** Other */
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.haze)
     implementation(deps.lifecycle.compose)
 
     /** DI */

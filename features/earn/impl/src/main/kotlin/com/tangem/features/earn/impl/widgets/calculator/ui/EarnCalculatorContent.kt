@@ -32,7 +32,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.extensions.resolveReference
@@ -144,7 +143,7 @@ private fun HorizonPicker(horizon: EarnHorizonSelectUM, textStyle: TextStyle) {
         TangemMenu(
             isExpanded = isMenuExpanded,
             onDismissRequest = { isMenuExpanded = false },
-            modifier = Modifier.hazeEffectTangem { blurRadius = 10.dp },
+            modifier = if (LocalEarnCalculatorOnGlass.current) Modifier.frostedMenuBase() else Modifier,
             isSelectable = true,
         ) {
             horizon.items.forEach { item ->
