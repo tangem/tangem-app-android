@@ -55,16 +55,19 @@ import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUse
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStateService
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRunner
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
 import com.tangem.domain.polymarket.usecase.ValidatePredictionOrderUseCase
@@ -529,4 +532,34 @@ internal object PolymarketDomainModule {
         reconcile = reconcile,
         scope = appCoroutineScope,
     )
+
+    @Provides
+    @Singleton
+    fun providePolymarketSessionKeyOperationRunner(
+        manage: ManagePolymarketSessionKeyInteractor,
+        stateService: PolymarketSessionKeyStateService,
+        sessionKeyStore: PolymarketSessionKeyStore,
+        appCoroutineScope: AppCoroutineScope,
+    ): PolymarketSessionKeyOperationRunner = PolymarketSessionKeyOperationRunner(
+        manage = manage,
+        stateService = stateService,
+        sessionKeyStore = sessionKeyStore,
+        appScope = appCoroutineScope,
+    )
+
+    @Provides
+    @Singleton
+    fun provideObservePolymarketFastTradingUseCase(
+        stateService: PolymarketSessionKeyStateService,
+        runner: PolymarketSessionKeyOperationRunner,
+    ): ObservePolymarketFastTradingUseCase = ObservePolymarketFastTradingUseCase(
+        stateService = stateService,
+        runner = runner,
+    )
+
+    @Provides
+    @Singleton
+    fun provideRefreshPolymarketFastTradingUseCase(
+        stateService: PolymarketSessionKeyStateService,
+    ): RefreshPolymarketFastTradingUseCase = RefreshPolymarketFastTradingUseCase(stateService = stateService)
 }

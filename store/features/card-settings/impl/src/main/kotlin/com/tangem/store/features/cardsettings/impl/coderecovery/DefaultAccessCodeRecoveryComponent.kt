@@ -8,6 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.store.features.cardsettings.impl.coderecovery.api.AccessCodeRecoveryComponent
 import com.tangem.store.features.cardsettings.impl.coderecovery.model.AccessCodeRecoveryModel
+import com.tangem.store.features.cardsettings.impl.coderecovery.ui.AccessCodeRecoveryScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -22,7 +23,7 @@ internal class DefaultAccessCodeRecoveryComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.screenState.collectAsStateWithLifecycle()
+        val state by model.uiState.collectAsStateWithLifecycle()
 
         AccessCodeRecoveryScreen(
             state = state,

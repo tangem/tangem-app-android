@@ -27,7 +27,7 @@ internal object PlacePredictionNotificationsFactory {
 
         if (!state.isMarketAcceptingOrders) add(PredictionNotificationUM.MarketClosed)
 
-        addAll(state.quote.notifications())
+        addAll(state.quoteNotifications())
 
         when (state.priceError) {
             PriceErrorUM.MarketClosed -> add(PredictionNotificationUM.MarketClosed)
@@ -52,18 +52,24 @@ internal object PlacePredictionNotificationsFactory {
         }
     }.distinct().toImmutableList()
 
-    private fun QuoteUM.notifications(): List<PredictionNotificationUM> = when (this) {
-        is QuoteUM.Content -> when (status) {
+    private fun PlacePredictionUM.quoteNotifications(): List<PredictionNotificationUM> = when (quote) {
+        is QuoteUM.Content -> when (quote.status) {
             PredictionQuoteStatus.PARTIAL -> listOf(PredictionNotificationUM.PartialFill)
+            PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE -> belowMinOrderNotifications()
             else -> emptyList()
         }
-        is QuoteUM.Unavailable -> when (status) {
+        is QuoteUM.Unavailable -> when (quote.status) {
             PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY -> listOf(PredictionNotificationUM.NoLiquidity)
             PredictionQuoteStatus.MARKET_CLOSED -> listOf(PredictionNotificationUM.MarketClosed)
             else -> emptyList()
         }
         is QuoteUM.Error -> listOf(PredictionNotificationUM.QuoteFailed)
         QuoteUM.Empty, is QuoteUM.Loading -> emptyList()
+    }
+
+    private fun PlacePredictionUM.belowMinOrderNotifications(): List<PredictionNotificationUM> = when {
+        order is OrderSideUM.Buy && !isBelowMinAmount() -> listOf(PredictionNotificationUM.BelowMinOrder)
+        else -> emptyList()
     }
 }
 

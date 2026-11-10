@@ -28,15 +28,16 @@ import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.store.features.cardsettings.api.CardSettingsComponent
-import com.tangem.store.features.cardsettings.impl.main.CardInfo
 import com.tangem.store.features.cardsettings.impl.CardSettingsRoute
-import com.tangem.store.features.cardsettings.impl.main.CardSettingsScreenState
 import com.tangem.store.features.cardsettings.impl.common.CardSettingsAnalyticsEvent
-import com.tangem.store.features.cardsettings.impl.common.utils.*
+import com.tangem.store.features.cardsettings.impl.common.utils.getResetToFactoryDescription
 import com.tangem.store.features.cardsettings.impl.domain.CardSettingsInteractor
+import com.tangem.store.features.cardsettings.impl.main.ui.state.CardInfoUM
+import com.tangem.store.features.cardsettings.impl.main.ui.state.CardSettingsUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -68,7 +69,8 @@ internal class CardSettingsModel @Inject constructor(
 
     private val userWalletId = params.userWalletId
 
-    val screenState: MutableStateFlow<CardSettingsScreenState> = MutableStateFlow(getInitialState())
+    val uiState: StateFlow<CardSettingsUM>
+        field = MutableStateFlow(getInitialState())
 
     init {
         overrideSdkConfig()
@@ -106,7 +108,7 @@ internal class CardSettingsModel @Inject constructor(
         }
     }
 
-    private fun getInitialState() = CardSettingsScreenState(
+    private fun getInitialState() = CardSettingsUM(
         cardDetails = null,
         onElementClick = ::handleClickingItem,
         onScanCardClick = ::scanCard,
@@ -141,25 +143,21 @@ internal class CardSettingsModel @Inject constructor(
         val cardTypesResolver = scanResponse.cardTypesResolver
         val cardId = cardTypesResolver.getCardId()
 
-        val currentSecurityOption = getCurrentSecurityOption(card)
-        val allowedSecurityOptions = getAllowedSecurityOptions(
-            card = card,
-            cardTypesResolver = cardTypesResolver,
-            currentSecurityOption = currentSecurityOption,
-        )
+        val currentSecurityOption = cardSettingsInteractor.getSecurityOption(card)
+        val allowedSecurityOptions = cardSettingsInteractor.getAllowedSecurityOptions(scanResponse)
         val isResetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver)
 
-        val cardDetails: List<CardInfo> = buildList {
-            add(CardInfo.CardId(cardId))
-            add(CardInfo.Issuer(card.issuer.name))
+        val cardDetails: List<CardInfoUM> = buildList {
+            add(CardInfoUM.CardId(cardId))
+            add(CardInfoUM.Issuer(card.issuer.name))
 
             addIf(
                 condition = !cardTypesResolver.isTangemTwins(),
-                element = CardInfo.SignedHashes(card.signedHashesCount().toString()),
+                element = CardInfoUM.SignedHashes(card.signedHashesCount().toString()),
             )
 
             add(
-                CardInfo.SecurityMode(
+                CardInfoUM.SecurityMode(
                     securityOption = currentSecurityOption,
                     clickable = allowedSecurityOptions.size > 1,
                 ),
@@ -167,16 +165,18 @@ internal class CardSettingsModel @Inject constructor(
 
             addIf(
                 condition = card.backupStatus?.isActive == true && card.isAccessCodeSet,
-                element = CardInfo.ChangeAccessCode,
+                element = CardInfoUM.ChangeAccessCode,
             )
 
             addIf(
-                condition = isAccessCodeRecoveryAllowed(cardTypesResolver),
-                element = CardInfo.AccessCodeRecovery(isAccessCodeRecoveryEnabled(cardTypesResolver, card)),
+                condition = cardSettingsInteractor.isAccessCodeRecoveryAllowed(scanResponse),
+                element = CardInfoUM.AccessCodeRecovery(
+                    isEnabled = cardSettingsInteractor.isAccessCodeRecoveryEnabled(scanResponse),
+                ),
             )
 
             addIf(isResetCardAllowed) {
-                CardInfo.ResetToFactorySettings(
+                CardInfoUM.ResetToFactorySettings(
                     description = getResetToFactoryDescription(
                         isActiveBackupStatus = card.backupStatus?.isActive == true,
                         typesResolver = cardTypesResolver,
@@ -185,30 +185,30 @@ internal class CardSettingsModel @Inject constructor(
             }
         }
 
-        screenState.update { state ->
-            state.copy(cardDetails = cardDetails)
+        uiState.update { state ->
+            state.copy(cardDetails = cardDetails.toImmutableList())
         }
     }
 
     private fun CardDTO.signedHashesCount(): Int = wallets.sumOf { it.totalSignedHashes ?: 0 }
 
-    private fun handleClickingItem(item: CardInfo) {
+    private fun handleClickingItem(item: CardInfoUM) {
         when (item) {
-            is CardInfo.ChangeAccessCode -> {
+            is CardInfoUM.ChangeAccessCode -> {
                 analyticsEventHandler.send(
                     CardSettingsAnalyticsEvent.ButtonChangeUserCode(AnalyticsParam.UserCode.AccessCode),
                 )
                 changeAccessCode()
             }
-            is CardInfo.ResetToFactorySettings -> {
+            is CardInfoUM.ResetToFactorySettings -> {
                 analyticsEventHandler.send(CardSettingsAnalyticsEvent.ButtonFactoryReset())
                 resetWalletToFactorySettings()
             }
-            is CardInfo.SecurityMode -> {
+            is CardInfoUM.SecurityMode -> {
                 analyticsEventHandler.send(CardSettingsAnalyticsEvent.ButtonChangeSecurityMode())
                 router.push(route = CardSettingsRoute.SecurityMode(userWalletId))
             }
-            is CardInfo.AccessCodeRecovery -> {
+            is CardInfoUM.AccessCodeRecovery -> {
                 router.push(CardSettingsRoute.AccessCodeRecovery)
             }
             else -> {}
@@ -216,9 +216,7 @@ internal class CardSettingsModel @Inject constructor(
     }
 
     private fun resetWalletToFactorySettings() {
-        val scanResponse = requireNotNull(cardSettingsInteractor.scannedScanResponse.value) {
-            "Impossible to reset card if ScanResponse is null"
-        }
+        val scanResponse = cardSettingsInteractor.requireScanResponse()
 
         if (scanResponse.cardTypesResolver.isTangemTwins()) {
             router.push(
@@ -246,7 +244,7 @@ internal class CardSettingsModel @Inject constructor(
     }
 
     private fun changeAccessCode() = modelScope.launch {
-        val scanResponse = requireNotNull(cardSettingsInteractor.scannedScanResponse.value) { "Scan response is null" }
+        val scanResponse = cardSettingsInteractor.requireScanResponse()
 
         when (val result = tangemSdkManager.setAccessCode(scanResponse.card.cardId)) {
             is CompletionResult.Success -> analyticsEventHandler.send(CardSettingsAnalyticsEvent.UserCodeChanged())
@@ -267,5 +265,3 @@ internal class CardSettingsModel @Inject constructor(
         router.pop()
     }
 }
-
-private fun isAccessCodeRecoveryAllowed(typeResolver: CardTypesResolver): Boolean = typeResolver.isWallet2()

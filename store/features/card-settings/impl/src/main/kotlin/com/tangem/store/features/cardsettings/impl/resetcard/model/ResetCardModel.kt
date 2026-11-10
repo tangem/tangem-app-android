@@ -22,7 +22,7 @@ import com.tangem.store.features.cardsettings.impl.common.CardSettingsAnalyticsE
 import com.tangem.store.features.cardsettings.impl.common.utils.getResetToFactoryDescription
 import com.tangem.store.features.cardsettings.impl.domain.CardSettingsInteractor
 import com.tangem.store.features.cardsettings.impl.resetcard.ResetCardDialog
-import com.tangem.store.features.cardsettings.impl.resetcard.ResetCardScreenState
+import com.tangem.store.features.cardsettings.impl.resetcard.ui.state.ResetCardUM
 import com.tangem.store.features.cardsettings.impl.resetcard.api.ResetCardComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
@@ -31,6 +31,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -79,14 +80,13 @@ internal class ResetCardModel @Inject constructor(
     // TODO: move logic to separate domain entity
     private var resetBackupCardCount = 0
 
-    private var warningsMap = emptyMap<ResetCardScreenState.WarningType, ResetCardScreenState.WarningUM>()
+    private var warningsMap = emptyMap<ResetCardUM.WarningType, ResetCardUM.WarningUM>()
 
-    val screenState: MutableStateFlow<ResetCardScreenState> = MutableStateFlow(
-        value = getInitialState(),
-    )
+    val uiState: StateFlow<ResetCardUM>
+        field = MutableStateFlow(getInitialState())
 
-    private fun getInitialState(): ResetCardScreenState {
-        return ResetCardScreenState(
+    private fun getInitialState(): ResetCardUM {
+        return ResetCardUM(
             isResetButtonEnabled = false,
             descriptionText = getResetToFactoryDescription(
                 isActiveBackupStatus = isActiveBackupPrimaryCard,
@@ -105,40 +105,40 @@ internal class ResetCardModel @Inject constructor(
         return isTangemWallet && isActiveBackupPrimaryCard
     }
 
-    private fun buildInitialItems(): ImmutableList<ResetCardScreenState.WarningUM> {
+    private fun buildInitialItems(): ImmutableList<ResetCardUM.WarningUM> {
         val shouldShowResetPasswordButton = shouldShowResetPasswordButton()
         val shouldShowResetTangemPayButton = params.hasTangemPay
 
-        val lostWalletUM = ResetCardScreenState.WarningUM(
+        val lostWalletUM = ResetCardUM.WarningUM(
             isChecked = false,
-            type = ResetCardScreenState.WarningType.LOST_WALLET_ACCESS,
+            type = ResetCardUM.WarningType.LOST_WALLET_ACCESS,
             description = TextReference.Res(id = R.string.reset_card_to_factory_condition_1),
         )
-        val lostPasswordUM = ResetCardScreenState.WarningUM(
+        val lostPasswordUM = ResetCardUM.WarningUM(
             isChecked = false,
-            type = ResetCardScreenState.WarningType.LOST_PASSWORD_RESTORE,
+            type = ResetCardUM.WarningType.LOST_PASSWORD_RESTORE,
             description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
         )
-        val lostTangemPayUM = ResetCardScreenState.WarningUM(
+        val lostTangemPayUM = ResetCardUM.WarningUM(
             isChecked = false,
-            type = ResetCardScreenState.WarningType.LOST_TANGEM_PAY,
+            type = ResetCardUM.WarningType.LOST_TANGEM_PAY,
             description = TextReference.Res(R.string.reset_card_to_factory_condition_3),
         )
 
         warningsMap = buildMap {
-            put(ResetCardScreenState.WarningType.LOST_WALLET_ACCESS, lostWalletUM)
+            put(ResetCardUM.WarningType.LOST_WALLET_ACCESS, lostWalletUM)
             if (shouldShowResetPasswordButton) {
-                put(ResetCardScreenState.WarningType.LOST_PASSWORD_RESTORE, lostPasswordUM)
+                put(ResetCardUM.WarningType.LOST_PASSWORD_RESTORE, lostPasswordUM)
             }
             if (shouldShowResetTangemPayButton) {
-                put(ResetCardScreenState.WarningType.LOST_TANGEM_PAY, lostTangemPayUM)
+                put(ResetCardUM.WarningType.LOST_TANGEM_PAY, lostTangemPayUM)
             }
         }
         return warningsMap.values.toImmutableList()
     }
 
-    private fun toggleCondition(type: ResetCardScreenState.WarningType) {
-        screenState.update { prevState ->
+    private fun toggleCondition(type: ResetCardUM.WarningType) {
+        uiState.update { prevState ->
             warningsMap[type]?.let { current ->
                 warningsMap = warningsMap + (type to current.copy(isChecked = !current.isChecked))
             }
@@ -149,28 +149,28 @@ internal class ResetCardModel @Inject constructor(
         }
     }
 
-    private fun createDialog(dialog: ResetCardDialog): ResetCardScreenState.Dialog {
+    private fun createDialog(dialog: ResetCardDialog): ResetCardUM.Dialog {
         return when (dialog) {
             ResetCardDialog.StartResetDialog -> {
-                ResetCardScreenState.Dialog.StartReset(
+                ResetCardUM.Dialog.StartReset(
                     onConfirmClick = ::onStartResetClick,
                     onDismiss = ::dismissDialog,
                 )
             }
             ResetCardDialog.ContinueResetDialog -> {
-                ResetCardScreenState.Dialog.ContinueReset(
+                ResetCardUM.Dialog.ContinueReset(
                     onConfirmClick = ::onContinueResetClick,
                     onDismiss = ::onContinueResetDialogDismiss,
                 )
             }
             ResetCardDialog.InterruptedResetDialog -> {
-                ResetCardScreenState.Dialog.InterruptedReset(
+                ResetCardUM.Dialog.InterruptedReset(
                     onConfirmClick = ::onContinueResetClick,
                     onDismiss = ::onInterruptedResetDialogDismiss,
                 )
             }
             ResetCardDialog.CompletedResetDialog -> {
-                ResetCardScreenState.Dialog.CompletedReset(
+                ResetCardUM.Dialog.CompletedReset(
                     onConfirmClick = ::dismissAndFinishFullReset,
                 )
             }
@@ -291,11 +291,11 @@ internal class ResetCardModel @Inject constructor(
     }
 
     private fun showDialog(dialog: ResetCardDialog) {
-        screenState.update { it.copy(dialog = createDialog(dialog)) }
+        uiState.update { it.copy(dialog = createDialog(dialog)) }
     }
 
     private fun dismissDialog() {
-        screenState.update { it.copy(dialog = null) }
+        uiState.update { it.copy(dialog = null) }
     }
 
     private fun getBackupCardsCount(): Int {

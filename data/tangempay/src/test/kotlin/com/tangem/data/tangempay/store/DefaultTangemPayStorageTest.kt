@@ -15,7 +15,6 @@ import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -50,8 +49,8 @@ internal class DefaultTangemPayStorageTest {
     )
 
     @BeforeEach
-    fun resetStore() {
-        runBlocking { dataStore.updateData { emptyPreferences() } }
+    fun resetStore() = runTest {
+        dataStore.updateData { emptyPreferences() }
     }
 
     @Test

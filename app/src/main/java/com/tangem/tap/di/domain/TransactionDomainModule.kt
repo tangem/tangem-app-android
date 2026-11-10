@@ -4,6 +4,7 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -57,6 +58,7 @@ internal object TransactionDomainModule {
         transactionRepository: TransactionRepository,
         walletManagersFacade: WalletManagersFacade,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+        balanceContributionsRefresher: BalanceContributionsRefresher,
         tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
         pushNotificationsRepository: PushNotificationsRepository,
         appScope: AppCoroutineScope,
@@ -67,6 +69,7 @@ internal object TransactionDomainModule {
             transactionRepository = transactionRepository,
             walletManagersFacade = walletManagersFacade,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+            balanceContributionsRefresher = balanceContributionsRefresher,
             parallelUpdatingScope = appScope,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
             pushNotificationsRepository = pushNotificationsRepository,

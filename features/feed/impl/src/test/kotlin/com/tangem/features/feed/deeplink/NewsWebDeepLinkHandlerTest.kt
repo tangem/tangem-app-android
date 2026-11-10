@@ -2,7 +2,6 @@ package com.tangem.features.feed.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.deeplink.DeepLinkRequest
-import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -17,18 +16,18 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class NewsWebDeepLinkHandlerTest {
 
-    private val newsDeepLinkHandlerFactory: NewsDeepLinkHandler.Factory = mockk(relaxed = true)
+    private val newsDeepLinkHandler: NewsDeepLinkHandler = mockk(relaxed = true)
     private val newsDetailsDeepLinkHandlerFactory: NewsDetailsDeepLinkHandler.Factory = mockk(relaxed = true)
     private val scope: CoroutineScope = mockk()
 
     private val handler = NewsWebDeepLinkHandler(
-        newsDeepLinkHandlerFactory = newsDeepLinkHandlerFactory,
+        newsDeepLinkHandler = newsDeepLinkHandler,
         newsDetailsDeepLinkHandlerFactory = newsDetailsDeepLinkHandlerFactory,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(newsDeepLinkHandlerFactory, newsDetailsDeepLinkHandlerFactory)
+        clearMocks(newsDeepLinkHandler, newsDetailsDeepLinkHandlerFactory)
     }
 
     @ParameterizedTest
@@ -38,17 +37,17 @@ internal class NewsWebDeepLinkHandlerTest {
         val uri = mockk<Uri> { every { path } returns model.path }
         val queryParams = mapOf("category_id" to "5")
 
+        val request = DeepLinkRequest(uri = uri, queryParams = queryParams, scope = scope, isFromOnNewIntent = false)
+
         // Act
-        handler.handle(
-            DeepLinkRequest(uri = uri, queryParams = queryParams, scope = scope, isFromOnNewIntent = false),
-        )
+        handler.handle(request)
 
         // Assert
         if (model.isArticle) {
             verify { newsDetailsDeepLinkHandlerFactory.create(coroutineScope = scope, deeplinkUri = uri) }
-            verify(inverse = true) { newsDeepLinkHandlerFactory.create(any()) }
+            verify(inverse = true) { newsDeepLinkHandler.handle(any()) }
         } else {
-            verify { newsDeepLinkHandlerFactory.create(queryParams = queryParams) }
+            verify { newsDeepLinkHandler.handle(request) }
             verify(inverse = true) { newsDetailsDeepLinkHandlerFactory.create(any(), any()) }
         }
     }

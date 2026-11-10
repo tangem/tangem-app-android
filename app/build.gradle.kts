@@ -409,6 +409,8 @@ dependencies {
     implementation(projects.features.forYou.impl)
     implementation(projects.features.mcp.api)
     implementation(projects.features.mcp.impl)
+    implementation(projects.features.allServices.api)
+    implementation(projects.features.allServices.impl)
     implementation(projects.common.uiCharts)
     implementation(projects.common.uiMarkets)
     implementation(projects.core.error)

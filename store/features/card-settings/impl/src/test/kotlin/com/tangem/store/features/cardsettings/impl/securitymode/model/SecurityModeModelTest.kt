@@ -12,7 +12,7 @@ import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.store.features.cardsettings.impl.common.SecurityOption
+import com.tangem.store.features.cardsettings.impl.domain.SecurityOption
 import com.tangem.store.features.cardsettings.impl.domain.CardSettingsInteractor
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -53,7 +53,7 @@ internal class SecurityModeModelTest {
         val model = createModel()
 
         // Assert
-        val state = model.screenState.value
+        val state = model.uiState.value
         assertThat(state.selectedSecurityMode).isEqualTo(SecurityOption.LongTap)
         assertThat(state.isSaveChangesEnabled).isFalse()
         assertThat(state.availableOptions).containsExactly(SecurityOption.LongTap, SecurityOption.PassCode)
@@ -72,8 +72,8 @@ internal class SecurityModeModelTest {
         val model = createModel()
 
         // Act
-        model.screenState.value.onNewModeSelected(SecurityOption.PassCode)
-        model.screenState.value.onSaveChangesClicked()
+        model.uiState.value.onNewModeSelected(SecurityOption.PassCode)
+        model.uiState.value.onSaveChangesClicked()
         advanceUntilIdle()
 
         // Assert
@@ -95,8 +95,8 @@ internal class SecurityModeModelTest {
         val model = createModel()
 
         // Act
-        model.screenState.value.onNewModeSelected(SecurityOption.PassCode)
-        model.screenState.value.onSaveChangesClicked()
+        model.uiState.value.onNewModeSelected(SecurityOption.PassCode)
+        model.uiState.value.onSaveChangesClicked()
         advanceUntilIdle()
 
         // Assert
@@ -117,12 +117,12 @@ internal class SecurityModeModelTest {
         val model = createModel()
 
         // Act
-        model.screenState.value.onNewModeSelected(SecurityOption.PassCode)
-        model.screenState.value.onSaveChangesClicked()
+        model.uiState.value.onNewModeSelected(SecurityOption.PassCode)
+        model.uiState.value.onSaveChangesClicked()
         advanceUntilIdle()
 
         // Assert
-        val state = model.screenState.value
+        val state = model.uiState.value
         assertThat(state.selectedSecurityMode).isEqualTo(SecurityOption.LongTap)
         assertThat(state.isSaveChangesEnabled).isFalse()
 
@@ -138,13 +138,13 @@ internal class SecurityModeModelTest {
         val model = createModel()
 
         // Act
-        model.screenState.value.onNewModeSelected(SecurityOption.LongTap)
-        model.screenState.value.onSaveChangesClicked()
+        model.uiState.value.onNewModeSelected(SecurityOption.LongTap)
+        model.uiState.value.onSaveChangesClicked()
         advanceUntilIdle()
 
         // Assert
         assertThat(cardSettingsInteractor.scannedScanResponse.value?.card?.isPasscodeSet).isTrue()
-        assertThat(model.screenState.value.selectedSecurityMode).isEqualTo(SecurityOption.PassCode)
+        assertThat(model.uiState.value.selectedSecurityMode).isEqualTo(SecurityOption.PassCode)
 
         model.onDestroy()
     }

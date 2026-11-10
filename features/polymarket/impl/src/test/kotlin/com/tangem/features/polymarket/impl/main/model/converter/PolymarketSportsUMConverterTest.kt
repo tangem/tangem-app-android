@@ -1,6 +1,8 @@
 package com.tangem.features.polymarket.impl.main.model.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.model.PolymarketTeam
@@ -197,7 +199,9 @@ internal class PolymarketSportsUMConverterTest {
         if (draw.startsWith("Draw (")) {
             assertThat(actual.sports).isNotNull()
             assertThat(actual.rows.single().outcomes.map { it.title })
-                .containsExactly(stringReference("SAO1"), stringReference("Draw"), stringReference("AWY")).inOrder()
+                .containsExactly(
+                    stringReference("SAO1"), resourceReference(R.string.prediction_sports_draw), stringReference("AWY"),
+                ).inOrder()
             assertThat(clicks).containsExactly(
                 Triple("event-1", "São Paulo", "São Paulo-yes"),
                 Triple("event-1", draw, "$draw-yes"),
