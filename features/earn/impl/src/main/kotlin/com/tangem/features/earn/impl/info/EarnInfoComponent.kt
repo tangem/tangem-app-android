@@ -25,7 +25,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-/** The position of the user in one Earn product: balance, rewards, APY chart, calculator and the product details. */
 internal class EarnInfoComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: Params,

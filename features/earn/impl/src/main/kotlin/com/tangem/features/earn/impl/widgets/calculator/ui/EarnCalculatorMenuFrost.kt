@@ -12,37 +12,20 @@ import com.tangem.core.ui.res.TangemTheme
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 
-/**
- * `true` where the calculator sits on a glass card and is its own haze source: that source is transparent over the
- * card, so the menu material alone blurs next to nothing and lets the sharp content through.
- */
+/** `true` where the calculator is its own haze source over a glass card: the menu material alone shows it through. */
 internal val LocalEarnCalculatorOnGlass = staticCompositionLocalOf { false }
 
-/**
- * An opaque-ish blurred base under the design system menu material. The effect fills its whole rectangle, so it is
- * clipped to the corners of the menu panel.
- */
 @Composable
-internal fun Modifier.frostedMenuBase(): Modifier = clip(MenuPanelShape).hazeEffectTangem(
+internal fun Modifier.frostedMenuBase(): Modifier = clip(RoundedCornerShape(32.dp)).hazeEffectTangem(
     style = HazeStyle(
-        backgroundColor = TangemTheme.colors3.bg.primary.copy(alpha = BASE_ALPHA),
+        // 0.95 lets only about 5% of the sharp content under the panel show through
+        backgroundColor = TangemTheme.colors3.bg.primary.copy(alpha = 0.95f),
         // An empty list would fall back to the tints of LocalHazeStyle
         tints = listOf(HazeTint(Color.Transparent)),
-        blurRadius = BLUR_RADIUS,
+        blurRadius = 32.dp,
     ),
 ) {
-    // Haze stops the effect at the haze source bounds by default when the base alpha is 0.9 or less; the menu may
-    // reach past them, so the default must not depend on BASE_ALPHA
+    // Haze clips the effect to the source bounds by default only at a base alpha of 0.9 or less; the menu may reach
+    // past them, so this must not depend on the alpha
     clipToAreasBounds = false
 }
-
-/** The corners of the design system menu panel (`TangemMenuPanel`). */
-private val MenuPanelShape = RoundedCornerShape(32.dp)
-
-/**
- * The opacity of the base under the blurred backdrop: only about 5% of the sharp content under the panel shows through.
- */
-private const val BASE_ALPHA = 0.95f
-
-/** The radius of the design system menu material, so the two blur layers coincide. */
-private val BLUR_RADIUS = 32.dp

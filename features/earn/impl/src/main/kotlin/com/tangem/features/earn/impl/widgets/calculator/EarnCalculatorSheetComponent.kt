@@ -19,12 +19,8 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 /**
- * The calculator as a DS v2 glass modal. Blurring the page behind it needs a `LocalTangemModalHost` in the window,
- * otherwise the card falls back to a flat opaque dialog.
- *
- * The modal isolates the haze scope of its content, so the calculator registers itself as a haze source: without it
- * the horizon menu has nothing to blur and shows the content through. That source is transparent over the card, so the
- * menu also gets a frosted base: see [LocalEarnCalculatorOnGlass].
+ * Needs a `LocalTangemModalHost` in the window to blur the page. The modal isolates the haze scope of its content, so
+ * the calculator is its own haze source, see [LocalEarnCalculatorOnGlass].
  */
 internal class EarnCalculatorSheetComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
