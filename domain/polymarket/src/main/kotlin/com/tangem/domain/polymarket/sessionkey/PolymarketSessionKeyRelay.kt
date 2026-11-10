@@ -13,6 +13,7 @@ import com.tangem.domain.polymarket.model.PolymarketSessionKeyRevocation
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSessionSigner
 import com.tangem.domain.polymarket.model.isTransient
+import com.tangem.domain.polymarket.model.newestFor
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import java.time.Clock
@@ -54,7 +55,7 @@ internal class PolymarketSessionKeyRelay(
             polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue)
                 .onLeft { error -> TangemLogger.i("Polymarket session key status not read, still waiting: $error") }
                 .onRight { state ->
-                    val record = state.sessionKeys.firstOrNull { it.address.equals(submitted.address, true) }
+                    val record = state.sessionKeys.newestFor(submitted.address)
                     when {
                         record != null -> {
                             latest = record

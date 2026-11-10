@@ -12,6 +12,7 @@ import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSessionSigner
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
+import com.tangem.domain.polymarket.model.newestFor
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessment
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessor
@@ -100,7 +101,7 @@ class ReconcilePolymarketSessionKeysInteractor(
         localKeyAddress: String?,
         signers: List<PolymarketSessionSigner>?,
     ) {
-        val own = wallet.sessionKeys.firstOrNull { it.address.equals(localKeyAddress, ignoreCase = true) } ?: return
+        val own = localKeyAddress?.let(wallet.sessionKeys::newestFor) ?: return
         val validUntil = own.validUntil ?: return
         val isListed = signers.orEmpty().any { it.lists(own, now = clock.instant()) }
         if (own.status != PolymarketSessionKeyStatus.ACTIVE || !isListed) return
