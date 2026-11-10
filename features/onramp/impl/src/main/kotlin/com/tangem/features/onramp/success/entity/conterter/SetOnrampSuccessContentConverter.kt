@@ -4,6 +4,7 @@ import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusItemState
 import com.tangem.common.ui.expressStatus.state.ExpressStatusItemUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
+import com.tangem.common.ui.expressStatus.toActiveStatusText
 import com.tangem.common.ui.notifications.ExpressNotificationsUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -52,6 +53,8 @@ internal class SetOnrampSuccessContentConverter(
                 externalTxId = value.externalTxId,
             ),
             activeStatus = value.status,
+            statusTitle = value.status.toActiveStatusText(currencyName = cryptoCurrency.name),
+            externalTxId = value.externalTxId,
             notification = getNotification(status = value.status, externalTxUrl = value.externalTxUrl),
         )
     }

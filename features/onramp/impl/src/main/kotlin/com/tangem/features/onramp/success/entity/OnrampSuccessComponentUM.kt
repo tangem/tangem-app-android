@@ -20,5 +20,7 @@ sealed class OnrampSuccessComponentUM {
         val providerImageUrl: String,
         val notification: NotificationUM?,
         val activeStatus: OnrampStatus.Status,
+        val statusTitle: TextReference,
+        val externalTxId: String?,
     ) : OnrampSuccessComponentUM()
 }

@@ -26,6 +26,8 @@ internal data object OnrampSuccessComponentUMPreviewData {
         currencyImageUrl = "",
         notification = null,
         activeStatus = OnrampStatus.Status.Verifying,
+        statusTitle = stringReference("Verifying"),
+        externalTxId = "vz5tdtqbu0cmvdqx",
         statusBlock = ExpressStatusUM(
             title = resourceReference(R.string.express_exchange_status_title),
             link = ExpressLinkUM.Empty,
