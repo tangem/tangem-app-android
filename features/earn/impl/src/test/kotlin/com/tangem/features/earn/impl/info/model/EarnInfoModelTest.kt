@@ -364,7 +364,7 @@ internal class EarnInfoModelTest {
                 // Act
                 state.primary.onClick()
                 state.secondary.first().onClick()
-                requireNotNull(state.rewards).onClaimClick()
+                requireNotNull(state.rewards).claim.onClick()
 
                 // Assert
                 assertThat(product.handled)
@@ -686,7 +686,7 @@ internal class EarnInfoModelTest {
     )
 
     private fun EarnInfoUM.withoutCallbacks(): EarnInfoUM = copy(
-        rewards = rewards?.copy(onClaimClick = NoOp),
+        rewards = rewards?.copy(claim = rewards.claim.copy(onClick = NoOp)),
         myFunds = myFunds.copy(rows = persistentListOf(), onHowItWorksClick = null),
         details = persistentListOf(),
         secondary = secondary.map { it.copy(onClick = NoOp) }.toImmutableList(),
