@@ -24,12 +24,15 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
+import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.navigation.EarnNavigator
 import com.tangem.features.earn.product.api.product.EarnApyHistory
 import com.tangem.features.earn.product.api.product.EarnPeriod
+import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
@@ -48,6 +51,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -66,6 +70,7 @@ internal class PooledStakingEarnProductTest {
     private val p2pEthPoolRepository: P2PEthPoolRepository = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
     private val singleStakingBalanceFetcher: SingleStakingBalanceFetcher = mockk()
+    private val multiStakingBalanceSupplier: MultiStakingBalanceSupplier = mockk()
 
     private val product = PooledStakingEarnProduct(
         accountStatusListSupplier = accountStatusListSupplier,
@@ -73,6 +78,7 @@ internal class PooledStakingEarnProductTest {
         p2pEthPoolRepository = p2pEthPoolRepository,
         stakingIdFactory = stakingIdFactory,
         singleStakingBalanceFetcher = singleStakingBalanceFetcher,
+        multiStakingBalanceSupplier = multiStakingBalanceSupplier,
         mapper = PooledStakingMapper(),
     )
 
@@ -84,7 +90,9 @@ internal class PooledStakingEarnProductTest {
             p2pEthPoolRepository,
             stakingIdFactory,
             singleStakingBalanceFetcher,
+            multiStakingBalanceSupplier,
         )
+        every { multiStakingBalanceSupplier(any()) } returns flowOf(emptySet())
     }
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
@@ -418,6 +426,125 @@ internal class PooledStakingEarnProductTest {
         )
     }
 
+    @Nested
+    inner class BalanceFailure {
+
+        private val params = EarnProduct.Params(userWalletId, ethereum)
+        private val poolStakingId = StakingID(integrationId = MockStaking.P2P_ID, address = STATUS_ADDRESS)
+        private val failure = StakingBalance.Error(poolStakingId)
+        private val manage = PooledStakingAction(stringReference("Manage"))
+        private val startEarning = PooledStakingAction(stringReference("Start earning"))
+
+        @BeforeEach
+        fun arrangeCurrency() {
+            every { accountStatusListSupplier(userWalletId) } returns flowOf(accountList(status(ethereum)))
+            every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns flowOf(available)
+            every { stakingIdFactory.create(currencyId = ethereum.id, defaultAddress = STATUS_ADDRESS) } returns
+                poolStakingId.right()
+        }
+
+        @Test
+        fun `GIVEN the balance of the currency failed WHEN state THEN Unknown position and Manage`() = runTest {
+            // Arrange
+            arrangeBalances(flowOf(setOf(failure)))
+
+            // Act
+            val actual = product.state(params).first { it is EarnProductState.Ready } as EarnProductState.Ready
+
+            // Assert
+            assertThat(actual.position).isEqualTo(EarnPositionState.Unknown)
+            assertThat(actual.primary.action).isEqualTo(manage)
+        }
+
+        @Test
+        fun `GIVEN the balance of the currency failed WHEN summaries THEN no position and Manage`() = runTest {
+            // Arrange
+            arrangeBalances(flowOf(setOf(failure)))
+
+            // Act
+            val actual = product.summaries(userWalletId).first().getValue(ethereum.id)
+
+            // Assert
+            assertThat(actual.position).isNull()
+            assertThat(actual.onClickAction).isEqualTo(manage)
+        }
+
+        @Test
+        fun `GIVEN the balance of another address failed WHEN state THEN position is None`() = runTest {
+            // Arrange
+            val other = StakingBalance.Error(StakingID(integrationId = MockStaking.P2P_ID, address = "other"))
+            arrangeBalances(flowOf(setOf(other)))
+
+            // Act
+            val actual = product.state(params).first { it is EarnProductState.Ready } as EarnProductState.Ready
+
+            // Assert
+            assertThat(actual.position).isEqualTo(EarnPositionState.None)
+            assertThat(actual.primary.action).isEqualTo(startEarning)
+        }
+
+        @Test
+        fun `GIVEN no failed balance WHEN state THEN position is None`() = runTest {
+            // Act
+            val actual = product.state(params).first { it is EarnProductState.Ready } as EarnProductState.Ready
+
+            // Assert
+            assertThat(actual.position).isEqualTo(EarnPositionState.None)
+            assertThat(actual.primary.action).isEqualTo(startEarning)
+        }
+
+        @Test
+        fun `GIVEN the staking id cannot be built WHEN state THEN position is None`() = runTest {
+            // Arrange
+            arrangeBalances(flowOf(setOf(failure)))
+            every { stakingIdFactory.create(currencyId = ethereum.id, defaultAddress = STATUS_ADDRESS) } returns
+                StakingIdFactory.Error.UnsupportedCurrency.left()
+
+            // Act
+            val actual = product.state(params).first { it is EarnProductState.Ready } as EarnProductState.Ready
+
+            // Assert
+            assertThat(actual.position).isEqualTo(EarnPositionState.None)
+        }
+
+        @Test
+        fun `GIVEN the balances arrive after the statuses WHEN state THEN Loading until they do`() = runTest {
+            // Arrange
+            val balances = MutableSharedFlow<Set<StakingBalance>>(replay = 1)
+            arrangeBalances(balances)
+
+            // Act & Assert
+            product.state(params).test {
+                assertThat(awaitItem()).isEqualTo(EarnProductState.Loading)
+                expectNoEvents()
+                balances.emit(setOf(failure))
+                assertThat((awaitItem() as EarnProductState.Ready).position).isEqualTo(EarnPositionState.Unknown)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        @Test
+        fun `GIVEN a failed balance that a later fetch fixes WHEN state THEN Unknown then None`() = runTest {
+            // Arrange
+            val balances = MutableSharedFlow<Set<StakingBalance>>(replay = 1)
+            balances.tryEmit(setOf(failure))
+            arrangeBalances(balances)
+
+            // Act & Assert
+            product.state(params).test {
+                assertThat(awaitItem()).isEqualTo(EarnProductState.Loading)
+                assertThat((awaitItem() as EarnProductState.Ready).position).isEqualTo(EarnPositionState.Unknown)
+                balances.emit(emptySet())
+                assertThat((awaitItem() as EarnProductState.Ready).position).isEqualTo(EarnPositionState.None)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        private fun arrangeBalances(balances: Flow<Set<StakingBalance>>) {
+            every { multiStakingBalanceSupplier(MultiStakingBalanceProducer.Params(userWalletId)) } returns balances
+        }
+    }
+
     private fun status(currency: CryptoCurrency, position: StakingBalance? = null): CryptoCurrencyStatus =
         currencyStatus(currency = currency, stakingBalance = position)
 
@@ -455,5 +582,6 @@ internal class PooledStakingEarnProductTest {
 
     private companion object {
         const val SECOND_ACCOUNT_PATH = "m/44'/60'/1'/0/0"
+        const val STATUS_ADDRESS = "address"
     }
 }

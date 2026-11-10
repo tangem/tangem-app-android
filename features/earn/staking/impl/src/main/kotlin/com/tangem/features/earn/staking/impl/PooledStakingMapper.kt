@@ -5,7 +5,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.currency.balance.contributionOrNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.P2PEthPoolIntegration
 import com.tangem.domain.staking.model.StakingAvailability
@@ -35,10 +34,12 @@ import javax.inject.Inject
 
 internal class PooledStakingMapper @Inject constructor() {
 
+    /** @param isBalanceFailed the staking balance of the currency could not be loaded, so a stake cannot be ruled out */
     fun summary(
         userWalletId: UserWalletId,
         status: CryptoCurrencyStatus,
         availability: StakingAvailability,
+        isBalanceFailed: Boolean = false,
     ): EarnProductSummary? {
         val option = offerOf(status, availability) ?: return null
         val position = status.value.stakingBalanceData as? StakingBalance.Data.P2PEthPool
@@ -56,12 +57,16 @@ internal class PooledStakingMapper @Inject constructor() {
             rate = EarnProductRate(fraction = option.apy, type = EarnRateType.APY),
             position = position?.let { EarnPositionSummary(cryptoAmount = it.totalStaked) },
             source = status.value.stakingSource,
-            onClickAction = PooledStakingAction(buttonLabel(status.hasPossibleStake())),
+            onClickAction = PooledStakingAction(buttonLabel(position != null || isBalanceFailed)),
             route = stakingRoute(userWalletId, status.currency),
         )
     }
 
-    fun state(status: CryptoCurrencyStatus, availability: StakingAvailability): EarnProductState {
+    fun state(
+        status: CryptoCurrencyStatus,
+        availability: StakingAvailability,
+        isBalanceFailed: Boolean = false,
+    ): EarnProductState {
         if (status.value is CryptoCurrencyStatus.Loading) return EarnProductState.Loading
 
         val option = offerOf(status, availability) ?: return EarnProductState.Unavailable
@@ -77,9 +82,9 @@ internal class PooledStakingMapper @Inject constructor() {
             details = details(feePercent = bestVault.feePercent.stripTrailingZeros().toPlainString()),
             limits = EarnLimits(minDeposit = P2PEthPoolIntegration.DEFAULT_MINIMUM_STAKE, remainingCap = null),
             apyPeriods = emptyList(),
-            primary = EarnActionItem(PooledStakingAction(buttonLabel(status.hasPossibleStake()))),
+            primary = EarnActionItem(PooledStakingAction(buttonLabel(position != null || isBalanceFailed))),
             freshness = null,
-            position = positionOf(status, position),
+            position = positionOf(position, isBalanceFailed),
         )
     }
 
@@ -99,21 +104,20 @@ internal class PooledStakingMapper @Inject constructor() {
     /** The rate the app shows is gross: the performance fee of the same vault is taken off for estimates (D7). */
     private fun P2PEthPoolVault.netRate(): BigDecimal = apy * (BigDecimal.ONE - feePercent.movePointLeft(PERCENT_SHIFT))
 
-    private fun positionOf(status: CryptoCurrencyStatus, data: StakingBalance.Data.P2PEthPool?): EarnPositionState =
-        when {
-            data != null -> EarnPositionState.Known(
-                EarnPosition(
-                    cryptoAmount = data.totalStaked,
-                    earned = data.totalRewards,
-                    description = null,
-                    rows = emptyList(),
-                    rewards = null,
-                    freshness = null,
-                ),
-            )
-            status.value.contributionOrNull<StakingBalance.Error>() != null -> EarnPositionState.Unknown
-            else -> EarnPositionState.None
-        }
+    private fun positionOf(data: StakingBalance.Data.P2PEthPool?, isBalanceFailed: Boolean): EarnPositionState = when {
+        data != null -> EarnPositionState.Known(
+            EarnPosition(
+                cryptoAmount = data.totalStaked,
+                earned = data.totalRewards,
+                description = null,
+                rows = emptyList(),
+                rewards = null,
+                freshness = null,
+            ),
+        )
+        isBalanceFailed -> EarnPositionState.Unknown
+        else -> EarnPositionState.None
+    }
 
     // Temporary plain text: the fee texts become resources taking the fee as an argument.
     private fun details(feePercent: String): List<EarnRow> = listOf(
@@ -140,10 +144,6 @@ internal class PooledStakingMapper @Inject constructor() {
     )
 
     /** A stake that is known or could not be read: "Start earning" must not be offered over a possible balance. */
-    private fun CryptoCurrencyStatus.hasPossibleStake(): Boolean =
-        value.stakingBalanceData is StakingBalance.Data.P2PEthPool ||
-            value.contributionOrNull<StakingBalance.Error>() != null
-
     private fun buttonLabel(hasPossibleStake: Boolean): TextReference =
         stringReference(if (hasPossibleStake) MANAGE_LABEL else START_EARNING_LABEL)
 
