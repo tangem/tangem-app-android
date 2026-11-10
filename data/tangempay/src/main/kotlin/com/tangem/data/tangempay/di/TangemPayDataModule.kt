@@ -53,6 +53,7 @@ import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.spend.datasource.tangempay.entity.PaymentAccountStatusValueDM
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.domain.tangempay.order.TangemPayOrderRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -112,6 +113,10 @@ internal interface TangemPayDataModule {
     fun bindPaymentAccountStatusProducerFactory(
         impl: DefaultPaymentAccountStatusProducer.Factory,
     ): PaymentAccountStatusProducer.Factory
+
+    @Binds
+    @Singleton
+    fun bindTangemPayOrderRepository(repository: DefaultTangemPayOrderRepository): TangemPayOrderRepository
 
     @Binds
     @Singleton
