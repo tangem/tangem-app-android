@@ -20,7 +20,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import com.tangem.core.ui.R as CoreUiR
 
-internal class PolymarketSessionKeyToastFactoryTest {
+internal class PolymarketSessionKeyMessagesFactoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -30,7 +30,7 @@ internal class PolymarketSessionKeyToastFactoryTest {
         @ProvideTestModels
         fun `GIVEN finished outcome WHEN create THEN toast matches the request and result`(model: OutcomeModel) {
             // Act
-            val actual = PolymarketSessionKeyToastFactory.create(model.outcome)
+            val actual = PolymarketSessionKeyMessagesFactory.create(model.outcome)
 
             // Assert
             assertThat(actual?.message).isEqualTo(model.expected?.messageId?.let(::resourceReference))
@@ -96,7 +96,7 @@ internal class PolymarketSessionKeyToastFactoryTest {
         @ProvideTestModels
         fun `GIVEN start result WHEN create THEN busy is toasted and started is not`(model: StartModel) {
             // Act
-            val actual = PolymarketSessionKeyToastFactory.create(model.start)
+            val actual = PolymarketSessionKeyMessagesFactory.create(model.start)
 
             // Assert
             assertThat(actual?.message).isEqualTo(model.expected?.messageId?.let(::resourceReference))

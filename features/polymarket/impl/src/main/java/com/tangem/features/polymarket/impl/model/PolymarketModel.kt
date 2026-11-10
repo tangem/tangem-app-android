@@ -8,7 +8,7 @@ import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOpe
 import com.tangem.domain.polymarket.usecase.AcknowledgePolymarketSessionKeyOutcomeUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOutcomeUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketSessionKeyToastFactory
+import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketSessionKeyMessagesFactory
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,7 +66,7 @@ internal class PolymarketModel @Inject constructor(
     }
 
     private fun toast(userWalletId: UserWalletId, outcome: PolymarketSessionKeyOperationOutcome) {
-        PolymarketSessionKeyToastFactory.create(outcome)?.let(messageSender::send)
+        PolymarketSessionKeyMessagesFactory.create(outcome)?.let(messageSender::send)
         acknowledgeSessionKeyOutcome(userWalletId, outcome.id)
     }
 }
