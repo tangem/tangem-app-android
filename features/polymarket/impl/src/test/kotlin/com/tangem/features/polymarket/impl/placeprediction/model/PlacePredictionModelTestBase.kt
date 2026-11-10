@@ -287,7 +287,6 @@ internal abstract class PlacePredictionModelTestBase {
                 router = signingRouter,
                 stateService = mockk(relaxed = true),
             ),
-            featureToggles = featureToggles,
             awaitDelayedPredictionOrderUseCase = awaitDelayedOrderUseCase,
             positionsRepository = positionsRepository,
             predictionFundingWindow = fundingWindow,
