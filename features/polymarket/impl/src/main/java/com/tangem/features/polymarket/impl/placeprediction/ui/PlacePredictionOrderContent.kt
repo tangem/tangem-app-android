@@ -36,6 +36,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
+import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.orderTotal
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountCaptionStyle
@@ -151,7 +152,7 @@ private fun OrderBody(
         ) {
             PredictionOrderDetailsCard(
                 slippage = state.slippage,
-                total = state.orderTotal()?.formatPolymarketMoney() ?: DASH_SIGN,
+                total = state.totalText(),
                 isTotalLoading = state.quote is QuoteUM.Loading,
                 onSlippageClick = intents::onSlippageClick.takeIf { isIdle },
                 onTotalClick = intents::onFeeClick.takeIf { state.canShowFeeBreakdown() },
@@ -163,6 +164,11 @@ private fun OrderBody(
         }
         Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))
     }
+}
+
+private fun PlacePredictionUM.totalText(): String? = when {
+    enteredAmount() == null -> null
+    else -> orderTotal()?.formatPolymarketMoney() ?: DASH_SIGN
 }
 
 private fun PlacePredictionUM.isMaxPresetEnabled(): Boolean = when (val order = order) {
