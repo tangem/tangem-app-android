@@ -7,15 +7,21 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.cosign.SignatureProgressUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate.Verdict
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
@@ -25,20 +31,23 @@ import com.tangem.domain.jointaccount.model.JointOperationSignerState
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.domain.jointaccount.model.JointOperationTransfer
 import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidResult
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
+import com.tangem.features.jointaccount.analytics.JointBlockaidAnalyticsSender
+import com.tangem.common.ui.blockaid.BlockaidSheetUM
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
 import com.tangem.features.txhistory.joint.operation.signers.FinishedJointOperationSigners
 import com.tangem.features.txhistory.joint.operation.signers.ui.state.JointOperationSignersUM
 import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
 import com.tangem.features.txhistory.model.ResolvedOwner
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.features.txhistory.model.TxDetailsMenuActions
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
@@ -63,9 +72,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigInteger
 
@@ -118,6 +129,8 @@ internal class JointOperationModelTest {
         }
         every { delegate.fiat(userWalletId = any(), currency = any()) } returns
             flowOf(JointOperationFiat(rate = null, appCurrency = AppCurrency.Default))
+        coEvery { delegate.prepareSigning(state = any(), network = any(), operationId = any()) } returns
+            prepared(verdict = Verdict.Safe).right()
         every { getBalanceHidingSettingsUseCase() } returns flowOf(
             BalanceHidingSettings(
                 isHidingEnabledInSettings = false,
@@ -135,7 +148,7 @@ internal class JointOperationModelTest {
                 status = JointOperation.Status.PENDING,
                 signatures = listOf(signature(address = OWN)),
             )
-            coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns
+            coEvery { delegate.submitSigning(prepared = any()) } returns
                 signedOperation.right()
             val model = createModel()
 
@@ -166,7 +179,7 @@ internal class JointOperationModelTest {
                 status = JointOperation.Status.UNKNOWN,
                 signatures = listOf(signature(address = INITIATOR), signature(address = OWN)),
             )
-            coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns
+            coEvery { delegate.submitSigning(prepared = any()) } returns
                 signedOperation.right()
             val model = createModel()
 
@@ -196,7 +209,7 @@ internal class JointOperationModelTest {
             status = JointOperation.Status.PENDING,
             signatures = listOf(signature(address = OWN)),
         ).copy(initiator = null)
-        coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns signedOperation.right()
+        coEvery { delegate.submitSigning(prepared = any()) } returns signedOperation.right()
         val model = createModel()
 
         // Act
@@ -227,7 +240,7 @@ internal class JointOperationModelTest {
             status = JointOperation.Status.AWAITING_SIGNATURES,
             signatures = listOf(signature(address = OWN)),
         )
-        coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns signedOperation.right()
+        coEvery { delegate.submitSigning(prepared = any()) } returns signedOperation.right()
         val model = createModel()
 
         // Act
@@ -250,9 +263,9 @@ internal class JointOperationModelTest {
     }
 
     @Test
-    fun `GIVEN the backend answer could not be read WHEN sign THEN no event is sent`() = runTest {
+    fun `GIVEN the backend answer could not be read WHEN sign THEN only the Blockaid check is sent`() = runTest {
         // Arrange
-        coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns null.right()
+        coEvery { delegate.submitSigning(prepared = any()) } returns null.right()
         val model = createModel()
 
         // Act
@@ -260,13 +273,13 @@ internal class JointOperationModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+        assertThat(sentEvents()).containsExactly(blockaidCheck(result = BlockaidResult.Benign))
     }
 
     @Test
-    fun `GIVEN signing is dismissed WHEN sign THEN no event is sent`() = runTest {
+    fun `GIVEN signing is dismissed WHEN sign THEN only the Blockaid check is sent`() = runTest {
         // Arrange
-        coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns
+        coEvery { delegate.submitSigning(prepared = any()) } returns
             JointOperationSignError.UserCancelled.left()
         val model = createModel()
 
@@ -275,7 +288,7 @@ internal class JointOperationModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+        assertThat(sentEvents()).containsExactly(blockaidCheck(result = BlockaidResult.Benign))
     }
 
     @ParameterizedTest
@@ -283,7 +296,7 @@ internal class JointOperationModelTest {
     fun `GIVEN signing fails with a shown error WHEN sign THEN Joint Account Error is sent`(model: SignErrorModel) =
         runTest {
             // Arrange
-            coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns model.error.left()
+            coEvery { delegate.submitSigning(prepared = any()) } returns model.error.left()
             val sheet = createModel()
 
             // Act
@@ -442,7 +455,7 @@ internal class JointOperationModelTest {
         assertThat(content.operation.cosignAction?.isLoading).isTrue()
         assertThat(content.operation.cosignAction?.isEnabled).isFalse()
         assertThat(content.operation.header.menu.map { it.isDestructive }).doesNotContain(true)
-        coVerify(exactly = 0) { delegate.sign(state = any(), network = any(), operationId = any()) }
+        coVerify(exactly = 0) { delegate.prepareSigning(state = any(), network = any(), operationId = any()) }
     }
 
     private fun declinedByThird() = createState(threshold = 3).copy(
@@ -708,7 +721,7 @@ internal class JointOperationModelTest {
     @Test
     fun `GIVEN a successful signature WHEN sign THEN the operation is fetched at once`() = runTest {
         // Arrange
-        coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns null.right()
+        coEvery { delegate.submitSigning(prepared = any()) } returns null.right()
         val model = createModel()
 
         // Act
@@ -722,7 +735,7 @@ internal class JointOperationModelTest {
     @Test
     fun `GIVEN a failed signature WHEN sign THEN nothing is fetched at once`() = runTest {
         // Arrange
-        coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns
+        coEvery { delegate.submitSigning(prepared = any()) } returns
             JointOperationSignError.UserCancelled.left()
         val model = createModel()
 
@@ -740,7 +753,7 @@ internal class JointOperationModelTest {
         error: JointOperationSignError,
     ) = runTest {
         // Arrange
-        coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns error.left()
+        coEvery { delegate.submitSigning(prepared = any()) } returns error.left()
         val model = createModel()
 
         // Act
@@ -780,6 +793,304 @@ internal class JointOperationModelTest {
         JointOperationRejectError.ThresholdReached,
     )
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Blockaid {
+
+        @ParameterizedTest
+        @MethodSource("provideChecks")
+        fun `GIVEN a Blockaid verdict WHEN sign THEN Blockaid Check carries its result`(
+            verdict: Verdict,
+            expected: BlockaidResult,
+        ) = runTest {
+            // Arrange
+            stubPrepared(verdict = verdict)
+            coEvery { delegate.submitSigning(prepared = any()) } returns null.right()
+            val model = createModel()
+
+            // Act
+            model.onSignClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(event = blockaidCheck(result = expected)) }
+        }
+
+        private fun provideChecks() = listOf(
+            Arguments.of(Verdict.Safe, BlockaidResult.Benign),
+            Arguments.of(Verdict.Warning, BlockaidResult.Warning),
+            Arguments.of(Verdict.Malicious, BlockaidResult.Malicious),
+            Arguments.of(Verdict.NoVerdict(Verdict.NoVerdict.Reason.ERROR), BlockaidResult.Error),
+            Arguments.of(Verdict.NoVerdict(Verdict.NoVerdict.Reason.TIMEOUT), BlockaidResult.Timeout),
+            Arguments.of(
+                Verdict.NoVerdict(Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK),
+                BlockaidResult.UnsupportedNetwork,
+            ),
+        )
+
+        @ParameterizedTest
+        @MethodSource("provideVerdictsWithoutSheet")
+        fun `GIVEN a verdict without a sheet WHEN sign THEN it is submitted and no notice is sent`(verdict: Verdict) =
+            runTest {
+                // Arrange
+                val prepared = stubPrepared(verdict = verdict)
+                coEvery { delegate.submitSigning(prepared = any()) } returns null.right()
+                val model = createModel()
+
+                // Act
+                model.onSignClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.blockaidSheet.value).isNull()
+                coVerify(exactly = 1) { delegate.submitSigning(prepared = prepared) }
+                assertThat(sentEvents()).containsExactly(blockaidCheck(result = verdict.expectedResult()))
+            }
+
+        private fun provideVerdictsWithoutSheet() = listOf(
+            Verdict.Safe,
+            Verdict.NoVerdict(Verdict.NoVerdict.Reason.ERROR),
+            Verdict.NoVerdict(Verdict.NoVerdict.Reason.TIMEOUT),
+            Verdict.NoVerdict(Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK),
+        )
+
+        @Test
+        fun `GIVEN a warning WHEN sign THEN the risky sheet shows and Notice Risky Address is sent`() = runTest {
+            // Arrange
+            stubPrepared(verdict = Verdict.Warning)
+            val model = createModel()
+
+            // Act
+            model.onSignClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.blockaidSheet.value?.title)
+                .isEqualTo(resourceReference(CoreUiR.string.joint_blockaid_risky_title))
+            assertThat(sentEvents()).containsExactly(
+                blockaidCheck(result = BlockaidResult.Warning),
+                JointAccountAnalyticsEvent.NoticeRiskyAddress(source = BlockaidSource.Sign, blockchain = blockchain),
+            ).inOrder()
+            coVerify(exactly = 0) { delegate.submitSigning(prepared = any()) }
+        }
+
+        @Test
+        fun `GIVEN a malicious verdict WHEN sign THEN the malicious sheet shows and its notice is sent`() = runTest {
+            // Arrange
+            stubPrepared(verdict = Verdict.Malicious)
+            val model = createModel()
+
+            // Act
+            model.onSignClick()
+            advanceUntilIdle()
+
+            // Assert
+            val sheet = model.blockaidSheet.value
+            assertThat(sheet?.title).isEqualTo(resourceReference(CoreUiR.string.joint_blockaid_malicious_title))
+            assertThat(sheet?.secondaryButton).isNull()
+            assertThat(sentEvents()).containsExactly(
+                blockaidCheck(result = BlockaidResult.Malicious),
+                JointAccountAnalyticsEvent.NoticeMaliciousTransaction(
+                    source = BlockaidSource.Sign,
+                    blockchain = blockchain,
+                ),
+            ).inOrder()
+            coVerify(exactly = 0) { delegate.submitSigning(prepared = any()) }
+        }
+
+        @Test
+        fun `GIVEN the risky sheet WHEN sign anyway THEN Button Sign Anyway is sent and the operation submitted`() =
+            runTest {
+                // Arrange
+                val prepared = stubPrepared(verdict = Verdict.Warning)
+                coEvery { delegate.submitSigning(prepared = any()) } returns null.right()
+                val model = createModel()
+                model.onSignClick()
+                advanceUntilIdle()
+
+                // Act
+                model.blockaidSheet.value?.primaryButton?.onClick?.invoke()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.blockaidSheet.value).isNull()
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        event = JointAccountAnalyticsEvent.ButtonSignAnyway(
+                            source = BlockaidSource.Sign,
+                            blockchain = blockchain,
+                        ),
+                    )
+                }
+                coVerify(exactly = 1) { delegate.submitSigning(prepared = prepared) }
+            }
+
+        @ParameterizedTest
+        @MethodSource("provideDeclineButtons")
+        fun `GIVEN a Blockaid sheet WHEN decline THEN the operation is refused without a dialog or sign anyway`(
+            model: DeclineModel,
+        ) = runTest {
+            // Arrange
+            stubPrepared(verdict = model.verdict)
+            coEvery { delegate.reject(state = any(), network = any(), operationId = any()) } returns Unit.right()
+            val sheet = createModel()
+            sheet.onSignClick()
+            advanceUntilIdle()
+
+            // Act
+            model.button(sheet.blockaidSheet.value!!)?.onClick?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sheet.blockaidSheet.value).isNull()
+            coVerify(exactly = 1) { delegate.reject(state = any(), network = any(), operationId = OPERATION_ID) }
+            coVerify(exactly = 0) { delegate.submitSigning(prepared = any()) }
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            verify(exactly = 0) {
+                analyticsEventHandler.send(event = ofType<JointAccountAnalyticsEvent.ButtonSignAnyway>())
+            }
+        }
+
+        private fun provideDeclineButtons() = listOf(
+            DeclineModel(verdict = Verdict.Warning, button = { it.secondaryButton }),
+            DeclineModel(verdict = Verdict.Malicious, button = { it.primaryButton }),
+        )
+
+        @ParameterizedTest
+        @MethodSource("provideSheetVerdicts")
+        fun `GIVEN a Blockaid sheet WHEN it is closed THEN the operation shows again and nothing is signed or refused`(
+            verdict: Verdict,
+        ) = runTest {
+            // Arrange
+            stubPrepared(verdict = verdict)
+            val model = createModel()
+            model.onSignClick()
+            advanceUntilIdle()
+
+            // Act
+            model.blockaidSheet.value?.onClose?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.blockaidSheet.value).isNull()
+            assertThat(model.uiState.value).isInstanceOf(JointOperationUM.Content::class.java)
+            coVerify(exactly = 0) { delegate.submitSigning(prepared = any()) }
+            coVerify(exactly = 0) { delegate.reject(state = any(), network = any(), operationId = any()) }
+        }
+
+        private fun provideSheetVerdicts() = listOf(Verdict.Warning, Verdict.Malicious)
+
+        @Test
+        fun `GIVEN submit refuses a malicious operation WHEN sign THEN the malicious sheet shows`() = runTest {
+            // Arrange
+            coEvery { delegate.submitSigning(prepared = any()) } returns JointOperationSignError.Malicious.left()
+            val model = createModel()
+
+            // Act
+            model.onSignClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.blockaidSheet.value?.title)
+                .isEqualTo(resourceReference(CoreUiR.string.joint_blockaid_malicious_title))
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    event = JointAccountAnalyticsEvent.NoticeMaliciousTransaction(
+                        source = BlockaidSource.Sign,
+                        blockchain = blockchain,
+                    ),
+                )
+            }
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideUnsignableSnapshots")
+        fun `GIVEN a Blockaid sheet WHEN the operation can no longer be signed THEN the sheet closes`(
+            unsignable: JointOperationSnapshot,
+        ) = runTest {
+            // Arrange
+            stubPrepared(verdict = Verdict.Warning)
+            val snapshots = MutableStateFlow<JointOperationSnapshot>(JointOperationSnapshot.InFlight(createState()))
+            every { delegate.observe(userWalletId = any(), currency = any(), operationId = any()) } returns snapshots
+            val model = createModel()
+            model.onSignClick()
+            advanceUntilIdle()
+
+            // Act
+            snapshots.value = unsignable
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.blockaidSheet.value).isNull()
+            coVerify(exactly = 0) { delegate.submitSigning(prepared = any()) }
+        }
+
+        private fun provideUnsignableSnapshots() = listOf(
+            JointOperationSnapshot.InFlight(createState(), isHeld = true),
+            JointOperationSnapshot.InFlight(createState().copy(canSign = false)),
+            cancelledSnapshot,
+        )
+
+        @Test
+        fun `GIVEN preparing fails WHEN sign THEN no Blockaid event is sent`() = runTest {
+            // Arrange
+            coEvery { delegate.prepareSigning(state = any(), network = any(), operationId = any()) } returns
+                JointOperationSignError.UserCancelled.left()
+            val model = createModel()
+
+            // Act
+            model.onSignClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.blockaidSheet.value).isNull()
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+            coVerify(exactly = 0) { delegate.submitSigning(prepared = any()) }
+        }
+
+        private fun stubPrepared(verdict: Verdict): PreparedJointOperation.Signing {
+            val prepared = prepared(verdict = verdict)
+            coEvery { delegate.prepareSigning(state = any(), network = any(), operationId = any()) } returns
+                prepared.right()
+            return prepared
+        }
+
+        private fun Verdict.expectedResult() = when (this) {
+            Verdict.Safe -> BlockaidResult.Benign
+            Verdict.Warning -> BlockaidResult.Warning
+            Verdict.Malicious -> BlockaidResult.Malicious
+            is Verdict.NoVerdict -> when (reason) {
+                Verdict.NoVerdict.Reason.ERROR -> BlockaidResult.Error
+                Verdict.NoVerdict.Reason.TIMEOUT -> BlockaidResult.Timeout
+                Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK -> BlockaidResult.UnsupportedNetwork
+            }
+        }
+    }
+
+    data class DeclineModel(
+        val verdict: Verdict,
+        val button: (BlockaidSheetUM) -> BlockaidSheetUM.ButtonUM?,
+    )
+
+    private val blockchain: String = currency.network.name
+
+    private fun blockaidCheck(result: BlockaidResult) = JointAccountAnalyticsEvent.BlockaidCheck(
+        source = BlockaidSource.Sign,
+        result = result,
+        blockchain = blockchain,
+    )
+
+    private fun sentEvents(): List<AnalyticsEvent> {
+        val events = mutableListOf<AnalyticsEvent>()
+        verify(atLeast = 0) { analyticsEventHandler.send(event = capture(events)) }
+        return events
+    }
+
+    private fun prepared(verdict: Verdict): PreparedJointOperation.Signing = mockk {
+        every { this@mockk.verdict } returns verdict
+    }
+
     /** The refusal runs from the confirmation dialog the sheet shows first */
     private fun JointOperationModel.confirmRefusal() {
         val dialogs = mutableListOf<UiMessage>()
@@ -805,6 +1116,7 @@ internal class JointOperationModelTest {
             uiMessageSender = uiMessageSender,
             clipboardManager = clipboardManager,
             analyticsEventHandler = analyticsEventHandler,
+            blockaidAnalyticsSender = JointBlockaidAnalyticsSender(analyticsEventHandler = analyticsEventHandler),
             menuActions = menuActions,
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
         )

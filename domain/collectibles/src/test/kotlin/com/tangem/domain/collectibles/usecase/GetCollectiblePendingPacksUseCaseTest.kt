@@ -1,20 +1,24 @@
 package com.tangem.domain.collectibles.usecase
 
 import com.google.common.truth.Truth.assertThat
+import arrow.core.left
+import arrow.core.right
+import com.tangem.domain.collectibles.flow.CollectiblesActiveTxsFetcher
+import com.tangem.domain.collectibles.flow.CollectiblesActiveTxsSupplier
 import com.tangem.domain.collectibles.models.CollectibleActiveTx
 import com.tangem.domain.collectibles.models.CollectiblePendingPack
 import com.tangem.domain.collectibles.models.CollectibleTxStatus
 import com.tangem.domain.collectibles.repository.CollectiblesDismissedTxRepository
-import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -24,49 +28,42 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class GetCollectiblePendingPacksUseCaseTest {
 
-    private val collectiblesRepository: CollectiblesRepository = mockk()
+    private val activeTxsSupplier: CollectiblesActiveTxsSupplier = mockk()
+    private val activeTxsFetcher: CollectiblesActiveTxsFetcher = mockk()
     private val dismissedTxRepository: CollectiblesDismissedTxRepository = mockk()
 
     private val useCase = GetCollectiblePendingPacksUseCase(
-        collectiblesRepository = collectiblesRepository,
+        activeTxsSupplier = activeTxsSupplier,
+        activeTxsFetcher = activeTxsFetcher,
         dismissedTxRepository = dismissedTxRepository,
     )
 
+    private val storedActiveTxs = MutableStateFlow<List<CollectibleActiveTx>?>(null)
     private val dismissedTxIds = MutableStateFlow(emptySet<String>())
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(collectiblesRepository, dismissedTxRepository)
+        clearMocks(activeTxsSupplier, activeTxsFetcher, dismissedTxRepository)
+        storedActiveTxs.value = null
         dismissedTxIds.value = emptySet()
+        every { activeTxsSupplier(WALLET_ID) } returns storedActiveTxs.filterNotNull()
         every { dismissedTxRepository.getDismissedTxIds() } returns dismissedTxIds
-    }
-
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN an active purchase WHEN invoked THEN it is mapped by its status`(model: StatusModel) = runTest {
-        // Arrange
-        coEvery { collectiblesRepository.getActiveTxs(WALLET_ID) } returns listOf(activeTx(status = model.status))
-
-        // Act
-        val actual = useCase(WALLET_ID).first()
-
-        // Assert
-        assertThat(actual).isEqualTo(listOfNotNull(model.expected))
     }
 
     @Test
     fun `GIVEN purchases in some order WHEN invoked THEN the backend's order is kept`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.getActiveTxs(WALLET_ID) } returns listOf(
-            activeTx(txId = "refunding", status = CollectibleTxStatus.REFUNDING),
-            activeTx(txId = "failed", status = CollectibleTxStatus.PACK_OPENING_ERROR),
-            activeTx(txId = "ready", status = CollectibleTxStatus.PACK_PURCHASED),
+        givenReads(
+            listOf(
+                activeTx(txId = "refunding", status = CollectibleTxStatus.REFUNDING),
+                activeTx(txId = "failed", status = CollectibleTxStatus.PACK_OPENING_ERROR),
+                activeTx(txId = "ready", status = CollectibleTxStatus.PACK_PURCHASED),
+            ),
         )
 
         // Act
@@ -77,26 +74,15 @@ internal class GetCollectiblePendingPacksUseCaseTest {
     }
 
     @Test
-    fun `GIVEN a pack to open without its machine WHEN invoked THEN it is left out`() = runTest {
-        // Arrange
-        coEvery { collectiblesRepository.getActiveTxs(WALLET_ID) } returns
-            listOf(activeTx(status = CollectibleTxStatus.PACK_PURCHASED, machineId = null))
-
-        // Act
-        val actual = useCase(WALLET_ID).first()
-
-        // Assert
-        assertThat(actual).isEmpty()
-    }
-
-    @Test
     fun `GIVEN dismissed purchases WHEN invoked THEN only the dismissible ones are hidden`() = runTest {
         // Arrange
         dismissedTxIds.value = setOf("failed", "refunding", "ready")
-        coEvery { collectiblesRepository.getActiveTxs(WALLET_ID) } returns listOf(
-            activeTx(txId = "failed", status = CollectibleTxStatus.PACK_OPENING_ERROR),
-            activeTx(txId = "refunding", status = CollectibleTxStatus.REFUNDING),
-            activeTx(txId = "ready", status = CollectibleTxStatus.PACK_PURCHASED),
+        givenReads(
+            listOf(
+                activeTx(txId = "failed", status = CollectibleTxStatus.PACK_OPENING_ERROR),
+                activeTx(txId = "refunding", status = CollectibleTxStatus.REFUNDING),
+                activeTx(txId = "ready", status = CollectibleTxStatus.PACK_PURCHASED),
+            ),
         )
 
         // Act
@@ -109,8 +95,7 @@ internal class GetCollectiblePendingPacksUseCaseTest {
     @Test
     fun `GIVEN a shown banner WHEN its purchase is dismissed THEN it disappears without a new request`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.getActiveTxs(WALLET_ID) } returns
-            listOf(activeTx(txId = "failed", status = CollectibleTxStatus.PACK_OPENING_ERROR))
+        givenReads(listOf(activeTx(txId = "failed", status = CollectibleTxStatus.PACK_OPENING_ERROR)))
         val emissions = mutableListOf<List<CollectiblePendingPack>>()
         val job = backgroundScope.launch { useCase(WALLET_ID).toList(emissions) }
         runCurrent()
@@ -121,15 +106,14 @@ internal class GetCollectiblePendingPacksUseCaseTest {
 
         // Assert
         assertThat(emissions.last()).isEmpty()
-        coVerify(exactly = 1) { collectiblesRepository.getActiveTxs(WALLET_ID) }
+        coVerify(exactly = 1) { activeTxsFetcher(FETCHER_PARAMS) }
         job.cancel()
     }
 
     @Test
     fun `GIVEN no payment in progress WHEN invoked THEN the purchases are read once`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.getActiveTxs(WALLET_ID) } returns
-            listOf(activeTx(status = CollectibleTxStatus.PACK_PURCHASED))
+        givenReads(listOf(activeTx(status = CollectibleTxStatus.PACK_PURCHASED)))
         val job = backgroundScope.launch { useCase(WALLET_ID).toList() }
 
         // Act
@@ -137,14 +121,14 @@ internal class GetCollectiblePendingPacksUseCaseTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { collectiblesRepository.getActiveTxs(WALLET_ID) }
+        coVerify(exactly = 1) { activeTxsFetcher(FETCHER_PARAMS) }
         job.cancel()
     }
 
     @Test
     fun `GIVEN a payment in progress WHEN it lands THEN polling goes on every five seconds until then`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.getActiveTxs(WALLET_ID) } returnsMany listOf(
+        givenReads(
             listOf(activeTx(status = CollectibleTxStatus.WAITING_FOR_PAYMENT)),
             listOf(activeTx(status = CollectibleTxStatus.PURCHASE_TX_SENT)),
             listOf(activeTx(status = CollectibleTxStatus.PACK_PURCHASED)),
@@ -158,7 +142,7 @@ internal class GetCollectiblePendingPacksUseCaseTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 3) { collectiblesRepository.getActiveTxs(WALLET_ID) }
+        coVerify(exactly = 3) { activeTxsFetcher(FETCHER_PARAMS) }
         assertThat(emissions.last()).containsExactly(
             CollectiblePendingPack.ReadyToOpen(txId = TX_ID, machineId = MACHINE_ID, isTurboModeEnabled = false),
         )
@@ -168,15 +152,11 @@ internal class GetCollectiblePendingPacksUseCaseTest {
     @Test
     fun `GIVEN a payment in progress WHEN a read fails THEN the last answer stays and polling goes on`() = runTest {
         // Arrange
-        var calls = 0
-        coEvery { collectiblesRepository.getActiveTxs(WALLET_ID) } answers {
-            calls++
-            when (calls) {
-                1 -> listOf(activeTx(status = CollectibleTxStatus.WAITING_FOR_PAYMENT))
-                2 -> error("offline")
-                else -> emptyList()
-            }
-        }
+        givenReads(
+            listOf(activeTx(status = CollectibleTxStatus.WAITING_FOR_PAYMENT)),
+            null,
+            emptyList(),
+        )
         val emissions = mutableListOf<List<CollectiblePendingPack>>()
         val job = backgroundScope.launch { useCase(WALLET_ID).toList(emissions) }
         runCurrent()
@@ -191,14 +171,14 @@ internal class GetCollectiblePendingPacksUseCaseTest {
         // Assert
         assertThat(afterFailure).containsExactly(CollectiblePendingPack.PaymentInProgress(txId = TX_ID))
         assertThat(emissions.last()).isEmpty()
-        coVerify(exactly = 3) { collectiblesRepository.getActiveTxs(WALLET_ID) }
+        coVerify(exactly = 3) { activeTxsFetcher(FETCHER_PARAMS) }
         job.cancel()
     }
 
     @Test
     fun `GIVEN a payment in progress WHEN the same answer comes again THEN it is not emitted twice`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.getActiveTxs(WALLET_ID) } returnsMany listOf(
+        givenReads(
             listOf(activeTx(status = CollectibleTxStatus.WAITING_FOR_PAYMENT)),
             listOf(activeTx(status = CollectibleTxStatus.WAITING_FOR_PAYMENT)),
             emptyList(),
@@ -215,33 +195,55 @@ internal class GetCollectiblePendingPacksUseCaseTest {
             listOf(CollectiblePendingPack.PaymentInProgress(txId = TX_ID)),
             emptyList<CollectiblePendingPack>(),
         ).inOrder()
-        coVerify(exactly = 3) { collectiblesRepository.getActiveTxs(WALLET_ID) }
+        coVerify(exactly = 3) { activeTxsFetcher(FETCHER_PARAMS) }
         job.cancel()
     }
 
-    internal data class StatusModel(val status: CollectibleTxStatus, val expected: CollectiblePendingPack?)
+    @Test
+    fun `GIVEN an earlier read WHEN invoked THEN it is shown before the new read answers`() = runTest {
+        // Arrange
+        storedActiveTxs.value = listOf(activeTx(status = CollectibleTxStatus.PACK_PURCHASED))
+        coEvery { activeTxsFetcher(FETCHER_PARAMS) } coAnswers { awaitCancellation() }
 
-    private fun provideTestModels(): List<StatusModel> {
-        val paymentInProgress = CollectiblePendingPack.PaymentInProgress(txId = TX_ID)
-        val readyToOpen = CollectiblePendingPack.ReadyToOpen(
-            txId = TX_ID,
-            machineId = MACHINE_ID,
-            isTurboModeEnabled = false,
-        )
+        // Act
+        val actual = useCase(WALLET_ID).first()
 
-        return listOf(
-            StatusModel(CollectibleTxStatus.CREATED, paymentInProgress),
-            StatusModel(CollectibleTxStatus.WAITING_TX_HASH, paymentInProgress),
-            StatusModel(CollectibleTxStatus.PURCHASE_TX_SENT, paymentInProgress),
-            StatusModel(CollectibleTxStatus.WAITING_FOR_PAYMENT, paymentInProgress),
-            StatusModel(CollectibleTxStatus.PACK_PURCHASED, readyToOpen),
-            StatusModel(CollectibleTxStatus.PACK_OPENING_ERROR, CollectiblePendingPack.OpenFailed(txId = TX_ID)),
-            StatusModel(CollectibleTxStatus.REFUNDING, CollectiblePendingPack.Refunding(txId = TX_ID)),
-            StatusModel(CollectibleTxStatus.PAUSED, null),
-            StatusModel(CollectibleTxStatus.PACK_OPENED, null),
-            StatusModel(CollectibleTxStatus.NFT_RECEIVED, null),
-            StatusModel(CollectibleTxStatus.UNKNOWN, null),
+        // Assert
+        assertThat(actual).containsExactly(
+            CollectiblePendingPack.ReadyToOpen(txId = TX_ID, machineId = MACHINE_ID, isTurboModeEnabled = false),
         )
+    }
+
+    @Test
+    fun `GIVEN a pack to open WHEN the store changes outside THEN the new state is emitted`() = runTest {
+        // Arrange
+        givenReads(listOf(activeTx(status = CollectibleTxStatus.PACK_PURCHASED)))
+        val emissions = mutableListOf<List<CollectiblePendingPack>>()
+        val job = backgroundScope.launch { useCase(WALLET_ID).toList(emissions) }
+        runCurrent()
+
+        // Act
+        storedActiveTxs.value = emptyList()
+        runCurrent()
+
+        // Assert
+        assertThat(emissions.last()).isEmpty()
+        coVerify(exactly = 1) { activeTxsFetcher(FETCHER_PARAMS) }
+        job.cancel()
+    }
+
+    /** Each fetch stores the next read; `null` is a failed fetch, which keeps the store. The last read repeats. */
+    private fun givenReads(vararg reads: List<CollectibleActiveTx>?) {
+        val queue = ArrayDeque(reads.toList())
+        coEvery { activeTxsFetcher(FETCHER_PARAMS) } answers {
+            val read = if (queue.size > 1) queue.removeFirst() else queue.first()
+            if (read == null) {
+                IllegalStateException("offline").left()
+            } else {
+                storedActiveTxs.value = read
+                Unit.right()
+            }
+        }
     }
 
     private fun activeTx(
@@ -252,6 +254,7 @@ internal class GetCollectiblePendingPacksUseCaseTest {
 
     private companion object {
         val WALLET_ID = UserWalletId("aa")
+        val FETCHER_PARAMS = CollectiblesActiveTxsFetcher.Params(WALLET_ID)
         const val TX_ID = "tx-id"
         const val MACHINE_ID = "pokemon_50"
         const val POLL_INTERVAL_MS = 5_000L

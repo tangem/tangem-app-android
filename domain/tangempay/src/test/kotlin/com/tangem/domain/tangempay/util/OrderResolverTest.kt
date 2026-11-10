@@ -10,44 +10,54 @@ import org.junit.jupiter.api.Test
 internal class OrderResolverTest {
 
     @Test
-    fun `selectActive filters by type and active status`() {
+    fun `GIVEN orders of several types and statuses WHEN selectActive THEN filters by type and active status`() {
+        // Arrange
         val orders = listOf(
             order(id = "1", type = OrderType.WITHDRAW, status = OrderStatus.PROCESSING, updatedAt = "2026-01-01"),
             order(id = "2", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.PROCESSING, updatedAt = "2026-01-02"),
             order(id = "3", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.COMPLETED, updatedAt = "2026-01-03"),
         )
 
+        // Act
         val result = OrderResolver.selectActive(orders = orders, type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC)
 
+        // Assert
         assertThat(result?.id).isEqualTo("2")
     }
 
     @Test
-    fun `selectActive picks the latest by updatedAt`() {
+    fun `GIVEN several active orders WHEN selectActive THEN picks the latest by updatedAt`() {
+        // Arrange
         val orders = listOf(
             order(id = "old", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.NEW, updatedAt = "2026-01-01"),
             order(id = "new", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.PROCESSING, updatedAt = "2026-06-05"),
         )
 
+        // Act
         val result = OrderResolver.selectActive(orders = orders, type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC)
 
+        // Assert
         assertThat(result?.id).isEqualTo("new")
     }
 
     @Test
-    fun `selectActive returns null when no active order of the type exists`() {
+    fun `GIVEN no active order of the type WHEN selectActive THEN returns null`() {
+        // Arrange
         val orders = listOf(
             order(id = "1", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.COMPLETED, updatedAt = "2026-01-01"),
             order(id = "2", type = OrderType.WITHDRAW, status = OrderStatus.PROCESSING, updatedAt = "2026-01-02"),
         )
 
+        // Act
         val result = OrderResolver.selectActive(orders = orders, type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC)
 
+        // Assert
         assertThat(result).isNull()
     }
 
     @Test
-    fun `selectActive scopes by productInstanceId`() {
+    fun `GIVEN orders of several product instances WHEN selectActive THEN scopes by productInstanceId`() {
+        // Arrange
         val orders = listOf(
             order(
                 id = "card-a",
@@ -65,27 +75,32 @@ internal class OrderResolverTest {
             ),
         )
 
+        // Act
         val result = OrderResolver.selectActive(
             orders = orders,
             type = OrderType.CARD_FREEZE,
             productInstanceId = "pi-a",
         )
 
+        // Assert
         assertThat(result?.id).isEqualTo("card-a")
     }
 
     @Test
-    fun `selectActive ignores payment-account-level orders when a card scope is requested`() {
+    fun `GIVEN a card scope WHEN selectActive THEN payment-account-level orders are ignored`() {
+        // Arrange
         val orders = listOf(
             order(id = "account-level", type = OrderType.WITHDRAW, status = OrderStatus.PROCESSING, updatedAt = "x"),
         )
 
+        // Act
         val result = OrderResolver.selectActive(
             orders = orders,
             type = OrderType.WITHDRAW,
             productInstanceId = "pi-a",
         )
 
+        // Assert
         assertThat(result).isNull()
     }
 

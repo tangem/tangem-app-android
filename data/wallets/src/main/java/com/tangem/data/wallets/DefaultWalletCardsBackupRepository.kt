@@ -2,6 +2,8 @@ package com.tangem.data.wallets
 
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.remote.response.ApiResponse
@@ -12,16 +14,20 @@ import com.tangem.data.wallets.converters.WalletCardBackupConverter
 import com.tangem.data.wallets.converters.WalletCardDTOConverter
 import com.tangem.data.wallets.store.PendingWalletCardsBackup
 import com.tangem.data.wallets.store.PendingWalletCardsBackupStore
+import com.tangem.data.wallets.store.WalletCardsRegistryStore
 import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.datasource.api.tangemTech.models.WalletCardDTO
 import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.models.errors.WalletCardsBackupError
 import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -30,10 +36,13 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
+@Suppress("LongParameterList")
 internal class DefaultWalletCardsBackupRepository(
     private val tangemTechApi: TangemTechApi,
     private val pendingStore: PendingWalletCardsBackupStore,
+    private val registryStore: WalletCardsRegistryStore,
     private val appPreferencesStore: AppPreferencesStore,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val deliveryScheduler: WalletCardsBackupDeliveryScheduler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletCardsBackupRepository {
@@ -45,26 +54,40 @@ internal class DefaultWalletCardsBackupRepository(
      */
     private val sendMutex = Mutex()
 
+    /**
+     * A report is a snapshot of the registry, so remembering its cards and queuing it happen under one lock —
+     * otherwise two concurrent reports could be queued in the opposite order to their snapshots, and the older
+     * state of a card would reach the backend last.
+     */
+    private val queueMutex = Mutex()
+
     override suspend fun saveWalletCards(
         userWalletId: UserWalletId,
         cards: List<WalletCardBackup>,
         usedSeed: Boolean,
     ): Either<WalletCardsBackupError, Unit> = withContext(dispatchers.io) {
-        val pending = PendingWalletCardsBackup(
-            id = UUID.randomUUID().toString(),
-            walletId = userWalletId.stringValue,
-            cards = PendingWalletCardsBackupConverter.convert(WalletCardDTOConverter.convertList(cards)),
-            usedSeed = usedSeed,
-        )
-
-        // queued before the request leaves, so a report is never lost to a dead network or a killed process,
-        // and sent by the same drain as everything else so an earlier report still waiting goes out first
-        runSuspendCatching { pendingStore.enqueue(pending) }.getOrElse { error ->
-            TangemLogger.e("Unable to queue cards backup report wallet=$userWalletId", error)
-            return@withContext WalletCardsBackupError.Unexpected(cause = error).left()
+        if (!onboardingV2FeatureToggles.isCardLinkedStatusUpdateV2Enabled) {
+            val reportedCards = PendingWalletCardsBackupConverter.convert(WalletCardDTOConverter.convertList(cards))
+            return@withContext enqueue(userWalletId, reportedCards, usedSeed).flatMap { sendQueued() }
         }
 
-        drain().onLeft { deliveryScheduler.schedule() }
+        queueMutex.withLock {
+            val registration = register(userWalletId, cards).getOrElse { return@withContext it.left() }
+            enqueue(userWalletId, registration.walletCards, usedSeed)
+        }.flatMap { sendQueued() }
+    }
+
+    override suspend fun saveSeenWalletCard(
+        userWalletId: UserWalletId,
+        card: WalletCardBackup,
+        usedSeed: Boolean,
+    ): Either<WalletCardsBackupError, Unit> = withContext(dispatchers.io) {
+        queueMutex.withLock {
+            val registration = register(userWalletId, listOf(card)).getOrElse { return@withContext it.left() }
+            if (!registration.isChanged) return@withContext Unit.right()
+
+            enqueue(userWalletId, registration.walletCards, usedSeed)
+        }.flatMap { sendQueued() }
     }
 
     override suspend fun sendPendingWalletCards(): Either<WalletCardsBackupError, Unit> =
@@ -88,16 +111,71 @@ internal class DefaultWalletCardsBackupRepository(
         )
     }
 
+    override suspend fun hasCardWithIncompleteBackup(userWalletId: UserWalletId): Boolean {
+        return withContext(dispatchers.io) { getRegisteredCards(userWalletId.stringValue) }
+            .any { it.backupStatus != WalletCardDTO.BackupStatus.ACTIVE }
+    }
+
+    @RemoveWithToggle("TWI_1586_CARD_LINKED_STATUS_UPDATE_V2")
     override suspend fun isCardLinkedReported(userWalletId: UserWalletId): Boolean {
         val reportedWalletIds = appPreferencesStore.getSyncOrDefault(CARD_LINKED_REPORTED_WALLET_IDS_KEY, emptySet())
         return userWalletId.stringValue in reportedWalletIds
     }
 
+    @RemoveWithToggle("TWI_1586_CARD_LINKED_STATUS_UPDATE_V2")
     override suspend fun setCardLinkedReported(userWalletId: UserWalletId) {
         appPreferencesStore.editData { preferences ->
             preferences[CARD_LINKED_REPORTED_WALLET_IDS_KEY] =
                 preferences.getOrDefault(CARD_LINKED_REPORTED_WALLET_IDS_KEY, emptySet()) + userWalletId.stringValue
         }
+    }
+
+    private suspend fun getRegisteredCards(walletId: String): List<PendingWalletCardsBackup.Card> {
+        return runSuspendCatching { registryStore.getWalletCards(walletId) }
+            .getOrElse { error ->
+                TangemLogger.e("Wallet cards registry is unavailable", error)
+                emptyList()
+            }
+    }
+
+    private suspend fun register(
+        userWalletId: UserWalletId,
+        cards: List<WalletCardBackup>,
+    ): Either<WalletCardsBackupError, WalletCardsRegistryStore.Registration> {
+        val registeredCards = PendingWalletCardsBackupConverter.convert(WalletCardDTOConverter.convertList(cards))
+
+        return runSuspendCatching { registryStore.register(userWalletId.stringValue, registeredCards) }
+            .map { it.right() }
+            .getOrElse { error ->
+                TangemLogger.e("Unable to remember cards of wallet=$userWalletId", error)
+                WalletCardsBackupError.Unexpected(cause = error).left()
+            }
+    }
+
+    private suspend fun enqueue(
+        userWalletId: UserWalletId,
+        walletCards: List<PendingWalletCardsBackup.Card>,
+        usedSeed: Boolean,
+    ): Either<WalletCardsBackupError, Unit> {
+        val pending = PendingWalletCardsBackup(
+            id = UUID.randomUUID().toString(),
+            walletId = userWalletId.stringValue,
+            cards = walletCards,
+            usedSeed = usedSeed,
+        )
+
+        // queued before the request leaves, so a report is never lost to a dead network or a killed process,
+        // and sent by the same drain as everything else so an earlier report still waiting goes out first
+        runSuspendCatching { pendingStore.enqueue(pending) }.getOrElse { error ->
+            TangemLogger.e("Unable to queue cards backup report wallet=$userWalletId", error)
+            return WalletCardsBackupError.Unexpected(cause = error).left()
+        }
+
+        return Unit.right()
+    }
+
+    private suspend fun sendQueued(): Either<WalletCardsBackupError, Unit> {
+        return drain().onLeft { deliveryScheduler.schedule() }
     }
 
     /**
@@ -193,6 +271,7 @@ internal class DefaultWalletCardsBackupRepository(
 
     private companion object {
 
+        @RemoveWithToggle("TWI_1586_CARD_LINKED_STATUS_UPDATE_V2")
         val CARD_LINKED_REPORTED_WALLET_IDS_KEY by lazy {
             stringSetPreferencesKey(name = "cardLinkedReportedWalletIds")
         }

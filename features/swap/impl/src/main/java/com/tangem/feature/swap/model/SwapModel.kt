@@ -53,6 +53,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
@@ -115,6 +116,8 @@ import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
+import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
+import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
@@ -183,6 +186,7 @@ internal class SwapModel @Inject constructor(
     private val analyticsErrorEventHandler: AnalyticsErrorHandler,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
+    private val balanceContributionsRefresher: BalanceContributionsRefresher,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
@@ -195,6 +199,7 @@ internal class SwapModel @Inject constructor(
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
+    private val appTxHistoryFetcher: AppTxHistoryFetcher,
     private val swapInteractor: SwapInteractor,
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
@@ -1863,6 +1868,7 @@ internal class SwapModel @Inject constructor(
                         )
                         sendSwapInProgressEvent()
                         openPredictionFundingWindow()
+                        notifySwapExecuted(fromSwapCurrencyStatus.userWalletId)
 
                         router.replaceAll(SwapRoute.Success)
                     }
@@ -2198,6 +2204,7 @@ internal class SwapModel @Inject constructor(
                         txUrl = txUrl.orEmpty(),
                         onExploreClick = { if (txUrl != null) urlOpener.openUrl(txUrl) },
                     )
+                    notifySwapExecuted(swapTransactionState.storeData.fromSwapCurrencyStatus.userWalletId)
                     router.replaceAll(SwapRoute.Success)
                 }
             }
@@ -3259,6 +3266,19 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    /**
+     * The express deal exists on the backend from the moment the swap is sent, so the history sync is asked for
+     * it right away instead of waiting for the next screen open — its status is polled from the local rows.
+     */
+    private fun notifySwapExecuted(userWalletId: UserWalletId) {
+        appTxHistoryFetcher.invoke(
+            TxHistoryFetchTrigger.OnExpressOperationExecute(
+                walletId = userWalletId,
+                type = TxHistoryFetchTrigger.OnExpressOperationExecute.Swap,
+            ),
+        )
+    }
+
     private fun updateWalletBalance() {
         dataState.fromSwapCurrencyStatus?.let { fromSwapCurrencyStatus ->
             modelScope.launch {
@@ -3299,6 +3319,7 @@ internal class SwapModel @Inject constructor(
             network = network,
             delayMillis = UPDATE_BALANCE_DELAY_MILLIS,
         )
+        balanceContributionsRefresher(userWalletId = userWalletId, network = network)
     }
 
     private fun triggerPromoProviderEvent(recommendedProvider: SwapProvider?, bestQuotesProvider: SwapProvider?) {

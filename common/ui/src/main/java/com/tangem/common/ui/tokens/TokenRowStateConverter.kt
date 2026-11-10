@@ -12,7 +12,10 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.quote.fold
 import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.utils.StringsSigns
 
@@ -89,5 +92,23 @@ class TokenRowStateConverter(private val appCurrency: AppCurrency) {
                 )
             }
         }
+    }
+
+    fun convert(currency: CryptoCurrency, quoteStatus: QuoteStatus, onClick: (() -> Unit)?): TangemTokenRow.State {
+        val quote = quoteStatus.fold(onData = { this }, onEmpty = { null })
+        return TangemTokenRow.State.Content(
+            id = currency.id.value,
+            icon = currencyToIconStateConverter.convert(currency).toTokenIconState(),
+            title = stringReference(currency.name),
+            quote = quote?.let { data ->
+                stringReference(
+                    data.fiatRate.format {
+                        fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                    },
+                )
+            },
+            priceChange = quote?.priceChange?.toPriceChangeState(),
+            onClick = onClick,
+        )
     }
 }

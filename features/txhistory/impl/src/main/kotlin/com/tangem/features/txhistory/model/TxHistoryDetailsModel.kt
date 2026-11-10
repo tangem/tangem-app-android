@@ -2,7 +2,6 @@ package com.tangem.features.txhistory.model
 
 import android.content.Context
 import androidx.compose.runtime.Stable
-import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pushNew
@@ -28,14 +27,10 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
-import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.express.models.ExchangeTransaction
-import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.express.models.ExpressExchangeStatus
-import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.staking.GetStakingTargetsByAddressUseCase
@@ -60,7 +55,6 @@ import com.tangem.features.txhistory.converter.fiatCode
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -70,7 +64,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -100,7 +93,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val menuActions: TxDetailsMenuActions,
     private val getStakingTargetsByAddressUseCase: GetStakingTargetsByAddressUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
-    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
     private val router: Router,
     isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
@@ -137,12 +129,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
         .flowOn(dispatchers.io)
 
     /**
-     * The portfolio token a refunded DEX-bridge swap was refunded in — drives the "Refunded in {token}" terminal.
-     * `null` while unresolved or when the deal carries no refund token.
-     */
-    private val refundCurrency = MutableStateFlow<CryptoCurrency?>(null)
-
-    /**
      * Provider-rating (CSAT) card slot. Activated once the viewed tx turns out to be an express swap that reached a
      * terminal state, mirroring the legacy express-status sheet. Stays dismissed for onramp / on-chain txs.
      */
@@ -152,16 +138,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
 
     /** One-shot guard for the screen-opened analytics, sent from the [uiState] combine below */
     private var isScreenOpenedAnalyticsSent = false
-
-    init {
-        // One-shot: the portfolio add must not re-run when the UI resubscribes.
-        modelScope.launch(dispatchers.default) {
-            val refundAssetId = txHistoryInfo
-                .mapNotNull { it.bridgeRefundTx()?.refundAssetId }
-                .first()
-            refundCurrency.value = addRefundTokenToPortfolio(refundAssetId)
-        }
-    }
 
     val stackNavigation = StackNavigation<JointOperationRoutes>()
 
@@ -222,9 +198,8 @@ internal class TxHistoryDetailsModel @Inject constructor(
         flow = txHistoryInfo,
         flow2 = detailsInputs,
         flow3 = targetsByAddress,
-        flow4 = refundCurrency,
-        flow5 = balanceHidingSettings.isBalanceHidden(),
-    ) { txInfo, inputs, stakingTargets, refundToken, isBalanceHidden ->
+        flow4 = balanceHidingSettings.isBalanceHidden(),
+    ) { txInfo, inputs, stakingTargets, isBalanceHidden ->
         val lookup = inputs.lookup
         // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
         // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
@@ -242,7 +217,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
             shareText = shareText,
             onShare = { text -> onShare(text, txInfo) },
             onExplore = menuActions.exploreAction(txInfo = txInfo, currency = params.currency),
-            refundCurrency = refundToken,
             onLearnMoreAboutRefundsClick = ::onLearnMoreAboutRefunds,
             onGoToRefundedTokenClick = params.onOpenTokenDetails,
             lookup = lookup,
@@ -425,28 +399,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
             urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
         }
     }
-
-    /**
-     * Adds the refund token to the account of the viewed currency and returns it (idempotent);
-     * `null` when the account or the token cannot be resolved (e.g. offline).
-     */
-    private suspend fun addRefundTokenToPortfolio(ref: ExpressAsset.ID): CryptoCurrency? {
-        val accountId = getAccountCurrencyStatusUseCase
-            .invokeSync(userWalletId = params.userWalletId, currency = params.currency)
-            .map { it.account.accountId }
-            .getOrElse {
-                TangemLogger.e("Unable to resolve account for refund token ${params.currency.id}")
-                return null
-            }
-
-        return manageCryptoCurrenciesUseCase.add(
-            accountId = accountId,
-            networkId = ref.networkId,
-            contractAddress = ref.contractAddress,
-        )
-            .onLeft { TangemLogger.e("Unable to resolve refund token", it) }
-            .getOrNull()
-    }
 }
 
 /** How long the rating slot waits before it may appear, covering the sheet's opening animation. */
@@ -467,14 +419,3 @@ private data class RatingKey(
     val providerName: String,
     val txExternalUrl: String,
 )
-
-/**
- * The deal of a refunded DEX-bridge swap; `null` for everything else. Only a DEX-bridge deal is refunded in an
- * intermediate token, so other provider types must not surface the "Refunded in {token}" terminal.
- */
-private fun TxHistoryInfo.bridgeRefundTx(): ExchangeTransaction? {
-    val tx = (this as? ExpressTx.Swap)?.tx ?: return null
-    if (tx.status != ExpressExchangeStatus.Refunded) return null
-    if (tx.provider?.type != ExpressProviderType.DEX_BRIDGE) return null
-    return tx
-}

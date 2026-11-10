@@ -54,6 +54,7 @@ dependencies {
     implementation(projects.domain.common)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.tokens)
     // endregion
 
     // region Domain models

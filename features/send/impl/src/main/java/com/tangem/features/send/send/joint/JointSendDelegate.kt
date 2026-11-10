@@ -10,11 +10,11 @@ import arrow.core.raise.ensureNotNull
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
-import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
@@ -203,13 +203,13 @@ internal class JointSendDelegate @Inject constructor(
         TransactionFeeExtended(transactionFee = tokenFee, feeTokenId = feeToken.id, nativeFee = nativeFee)
     }
 
-    suspend fun createOperation(
+    suspend fun prepareOperation(
         account: Account.Joint,
         currency: CryptoCurrency,
         amount: BigDecimal,
         destinationUM: DestinationUM,
         feeToken: CryptoCurrency.Token?,
-    ): Either<JointOperationCreateError, Unit> = either {
+    ): Either<JointOperationCreateError, PreparedJointOperation.Creation> = either {
         val intent = ensureNotNull(JointTransferIntentFactory.create(amount, destinationUM, currency)) {
             JointOperationCreateError.InvalidPayload
         }
@@ -217,17 +217,15 @@ internal class JointSendDelegate @Inject constructor(
             .mapLeft(JointOperationCreateError::Failed)
             .bind()
 
-        val prepared = createJointOperationUseCase
+        createJointOperationUseCase
             .prepare(account = account, network = currency.network, intent = intent, gasToken = gasToken)
             .bind()
-        ensure(prepared.verdict != JointOperationBlockaidGate.Verdict.Malicious) { JointOperationCreateError.Malicious }
+    }
 
-        when (val result = createJointOperationUseCase.submit(prepared = prepared).bind()) {
-            CreateJointOperationUseCase.SubmitResult.Created -> Unit
-            is CreateJointOperationUseCase.SubmitResult.Rebuilt -> {
-                createJointOperationUseCase.submit(prepared = result.prepared).bind()
-            }
-        }
+    suspend fun submitOperation(
+        prepared: PreparedJointOperation.Creation,
+    ): Either<JointOperationCreateError, CreateJointOperationUseCase.SubmitResult> {
+        return createJointOperationUseCase.submit(prepared = prepared)
     }
 
     private suspend fun resolveGasToken(

@@ -3,9 +3,7 @@ package com.tangem.features.tangempay.card.issue
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.wallet.UserWalletId
@@ -14,6 +12,7 @@ import com.tangem.domain.tangempay.model.IssueAdditionalCardResult
 import com.tangem.domain.tangempay.usecase.IssueAdditionalCardUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.payOrder
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -33,11 +32,9 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Currency
 
-internal class TangemPayIssueAdditionalCardModelTest {
+internal class TangemPayIssueAdditionalCardModelTest : TangemPayModelTestBase() {
 
     private val issueAdditionalCard: IssueAdditionalCardUseCase = mockk()
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val listener: TangemPayIssueAdditionalCardComponent.Listener = mockk(relaxed = true)
 
     private var model: TangemPayIssueAdditionalCardModel? = null

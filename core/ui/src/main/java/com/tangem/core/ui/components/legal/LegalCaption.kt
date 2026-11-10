@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.legal
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,15 +23,16 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * clickable links. Without [onPrivacyPolicyClick] the caption is "By continuing, you agree with Terms of service".
  *
  * The link ranges are derived from the localized sentence, so a translation may reorder or omit a document
- * name without breaking the caption.
+ * name without breaking the caption. [termsTitleRes] names the terms document, "Terms of service" by default.
  */
 @Composable
 fun LegalCaption(
     onTermsOfServiceClick: () -> Unit,
     onPrivacyPolicyClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    @StringRes termsTitleRes: Int = R.string.introduction_terms_of_service,
 ) {
-    val termsTitle = stringResourceSafe(id = R.string.introduction_terms_of_service)
+    val termsTitle = stringResourceSafe(id = termsTitleRes)
     val privacyTitle = onPrivacyPolicyClick?.let { stringResourceSafe(id = R.string.common_privacy_policy) }
     val caption = if (privacyTitle == null) {
         stringResourceSafe(id = R.string.introduction_terms_of_service_consent, termsTitle)

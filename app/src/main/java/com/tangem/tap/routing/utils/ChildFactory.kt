@@ -17,6 +17,7 @@ import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.createwalletstart.CreateWalletStartComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
+import com.tangem.features.earn.api.EarnEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.hotwallet.*
@@ -134,6 +135,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingSuccessComponentFactory: TangemPayOnboardingSuccessComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
+    private val earnEntryComponentFactory: EarnEntryComponent.Factory,
     private val polymarketComponentFactory: PolymarketComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val addressBookComponentFactory: AddressBookComponent.Factory,
@@ -823,6 +825,18 @@ internal class ChildFactory @Inject constructor(
                         apy = route.apy,
                     ),
                     componentFactory = yieldSupplyEntryComponentFactory,
+                )
+            }
+            is AppRoute.EarnEntry -> {
+                createComponentChild(
+                    context = context,
+                    params = EarnEntryComponent.Params(
+                        userWalletId = route.userWalletId,
+                        cryptoCurrency = route.cryptoCurrency,
+                        source = route.source.toEarnEntrySource(),
+                        start = route.start.toEarnEntryStart(),
+                    ),
+                    componentFactory = earnEntryComponentFactory,
                 )
             }
             is AppRoute.Polymarket -> {

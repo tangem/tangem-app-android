@@ -10,9 +10,12 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.yield.supply.YieldSupplyContribution
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.qrscanning.models.QrResult
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.transaction.error.GetFeeError
@@ -519,6 +522,59 @@ internal class SendModelTest : SendModelTestBase() {
                 verify(exactly = 1) { router.replaceAll(CommonSendRoute.Confirm, onComplete = any()) }
                 sendModel.onDestroy()
             }
+
+        @Test
+        fun `GIVEN active yield position cached WHEN currency status loaded THEN initial route is not opened`() =
+            runTest {
+                // Arrange
+                givenStatusWithYieldPosition(positionSource = StatusSource.CACHE)
+                val sendModel = createSendModel(this, MutableParamsContainer(intentParams(amount = "5")))
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 0) { router.replaceAll(any<CommonSendRoute>(), onComplete = any()) }
+                sendModel.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN active yield position actual WHEN currency status loaded THEN initial route is opened`() = runTest {
+            // Arrange
+            givenStatusWithYieldPosition(positionSource = StatusSource.ACTUAL)
+            val sendModel = createSendModel(this, MutableParamsContainer(intentParams(amount = "5")))
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.replaceAll(any<CommonSendRoute>(), onComplete = any()) }
+            sendModel.onDestroy()
+        }
+
+        private fun givenStatusWithYieldPosition(positionSource: StatusSource) {
+            val position = YieldSupplyContribution(
+                status = YieldSupplyStatus(
+                    isActive = true,
+                    isInitialized = true,
+                    isAllowedToSpend = true,
+                    effectiveProtocolBalance = BigDecimal.ONE,
+                ),
+                source = positionSource,
+            )
+            val status = loadedStatus(
+                currency = testCryptoCurrency,
+                balance = BigDecimal.TEN,
+                contributions = listOf(position),
+            )
+            val account = mockk<Account.Personal>(relaxed = true) {
+                every { cryptoCurrencies } returns listOf(testCryptoCurrency)
+            }
+            every { getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency) } returns
+                flowOf(AccountCryptoCurrencyStatus(account = account, status = status))
+            coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns
+                loadedStatus(currency = testCryptoCurrency, balance = BigDecimal.TEN).right()
+        }
 
         private fun provideTestModels() = listOf(
             InitialRouteModel(

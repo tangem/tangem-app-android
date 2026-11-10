@@ -6,8 +6,10 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.staking.earn.ResolveEarnRateUseCase
 import com.tangem.features.earn.api.overview.EarnProductRate
@@ -40,7 +42,11 @@ internal class YieldModeRateMapperTest {
         @ProvideTestModels
         fun `GIVEN token in the map WHEN entry THEN rate, activity, source and route per table`(model: ActivityModel) {
             // Arrange
-            val status = currencyStatus(ethereumToken, model.yieldSupplyStatus)
+            val status = currencyStatus(
+                currency = ethereumToken,
+                yieldSupplyStatus = model.yieldSupplyStatus,
+                contributions = model.contributions,
+            )
 
             // Act
             val actual = mapper.entry(userWalletId, status, mapOf(key to BigDecimal("5.5")))
@@ -59,6 +65,69 @@ internal class YieldModeRateMapperTest {
             ActivityModel(name = "active", yieldSupplyStatus = yieldStatus(isActive = true), expectedActive = true),
             ActivityModel(name = "inactive", yieldSupplyStatus = yieldStatus(isActive = false), expectedActive = false),
             ActivityModel(name = "no yield status", yieldSupplyStatus = null, expectedActive = false),
+            ActivityModel(
+                name = "active Yield Module position, no network status",
+                yieldSupplyStatus = null,
+                contributions = listOf(YieldSupplyContribution(yieldStatus(isActive = true), StatusSource.ACTUAL)),
+                expectedActive = true,
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ActivityFromContribution {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an empty yield status field AND a yield contribution WHEN entry THEN activity follows it`(
+            model: ContributionModel,
+        ) {
+            // Arrange
+            val status = contributionOnlyStatus(isActive = model.isActive)
+
+            // Act
+            val actual = mapper.entry(userWalletId, status, mapOf(key to BigDecimal("5.5")))
+
+            // Assert
+            assertThat(actual?.isActive).isEqualTo(model.isActive)
+        }
+
+        private fun provideTestModels() = listOf(
+            ContributionModel(name = "active contribution", isActive = true),
+            ContributionModel(name = "inactive contribution", isActive = false),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SourceFromContribution {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN network and contribution sources WHEN entry THEN the entry source is the weaker of both`(
+            model: SourceModel,
+        ) {
+            // Arrange
+            val status = contributionOnlyStatus(
+                isActive = true,
+                contributionSource = model.contributionSource,
+                networkSource = model.networkSource,
+            )
+
+            // Act
+            val actual = mapper.entry(userWalletId, status, mapOf(key to BigDecimal("5.5")))
+
+            // Assert
+            assertThat(actual?.source).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            SourceModel(StatusSource.ACTUAL, StatusSource.ACTUAL, expected = StatusSource.ACTUAL),
+            SourceModel(StatusSource.ACTUAL, StatusSource.CACHE, expected = StatusSource.CACHE),
+            SourceModel(StatusSource.ACTUAL, StatusSource.ONLY_CACHE, expected = StatusSource.ONLY_CACHE),
+            SourceModel(StatusSource.CACHE, StatusSource.ACTUAL, expected = StatusSource.CACHE),
+            SourceModel(StatusSource.CACHE, StatusSource.ONLY_CACHE, expected = StatusSource.ONLY_CACHE),
         )
     }
 
@@ -193,6 +262,7 @@ internal class YieldModeRateMapperTest {
                 ParityModel("active token", currencyStatus(ethereumToken, yieldStatus(isActive = true)), apy),
                 ParityModel("inactive token", currencyStatus(ethereumToken, yieldStatus(isActive = false)), apy),
                 ParityModel("token without yield status", currencyStatus(ethereumToken), apy),
+                ParityModel("active through the contribution only", contributionOnlyStatus(isActive = true), apy),
                 ParityModel("coin", currencyStatus(coin(Blockchain.Ethereum)), apy),
                 ParityModel("token missing from the map", currencyStatus(ethereumToken), mapOf("other_key" to BigDecimal.ONE)),
                 ParityModel("uppercase key on Ethereum", currencyStatus(ethereumToken), mapOf(key.uppercase() to BigDecimal.TEN)),
@@ -201,10 +271,34 @@ internal class YieldModeRateMapperTest {
         }
     }
 
+    private fun contributionOnlyStatus(
+        isActive: Boolean,
+        contributionSource: StatusSource = StatusSource.ACTUAL,
+        networkSource: StatusSource = StatusSource.ACTUAL,
+    ): CryptoCurrencyStatus {
+        val status = currencyStatus(ethereumToken, networkSource = networkSource)
+        val contribution = YieldSupplyContribution(status = yieldStatus(isActive), source = contributionSource)
+        val value = (status.value as CryptoCurrencyStatus.Loaded).copy(contributions = listOf(contribution))
+        return status.copy(value = value)
+    }
+
+    internal data class ContributionModel(val name: String, val isActive: Boolean) {
+        override fun toString(): String = name
+    }
+
+    internal data class SourceModel(
+        val networkSource: StatusSource,
+        val contributionSource: StatusSource,
+        val expected: StatusSource,
+    ) {
+        override fun toString(): String = "network $networkSource AND contribution $contributionSource -> $expected"
+    }
+
     internal data class ActivityModel(
         val name: String,
         val yieldSupplyStatus: YieldSupplyStatus?,
         val expectedActive: Boolean,
+        val contributions: List<BalanceContribution> = emptyList(),
     ) {
         override fun toString(): String = name
     }

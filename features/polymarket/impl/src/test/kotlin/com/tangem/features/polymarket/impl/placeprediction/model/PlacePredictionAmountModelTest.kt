@@ -189,7 +189,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN the market takes no orders WHEN an amount is typed THEN no quote is requested`() = runTest {
+        fun `GIVEN the market takes no orders WHEN an amount is typed THEN the quote is still requested`() = runTest {
             // Arrange
             coEvery { getEventUseCase(any(), eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
             val model = createAmountModel(testScope = this)
@@ -198,10 +198,10 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Act
             model.onAmountChange(value = "10")
-            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
             // Assert
-            coVerify(exactly = 0) { getQuoteUseCase(any(), request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.notifications).contains(PredictionNotificationUM.MarketClosed)
             assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
@@ -209,7 +209,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN an amount typed before the market lands WHEN it takes no orders THEN no quote is requested`() =
+        fun `GIVEN an amount typed before the market lands WHEN it takes no orders THEN the quote is requested`() =
             runTest {
                 // Arrange
                 coEvery { getEventUseCase(any(), eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
@@ -219,10 +219,10 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 // Act
                 model.onAmountChange(value = "10")
                 runCurrent()
-                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_POLL_INTERVAL_MILLIS * 3)
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
                 // Assert
-                coVerify(exactly = 0) { getQuoteUseCase(any(), request = any()) }
+                coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
 
                 model.onDestroy()
             }
@@ -1105,7 +1105,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
     inner class PositionReads {
 
         @Test
-        fun `GIVEN sell params WHEN model created THEN the position fills the screen AND no event is read`() = runTest {
+        fun `GIVEN sell params WHEN model created THEN the position fills the screen AND the event is read once for its end date`() = runTest {
             // Act
             val model = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
@@ -1118,7 +1118,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
             assertThat(model.uiState.value.market.entryPrice).isEqualTo("35.6¢")
             assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("pUSD")
-            coVerify(exactly = 0) { getEventUseCase(any(), eventId = any()) }
+            coVerify(exactly = 1) { getEventUseCase(any(), eventId = EVENT_ID) }
 
             model.onDestroy()
         }

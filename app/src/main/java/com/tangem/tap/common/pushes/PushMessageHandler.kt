@@ -22,6 +22,7 @@ import javax.inject.Inject
  */
 internal class PushMessageHandler @Inject constructor(
     private val tokenDetailsPushHandler: TokenDetailsPushHandler,
+    private val jointAccountPushHandler: JointAccountPushHandler,
 ) {
 
     fun onMessageReceived(data: Map<String, String>) {
@@ -31,6 +32,7 @@ internal class PushMessageHandler @Inject constructor(
         val queryParams = deeplink.getQueryParams()
         when (deeplink.host) {
             DeepLinkRoute.TokenDetails.host -> tokenDetailsPushHandler.handle(queryParams)
+            DeepLinkRoute.JointAccount.host -> jointAccountPushHandler.handle(queryParams)
             else -> Unit
         }
     }

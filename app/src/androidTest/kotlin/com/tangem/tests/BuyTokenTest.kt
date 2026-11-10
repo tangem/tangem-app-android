@@ -139,7 +139,7 @@ class BuyTokenTest : BaseTestCase() {
         val scenarioName = "currencies_api"
         val scenarioState = "Error"
         val currenciesMethod = "GET"
-        val currenciesPath = "/v1/currencies"
+        val currenciesPath = "/v[12]/currencies"
         val tokenTitle = "Polygon"
 
         setupHooks().run {
@@ -203,7 +203,7 @@ class BuyTokenTest : BaseTestCase() {
     fun allOffersSortedByReceiveAmountTest() {
         val quoteScenarioName = "onramp_quote"
         val quoteScenarioState = "ProvidersSorting"
-        val quotesPath = "/v1/onramp-quote"
+        val quotesPath = "/v[12]/onramp-quote"
         val tokenTitle = "Polygon"
         val fiatAmount = "1"
         val paymentMethod = "Card"

@@ -48,11 +48,6 @@ internal class SendConfirmAlertFactory @Inject constructor(
         message = R.string.joint_account_send_network_changed_subtitle,
     )
 
-    fun getJointMaliciousState() = sendJointNotice(
-        title = R.string.joint_operation_malicious_title,
-        message = R.string.joint_operation_malicious_subtitle,
-    )
-
     fun getJointSendBlockedState(onSupportClick: () -> Unit) {
         messageSender.send(
             DialogMessage(

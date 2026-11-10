@@ -64,6 +64,8 @@ internal interface PlacePredictionOrderIntents {
     fun onTangemTermsClick()
 
     fun onCloseClick()
+
+    fun onUntradableSheetDismiss()
 }
 
 internal interface PlacePredictionSlippageIntents {
@@ -79,7 +81,7 @@ internal interface PlacePredictionSlippageIntents {
 
 internal interface PlacePredictionStatusIntents {
 
-    fun onToMainClick()
+    fun onCloseClick()
 
     fun onViewPositionClick()
 }

@@ -253,6 +253,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
                 every { this@mockk.invoke(Unit) } returns flowOf(emptyMap())
             },
             balanceContributionProviders = emptySet(),
+            tokensFeatureToggles = mockk { every { isYieldContributionEnabled } returns false },
         )
     }
 

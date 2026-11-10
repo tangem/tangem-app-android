@@ -7,6 +7,7 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.common.ui.tokens.TokenRowStateConverter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -34,6 +35,7 @@ import com.tangem.features.onramp.hottokens.portfolio.OnrampAddTokenComponent.Ad
 import com.tangem.features.onramp.hottokens.portfolio.entity.OnrampAddToPortfolioBSConfig
 import com.tangem.features.onramp.hottokens.portfolio.entity.OnrampAddTokenRoute
 import com.tangem.features.onramp.impl.R
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -64,6 +66,7 @@ internal class HotCryptoModel @Inject constructor(
     val portfolioSelectorController: PortfolioSelectorController,
     private val networkFactory: NetworkFactory,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : Model(), OnrampAddTokenComponent.Callbacks by callbackDelegate {
 
     val bottomSheetNavigation: SlotNavigation<OnrampAddToPortfolioBSConfig> = SlotNavigation()
@@ -92,16 +95,32 @@ internal class HotCryptoModel @Inject constructor(
     private fun combineData() {
         hotCryptoPortfolioDataLoader.loadPortfolioData(params.userWalletId)
             .map { data ->
-                HotTokenItemStateConverter(
+                val onItemClick: (HotCryptoCurrency) -> Unit = { hotCryptoCurrency ->
+                    startAddTokenFlow(currency = hotCryptoCurrency, hotCryptoPortfolioData = data)
+                }
+                val items = HotTokenItemStateConverter(
                     appCurrency = data.appCurrency,
-                    onItemClick = { _, hotCryptoCurrency ->
-                        startAddTokenFlow(currency = hotCryptoCurrency, hotCryptoPortfolioData = data)
-                    },
+                    onItemClick = { _, hotCryptoCurrency -> onItemClick(hotCryptoCurrency) },
                 )
                     .convertList(data.allHotCrypto)
                     .map(TokensListItemUM::Token)
+                val rows = if (walletFeatureToggles.isRedesignedTokenRowsEnabled) {
+                    val rowConverter = TokenRowStateConverter(data.appCurrency)
+                    data.allHotCrypto.map { hotCrypto ->
+                        rowConverter.convert(
+                            currency = hotCrypto.cryptoCurrency,
+                            quoteStatus = hotCrypto.quoteStatus,
+                            onClick = { onItemClick(hotCrypto) },
+                        )
+                    }
+                } else {
+                    emptyList()
+                }
+                items to rows
             }
-            .onEach { items -> state.update { HotCryptoUM(items = it.buildItems(items)) } }
+            .onEach { (items, rows) ->
+                state.update { HotCryptoUM(items = it.buildItems(items), rows = rows.toImmutableList()) }
+            }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }

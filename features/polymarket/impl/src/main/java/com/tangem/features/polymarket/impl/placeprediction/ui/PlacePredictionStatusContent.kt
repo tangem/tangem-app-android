@@ -15,7 +15,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
@@ -87,26 +86,19 @@ private fun ResultFooter(viewPosition: ViewPositionUM, intents: PlacePredictionS
         ViewPositionUM.Hidden -> TangemButton(
             modifier = modifier,
             size = TangemButton.Size.X12,
-            text = resourceReference(R.string.prediction_place_result_to_main),
-            onClick = intents::onToMainClick,
+            text = resourceReference(R.string.common_got_it),
+            onClick = intents::onCloseClick,
         )
         ViewPositionUM.Awaiting,
         ViewPositionUM.Available,
-        -> TangemButtonGroup(modifier = modifier, orientation = TangemButtonGroup.Orientation.Horizontal) {
-            TangemButton(
-                variant = TangemButton.Variant.Secondary,
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.prediction_place_result_to_main),
-                onClick = intents::onToMainClick,
-            )
-            TangemButton(
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.prediction_place_result_view_position),
-                isLoading = viewPosition == ViewPositionUM.Awaiting,
-                isEnabled = viewPosition == ViewPositionUM.Available,
-                onClick = intents::onViewPositionClick,
-            )
-        }
+        -> TangemButton(
+            modifier = modifier,
+            size = TangemButton.Size.X12,
+            text = resourceReference(R.string.prediction_place_result_view_position),
+            isLoading = viewPosition == ViewPositionUM.Awaiting,
+            isEnabled = viewPosition == ViewPositionUM.Available,
+            onClick = intents::onViewPositionClick,
+        )
     }
 }
 
@@ -182,10 +174,12 @@ private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM, side: Pred
             ),
             value = shares?.formatPolymarketShares() ?: DASH_SIGN,
         )
-        DetailRow(
-            title = resourceReference(R.string.prediction_details_resolution_date),
-            value = market.resolutionDateMillis?.formatResolutionDate() ?: DASH_SIGN,
-        )
+        market.resolutionDateMillis?.let { resolutionDateMillis ->
+            DetailRow(
+                title = resourceReference(R.string.prediction_details_resolution_date),
+                value = resolutionDateMillis.formatResolutionDate(),
+            )
+        }
     }
 }
 
