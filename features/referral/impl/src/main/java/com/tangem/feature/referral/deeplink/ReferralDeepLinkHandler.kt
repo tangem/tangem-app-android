@@ -2,20 +2,20 @@ package com.tangem.feature.referral.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
 
-internal class DefaultReferralDeepLinkHandler @AssistedInject constructor(
-    appRouter: AppRouter,
-    getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-) : ReferralDeepLinkHandler {
+internal class ReferralDeepLinkHandler @Inject constructor(
+    private val appRouter: AppRouter,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+) : DeepLinkHandler {
 
-    init {
+    override fun handle(request: DeepLinkRequest) {
         // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         getSelectedWalletSyncUseCase().fold(
             ifLeft = {
@@ -29,11 +29,6 @@ internal class DefaultReferralDeepLinkHandler @AssistedInject constructor(
                 }
             },
         )
-    }
-
-    @AssistedFactory
-    interface Factory : ReferralDeepLinkHandler.Factory {
-        override fun create(): DefaultReferralDeepLinkHandler
     }
 
     companion object {

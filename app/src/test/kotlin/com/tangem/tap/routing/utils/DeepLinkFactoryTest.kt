@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import javax.inject.Provider
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DeepLinkFactoryTest {
@@ -71,7 +72,7 @@ internal class DeepLinkFactoryTest {
             "wc:" to registeredWalletConnectHandler,
             "tangem://pay-app-main" to registeredTangemPayMainHandler,
             "https://tangem.com/pay-app-main" to registeredTangemPayMainHandler,
-        ),
+        ).mapValues { (_, handler) -> Provider { handler } },
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)

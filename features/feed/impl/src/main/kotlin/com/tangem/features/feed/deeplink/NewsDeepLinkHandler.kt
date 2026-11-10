@@ -2,23 +2,18 @@ package com.tangem.features.feed.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.CATEGORY_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NEWS_ID_KEY
-import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import javax.inject.Inject
 
-internal class DefaultNewsDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val queryParams: Map<String, String>,
+internal class NewsDeepLinkHandler @Inject constructor(
     private val appRouter: AppRouter,
-) : NewsDeepLinkHandler {
+) : DeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
-
-    private fun handleDeepLink() {
+    override fun handle(request: DeepLinkRequest) {
+        val queryParams = request.queryParams
         val newsId = queryParams[NEWS_ID_KEY]?.toIntOrNull()
         if (newsId != null) {
             appRouter.push(AppRoute.NewsDetails(newsId = newsId))
@@ -26,11 +21,6 @@ internal class DefaultNewsDeepLinkHandler @AssistedInject constructor(
         }
 
         appRouter.push(AppRoute.News(categoryId = queryParams[CATEGORY_ID_KEY]?.toIntOrNull()))
-    }
-
-    @AssistedFactory
-    interface Factory : NewsDeepLinkHandler.Factory {
-        override fun create(queryParams: Map<String, String>): DefaultNewsDeepLinkHandler
     }
 
     companion object {
