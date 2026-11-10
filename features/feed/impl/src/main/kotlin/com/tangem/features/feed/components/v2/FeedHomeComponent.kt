@@ -58,7 +58,10 @@ internal class FeedHomeComponent(
 
     private val topBlocksComponent = FeedTopBlocksComponent(
         context = child("feedTopBlocks"),
-        params = FeedTopBlocksComponent.Params(callbacks = model.topBlocksCallbacks),
+        params = FeedTopBlocksComponent.Params(
+            callbacks = model.topBlocksCallbacks,
+            isServicesBlockEnabled = model.isServicesBlockEnabled,
+        ),
         portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         addAccountTypeComponentFactory = addAccountTypeComponentFactory,
         blocksAnalytics = blocksAnalytics,
