@@ -34,7 +34,6 @@ import javax.inject.Inject
 
 internal class PooledStakingMapper @Inject constructor() {
 
-    /** @param isBalanceFailed the staking balance of the currency could not be loaded, so a stake cannot be ruled out */
     fun summary(
         userWalletId: UserWalletId,
         status: CryptoCurrencyStatus,
@@ -57,7 +56,7 @@ internal class PooledStakingMapper @Inject constructor() {
             rate = EarnProductRate(fraction = option.apy, type = EarnRateType.APY),
             position = position?.let { EarnPositionSummary(cryptoAmount = it.totalStaked) },
             source = status.value.stakingSource,
-            onClickAction = PooledStakingAction(buttonLabel(position != null || isBalanceFailed)),
+            onClickAction = PooledStakingAction(buttonLabel(hasPossibleStake(position, isBalanceFailed))),
             route = stakingRoute(userWalletId, status.currency),
         )
     }
@@ -82,7 +81,7 @@ internal class PooledStakingMapper @Inject constructor() {
             details = details(feePercent = bestVault.feePercent.stripTrailingZeros().toPlainString()),
             limits = EarnLimits(minDeposit = P2PEthPoolIntegration.DEFAULT_MINIMUM_STAKE, remainingCap = null),
             apyPeriods = emptyList(),
-            primary = EarnActionItem(PooledStakingAction(buttonLabel(position != null || isBalanceFailed))),
+            primary = EarnActionItem(PooledStakingAction(buttonLabel(hasPossibleStake(position, isBalanceFailed)))),
             freshness = null,
             position = positionOf(position, isBalanceFailed),
         )
@@ -144,6 +143,9 @@ internal class PooledStakingMapper @Inject constructor() {
     )
 
     /** A stake that is known or could not be read: "Start earning" must not be offered over a possible balance. */
+    private fun hasPossibleStake(position: StakingBalance.Data.P2PEthPool?, isBalanceFailed: Boolean): Boolean =
+        position != null || isBalanceFailed
+
     private fun buttonLabel(hasPossibleStake: Boolean): TextReference =
         stringReference(if (hasPossibleStake) MANAGE_LABEL else START_EARNING_LABEL)
 
