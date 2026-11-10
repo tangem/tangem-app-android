@@ -28,7 +28,7 @@ internal class UserPortfolioStateController @AssistedInject constructor(
     @Assisted private val onTokenSelected: (AddToPortfolioManager.Result) -> Unit,
 ) {
 
-    private val requiredDataFlow = MutableSharedFlow<Pair<AvailableToAddData, CryptoCurrency.RawID>>(
+    private val requiredDataFlow = MutableSharedFlow<RequiredData>(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
@@ -38,10 +38,11 @@ internal class UserPortfolioStateController @AssistedInject constructor(
         flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
         flow3 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
         flow4 = isAccountsModeEnabledUseCase(),
-    ) { (allAvailableData, rawCurrencyId), appCurrency, isBalanceHidden, isAccountsModeEnabled ->
+    ) { requiredData, appCurrency, isBalanceHidden, isAccountsModeEnabled ->
         UserPortfolioSectionsTransformer(
-            availableData = allAvailableData,
-            rawCurrencyId = rawCurrencyId,
+            availableData = requiredData.allAvailableData,
+            rawCurrencyId = requiredData.rawCurrencyId,
+            networkIds = requiredData.networkIds,
             appCurrency = appCurrency,
             isBalanceHidden = isBalanceHidden,
             isAccountsModeEnabled = isAccountsModeEnabled,
@@ -54,10 +55,29 @@ internal class UserPortfolioStateController @AssistedInject constructor(
         .distinctUntilChanged()
         .stateIn(modelScope, SharingStarted.Lazily, null)
 
-    suspend fun updateAndWaitNotNullState(allAvailableData: AvailableToAddData, rawCurrencyId: CryptoCurrency.RawID) {
-        requiredDataFlow.tryEmit(allAvailableData to rawCurrencyId)
+    /**
+     * @param networkIds when not `null`, only the holdings on these networks are listed
+     */
+    suspend fun updateAndWaitNotNullState(
+        allAvailableData: AvailableToAddData,
+        rawCurrencyId: CryptoCurrency.RawID,
+        networkIds: Set<String>? = null,
+    ) {
+        requiredDataFlow.tryEmit(
+            RequiredData(
+                allAvailableData = allAvailableData,
+                rawCurrencyId = rawCurrencyId,
+                networkIds = networkIds,
+            ),
+        )
         uiState.filterNotNull().firstOrNull()
     }
+
+    private data class RequiredData(
+        val allAvailableData: AvailableToAddData,
+        val rawCurrencyId: CryptoCurrency.RawID,
+        val networkIds: Set<String>?,
+    )
 
     @AssistedFactory
     interface Factory {
