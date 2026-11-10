@@ -1,6 +1,11 @@
 package com.tangem.feature.swap.domain.fee
 
 import android.util.Base64
+import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.common.extensions.hexToBytes
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySwapCallData
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndeterminateException
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -11,6 +16,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
@@ -1683,6 +1690,279 @@ internal class DexSwapFeeCalculatorTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class YieldGasless {
+
+        private lateinit var fromYieldToken: SwapCurrencyStatus
+        private val wrappedSwapCallData: SmartContractCallData = mockk()
+        private val swapExtras: TransactionExtras = mockk()
+        private val gaslessFee = TransactionFeeExtended(
+            transactionFee = TransactionFee.Single(normal = ethLegacyFee()),
+            feeTokenId = mockk(relaxed = true),
+            gaslessProtocolData = GaslessProtocolData.Evm,
+        )
+        private val yieldSwap = buildDex(
+            txData = DEX_CALL_DATA,
+            txTo = DEX_ROUTER,
+            allowanceContract = DEX_SPENDER,
+        )
+
+        @BeforeEach
+        fun setUpYieldSwap() {
+            fromYieldToken = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = YIELD_TOKEN_CONTRACT,
+                isCoin = false,
+                decimals = 6,
+                yieldSupplyActive = true,
+            )
+            coEvery {
+                wrapYieldSwapCallDataWithUpgradeUseCase.invoke(userWalletId = any(), network = any(), callData = any())
+            } returns wrappedSwapCallData
+            every {
+                createTransactionExtrasUseCase.invoke(
+                    callData = wrappedSwapCallData,
+                    network = any(),
+                    gasLimit = any(),
+                    nonce = any(),
+                )
+            } returns swapExtras.right()
+            coEvery {
+                getFeeForTokenUseCase.invoke(
+                    userWallet = any(),
+                    token = any(),
+                    transactionData = any(),
+                    sentAmount = any(),
+                    approval = any(),
+                )
+            } returns gaslessFee.right()
+            coEvery {
+                getFeeForGaslessUseCase.invoke(
+                    userWallet = any(),
+                    network = any(),
+                    transactionData = any(),
+                    sentAmount = any(),
+                    sentCurrencyStatus = any(),
+                    approval = any(),
+                    onNativeFeePreferred = any(),
+                )
+            } returns gaslessFee.right()
+        }
+
+        @Test
+        fun `GIVEN yield swap WHEN calculateYieldGasless THEN module swaps through the router with the express spender`() =
+            runTest {
+                // Arrange
+                val swapCallData = slot<SmartContractCallData>()
+                coEvery {
+                    wrapYieldSwapCallDataWithUpgradeUseCase.invoke(
+                        userWalletId = any(),
+                        network = any(),
+                        callData = capture(swapCallData),
+                    )
+                } returns wrappedSwapCallData
+
+                // Act
+                sut.calculateYieldGasless(
+                    fromSwapCurrencyStatus = fromYieldToken,
+                    transaction = yieldSwap,
+                    yieldModuleAddress = YIELD_MODULE,
+                    selectedToken = null,
+                )
+
+                // Assert
+                val expected = EthereumYieldSupplySwapCallData(
+                    tokenIn = YIELD_TOKEN_CONTRACT,
+                    amountIn = BigInteger.valueOf(1_000_000),
+                    target = DEX_ROUTER,
+                    spender = DEX_SPENDER,
+                    swapData = DEX_CALL_DATA.removePrefix("0x").hexToBytes(),
+                )
+                assertThat(swapCallData.captured.data).isEqualTo(expected.data)
+            }
+
+        @Test
+        fun `GIVEN fee token selected WHEN calculateYieldGasless THEN token fee is quoted for the module swap`() =
+            runTest {
+                // Arrange
+                val feeToken = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false).status
+
+                // Act
+                val result = sut.calculateYieldGasless(
+                    fromSwapCurrencyStatus = fromYieldToken,
+                    transaction = yieldSwap,
+                    yieldModuleAddress = YIELD_MODULE,
+                    selectedToken = feeToken,
+                )
+
+                // Assert
+                val expectedTransaction = expectedModuleSwap()
+                assertThat(result.loadedFee()).isEqualTo(gaslessFee)
+                coVerify {
+                    getFeeForTokenUseCase.invoke(
+                        userWallet = fromYieldToken.userWallet,
+                        token = feeToken.currency as CryptoCurrency.Token,
+                        transactionData = expectedTransaction,
+                        sentAmount = BigDecimal.ONE,
+                        approval = null,
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN no fee token WHEN calculateYieldGasless THEN auto fee is quoted for the module swap`() = runTest {
+            // Act
+            val result = sut.calculateYieldGasless(
+                fromSwapCurrencyStatus = fromYieldToken,
+                transaction = yieldSwap,
+                yieldModuleAddress = YIELD_MODULE,
+                selectedToken = null,
+            )
+
+            // Assert
+            val expectedTransaction = expectedModuleSwap()
+            val network = fromYieldToken.currency.network
+            assertThat(result.loadedFee()).isEqualTo(gaslessFee)
+            coVerify {
+                getFeeForGaslessUseCase.invoke(
+                    userWallet = fromYieldToken.userWallet,
+                    network = network,
+                    transactionData = expectedTransaction,
+                    sentAmount = BigDecimal.ONE,
+                    sentCurrencyStatus = fromYieldToken.status,
+                    approval = null,
+                    onNativeFeePreferred = any(),
+                )
+            }
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideModuleErrorModels")
+        fun `GIVEN module call data cannot be built WHEN calculateYieldGasless THEN returns mapped error`(
+            model: ModuleErrorModel,
+        ) = runTest {
+            // Arrange
+            coEvery {
+                wrapYieldSwapCallDataWithUpgradeUseCase.invoke(userWalletId = any(), network = any(), callData = any())
+            } throws model.error
+
+            // Act
+            val result = sut.calculateYieldGasless(
+                fromSwapCurrencyStatus = fromYieldToken,
+                transaction = yieldSwap,
+                yieldModuleAddress = YIELD_MODULE,
+                selectedToken = null,
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(model.expected)
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideUnsupportedSwapModels")
+        fun `GIVEN swap gasless cannot run WHEN calculateYieldGasless THEN no fee is quoted`(
+            model: UnsupportedSwapModel,
+        ) = runTest {
+            // Act
+            val result = sut.calculateYieldGasless(
+                fromSwapCurrencyStatus = model.fromStatus(fromYieldToken),
+                transaction = model.transaction,
+                yieldModuleAddress = YIELD_MODULE,
+                selectedToken = null,
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(model.expected)
+            coVerify(exactly = 0) {
+                getFeeForGaslessUseCase.invoke(
+                    userWallet = any(),
+                    network = any(),
+                    transactionData = any(),
+                    sentAmount = any(),
+                    sentCurrencyStatus = any(),
+                    approval = any(),
+                    onNativeFeePreferred = any(),
+                )
+            }
+        }
+
+        private fun provideModuleErrorModels(): List<ModuleErrorModel> {
+            val unexpected = IllegalStateException("payload too large")
+            return listOf(
+                ModuleErrorModel(
+                    case = "module cannot be upgraded",
+                    error = YieldModuleUpgradeUnavailableException(currentImplementation = "0xOld"),
+                    expected = GetFeeError.GaslessError.ModuleUpdateUnavailable,
+                ),
+                ModuleErrorModel(
+                    case = "module version is unknown",
+                    error = YieldModuleVersionIndeterminateException(reason = "rpc error"),
+                    expected = GetFeeError.GaslessError.ModuleUpdateUnavailable,
+                ),
+                ModuleErrorModel(
+                    case = "unexpected error",
+                    error = unexpected,
+                    expected = GetFeeError.GaslessError.DataError(unexpected),
+                ),
+            )
+        }
+
+        private fun provideUnsupportedSwapModels() = listOf(
+            UnsupportedSwapModel(
+                case = "no express spender",
+                transaction = buildDex(txData = DEX_CALL_DATA, txTo = DEX_ROUTER, allowanceContract = null),
+                expected = GetFeeError.UnknownError,
+            ),
+            UnsupportedSwapModel(
+                case = "swap sends native coin",
+                transaction = yieldSwap.copy(txValue = "1000000000000000"),
+                expected = GetFeeError.GaslessError.NetworkIsNotSupported,
+            ),
+            UnsupportedSwapModel(
+                case = "bridge fee in native coin",
+                transaction = yieldSwap.copy(otherNativeFeeWei = BigDecimal.ONE),
+                expected = GetFeeError.GaslessError.NetworkIsNotSupported,
+            ),
+            UnsupportedSwapModel(
+                case = "no wallet address",
+                transaction = yieldSwap,
+                fromStatus = { status -> status.also { every { it.status.value.networkAddress } returns null } },
+                expected = GetFeeError.UnknownError,
+            ),
+            UnsupportedSwapModel(
+                case = "sold currency is a coin",
+                transaction = yieldSwap,
+                fromStatus = { buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true) },
+                expected = GetFeeError.GaslessError.NetworkIsNotSupported,
+            ),
+        )
+
+        private fun expectedModuleSwap() = TransactionData.Uncompiled(
+            amount = BigDecimal.ONE.convertToSdkAmount(fromYieldToken.status),
+            fee = null,
+            sourceAddress = WALLET_ADDRESS,
+            destinationAddress = YIELD_MODULE,
+            extras = swapExtras,
+        )
+
+        private fun Either<GetFeeError, DexFeeResult>.loadedFee(): TransactionFeeExtended? =
+            (getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended)?.fee
+    }
+
+    data class ModuleErrorModel(val case: String, val error: Throwable, val expected: GetFeeError) {
+        override fun toString(): String = case
+    }
+
+    data class UnsupportedSwapModel(
+        val case: String,
+        val transaction: ExpressTransactionModel.DEX,
+        val expected: GetFeeError,
+        val fromStatus: (SwapCurrencyStatus) -> SwapCurrencyStatus = { it },
+    ) {
+        override fun toString(): String = case
+    }
+
     data class ApproveTypeModel(
         val type: ApproveType,
         val expectedAmount: BigDecimal?,
@@ -1715,5 +1995,11 @@ internal class DexSwapFeeCalculatorTest {
         const val TRON_USDT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
         const val USDT_CONTRACT = "0xUsdt"
         const val SPENDER = "0xSpender"
+        const val YIELD_MODULE = "0xYieldModule"
+        const val WALLET_ADDRESS = "0xTestAddress"
+        const val YIELD_TOKEN_CONTRACT = "0x1111111111111111111111111111111111111111"
+        const val DEX_ROUTER = "0x2222222222222222222222222222222222222222"
+        const val DEX_SPENDER = "0x3333333333333333333333333333333333333333"
+        const val DEX_CALL_DATA = "0x0102"
     }
 }
