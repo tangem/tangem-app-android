@@ -14,6 +14,7 @@ import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.TangemPayModelTestBase
@@ -67,6 +68,7 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
     private val onOrderCreated: (BankOfframpOrderResult) -> Unit = {}
     private val onDestinationChanged: (OfframpDestination) -> Unit = {}
     private val onNetworkFeeChanged: (BigDecimal) -> Unit = {}
+    private val onQuoteChanged: (BankOfframpQuote) -> Unit = {}
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private var completedCount = 0
     private var outcomeUnknownCount = 0
@@ -77,7 +79,8 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
         completedCount = 0
         outcomeUnknownCount = 0
         every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
-        every { completionFactory.create(any(), any(), any(), any(), any()) } returns completion
+        every { completionFactory.create(any(), any(), any()) } returns completion
+        coEvery { completion.prepare(any()) } returns Unit
         completionInFlight()
     }
 
@@ -117,8 +120,30 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
 
             // Assert
             verify(exactly = 1) {
-                completionFactory.create(sourceAccount, any(), onOrderCreated, onDestinationChanged, onNetworkFeeChanged)
+                completionFactory.create(
+                    sourceAccount = sourceAccount,
+                    scope = any(),
+                    callbacks = BankWithdrawCompletionFactory.Callbacks(
+                        onOrderCreated = onOrderCreated,
+                        onDestinationChanged = onDestinationChanged,
+                        onNetworkFeeChanged = onNetworkFeeChanged,
+                        onQuoteChanged = onQuoteChanged,
+                    ),
+                )
             }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN draft WHEN model created THEN completion prepares the terms of that draft`() {
+            // Arrange
+            val draft = savedRecipientDraft()
+
+            // Act
+            val model = createModel(draft = draft)
+
+            // Assert
+            coVerify(exactly = 1) { completion.prepare(draft) }
             model.onDestroy()
         }
 
@@ -763,6 +788,7 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
                     onOrderCreated = onOrderCreated,
                     onDestinationChanged = onDestinationChanged,
                     onNetworkFeeChanged = onNetworkFeeChanged,
+                    onQuoteChanged = onQuoteChanged,
                     onCompleted = { completedCount++ },
                     onTransferOutcomeUnknown = { outcomeUnknownCount++ },
                     onCloseFlow = onCloseFlow,

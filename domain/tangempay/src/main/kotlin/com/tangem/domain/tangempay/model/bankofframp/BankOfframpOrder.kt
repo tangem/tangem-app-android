@@ -42,7 +42,15 @@ data class BankOfframpQuote(
     val fee: OfframpFee,
     val eta: OfframpEta,
     val expiresAt: DateTime,
-)
+) {
+
+    val sendDeadline: DateTime
+        get() = expiresAt.minusSeconds(EXPIRY_MARGIN_SECONDS)
+
+    private companion object {
+        const val EXPIRY_MARGIN_SECONDS = 30
+    }
+}
 
 data class BankOfframpTransfer(
     val transferId: String,
