@@ -157,9 +157,8 @@ internal class PooledStakingEarnProduct @Inject constructor(
         }
 
     /**
-     * The account statuses carry only a loaded stake, so a balance that failed to load is read from the balances
-     * themselves. The first frame is awaited, as the statuses do: a stake is not offered to start before it is known
-     * whether the balance can be read.
+     * Read from the balances, not the statuses, which carry only a loaded stake. The first frame is awaited, as the
+     * statuses do, so "Start earning" is not shown before it is known whether the balance can be read.
      */
     private fun failedBalanceIds(userWalletId: UserWalletId): Flow<Set<StakingID>> =
         multiStakingBalanceSupplier(MultiStakingBalanceProducer.Params(userWalletId))
