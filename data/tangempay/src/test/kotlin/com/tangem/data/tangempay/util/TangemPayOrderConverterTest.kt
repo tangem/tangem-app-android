@@ -3,7 +3,6 @@ package com.tangem.data.tangempay.util
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.tangempay.model.OrderDetails
-import com.tangem.domain.tangempay.model.OrderErrorCode
 import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.TangemPayOrder
 import com.tangem.spend.datasource.tangempay.models.response.OrderDataResponse
@@ -20,21 +19,14 @@ internal class TangemPayOrderConverterTest {
     @Test
     fun `GIVEN order response WHEN convert THEN common fields are mapped`() {
         // Act
-        val actual = TangemPayOrderConverter.convert(
-            result(data = UNKNOWN_DATA).copy(errorCode = "REGION_RESTRICTED"),
-        )
+        val actual = TangemPayOrderConverter.convert(result(data = UNKNOWN_DATA))
 
         // Assert
         assertThat(actual).isEqualTo(
             TangemPayOrder(
                 id = "order-1",
-                customerId = "customer-1",
                 status = TangemPayOrder.Status.PROCESSING,
                 step = OrderStep.STARTING,
-                stepChangeCode = 2,
-                createdAt = "2026-11-09T10:00:00Z",
-                updatedAt = "2026-11-09T10:05:00Z",
-                errorCode = OrderErrorCode.REGION_RESTRICTED,
                 details = OrderDetails.Unknown,
             ),
         )
@@ -270,15 +262,9 @@ internal class TangemPayOrderConverterTest {
 
     private fun result(data: OrderDataResponse, status: String = "PROCESSING") = TangemPayOrderResponse.Result(
         id = "order-1",
-        customerId = "customer-1",
-        type = "ANY",
         status = status,
         step = "STARTING",
         data = data,
-        stepChangeCode = 2,
-        createdAt = "2026-11-09T10:00:00Z",
-        updatedAt = "2026-11-09T10:05:00Z",
-        errorCode = null,
     )
 
     private companion object {

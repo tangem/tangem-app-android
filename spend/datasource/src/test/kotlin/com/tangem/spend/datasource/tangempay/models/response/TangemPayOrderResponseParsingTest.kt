@@ -43,15 +43,9 @@ internal class TangemPayOrderResponseParsingTest {
             TangemPayOrderResponse(
                 result = TangemPayOrderResponse.Result(
                     id = "order-1",
-                    customerId = "customer-1",
-                    type = "CARD_FREEZE_RAIN",
                     status = "PROCESSING",
                     step = "STARTING",
                     data = OrderDataResponse.CardFreeze(productInstanceId = "pi-1"),
-                    stepChangeCode = 2,
-                    createdAt = "2026-11-09T10:00:00Z",
-                    updatedAt = "2026-11-09T10:05:00Z",
-                    errorCode = "REGION_RESTRICTED",
                 ),
             ),
         )
