@@ -9,10 +9,11 @@ internal sealed interface CategorySelectorUM {
 
     data object Loading : CategorySelectorUM
 
+    /** @property isApplyVisible a category + sector pair is picked that differs from the applied filter */
     @Immutable
     data class Content(
         val sections: ImmutableList<CategorySelectorSectionUM>,
-        val isEdited: Boolean,
+        val isApplyVisible: Boolean,
         val footer: CategorySelectorFooterUM,
     ) : CategorySelectorUM
 
@@ -59,7 +60,4 @@ internal data class CategoryItemUM(
 )
 
 @Immutable
-internal data class CategorySelectorFooterUM(
-    val onReset: () -> Unit,
-    val onApply: () -> Unit,
-)
+internal data class CategorySelectorFooterUM(val onApply: () -> Unit)
