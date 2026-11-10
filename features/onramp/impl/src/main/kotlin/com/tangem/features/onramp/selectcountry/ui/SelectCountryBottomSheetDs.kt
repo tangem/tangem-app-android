@@ -55,9 +55,9 @@ import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcountry.entity.CountryItemState
 import com.tangem.features.onramp.selectcountry.entity.CountryListUM
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
 @RemoveWithToggle(
