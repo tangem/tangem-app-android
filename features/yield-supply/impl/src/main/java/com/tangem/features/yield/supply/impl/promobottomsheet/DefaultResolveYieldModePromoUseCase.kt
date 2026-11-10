@@ -129,7 +129,7 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
         val token: CryptoCurrency.Token,
         val apy: BigDecimal,
         val fiatAmount: BigDecimal,
-        val chainId: Int?,
+        val chainId: Long?,
     )
 
     private companion object {

@@ -30,7 +30,7 @@ internal class WcEthChainChangedEmitter @Inject constructor(
 ) {
 
     suspend fun emit(topic: String, chainId: CAIP2) {
-        val reference = chainId.reference.toIntOrNull() ?: return
+        val reference = chainId.reference.toLongOrNull() ?: return
 
         if (!awaitSessionCarrying(topic = topic, rawChainId = chainId.raw)) {
             TangemLogger.withTag(WC_TAG).e(
