@@ -5,6 +5,7 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import java.math.BigDecimal
@@ -35,6 +36,7 @@ internal fun currencyStatus(
     currency: CryptoCurrency,
     yieldSupplyStatus: YieldSupplyStatus? = null,
     networkSource: StatusSource = StatusSource.ACTUAL,
+    contributions: List<BalanceContribution> = emptyList(),
 ): CryptoCurrencyStatus {
     val value = CryptoCurrencyStatus.Loaded(
         amount = BigDecimal("10"),
@@ -48,7 +50,7 @@ internal fun currencyStatus(
             NetworkAddress.Address("address", NetworkAddress.Address.Type.Primary),
         ),
         sources = CryptoCurrencyStatus.Sources(networkSource = networkSource),
-        contributions = emptyList(),
+        contributions = contributions,
     )
     return CryptoCurrencyStatus(currency = currency, value = value)
 }
