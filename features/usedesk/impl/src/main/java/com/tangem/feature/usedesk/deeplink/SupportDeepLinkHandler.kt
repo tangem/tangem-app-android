@@ -3,27 +3,24 @@ package com.tangem.feature.usedesk.deeplink
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.utils.popToIfCovered
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.feature.usedesk.api.deeplink.SupportDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class DefaultSupportDeepLinkHandler @AssistedInject constructor(
-    @Assisted coroutineScope: CoroutineScope,
-    appRouter: AppRouter,
-    getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
-) : SupportDeepLinkHandler {
+internal class SupportDeepLinkHandler @Inject constructor(
+    private val appRouter: AppRouter,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+) : DeepLinkHandler {
 
-    init {
-        coroutineScope.launch {
+    override fun handle(request: DeepLinkRequest) {
+        request.scope.launch {
             // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
             val userWallet = getSelectedWalletSyncUseCase().getOrElse { error ->
                 TangemLogger.e("Error on getting user wallet: $error")
@@ -48,11 +45,6 @@ internal class DefaultSupportDeepLinkHandler @AssistedInject constructor(
                 ),
             )
         }
-    }
-
-    @AssistedFactory
-    interface Factory : SupportDeepLinkHandler.Factory {
-        override fun create(coroutineScope: CoroutineScope): DefaultSupportDeepLinkHandler
     }
 
     companion object {

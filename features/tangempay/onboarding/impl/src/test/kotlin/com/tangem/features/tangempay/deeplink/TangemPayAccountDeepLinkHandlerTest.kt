@@ -1,7 +1,9 @@
 package com.tangem.features.tangempay.deeplink
 
+import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
@@ -37,7 +39,7 @@ import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class DefaultTangemPayAccountDeepLinkHandlerTest {
+internal class TangemPayAccountDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
@@ -73,7 +75,7 @@ internal class DefaultTangemPayAccountDeepLinkHandlerTest {
             every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns flowOf(status)
 
             // Act
-            createHandler(scope = this, queryParams = model.queryParams)
+            handle(scope = this, queryParams = model.queryParams)
             advanceUntilIdle()
 
             // Assert
@@ -114,7 +116,7 @@ internal class DefaultTangemPayAccountDeepLinkHandlerTest {
             every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns flowOf(paymentStatus(model.value))
 
             // Act
-            createHandler(scope = this)
+            handle(scope = this)
             advanceUntilIdle()
 
             // Assert
@@ -130,7 +132,7 @@ internal class DefaultTangemPayAccountDeepLinkHandlerTest {
             coEvery { userWalletsListRepository.selectedUserWalletSync() } returns null
 
             // Act
-            createHandler(scope = this)
+            handle(scope = this)
             advanceUntilIdle()
 
             // Assert
@@ -144,7 +146,7 @@ internal class DefaultTangemPayAccountDeepLinkHandlerTest {
             coEvery { userWalletsListRepository.selectedUserWalletSync() } returns lockedWallet()
 
             // Act
-            createHandler(scope = this)
+            handle(scope = this)
             advanceUntilIdle()
 
             // Assert
@@ -157,7 +159,7 @@ internal class DefaultTangemPayAccountDeepLinkHandlerTest {
             every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns emptyFlow()
 
             // Act
-            createHandler(scope = this)
+            handle(scope = this)
             advanceUntilIdle()
 
             // Assert
@@ -181,14 +183,14 @@ internal class DefaultTangemPayAccountDeepLinkHandlerTest {
         )
     }
 
-    private fun createHandler(scope: TestScope, queryParams: Map<String, String> = emptyMap()) =
-        DefaultTangemPayAccountDeepLinkHandler(
-            scope = scope,
-            queryParams = queryParams,
+    private fun handle(scope: TestScope, queryParams: Map<String, String> = emptyMap()) =
+        TangemPayAccountDeepLinkHandler(
             appRouter = appRouter,
             userWalletsListRepository = userWalletsListRepository,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+        ).handle(
+            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = scope, isFromOnNewIntent = false),
         )
 
     private fun unlockedWallet(id: UserWalletId = USER_WALLET_ID): UserWallet = mockk<UserWallet.Hot>(relaxed = true) {

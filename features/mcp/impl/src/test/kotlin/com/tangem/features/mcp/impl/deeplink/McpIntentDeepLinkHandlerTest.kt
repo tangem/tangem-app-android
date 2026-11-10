@@ -1,25 +1,37 @@
 package com.tangem.features.mcp.impl.deeplink
 
+import android.net.Uri
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
+import com.tangem.features.mcp.api.McpFeatureToggles
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 
-internal class DefaultMcpIntentDeepLinkHandlerTest {
+internal class McpIntentDeepLinkHandlerTest {
 
     private val mcpRequestService: McpRequestService = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val mcpFeatureToggles: McpFeatureToggles = mockk()
+
+    private val handler = McpIntentDeepLinkHandler(
+        mcpRequestService = mcpRequestService,
+        analyticsEventHandler = analyticsEventHandler,
+        mcpFeatureToggles = mcpFeatureToggles,
+    )
 
     private val exchangeSource = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE)
     private val sendSource = McpRequest.Intent.Source.Transaction(McpRequest.Intent.Source.Transaction.Type.SEND)
@@ -28,13 +40,26 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(mcpRequestService, analyticsEventHandler)
+        clearMocks(mcpRequestService, analyticsEventHandler, mcpFeatureToggles)
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN mcp toggle WHEN isEnabled read THEN it follows the toggle`(isMcpEnabled: Boolean) {
+        // Arrange
+        every { mcpFeatureToggles.isMcpEnabled } returns isMcpEnabled
+
+        // Act
+        val actual = handler.isEnabled
+
+        // Assert
+        assertThat(actual).isEqualTo(isMcpEnabled)
     }
 
     @Test
-    fun `GIVEN express exchange link WHEN handler created THEN intent request is sent`() {
+    fun `GIVEN express exchange link WHEN handled THEN intent request is sent`() {
         // Act
-        createHandler(queryParams = validParams)
+        handle(queryParams = validParams)
 
         // Assert
         verify(exactly = 1) {
@@ -45,12 +70,12 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["", " "])
-    fun `GIVEN express link without type WHEN handler created THEN it is taken as an exchange`(type: String) {
+    fun `GIVEN express link without type WHEN handled THEN it is taken as an exchange`(type: String) {
         // Arrange
         val params = validParams - "type" + ("type" to type)
 
         // Act
-        createHandler(queryParams = params)
+        handle(queryParams = params)
 
         // Assert
         verify(exactly = 1) {
@@ -60,9 +85,9 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN express link with no type param WHEN handler created THEN it is taken as an exchange`() {
+    fun `GIVEN express link with no type param WHEN handled THEN it is taken as an exchange`() {
         // Act
-        createHandler(queryParams = validParams - "type")
+        handle(queryParams = validParams - "type")
 
         // Assert
         verify(exactly = 1) {
@@ -73,9 +98,9 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["id", "source"])
-    fun `GIVEN missing param WHEN handler created THEN nothing is sent`(missingKey: String) {
+    fun `GIVEN missing param WHEN handled THEN nothing is sent`(missingKey: String) {
         // Act
-        createHandler(queryParams = validParams - missingKey)
+        handle(queryParams = validParams - missingKey)
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
@@ -84,9 +109,9 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["id", "source"])
-    fun `GIVEN blank param WHEN handler created THEN nothing is sent`(blankKey: String) {
+    fun `GIVEN blank param WHEN handled THEN nothing is sent`(blankKey: String) {
         // Act
-        createHandler(queryParams = validParams + (blankKey to " "))
+        handle(queryParams = validParams + (blankKey to " "))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
@@ -94,12 +119,12 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN transaction send link WHEN handler created THEN send intent request is sent`() {
+    fun `GIVEN transaction send link WHEN handled THEN send intent request is sent`() {
         // Arrange
         val params = mapOf("id" to "my_intent_id123", "source" to "transaction", "type" to "send")
 
         // Act
-        createHandler(queryParams = params)
+        handle(queryParams = params)
 
         // Assert
         verify(exactly = 1) {
@@ -110,11 +135,11 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["receive", "SEND", "", " "])
-    fun `GIVEN transaction link of an unsupported or blank type WHEN handler created THEN nothing is sent`(
+    fun `GIVEN transaction link of an unsupported or blank type WHEN handled THEN nothing is sent`(
         type: String,
     ) {
         // Act
-        createHandler(queryParams = mapOf("id" to "my_intent_id123", "source" to "transaction", "type" to type))
+        handle(queryParams = mapOf("id" to "my_intent_id123", "source" to "transaction", "type" to type))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
@@ -122,9 +147,9 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN transaction link with no type param WHEN handler created THEN nothing is sent`() {
+    fun `GIVEN transaction link with no type param WHEN handled THEN nothing is sent`() {
         // Act
-        createHandler(queryParams = mapOf("id" to "my_intent_id123", "source" to "transaction"))
+        handle(queryParams = mapOf("id" to "my_intent_id123", "source" to "transaction"))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
@@ -133,9 +158,9 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["onramp", "staking"])
-    fun `GIVEN intent of an unknown service WHEN handler created THEN nothing is sent`(source: String) {
+    fun `GIVEN intent of an unknown service WHEN handled THEN nothing is sent`(source: String) {
         // Act
-        createHandler(queryParams = mapOf("id" to "my_intent_id123", "source" to source, "type" to "send"))
+        handle(queryParams = mapOf("id" to "my_intent_id123", "source" to source, "type" to "send"))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
@@ -143,9 +168,9 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN express intent of an unsupported operation WHEN handler created THEN nothing is sent`() {
+    fun `GIVEN express intent of an unsupported operation WHEN handled THEN nothing is sent`() {
         // Act
-        createHandler(queryParams = validParams + ("type" to "onramp"))
+        handle(queryParams = validParams + ("type" to "onramp"))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
@@ -153,9 +178,9 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN express intent of an unknown operation WHEN handler created THEN nothing is sent`() {
+    fun `GIVEN express intent of an unknown operation WHEN handled THEN nothing is sent`() {
         // Act
-        createHandler(queryParams = validParams + ("type" to "refund"))
+        handle(queryParams = validParams + ("type" to "refund"))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
@@ -164,7 +189,7 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
     @ParameterizedTest
     @CsvSource("express, exchange", "transaction, send")
-    fun `GIVEN supported intent link WHEN handler created THEN intent received is sent once`(
+    fun `GIVEN supported intent link WHEN handled THEN intent received is sent once`(
         source: String,
         type: String,
     ) {
@@ -173,7 +198,7 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
         val params = mapOf("id" to "my_intent_id123", "source" to source, "type" to type)
 
         // Act
-        createHandler(queryParams = params)
+        handle(queryParams = params)
 
         // Assert
         verify(exactly = 1) { analyticsEventHandler.send(capture(event)) }
@@ -189,9 +214,12 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
     private fun intentReceived(source: McpRequest.Intent.Source) =
         McpIntentAnalyticsEvent.IntentReceived(intentId = "my_intent_id123", source = source)
 
-    private fun createHandler(queryParams: Map<String, String>) = DefaultMcpIntentDeepLinkHandler(
-        queryParams = queryParams,
-        mcpRequestService = mcpRequestService,
-        analyticsEventHandler = analyticsEventHandler,
+    private fun handle(queryParams: Map<String, String>) = handler.handle(
+        DeepLinkRequest(
+            uri = mockk<Uri>(),
+            queryParams = queryParams,
+            scope = mockk<CoroutineScope>(),
+            isFromOnNewIntent = false,
+        ),
     )
 }
