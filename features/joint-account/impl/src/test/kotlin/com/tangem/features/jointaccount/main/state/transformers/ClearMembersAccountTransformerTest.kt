@@ -50,7 +50,7 @@ internal class ClearMembersAccountTransformerTest {
                 ),
             ),
             membersLabel = stringReference("Members"),
-            footer = JointAccountMembersUM.FooterUM(
+            footer = JointAccountMembersUM.FooterUM.Confirm(
                 hint = null,
                 button = JointAccountMembersUM.ConfirmButtonUM(
                     isEnabled = true,
