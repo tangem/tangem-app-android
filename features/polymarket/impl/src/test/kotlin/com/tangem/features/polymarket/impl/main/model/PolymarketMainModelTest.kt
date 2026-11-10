@@ -50,6 +50,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -58,7 +59,10 @@ import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.test.core.getEmittedValues
+import io.mockk.Runs
 import io.mockk.clearMocks
+import io.mockk.just
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -70,6 +74,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -138,6 +143,14 @@ internal class PolymarketMainModelTest {
         every { this@mockk.invoke(any(), any()) } returns sportsState
     }
 
+
+    private val fastTradingBanner = MutableStateFlow<PolymarketFastTradingBanner?>(value = null)
+    private val fastTradingRechecks = slot<Flow<Unit>>()
+    private val fastTradingBannerSource: PolymarketFastTradingBannerSource = mockk {
+        every { observe(any(), capture(fastTradingRechecks)) } returns fastTradingBanner
+        coEvery { refresh(any()) } just Runs
+        coEvery { dismissActivation(any()) } just Runs
+    }
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
@@ -777,6 +790,107 @@ internal class PolymarketMainModelTest {
         verify(exactly = 1) {
             router.push(PolymarketRoute.FastTradingSettings(userWalletId = USER_WALLET_ID), any())
         }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN activate banner WHEN action clicked THEN fast trading settings open for the wallet`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        fastTradingBanner.value = PolymarketFastTradingBanner.Activate
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.fastTradingBanner!!.onActionClick()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(PolymarketRoute.FastTradingSettings(userWalletId = USER_WALLET_ID), any())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN unknown signers banner WHEN action clicked THEN fast trading settings open for the wallet`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            fastTradingBanner.value = PolymarketFastTradingBanner.UnknownSigners
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.fastTradingBanner!!.onActionClick()
+
+            // Assert
+            verify(exactly = 1) {
+                router.push(PolymarketRoute.FastTradingSettings(userWalletId = USER_WALLET_ID), any())
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN activate banner WHEN closed THEN activate dismissal is stored`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        fastTradingBanner.value = PolymarketFastTradingBanner.Activate
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value.fastTradingBanner as PolymarketFastTradingBannerUM.Activate).onCloseClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            fastTradingBannerSource.dismissActivation(USER_WALLET_ID)
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN shown banner WHEN source emits none THEN banner is removed`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        fastTradingBanner.value = PolymarketFastTradingBanner.Activate
+        advanceUntilIdle()
+
+        // Act
+        fastTradingBanner.value = null
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.fastTradingBanner).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model observing banner WHEN resumed THEN a recheck is emitted`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val emissions = getEmittedValues(fastTradingRechecks.captured)
+        val before = emissions.size
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(emissions.size).isEqualTo(before + 1)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `WHEN pulled to refresh THEN fast trading banner source is refreshed for the wallet`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { fastTradingBannerSource.refresh(USER_WALLET_ID) }
         model.onDestroy()
     }
 
@@ -2110,6 +2224,7 @@ internal class PolymarketMainModelTest {
                 featureToggles = featureToggles,
                 collateralCurrencyFactory = mockk(relaxed = true),
             ),
+            fastTradingBannerSource = fastTradingBannerSource,
             polymarketFeatureToggles = featureToggles,
             walletLinkGate = walletLinkGate,
         ).also { model = it }

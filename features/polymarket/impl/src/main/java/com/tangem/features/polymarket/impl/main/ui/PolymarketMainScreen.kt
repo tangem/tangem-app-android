@@ -296,6 +296,7 @@ private fun FeedList(
                     balance = state.balance,
                     isAwaitingFunds = state.isAwaitingFunds,
                     isRegionRestricted = state.isRegionRestricted,
+                    fastTradingBanner = state.fastTradingBanner,
                     positions = positions,
                 )
             }

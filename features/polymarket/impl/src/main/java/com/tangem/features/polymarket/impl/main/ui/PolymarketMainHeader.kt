@@ -47,6 +47,7 @@ import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.common.funding.PredictionAwaitingFundsBanner
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionRestrictedBanner
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
@@ -63,6 +64,7 @@ internal fun PolymarketMainHeader(
     isAwaitingFunds: Boolean,
     modifier: Modifier = Modifier,
     isRegionRestricted: Boolean = false,
+    fastTradingBanner: PolymarketFastTradingBannerUM? = null,
     positions: (@Composable (Modifier) -> Unit)? = null,
 ) {
     Column(
@@ -88,6 +90,13 @@ internal fun PolymarketMainHeader(
 
         if (isAwaitingFunds) {
             PredictionAwaitingFundsBanner(
+                modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp),
+            )
+        }
+
+        fastTradingBanner?.let { banner ->
+            PolymarketFastTradingBanner(
+                state = banner,
                 modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp),
             )
         }
