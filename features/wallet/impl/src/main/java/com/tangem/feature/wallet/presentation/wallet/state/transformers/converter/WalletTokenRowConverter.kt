@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.common.ui.tokens.TokenRowStateConverter
-import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.resourceReference
@@ -16,7 +15,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletContentClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
-import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnHeadline
 import com.tangem.features.earn.api.overview.EarnOverviews
 import java.math.BigDecimal
@@ -62,15 +60,7 @@ internal class WalletTokenRowConverter(
         )
     }
 
-    private fun EarnHeadline.toBadge() = TangemTokenRow.Badge(
-        text = badge,
-        status = if (isActive) badgeAccent.toStatus() else TangemBadge.Status.Neutral,
-    )
-
-    private fun EarnBadgeAccent.toStatus() = when (this) {
-        EarnBadgeAccent.Info -> TangemBadge.Status.Info
-        EarnBadgeAccent.Success -> TangemBadge.Status.Success
-    }
+    private fun EarnHeadline.toBadge() = TangemTokenRow.Badge(text = badge, status = toBadgeStatus())
 
     private fun toPendingOperationBubble(currencyStatus: CryptoCurrencyStatus): TangemTokenRow.MessageBubble? {
         val operation = jointPendingOperations.firstOrNull { it.transfer.currency.id == currencyStatus.currency.id }

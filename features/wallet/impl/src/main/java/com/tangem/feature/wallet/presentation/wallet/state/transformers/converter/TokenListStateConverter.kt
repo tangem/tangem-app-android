@@ -2,11 +2,11 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
 import com.tangem.common.ui.account.TokensListPortfolioItemConverter
-import com.tangem.common.ui.tokens.EarnBadge
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.ui.components.tokenlist.state.PortfolioItemContentUM
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -60,7 +60,9 @@ internal class TokenListStateConverter(
         appCurrency = appCurrency,
         yieldModuleApyMap = yieldModuleApyMap,
         promoCryptoCurrencyStatus = yieldSupplyPromoBannerConverter.convert(params),
-        earnBadgeProvider = { id -> earnOverviews[id]?.headline?.let { EarnBadge(it.badge, it.isActive) } },
+        earnBadgeProvider = { id ->
+            earnOverviews[id]?.headline?.let { TangemBadgeUM(text = it.badge, status = it.toBadgeStatus()) }
+        },
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
         onYieldPromoCloseClick = clickIntents::onYieldPromoCloseClick,

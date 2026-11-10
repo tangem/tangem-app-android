@@ -6,6 +6,8 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -53,7 +55,7 @@ internal class TokenItemStateConverterEarnBadgeTest {
             model: BadgeModel,
         ) {
             // Arrange
-            val converter = converter(earnBadgeProvider = { EarnBadge(text = badgeText, isActive = model.isActive) })
+            val converter = converter(earnBadgeProvider = { TangemBadgeUM(text = badgeText, status = model.status) })
 
             // Act
             val actual = converter.contentTitle(CryptoCurrencyStatus(currency = ethereum, value = model.value))
@@ -64,11 +66,41 @@ internal class TokenItemStateConverterEarnBadgeTest {
         }
 
         private fun provideTestModels() = listOf(
-            BadgeModel(description = "Loaded, active", value = loaded(), isActive = true),
-            BadgeModel(description = "Loaded, inactive", value = loaded(), isActive = false),
-            BadgeModel(description = "Custom, active", value = custom(), isActive = true),
-            BadgeModel(description = "NoQuote, inactive", value = noQuote(), isActive = false),
-            BadgeModel(description = "NoAccount, active", value = noAccount(), isActive = true),
+            BadgeModel("Loaded, active", loaded(), TangemBadge.Status.Success, isActive = true),
+            BadgeModel("Loaded, inactive", loaded(), TangemBadge.Status.Neutral, isActive = false),
+            BadgeModel("Custom, active", custom(), TangemBadge.Status.Info, isActive = true),
+            BadgeModel("NoQuote, inactive", noQuote(), TangemBadge.Status.Neutral, isActive = false),
+            BadgeModel("NoAccount, active", noAccount(), TangemBadge.Status.Success, isActive = true),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BadgeStatuses {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a provider badge with a status WHEN convert THEN only the neutral status is inactive`(
+            model: StatusModel,
+        ) {
+            // Arrange
+            val converter = converter(earnBadgeProvider = { TangemBadgeUM(text = badgeText, status = model.status) })
+
+            // Act
+            val actual = converter.contentTitle(CryptoCurrencyStatus(currency = ethereum, value = loaded()))
+
+            // Assert
+            val expected = expectedTitle(ethereum, earnApy = badgeText, isEarnApyActive = model.isActive)
+            assertThat(actual).isEqualTo(expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            StatusModel(TangemBadge.Status.Neutral, isActive = false),
+            StatusModel(TangemBadge.Status.Info, isActive = true),
+            StatusModel(TangemBadge.Status.Success, isActive = true),
+            StatusModel(TangemBadge.Status.Warning, isActive = true),
+            StatusModel(TangemBadge.Status.Error, isActive = true),
+            StatusModel(TangemBadge.Status.Violet, isActive = true),
         )
     }
 
@@ -109,8 +141,8 @@ internal class TokenItemStateConverterEarnBadgeTest {
             model: NonContentStatusModel,
         ) {
             // Arrange
-            val provider: (CryptoCurrency.ID) -> EarnBadge? = mockk()
-            every { provider(any()) } returns EarnBadge(text = badgeText, isActive = true)
+            val provider: (CryptoCurrency.ID) -> TangemBadgeUM? = mockk()
+            every { provider(any()) } returns TangemBadgeUM(text = badgeText, status = TangemBadge.Status.Success)
             val converter = converter(earnBadgeProvider = provider)
 
             // Act
@@ -218,15 +250,16 @@ internal class TokenItemStateConverterEarnBadgeTest {
             )
     }
 
-    private fun converter(earnBadgeProvider: (CryptoCurrency.ID) -> EarnBadge? = { null }) = TokenItemStateConverter(
-        appCurrency = AppCurrency.Default,
-        earnBadgeProvider = earnBadgeProvider,
-        iconStateProvider = { CurrencyIconState.Loading },
-        subtitleStateProvider = { TokenItemState.SubtitleState.Loading },
-        subtitle2StateProvider = { TokenItemState.Subtitle2State.Loading },
-        fiatAmountStateProvider = { TokenItemState.FiatAmountState.Loading },
-        promoBannerProvider = { TokenItemState.PromoBannerState.Empty },
-    )
+    private fun converter(earnBadgeProvider: (CryptoCurrency.ID) -> TangemBadgeUM? = { null }) =
+        TokenItemStateConverter(
+            appCurrency = AppCurrency.Default,
+            earnBadgeProvider = earnBadgeProvider,
+            iconStateProvider = { CurrencyIconState.Loading },
+            subtitleStateProvider = { TokenItemState.SubtitleState.Loading },
+            subtitle2StateProvider = { TokenItemState.Subtitle2State.Loading },
+            fiatAmountStateProvider = { TokenItemState.FiatAmountState.Loading },
+            promoBannerProvider = { TokenItemState.PromoBannerState.Empty },
+        )
 
     private fun TokenItemStateConverter.contentTitle(status: CryptoCurrencyStatus): TokenItemState.TitleState {
         return (convert(status) as TokenItemState.Content).titleState as TokenItemState.TitleState.Content
@@ -290,9 +323,14 @@ internal class TokenItemStateConverterEarnBadgeTest {
     internal data class BadgeModel(
         val description: String,
         val value: CryptoCurrencyStatus.Value,
+        val status: TangemBadge.Status,
         val isActive: Boolean,
     ) {
         override fun toString(): String = description
+    }
+
+    internal data class StatusModel(val status: TangemBadge.Status, val isActive: Boolean) {
+        override fun toString(): String = status.name
     }
 
     internal data class BalanceStatusModel(val description: String, val value: CryptoCurrencyStatus.Value) {

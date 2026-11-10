@@ -9,6 +9,8 @@ import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -31,6 +33,8 @@ import java.math.BigDecimal
  * Token item state converter from [CryptoCurrencyStatus] to [TokenItemState]
  *
  * @property appCurrency           app currency
+ * @property earnBadgeProvider     earn badge of a currency; any status but [TangemBadge.Status.Neutral] marks an
+ * active earning
  * @property titleStateProvider    title state provider
  * @property subtitleStateProvider subtitle state provider
  * @property onItemClick           callback is invoked when item is clicked
@@ -39,7 +43,7 @@ import java.math.BigDecimal
 class TokenItemStateConverter(
     private val appCurrency: AppCurrency,
     private val yieldModuleApyMap: Map<String, BigDecimal> = emptyMap(),
-    private val earnBadgeProvider: (CryptoCurrency.ID) -> EarnBadge? = { null },
+    private val earnBadgeProvider: (CryptoCurrency.ID) -> TangemBadgeUM? = { null },
     private val promoCryptoCurrencyStatus: CryptoCurrencyStatus? = null,
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
@@ -145,7 +149,7 @@ class TokenItemStateConverter(
     companion object {
         private fun createTitleState(
             currencyStatus: CryptoCurrencyStatus,
-            earnBadgeProvider: (CryptoCurrency.ID) -> EarnBadge?,
+            earnBadgeProvider: (CryptoCurrency.ID) -> TangemBadgeUM?,
         ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
                 is CryptoCurrencyStatus.Loading,
@@ -165,7 +169,7 @@ class TokenItemStateConverter(
                         text = stringReference(currencyStatus.currency.name),
                         hasPending = value.hasCurrentNetworkTransactions,
                         earnApy = earnBadge?.text,
-                        isEarnApyActive = earnBadge?.isActive == true,
+                        isEarnApyActive = earnBadge != null && earnBadge.status != TangemBadge.Status.Neutral,
                     )
                 }
             }
