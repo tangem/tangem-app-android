@@ -2,6 +2,8 @@ package com.tangem.features.feed.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.common.routing.utils.pushIfAbsent
@@ -11,28 +13,19 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetAvailabilityUseCase
-import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class DefaultYieldDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val scope: CoroutineScope,
-    @Assisted private val queryParams: Map<String, String>,
+internal class YieldDeepLinkHandler @Inject constructor(
     private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val yieldSupplyGetAvailabilityUseCase: YieldSupplyGetAvailabilityUseCase,
-) : YieldDeepLinkHandler {
+) : DeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
-
-    private fun handleDeepLink() {
+    override fun handle(request: DeepLinkRequest) {
+        val queryParams = request.queryParams
         val tokenId = queryParams[TOKEN_ID_KEY]?.takeIf { it.isNotBlank() }
         val networkId = queryParams[NETWORK_ID_KEY]?.takeIf { it.isNotBlank() }
 
@@ -42,7 +35,7 @@ internal class DefaultYieldDeepLinkHandler @AssistedInject constructor(
             return
         }
 
-        scope.launch {
+        request.scope.launch {
             val userWallet = getSelectedWalletSyncUseCase().getOrNull()
             if (userWallet == null) {
                 TangemLogger.e("Yield deeplink: no selected user wallet")
@@ -96,14 +89,6 @@ internal class DefaultYieldDeepLinkHandler @AssistedInject constructor(
                 preselectedNetworkId = networkId,
             ),
         )
-    }
-
-    @AssistedFactory
-    interface Factory : YieldDeepLinkHandler.Factory {
-        override fun create(
-            coroutineScope: CoroutineScope,
-            queryParams: Map<String, String>,
-        ): DefaultYieldDeepLinkHandler
     }
 
     companion object {
