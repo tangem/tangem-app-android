@@ -10,7 +10,10 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import com.tangem.features.onramp.selectcountry.model.OnrampSelectCountryModel
+import com.tangem.features.onramp.selectcountry.ui.LegacyOnrampCountryList
+import com.tangem.features.onramp.selectcountry.ui.LegacySelectCountryBottomSheet
 import com.tangem.features.onramp.selectcountry.ui.OnrampCountryList
 import com.tangem.features.onramp.selectcountry.ui.SelectCountryBottomSheet
 import dagger.assisted.Assisted
@@ -20,6 +23,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultSelectCountryComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: SelectCountryComponent.Params,
+    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : SelectCountryComponent, AppComponentContext by appComponentContext {
 
     private val model: OnrampSelectCountryModel = getOrCreateModel(params)
@@ -38,10 +42,23 @@ internal class DefaultSelectCountryComponent @AssistedInject constructor(
                 content = TangemBottomSheetConfigContent.Empty,
             )
         }
-        SelectCountryBottomSheet(
-            config = bottomSheetConfig,
-            content = { OnrampCountryList(state = state, modifier = Modifier.fillMaxSize()) },
-        )
+        if (onrampFeatureToggles.isNewDesignSystemEnabled) {
+            SelectCountryBottomSheet(
+                config = bottomSheetConfig,
+                content = {
+                    OnrampCountryList(
+                        state = state,
+                        onCloseClick = ::dismiss,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                },
+            )
+        } else {
+            LegacySelectCountryBottomSheet(
+                config = bottomSheetConfig,
+                content = { LegacyOnrampCountryList(state = state, modifier = Modifier.fillMaxSize()) },
+            )
+        }
     }
 
     @AssistedFactory
