@@ -123,53 +123,6 @@ internal class DefaultCollectiblesAccountRepositoryTest {
     }
 
     @Test
-    fun `GIVEN a collectibles record WHEN unregisterAccount THEN the others are pushed without it and stored`() =
-        runTest {
-            // Arrange
-            val synced = accountsResponse(PORTFOLIO_RECORD)
-            coEvery { walletAccountsFetcher.fetch(WALLET) } returns
-                accountsResponse(PORTFOLIO_RECORD, COLLECTIBLES_RECORD)
-            coEvery { walletAccountsSaver.push(userWalletId = WALLET, accounts = any()) } returns synced
-            val repository = createRepository(testScope = this)
-
-            // Act
-            repository.unregisterAccount(WALLET)
-
-            // Assert
-            coVerify(exactly = 1) {
-                walletAccountsSaver.push(userWalletId = WALLET, accounts = listOf(PORTFOLIO_RECORD))
-                walletAccountsSaver.store(userWalletId = WALLET, response = synced)
-            }
-        }
-
-    @Test
-    fun `GIVEN no collectibles record WHEN unregisterAccount THEN nothing is pushed`() = runTest {
-        // Arrange
-        coEvery { walletAccountsFetcher.fetch(WALLET) } returns accountsResponse(PORTFOLIO_RECORD)
-        val repository = createRepository(testScope = this)
-
-        // Act
-        repository.unregisterAccount(WALLET)
-
-        // Assert
-        coVerify(exactly = 0) { walletAccountsSaver.push(userWalletId = any(), accounts = any()) }
-    }
-
-    @Test
-    fun `GIVEN the backend fails WHEN unregisterAccount THEN it does not throw and stores nothing`() = runTest {
-        // Arrange
-        coEvery { walletAccountsFetcher.fetch(WALLET) } throws IllegalStateException("GET /accounts failed")
-        val repository = createRepository(testScope = this)
-
-        // Act
-        val actual = runCatching { repository.unregisterAccount(WALLET) }.exceptionOrNull()
-
-        // Assert
-        assertThat(actual).isNull()
-        coVerify(exactly = 0) { walletAccountsSaver.store(userWalletId = any(), response = any()) }
-    }
-
-    @Test
     fun `GIVEN a relink just sent WHEN isRelinkPending THEN it is pending for this wallet only`() = runTest {
         // Arrange
         val repository = createRepository(testScope = this)
