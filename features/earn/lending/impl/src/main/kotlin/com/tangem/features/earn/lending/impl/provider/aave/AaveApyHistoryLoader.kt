@@ -5,8 +5,6 @@ import arrow.core.right
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.yield.supply.models.incentives.YieldAprHistory
 import com.tangem.domain.yield.supply.usecase.GetYieldAprHistoryUseCase
-import com.tangem.features.earn.api.overview.EarnProductRate
-import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
 import com.tangem.features.earn.product.api.product.EarnApyHistory
 import com.tangem.features.earn.product.api.product.EarnApyPoint
@@ -25,7 +23,11 @@ internal class AaveApyHistoryLoader @Inject constructor(
     suspend fun load(asset: LendingAsset, period: EarnPeriod): Either<Throwable, EarnApyHistory> {
         val market = markets.current(asset) ?: return EarnApyHistory(points = emptyList(), average = null).right()
 
-        return getAprHistory(chainId = market.chainId, tokenAddress = asset.weth.contractAddress, days = days(period))
+        return getAprHistory(
+            chainId = market.chainId,
+            tokenAddress = asset.reserveToken.contractAddress,
+            days = days(period),
+        )
             .mapLeft { error -> IllegalStateException("Aave APY history failed: $error") }
             .map { history -> history.toEarnHistory() }
     }
@@ -40,10 +42,7 @@ internal class AaveApyHistoryLoader @Inject constructor(
         val earnPoints = points.map { point ->
             EarnApyPoint(
                 at = point.date.atStartOfDayIn(TimeZone.UTC),
-                rate = EarnProductRate(
-                    fraction = point.totalApyEst.movePointLeft(PERCENT_SCALE),
-                    type = EarnRateType.APY,
-                ),
+                rate = point.totalApyEst.percentToApy(),
             )
         }
         val average = earnPoints.takeIf { it.isNotEmpty() }
@@ -55,7 +54,6 @@ internal class AaveApyHistoryLoader @Inject constructor(
     }
 
     private companion object {
-        const val PERCENT_SCALE = 2
         const val MONTH_DAYS = 30
 
         /** The backend keeps 90 days of history, so a longer period cannot be drawn */

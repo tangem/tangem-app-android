@@ -21,7 +21,7 @@ internal class DefaultAaveAssetResolverTest {
     private val ethereum = currencies.createCoin(Blockchain.Ethereum)
     private val weth = currencies.createToken(
         blockchain = Blockchain.Ethereum,
-        contractAddress = YieldSupplyWrappedNativeFactory.WETH_CONTRACT_ADDRESS,
+        contractAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
         symbol = "WETH",
         decimals = 18,
     )
@@ -30,7 +30,7 @@ internal class DefaultAaveAssetResolverTest {
         every { create(any()) } answers { if (firstArg<Network>() == ethereum.network) weth else null }
     }
 
-    private val resolver = DefaultAaveAssetResolver(wethFactory = wethFactory)
+    private val resolver = DefaultAaveAssetResolver(wrappedNativeFactory = wethFactory)
 
     @Test
     fun `GIVEN ETH coin on mainnet WHEN resolve THEN asset wraps it into WETH`() {
@@ -49,6 +49,31 @@ internal class DefaultAaveAssetResolverTest {
 
         // Assert
         assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN coin asset WHEN reserveToken THEN its wrapped token`() {
+        // Arrange
+        val asset = LendingAsset(currency = ethereum, wrappedToken = weth)
+
+        // Act
+        val actual = asset.reserveToken
+
+        // Assert
+        assertThat(actual).isEqualTo(weth)
+    }
+
+    @Test
+    fun `GIVEN token asset without a wrapper WHEN reserveToken THEN the token itself`() {
+        // Arrange
+        val usdc = currencies.createToken(Blockchain.Ethereum, symbol = "USDC")
+        val asset = LendingAsset(currency = usdc, wrappedToken = null)
+
+        // Act
+        val actual = asset.reserveToken
+
+        // Assert
+        assertThat(actual).isEqualTo(usdc)
     }
 
     private fun provideTestModels(): List<CryptoCurrency> = listOf(
