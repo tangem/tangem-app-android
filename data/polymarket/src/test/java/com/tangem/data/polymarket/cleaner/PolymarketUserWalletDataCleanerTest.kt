@@ -288,6 +288,19 @@ internal class PolymarketUserWalletDataCleanerTest {
     }
 
     @Test
+    fun `GIVEN a session key fails to delete WHEN clear THEN its banner dismissals are still cleared`() = runTest {
+        // Arrange
+        coEvery { sessionKeyStore.delete(WALLET_A) } returns
+            PolymarketSessionKeyError.Failure(IllegalStateException("keystore unavailable")).left()
+
+        // Act
+        cleaner.clear(listOf(WALLET_A))
+
+        // Assert
+        coVerify(exactly = 1) { fastTradingBannerStore.clear(WALLET_A) }
+    }
+
+    @Test
     fun `GIVEN a session key fails to delete WHEN clear THEN the other wallets are still cleared`() = runTest {
         // Arrange
         coEvery { sessionKeyStore.delete(WALLET_A) } returns
@@ -298,7 +311,6 @@ internal class PolymarketUserWalletDataCleanerTest {
 
         // Assert
         coVerify(exactly = 1) { sessionKeyStore.delete(WALLET_B) }
-        coVerify(exactly = 1) { fastTradingBannerStore.clear(WALLET_A) }
         coVerify(exactly = 1) { credentialsStore.clear(WALLET_B) }
     }
 
