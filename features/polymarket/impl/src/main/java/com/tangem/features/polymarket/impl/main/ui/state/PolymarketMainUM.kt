@@ -28,4 +28,5 @@ internal data class PolymarketMainUM(
     val pendingScrollPosition: PolymarketFeedScrollPosition? = null,
     val isAwaitingFunds: Boolean = false,
     val isRegionRestricted: Boolean = false,
+    val isFastTradingSettingsAvailable: Boolean = false,
 )
