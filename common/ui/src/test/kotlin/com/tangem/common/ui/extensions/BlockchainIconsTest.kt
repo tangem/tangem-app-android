@@ -81,6 +81,7 @@ internal class BlockchainIconsTest {
                 Blockchain.InternetComputer -> R.drawable.img_icp_22
                 Blockchain.Joystream -> R.drawable.img_joystream_22
                 Blockchain.Kaspa, Blockchain.KaspaTestnet -> R.drawable.img_kaspa_22
+                Blockchain.Katana, Blockchain.KatanaTestnet -> R.drawable.img_katana_22
                 Blockchain.Kava, Blockchain.KavaTestnet -> R.drawable.img_kava_22
                 Blockchain.Koinos, Blockchain.KoinosTestnet -> R.drawable.img_koinos_22
                 Blockchain.Kusama -> R.drawable.img_kusama_22
@@ -212,6 +213,7 @@ internal class BlockchainIconsTest {
                 Blockchain.InternetComputer -> R.drawable.ic_icp_22
                 Blockchain.Joystream -> R.drawable.ic_joystream_22
                 Blockchain.Kaspa, Blockchain.KaspaTestnet -> R.drawable.ic_kaspa_22
+                Blockchain.Katana, Blockchain.KatanaTestnet -> R.drawable.ic_katana_22
                 Blockchain.Kava, Blockchain.KavaTestnet -> R.drawable.ic_kava_22
                 Blockchain.Koinos, Blockchain.KoinosTestnet -> R.drawable.ic_koinos_22
                 Blockchain.Kusama -> R.drawable.ic_kusama_16

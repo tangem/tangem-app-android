@@ -46,5 +46,9 @@
     {
         "name": "zeniq",
         "version": "6.9"
+    },
+    {
+        "name": "katana",
+        "version": "6.9"
     }
 ]
