@@ -17,6 +17,7 @@ internal object AccountFeeConverter : Converter<FeesResponse.Fee, AccountFee?> {
             calculationType = FeeCalculationType.fromString(value.calculationType),
             amount = value.amount ?: return null,
             currency = value.currency?.takeIf(String::isNotBlank) ?: return null,
+            fixedAmount = value.fixedAmount,
         )
     }
 }

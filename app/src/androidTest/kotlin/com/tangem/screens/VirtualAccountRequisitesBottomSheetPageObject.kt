@@ -34,6 +34,16 @@ class VirtualAccountRequisitesBottomSheetPageObject(semanticsProvider: Semantics
         useUnmergedTree = true
     }
 
+    val minimumDepositTitle: KNode = child {
+        hasTestTag(VirtualAccountRequisitesBottomSheetTestTags.MINIMUM_DEPOSIT_TITLE)
+        useUnmergedTree = true
+    }
+
+    val minimumDepositValue: KNode = child {
+        hasTestTag(VirtualAccountRequisitesBottomSheetTestTags.MINIMUM_DEPOSIT_VALUE)
+        useUnmergedTree = true
+    }
+
     val accountDetailsTitle: KNode = child {
         hasText(getResourceString(CoreResR.string.tangempay_va_account_details))
         useUnmergedTree = true

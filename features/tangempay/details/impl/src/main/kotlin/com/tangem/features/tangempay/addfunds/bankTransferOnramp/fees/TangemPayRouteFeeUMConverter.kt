@@ -6,7 +6,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.default
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
-import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.tangempay.model.BankCredentials
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
@@ -35,10 +36,14 @@ internal object TangemPayRouteFeeUMConverter : Converter<BankCredentials, Tangem
     private fun BankCredentials.toFeeRow(): TangemPayOnrampFeesUM.FeeRow? {
         val railName = rail ?: return null
         val fee = depositFee ?: return null
-        val value = when (fee.type) {
-            BankCredentials.DepositFee.Type.FLAT -> fee.amount.formatFiatAmount(depositCurrencyCode)
-            BankCredentials.DepositFee.Type.PERCENTAGE -> fee.amount.formatPercentageFee()
-            BankCredentials.DepositFee.Type.UNKNOWN -> return null
+        val currencyCode = fee.currency ?: depositCurrencyCode
+        val value = when (fee.calculationType) {
+            FeeCalculationType.FIXED -> fee.amount.formatFiatAmount(currencyCode)
+            FeeCalculationType.PERCENTAGE -> formatPercentageFee(
+                percentage = fee.amount,
+                fixedAmount = fee.fixedAmount,
+                currencyCode = currencyCode,
+            )
         }
         return TangemPayOnrampFeesUM.FeeRow(type = railName, title = stringReference(railName), value = value)
     }

@@ -10,4 +10,5 @@ data class AccountFee(
     val calculationType: FeeCalculationType,
     val amount: BigDecimal,
     val currency: String,
+    val fixedAmount: BigDecimal? = null,
 )
