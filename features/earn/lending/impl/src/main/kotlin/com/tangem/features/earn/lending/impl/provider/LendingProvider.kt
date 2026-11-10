@@ -42,10 +42,11 @@ internal interface LendingProvider {
 }
 
 /**
- * @property wrappedToken the token the provider holds the coin as; its balance may already include the position
+ * @property wrappedToken the token the provider holds a coin as; its balance may already include the position. Null when
+ * the provider holds [currency] as is
  */
 internal data class LendingAsset(
-    val currency: CryptoCurrency.Coin,
+    val currency: CryptoCurrency,
     val wrappedToken: CryptoCurrency.Token?,
 )
 

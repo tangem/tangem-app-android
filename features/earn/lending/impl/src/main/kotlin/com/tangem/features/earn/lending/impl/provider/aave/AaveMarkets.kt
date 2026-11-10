@@ -13,9 +13,9 @@ internal class AaveMarkets @Inject constructor(
     private val yieldSupplyRepository: YieldSupplyRepository,
 ) {
 
-    /** The WETH market from the yield backend; null until the backend lists it */
+    /** The reserve market from the yield backend; null until the backend lists it */
     fun observe(asset: LendingAsset): Flow<YieldMarketToken?> {
-        val key = asset.weth.yieldSupplyKey()
+        val key = asset.reserveToken.yieldSupplyKey()
         return yieldSupplyRepository.getMarketsFlow()
             .map { markets -> markets.firstOrNull { it.yieldSupplyKey == key } }
     }

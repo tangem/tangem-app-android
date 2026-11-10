@@ -18,8 +18,6 @@ import com.tangem.domain.yield.supply.models.status.findFor
 import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
 import com.tangem.domain.yield.supply.status.YieldModuleStatusProducer
 import com.tangem.domain.yield.supply.status.YieldModuleStatusSupplier
-import com.tangem.features.earn.api.overview.EarnProductRate
-import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
 import com.tangem.features.earn.lending.impl.provider.LendingDepositGate
 import com.tangem.features.earn.lending.impl.provider.LendingMarket
@@ -44,7 +42,7 @@ import kotlinx.coroutines.coroutineScope
 import java.math.BigDecimal
 import javax.inject.Inject
 
-/** Lending on top of the Yield Module, where the coin is held in Aave as WETH */
+/** Lending on top of the Yield Module, where a coin is held in Aave as its wrapped token */
 @Suppress("LongParameterList")
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class AaveLendingProvider @Inject constructor(
@@ -75,8 +73,8 @@ internal class AaveLendingProvider @Inject constructor(
 
         val isSupported = yieldSupplyRepository.isYieldSupplySupported(userWalletId, asset.currency)
 
-        // Re-read on every network update of the wallet rather than on a timer. The wallet refresh reads WETH only when
-        // it is in the portfolio, so Lending asks for its status itself
+        // Re-read on every network update of the wallet rather than on a timer. The wallet refresh reads the reserve
+        // token only when it is in the portfolio, so Lending asks for its status itself
         val onChain = networkStatusSupplier(SingleNetworkStatusProducer.Params(userWalletId, asset.currency.network))
             .mapLatest {
                 coroutineScope {
@@ -117,12 +115,12 @@ internal class AaveLendingProvider @Inject constructor(
         apyHistoryLoader.load(asset, period)
 
     private suspend fun fetchStatus(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit> =
-        statusFetcher(YieldModuleStatusFetcher.Params(userWalletId = userWalletId, tokens = setOf(asset.weth)))
-            .onLeft { TangemLogger.e("Aave WETH status fetch failed", it) }
+        statusFetcher(YieldModuleStatusFetcher.Params(userWalletId = userWalletId, tokens = setOf(asset.reserveToken)))
+            .onLeft { TangemLogger.e("Aave reserve status fetch failed", it) }
 
     private fun observeStatus(userWalletId: UserWalletId, asset: LendingAsset): Flow<YieldModuleStatus?> =
         statusSupplier(YieldModuleStatusProducer.Params(userWalletId))
-            .map { statuses -> statuses.findFor(asset.weth) }
+            .map { statuses -> statuses.findFor(asset.reserveToken) }
             .onStart { emit(null) }
             .distinctUntilChanged()
 
@@ -138,7 +136,7 @@ internal class AaveLendingProvider @Inject constructor(
         val liquidity = read?.withdrawLiquidity
 
         return LendingMarket(
-            rate = market?.let { EarnProductRate(it.effectiveApy.movePointLeft(PERCENT_SCALE), EarnRateType.APY) },
+            rate = market?.effectiveApy?.percentToApy(),
             isOpen = isSupported && market?.isActive == true,
             deposit = read?.let { status.depositGate(it.toState()) } ?: chain.unreadGate(),
             position = position?.let(::LendingPosition),
@@ -150,7 +148,7 @@ internal class AaveLendingProvider @Inject constructor(
 
     /**
      * A failed fetch leaves no trace in the status store for a token it has never held, so without this flag a missing
-     * WETH status would look like a status still on its way
+     * reserve status would look like a status still on its way
      */
     private data class StatusRead(val status: YieldModuleStatus?, val isFetchFailed: Boolean) {
 
@@ -179,9 +177,5 @@ internal class AaveLendingProvider @Inject constructor(
         companion object {
             val Initial = OnChainState(read = null, source = StatusSource.CACHE)
         }
-    }
-
-    private companion object {
-        const val PERCENT_SCALE = 2
     }
 }

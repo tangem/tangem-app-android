@@ -6,14 +6,14 @@ import com.tangem.features.earn.lending.impl.provider.LendingDepositGate
 import com.tangem.features.earn.lending.impl.provider.LendingProviderState
 import java.math.BigDecimal
 
-/** What is read from the chain on each network update; the WETH status comes separately from its supplier */
+/** What is read from the chain on each network update; the reserve status comes separately from its supplier */
 internal data class AaveOnChainRead(
     val version: YieldModuleVersionStatus,
     val withdrawLiquidity: BigDecimal?,
 )
 
 /**
- * @property status           WETH in the user's Yield Module; null until it is read
+ * @property status           the reserve in the user's Yield Module; null until it is read
  * @property withdrawLiquidity null when the pool liquidity could not be read: a withdrawal is capped by the position only
  */
 internal data class AaveModuleRead(
@@ -25,7 +25,7 @@ internal data class AaveModuleRead(
     override val planKey: String
         get() = toState().toString()
 
-    /** The first matching row wins: the module version goes before the WETH status */
+    /** The first matching row wins: the module version goes before the reserve status */
     fun toState(): AaveModuleState = when (version) {
         is YieldModuleVersionStatus.Indeterminate -> AaveModuleState.ReadFailed
         is YieldModuleVersionStatus.NotDeployed -> AaveModuleState.NotDeployed
@@ -49,7 +49,7 @@ internal sealed interface AaveModuleState {
 
     data object UpgradeUnavailable : AaveModuleState
 
-    /** The module is up to date, but the WETH status has not arrived yet */
+    /** The module is up to date, but the reserve status has not arrived yet */
     data object StatusUnknown : AaveModuleState
 
     data object NeedsActivation : AaveModuleState

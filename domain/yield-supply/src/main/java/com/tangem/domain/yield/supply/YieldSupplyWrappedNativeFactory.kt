@@ -8,13 +8,4 @@ interface YieldSupplyWrappedNativeFactory {
 
     /** @return null when the wrapped native token of [network] is not known */
     fun create(network: Network): CryptoCurrency.Token?
-
-    companion object {
-        /** WETH9: the module recognises WETH by this address, not by the symbol */
-        const val WETH_CONTRACT_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-        const val WETH_SYMBOL = "WETH"
-        const val WETH_NAME = "WETH"
-        const val WETH_DECIMALS = 18
-        val WETH_RAW_ID = CryptoCurrency.RawID("weth")
-    }
 }

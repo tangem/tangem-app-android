@@ -36,6 +36,6 @@ internal class AaveModuleReader @Inject constructor(
 
     /** Without the pool liquidity a withdrawal is capped by the position only, so its failure is not fatal */
     private suspend fun readLiquidity(userWalletId: UserWalletId, asset: LendingAsset) = runSuspendCatching {
-        yieldTransactions.getWithdrawLiquidity(userWalletId, asset.weth)
+        yieldTransactions.getWithdrawLiquidity(userWalletId, asset.reserveToken)
     }.getOrNull()
 }

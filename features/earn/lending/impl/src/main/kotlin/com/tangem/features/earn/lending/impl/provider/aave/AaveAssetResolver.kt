@@ -13,18 +13,20 @@ internal interface AaveAssetResolver {
 }
 
 internal class DefaultAaveAssetResolver @Inject constructor(
-    private val wethFactory: YieldSupplyWrappedNativeFactory,
+    private val wrappedNativeFactory: YieldSupplyWrappedNativeFactory,
 ) : AaveAssetResolver {
 
     override fun resolve(currency: CryptoCurrency): LendingAsset? {
         // A joint account is a Safe contract and owns no Yield Module
         if (currency !is CryptoCurrency.Coin || currency.isJoint) return null
-        val weth = wethFactory.create(currency.network) ?: return null
+        val wrappedToken = wrappedNativeFactory.create(currency.network) ?: return null
 
-        return LendingAsset(currency = currency, wrappedToken = weth)
+        return LendingAsset(currency = currency, wrappedToken = wrappedToken)
     }
 }
 
-/** The reserve in the module is held in WETH, so an Aave asset always has it */
-internal val LendingAsset.weth: CryptoCurrency.Token
-    get() = checkNotNull(wrappedToken) { "Aave asset without WETH: ${currency.id}" }
+/** The Aave reserve the deposit goes to: the wrapped token for a coin, the token itself otherwise */
+internal val LendingAsset.reserveToken: CryptoCurrency.Token
+    get() = checkNotNull(
+        wrappedToken ?: currency as? CryptoCurrency.Token,
+    ) { "Aave coin without a wrapper: ${currency.id}" }
