@@ -405,6 +405,7 @@ internal class AaveLendingProviderTest {
         isInitialized = true,
         isAllowedToSpend = true,
         effectiveProtocolBalance = BigDecimal(balance),
+        effectiveBalance = null,
         source = StatusSource.ACTUAL,
     )
 
