@@ -17,7 +17,6 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
-import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
@@ -65,7 +64,6 @@ internal class CollectiblesMainModelTest {
     private val router: Router = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase = mockk()
     private val createOrReactivateUseCase: CreateOrReactivateCollectiblesAccountUseCase = mockk()
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
     private val accountRepository: CollectiblesAccountRepository = mockk()
@@ -90,7 +88,6 @@ internal class CollectiblesMainModelTest {
             router,
             messageSender,
             userWalletsListRepository,
-            closeCollectiblesVaultUseCase,
             createOrReactivateUseCase,
             accountStatusSupplier,
             accountRepository,
@@ -356,81 +353,6 @@ internal class CollectiblesMainModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class CloseAccount {
-
-        @Test
-        fun `GIVEN the vault closes WHEN close account clicked THEN the feature is popped`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            coEvery { closeCollectiblesVaultUseCase(coldWallet) } returns Unit.right()
-
-            // Act
-            model.uiState.value.menu.items.single { it.id == "close_account" }.onClick()
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) { router.pop(onComplete = any()) }
-            assertThat(model.uiState.value.menu.isShown).isFalse()
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN another wallet is selected WHEN close account clicked THEN the screen's wallet is closed`() =
-            runTest {
-                // Arrange
-                val model = createModel(testScope = this)
-                coEvery { closeCollectiblesVaultUseCase(any()) } returns Unit.right()
-
-                // Act
-                model.uiState.value.menu.items.single { it.id == "close_account" }.onClick()
-                advanceUntilIdle()
-
-                // Assert
-                coVerify(exactly = 1) { closeCollectiblesVaultUseCase(coldWallet) }
-                coVerify(exactly = 0) { closeCollectiblesVaultUseCase(selectedWallet) }
-                model.onDestroy()
-            }
-
-        @Test
-        fun `GIVEN the card refuses WHEN close account clicked THEN the account is kept`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            coEvery { closeCollectiblesVaultUseCase(coldWallet) } returns
-                CollectiblesAccountError.CardError(code = 50002, message = "50002").left()
-
-            // Act
-            model.uiState.value.menu.items.single { it.id == "close_account" }.onClick()
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 0) { router.pop(onComplete = any()) }
-            verify(exactly = 0) { messageSender.send(any()) }
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN the chain refuses WHEN close account clicked THEN a message is shown and the account is kept`() =
-            runTest {
-                // Arrange
-                val model = createModel(testScope = this)
-                coEvery { closeCollectiblesVaultUseCase(coldWallet) } returns
-                    CollectiblesAccountError.Vault(
-                        GachaVaultError.NetworkUnsupported,
-                    ).left()
-
-                // Act
-                model.uiState.value.menu.items.single { it.id == "close_account" }.onClick()
-                advanceUntilIdle()
-
-                // Assert
-                verify(exactly = 0) { router.pop(onComplete = any()) }
-                verify(exactly = 1) { messageSender.send(any()) }
-                model.onDestroy()
-            }
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Relink {
 
         @Test
@@ -622,7 +544,6 @@ internal class CollectiblesMainModelTest {
             router = router,
             messageSender = messageSender,
             userWalletsListRepository = userWalletsListRepository,
-            closeCollectiblesVaultUseCase = closeCollectiblesVaultUseCase,
             createOrReactivateCollectiblesAccountUseCase = createOrReactivateUseCase,
             collectiblesAccountStatusSupplier = accountStatusSupplier,
             collectiblesAccountRepository = accountRepository,
