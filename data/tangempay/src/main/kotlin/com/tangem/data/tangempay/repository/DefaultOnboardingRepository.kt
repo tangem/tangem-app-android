@@ -26,7 +26,6 @@ import com.tangem.spend.datasource.tangempay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.tangempay.TangemPayEligibilityType
@@ -43,6 +42,7 @@ import com.tangem.domain.tangempay.model.CustomerOrderRequest
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.model.TangemPayInitialCredentials
 import com.tangem.domain.tangempay.order.OrderPoller
 import com.tangem.domain.tangempay.order.OrdersStore

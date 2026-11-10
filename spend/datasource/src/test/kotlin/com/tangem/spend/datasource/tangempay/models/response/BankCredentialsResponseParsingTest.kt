@@ -6,6 +6,7 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class BankCredentialsResponseParsingTest {
@@ -27,7 +28,9 @@ internal class BankCredentialsResponseParsingTest {
         // Arrange
         val raw = """{"result":[{$BASE_FIELDS,"rail":"ACH"},""" +
             """{"type":"fiat","account_number":"646180157000000004","rail":"SPEI",""" +
-            """"fee":{"type":"variable","amount":"1.00"},"deposit_limit":{"amount":10000,"period":"day",""" +
+            """"fee":{"type":"variable","amount":"1.00"},"deposit_fee":{"type":"SPEI_ONRAMP",""" +
+            """"group":"ONRAMP","name":"SPEI","calculation_type":"PERCENTAGE","amount":1.00,"fixed_amount":10,""" +
+            """"currency":"MXN","description":"SPEI onramp fee"},"amount_limits":{"min":2,"max":null,""" +
             """"currency":"USD"},"exchange_rate":{"rate":18.541575,"base":"USD","quote":"MXN"}},""" +
             """{"type":"onchain","address":"0x5aE3fA2b1c9D8e7F6a5B4c3D2e1F0a9B8c7D6e5F"}],"error":null}"""
 
@@ -42,8 +45,18 @@ internal class BankCredentialsResponseParsingTest {
                     type = "fiat",
                     accountNumber = "646180157000000004",
                     rail = "SPEI",
-                    fee = BankCredentialsResponse.Fee(type = "variable", amount = "1.00"),
-                    depositLimit = BankCredentialsResponse.DepositLimit(amount = "10000", period = "day"),
+                    fee = fee(type = "variable", amount = "1.00"),
+                    depositFee = fee(
+                        type = "SPEI_ONRAMP",
+                        group = "ONRAMP",
+                        name = "SPEI",
+                        calculationType = "PERCENTAGE",
+                        amount = "1.00",
+                        fixedAmount = "10",
+                        currency = "MXN",
+                        description = "SPEI onramp fee",
+                    ),
+                    amountLimits = AmountLimitsResponse(min = BigDecimal("2"), max = null, currency = "USD"),
                     exchangeRate = BankCredentialsResponse.ExchangeRate(
                         rate = "18.541575",
                         base = "USD",
@@ -65,8 +78,29 @@ internal class BankCredentialsResponseParsingTest {
                 result = baseResult().copy(
                     rail = "ACH",
                     transferMessage = "REF-A1B2C3D4",
-                    fee = BankCredentialsResponse.Fee(type = "flat", amount = "1.00"),
+                    fee = fee(type = "flat", amount = "1.00"),
                     depositLimit = BankCredentialsResponse.DepositLimit(amount = "10000", period = "day"),
+                ),
+            ),
+        ),
+        ParsingModel(
+            raw = """{"result":{$BASE_FIELDS,"rail":"ACH","fee":{"type":"ACH_ONRAMP","group":"ONRAMP",""" +
+                """"name":"ACH","calculation_type":"FIXED","amount":0.00,"fixed_amount":null,"currency":"USD",""" +
+                """"description":"ACH onramp fee"},"amount_limits":{"min":2,"max":null,"currency":"USD"}},""" +
+                """"error":null}""",
+            expected = BankCredentialsResponse(
+                result = baseResult().copy(
+                    rail = "ACH",
+                    fee = fee(
+                        type = "ACH_ONRAMP",
+                        group = "ONRAMP",
+                        name = "ACH",
+                        calculationType = "FIXED",
+                        amount = "0.00",
+                        currency = "USD",
+                        description = "ACH onramp fee",
+                    ),
+                    amountLimits = AmountLimitsResponse(min = BigDecimal("2"), max = null, currency = "USD"),
                 ),
             ),
         ),
@@ -77,7 +111,7 @@ internal class BankCredentialsResponseParsingTest {
             expected = BankCredentialsResponse(
                 result = baseResult().copy(
                     rail = "ACH",
-                    fee = BankCredentialsResponse.Fee(type = "flat", amount = "0.00"),
+                    fee = fee(type = "flat", amount = "0.00"),
                     depositLimit = BankCredentialsResponse.DepositLimit(amount = "10000", period = "day"),
                     exchangeRate = BankCredentialsResponse.ExchangeRate(rate = "17.25", base = "USD", quote = "MXN"),
                 ),
@@ -89,7 +123,7 @@ internal class BankCredentialsResponseParsingTest {
         ),
         ParsingModel(
             raw = """{"result":{$BASE_FIELDS,"rail":null,"transfer_message":null,"fee":null,""" +
-                """"deposit_limit":null},"error":null}""",
+                """"deposit_fee":null,"deposit_limit":null,"amount_limits":null},"error":null}""",
             expected = BankCredentialsResponse(result = baseResult()),
         ),
         ParsingModel(
@@ -109,7 +143,9 @@ internal class BankCredentialsResponseParsingTest {
         rail = null,
         transferMessage = null,
         fee = null,
+        depositFee = null,
         depositLimit = null,
+        amountLimits = null,
         exchangeRate = null,
     )
 
@@ -124,8 +160,32 @@ internal class BankCredentialsResponseParsingTest {
         rail = null,
         transferMessage = null,
         fee = null,
+        depositFee = null,
         depositLimit = null,
+        amountLimits = null,
         exchangeRate = null,
+    )
+
+    @Suppress("LongParameterList")
+    private fun fee(
+        type: String? = null,
+        group: String? = null,
+        name: String? = null,
+        calculationType: String? = null,
+        amount: String,
+        fixedAmount: String? = null,
+        currency: String? = null,
+        description: String? = null,
+    ) = FeesResponse.Fee(
+        type = type,
+        group = group,
+        name = name,
+        paymentMethodId = null,
+        calculationType = calculationType,
+        amount = BigDecimal(amount),
+        fixedAmount = fixedAmount?.let(::BigDecimal),
+        currency = currency,
+        description = description,
     )
 
     data class ParsingModel(val raw: String, val expected: BankCredentialsResponse)

@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.addfunds.bankTransferOnramp.details
 
 import androidx.annotation.StringRes
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsScreenUM.RequisiteUM
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.RequisiteField
 import com.tangem.features.tangempay.details.impl.R

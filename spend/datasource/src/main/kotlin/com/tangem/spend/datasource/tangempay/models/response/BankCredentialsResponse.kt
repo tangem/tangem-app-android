@@ -21,15 +21,12 @@ data class BankCredentialsResponse(
         @SerialName("routing_number") val routingNumber: String?,
         @SerialName("rail") val rail: String?,
         @SerialName("transfer_message") val transferMessage: String?,
-        @SerialName("fee") val fee: Fee?,
+        @Deprecated("Sent for apps up to 6.8, replaced by depositFee")
+        @SerialName("fee") val fee: FeesResponse.Fee?,
+        @SerialName("deposit_fee") val depositFee: FeesResponse.Fee?,
         @SerialName("deposit_limit") val depositLimit: DepositLimit?,
+        @SerialName("amount_limits") val amountLimits: AmountLimitsResponse?,
         @SerialName("exchange_rate") val exchangeRate: ExchangeRate?,
-    )
-
-    @Serializable
-    data class Fee(
-        @SerialName("type") val type: String?,
-        @SerialName("amount") val amount: String?,
     )
 
     @Serializable
