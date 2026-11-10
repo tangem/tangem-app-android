@@ -25,8 +25,6 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.ds.message.TangemMessage
-import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -43,7 +41,6 @@ import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
 import com.tangem.features.onramp.main.entity.OnrampOfferUM
 import com.tangem.features.onramp.main.ui.TimingBlock
 import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
-import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -56,7 +53,7 @@ internal fun PaymentMethodsContent(methods: ImmutableList<AllOffersPaymentMethod
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (notification != null) {
-            TangemMessage(config = notification.config)
+            Notification(config = notification.config)
             SpacerH(8.dp)
         }
         methods.fastForEach { method ->
@@ -70,69 +67,26 @@ internal fun PaymentMethodsContent(methods: ImmutableList<AllOffersPaymentMethod
 
 @Composable
 private fun PaymentMethod(methodUM: AllOffersPaymentMethodUM, modifier: Modifier = Modifier) {
-    TangemSurface(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD),
-        color = TangemTheme.colors3.bg.secondary,
-        shape = RoundedCornerShape(14.dp),
-        onClick = methodUM.methodConfig.onClick,
-    ) {
-        PaymentMethodBody(
-            methodUM = methodUM,
-            modifier = Modifier.fillMaxWidth().padding(PaymentMethodContentPadding),
-        )
-    }
-}
-
-@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
-@Composable
-internal fun LegacyPaymentMethodsContent(
-    methods: ImmutableList<AllOffersPaymentMethodUM>,
-    notification: NotificationUM?,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        if (notification != null) {
-            Notification(config = notification.config)
-            SpacerH(8.dp)
-        }
-        methods.fastForEach { method ->
-            key(method.methodConfig.method.id) {
-                LegacyPaymentMethod(methodUM = method)
-                SpacerH(8.dp)
-            }
-        }
-    }
-}
-
-@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED")
-@Composable
-private fun LegacyPaymentMethod(methodUM: AllOffersPaymentMethodUM, modifier: Modifier = Modifier) {
-    PaymentMethodBody(
-        methodUM = methodUM,
-        modifier = modifier
-            .fillMaxWidth()
-            .background(color = TangemTheme.colors3.bg.secondary, shape = RoundedCornerShape(14.dp))
+            .background(
+                color = TangemTheme.colors3.bg.secondary,
+                shape = RoundedCornerShape(14.dp),
+            )
             .clickable(
                 indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = methodUM.methodConfig.onClick,
             )
-            .padding(PaymentMethodContentPadding)
+            .padding(
+                start = 12.dp,
+                end = 12.dp,
+                top = 14.dp,
+                bottom = 12.dp,
+            )
             .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD),
-    )
-}
-
-private val PaymentMethodContentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 14.dp, bottom = 12.dp)
-
-@Composable
-private fun PaymentMethodBody(methodUM: AllOffersPaymentMethodUM, modifier: Modifier = Modifier) {
-    Row(modifier = modifier) {
+    ) {
         PaymentMethodIcon(
             modifier = Modifier
                 .size(36.dp)
