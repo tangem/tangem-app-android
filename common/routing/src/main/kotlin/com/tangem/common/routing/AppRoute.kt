@@ -21,6 +21,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
@@ -641,6 +642,31 @@ sealed class AppRoute(val path: String) : Route {
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
     ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+
+    @Serializable
+    data class EarnEntry(
+        val userWalletId: UserWalletId,
+        val cryptoCurrency: CryptoCurrency,
+        val source: Source,
+        val start: Start = Start.Auto,
+    ) : AppRoute(path = "/earn_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}") {
+
+        @Serializable
+        enum class Source { TokenPage, Markets, Deeplink, EarnBanner, YieldSheet, ForYou }
+
+        @Serializable
+        sealed interface Start {
+
+            @Serializable
+            data object Auto : Start
+
+            @Serializable
+            data class Picker(val preselected: EarnProductId? = null) : Start
+
+            @Serializable
+            data class Info(val productId: EarnProductId) : Start
+        }
+    }
 
     @Serializable
     data class Polymarket(

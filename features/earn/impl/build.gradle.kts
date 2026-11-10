@@ -15,6 +15,9 @@ dependencies {
     api(projects.features.earn.api)
     api(projects.features.earn.product.api)
 
+    /** Common */
+    implementation(projects.common.routing)
+
     /** Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
