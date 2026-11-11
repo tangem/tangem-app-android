@@ -39,7 +39,7 @@ internal class StartOrderUseCaseTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(orderRepository, orderPoller)
-        every { orderPoller.poll(any()) } returns flowOf(OrderPollingState.Pending)
+        every { orderPoller.startPolling(any()) } returns flowOf(OrderPollingState.Pending)
     }
 
     @Test
@@ -61,7 +61,7 @@ internal class StartOrderUseCaseTest {
 
         // Assert
         assertThat(result.getOrNull()?.ref).isEqualTo(expected)
-        verify(exactly = 1) { orderPoller.poll(expected) }
+        verify(exactly = 1) { orderPoller.startPolling(expected) }
     }
 
     @Test
@@ -82,7 +82,7 @@ internal class StartOrderUseCaseTest {
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
-        verify(exactly = 0) { orderPoller.poll(any()) }
+        verify(exactly = 0) { orderPoller.startPolling(any()) }
     }
 
     @Test
@@ -99,7 +99,7 @@ internal class StartOrderUseCaseTest {
         // Assert
         assertThat(result.getOrNull()?.ref).isEqualTo(expected)
         coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
-        verify(exactly = 1) { orderPoller.poll(expected) }
+        verify(exactly = 1) { orderPoller.startPolling(expected) }
     }
 
     private fun createdOrder() = TangemPayOrder(

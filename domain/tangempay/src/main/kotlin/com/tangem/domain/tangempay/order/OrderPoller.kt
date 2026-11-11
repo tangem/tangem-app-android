@@ -24,11 +24,15 @@ class OrderPoller(
     private val lock = Any()
     private val pollings = mutableMapOf<OrderRef, Polling>()
 
-    fun poll(orderRef: OrderRef): Flow<OrderPollingState> {
+    fun startPolling(orderRef: OrderRef): Flow<OrderPollingState> {
         return getOrStartPolling(orderRef).state.transformWhile { state ->
             emit(state)
             !state.isTerminal
         }
+    }
+
+    fun launchPolling(orderRef: OrderRef) {
+        getOrStartPolling(orderRef)
     }
 
     fun stopPolling(userWalletIds: Collection<UserWalletId>) {
