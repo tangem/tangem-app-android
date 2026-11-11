@@ -106,24 +106,36 @@ object PolymarketSessionKeyAssessor {
 
     private fun reconcile(snapshot: PolymarketSessionKeySnapshot): PolymarketSessionKeyReconciliation {
         val signers = snapshot.signers ?: return PolymarketSessionKeyReconciliation.Unavailable
-        val listed = signers.mapTo(mutableSetOf()) { it.address }
-        val missingOnExchange = snapshot.sessionKeys
-            .filter { it.isSettledActiveAt(snapshot.now) && it.address !in listed }
+        val listed = signers.mapTo(mutableSetOf()) { it.address.lowercase() }
+        val records = snapshot.sessionKeys.groupBy { it.address.lowercase() }
+        val missingOnExchange = records
+            .filterKeys { it !in listed }
+            .values
+            .flatten()
+            .filter { it.isSettledActiveAt(snapshot.now) }
             .mapTo(mutableSetOf()) { it.address }
         return PolymarketSessionKeyReconciliation.Checked(
-            foreignSigners = signers.filter { it.isForeign(snapshot) },
+            foreignSigners = signers.filter { signer ->
+                isForeign(signer, records[signer.address.lowercase()]?.maxByOrNull { it.createdAt }, snapshot)
+            },
             missingOnExchange = missingOnExchange,
+            listedSigners = listed,
         )
     }
 
-    private fun PolymarketSessionSigner.isForeign(snapshot: PolymarketSessionKeySnapshot): Boolean {
-        val record = snapshot.sessionKeys.firstOrNull { it.address == address } ?: return true
+    private fun isForeign(
+        signer: PolymarketSessionSigner,
+        record: PolymarketSessionKey?,
+        snapshot: PolymarketSessionKeySnapshot,
+    ): Boolean {
+        if (record == null) return true
         return when (record.status) {
             PolymarketSessionKeyStatus.PENDING,
             PolymarketSessionKeyStatus.REVOKING,
             -> false
-            PolymarketSessionKeyStatus.ACTIVE -> record.isPastReadinessGraceAt(snapshot.now) && !hasTermsOf(record)
-            PolymarketSessionKeyStatus.FAILED -> record.address != snapshot.localKeyAddress
+            PolymarketSessionKeyStatus.ACTIVE ->
+                record.isPastReadinessGraceAt(snapshot.now) && !signer.hasTermsOf(record)
+            PolymarketSessionKeyStatus.FAILED -> !record.address.equals(snapshot.localKeyAddress, ignoreCase = true)
             PolymarketSessionKeyStatus.REVOKED,
             PolymarketSessionKeyStatus.EXPIRED,
             PolymarketSessionKeyStatus.UNKNOWN,
