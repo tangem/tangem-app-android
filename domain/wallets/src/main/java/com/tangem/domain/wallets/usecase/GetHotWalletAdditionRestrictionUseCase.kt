@@ -2,7 +2,7 @@ package com.tangem.domain.wallets.usecase
 
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.isHotWalletsLimitReached
-import com.tangem.domain.models.wallet.isSocialLoginWallet
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.models.HotWalletAdditionRestriction
 
 class GetHotWalletAdditionRestrictionUseCase(
@@ -16,7 +16,7 @@ class GetHotWalletAdditionRestrictionUseCase(
         val userWallets = userWalletsListRepository.userWalletsSync()
         return when {
             userWallets.isHotWalletsLimitReached() -> HotWalletAdditionRestriction.LimitReached
-            isSocialLogin && userWallets.any { it.isSocialLoginWallet } -> {
+            isSocialLogin && userWallets.any { it is UserWallet.Hot && it.isSocialBackupCompleted } -> {
                 HotWalletAdditionRestriction.SocialWalletAlreadyAdded
             }
             else -> null
