@@ -1,0 +1,579 @@
+{
+  "event": {
+    "eventId": "1209076",
+    "slug": "epl-che-mun-2026-10-31",
+    "title": "Chelsea FC vs. Manchester United FC",
+    "description": "This event is for the upcoming Premier League game, scheduled for Saturday, …",
+    "polymarketRulesUrl": "https://help.polymarket.com/en/articles/13364518-how-are-prediction-markets-resolved",
+    "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+    "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+    "status": "active",
+    "live": false,
+    "startTime": "2026-10-31T12:30:00Z",
+    "startDate": "2026-10-18T04:00:17Z",
+    "endDate": "2026-10-31T12:30:00Z",
+    "volume": 25553.409918,
+    "volume24hr": 3611.146998,
+    "liquidity": 569797.2123,
+    "negRisk": true,
+    "gameId": "90114153",
+    "score": null,
+    "period": null,
+    "elapsed": null,
+    "ended": null,
+    "dataFetchedAt": "2026-10-28T19:39:05Z",
+    "league": {
+      "slug": "epl",
+      "name": "Premier League",
+      "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/league-icons/epl-24885021.png"
+    },
+    "resolutionSource": "https://www.premierleague.com/",
+    "sportOrdering": "home",
+    "teams": [
+      {
+        "name": "Chelsea FC",
+        "abbreviation": "che",
+        "alias": "Chelsea",
+        "logo": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Chelsea FC-a99798da02.png",
+        "ordering": "home"
+      },
+      {
+        "name": "Manchester United FC",
+        "abbreviation": "mun",
+        "alias": "Man Utd",
+        "logo": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Manchester United FC-05ec8891f0.png",
+        "ordering": "away"
+      }
+    ],
+    "tabs": [
+      {
+        "key": "game_lines",
+        "cards": [
+          {
+            "key": "moneyline",
+            "template": "three_way",
+            "sportsMarketType": "moneyline",
+            "buttons": [
+              {
+                "side": "left",
+                "label": "CHE",
+                "marketId": "5851323",
+                "assetId": "15290396180998198710310272736155640419943413721470664454665442922483962945384"
+              },
+              {
+                "side": "middle",
+                "label": "DRAW",
+                "marketId": "5851325",
+                "assetId": "11924499659940277990313763338145979800963868967390053504977336871911194083477"
+              },
+              {
+                "side": "right",
+                "label": "MUN",
+                "marketId": "5851327",
+                "assetId": "42196822305561413344053691620811148871819514949401220664893881229065342159878"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5851323",
+                "eventId": "1209076",
+                "question": "Will Chelsea FC win on 2026-10-31?",
+                "slug": "epl-che-mun-2026-10-31-che",
+                "description": "In the upcoming game, scheduled for October 31, 2026\nIf Chelsea FC …",
+                "groupItemTitle": "Chelsea FC",
+                "image": null,
+                "icon": null,
+                "status": "active",
+                "negRisk": true,
+                "acceptingOrders": true,
+                "startDate": "2026-10-18T04:00:17Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 12753.090686,
+                "volume24hr": 2301.804151,
+                "liquidity": 44777.6062,
+                "orderIndex": 0,
+                "sportsMarketType": "moneyline",
+                "line": null,
+                "outcomes": [
+                  {
+                    "assetId": "15290396180998198710310272736155640419943413721470664454665442922483962945384",
+                    "label": "Yes",
+                    "probability": 0.54
+                  },
+                  {
+                    "assetId": "102490352960826289878203626922376022882491041625339900488317693005473902922874",
+                    "label": "No",
+                    "probability": 0.47
+                  }
+                ]
+              },
+              {
+                "id": "5851325",
+                "eventId": "1209076",
+                "question": "Will Chelsea FC vs. Manchester United FC end in a draw?",
+                "slug": "epl-che-mun-2026-10-31-draw",
+                "description": "In the upcoming game, scheduled for October 31, 2026\nIf the game ends …",
+                "groupItemTitle": "Draw (Chelsea FC vs. Manchester United FC)",
+                "image": null,
+                "icon": null,
+                "status": "active",
+                "negRisk": true,
+                "acceptingOrders": true,
+                "startDate": "2026-10-18T04:00:17Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 783.2334109999999,
+                "volume24hr": 426.813683,
+                "liquidity": 59712.9575,
+                "orderIndex": 1,
+                "sportsMarketType": "moneyline",
+                "line": null,
+                "outcomes": [
+                  {
+                    "assetId": "11924499659940277990313763338145979800963868967390053504977336871911194083477",
+                    "label": "Yes",
+                    "probability": 0.25
+                  },
+                  {
+                    "assetId": "101126693323255545794574137630437895473686407287405597013546579634889144381807",
+                    "label": "No",
+                    "probability": 0.76
+                  }
+                ]
+              },
+              {
+                "id": "5851327",
+                "eventId": "1209076",
+                "question": "Will Manchester United FC win on 2026-10-31?",
+                "slug": "epl-che-mun-2026-10-31-mun",
+                "description": "In the upcoming game, scheduled for October 31, 2026\nIf Manchester …",
+                "groupItemTitle": "Manchester United FC",
+                "image": null,
+                "icon": null,
+                "status": "active",
+                "negRisk": true,
+                "acceptingOrders": true,
+                "startDate": "2026-10-18T04:00:17Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 3223.1562090000007,
+                "volume24hr": 425.11932499999995,
+                "liquidity": 57202.1439,
+                "orderIndex": 2,
+                "sportsMarketType": "moneyline",
+                "line": null,
+                "outcomes": [
+                  {
+                    "assetId": "42196822305561413344053691620811148871819514949401220664893881229065342159878",
+                    "label": "Yes",
+                    "probability": 0.23
+                  },
+                  {
+                    "assetId": "111793439037232748644111795259361641293160219434292079751709464955147396430376",
+                    "label": "No",
+                    "probability": 0.78
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "template": "side_picker",
+            "sportsMarketType": "spreads",
+            "positions": [
+              {
+                "pickerLabel": "1.5",
+                "line": 1.5,
+                "isDefault": false,
+                "marketId": "5856812",
+                "buttons": [
+                  {
+                    "side": "left",
+                    "label": "CHE +1.5",
+                    "marketId": "5856812",
+                    "assetId": "99746521766161140988198839416482059681019458696690071592140611950064751203118"
+                  },
+                  {
+                    "side": "right",
+                    "label": "MUN -1.5",
+                    "marketId": "5856812",
+                    "assetId": "26251781196126578005045616208385552164559439743950212416235348048175413013363"
+                  }
+                ]
+              },
+              {
+                "pickerLabel": "1.5",
+                "line": -1.5,
+                "isDefault": true,
+                "marketId": "5856811",
+                "buttons": [
+                  {
+                    "side": "left",
+                    "label": "CHE -1.5",
+                    "marketId": "5856811",
+                    "assetId": "70944895767458878833296908691612977763613689517991946611622285167800744901583"
+                  },
+                  {
+                    "side": "right",
+                    "label": "MUN +1.5",
+                    "marketId": "5856811",
+                    "assetId": "11260808662533159764943309111875901661883945332197863850859484907185372485604"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856812",
+                "eventId": "1209567",
+                "question": "Spread: Manchester United FC (-1.5)",
+                "slug": "epl-che-mun-2026-10-31-spread-away-1pt5",
+                "description": "In the upcoming Premier League game, scheduled for October 31 at 8:30 …",
+                "groupItemTitle": "Manchester United FC (-1.5)",
+                "image": null,
+                "icon": null,
+                "status": "active",
+                "negRisk": false,
+                "acceptingOrders": true,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 123.738385,
+                "volume24hr": 123.738385,
+                "liquidity": 6622.4015,
+                "orderIndex": 0,
+                "sportsMarketType": "spreads",
+                "line": -1.5,
+                "outcomes": [
+                  {
+                    "assetId": "26251781196126578005045616208385552164559439743950212416235348048175413013363",
+                    "label": "Manchester United FC",
+                    "probability": 0.09
+                  },
+                  {
+                    "assetId": "99746521766161140988198839416482059681019458696690071592140611950064751203118",
+                    "label": "Chelsea FC",
+                    "probability": 0.92
+                  }
+                ]
+              },
+              {
+                "id": "5856811",
+                "eventId": "1209567",
+                "question": "Spread: Chelsea FC (-1.5)",
+                "slug": "epl-che-mun-2026-10-31-spread-home-1pt5",
+                "description": "In the upcoming Premier League game, scheduled for October 31 at 8:30 …",
+                "groupItemTitle": "Chelsea FC (-1.5)",
+                "image": null,
+                "icon": null,
+                "status": "active",
+                "negRisk": false,
+                "acceptingOrders": true,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 152.38709699999998,
+                "volume24hr": 20.0,
+                "liquidity": 27106.6703,
+                "orderIndex": 1,
+                "sportsMarketType": "spreads",
+                "line": -1.5,
+                "outcomes": [
+                  {
+                    "assetId": "70944895767458878833296908691612977763613689517991946611622285167800744901583",
+                    "label": "Chelsea FC",
+                    "probability": 0.31
+                  },
+                  {
+                    "assetId": "11260808662533159764943309111875901661883945332197863850859484907185372485604",
+                    "label": "Manchester United FC",
+                    "probability": 0.7
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "template": "over_under_picker",
+            "sportsMarketType": "totals",
+            "teamSide": null,
+            "positions": [
+              {
+                "pickerLabel": "2.5",
+                "line": 2.5,
+                "isDefault": true,
+                "marketId": "5856823",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 2.5",
+                    "marketId": "5856823",
+                    "assetId": "101476387294999801698961537843203072689284082135016957059344926955498080035740"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 2.5",
+                    "marketId": "5856823",
+                    "assetId": "1632884242820689672689709933695115982269305936907901571045219666338314943795"
+                  }
+                ]
+              },
+              {
+                "pickerLabel": "3.5",
+                "line": 3.5,
+                "isDefault": false,
+                "marketId": "5856824",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 3.5",
+                    "marketId": "5856824",
+                    "assetId": "25441284835955929101437687218185231927785795635979763459210733190905591844039"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 3.5",
+                    "marketId": "5856824",
+                    "assetId": "61885626903277779394657121044108489095743504538074348286433550003788726482151"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856823",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: O/U 2.5",
+                "slug": "epl-che-mun-2026-10-31-total-2pt5",
+                "description": "In the upcoming Premier League game between Chelsea FC and Manchester …",
+                "groupItemTitle": "O/U 2.5",
+                "image": null,
+                "icon": null,
+                "status": "active",
+                "negRisk": false,
+                "acceptingOrders": true,
+                "startDate": "2026-10-18T05:02:20Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 339.41361,
+                "volume24hr": 4.838709,
+                "liquidity": 20305.457,
+                "orderIndex": 0,
+                "sportsMarketType": "totals",
+                "line": 2.5,
+                "outcomes": [
+                  {
+                    "assetId": "101476387294999801698961537843203072689284082135016957059344926955498080035740",
+                    "label": "Over",
+                    "probability": 0.61
+                  },
+                  {
+                    "assetId": "1632884242820689672689709933695115982269305936907901571045219666338314943795",
+                    "label": "Under",
+                    "probability": 0.4
+                  }
+                ]
+              },
+              {
+                "id": "5856824",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: O/U 3.5",
+                "slug": "epl-che-mun-2026-10-31-total-3pt5",
+                "description": "In the upcoming Premier League game between Chelsea FC and Manchester …",
+                "groupItemTitle": "O/U 3.5",
+                "image": null,
+                "icon": null,
+                "status": "active",
+                "negRisk": false,
+                "acceptingOrders": true,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 39.604513,
+                "volume24hr": 5.09,
+                "liquidity": 20279.651,
+                "orderIndex": 1,
+                "sportsMarketType": "totals",
+                "line": 3.5,
+                "outcomes": [
+                  {
+                    "assetId": "25441284835955929101437687218185231927785795635979763459210733190905591844039",
+                    "label": "Over",
+                    "probability": 0.38
+                  },
+                  {
+                    "assetId": "61885626903277779394657121044108489095743504538074348286433550003788726482151",
+                    "label": "Under",
+                    "probability": 0.63
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "both_teams_to_score",
+            "template": "yes_no",
+            "sportsMarketType": "both_teams_to_score",
+            "buttons": [
+              {
+                "side": "yes",
+                "label": "YES",
+                "marketId": "5856830",
+                "assetId": "87606462827142428785398523526754618041393234636280312158621249068253416918182"
+              },
+              {
+                "side": "no",
+                "label": "NO",
+                "marketId": "5856830",
+                "assetId": "38865326428569126515732756229851490741825636067591758623507735496839226867543"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856830",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Both Teams to Score",
+                "slug": "epl-che-mun-2026-10-31-btts",
+                "description": "In the upcoming Premier League game between Chelsea FC and Manchester …",
+                "groupItemTitle": "Both Teams to Score",
+                "image": null,
+                "icon": null,
+                "status": "active",
+                "negRisk": false,
+                "acceptingOrders": true,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 31.076157,
+                "volume24hr": 15.211291,
+                "liquidity": 5293.7711,
+                "orderIndex": 0,
+                "sportsMarketType": "both_teams_to_score",
+                "line": null,
+                "outcomes": [
+                  {
+                    "assetId": "87606462827142428785398523526754618041393234636280312158621249068253416918182",
+                    "label": "Yes",
+                    "probability": 0.62
+                  },
+                  {
+                    "assetId": "38865326428569126515732756229851490741825636067591758623507735496839226867543",
+                    "label": "No",
+                    "probability": 0.4
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "exact_score",
+        "cards": [
+          {
+            "key": "exact_score",
+            "template": "list",
+            "sportsMarketType": "soccer_exact_score",
+            "rows": [
+              {
+                "side": "yes",
+                "label": "Chelsea FC 0 - 0 Manchester United FC",
+                "marketId": "5851474",
+                "assetId": "12530796803609638109825823017218093412199969500007394307015141718750165263582"
+              },
+              {
+                "side": "yes",
+                "label": "Any Other Score",
+                "marketId": "5851569",
+                "assetId": "42075622553609201149224642269100276252432034520469174297744220429317911747473"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5851474",
+                "eventId": "1209095",
+                "question": "Exact Score: Chelsea FC 0 - 0 Manchester United FC?",
+                "slug": "epl-che-mun-2026-10-31-exact-score-0-0",
+                "description": "In the upcoming Premier League game between Chelsea FC and Manchester …",
+                "groupItemTitle": "Chelsea FC 0 - 0 Manchester United FC",
+                "image": null,
+                "icon": null,
+                "status": "active",
+                "negRisk": true,
+                "acceptingOrders": true,
+                "startDate": "2026-10-18T04:00:53Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 316.85262,
+                "volume24hr": 36.65262,
+                "liquidity": 5429.2238,
+                "orderIndex": 0,
+                "sportsMarketType": "soccer_exact_score",
+                "line": null,
+                "outcomes": [
+                  {
+                    "assetId": "12530796803609638109825823017218093412199969500007394307015141718750165263582",
+                    "label": "Yes",
+                    "probability": 0.06
+                  },
+                  {
+                    "assetId": "55463146304740488179823882876890386204442064117858461547216829250699390488517",
+                    "label": "No",
+                    "probability": 0.96
+                  }
+                ]
+              },
+              {
+                "id": "5851569",
+                "eventId": "1209095",
+                "question": "Exact Score: Any Other Score?",
+                "slug": "epl-che-mun-2026-10-31-exact-score-any-other",
+                "description": "In the upcoming Premier League game between Chelsea FC and Manchester …",
+                "groupItemTitle": "Any Other Score",
+                "image": null,
+                "icon": null,
+                "status": "active",
+                "negRisk": true,
+                "acceptingOrders": true,
+                "startDate": "2026-10-18T04:00:53Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 6620.0,
+                "volume24hr": null,
+                "liquidity": 1068.9296,
+                "orderIndex": 1,
+                "sportsMarketType": "soccer_exact_score",
+                "line": null,
+                "outcomes": [
+                  {
+                    "assetId": "42075622553609201149224642269100276252432034520469174297744220429317911747473",
+                    "label": "Yes",
+                    "probability": 0.1
+                  },
+                  {
+                    "assetId": "74668973543524783528334926979850619729795079878690348382992005911807859761891",
+                    "label": "No",
+                    "probability": null
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
