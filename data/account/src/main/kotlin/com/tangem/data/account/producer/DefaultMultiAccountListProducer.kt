@@ -8,7 +8,8 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.loadAndGet
 import com.tangem.domain.core.flow.FlowProducerTools
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -41,16 +42,28 @@ internal class DefaultMultiAccountListProducer @AssistedInject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun produce(): Flow<List<AccountList>> {
         return userWalletsListRepository.loadAndGet()
-            .map { it.map(UserWallet::walletId) }
+            .map { wallets -> wallets.map { WalletKey(id = it.walletId, isLocked = it.isLocked) } }
             .distinctUntilChanged()
-            .flatMapLatest { ids ->
+            .flatMapLatest { wallets ->
                 combine(
-                    flows = ids.map(singleAccountListSupplier::invoke),
-                    transform = ::listOf,
+                    flows = wallets.map(::accountListOrNullWhileLocked),
+                    transform = { accountLists -> accountLists.filterNotNull() },
                 )
             }
             .flowOn(dispatchers.default)
     }
+
+    /**
+     * A locked wallet is never fetched, so its account list may not exist yet.
+     * It must not hold back the lists of the other wallets.
+     */
+    private fun accountListOrNullWhileLocked(wallet: WalletKey): Flow<AccountList?> {
+        val accountList = singleAccountListSupplier(wallet.id)
+
+        return if (wallet.isLocked) accountList.onStart<AccountList?> { emit(null) } else accountList
+    }
+
+    private data class WalletKey(val id: UserWalletId, val isLocked: Boolean)
 
     @AssistedFactory
     interface Factory : MultiAccountListProducer.Factory {

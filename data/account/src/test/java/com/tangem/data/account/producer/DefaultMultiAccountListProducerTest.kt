@@ -22,6 +22,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -63,8 +64,11 @@ class DefaultMultiAccountListProducerTest {
     }
 
     private val userWalletId = UserWalletId("011")
-    private val userWallet = mockk<UserWallet> {
-        every { this@mockk.walletId } returns userWalletId
+    private val userWallet = createUserWallet(id = userWalletId)
+
+    private fun createUserWallet(id: UserWalletId, isLocked: Boolean = false): UserWallet = mockk<UserWallet.Cold> {
+        every { this@mockk.walletId } returns id
+        every { this@mockk.isLocked } returns isLocked
     }
 
     @AfterEach
@@ -233,9 +237,7 @@ class DefaultMultiAccountListProducerTest {
     fun `flow is empty if one of factoryFlow is empty`() = runTest {
         // Arrange
         val userWalletId2 = UserWalletId("012")
-        val userWallet2 = mockk<UserWallet> {
-            every { this@mockk.walletId } returns userWalletId2
-        }
+        val userWallet2 = createUserWallet(id = userWalletId2)
 
         val userWalletsFlow = MutableStateFlow(listOf(userWallet, userWallet2))
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
@@ -255,6 +257,74 @@ class DefaultMultiAccountListProducerTest {
             userWalletsListRepository.userWallets
             singleAccountListSupplier.invoke(userWalletId)
             singleAccountListSupplier.invoke(userWalletId2)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LockedWallet {
+
+        private val lockedWalletId = UserWalletId("012")
+        private val accountList = AccountList.empty(userWalletId)
+        private val lockedWalletAccountList = AccountList.empty(lockedWalletId)
+
+        @Test
+        fun `GIVEN locked wallet without account list WHEN produce THEN other wallets are emitted`() = runTest {
+            // Arrange
+            val lockedWallet = createUserWallet(id = lockedWalletId, isLocked = true)
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet, lockedWallet))
+            every { singleAccountListSupplier.invoke(userWalletId) } returns flowOf(accountList)
+            every { singleAccountListSupplier.invoke(lockedWalletId) } returns
+                MutableStateFlow<AccountList?>(null).filterNotNull()
+
+            // Act
+            val actual = producer.produce().let(::getEmittedValues)
+
+            // Assert
+            Truth.assertThat(actual).containsExactly(listOf(accountList))
+        }
+
+        @Test
+        fun `GIVEN locked wallet with account list WHEN produce THEN it is included`() = runTest {
+            // Arrange
+            val lockedWallet = createUserWallet(id = lockedWalletId, isLocked = true)
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet, lockedWallet))
+            every { singleAccountListSupplier.invoke(userWalletId) } returns flowOf(accountList)
+            every { singleAccountListSupplier.invoke(lockedWalletId) } returns flowOf(lockedWalletAccountList)
+
+            // Act
+            val actual = producer.produce().let(::getEmittedValues)
+
+            // Assert
+            Truth.assertThat(actual.last()).containsExactly(accountList, lockedWalletAccountList).inOrder()
+        }
+
+        @Test
+        fun `GIVEN wallet without account list WHEN it is unlocked THEN its account list is awaited`() = runTest {
+            // Arrange
+            val lockedWallet = createUserWallet(id = lockedWalletId, isLocked = true)
+            val unlockedWallet = createUserWallet(id = lockedWalletId, isLocked = false)
+            val userWalletsFlow = MutableStateFlow(listOf(userWallet, lockedWallet))
+            val unlockedAccountListFlow = MutableStateFlow<AccountList?>(null)
+            every { userWalletsListRepository.userWallets } returns userWalletsFlow
+            every { singleAccountListSupplier.invoke(userWalletId) } returns flowOf(accountList)
+            every { singleAccountListSupplier.invoke(lockedWalletId) } returns unlockedAccountListFlow.filterNotNull()
+
+            producer.produce().test {
+                Truth.assertThat(awaitItem()).containsExactly(accountList)
+
+                // Act
+                userWalletsFlow.value = listOf(userWallet, unlockedWallet)
+
+                // Assert
+                expectNoEvents()
+
+                // Act
+                unlockedAccountListFlow.value = lockedWalletAccountList
+
+                // Assert
+                Truth.assertThat(awaitItem()).containsExactly(accountList, lockedWalletAccountList).inOrder()
+            }
         }
     }
 }
