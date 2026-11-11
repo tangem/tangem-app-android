@@ -18,15 +18,11 @@ internal sealed interface PolymarketRoute : Route {
     /** The prerequisite for the gate: a known wallet. */
     data object Entry : PolymarketRoute
 
-    sealed interface WalletScoped : PolymarketRoute {
-        val userWalletId: UserWalletId
-    }
-
     /**
      * Entry gate for [userWalletId] — the wallet [Entry] settled, which may differ from the one the feature was
      * opened with.
      */
-    data class Onboarding(override val userWalletId: UserWalletId) : WalletScoped
+    data class Onboarding(val userWalletId: UserWalletId) : PolymarketRoute
 
     /**
      * Discovery feed — reached once [Onboarding] resolves the entry decision.
@@ -35,25 +31,19 @@ internal sealed interface PolymarketRoute : Route {
      *  the feature params because the gate may resolve a *different* wallet than the one the feature was
      *  opened with — the user can choose among several eligible wallets.
      */
-    data class Main(override val userWalletId: UserWalletId) : WalletScoped
+    data class Main(val userWalletId: UserWalletId) : PolymarketRoute
 
-    data class Category(override val userWalletId: UserWalletId, val category: PolymarketCategory) : WalletScoped
+    data class Category(val userWalletId: UserWalletId, val category: PolymarketCategory) : PolymarketRoute
 
-    data class History(override val userWalletId: UserWalletId) : WalletScoped
+    data class History(val userWalletId: UserWalletId) : PolymarketRoute
 
-    data class FastTradingSettings(override val userWalletId: UserWalletId) : WalletScoped
+    data class FastTradingSettings(val userWalletId: UserWalletId) : PolymarketRoute
 
-    data class Positions(override val userWalletId: UserWalletId, val initialTab: PolymarketPositionsTab) : WalletScoped
+    data class Positions(val userWalletId: UserWalletId, val initialTab: PolymarketPositionsTab) : PolymarketRoute
 
-    data class PositionDetails(
-        override val userWalletId: UserWalletId,
-        val positionId: PolymarketPositionId,
-    ) : WalletScoped
+    data class PositionDetails(val userWalletId: UserWalletId, val positionId: PolymarketPositionId) : PolymarketRoute
 
-    data class PositionResult(
-        override val userWalletId: UserWalletId,
-        val position: PolymarketPosition.Open,
-    ) : WalletScoped
+    data class PositionResult(val userWalletId: UserWalletId, val position: PolymarketPosition.Open) : PolymarketRoute
 
     /**
      * Details of a single prediction event.
@@ -67,11 +57,11 @@ internal sealed interface PolymarketRoute : Route {
      */
     data class EventDetails(
         val eventId: String,
-        override val userWalletId: UserWalletId,
+        val userWalletId: UserWalletId,
         val marketId: String? = null,
         val assetId: String? = null,
         val categoryLabel: String? = null,
-    ) : WalletScoped
+    ) : PolymarketRoute
 
     /**
      * Place-prediction flow, a step of this stack like the screens around it.
@@ -80,11 +70,11 @@ internal sealed interface PolymarketRoute : Route {
      * producer of that answer, and the flow reads it itself before it lets an order be placed.
      */
     data class PlacePrediction(
-        override val userWalletId: UserWalletId,
+        val userWalletId: UserWalletId,
         val eventId: String,
         val marketId: String,
         val assetId: String,
-    ) : WalletScoped
+    ) : PolymarketRoute
 
     /**
      * Sell of a held position, served by the same flow as [PlacePrediction] with the side fixed to a sell.
@@ -93,10 +83,10 @@ internal sealed interface PolymarketRoute : Route {
      *  has none and cannot be quoted, so such a row must not build this route
      */
     data class ClosePosition(
-        override val userWalletId: UserWalletId,
+        val userWalletId: UserWalletId,
         val positionId: PolymarketPositionId,
         val marketId: String,
-    ) : WalletScoped
+    ) : PolymarketRoute
 
     /**
      * Full-text search over discoverable events.
@@ -104,8 +94,12 @@ internal sealed interface PolymarketRoute : Route {
      * @property userWalletId the wallet the feature runs for, carried for the same reason as
      *  [Main.userWalletId] — a tapped result opens [EventDetails], which needs it
      */
-    data class Search(override val userWalletId: UserWalletId) : WalletScoped
+    data class Search(val userWalletId: UserWalletId) : PolymarketRoute
 }
 
-internal val PolymarketRoute.userWalletIdOrNull: UserWalletId?
-    get() = (this as? PolymarketRoute.WalletScoped)?.userWalletId
+internal val List<PolymarketRoute>.settledUserWalletId: UserWalletId?
+    get() = when (val root = firstOrNull()) {
+        is PolymarketRoute.Onboarding -> root.userWalletId
+        is PolymarketRoute.Main -> root.userWalletId
+        else -> null
+    }

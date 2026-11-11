@@ -29,7 +29,7 @@ import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
-import com.tangem.features.polymarket.impl.navigation.userWalletIdOrNull
+import com.tangem.features.polymarket.impl.navigation.settledUserWalletId
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.onboarding.PolymarketOnboardingComponent
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
@@ -80,7 +80,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
 
     init {
         childStack.subscribe(lifecycle) { stack ->
-            model.onActiveWalletChanged(stack.active.configuration.userWalletIdOrNull)
+            model.onSettledWalletChanged(stack.items.map { it.configuration }.settledUserWalletId)
         }
         lifecycle.subscribe(
             onStart = { model.onVisibilityChanged(isVisible = true) },
