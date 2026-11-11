@@ -76,9 +76,9 @@ private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
     ) {
         LogoBlock(providerImageUrl = state.providerImageUrl)
         Text(
-            modifier = Modifier.padding(top = 24.dp),
+            modifier = Modifier.padding(top = 16.dp),
             text = state.title.resolveReference(),
-            style = TangemTheme.typography3.heading.medium,
+            style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
