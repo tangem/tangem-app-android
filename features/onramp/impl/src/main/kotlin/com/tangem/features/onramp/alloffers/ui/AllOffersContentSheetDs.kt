@@ -184,9 +184,9 @@ private object IntrinsicFreeMeasurePolicyDs : MeasurePolicy {
         val height = placeables.sumOf { it.height }
         return layout(width, height) {
             var y = 0
-            placeables.forEach {
-                it.placeRelative(x = 0, y = y)
-                y += it.height
+            placeables.forEach { placeable ->
+                placeable.placeRelative(x = 0, y = y)
+                y += placeable.height
             }
         }
     }
