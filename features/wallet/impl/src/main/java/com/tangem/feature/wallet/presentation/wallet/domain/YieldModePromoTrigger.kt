@@ -13,7 +13,6 @@ import com.tangem.domain.earn.repository.EarnRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics.SkipReason
 import com.tangem.features.yield.supply.api.promobottomsheet.GetYieldModePromoVariantUseCase
@@ -41,7 +40,6 @@ import javax.inject.Singleton
 @Suppress("LongParameterList")
 @Singleton
 internal class YieldModePromoTrigger @Inject constructor(
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val earnRepository: EarnRepository,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
@@ -70,7 +68,6 @@ internal class YieldModePromoTrigger @Inject constructor(
         isBusyOutsideSlot: suspend () -> Boolean,
         interruptions: Flow<Unit>,
     ): YieldModePromoOffer? {
-        if (!yieldSupplyFeatureToggles.isYieldModePromoEnabled) return null
         if (!isChecked.compareAndSet(false, true)) return null
         if (walletDeepLinkActionListener.isOpenedByLinkOrPush.value) return null
         if (yieldSupplyRepository.isYieldModePromoBottomSheetShown()) return null

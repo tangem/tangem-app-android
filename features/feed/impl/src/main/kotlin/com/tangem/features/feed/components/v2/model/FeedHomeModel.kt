@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.pages.select
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.allservices.api.AllServicesFeatureToggles
 import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
 import com.tangem.features.feed.components.v2.blocks.FeedBlockModalCallbacks
 import com.tangem.features.feed.nav.FeedTabContributor
@@ -27,7 +28,10 @@ internal class FeedHomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     tabSet: FeedTabSet,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    allServicesFeatureToggles: AllServicesFeatureToggles,
 ) : Model() {
+
+    val isServicesBlockEnabled: Boolean = allServicesFeatureToggles.isAllServicesEnabled
 
     val contributors: List<FeedTabContributor> = tabSet.tabs
 

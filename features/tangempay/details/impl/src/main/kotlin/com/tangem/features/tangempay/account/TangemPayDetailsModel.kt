@@ -27,19 +27,19 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
-import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.TangemPayTopUpData
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.TangemPayTopUpData
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
-import com.tangem.domain.pay.usecase.*
-import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
+import com.tangem.domain.tangempay.usecase.*
+import com.tangem.domain.tangempay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.account.cashback.withCashback
 import com.tangem.features.tangempay.addfunds.AddFundsListener
@@ -309,7 +309,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         val customerId = currentStatus.value.customerId ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase.invoke(
-                type = FeedbackEmailType.Visa.FeatureIsBeta(
+                type = FeedbackEmailType.TangemPay.FeatureIsBeta(
                     walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                     customerId = customerId,
                 ),
@@ -334,7 +334,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         val customerId = currentStatus.value.customerId ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase.invoke(
-                type = FeedbackEmailType.Visa.FailedIssueCard(
+                type = FeedbackEmailType.TangemPay.FailedIssueCard(
                     walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                     customerId = customerId,
                 ),
@@ -402,7 +402,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         )
     }
 
-    suspend fun retryBankCredentials(productInstanceId: String): Either<VisaApiError, Unit> =
+    suspend fun retryBankCredentials(productInstanceId: String): Either<TangemPayApiError, Unit> =
         getBankCredentialsUseCase(userWalletId = userWalletId, productInstanceId = productInstanceId)
             .map(::onVaBankingDetailsResolved)
 

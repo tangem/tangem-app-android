@@ -20,7 +20,7 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PreviewSli
 @Composable
 internal fun PredictionOrderDetailsCard(
     slippage: SlippageUM,
-    total: String,
+    total: String?,
     isTotalLoading: Boolean,
     modifier: Modifier = Modifier,
     onSlippageClick: (() -> Unit)? = null,
@@ -28,13 +28,15 @@ internal fun PredictionOrderDetailsCard(
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
-            PredictionSlippageRow(slippage = slippage, divider = true, onClick = onSlippageClick)
-            PredictionUsdValueRow(
-                value = total,
-                isLoading = isTotalLoading,
-                titleRes = R.string.prediction_fee_sheet_total,
-                onClick = onTotalClick,
-            )
+            PredictionSlippageRow(slippage = slippage, divider = total != null, onClick = onSlippageClick)
+            if (total != null) {
+                PredictionUsdValueRow(
+                    value = total,
+                    isLoading = isTotalLoading,
+                    titleRes = R.string.prediction_fee_sheet_total,
+                    onClick = onTotalClick,
+                )
+            }
         }
     }
 }
@@ -58,6 +60,7 @@ private fun PredictionOrderDetailsCardPreview() {
                 onTotalClick = {},
             )
             PredictionOrderDetailsCard(slippage = PreviewSlippage, total = "", isTotalLoading = true)
+            PredictionOrderDetailsCard(slippage = PreviewSlippage, total = null, isTotalLoading = false)
         }
     }
 }

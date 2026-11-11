@@ -2,7 +2,7 @@ package com.tangem.domain.feedback
 
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.utils.breakLine
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.feedback.models.BlockchainInfo.Addresses as BlockchainAddresses
 
 internal class FeedbackDataBuilder {
@@ -93,22 +93,22 @@ internal class FeedbackDataBuilder {
         builder.appendKeyValue("App version", phoneInfo.appVersion)
     }
 
-    fun addTangemPayIssueType(type: FeedbackEmailType.Visa) {
+    fun addTangemPayIssueType(type: FeedbackEmailType.TangemPay) {
         val issueType = when (type) {
-            is FeedbackEmailType.Visa.DirectUserRequest,
-            is FeedbackEmailType.Visa.MoneyAccountRequest,
-            is FeedbackEmailType.Visa.FeatureIsBeta,
-            is FeedbackEmailType.Visa.Withdrawal,
-            is FeedbackEmailType.Visa.KycRejected,
+            is FeedbackEmailType.TangemPay.DirectUserRequest,
+            is FeedbackEmailType.TangemPay.MoneyAccountRequest,
+            is FeedbackEmailType.TangemPay.FeatureIsBeta,
+            is FeedbackEmailType.TangemPay.Withdrawal,
+            is FeedbackEmailType.TangemPay.KycRejected,
             -> return
-            is FeedbackEmailType.Visa.Dispute -> when (type.item) {
+            is FeedbackEmailType.TangemPay.Dispute -> when (type.item) {
                 is TangemPayTxHistoryItem.Collateral -> "Receive/Withdraw"
                 is TangemPayTxHistoryItem.Fee,
                 is TangemPayTxHistoryItem.Spend,
                 is TangemPayTxHistoryItem.Payment,
                 -> "Transaction"
             }
-            is FeedbackEmailType.Visa.FailedIssueCard -> "Card issuing"
+            is FeedbackEmailType.TangemPay.FailedIssueCard -> "Card issuing"
         }
         builder.appendKeyValue("Issue type", issueType)
     }

@@ -20,7 +20,7 @@ import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
@@ -253,6 +253,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
                 every { this@mockk.invoke(Unit) } returns flowOf(emptyMap())
             },
             balanceContributionProviders = emptySet(),
+            tokensFeatureToggles = mockk { every { isYieldContributionEnabled } returns false },
         )
     }
 

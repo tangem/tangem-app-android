@@ -5,6 +5,8 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,19 +15,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -37,8 +38,9 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
+import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.core.ui.components.haze.ProvideHaze
-import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
@@ -55,46 +57,43 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
-import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeleton
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeletonHeight
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBar
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
-import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
-import com.tangem.features.polymarket.impl.common.ui.PolymarketEmptyListPrompt
-import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
+import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketScrollIdleEffect
+import com.tangem.features.polymarket.impl.common.feed.ui.toTangemTabItemUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketCategoryTabUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketEventRowUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketEventUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketOutcomeUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.math.ceil
 import java.math.BigDecimal
+import com.tangem.features.polymarket.impl.common.feed.ui.POLYMARKET_FEED_STATUS_KEY
+import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketVisibleEventsEffect
+import com.tangem.features.polymarket.impl.common.feed.ui.polymarketEventsSection
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
 
 // Feed layout: the scrolling header is item 0, the tab band — while loading or with categories — is item 1.
 private const val TAB_BAND_INDEX = 1
 private const val KEY_HEADER = "header"
 private const val KEY_TAB_BAND = "tab_band"
-private const val KEY_STATUS = "status"
-
-private val ScrollIdleDebounce = 500.milliseconds
 
 private val ScrollRestoreTimeout = 2.seconds
 
 /** Fixed height of the category tab band: 36dp pills + 8dp vertical padding. */
 private val TabBandHeight = 52.dp
+
+private val FilterTabBandHeight = 48.dp
 
 private val TabBandPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
 
@@ -111,6 +110,7 @@ internal fun PolymarketMainScreen(
     onSearchClick: () -> Unit,
     onHistoryClick: () -> Unit,
     onSupportChatClick: () -> Unit,
+    onFastTradingSettingsClick: () -> Unit,
     onLoadMore: () -> Unit,
     onVisibleEventsChange: (Set<String>) -> Unit,
     onScrollIdle: (index: Int, offset: Int) -> Unit,
@@ -129,17 +129,23 @@ internal fun PolymarketMainScreen(
     }
 
     val selectedCategoryId = state.categories.firstOrNull { it.isSelected }?.id
+    val filterRowState = key(selectedCategoryId) { rememberScrollState() }
 
     PolymarketLoadMoreEffect(listState = listState, onLoadMore = onLoadMore)
-    VisibleEventsEffect(listState = listState, onVisibleEventsChange = onVisibleEventsChange)
-    ScrollIdleEffect(
+    PolymarketVisibleEventsEffect(
         listState = listState,
-        selectedCategoryId = selectedCategoryId,
+        feedKey = state.selection,
+        onVisibleEventsChange = onVisibleEventsChange,
+        excludedKeys = setOf(KEY_HEADER, KEY_TAB_BAND, POLYMARKET_FEED_STATUS_KEY),
+    )
+    PolymarketScrollIdleEffect(
+        listState = listState,
+        feedKey = state.selection,
         onScrollIdle = onScrollIdle,
     )
     CategorySwitchEffect(
         listState = listState,
-        selectedCategoryId = selectedCategoryId,
+        feedKey = state.selection,
         pendingScrollPosition = state.pendingScrollPosition,
         isTabBandPinned = isTabBandPinned,
         onScrollPositionRestore = onScrollPositionRestore,
@@ -154,10 +160,12 @@ internal fun PolymarketMainScreen(
                     positions = positions,
                     listState = listState,
                     tabRowState = tabRowState,
+                    filterRowState = filterRowState,
                     isTabBandPinned = isTabBandPinned,
                     onBackClick = onBackClick,
                     onHistoryClick = onHistoryClick,
                     onSupportChatClick = onSupportChatClick,
+                    onFastTradingSettingsClick = onFastTradingSettingsClick,
                 )
 
                 // Outside the scaffold: glass inside its own haze source has nothing to sample.
@@ -181,12 +189,16 @@ private fun PolymarketMainScaffold(
     positions: (@Composable (Modifier) -> Unit)?,
     listState: LazyListState,
     tabRowState: ScrollState,
+    filterRowState: ScrollState,
     isTabBandPinned: Boolean,
     onBackClick: () -> Unit,
     onHistoryClick: () -> Unit,
     onSupportChatClick: () -> Unit,
+    onFastTradingSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val hasFilters = state.filters.isNotEmpty() || state.onSeeAllClick != null
+    val tabBandHeight = TabBandHeight + if (hasFilters) FilterTabBandHeight else 0.dp
     TangemTopBarScaffold(
         modifier = modifier,
         topBar = {
@@ -198,7 +210,13 @@ private fun PolymarketMainScaffold(
                 fadeEnabled = false,
                 onBack = onBackClick,
                 endButton = {
-                    PolymarketMainMenu(onHistoryClick = onHistoryClick, onSupportChatClick = onSupportChatClick)
+                    PolymarketMainMenu(
+                        onHistoryClick = onHistoryClick,
+                        onSupportChatClick = onSupportChatClick,
+                        onFastTradingSettingsClick = onFastTradingSettingsClick.takeIf {
+                            state.isFastTradingSettingsAvailable
+                        },
+                    )
                 },
             )
         },
@@ -206,7 +224,7 @@ private fun PolymarketMainScaffold(
             val topPadding = contentPadding.calculateTopPadding()
 
             val frostHeight by animateDpAsState(
-                targetValue = if (isTabBandPinned) topPadding + TabBandHeight else topPadding,
+                targetValue = if (isTabBandPinned) topPadding + tabBandHeight else topPadding,
                 label = "headerFrostHeight",
             )
             TangemFade(
@@ -217,6 +235,9 @@ private fun PolymarketMainScaffold(
 
             CategoryTabBar(
                 categories = state.categories,
+                filters = state.filters,
+                onSeeAllClick = state.onSeeAllClick,
+                filterRowState = filterRowState,
                 isLoading = state.isCategoriesLoading,
                 state = tabRowState,
                 isShown = isTabBandPinned,
@@ -236,6 +257,7 @@ private fun PolymarketMainScaffold(
                 positions = positions,
                 listState = listState,
                 tabRowState = tabRowState,
+                filterRowState = filterRowState,
                 isTabBandPinned = isTabBandPinned,
                 contentPadding = contentPadding,
             )
@@ -250,6 +272,7 @@ private fun FeedList(
     positions: (@Composable (Modifier) -> Unit)?,
     listState: LazyListState,
     tabRowState: ScrollState,
+    filterRowState: ScrollState,
     isTabBandPinned: Boolean,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -283,6 +306,9 @@ private fun FeedList(
                     KeepItemComposed()
                     CategoryTabBar(
                         categories = state.categories,
+                        filters = state.filters,
+                        onSeeAllClick = state.onSeeAllClick,
+                        filterRowState = filterRowState,
                         isLoading = state.isCategoriesLoading,
                         state = tabRowState,
                         isShown = !isTabBandPinned,
@@ -290,88 +316,8 @@ private fun FeedList(
                 }
             }
 
-            eventsSection(content = state.content, skeletonCount = skeletonCount)
+            polymarketEventsSection(content = state.content, skeletonCount = skeletonCount)
         }
-    }
-}
-
-private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM, skeletonCount: Int) {
-    when (content) {
-        is PolymarketMainUM.ContentUM.Loading -> items(count = skeletonCount, key = { it }) {
-            PolymarketEventCardSkeleton(modifier = Modifier.padding(horizontal = 16.dp))
-        }
-        is PolymarketMainUM.ContentUM.Empty -> item(key = KEY_STATUS) {
-            PolymarketEmptyListPrompt(
-                text = resourceReference(R.string.prediction_main_empty_events),
-                modifier = Modifier.height(180.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-            )
-        }
-        is PolymarketMainUM.ContentUM.Error -> item(key = KEY_STATUS) {
-            PolymarketReloadPrompt(
-                text = resourceReference(R.string.prediction_main_events_load_error),
-                onReloadClick = content.onReloadClick,
-                modifier = Modifier.height(180.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-            )
-        }
-        is PolymarketMainUM.ContentUM.Content -> {
-            items(
-                items = content.events,
-                key = { it.id },
-            ) { event ->
-                PolymarketEventCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    state = event,
-                )
-            }
-
-            when (val footer = content.footer) {
-                is PolymarketFeedFooterUM.None -> Unit
-                is PolymarketFeedFooterUM.Loading -> item(key = KEY_STATUS) {
-                    PolymarketNextPageLoader()
-                }
-                is PolymarketFeedFooterUM.Error -> item(key = KEY_STATUS) {
-                    PolymarketReloadPrompt(
-                        text = resourceReference(R.string.prediction_main_events_load_error),
-                        onReloadClick = footer.onRetryClick,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun VisibleEventsEffect(listState: LazyListState, onVisibleEventsChange: (Set<String>) -> Unit) {
-    val currentOnVisibleEventsChanged by rememberUpdatedState(onVisibleEventsChange)
-
-    LaunchedEffect(listState) {
-        snapshotFlow {
-            listState.layoutInfo.visibleItemsInfo
-                .mapNotNull { it.key as? String }
-                .filterNotTo(mutableSetOf()) { it == KEY_HEADER || it == KEY_TAB_BAND || it == KEY_STATUS }
-        }
-            .distinctUntilChanged()
-            .collect { visibleEventIds -> currentOnVisibleEventsChanged(visibleEventIds) }
-    }
-}
-
-@Composable
-private fun ScrollIdleEffect(listState: LazyListState, selectedCategoryId: Int?, onScrollIdle: (Int, Int) -> Unit) {
-    val currentOnScrollIdle by rememberUpdatedState(onScrollIdle)
-
-    // Keyed by the category: a pending report belongs to the tab that is gone.
-    LaunchedEffect(listState, selectedCategoryId) {
-        snapshotFlow { listState.isScrollInProgress }
-            .collectLatest { isScrollInProgress ->
-                if (isScrollInProgress) return@collectLatest
-
-                delay(ScrollIdleDebounce)
-                currentOnScrollIdle(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
-            }
     }
 }
 
@@ -379,17 +325,17 @@ private fun ScrollIdleEffect(listState: LazyListState, selectedCategoryId: Int?,
 @Composable
 private fun CategorySwitchEffect(
     listState: LazyListState,
-    selectedCategoryId: Int?,
+    feedKey: PolymarketEventsListConfig?,
     pendingScrollPosition: PolymarketFeedScrollPosition?,
     isTabBandPinned: Boolean,
     onScrollPositionRestore: () -> Unit,
 ) {
     val currentOnScrollPositionRestore by rememberUpdatedState(onScrollPositionRestore)
-    var appliedCategoryId by remember { mutableStateOf(selectedCategoryId) }
+    var appliedSelection by remember { mutableStateOf(feedKey) }
 
-    LaunchedEffect(selectedCategoryId) {
-        if (selectedCategoryId == appliedCategoryId) return@LaunchedEffect
-        appliedCategoryId = selectedCategoryId
+    LaunchedEffect(feedKey) {
+        if (feedKey == appliedSelection) return@LaunchedEffect
+        appliedSelection = feedKey
 
         val target = pendingScrollPosition
             ?: PolymarketFeedScrollPosition(index = TAB_BAND_INDEX, offset = 0).takeIf { isTabBandPinned }
@@ -412,9 +358,13 @@ private fun LazyListState.isTabBandPinned(): Boolean {
     return firstVisibleIndex > TAB_BAND_INDEX
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun CategoryTabBar(
     categories: ImmutableList<PolymarketCategoryTabUM>,
+    filters: ImmutableList<TangemTabItemUM.Content>,
+    onSeeAllClick: (() -> Unit)?,
+    filterRowState: ScrollState,
     isLoading: Boolean,
     state: ScrollState,
     isShown: Boolean,
@@ -423,15 +373,36 @@ private fun CategoryTabBar(
     val tabs = remember(categories, isLoading) {
         if (isLoading) loadingTabs() else categories.map { it.toTangemTabItemUM() }.toImmutableList()
     }
-    TangemTabNavigation(
-        tabs = tabs,
-        scrollState = state,
-        variant = if (isShown) TangemTabItem.Variant.Material else TangemTabItem.Variant.Transparent,
-        contentPadding = TabBandPadding,
-        modifier = modifier
-            .placedOnlyWhen(isShown)
-            .height(TabBandHeight),
-    )
+    val variant = if (isShown) TangemTabItem.Variant.Material else TangemTabItem.Variant.Transparent
+    Column(modifier = modifier.placedOnlyWhen(isShown)) {
+        TangemTabNavigation(
+            tabs = tabs,
+            scrollState = state,
+            variant = variant,
+            contentPadding = TabBandPadding,
+            modifier = Modifier.height(TabBandHeight),
+        )
+        if (filters.isNotEmpty() || onSeeAllClick != null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TangemTabNavigation(
+                    tabs = filters,
+                    scrollState = filterRowState,
+                    variant = variant,
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
+                    modifier = Modifier.weight(1f).height(FilterTabBandHeight),
+                )
+                onSeeAllClick?.let { onClick ->
+                    TangemButton(
+                        text = resourceReference(R.string.common_see_all),
+                        variant = TangemButton.Variant.Ghost,
+                        size = TangemButton.Size.X7,
+                        onClick = onClick,
+                        modifier = Modifier.padding(end = 16.dp),
+                    )
+                }
+            }
+        }
+    }
 }
 
 private fun Modifier.placedOnlyWhen(isPlaced: Boolean) = this
@@ -455,14 +426,6 @@ private fun KeepItemComposed() {
 private fun loadingTabs(): ImmutableList<TangemTabItemUM> =
     List(LOADING_TAB_COUNT) { index -> TangemTabItemUM.Loading(id = "loading_$index") }.toImmutableList()
 
-private fun PolymarketCategoryTabUM.toTangemTabItemUM() = TangemTabItemUM.Content(
-    id = id.toString(),
-    label = stringReference(label),
-    iconStart = icon?.let { TangemIconUM.Icon(imageVector = it.tabIcon) },
-    isSelected = isSelected,
-    onClick = onClick,
-)
-
 @Preview(name = "Content Light", showBackground = true, widthDp = 360)
 @Preview(
     name = "Content Dark",
@@ -477,7 +440,7 @@ private fun PolymarketMainScreenContentPreview() {
             state = PolymarketMainUM(
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
-                content = PolymarketMainUM.ContentUM.Content(
+                content = PolymarketFeedContentUM.Content(
                     events = previewEvents(),
                     footer = PolymarketFeedFooterUM.Loading,
                 ),
@@ -490,6 +453,7 @@ private fun PolymarketMainScreenContentPreview() {
             onSearchClick = {},
             onHistoryClick = {},
             onSupportChatClick = {},
+            onFastTradingSettingsClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -512,7 +476,7 @@ private fun PolymarketMainScreenAwaitingFundsPreview() {
             state = PolymarketMainUM(
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
-                content = PolymarketMainUM.ContentUM.Content(
+                content = PolymarketFeedContentUM.Content(
                     events = previewEvents(),
                     footer = PolymarketFeedFooterUM.Loading,
                 ),
@@ -526,6 +490,7 @@ private fun PolymarketMainScreenAwaitingFundsPreview() {
             onSearchClick = {},
             onHistoryClick = {},
             onSupportChatClick = {},
+            onFastTradingSettingsClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -550,7 +515,7 @@ private fun PolymarketMainScreenErrorPreview() {
             state = PolymarketMainUM(
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
-                content = PolymarketMainUM.ContentUM.Error(onReloadClick = {}),
+                content = PolymarketFeedContentUM.Error(onReloadClick = {}),
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
             positions = null,
@@ -558,6 +523,7 @@ private fun PolymarketMainScreenErrorPreview() {
             onSearchClick = {},
             onHistoryClick = {},
             onSupportChatClick = {},
+            onFastTradingSettingsClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -581,7 +547,7 @@ private fun PolymarketMainScreenEmptyPreview() {
             state = PolymarketMainUM(
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
-                content = PolymarketMainUM.ContentUM.Empty,
+                content = PolymarketFeedContentUM.Empty,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
             positions = null,
@@ -589,6 +555,7 @@ private fun PolymarketMainScreenEmptyPreview() {
             onSearchClick = {},
             onHistoryClick = {},
             onSupportChatClick = {},
+            onFastTradingSettingsClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -614,7 +581,7 @@ private fun PolymarketMainScreenLoadingPreview() {
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = persistentListOf(),
                 isCategoriesLoading = true,
-                content = PolymarketMainUM.ContentUM.Loading,
+                content = PolymarketFeedContentUM.Loading,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
             positions = { modifier ->
@@ -629,6 +596,7 @@ private fun PolymarketMainScreenLoadingPreview() {
             onSearchClick = {},
             onHistoryClick = {},
             onSupportChatClick = {},
+            onFastTradingSettingsClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -640,21 +608,21 @@ private fun PolymarketMainScreenLoadingPreview() {
 private fun previewCategories() = persistentListOf(
     PolymarketCategoryTabUM(
         id = 1,
-        label = "Trending",
+        label = stringReference("Trending"),
         icon = PolymarketCategoryIcon.TRENDING,
         isSelected = true,
         onClick = {},
     ),
     PolymarketCategoryTabUM(
         id = 2,
-        label = "Business",
+        label = stringReference("Business"),
         icon = null,
         isSelected = false,
         onClick = {},
     ),
     PolymarketCategoryTabUM(
         id = 3,
-        label = "Sport",
+        label = stringReference("Sport"),
         icon = PolymarketCategoryIcon.SPORTS,
         isSelected = false,
         onClick = {},

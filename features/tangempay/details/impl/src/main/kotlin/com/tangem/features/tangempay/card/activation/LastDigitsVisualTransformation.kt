@@ -8,7 +8,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
-import com.tangem.domain.pay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
+import com.tangem.domain.tangempay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
 
 internal const val MASK_DIGIT = "0"
 

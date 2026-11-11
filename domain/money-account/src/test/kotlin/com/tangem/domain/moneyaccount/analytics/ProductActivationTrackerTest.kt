@@ -1,11 +1,11 @@
 package com.tangem.domain.moneyaccount.analytics
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.pay.TangemPayProduct
-import com.tangem.domain.pay.model.CustomerSummary
-import com.tangem.domain.pay.model.MoneyAccountActivationState
-import com.tangem.domain.pay.model.PaymentAccountActivationState
-import com.tangem.domain.pay.model.TangemPayCustomerState
+import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.tangempay.model.CustomerSummary
+import com.tangem.domain.tangempay.model.MoneyAccountActivationState
+import com.tangem.domain.tangempay.model.PaymentAccountActivationState
+import com.tangem.domain.tangempay.model.TangemPayCustomerState
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.ActivationFailureReason
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.ActivationResult

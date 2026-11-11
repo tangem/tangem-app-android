@@ -50,12 +50,16 @@ internal class FeedTopBlocksComponent(
             context = child(key = ForYouBlockComponent.KEY),
             blocksAnalytics = blocksAnalytics,
         ),
-        AddAccountBlockComponent(
-            context = child(key = AddAccountBlockComponent.KEY),
-            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
-            addAccountTypeComponentFactory = addAccountTypeComponentFactory,
-            blocksAnalytics = blocksAnalytics,
-        ),
+        if (params.isServicesBlockEnabled) {
+            ServicesBlockComponent(context = child(key = ServicesBlockComponent.KEY))
+        } else {
+            AddAccountBlockComponent(
+                context = child(key = AddAccountBlockComponent.KEY),
+                portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+                addAccountTypeComponentFactory = addAccountTypeComponentFactory,
+                blocksAnalytics = blocksAnalytics,
+            )
+        },
         TangemPayBlockComponent(
             context = child(key = TangemPayBlockComponent.KEY),
             blocksAnalytics = blocksAnalytics,
@@ -117,5 +121,6 @@ internal class FeedTopBlocksComponent(
 
     data class Params(
         val callbacks: FeedBlockModalCallbacks,
+        val isServicesBlockEnabled: Boolean,
     )
 }

@@ -6,4 +6,5 @@ data class EarnRowUM(
     val label: TextReference,
     val value: TextReference,
     val onInfoClick: (() -> Unit)?,
+    val onValueClick: (() -> Unit)? = null,
 )

@@ -59,11 +59,15 @@ data class JointAccountMembersUM(
         val onApprovalsInfoClick: () -> Unit,
     )
 
-    /** [button] is `null` once this wallet has confirmed the account — only the [hint] remains. */
-    data class FooterUM(
-        val hint: TextReference?,
-        val button: ConfirmButtonUM?,
-    )
+    sealed interface FooterUM {
+
+        data class Confirm(
+            val hint: TextReference?,
+            val button: ConfirmButtonUM,
+        ) : FooterUM
+
+        data class AwaitingOthers(val text: TextReference) : FooterUM
+    }
 
     /** "Confirm shared address" button. */
     data class ConfirmButtonUM(

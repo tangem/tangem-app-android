@@ -9,7 +9,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
@@ -52,16 +51,7 @@ internal class PlacePredictionAddFunds(
     }
 
     fun onAddFundsClick() {
-        when (requisites.state.value) {
-            is RequisitesState.Loading -> Unit
-            is RequisitesState.Failed -> messageSender.send(
-                DialogMessage(
-                    message = resourceReference(R.string.prediction_add_funds_error_description),
-                    onDismissRequest = requisites::retryIfFailed,
-                ),
-            )
-            is RequisitesState.Ready -> openAddFunds()
-        }
+        if (requisites.state.value is RequisitesState.Ready) openAddFunds()
     }
 
     override fun onSwapClick() {
@@ -105,8 +95,9 @@ internal class PlacePredictionAddFunds(
         requisites: RequisitesState,
         permission: TradingPermissionUM?,
     ): Boolean = permission != null && permission != TradingPermissionUM.Restricted && when (requisites) {
-        RequisitesState.Loading -> false
-        RequisitesState.Failed -> status != null
+        RequisitesState.Loading,
+        RequisitesState.Failed,
+        -> false
         is RequisitesState.Ready -> status?.cryptoCurrencyStatus != null
     }
 }

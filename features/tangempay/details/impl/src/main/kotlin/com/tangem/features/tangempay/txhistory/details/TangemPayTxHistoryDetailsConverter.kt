@@ -11,7 +11,8 @@ import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.core.ui.utils.DateTimeFormatters
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.common.TangemPayUrlValidator
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
@@ -87,7 +88,7 @@ internal object TangemPayTxHistoryDetailsConverter :
                 },
             )
             is TangemPayTxHistoryItem.Spend -> {
-                val merchantIcon = this.enrichedMerchantIconUrl
+                val merchantIcon = this.enrichedMerchantIconUrl?.takeIf(TangemPayUrlValidator::isImageUrlSecure)
                 if (merchantIcon != null) {
                     TangemIconUM.Url(merchantIcon, R.drawable.ic_category_24)
                 } else {

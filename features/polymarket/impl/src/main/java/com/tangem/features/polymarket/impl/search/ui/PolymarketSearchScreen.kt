@@ -53,11 +53,11 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
 import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
-import com.tangem.features.polymarket.impl.main.ui.PolymarketEventCard
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
+import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketEventCard
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketEventRowUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketEventUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketOutcomeUM
 import com.tangem.features.polymarket.impl.search.ui.state.PolymarketSearchUM
 import kotlinx.collections.immutable.persistentListOf
 

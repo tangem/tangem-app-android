@@ -24,8 +24,9 @@ internal interface OnrampDeeplinkModule {
     fun bindBuyDeepLinkHandler(impl: DefaultBuyDeepLinkHandler.Factory): BuyDeepLinkHandler.Factory
 
     @Binds
-    @Singleton
-    fun bindSellDeepLinkHandler(impl: DefaultSellDeepLinkHandler.Factory): SellDeepLinkHandler.Factory
+    @IntoMap
+    @DeepLinkKey(SellDeepLinkHandler.DEEPLINK_KEY)
+    fun bindSellDeepLinkHandler(impl: SellDeepLinkHandler): DeepLinkHandler
 
     @Binds
     @Singleton
@@ -53,14 +54,6 @@ internal interface OnrampDeeplinkModule {
         @IntoMap
         @DeepLinkKey(DefaultBuyDeepLinkHandler.DEEPLINK_KEY)
         fun provideBuyDeepLinkHandler(factory: BuyDeepLinkHandler.Factory): DeepLinkHandler =
-            DeepLinkHandler { factory.create() }
-
-        // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
-        // bound here as a DeepLinkHandler instead of a lambda over its factory.
-        @Provides
-        @IntoMap
-        @DeepLinkKey(DefaultSellDeepLinkHandler.DEEPLINK_KEY)
-        fun provideSellDeepLinkHandler(factory: SellDeepLinkHandler.Factory): DeepLinkHandler =
             DeepLinkHandler { factory.create() }
 
         /** Claimed on purpose so the provider's return link counts as handled; there is nothing to open. */

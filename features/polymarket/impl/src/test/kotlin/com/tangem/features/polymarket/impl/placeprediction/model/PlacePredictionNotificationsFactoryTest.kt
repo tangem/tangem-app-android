@@ -78,7 +78,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         ),
         GateModel(
             quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-            expectedNotifications = emptyList(),
+            expectedNotifications = listOf(PredictionNotificationUM.BelowMinOrder),
             expectedButtonEnabled = false,
         ),
         GateModel(
@@ -215,6 +215,45 @@ internal class PlacePredictionNotificationsFactoryTest {
         // Assert
         assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("4.5")))
         assertThat(actual.isReadyToPlace).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a buy below the share minimum under the stated minimum WHEN the gate runs THEN only the caption explains it`() {
+        // Arrange
+        val state = createState(
+            amountValue = "1",
+            minAmount = BigDecimal("4.5"),
+            quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).doesNotContain(PredictionNotificationUM.BelowMinOrder)
+        assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("4.5")))
+        assertThat(actual.isReadyToPlace).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a sell below the share minimum WHEN the gate runs THEN no notification is shown AND it stays placeable`() {
+        // Arrange
+        val state = createState(
+            amountValue = "3",
+            quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+            order = OrderSideUM.Sell(
+                position = SellPositionUM.Held(available = BigDecimal("51.23")),
+                proceeds = SharesProceedsUM.Unavailable,
+                balance = null,
+            ),
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).isEmpty()
+        assertThat(actual.isReadyToPlace).isTrue()
     }
 
     @Test

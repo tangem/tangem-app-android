@@ -3,6 +3,7 @@ package com.tangem.features.collectibles.impl.main.ui.state
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -34,6 +35,21 @@ internal data class CollectiblesMainUM(
         data object Hidden : RelinkUM
         data class Shown(val isLoading: Boolean, val onRelinkClick: () -> Unit) : RelinkUM
     }
+
+    /**
+     * One banner per pending purchase.
+     *
+     * @property icon a status glyph at the end; a banner the user can close shows the close button instead
+     */
+    @Immutable
+    data class PendingPackUM(
+        val txId: String,
+        val title: TextReference,
+        val description: TextReference,
+        val icon: ImageVector?,
+        val onCloseClick: (() -> Unit)?,
+        val button: TangemMessageBanner.Button?,
+    )
 
     data class MenuUM(
         val items: ImmutableList<MenuItemUM>,

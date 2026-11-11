@@ -1,8 +1,8 @@
 package com.tangem.features.tangempay.deeplink
 
-import com.tangem.domain.pay.utils.TangemPayTxHistoryItemStatusConverter
-import com.tangem.domain.visa.model.TangemPayPushNotificationType
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.utils.TangemPayTxHistoryItemStatusConverter
+import com.tangem.domain.tangempay.model.TangemPayPushNotificationType
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.utils.extensions.orZero
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone

@@ -1,0 +1,12 @@
+package com.tangem.domain.tangempay.model
+
+data class ShippingAddress(
+    val firstName: String,
+    val lastName: String,
+    val region: String,
+    val city: String,
+    val line1: String,
+    val line2: String?,
+    val postalCode: String,
+    val phone: String,
+)

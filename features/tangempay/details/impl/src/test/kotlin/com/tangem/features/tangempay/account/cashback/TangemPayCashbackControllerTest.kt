@@ -14,15 +14,15 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CashbackDisplayMode
-import com.tangem.domain.pay.model.CashbackSummary
-import com.tangem.domain.pay.model.TangemPayCashback
-import com.tangem.domain.pay.usecase.GetCashbackDeactivationDismissedUseCase
-import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
-import com.tangem.domain.pay.usecase.ObserveCashbackSummaryUseCase
-import com.tangem.domain.pay.usecase.SetCashbackDeactivationDismissedUseCase
+import com.tangem.domain.tangempay.model.CashbackDisplayMode
+import com.tangem.domain.tangempay.model.CashbackSummary
+import com.tangem.domain.tangempay.model.TangemPayCashback
+import com.tangem.domain.tangempay.usecase.GetCashbackDeactivationDismissedUseCase
+import com.tangem.domain.tangempay.usecase.GetCashbackSummaryUseCase
+import com.tangem.domain.tangempay.usecase.ObserveCashbackSummaryUseCase
+import com.tangem.domain.tangempay.usecase.SetCashbackDeactivationDismissedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.account.CashbackBlockUM
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
@@ -697,7 +697,7 @@ internal class TangemPayCashbackControllerTest {
         router = router,
     )
 
-    private fun givenRefreshReturns(result: Either<VisaApiError, CashbackSummary>, delayMillis: Long = 0L) {
+    private fun givenRefreshReturns(result: Either<TangemPayApiError, CashbackSummary>, delayMillis: Long = 0L) {
         coEvery { getCashbackSummaryUseCase(any()) } coAnswers {
             delay(delayMillis)
             result.onRight { summary ->
@@ -708,7 +708,7 @@ internal class TangemPayCashbackControllerTest {
         }
     }
 
-    private fun refreshFailure(): Either<VisaApiError, CashbackSummary> = mockk<VisaApiError>(relaxed = true).left()
+    private fun refreshFailure(): Either<TangemPayApiError, CashbackSummary> = mockk<TangemPayApiError>(relaxed = true).left()
 
     private fun TangemPayCashbackController.errorBlock(): CashbackBlockUM.Error =
         state.value.block as CashbackBlockUM.Error

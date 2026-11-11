@@ -16,11 +16,16 @@ import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
+import com.tangem.features.jointaccount.analytics.JointBlockaidAnalyticsSender
+import com.tangem.features.jointaccount.blockaid.JointBlockaidSheetKind
+import com.tangem.common.ui.blockaid.BlockaidSheetUM
 import com.tangem.features.txhistory.converter.FiatConversion
 import com.tangem.features.txhistory.converter.JointOperationTxToDetailsUMConverter
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
@@ -41,11 +46,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
@@ -64,12 +72,15 @@ internal class JointOperationModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val menuActions: TxDetailsMenuActions,
+    private val blockaidAnalyticsSender: JointBlockaidAnalyticsSender,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
     private val params: JointOperationComponent.Params = paramsContainer.require()
 
     private val isColdWallet = delegate.isColdWallet(userWalletId = params.userWalletId)
+
+    private val blockchain = params.currency.network.name
 
     private val snapshot: SharedFlow<JointOperationSnapshot> = delegate
         .observe(
@@ -119,13 +130,7 @@ internal class JointOperationModel @Inject constructor(
         get() = isSigning.value || isRefusing.value || isAwaitingCancellation.value || isHeld
 
     private val recipient = snapshot
-        .map { snapshot ->
-            when (snapshot) {
-                is JointOperationSnapshot.InFlight -> snapshot.state.displayed.recipient
-                is JointOperationSnapshot.Finished -> snapshot.tx.transfer.intent.recipient
-                JointOperationSnapshot.NotSynced, JointOperationSnapshot.Unreadable -> null
-            }
-        }
+        .map(JointOperationSnapshot::recipientAddress)
         .distinctUntilChanged()
         .flatMapLatest { address ->
             if (address == null) return@flatMapLatest flowOf(null)
@@ -148,9 +153,12 @@ internal class JointOperationModel @Inject constructor(
 
     private val refusalMessages = JointOperationRefusalMessages(onConfirm = ::refuse)
 
-    private val signersConverter = JointOperationSignersUMConverter()
-
     val stackNavigation = StackNavigation<JointOperationRoutes>()
+
+    val blockaidSheet: StateFlow<BlockaidSheetUM?>
+        field = MutableStateFlow<BlockaidSheetUM?>(null)
+
+    private var pendingSigning: PendingSigning? = null
 
     val uiState: StateFlow<JointOperationUM> = combine(
         flow = snapshot,
@@ -184,26 +192,14 @@ internal class JointOperationModel @Inject constructor(
             !answered.isReachable && !answered.isSending
         if (recipient == null) return@combine JointOperationUM.Loading
 
-        JointOperationUM.Content(
-            operation = operationConverter.convert(
-                value = JointOperationUMConverter.Input(
-                    state = answered,
-                    isSigning = actions.isSigning,
-                    isRefusing = actions.isRefusing || isAwaitingCancellation,
-                    hasAnswered = actions.localAnswer != null,
-                    recipient = recipient,
-                    isBalanceHidden = isBalanceHidden,
-                    isColdWallet = isColdWallet,
-                    fiat = fiat,
-                ),
-            ),
-            signers = signersConverter.convert(
-                value = JointOperationSignersUMConverter.Input(
-                    membersCount = answered.membersCount,
-                    signers = answered.signers,
-                    isVotingClosed = answered.isVotingClosed,
-                ),
-            ),
+        answered.toContent(
+            operationConverter = operationConverter,
+            actions = actions,
+            isAwaitingCancellation = isAwaitingCancellation,
+            recipient = recipient,
+            isBalanceHidden = isBalanceHidden,
+            isColdWallet = isColdWallet,
+            fiat = fiat,
         )
     }
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = JointOperationUM.Loading)
@@ -225,6 +221,10 @@ internal class JointOperationModel @Inject constructor(
                 .first()
             if (end == JointOperationPoller.End.GONE) isGoneLocally.value = true
         }
+        snapshot
+            .filterNot(JointOperationSnapshot::isSignable)
+            .onEach { closeBlockaid() }
+            .launchIn(modelScope)
     }
 
     fun onResume() {
@@ -239,27 +239,83 @@ internal class JointOperationModel @Inject constructor(
         val operation = currentState ?: return
         if (!operation.canSign || isBusy) return
 
+        launchSigning {
+            delegate.prepareSigning(
+                state = operation,
+                network = params.currency.network,
+                operationId = params.operationId,
+            )
+                .onRight { prepared -> onSigningPrepared(operation = operation, prepared = prepared) }
+                .onLeft(::onSignFailed)
+        }
+    }
+
+    private suspend fun onSigningPrepared(operation: JointOperationState, prepared: PreparedJointOperation.Signing) {
+        blockaidAnalyticsSender.sendCheck(BlockaidSource.Sign, prepared.verdict, blockchain)
+        val kind = JointBlockaidSheetKind.of(prepared.verdict)
+            ?: return submitSigning(operation = operation, prepared = prepared)
+
+        if (kind == JointBlockaidSheetKind.RISKY) pendingSigning = PendingSigning(operation, prepared)
+        showBlockaid(kind = kind)
+    }
+
+    private suspend fun submitSigning(operation: JointOperationState, prepared: PreparedJointOperation.Signing) {
+        delegate.submitSigning(prepared = prepared)
+            .onRight { signedOperation ->
+                localAnswer.value = Answer.SIGNED
+                poller.refresh()
+                signedOperation?.let {
+                    analyticsEventHandler.send(operationSignedEvent(operation, it, params.currency))
+                }
+            }
+            .onLeft(::onSignFailed)
+    }
+
+    private fun onSignFailed(error: JointOperationSignError) {
+        if (error == JointOperationSignError.Malicious) showBlockaid(kind = JointBlockaidSheetKind.MALICIOUS)
+        if (error.isStaleOperation()) poller.refresh()
+        showSignError(error)
+    }
+
+    private fun showBlockaid(kind: JointBlockaidSheetKind) {
+        blockaidSheet.value = blockaidSheetUM(
+            kind = kind,
+            isColdWallet = isColdWallet,
+            onSignAnyway = ::onSignAnywayClick,
+            onDecline = ::onBlockaidDeclineClick,
+            onClose = ::closeBlockaid,
+        )
+        blockaidAnalyticsSender.sendSheetShown(source = BlockaidSource.Sign, kind = kind, blockchain = blockchain)
+    }
+
+    private fun onSignAnywayClick() {
+        val pending = pendingSigning ?: return
+        closeBlockaid()
+        blockaidAnalyticsSender.sendSignAnyway(source = BlockaidSource.Sign, blockchain = blockchain)
+
+        launchSigning { submitSigning(operation = pending.operation, prepared = pending.prepared) }
+    }
+
+    private fun launchSigning(block: suspend () -> Unit) {
         modelScope.launch {
             isSigning.value = true
             try {
-                delegate.sign(
-                    state = operation,
-                    network = params.currency.network,
-                    operationId = params.operationId,
-                )
-                    .onRight { signedOperation ->
-                        localAnswer.value = Answer.SIGNED
-                        poller.refresh()
-                        signedOperation?.let { sendOperationSigned(state = operation, signedOperation = it) }
-                    }
-                    .onLeft { error ->
-                        if (error.isStaleOperation()) poller.refresh()
-                        showSignError(error)
-                    }
+                block()
             } finally {
                 isSigning.value = false
             }
         }
+    }
+
+    private fun onBlockaidDeclineClick() {
+        if (blockaidSheet.value == null || currentState == null || isBusy) return
+        closeBlockaid()
+        refuse()
+    }
+
+    private fun closeBlockaid() {
+        pendingSigning = null
+        blockaidSheet.value = null
     }
 
     fun onRefuseClick() {
@@ -332,40 +388,11 @@ internal class JointOperationModel @Inject constructor(
         when (operation.role) {
             Role.INITIATOR -> {
                 isAwaitingCancellation.value = true
-                showDeleted()
+                uiMessageSender.send(deletedSnackbar)
             }
             Role.MEMBER -> localAnswer.value = Answer.DECLINED
             Role.UNKNOWN -> Unit
         }
-    }
-
-    private fun sendOperationSigned(state: JointOperationState, signedOperation: JointOperation) {
-        val signedBy = signedOperation.signatures
-            .filter { it.state == JointOperation.MemberSignature.State.SIGNED }
-            .map(JointOperation.MemberSignature::address)
-            .plus(listOfNotNull(signedOperation.initiator ?: state.initiator))
-            .distinct()
-
-        analyticsEventHandler.send(
-            JointAccountAnalyticsEvent.OperationSigned(
-                signaturesCollected = signedBy.size,
-                membersCount = state.membersCount,
-                threshold = state.threshold,
-                // An operation executed or failed right after this signature comes back with an unknown status
-                isThresholdReached = signedBy.size >= state.threshold,
-                blockchain = params.currency.network.name,
-                token = params.currency.symbol,
-            ),
-        )
-    }
-
-    private fun showDeleted() {
-        uiMessageSender.send(
-            SnackbarMessage(
-                message = resourceReference(CoreUiR.string.joint_operation_deleted_snackbar),
-                startIconId = CoreUiR.drawable.ic_trash_24,
-            ),
-        )
     }
 
     private fun showSignError(error: JointOperationSignError) {
@@ -373,11 +400,7 @@ internal class JointOperationModel @Inject constructor(
             ?: return
 
         TangemLogger.e("Unable to sign the joint operation: $error")
-        val analyticsEvent = when (error) {
-            is JointOperationSignError.Failed -> JointAccountError(source = ErrorSource.Sign, cause = error.cause)
-            else -> JointAccountError(source = ErrorSource.Sign, errorMessage = error.toString())
-        }
-        analyticsEventHandler.send(analyticsEvent)
+        analyticsEventHandler.send(error.toAnalyticsEvent())
         uiMessageSender.send(message)
     }
 
@@ -389,24 +412,24 @@ internal class JointOperationModel @Inject constructor(
         val message = refusalMessages.error(error) ?: return
 
         TangemLogger.e("Unable to reject the joint operation: $error")
-        val source = if (role == Role.INITIATOR) ErrorSource.Delete else ErrorSource.Decline
-        val analyticsEvent = when (error) {
-            is JointOperationRejectError.Failed -> JointAccountError(source = source, cause = error.cause)
-            else -> JointAccountError(source = source, errorMessage = error.toString())
-        }
-        analyticsEventHandler.send(analyticsEvent)
+        analyticsEventHandler.send(error.toAnalyticsEvent(role))
         uiMessageSender.send(message)
     }
-
-    /** What this member is doing or has done on the sheet, on top of what the backend reports */
-    private data class UserActions(
-        val isSigning: Boolean,
-        val isRefusing: Boolean,
-        val localAnswer: Answer?,
-        val isGone: Boolean,
-        val isAwaitingCancellation: Boolean,
-    )
 }
+
+private data class PendingSigning(
+    val operation: JointOperationState,
+    val prepared: PreparedJointOperation.Signing,
+)
+
+/** What this member is doing or has done on the sheet, on top of what the backend reports */
+private data class UserActions(
+    val isSigning: Boolean,
+    val isRefusing: Boolean,
+    val localAnswer: Answer?,
+    val isGone: Boolean,
+    val isAwaitingCancellation: Boolean,
+)
 
 @Suppress("LongParameterList")
 private fun JointOperationSnapshot.Finished.toContent(
@@ -436,3 +459,111 @@ private fun JointOperationSignError.isStaleOperation(): Boolean =
 
 private fun JointOperationRejectError.isStaleOperation(): Boolean =
     this == JointOperationRejectError.OperationNotFound || this == JointOperationRejectError.ThresholdReached
+
+private fun operationSignedEvent(
+    state: JointOperationState,
+    signedOperation: JointOperation,
+    currency: CryptoCurrency,
+): JointAccountAnalyticsEvent.OperationSigned {
+    val signedBy = signedOperation.signatures
+        .filter { it.state == JointOperation.MemberSignature.State.SIGNED }
+        .map(JointOperation.MemberSignature::address)
+        .plus(listOfNotNull(signedOperation.initiator ?: state.initiator))
+        .distinct()
+
+    return JointAccountAnalyticsEvent.OperationSigned(
+        signaturesCollected = signedBy.size,
+        membersCount = state.membersCount,
+        threshold = state.threshold,
+        // An operation executed or failed right after this signature comes back with an unknown status
+        isThresholdReached = signedBy.size >= state.threshold,
+        blockchain = currency.network.name,
+        token = currency.symbol,
+    )
+}
+
+private fun JointOperationSignError.toAnalyticsEvent(): JointAccountError = when (this) {
+    is JointOperationSignError.Failed -> JointAccountError(source = ErrorSource.Sign, cause = cause)
+    else -> JointAccountError(source = ErrorSource.Sign, errorMessage = toString())
+}
+
+private fun JointOperationRejectError.toAnalyticsEvent(role: Role): JointAccountError {
+    val source = if (role == Role.INITIATOR) ErrorSource.Delete else ErrorSource.Decline
+    return when (this) {
+        is JointOperationRejectError.Failed -> JointAccountError(source = source, cause = cause)
+        else -> JointAccountError(source = source, errorMessage = toString())
+    }
+}
+
+private fun blockaidSheetUM(
+    kind: JointBlockaidSheetKind,
+    isColdWallet: Boolean,
+    onSignAnyway: () -> Unit,
+    onDecline: () -> Unit,
+    onClose: () -> Unit,
+): BlockaidSheetUM {
+    val decline = BlockaidSheetUM.ButtonUM(
+        text = resourceReference(CoreUiR.string.joint_blockaid_decline_transaction),
+        onClick = onDecline,
+    )
+
+    return when (kind) {
+        JointBlockaidSheetKind.RISKY -> BlockaidSheetUM.risky(
+            primaryButton = BlockaidSheetUM.ButtonUM(
+                text = resourceReference(CoreUiR.string.joint_blockaid_sign_anyway),
+                hasTangemIcon = isColdWallet,
+                onClick = onSignAnyway,
+            ),
+            secondaryButton = decline,
+            onClose = onClose,
+        )
+        JointBlockaidSheetKind.MALICIOUS -> BlockaidSheetUM.malicious(primaryButton = decline, onClose = onClose)
+    }
+}
+
+private fun JointOperationSnapshot.isSignable(): Boolean =
+    this is JointOperationSnapshot.InFlight && !isHeld && state.canSign
+
+private fun JointOperationSnapshot.recipientAddress(): String? = when (this) {
+    is JointOperationSnapshot.InFlight -> state.displayed.recipient
+    is JointOperationSnapshot.Finished -> tx.transfer.intent.recipient
+    JointOperationSnapshot.NotSynced, JointOperationSnapshot.Unreadable -> null
+}
+
+@Suppress("LongParameterList")
+private fun JointOperationState.toContent(
+    operationConverter: JointOperationUMConverter,
+    actions: UserActions,
+    isAwaitingCancellation: Boolean,
+    recipient: JointOperationRecipient,
+    isBalanceHidden: Boolean,
+    isColdWallet: Boolean,
+    fiat: JointOperationFiat,
+): JointOperationUM.Content = JointOperationUM.Content(
+    operation = operationConverter.convert(
+        value = JointOperationUMConverter.Input(
+            state = this,
+            isSigning = actions.isSigning,
+            isRefusing = actions.isRefusing || isAwaitingCancellation,
+            hasAnswered = actions.localAnswer != null,
+            recipient = recipient,
+            isBalanceHidden = isBalanceHidden,
+            isColdWallet = isColdWallet,
+            fiat = fiat,
+        ),
+    ),
+    signers = signersConverter.convert(
+        value = JointOperationSignersUMConverter.Input(
+            membersCount = membersCount,
+            signers = signers,
+            isVotingClosed = isVotingClosed,
+        ),
+    ),
+)
+
+private val deletedSnackbar = SnackbarMessage(
+    message = resourceReference(CoreUiR.string.joint_operation_deleted_snackbar),
+    startIconId = CoreUiR.drawable.ic_trash_24,
+)
+
+private val signersConverter = JointOperationSignersUMConverter()

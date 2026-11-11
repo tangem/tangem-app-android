@@ -28,12 +28,12 @@ internal enum class CtaBannerLink {
 }
 
 /** Classifies a trimmed [link]. Never throws: malformed input is [CtaBannerLink.UNSUPPORTED]. */
-internal fun resolveCtaBannerLink(link: String?, isSupportChatEnabled: Boolean): CtaBannerLink {
+internal fun resolveCtaBannerLink(link: String?): CtaBannerLink {
     val uri = link?.let { runCatching { URI(it) }.getOrNull() } ?: return CtaBannerLink.UNSUPPORTED
 
     return when (uri.scheme) {
         DeepLinkScheme.Https.scheme -> uri.resolveHttpsLink()
-        DeepLinkScheme.Tangem.scheme -> uri.resolveTangemLink(isSupportChatEnabled)
+        DeepLinkScheme.Tangem.scheme -> uri.resolveTangemLink()
         else -> CtaBannerLink.UNSUPPORTED
     }
 }
@@ -42,13 +42,10 @@ internal fun resolveCtaBannerLink(link: String?, isSupportChatEnabled: Boolean):
 private fun URI.resolveHttpsLink(): CtaBannerLink =
     if (userInfo == null && !host.isNullOrBlank()) CtaBannerLink.PARTNER_PAGE else CtaBannerLink.UNSUPPORTED
 
-private fun URI.resolveTangemLink(isSupportChatEnabled: Boolean): CtaBannerLink =
+private fun URI.resolveTangemLink(): CtaBannerLink =
     // A host with an underscore, e.g. token_chart, is not a valid URI host and is only in the authority
     when (val routeHost = host ?: rawAuthority) {
         null -> CtaBannerLink.UNSUPPORTED
-        // The app routes the support chat link only behind this toggle, so the button would do nothing without it
-        DeepLinkRoute.Support.host ->
-            if (isSupportChatEnabled) CtaBannerLink.APP_LINK else CtaBannerLink.UNSUPPORTED
         DeepLinkRoute.Onramp.host ->
             if (isConciergeWaitlist()) CtaBannerLink.CONCIERGE_WAITLIST else CtaBannerLink.APP_LINK
         else -> if (routeHost.isBlank()) CtaBannerLink.UNSUPPORTED else CtaBannerLink.APP_LINK

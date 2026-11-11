@@ -858,6 +858,7 @@
   <string name="hw_cloud_backup_permissions_title_v2">Autoriser l\'accès complet à %1$s</string>
   <string name="hw_cloud_backup_remove_title">Sauvegarde de %2$s sur %1$s</string>
   <string name="hw_cloud_backup_removed">Sauvegarde supprimée</string>
+  <string name="hw_cloud_backup_restore_all_added_hint">Toutes les sauvegardes de ce compte %1$s sont déjà dans Tangem</string>
   <string name="hw_cloud_backup_restore_error_title">Une erreur est survenue</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">Veuillez réessayer plus tard ou importer votre phrase de récupération.</string>
   <string name="hw_cloud_backup_restore_navtitle_v2">Sauvegarde %1$s</string>
@@ -946,6 +947,8 @@
   <string name="hw_upgrade_title">Passez à notre Hardware Wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Protégez vos cryptomonnaies grâce au hardware wallet haut de gamme de Tangem.</string>
   <string name="hw_upgrade_to_cold_banner_title">Améliorez la sécurité de votre wallet grâce à un dispositif matériel</string>
+  <string name="hw_wallets_limit_alert_message">Vous pouvez avoir jusqu’à %1$s portefeuilles mobiles dans Tangem. Pour en ajouter un autre, supprimez d’abord l’un de vos portefeuilles mobiles actuels.</string>
+  <string name="hw_wallets_limit_alert_title">Limite de portefeuilles mobiles atteinte</string>
   <string name="information_generated_with_ai">Ces informations ont été générées avec l\'IA.\nAppuyez ici si vous trouvez des erreurs.</string>
   <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d\'accès</string>
   <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe</string>
@@ -2114,10 +2117,16 @@
   <string name="social_login_creating_wallet">Création de votre portefeuille</string>
   <string name="social_login_creating_wallet_description">Cela ne prendra que quelques secondes</string>
   <string name="social_login_error_backup_not_saved">Impossible d’enregistrer la sauvegarde — vérifiez que votre stockage cloud est disponible et réessayez</string>
+  <string name="social_login_error_backup_not_saved_description">Vérifiez que votre stockage cloud est disponible et réessayez.</string>
+  <string name="social_login_error_backup_not_saved_title">Impossible d’enregistrer la sauvegarde</string>
   <string name="social_login_error_cloud_access_description">Vérifiez que Tangem a accès à votre compte %s, puis réessayez</string>
   <string name="social_login_error_cloud_access_title">Impossible de restaurer le portefeuille</string>
   <string name="social_login_error_generic">Une erreur est survenue. Veuillez réessayer</string>
+  <string name="social_login_error_generic_v2">Veuillez réessayer. Si le problème persiste, vérifiez votre connexion Internet.</string>
+  <string name="social_login_error_network_description">Vérifiez votre connexion et réessayez.</string>
+  <string name="social_login_error_network_title">Pas de connexion internet</string>
   <string name="social_login_error_no_account">Ajoutez votre compte %s à cet appareil pour continuer.</string>
+  <string name="social_login_error_no_account_title">Aucun compte %1$s sur cet appareil</string>
   <string name="social_login_error_restore_failed_description">Nous n’avons pas pu restaurer le portefeuille associé à ce compte. Réessayez ou contactez l’assistance</string>
   <string name="social_login_error_session_expired">Session expirée. Veuillez réessayer</string>
   <string name="social_login_error_support">Contacter l’assistance</string>
@@ -2126,6 +2135,8 @@
   <string name="social_login_restoring_wallet_description">Récupération de vos tokens</string>
   <string name="social_login_toast_wallet_added">Portefeuille ajouté</string>
   <string name="social_login_toast_wallet_created">Portefeuille créé</string>
+  <string name="social_wallet_already_added_alert_message">Seul un portefeuille sur cet appareil peut utiliser Se connecter avec %1$s. Pour utiliser un autre compte, déconnectez-vous d’abord du compte actuel.</string>
+  <string name="social_wallet_already_added_alert_title">Vous êtes déjà connecté(e) avec %1$s</string>
   <string name="social_wallet_delete_anyway">Supprimer quand même</string>
   <string name="social_wallet_delete_attention_acknowledge">Je comprends que si je n’ai pas sauvegardé ma phrase de récupération, je perdrai définitivement l’accès à ce portefeuille.</string>
   <string name="social_wallet_delete_attention_description">Cela supprimera le portefeuille de cet appareil, le dissociera de votre compte %1$s et supprimera vos clés chiffrées du cloud. Se connecter avec %1$s ne le restaurera plus.</string>
@@ -3072,12 +3083,14 @@
   <string name="user_wallet_add_hardware_title">Ajouter un portefeuille matériel</string>
   <string name="user_wallet_add_mobile_description">Créez un nouveau portefeuille sur cet appareil</string>
   <string name="user_wallet_add_mobile_title">Ajouter un portefeuille mobile</string>
+  <string name="user_wallet_add_wallet">Ajouter un portefeuille</string>
   <string name="user_wallet_coming_soon_dialog_description">Nous travaillons sur la possibilité de créer plusieurs portefeuilles mobiles.</string>
   <string name="user_wallet_list_add_button">Ajouter un nouveau portefeuille</string>
   <string name="user_wallet_list_delete_hw_prompt">Si vous supprimez ce portefeuille sans sauvegarde, vous perdrez définitivement l\'accès à vos fonds.</string>
   <string name="user_wallet_list_delete_prompt">Êtes-vous sûr de vouloir supprimer ce portefeuille ?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Une erreur s\'est produite, veuillez scanner votre carte ou bague pour vous connecter</string>
   <string name="user_wallet_list_error_wallet_already_saved">Ce portefeuille a déjà été enregistré, vous pouvez en ajouter un autre</string>
+  <string name="user_wallet_list_error_wallet_already_saved_title">Portefeuille déjà ajouté</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">Le portefeuille portant le nom %s existe déjà</string>
   <string name="user_wallet_list_rename_popup_placeholder">Nom du portefeuille</string>
   <string name="user_wallet_list_rename_popup_title">Renommer le portefeuille</string>
