@@ -5,7 +5,15 @@ import com.tangem.features.earn.api.overview.EarnProductRate
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
 
-data class EarnHowItWorks(val title: TextReference, val entries: List<EarnTextBlock>)
+/**
+ * [footnote] goes under the entries, for example who audited the contract; [learnMoreUrl] adds a "Learn more" button.
+ */
+data class EarnHowItWorks(
+    val title: TextReference,
+    val entries: List<EarnTextBlock>,
+    val footnote: TextReference? = null,
+    val learnMoreUrl: String? = null,
+)
 
 data class EarnLimits(
     val minDeposit: BigDecimal,
@@ -18,7 +26,6 @@ data class EarnLimits(
  */
 data class EarnPeriod(val id: String, val label: TextReference)
 
-/** @property points in no guaranteed order: a consumer that needs the time order sorts them by [EarnApyPoint.at] */
 data class EarnApyHistory(
     val points: List<EarnApyPoint>,
     val average: BigDecimal?,

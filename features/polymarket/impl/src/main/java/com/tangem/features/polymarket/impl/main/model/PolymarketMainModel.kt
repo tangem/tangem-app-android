@@ -136,6 +136,7 @@ internal class PolymarketMainModel @Inject constructor(
                 categories = persistentListOf(),
                 content = PolymarketFeedContentUM.Loading,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
+                isFastTradingSettingsAvailable = polymarketFeatureToggles.isPolymarketSessionKeysEnabled,
             ),
         )
 
@@ -233,6 +234,10 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onHistoryClick() {
         router.push(PolymarketRoute.History(userWalletId = params.userWalletId))
+    }
+
+    fun onFastTradingSettingsClick() {
+        router.push(PolymarketRoute.FastTradingSettings(userWalletId = params.userWalletId))
     }
 
     fun onSupportChatClick() {

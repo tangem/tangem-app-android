@@ -86,6 +86,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import java.math.BigDecimal
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -736,6 +738,40 @@ internal class PolymarketMainModelTest {
 
         // Assert
         verify(exactly = 0) { router.push(any<AppRoute.Usedesk>(), any()) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN the session keys toggle WHEN the screen opens THEN fast trading settings follow it`(
+        isSessionKeysEnabled: Boolean,
+    ) = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
+
+        // Act
+        val model = createModel(testScope = this, isSessionKeysEnabled = isSessionKeysEnabled)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isFastTradingSettingsAvailable).isEqualTo(isSessionKeysEnabled)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `WHEN fast trading settings clicked THEN its screen opens for the wallet`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
+        val model = createModel(testScope = this, isSessionKeysEnabled = true)
+        advanceUntilIdle()
+
+        // Act
+        model.onFastTradingSettingsClick()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(PolymarketRoute.FastTradingSettings(userWalletId = USER_WALLET_ID), any())
+        }
         model.onDestroy()
     }
 
@@ -1992,9 +2028,14 @@ internal class PolymarketMainModelTest {
         PolymarketCategory(id = 2, label = "Politics", icon = null),
     )
 
-    private fun createModel(testScope: TestScope, isPhaseTwoEnabled: Boolean = false): PolymarketMainModel {
+    private fun createModel(
+        testScope: TestScope,
+        isPhaseTwoEnabled: Boolean = false,
+        isSessionKeysEnabled: Boolean = false,
+    ): PolymarketMainModel {
         val featureToggles = mockk<PolymarketFeatureToggles> {
             every { isPolymarketPhaseTwoEnabled } returns isPhaseTwoEnabled
+            every { isPolymarketSessionKeysEnabled } returns isSessionKeysEnabled
         }
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns statusFlow
 
