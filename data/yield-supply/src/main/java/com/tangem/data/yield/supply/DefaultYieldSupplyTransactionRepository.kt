@@ -328,12 +328,14 @@ internal class DefaultYieldSupplyTransactionRepository(
         }.logErrorUnlessCancellation().getOrThrow()
     }
 
-    override suspend fun isEntrySuspended(userWalletId: UserWalletId, token: CryptoCurrency.Token): Boolean =
-        withContext(dispatchers.io) {
-            runSuspendCatching {
-                getWalletManager(userWalletId, token.network).isEntrySuspended(token.contractAddress)
-            }.logErrorUnlessCancellation().getOrThrow()
-        }
+    override suspend fun getYieldModuleVersionStatus(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): YieldModuleVersionStatus = withContext(dispatchers.io) {
+        runSuspendCatching {
+            getWalletManager(userWalletId, network).checkModuleVersionStatus()
+        }.logErrorUnlessCancellation().getOrThrow()
+    }
 
     override suspend fun getWithdrawLiquidity(userWalletId: UserWalletId, token: CryptoCurrency.Token): BigDecimal =
         withContext(dispatchers.io) {
