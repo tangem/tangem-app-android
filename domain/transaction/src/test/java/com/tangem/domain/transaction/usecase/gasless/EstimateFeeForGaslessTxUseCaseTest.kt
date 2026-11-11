@@ -117,7 +117,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
             )
             // The plain-balance probe reverts: nothing is liquid on the EOA.
             coEvery { walletManager.getGasLimit(any(), FEE_RECEIVER, any()) } returns revertedEstimateFailure()
-            val plan = mockk<GaslessFeePlan.TokenPayWithYieldWithdraw>()
+            val plan = mockk<GaslessFeePlan.TokenPay>()
             coEvery {
                 resolveGaslessFeePlanUseCase(
                     userWallet = any(),

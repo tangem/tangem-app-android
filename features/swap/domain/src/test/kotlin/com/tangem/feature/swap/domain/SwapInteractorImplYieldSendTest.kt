@@ -72,6 +72,9 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
         coEvery {
             dexSwapFeeCalculator.calculateYield(any(), any(), any())
         } returns dexFeeResult().right()
+        coEvery {
+            dexSwapFeeCalculator.calculateYieldGasless(any(), any(), any(), any())
+        } returns dexFeeResult().right()
     }
 
     // region fee stage
@@ -98,6 +101,42 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
         coVerify(exactly = 1) { dexSwapFeeCalculator.calculateYield(any(), any(), any()) }
         coVerify(exactly = 0) { cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any()) }
     }
+
+    @Test
+    fun `GIVEN yield token and swap calldata WHEN loadSwapFee gasless THEN priced by the yield gasless calculator`() =
+        runTest {
+            // Act
+            val result = loadSwapFee(
+                fromStatus = yieldTokenStatus(),
+                swapData = swapCallDataSwapData(),
+                isGasless = true,
+            )
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            coVerify(exactly = 1) {
+                dexSwapFeeCalculator.calculateYieldGasless(any(), any(), YIELD_MODULE, any())
+            }
+            coVerify(exactly = 0) { dexSwapFeeCalculator.calculateYield(any(), any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN yield module address unresolved WHEN loadSwapFee gasless THEN unknown error without pricing`() =
+        runTest {
+            // Arrange
+            coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns null
+
+            // Act
+            val result = loadSwapFee(
+                fromStatus = yieldTokenStatus(),
+                swapData = swapCallDataSwapData(),
+                isGasless = true,
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(GetFeeError.UnknownError)
+            coVerify(exactly = 0) { dexSwapFeeCalculator.calculateYieldGasless(any(), any(), any(), any()) }
+        }
 
     @Test
     fun `GIVEN non-yield token and transfer calldata WHEN loadSwapFee THEN priced by the plain DEX calculator`() =
@@ -291,14 +330,18 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
 
     // region helpers
 
-    private suspend fun loadSwapFee(fromStatus: SwapCurrencyStatus, swapData: SwapDataModel) = sut.loadSwapFee(
+    private suspend fun loadSwapFee(
+        fromStatus: SwapCurrencyStatus,
+        swapData: SwapDataModel,
+        isGasless: Boolean = false,
+    ) = sut.loadSwapFee(
         quotesLoadedState = buildQuotesLoadedState(fromStatus),
         fromStatus = fromStatus,
         toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork),
         amount = SwapAmount(BigDecimal.ONE, DECIMALS),
         swapData = swapData,
         selectedFeeToken = null,
-        isGasless = false,
+        isGasless = isGasless,
         txType = ExpressTxType.SWAP,
     )
 
