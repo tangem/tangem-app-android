@@ -40,7 +40,7 @@ import java.math.BigDecimal
  *   (`fee.amount.value - otherNativeFee`), e.g. for the "high network fee" check.
  * @property feeBucket tier classifier derived from the parent [TransactionFee] shape (see
  *   [FeeBucket] mapping table). Drives analytics through [FeeBucket.toAnalyticsName].
- * @property isSponsored the user picked the fee Tangem pays (Solana DEX swaps); [fee] is then zero.
+ * @property isSponsored the user picked the fee Tangem pays (Solana swaps); [fee] is then zero.
  */
 data class SwapFee(
     val fee: Fee,
