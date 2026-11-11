@@ -10,15 +10,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_cross_24
 import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.utils.annotations.RemoveWithToggle
 
@@ -41,7 +41,7 @@ internal fun CloseButtonDs(state: TopAppBarButtonUM, modifier: Modifier = Modifi
         ) {
             Icon(
                 modifier = Modifier.size(24.dp),
-                painter = painterResource(id = CoreUiR.drawable.ic_close_24),
+                imageVector = Icons.ic_cross_24,
                 tint = TangemTheme.colors3.icon.primary,
                 contentDescription = null,
             )
