@@ -7,7 +7,7 @@ import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.tangempay.usecase.RestoreActiveCardOrdersUseCase
 import com.tangem.domain.tangempay.usecase.order.RestoreOrdersUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory

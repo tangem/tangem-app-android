@@ -3,8 +3,8 @@ package com.tangem.tap.common.pushes
 import android.net.Uri
 import androidx.core.net.toUri
 import com.tangem.common.routing.DeepLinkRoute
+import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
-import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.utils.extensions.uriValidate
 import javax.inject.Inject
 
@@ -21,13 +21,14 @@ import javax.inject.Inject
  * background push must not open a browser — and is opened on tap instead.
  */
 internal class PushMessageHandler @Inject constructor(
+    private val deepLinkHandlerRegistry: DeepLinkHandlerRegistry,
     private val tokenDetailsPushHandler: TokenDetailsPushHandler,
     private val jointAccountPushHandler: JointAccountPushHandler,
 ) {
 
     fun onMessageReceived(data: Map<String, String>) {
         val deeplink = PayloadToDeeplinkConverter.convert(data)?.toUri()
-            ?.takeIf { PushDeeplinkPolicy.isOpenableFromPush(scheme = it.scheme, host = it.host) }
+            ?.takeIf(deepLinkHandlerRegistry::isOpenableFromPush)
             ?: return
         val queryParams = deeplink.getQueryParams()
         when (deeplink.host) {

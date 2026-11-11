@@ -37,6 +37,7 @@ internal object CollectiblesMainPreviewData {
             onClick = {},
         ),
         relink = CollectiblesMainUM.RelinkUM.Hidden,
+        pendingPacks = persistentListOf(),
         menu = menu(isShown = false),
         isBalanceRefreshing = false,
         onBackClick = {},

@@ -72,8 +72,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import java.util.Locale
 
 internal class EarnFlowModelTest {
+
+    private val originalLocale = Locale.getDefault()
 
     private val session: EarnSession = mockk()
     private val accountStatusList: AccountStatusList = mockk()
@@ -100,6 +103,8 @@ internal class EarnFlowModelTest {
 
     @BeforeEach
     fun setUp() {
+        // The amount field reads the typed "0.5" with the default locale's decimal separator
+        Locale.setDefault(Locale.US)
         clearMocks(
             session,
             accountStatusList,
@@ -140,6 +145,7 @@ internal class EarnFlowModelTest {
 
     @AfterEach
     fun tearDown() {
+        Locale.setDefault(originalLocale)
         unmockkObject(CryptoCurrencyStatusOperations)
     }
 

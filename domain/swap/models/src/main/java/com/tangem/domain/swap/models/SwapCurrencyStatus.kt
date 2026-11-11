@@ -49,5 +49,4 @@ data class SwapCurrencyStatus(
  * @param isWithdrawSource whether the swap screen was opened to withdraw from this account
  */
 fun Account.isSwapTargetOnly(isWithdrawSource: Boolean): Boolean = this is Account.Joint ||
-    this is Account.Collectibles ||
-    (this is Account.Money || this is Account.Prediction) && !isWithdrawSource
+    (this is Account.Money || this is Account.Prediction || this is Account.Collectibles) && !isWithdrawSource

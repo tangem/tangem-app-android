@@ -274,7 +274,7 @@ internal class CollectiblesMachineDetailsModelTest {
 
         // Assert
         verify(exactly = 1) {
-            router.push(CollectiblesRoute.ConfirmOrder(externalId = EXTERNAL_ID, isTurboEnabled = isTurboEnabled))
+            router.push(CollectiblesRoute.ConfirmOrder(machineId = EXTERNAL_ID, isTurboEnabled = isTurboEnabled))
         }
     }
 
