@@ -25,7 +25,7 @@ class GetOnrampTransactionsUseCase(
         return onrampTransactionRepository.getTransactions(
             userWalletId = userWalletId,
             cryptoCurrencyId = cryptoCurrencyId,
-        ).map { it.right() }
-            .catch { errorResolver.resolve(it).left() }
+        ).map<List<OnrampTransaction>, Either<OnrampError, List<OnrampTransaction>>> { it.right() }
+            .catch { emit(errorResolver.resolve(it).left()) }
     }
 }

@@ -3,12 +3,13 @@ package com.tangem.domain.onramp.utils
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.PaymentMethodType
 import java.math.BigDecimal
+import java.math.MathContext
 
 internal fun calculateRateDif(currentTokenRate: BigDecimal, bestRate: BigDecimal?): BigDecimal? {
-    if (bestRate == null) return null
+    if (bestRate == null || bestRate.signum() <= 0) return null
     if (currentTokenRate > bestRate) return null
 
-    val rateDif = BigDecimal.ONE - currentTokenRate / bestRate
+    val rateDif = BigDecimal.ONE - currentTokenRate.divide(bestRate, MathContext.DECIMAL128)
     return if (rateDif >= BigDecimal("0.0001")) rateDif else null
 }
 
