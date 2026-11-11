@@ -82,7 +82,13 @@ private fun OnrampTopBar(config: OnrampMainTopBarUM, modifier: Modifier = Modifi
                     CountryButton(state = countryButton)
                 }
             },
-            endContent = { CloseButton(state = config.startButtonUM) },
+            endContent = {
+                if (LocalOnrampDesignSystemEnabled.current) {
+                    CloseButtonDs(state = config.startButtonUM)
+                } else {
+                    CloseButton(state = config.startButtonUM)
+                }
+            },
         )
     } else {
         TangemTopAppBar(
@@ -128,6 +134,7 @@ private fun CountryButton(state: OnrampCountryButtonUM, modifier: Modifier = Mod
 }
 
 @Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 private fun CloseButton(state: TopAppBarButtonUM, modifier: Modifier = Modifier) {
     TangemTopBarActionContent(
         actionUM = TangemTopBarActionUM(
