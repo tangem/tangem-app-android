@@ -124,25 +124,52 @@ internal class SpeiBankWithdrawCompletionTest {
     }
 
     @Test
-    fun `GIVEN quote within thirty seconds of expiry WHEN complete THEN a new quote under a new key and no transfer`() =
-        runTest {
-            // Arrange
-            val expiring = quote(expiresAt = DateTime.now().plusSeconds(20))
-            coEvery {
-                bankOfframpOrderRepository.createQuote(userWalletId, any(), any(), any(), capture(idempotencyKeys))
-            } returnsMany listOf(expiring.right(), quote().right())
-            val completion = createCompletion()
-            completion.prepare(draft)
+    fun `GIVEN quote expired by the device clock WHEN complete THEN the backend decides on the transfer`() = runTest {
+        // Arrange
+        coEvery { bankOfframpOrderRepository.createQuote(userWalletId, any(), any(), any(), any()) } returns
+            quote(expiresAt = DateTime.now().minusMinutes(5)).right()
+        val completion = createCompletion()
+        completion.prepare(draft)
 
-            // Act
-            completion.complete(draft, states::add)
+        // Act
+        completion.complete(draft, states::add)
 
-            // Assert
-            assertThat(quotes).containsExactly(expiring, quote()).inOrder()
-            assertThat(idempotencyKeys.distinct()).hasSize(2)
-            coVerify(exactly = 0) { bankOfframpOrderRepository.createTransfer(any(), any()) }
-            assertThat(states).containsExactly(CompletionState.Sending, CompletionState.Idle).inOrder()
-        }
+        // Assert
+        assertThat(quotes).hasSize(1)
+        coVerify(exactly = 1) { bankOfframpOrderRepository.createTransfer(userWalletId, QUOTE_ID) }
+        assertThat(states).containsExactly(CompletionState.Sending, CompletionState.Completed).inOrder()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideMismatchModels")
+    fun `GIVEN transfer or quote off the confirmed amount WHEN complete THEN general failure and nothing sent`(
+        model: MismatchModel,
+    ) = runTest {
+        // Arrange
+        coEvery { bankOfframpOrderRepository.createQuote(userWalletId, any(), any(), any(), any()) } returns
+            quote(sourceAmount = model.quoteSourceAmount).right()
+        coEvery { bankOfframpOrderRepository.createTransfer(userWalletId, QUOTE_ID) } returns
+            transfer(sourceAmount = model.transferSourceAmount).right()
+        val completion = createCompletion()
+        completion.prepare(draft)
+
+        // Act
+        completion.complete(draft, states::add)
+
+        // Assert
+        coVerify(exactly = 0) { moneyAccountTransfer.send(any(), any(), any(), any(), any()) }
+        assertThat(states).containsExactly(
+            CompletionState.Sending,
+            CompletionState.Failed(PreviewFailure.General),
+        ).inOrder()
+    }
+
+    private fun provideMismatchModels() = listOf(
+        MismatchModel(quoteSourceAmount = BigDecimal("500.00"), transferSourceAmount = BigDecimal("505.50")),
+        MismatchModel(quoteSourceAmount = BigDecimal("505.50"), transferSourceAmount = BigDecimal("505.50")),
+    )
+
+    data class MismatchModel(val quoteSourceAmount: BigDecimal, val transferSourceAmount: BigDecimal)
 
     @Test
     fun `GIVEN transfer refused as expired WHEN complete THEN a new quote under a new key and nothing sent`() =
@@ -187,10 +214,9 @@ internal class SpeiBankWithdrawCompletionTest {
         val newRecipientDraft = newSpeiRecipientDraft()
         coEvery {
             bankOfframpOrderRepository.createQuote(userWalletId, any(), any(), any(), capture(idempotencyKeys))
-        } returnsMany listOf(
-            quote(bankAccountId = "acc-new", expiresAt = DateTime.now().plusSeconds(10)).right(),
-            quote(bankAccountId = "acc-new").right(),
-        )
+        } returnsMany listOf(quote(bankAccountId = "acc-new").right(), quote(bankAccountId = "acc-new").right())
+        coEvery { bankOfframpOrderRepository.createTransfer(userWalletId, QUOTE_ID) } returns
+            BankOfframpError.QuoteExpired.left()
         val completion = createCompletion()
         completion.prepare(newRecipientDraft)
 
@@ -360,11 +386,12 @@ internal class SpeiBankWithdrawCompletionTest {
     private fun quote(
         bankAccountId: String = "acc-1",
         expiresAt: DateTime = FAR_EXPIRY,
+        sourceAmount: BigDecimal = BigDecimal("500.00"),
     ) = BankOfframpQuote(
         quoteId = QUOTE_ID,
         bankAccountId = bankAccountId,
         feeAmount = BigDecimal("5.50"),
-        sourceAmount = BigDecimal("500.00"),
+        sourceAmount = sourceAmount,
         destinationAmount = BigDecimal("8530.13"),
         destinationCurrency = "MXN",
         exchangeRate = BigDecimal("17.25"),
@@ -373,10 +400,10 @@ internal class SpeiBankWithdrawCompletionTest {
         expiresAt = expiresAt,
     )
 
-    private fun transfer() = BankOfframpTransfer(
+    private fun transfer(sourceAmount: BigDecimal = BigDecimal("500.00")) = BankOfframpTransfer(
         transferId = "transfer-1",
         depositAddress = TRANSFER_ADDRESS,
-        sourceAmount = BigDecimal("500.00"),
+        sourceAmount = sourceAmount,
         destinationAmount = BigDecimal("8530.13"),
         expiresAt = DateTime.now().plusMinutes(30),
     )
