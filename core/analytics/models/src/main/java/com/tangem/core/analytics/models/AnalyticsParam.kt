@@ -113,6 +113,7 @@ sealed class AnalyticsParam {
         Earn("Earn"),
         ForYou("For You"),
         Predictions("Predictions"),
+        Collectibles("Collectibles"),
         HotCreation("Hot Creation"),
         ColdCreation("Cold Creation"),
         FirstSignIn("First Sign In"),

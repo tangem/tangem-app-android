@@ -245,6 +245,8 @@ sealed class AppRoute(val path: String) : Route {
          * a wallet key but submitted as a signed batch through our backend.
          * PredictionTopUp anchors the prediction account as the concrete TO — its deposit token at the bridge
          * address — and is the only way the app funds that account through the swap screen.
+         * CollectiblesWithdraw anchors the Collectibles vault's USDC as the concrete FROM; the vault is a program
+         * account, so the debit is signed by the account's owner key, not by the token's own derivation.
          * MoneyTopUp anchors the Money account's USDC as the concrete TO at its deposit address.
          * MoneyWithdraw anchors the Money account's USDC as the concrete FROM, spent with the wallet's key at the
          * account's derivation path.
@@ -260,6 +262,8 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable data object PredictionTopUp : AccountFlow
 
             @Serializable data object CollectiblesTopUp : AccountFlow
+
+            @Serializable data object CollectiblesWithdraw : AccountFlow
 
             @Serializable data object MoneyTopUp : AccountFlow
 
