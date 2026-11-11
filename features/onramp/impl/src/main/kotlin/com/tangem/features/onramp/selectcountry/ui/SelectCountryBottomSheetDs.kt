@@ -96,7 +96,7 @@ private fun CountryListContent(state: CountryListUM.Content, modifier: Modifier 
         modifier = modifier
             .fillMaxSize()
             .testTag(SelectCountryBottomSheetTestTags.LAZY_LIST),
-        contentPadding = PaddingValues(bottom = FOOTER_INSET + navigationBarBottomInset()),
+        contentPadding = PaddingValues(bottom = FOOTER_INSET + maxOf(navigationBarBottomInset(), imeBottomInset())),
     ) {
         if (selectedItems.isNotEmpty()) {
             item(key = "selected_header") {
@@ -256,6 +256,9 @@ private fun navigationBarBottomInset(): Dp = WindowInsets.navigationBars
     .exclude(WindowInsets.ime)
     .asPaddingValues()
     .calculateBottomPadding()
+
+@Composable
+private fun imeBottomInset(): Dp = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
 
 @Composable
 private fun CountrySearchFooter(state: TangemSearch.State, modifier: Modifier = Modifier) {
