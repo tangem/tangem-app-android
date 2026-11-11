@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.redirect.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,7 +37,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_cross_24
+import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectTopBarUM
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectUM
@@ -99,17 +100,15 @@ private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
 private fun RedirectCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(
         modifier = modifier.size(44.dp),
-        isMaterial = true,
+        color = TangemTheme.colors3.bg.transparent.primary,
+        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         shape = CircleShape,
         onClick = onClick,
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
-            contentAlignment = Alignment.Center,
-        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(
-                modifier = Modifier.size(24.dp),
-                imageVector = Icons.ic_cross_24,
+                modifier = Modifier.size(18.dp),
+                imageVector = Icons.ic_cross_20,
                 tint = TangemTheme.colors3.icon.primary,
                 contentDescription = null,
             )
