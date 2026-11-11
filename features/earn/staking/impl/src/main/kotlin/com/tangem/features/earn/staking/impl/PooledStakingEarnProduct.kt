@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
@@ -166,8 +167,12 @@ internal class PooledStakingEarnProduct @Inject constructor(
      */
     private fun failedBalanceIds(userWalletId: UserWalletId): Flow<Set<StakingID>> =
         multiStakingBalanceSupplier(MultiStakingBalanceProducer.Params(userWalletId))
-            .map { balances -> balances.filterIsInstance<StakingBalance.Error>().mapTo(hashSetOf()) { it.stakingId } }
+            .map { balances -> balances.filter { it.isFailed() }.mapTo(hashSetOf()) { it.stakingId } }
             .distinctUntilChanged()
+
+    /** A failed refresh over a cached empty balance keeps it `Empty` and only marks it `ONLY_CACHE`, not `Error`. */
+    private fun StakingBalance.isFailed(): Boolean =
+        this is StakingBalance.Error || this is StakingBalance.Empty && source == StatusSource.ONLY_CACHE
 
     private fun CryptoCurrencyStatus.isBalanceFailed(failedIds: Set<StakingID>): Boolean {
         if (failedIds.isEmpty()) return false

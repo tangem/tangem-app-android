@@ -11,6 +11,7 @@ import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
@@ -427,6 +428,7 @@ internal class PooledStakingEarnProductTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class BalanceFailure {
 
         private val params = EarnProduct.Params(userWalletId, ethereum)
@@ -460,6 +462,35 @@ internal class PooledStakingEarnProductTest {
         fun `GIVEN the balance of the currency failed WHEN summaries THEN no position and Manage`() = runTest {
             // Arrange
             arrangeBalances(flowOf(setOf(failure)))
+
+            // Act
+            val actual = product.summaries(userWalletId).first().getValue(ethereum.id)
+
+            // Assert
+            assertThat(actual.position).isNull()
+            assertThat(actual.onClickAction).isEqualTo(manage)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an empty balance of the currency WHEN state THEN position and button follow its source`(
+            model: EmptyBalanceModel,
+        ) = runTest {
+            // Arrange
+            arrangeBalances(flowOf(setOf(StakingBalance.Empty(poolStakingId, model.source))))
+
+            // Act
+            val actual = product.state(params).first { it is EarnProductState.Ready } as EarnProductState.Ready
+
+            // Assert
+            assertThat(actual.position).isEqualTo(model.position)
+            assertThat(actual.primary.action).isEqualTo(model.action)
+        }
+
+        @Test
+        fun `GIVEN a refresh failed over an empty balance WHEN summaries THEN no position and Manage`() = runTest {
+            // Arrange
+            arrangeBalances(flowOf(setOf(StakingBalance.Empty(poolStakingId, StatusSource.ONLY_CACHE))))
 
             // Act
             val actual = product.summaries(userWalletId).first().getValue(ethereum.id)
@@ -543,7 +574,19 @@ internal class PooledStakingEarnProductTest {
         private fun arrangeBalances(balances: Flow<Set<StakingBalance>>) {
             every { multiStakingBalanceSupplier(MultiStakingBalanceProducer.Params(userWalletId)) } returns balances
         }
+
+        private fun provideTestModels() = listOf(
+            EmptyBalanceModel(StatusSource.ONLY_CACHE, EarnPositionState.Unknown, manage),
+            EmptyBalanceModel(StatusSource.ACTUAL, EarnPositionState.None, startEarning),
+            EmptyBalanceModel(StatusSource.CACHE, EarnPositionState.None, startEarning),
+        )
     }
+
+    internal data class EmptyBalanceModel(
+        val source: StatusSource,
+        val position: EarnPositionState,
+        val action: PooledStakingAction,
+    )
 
     private fun status(currency: CryptoCurrency, position: StakingBalance? = null): CryptoCurrencyStatus =
         currencyStatus(currency = currency, stakingBalance = position)
