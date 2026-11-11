@@ -87,8 +87,12 @@ internal class PooledStakingEarnProduct @Inject constructor(
             statuses.mapNotNull { status ->
                 val availability = availabilities[status.currency.id] ?: return@mapNotNull null
                 val isBalanceFailed = status.isBalanceFailed(failedIds)
-                mapper.summary(userWalletId, status, availability, isBalanceFailed)
-                    ?.let { summary -> status.currency.id to summary }
+                mapper.summary(
+                    userWalletId = userWalletId,
+                    status = status,
+                    availability = availability,
+                    isBalanceFailed = isBalanceFailed,
+                )?.let { summary -> status.currency.id to summary }
             }.toMap()
         }
     }
