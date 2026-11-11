@@ -29,6 +29,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
     private val exchangeSentEndpoint = "/v[12]/exchange-sent"
 
     private val previousMaxOrderPolls = 6
+    private val minPollsAfterClose = 2
 
     @AllureId("4972")
     @DisplayName("Tangem Pay: withdraw swaps USDC to Bitcoin and appends withdrawal to history")
@@ -714,10 +715,14 @@ class TangemPayWithdrawTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSwapSuccessScreen { closeButton.performClick() }
             }
-            step("Assert the order is still polled after $pollsPastPreviousLimit requests") {
+            val ordersAfterClose = getWireMockRequestCount("GET", withdrawOrderEndpoint)
+            step("Assert the order is still polled after Close and after $pollsPastPreviousLimit requests") {
                 awaitTangemPayWithdrawOrderPolls(
                     orderEndpoint = withdrawOrderEndpoint,
-                    expectedCount = ordersBeforeConfirm + pollsPastPreviousLimit,
+                    expectedCount = maxOf(
+                        ordersBeforeConfirm + pollsPastPreviousLimit,
+                        ordersAfterClose + minPollsAfterClose,
+                    ),
                     timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG,
                 )
             }

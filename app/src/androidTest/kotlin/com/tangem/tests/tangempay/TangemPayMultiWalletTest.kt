@@ -19,7 +19,6 @@ import com.tangem.scenarios.openMainScreenWithTangemPayTile
 import com.tangem.scenarios.openMoneyAccountFromRowWithBalance
 import com.tangem.scenarios.refreshMainUntilMoneyAccountBalance
 import com.tangem.scenarios.openTangemPayFromTileWithSubtitle
-import com.tangem.scenarios.returnToMainFromMoneyAccount
 import com.tangem.scenarios.returnToMainFromTangemPay
 import com.tangem.scenarios.switchToNextWallet
 import com.tangem.scenarios.switchToPreviousWallet
@@ -99,7 +98,10 @@ class TangemPayMultiWalletTest : BaseTestCase() {
                     otherWalletSenderEnd = walletBSenderEnd,
                 )
             }
-            step("Return to the Main screen") { returnToMainFromMoneyAccount() }
+            step("Click on system 'Back' button") { device.uiDevice.pressBack() }
+            step("Assert 'Money account' row of wallet A is displayed") {
+                assertMoneyAccountRowOfDisplayedWallet(walletAMoneyAccountBalance)
+            }
             step("Switch to wallet B") { switchToNextWallet() }
             step("Assert Tangem Pay tile of wallet B is displayed") {
                 assertTangemPayTileOfDisplayedWallet(walletBCardsSubtitle, walletBBalance)
