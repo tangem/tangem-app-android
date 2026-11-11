@@ -14,6 +14,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
@@ -41,20 +42,21 @@ internal class WalletContentFetcher @Inject constructor(
 ) : UserWalletDataCleaner {
 
     private val fetchingJobMap = ConcurrentHashMap<UserWalletId, JobHolder>()
+    private val lockedWalletFetchingJobMap = ConcurrentHashMap<UserWalletId, JobHolder>()
     private val mutex = Mutex()
 
     suspend operator fun invoke(userWalletId: UserWalletId, forceUpdate: Boolean = false) = supervisorScope {
         withContext(dispatchers.default) {
             val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId)
 
-            if (userWallet?.isLocked == true) {
-                fetchLockedWalletAccounts(userWallet)
-
-                return@withContext
-            }
-
             // Use mutex to ensure thread safety
-            val fetchingJob = mutex.withLock {
+            val fetchingJob: Job = mutex.withLock {
+                if (userWallet?.isLocked == true) {
+                    if (lockedWalletFetchingJobMap[userWalletId]?.isActive == true) return@withContext
+
+                    return@withLock launch { fetchLockedWalletAccounts(userWallet) }
+                        .saveIn(JobHolder().also { lockedWalletFetchingJobMap[userWalletId] = it })
+                }
                 val savedJobHolder = fetchingJobMap[userWalletId]
 
                 // If this is not a forced update and the balance is already being fetched or has been fetched,
@@ -120,6 +122,7 @@ internal class WalletContentFetcher @Inject constructor(
         mutex.withLock {
             userWalletIds.forEach { userWalletId ->
                 fetchingJobMap.remove(userWalletId)?.cancel()
+                lockedWalletFetchingJobMap.remove(userWalletId)?.cancel()
 
                 TangemLogger.d("Clear fetching state for $userWalletId")
             }
