@@ -47,7 +47,7 @@ internal class OrderPollerTest {
         coEvery { orderRepository.getOrder(USER_WALLET_ID, ORDER_ID) } returns completed.right()
 
         // Act
-        val states = createPoller().poll(ORDER_REF).toList()
+        val states = createPoller().startPolling(ORDER_REF).toList()
 
         // Assert
         assertThat(states).containsExactly(OrderPollingState.Pending, OrderPollingState.Loaded(completed)).inOrder()
@@ -66,7 +66,7 @@ internal class OrderPollerTest {
         )
 
         // Act
-        val states = createPoller().poll(ORDER_REF).toList()
+        val states = createPoller().startPolling(ORDER_REF).toList()
 
         // Assert
         assertThat(states).containsExactly(
@@ -87,7 +87,7 @@ internal class OrderPollerTest {
             )
 
             // Act
-            createPoller().poll(ORDER_REF).toList()
+            createPoller().startPolling(ORDER_REF).toList()
 
             // Assert
             coVerify(exactly = 3) { paymentAccountStatusFetcher(USER_WALLET_ID) }
@@ -104,7 +104,7 @@ internal class OrderPollerTest {
             )
 
             // Act
-            createPoller().poll(ORDER_REF).toList()
+            createPoller().startPolling(ORDER_REF).toList()
 
             // Assert
             coVerify(exactly = 2) { paymentAccountStatusFetcher(USER_WALLET_ID) }
@@ -121,7 +121,7 @@ internal class OrderPollerTest {
         )
 
         // Act
-        val states = createPoller().poll(ORDER_REF).toList()
+        val states = createPoller().startPolling(ORDER_REF).toList()
 
         // Assert
         assertThat(states).containsExactly(
@@ -141,7 +141,7 @@ internal class OrderPollerTest {
         )
 
         // Act
-        val states = createPoller().poll(ORDER_REF).toList()
+        val states = createPoller().startPolling(ORDER_REF).toList()
 
         // Assert
         assertThat(states.last()).isEqualTo(OrderPollingState.Loaded(completed))
@@ -157,7 +157,7 @@ internal class OrderPollerTest {
         } returns TangemPayApiError.OrderNotFound.left()
 
         // Act
-        val states = createPoller().poll(ORDER_REF).toList()
+        val states = createPoller().startPolling(ORDER_REF).toList()
 
         // Assert
         assertThat(states.last()).isEqualTo(OrderPollingState.NotFound)
@@ -176,8 +176,8 @@ internal class OrderPollerTest {
         val poller = createPoller()
 
         // Act
-        val first = async { poller.poll(ORDER_REF).toList() }
-        val second = async { poller.poll(ORDER_REF).toList() }
+        val first = async { poller.startPolling(ORDER_REF).toList() }
+        val second = async { poller.startPolling(ORDER_REF).toList() }
 
         // Assert
         assertThat(first.await().last()).isEqualTo(OrderPollingState.Loaded(completed))
@@ -192,7 +192,7 @@ internal class OrderPollerTest {
             orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
         } returns order(status = TangemPayOrder.Status.PROCESSING).right()
         val poller = createPoller()
-        val states = async { poller.poll(ORDER_REF).toList() }
+        val states = async { poller.startPolling(ORDER_REF).toList() }
         runCurrent()
 
         // Act
@@ -212,7 +212,7 @@ internal class OrderPollerTest {
             completed.right(),
         )
         val poller = createPoller()
-        val states = async { poller.poll(ORDER_REF).toList() }
+        val states = async { poller.startPolling(ORDER_REF).toList() }
         runCurrent()
 
         // Act
@@ -237,7 +237,7 @@ internal class OrderPollerTest {
         )
 
         // Act
-        createPoller().poll(ORDER_REF).toList()
+        createPoller().startPolling(ORDER_REF).toList()
 
         // Assert
         assertThat(registrySnapshots).containsExactly(listOf(active), emptyList<TangemPayOrder>()).inOrder()
@@ -250,7 +250,7 @@ internal class OrderPollerTest {
             orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
         } returns order(status = TangemPayOrder.Status.PROCESSING).right()
         val poller = createPoller()
-        val states = async { poller.poll(ORDER_REF).toList() }
+        val states = async { poller.startPolling(ORDER_REF).toList() }
         runCurrent()
 
         // Act
@@ -269,7 +269,7 @@ internal class OrderPollerTest {
         } returns order(status = TangemPayOrder.Status.COMPLETED).right()
 
         // Act
-        createPoller().poll(ORDER_REF).toList()
+        createPoller().startPolling(ORDER_REF).toList()
 
         // Assert
         coVerifyOrder {
@@ -277,6 +277,46 @@ internal class OrderPollerTest {
             orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
         }
     }
+
+    @Test
+    fun `GIVEN completed order WHEN launchPolling THEN order is polled to the end and the stored order removed`() =
+        runTest {
+            // Arrange
+            coEvery {
+                orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
+            } returns order(status = TangemPayOrder.Status.COMPLETED).right()
+
+            // Act
+            createPoller().launchPolling(ORDER_REF)
+            runCurrent()
+
+            // Assert
+            coVerifyOrder {
+                ordersStore.save(ORDER_REF)
+                orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
+                ordersStore.remove(ORDER_REF)
+            }
+        }
+
+    @Test
+    fun `GIVEN polling ensured WHEN startPolling for the same order THEN subscribes to the existing polling`() =
+        runTest {
+            // Arrange
+            val completed = order(status = TangemPayOrder.Status.COMPLETED)
+            coEvery { orderRepository.getOrder(USER_WALLET_ID, ORDER_ID) } returnsMany listOf(
+                order(status = TangemPayOrder.Status.PROCESSING).right(),
+                completed.right(),
+            )
+            val poller = createPoller()
+            poller.launchPolling(ORDER_REF)
+
+            // Act
+            val states = poller.startPolling(ORDER_REF).toList()
+
+            // Assert
+            assertThat(states.last()).isEqualTo(OrderPollingState.Loaded(completed))
+            coVerify(exactly = 2) { orderRepository.getOrder(USER_WALLET_ID, ORDER_ID) }
+        }
 
     private fun TestScope.createPoller() = OrderPoller(
         orderRepository = orderRepository,

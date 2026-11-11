@@ -58,6 +58,7 @@ import com.tangem.domain.tangempay.order.ActiveOrdersRegistry
 import com.tangem.domain.tangempay.usecase.order.GetActiveOrdersUseCase
 import com.tangem.domain.tangempay.order.OrderPoller
 import com.tangem.domain.tangempay.order.OrdersStore
+import com.tangem.domain.tangempay.usecase.order.RestoreOrdersUseCase
 import com.tangem.domain.tangempay.usecase.order.StartOrderUseCase
 import com.tangem.domain.tangempay.order.TangemPayOrderRepository
 import dagger.Binds
@@ -325,6 +326,21 @@ internal interface TangemPayDataModule {
                 activeOrdersRegistry = activeOrdersRegistry,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideRestoreOrdersUseCase(
+            orderRepository: TangemPayOrderRepository,
+            ordersStore: OrdersStore,
+            orderPoller: OrderPoller,
+            onboardingRepository: OnboardingRepository,
+        ): RestoreOrdersUseCase {
+            return RestoreOrdersUseCase(
+                orderRepository = orderRepository,
+                ordersStore = ordersStore,
+                orderPoller = orderPoller,
+                onboardingRepository = onboardingRepository,
             )
         }
 
