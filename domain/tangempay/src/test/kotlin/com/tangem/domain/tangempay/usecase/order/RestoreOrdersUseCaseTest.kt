@@ -23,7 +23,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -52,7 +51,7 @@ internal class RestoreOrdersUseCaseTest {
         coEvery { onboardingRepository.isTangemPayInitialDataProduced(USER_WALLET_ID) } returns true
         coEvery { ordersStore.getAll(USER_WALLET_ID) } returns emptyList()
         coEvery { ordersStore.save(any()) } just Runs
-        every { orderPoller.startPolling(any()) } returns emptyFlow()
+        every { orderPoller.launchPolling(any()) } just Runs
         coEvery { orderRepository.findOrders(any(), any(), any()) } returns emptyList<TangemPayOrder>().right()
     }
 
@@ -67,7 +66,7 @@ internal class RestoreOrdersUseCaseTest {
         // Assert
         coVerify(exactly = 0) { ordersStore.getAll(any()) }
         coVerify(exactly = 0) { orderRepository.findOrders(any(), any(), any()) }
-        verify(exactly = 0) { orderPoller.startPolling(any()) }
+        verify(exactly = 0) { orderPoller.launchPolling(any()) }
     }
 
     @Test
@@ -79,7 +78,7 @@ internal class RestoreOrdersUseCaseTest {
         useCase(USER_WALLET_ID)
 
         // Assert
-        verify(exactly = 1) { orderPoller.startPolling(STORED_ORDER) }
+        verify(exactly = 1) { orderPoller.launchPolling(STORED_ORDER) }
         coVerify(exactly = 0) { ordersStore.save(any()) }
     }
 
@@ -95,7 +94,7 @@ internal class RestoreOrdersUseCaseTest {
         // Assert
         coVerifyOrder {
             ordersStore.save(backendOrder)
-            orderPoller.startPolling(backendOrder)
+            orderPoller.launchPolling(backendOrder)
         }
     }
 
@@ -110,7 +109,7 @@ internal class RestoreOrdersUseCaseTest {
             useCase(USER_WALLET_ID)
 
             // Assert
-            verify(exactly = 1) { orderPoller.startPolling(STORED_ORDER) }
+            verify(exactly = 1) { orderPoller.launchPolling(STORED_ORDER) }
             coVerify(exactly = 0) { ordersStore.save(any()) }
         }
 
@@ -146,12 +145,12 @@ internal class RestoreOrdersUseCaseTest {
 
             // Assert
             coVerifyOrder {
-                orderPoller.startPolling(STORED_ORDER)
+                orderPoller.launchPolling(STORED_ORDER)
                 orderRepository.findOrders(any(), any(), any())
                 orderRepository.findOrders(any(), any(), any())
                 orderRepository.findOrders(any(), any(), any())
                 ordersStore.save(backendOrder)
-                orderPoller.startPolling(backendOrder)
+                orderPoller.launchPolling(backendOrder)
             }
             assertThat(currentTime).isEqualTo(RETRY_DELAY_MILLIS * 2)
         }
@@ -171,7 +170,7 @@ internal class RestoreOrdersUseCaseTest {
         // Assert
         coVerify(exactly = 1) { orderRepository.findOrders(any(), any(), any()) }
         coVerify(exactly = 0) { ordersStore.save(any()) }
-        verify(exactly = 1) { orderPoller.startPolling(STORED_ORDER) }
+        verify(exactly = 1) { orderPoller.launchPolling(STORED_ORDER) }
         assertThat(currentTime).isEqualTo(0)
     }
 

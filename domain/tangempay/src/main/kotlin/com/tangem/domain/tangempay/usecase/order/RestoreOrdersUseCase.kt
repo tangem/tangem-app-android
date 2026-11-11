@@ -19,7 +19,7 @@ class RestoreOrdersUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId) {
         if (!onboardingRepository.isTangemPayInitialDataProduced(userWalletId)) return
 
-        ordersStore.getAll(userWalletId).forEach(orderPoller::startPolling)
+        ordersStore.getAll(userWalletId).forEach(orderPoller::launchPolling)
 
         val activeOrders = findActiveOrders(userWalletId) ?: return
 
@@ -28,7 +28,7 @@ class RestoreOrdersUseCase(
             .filterNot { it in savedOrders }
             .forEach { orderRef ->
                 ordersStore.save(orderRef)
-                orderPoller.startPolling(orderRef)
+                orderPoller.launchPolling(orderRef)
             }
     }
 
