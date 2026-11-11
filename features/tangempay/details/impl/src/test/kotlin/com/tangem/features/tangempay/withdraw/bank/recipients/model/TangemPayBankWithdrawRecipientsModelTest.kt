@@ -15,10 +15,12 @@ import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.domain.tangempay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
+import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSpeiAvailability
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.ContentUM
@@ -32,6 +34,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifySequence
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -125,6 +128,21 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
                 onClick = items[1].onClick,
             ),
         )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN options without SPEI WHEN a CLABE recipient is saved THEN it is not listed`() {
+        // Arrange
+        val clabe = bankAccount(id = "acc-4", accountNumber = "646180157000000004", rail = BankRail.SPEI)
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns listOf(basit, clabe).right()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        val items = (model.uiState.value.content as ContentUM.Recipients).items
+        assertThat(items.map { it.id }).containsExactly("acc-1")
         model.onDestroy()
     }
 
@@ -331,6 +349,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawRecipientsComponent.Params(
                 sourceAccount = sourceAccount,
+                options = MutableStateFlow(bankWithdrawOptions()),
                 onRecipientSelected = onRecipientSelected,
                 onCloseFlow = onCloseFlow,
             ),

@@ -13,6 +13,7 @@ import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.recents.RecentTokenTransfer
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.hub.model.OptionsState
 import com.tangem.features.tangempay.withdraw.hub.model.RecentsState
 import com.tangem.features.tangempay.withdraw.hub.model.TokenRecentsState
@@ -97,20 +98,25 @@ internal class TangemPayWithdrawHubUMFactory(
                     title = resourceReference(R.string.tangempay_withdraw_hub_to_business_account),
                     onClick = callbacks.onToBusinessAccountClick,
                 ),
-                recents = createRecents(state.recents),
+                recents = createRecents(state.recents, (state.options as? OptionsState.Ready)?.options),
                 isAvailable = state.options is OptionsState.Ready,
                 unavailableSubtitle = unavailableSubtitle,
             )
         }
 
-    private fun createRecents(state: RecentsState): RecentsUM = when (state) {
+    private fun createRecents(state: RecentsState, options: BankWithdrawOptions?): RecentsUM = when (state) {
         RecentsState.Loading -> RecentsUM.Loading
         RecentsState.Failed -> RecentsUM.Error(onRetryClick = callbacks.onRetryRecentsClick)
-        is RecentsState.Loaded -> if (state.accounts.isEmpty()) {
+        is RecentsState.Loaded -> createLoadedRecents(state, options)
+    }
+
+    private fun createLoadedRecents(state: RecentsState.Loaded, options: BankWithdrawOptions?): RecentsUM {
+        val accounts = options?.let { state.accounts.filter(it::canPay) } ?: state.accounts
+        return if (accounts.isEmpty()) {
             RecentsUM.Empty
         } else {
             RecentsUM.Content(
-                recipients = state.accounts.map(::toRecipient).toImmutableList(),
+                recipients = accounts.map(::toRecipient).toImmutableList(),
                 onRecipientClick = callbacks.onRecentRecipientClick,
                 onSeeAllClick = callbacks.onSeeAllClick.takeIf { state.hasMoreAccounts },
             )

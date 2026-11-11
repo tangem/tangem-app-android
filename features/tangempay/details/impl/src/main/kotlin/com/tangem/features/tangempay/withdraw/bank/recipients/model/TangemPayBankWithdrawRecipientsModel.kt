@@ -76,7 +76,9 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
                 includeSpeiRecipients = speiAvailability.isOffered(params.sourceAccount),
             ).fold(
                 ifLeft = ::closeOnLoadFailure,
-                ifRight = { accounts -> state.update { it.copy(accounts = accounts) } },
+                ifRight = { accounts ->
+                    state.update { it.copy(accounts = accounts.filter(params.options.value::canPay)) }
+                },
             )
         }
     }

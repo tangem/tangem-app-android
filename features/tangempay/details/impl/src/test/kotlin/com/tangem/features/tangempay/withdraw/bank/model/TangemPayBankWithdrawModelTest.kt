@@ -113,6 +113,21 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
     }
 
     @Test
+    fun `GIVEN options without SPEI WHEN saved entry is a CLABE recipient THEN neither selected nor suggested`() {
+        // Arrange
+        val clabe = bankAccount(id = "acc-2", rail = BankRail.SPEI)
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns listOf(bankAccount(id = "acc-1"), clabe).right()
+
+        // Act
+        val model = createModel(BankWithdrawEntry.Saved("acc-2"))
+
+        // Assert
+        assertThat(model.draft.value.recipient).isNull()
+        assertThat(model.savedAccounts.value.map { it.id }).containsExactly("acc-1")
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN saved entry WHEN accounts fail THEN recipient stays null`() {
         // Arrange
         coEvery { getBankAccountsUseCase(userWalletId, any()) } returns BankOfframpError.Unknown(null).left()

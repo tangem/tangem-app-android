@@ -476,6 +476,21 @@ internal class TangemPayWithdrawHubModelTest : TangemPayModelTestBase() {
         }
 
         @Test
+        fun `GIVEN options without SPEI WHEN a CLABE recipient is among recents THEN it is not shown`() {
+            // Arrange
+            coEvery { getRecentBankAccountsUseCase(userWalletId, any()) } returns recentBankAccounts(
+                recents = listOf(bankAccount(id = "acc-2", rail = BankRail.SPEI), bankAccount(id = "acc-1")),
+            ).right()
+
+            // Act
+            val model = createModel()
+
+            // Assert
+            assertThat((model.recents() as RecentsUM.Content).recipients.map { it.id }).containsExactly("acc-1")
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN model created WHEN recents loaded THEN bank accounts requested once`() {
             // Act
             val model = createModel()
