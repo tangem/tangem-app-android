@@ -7,7 +7,7 @@ features by app version; the JSON config is the source of truth and the
 ## How it works
 
 - **Config:** one file per stream — `<stream>/config-toggles/feature_toggles.json`
-  (`core/`, `store/`, `grow/`, `spend/`), each a JSON array of
+  (`store/`, `grow/`, `spend/`; core toggles go to `store/`), each a JSON array of
   `{ "name": <STRING>, "version": <STRING> }` (`ConfigToggle`). The file lives in
   the stream's directory so CODEOWNERS sends a new toggle to that stream's team,
   not to core. The stream list is `featureTogglesStreams` in `build.gradle.kts`.

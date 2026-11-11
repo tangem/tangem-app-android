@@ -11,7 +11,7 @@ Remove all feature toggles whose version is less than or equal to the target rel
 
 ## Constants
 
-- **Config files**: `*/config-toggles/feature_toggles.json` — one per stream (`core`, `store`, `grow`, `spend`), merged into one enum
+- **Config files**: `*/config-toggles/feature_toggles.json` — one per stream (`store`, `grow`, `spend`), merged into one enum
 - **Generated enum** (DO NOT edit): `core/config-toggles/build/generated/source/toggles/com/tangem/core/configtoggle/FeatureToggles.kt`
 - **Dry-run mode**: check if `$ARGUMENTS` contains `--dry-run`. In dry-run mode, make NO file changes — only output what WOULD be removed (including affected files and usage sites).
 - **Version**: extract the version number from `$ARGUMENTS` (e.g., `5.35`, `5.35.0`). The version is the first argument that matches a semver-like pattern (`X.Y` or `X.Y.Z`).
