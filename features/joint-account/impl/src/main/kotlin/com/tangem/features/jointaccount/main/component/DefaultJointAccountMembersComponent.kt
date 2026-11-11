@@ -31,6 +31,11 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
 
     private val stackNavigation = StackNavigation<JointAccountMembersRoute>()
 
+    private val activationExit = JointAccountActivationExit(
+        messageSender = messageSender,
+        closeFlow = { router.pop() },
+    )
+
     private val innerRouter = InnerRouter<JointAccountMembersRoute>(
         stackNavigation = stackNavigation,
         popCallback = { onChildBack() },
@@ -73,6 +78,7 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
                 userWalletId = params.userWalletId,
                 cryptoAccountId = params.cryptoAccountId,
                 onCloseFlow = { router.pop() },
+                onActivated = activationExit::exit,
             ),
             childFactory = childFactory,
         )
@@ -81,6 +87,7 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
             params = JointAccountConfirmAddressComponent.Params(
                 userWalletId = params.userWalletId,
                 cryptoAccountId = route.cryptoAccountId,
+                onActivated = activationExit::exit,
             ),
         )
     }

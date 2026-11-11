@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.withdraw
 
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 
 /** Figma shows individuals as "First L." and businesses by their registered name. */
 internal fun Beneficiary.toShortName(): String = when (this) {

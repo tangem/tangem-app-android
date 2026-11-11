@@ -16,22 +16,21 @@ import com.tangem.core.error.UniversalError
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.tangempay.TangemPayEligibilityManager
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.onboarding.impl.R
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -39,7 +38,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -63,7 +61,6 @@ internal class TangemPayOnboardingModelTest {
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val video: LoopingVideoController = mockk(relaxed = true)
     private val videoFactory: LoopingVideoController.Factory = mockk()
 
@@ -84,7 +81,6 @@ internal class TangemPayOnboardingModelTest {
             videoFactory,
         )
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
-        every { tangemPayFeatureToggles.isPayBundleIntroductionEnabled } returns false
         every { videoFactory.create(any(), any(), any(), any(), any()) } returns video
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
         coEvery {
@@ -453,11 +449,10 @@ internal class TangemPayOnboardingModelTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN feature toggles WHEN model created THEN bundle video created only for unified onboarding with bundle`(
+    fun `GIVEN money accounts toggle WHEN model created THEN bundle video created only for unified onboarding`(
         testModel: VideoToggleTestModel,
     ) = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isPayBundleIntroductionEnabled } returns testModel.isPayBundleEnabled
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns testModel.isMoneyAccountsEnabled
 
         // Act
@@ -506,19 +501,15 @@ internal class TangemPayOnboardingModelTest {
     }
 
     private fun enableBundleVideo() {
-        every { tangemPayFeatureToggles.isPayBundleIntroductionEnabled } returns true
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
     }
 
     private fun provideTestModels() = listOf(
-        VideoToggleTestModel(isPayBundleEnabled = true, isMoneyAccountsEnabled = true, isVideoExpected = true),
-        VideoToggleTestModel(isPayBundleEnabled = true, isMoneyAccountsEnabled = false, isVideoExpected = false),
-        VideoToggleTestModel(isPayBundleEnabled = false, isMoneyAccountsEnabled = true, isVideoExpected = false),
-        VideoToggleTestModel(isPayBundleEnabled = false, isMoneyAccountsEnabled = false, isVideoExpected = false),
+        VideoToggleTestModel(isMoneyAccountsEnabled = true, isVideoExpected = true),
+        VideoToggleTestModel(isMoneyAccountsEnabled = false, isVideoExpected = false),
     )
 
     data class VideoToggleTestModel(
-        val isPayBundleEnabled: Boolean,
         val isMoneyAccountsEnabled: Boolean,
         val isVideoExpected: Boolean,
     )
@@ -567,16 +558,9 @@ internal class TangemPayOnboardingModelTest {
     )
 
     private fun TestScope.createModel(params: TangemPayOnboardingComponent.Params): TangemPayOnboardingModel {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
         return TangemPayOnboardingModel(
             paramsContainer = MutableParamsContainer(params),
-            dispatchers = TestingCoroutineDispatcherProvider(
-                main = testDispatcher,
-                mainImmediate = testDispatcher,
-                io = testDispatcher,
-                default = testDispatcher,
-                single = testDispatcher,
-            ),
+            dispatchers = createTestingCoroutineDispatcherProvider(),
             analytics = analytics,
             router = router,
             repository = repository,
@@ -595,7 +579,6 @@ internal class TangemPayOnboardingModelTest {
             ),
             userWalletsListRepository = userWalletsListRepository,
             uiMessageSender = uiMessageSender,
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
             videoFactory = videoFactory,
         )
     }

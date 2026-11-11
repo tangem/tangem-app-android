@@ -17,10 +17,10 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
-import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -40,7 +40,6 @@ class EstimateFeeForGaslessTxUseCase(
     private val estimateFeeUseCase: EstimateFeeUseCase,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -93,7 +92,6 @@ class EstimateFeeForGaslessTxUseCase(
                         amount = amount,
                         txTokenCurrencyStatus = sendingTokenCurrencyStatus,
                         initialFee = initialFee,
-                        isYieldModuleV3Enabled = yieldModuleFeatureToggles.isYieldModuleV3Enabled,
                     ).bind()
 
                     val nonPortfolioFeeToken = feeCurrencies.nonPortfolioFeeToken
@@ -233,11 +231,11 @@ class EstimateFeeForGaslessTxUseCase(
             .filter { (it.currency as CryptoCurrency.Token).contractAddress.lowercase() in supportedGaslessTokens }
             .filter { status ->
                 val total = status.value.amount ?: BigDecimal.ZERO
-                total > BigDecimal.ZERO || status.value.yieldSupplyStatus?.isActive == true
+                total > BigDecimal.ZERO || status.value.yieldSupply?.isActive == true
             }.maxByOrNull { status -> status.value.amount ?: BigDecimal.ZERO }
             ?: raise(GaslessError.NoSupportedTokensFound)
 
-        val isYieldActive = tokenForPayFeeStatus.value.yieldSupplyStatus?.isActive == true
+        val isYieldActive = tokenForPayFeeStatus.value.yieldSupply?.isActive == true
         val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
             walletManager = walletManager,
             tokenForPayFeeStatus = tokenForPayFeeStatus,

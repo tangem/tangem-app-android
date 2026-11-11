@@ -33,6 +33,7 @@ features/collectibles/
     discovery/      — The packs catalogue: tabs, search, paginated pack rows
     machinedetails/ — One machine: hero, odds, pack facts, paginated prize pool, Turbo switch, pinned CTA footer
     packopening/    — Buy + open one pack: confirm order, pack throw, reveal video, reward card
+    packopenfailed/ — "Failed to open pack": the terminal status screen that replaces the confirm order
 ```
 
 `packopening/` in detail:
@@ -40,7 +41,7 @@ features/collectibles/
 ```
 packopening/
   CollectiblesPackOpeningComponent  — the route; bottom-sheet slot, system back handler, reports the app theme
-  CollectiblesConfirmOrderBottomSheetConfig, sheet/CollectiblesConfirmOrderSheetComponent — PackUnopened / LowInventory / AutoBuyback
+  CollectiblesConfirmOrderBottomSheetConfig, sheet/CollectiblesConfirmOrderSheetComponent — PackUnopened / LowInventory / RefundOnTheWay / AutoBuyback
   PackOpeningConst                  — VIDEO_READY_TIMEOUT_MS, card-slab constants
   model/CollectiblesPackOpeningModel
   model/converter/                  — CollectiblesPackOpeningConverter (order), CollectiblesRewardCardConverter
@@ -105,10 +106,14 @@ AppRoute.Collectibles(userWalletId, startRoute) → DefaultCollectiblesEntryComp
   └─ CollectiblesRoute.ConfirmOrder(externalId, isTurboEnabled)
         → CollectiblesPackOpeningComponent → CollectiblesPackOpeningModel
         confirm order → throw → video → card, all inside the one route
-        slot: PackUnopened(txId) / LowInventory / AutoBuyback(amount, price) sheets
+        slot: PackUnopened(txId) / LowInventory / RefundOnTheWay / AutoBuyback(amount, price) sheets
+        RefundOnTheWay: close, scrim tap and back → router.popTo(Main(id))
         "Enable Turbo" → router.pop(); "Explore packs" → router.popTo(Main(id))
         AutoBuyback: "Open again", close, scrim tap and back → router.pop() to MachineDetails
         "Keep card" / a completed "Sell back" → router.pop() to MachineDetails
+        OpenPackStep.Failed.OpenFailed → router.replaceCurrent(PackOpenFailed)
+  └─ CollectiblesRoute.PackOpenFailed → CollectiblesPackOpenFailedComponent (no model)
+        terminal: close and system back → router.popTo(Main(id)); "Get assistance" is a stub ([REDACTED_TASK_KEY])
 ```
 
 **The feature decides nothing about where it opens** — the caller does, and the route says so:
@@ -188,7 +193,16 @@ emits `Generating → Confirming → Opening → Opened(pack)`, `AutoBuybacked(a
 back (the `/status` or `/open-pack` answer is `auto-buybacked` with an `autoBuyback.toAmount`; once `/status` says
 so, `/open-pack` is skipped), or an `OpenPackStep.Failed`:
 `LowInventory` / `PackUnopened(txId)` open a sheet (`PackUnopened` retries with `OpenPackRequest.Reopen`),
-`AutoBuybacked` opens the payout sheet instead of a card, everything else is a snackbar.
+`AutoBuybacked` opens the payout sheet instead of a card, `OpenFailed` replaces the route with `PackOpenFailed`,
+`Refunded` and `Refunding` (`/open-pack` code 3999, a placeholder until the backend names it) open the
+"Your refund is on the way" sheet, everything else is a snackbar.
+
+**Retry until the gacha says no.** A payment not confirmed in 100 s or a failed `/open-pack` (network, 5xx, 3015)
+gives `PackUnopened`, on `Buy` and on `Reopen` alike, so the "Pack unopened" sheet comes back as often as the user
+retries. An expired purchase and `/open-pack` codes 3009 / 3010
+(`CollectibleException.PackOpeningRefused`, mapped by `CollectiblesErrorResolver`) give `OpenFailed` at once. A
+repeat `/open-pack` on an already opened pack is safe: the backend answers from its own state. A failed
+`purchase-tx-sent` report is not fatal — the gacha finds the payment by its memo.
 
 The UI beat is `CollectiblesPackOpeningUM.Stage` — `Order → Launching → Reveal → Reward`:
 
@@ -400,10 +414,15 @@ codec failure, or system animations off (`ANIMATOR_DURATION_SCALE == 0`, which a
 wallet (`GachaVaultError.TransactionTooLarge`); `SendLargeSolanaTransactionUseCase` cannot help, it rebuilds
 the transaction and would break the backend's blockhash and other signatures.
 
+**A sheet's dismissal arrives twice.** `TangemModal` calls `onDismissRequest` again at the end of its collapse
+after a button has already closed the slot. A dismissal that navigates (Pack unopened, Refund on the way, Auto
+buyback) goes through `whileShown` in `CollectiblesConfirmOrderSheetComponent`, which drops the late call once the
+sheet component is destroyed; without it "Open pack" closed the confirm order in the middle of the reopen.
+
 **Trust `/buyback/status`, not the send.** Blink, the first Solana provider, sends with `skipPreflight = true`,
 so a transaction that fails on chain can still look sent.
 
-`Expired` / `Refunded` failures show hardcoded English. The buyback copy is localized:
+The buyback copy is localized:
 `collectibles_open_pack_buyback_unavailable` (the disabled button) and `collectibles_open_pack_sell_back_success`.
 
 **A few strings are still literals.** Most copy is in `core/res` (`collectibles_*`), but some

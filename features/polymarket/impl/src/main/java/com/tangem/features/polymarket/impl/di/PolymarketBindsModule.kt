@@ -22,11 +22,13 @@ import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
 import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
 import com.tangem.features.polymarket.impl.entry.model.PolymarketEntryModel
+import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketFastTradingSettingsModel
 import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.history.model.PolymarketHistoryModel
 import com.tangem.features.polymarket.impl.walletblock.DefaultPolymarketWalletBlockComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsModel
 import com.tangem.features.polymarket.impl.main.addfunds.network.PolymarketChooseNetworkModel
+import com.tangem.features.polymarket.impl.category.model.PolymarketCategoryModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketPositionsPreviewModel
 import com.tangem.features.polymarket.impl.search.model.PolymarketSearchModel
@@ -65,12 +67,18 @@ internal interface PolymarketBindsModule {
 
 @Module
 @InstallIn(ModelComponent::class)
+@Suppress("TooManyFunctions")
 internal interface PolymarketModelModule {
 
     @Binds
     @IntoMap
     @ClassKey(PolymarketModel::class)
     fun bindPolymarketModel(impl: PolymarketModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketCategoryModel::class)
+    fun bindPolymarketCategoryModel(impl: PolymarketCategoryModel): Model
 
     @Binds
     @IntoMap
@@ -86,6 +94,11 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PolymarketHistoryModel::class)
     fun bindPolymarketHistoryModel(impl: PolymarketHistoryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketFastTradingSettingsModel::class)
+    fun bindPolymarketFastTradingSettingsModel(impl: PolymarketFastTradingSettingsModel): Model
 
     @Binds
     @IntoMap

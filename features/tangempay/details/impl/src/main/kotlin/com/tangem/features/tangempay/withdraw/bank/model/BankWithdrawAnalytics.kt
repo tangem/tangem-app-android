@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
-import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 

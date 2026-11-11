@@ -9,7 +9,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.getEmittedValues
 import io.mockk.clearMocks

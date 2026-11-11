@@ -6,12 +6,12 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -58,7 +58,7 @@ internal class TangemPayVerifiedModelTest {
     @Test
     fun `GIVEN availability fails WHEN model created THEN after verification retry event sent`() = runTest {
         // Arrange
-        coEvery { getProductsAvailabilityUseCase(USER_WALLET_ID) } returns VisaApiError.ServerUnavailable.left()
+        coEvery { getProductsAvailabilityUseCase(USER_WALLET_ID) } returns TangemPayApiError.ServerUnavailable.left()
 
         // Act
         val model = createModel()

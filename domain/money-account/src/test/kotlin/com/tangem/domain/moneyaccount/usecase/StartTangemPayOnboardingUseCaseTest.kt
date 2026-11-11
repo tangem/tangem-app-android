@@ -9,23 +9,23 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.model.MoneyAccountActivationError
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
-import com.tangem.domain.pay.model.CustomerSummary
-import com.tangem.domain.pay.model.MoneyAccountActivationState
-import com.tangem.domain.pay.model.PaymentAccountActivationState
-import com.tangem.domain.pay.model.TangemPayCustomerState
-import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
+import com.tangem.domain.tangempay.model.CustomerSummary
+import com.tangem.domain.tangempay.model.MoneyAccountActivationState
+import com.tangem.domain.tangempay.model.PaymentAccountActivationState
+import com.tangem.domain.tangempay.model.TangemPayCustomerState
+import com.tangem.domain.tangempay.usecase.CreateOnboardingOrderUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.ActivationFailureReason
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.ActivationResult
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.SignatureResult
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.WalletType
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.MoneyAccountDepositCredentials
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.Runs
@@ -300,7 +300,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
         // Arrange
         coEvery {
             createOnboardingOrderUseCase(any(), any(), any())
-        } returns VisaApiError.CardIssueActiveOrderExists.left()
+        } returns TangemPayApiError.CardIssueActiveOrderExists.left()
 
         // Act
         useCase(
@@ -312,7 +312,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
         // Assert
         assertThat(sentEvents).containsExactly(
             TangemPayAnalyticsEvents.OnboardingOrderFailed(
-                error = VisaApiError.CardIssueActiveOrderExists,
+                error = TangemPayApiError.CardIssueActiveOrderExists,
                 availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT),
             ),
         )
@@ -323,7 +323,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
         // Arrange
         coEvery {
             createOnboardingOrderUseCase(any(), any(), any())
-        } returns VisaApiError.Unspecified.left()
+        } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val actual = useCase(

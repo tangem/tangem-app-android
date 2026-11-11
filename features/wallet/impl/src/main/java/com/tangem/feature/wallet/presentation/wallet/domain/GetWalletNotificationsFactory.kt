@@ -29,7 +29,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletLinkStatusUseCase

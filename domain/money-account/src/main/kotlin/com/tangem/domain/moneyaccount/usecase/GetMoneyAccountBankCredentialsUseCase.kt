@@ -5,8 +5,8 @@ import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.utils.annotations.RemoveWithToggle
 
 class GetMoneyAccountBankCredentialsUseCase(
@@ -16,11 +16,11 @@ class GetMoneyAccountBankCredentialsUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         @RemoveWithToggle(toggleName = "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED") includeAllRails: Boolean,
-    ): Either<VisaApiError, List<BankCredentials>> = either {
+    ): Either<TangemPayApiError, List<BankCredentials>> = either {
         val savedInfo = onboardingRepository.getSavedCustomerInfo(userWalletId)
         val instance = savedInfo?.moneyAccountProductInstance
             ?: onboardingRepository.getCustomerInfo(userWalletId).bind().moneyAccountProductInstance
-        val productInstance = ensureNotNull(instance) { VisaApiError.ProductInstanceNotFoundActivationRequired }
+        val productInstance = ensureNotNull(instance) { TangemPayApiError.ProductInstanceNotFoundActivationRequired }
 
         if (includeAllRails) {
             onboardingRepository.getAllBankCredentials(

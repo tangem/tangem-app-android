@@ -6,6 +6,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.*
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
@@ -19,7 +20,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.nft.utils.NFTCleaner
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
@@ -189,6 +190,20 @@ internal object AccountStatusUseCaseModule {
         return CryptoCurrencyBalanceFetcher(
             balanceFetchingOperations = balanceFetchingOperations,
             parallelUpdatingScope = appScope,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideBalanceContributionsRefresher(
+        singleAccountListSupplier: SingleAccountListSupplier,
+        balanceFetchingOperations: BalanceFetchingOperations,
+        tokensFeatureToggles: TokensFeatureToggles,
+    ): BalanceContributionsRefresher {
+        return BalanceContributionsRefresher(
+            singleAccountListSupplier = singleAccountListSupplier,
+            balanceFetchingOperations = balanceFetchingOperations,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 

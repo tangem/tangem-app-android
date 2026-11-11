@@ -29,7 +29,6 @@ internal class MarketCategorySelectorTransformer(
     private val selection: MarketCategorySelection,
     private val appCurrency: AppCurrency,
     private val isSearching: Boolean,
-    private val isEdited: Boolean,
     private val isLoadingMore: Boolean,
     private val onLoadMore: () -> Unit,
     private val onSelectionChange: (MarketCategorySelection) -> Unit,
@@ -37,7 +36,6 @@ internal class MarketCategorySelectorTransformer(
 
     override fun transform(prevState: MarketCategorySelectorUM): MarketCategorySelectorUM {
         return prevState.copy(
-            isEdited = isEdited,
             content = MarketCategorySelectorUM.ContentUM.Content(
                 featured = featured
                     .takeIf { !isSearching && it.isNotEmpty() }

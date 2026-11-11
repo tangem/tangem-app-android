@@ -40,8 +40,8 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
@@ -49,7 +49,7 @@ import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
-import com.tangem.test.mock.pay.MockBankCredentials
+import com.tangem.test.mock.tangempay.MockBankCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -68,6 +68,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -104,127 +105,79 @@ internal class MoneyAccountDetailsModelTest {
         clearMocks(moneyAccountStatusSupplier, router, sendFeedbackEmailUseCase, urlOpener, analytics)
         clearMocks(getMoneyAccountBankCredentialsUseCase, moneyAccountStatusFetcher, txHistoryContentUpdateEmitter)
         clearMocks(renewTangemPaySessionUseCase, uiMessageSender, getBalanceHidingSettingsUseCase)
-        clearMocks(moneyAccountFeatureToggles)
+        clearMocks(moneyAccountFeatureToggles, getExploreUrlUseCase)
         every { moneyAccountFeatureToggles.isMxnEnabled } returns false
         isBalanceHiddenFlow.value = false
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
         coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
     }
 
-    @Test
-    fun `GIVEN balance hidden WHEN model created THEN state is hidden`() = runTest {
-        // Arrange
-        isBalanceHiddenFlow.value = true
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BalanceHiding {
 
-        // Act
-        val model = createModel(activeAccount(balance = balance()))
-        advanceUntilIdle()
+        @Test
+        fun `GIVEN balance hidden WHEN model created THEN state is hidden`() = runTest {
+            // Arrange
+            isBalanceHiddenFlow.value = true
 
-        // Assert
-        assertThat(model.uiState.value.isBalanceHidden).isTrue()
-        model.onDestroy()
+            // Act
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.isBalanceHidden).isTrue()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN screen opened WHEN balance hiding toggled THEN state follows it`() = runTest {
+            // Arrange
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+            val states = mutableListOf(model.uiState.value.isBalanceHidden)
+
+            // Act
+            isBalanceHiddenFlow.value = true
+            advanceUntilIdle()
+            states += model.uiState.value.isBalanceHidden
+            isBalanceHiddenFlow.value = false
+            advanceUntilIdle()
+            states += model.uiState.value.isBalanceHidden
+
+            // Assert
+            assertThat(states).containsExactly(false, true, false).inOrder()
+            model.onDestroy()
+        }
     }
 
-    @Test
-    fun `GIVEN screen opened WHEN balance hiding toggled THEN state follows it`() = runTest {
-        // Arrange
-        val model = createModel(activeAccount(balance = balance()))
-        advanceUntilIdle()
-        val states = mutableListOf(model.uiState.value.isBalanceHidden)
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AddFunds {
 
-        // Act
-        isBalanceHiddenFlow.value = true
-        advanceUntilIdle()
-        states += model.uiState.value.isBalanceHidden
-        isBalanceHiddenFlow.value = false
-        advanceUntilIdle()
-        states += model.uiState.value.isBalanceHidden
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN active account WHEN add funds clicked THEN options sheet opens with its deposit address`(
+            model: AddFundsModel,
+        ) = runTest {
+            // Arrange
+            val detailsModel = createModel(activeAccount(balance = model.balance))
+            val openedSheets = detailsModel.bottomSheetNavigation.trackSlot()
+            advanceUntilIdle()
 
-        // Assert
-        assertThat(states).containsExactly(false, true, false).inOrder()
-        model.onDestroy()
-    }
+            // Act
+            detailsModel.uiState.value.onAddFundsClick()
 
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN active account WHEN add funds clicked THEN options sheet opens with its deposit address`(
-        model: AddFundsModel,
-    ) = runTest {
-        // Arrange
-        val detailsModel = createModel(activeAccount(balance = model.balance))
-        val openedSheets = detailsModel.bottomSheetNavigation.trackSlot()
-        advanceUntilIdle()
+            // Assert
+            assertThat(openedSheets).containsExactly(
+                MoneyAccountDetailsNavigation.AddFundsOptions(depositAddress = model.expectedDepositAddress),
+            )
+            verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.AddFundsClicked>()) }
+            detailsModel.onDestroy()
+        }
 
-        // Act
-        detailsModel.uiState.value.onAddFundsClick()
-
-        // Assert
-        assertThat(openedSheets).containsExactly(
-            MoneyAccountDetailsNavigation.AddFundsOptions(depositAddress = model.expectedDepositAddress),
-        )
-        verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.AddFundsClicked>()) }
-        detailsModel.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN options sheet WHEN receive clicked THEN options dismissed and receive sheet opens`() = runTest {
-        // Arrange
-        val model = createModel(activeAccount(balance = balance()))
-        val openedSheets = model.bottomSheetNavigation.trackSlot()
-        advanceUntilIdle()
-        model.uiState.value.onAddFundsClick()
-
-        // Act
-        model.onReceiveClick(DEPOSIT_ADDRESS)
-
-        // Assert
-        assertThat(openedSheets).containsExactly(
-            MoneyAccountDetailsNavigation.AddFundsOptions(depositAddress = DEPOSIT_ADDRESS),
-            null,
-            MoneyAccountDetailsNavigation.Receive(receiveConfig()),
-        ).inOrder()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN options sheet WHEN dismissed THEN slot cleared`() = runTest {
-        // Arrange
-        val model = createModel(activeAccount(balance = balance()))
-        val openedSheets = model.bottomSheetNavigation.trackSlot()
-        advanceUntilIdle()
-        model.uiState.value.onAddFundsClick()
-
-        // Act
-        model.onDismissAddFunds()
-
-        // Assert
-        assertThat(openedSheets.last()).isNull()
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideSheetsOpenedFromOptions")
-    fun `GIVEN sheet opened from options WHEN options dismissal arrives late THEN that sheet stays`(
-        model: SheetFromOptionsModel,
-    ) = runTest {
-        // Arrange
-        val detailsModel = createModel(activeAccount(balance = balance()))
-        val openedSheets = detailsModel.bottomSheetNavigation.trackSlot()
-        advanceUntilIdle()
-        detailsModel.uiState.value.onAddFundsClick()
-        model.openSheet(detailsModel)
-
-        // Act
-        detailsModel.onDismissAddFunds()
-
-        // Assert
-        assertThat(openedSheets.last()).isEqualTo(model.expectedSheet)
-        detailsModel.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN banking details fail to load WHEN notified THEN options replaced by error sheet and event sent`() =
-        runTest {
+        @Test
+        fun `GIVEN options sheet WHEN receive clicked THEN options dismissed and receive sheet opens`() = runTest {
             // Arrange
             val model = createModel(activeAccount(balance = balance()))
             val openedSheets = model.bottomSheetNavigation.trackSlot()
@@ -232,477 +185,639 @@ internal class MoneyAccountDetailsModelTest {
             model.uiState.value.onAddFundsClick()
 
             // Act
-            model.onBankingDetailsLoadFailed()
+            model.onReceiveClick(DEPOSIT_ADDRESS)
 
             // Assert
-            assertThat(openedSheets.last()).isEqualTo(MoneyAccountDetailsNavigation.BankDetailsError)
-            verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsLoadFailed>()) }
+            assertThat(openedSheets).containsExactly(
+                MoneyAccountDetailsNavigation.AddFundsOptions(depositAddress = DEPOSIT_ADDRESS),
+                null,
+                MoneyAccountDetailsNavigation.Receive(receiveConfig()),
+            ).inOrder()
             model.onDestroy()
         }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [false, true])
-    fun `GIVEN error sheet WHEN retried THEN credentials requested again, details pushed and retry event sent`(
-        isMxnEnabled: Boolean,
-    ) = runTest {
-        // Arrange
-        every { moneyAccountFeatureToggles.isMxnEnabled } returns isMxnEnabled
-        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, isMxnEnabled) } returns
-            listOf(CREDENTIALS).right()
-        val model = createModel(activeAccount(balance = balance()))
-        advanceUntilIdle()
-
-        // Act
-        val actual = model.retryBankCredentials()
-
-        // Assert
-        assertThat(actual).isEqualTo(Unit.right())
-        verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(listOf(CREDENTIALS)), any()) }
-        verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsRetryTapped>()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN credentials fail WHEN error sheet retried THEN error returned and the error sheet kept`() = runTest {
-        // Arrange
-        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, false) } returns
-            VisaApiError.ServerUnavailable.left()
-        val model = createModel(activeAccount(balance = balance()))
-        val openedSheets = model.bottomSheetNavigation.trackSlot()
-        advanceUntilIdle()
-        model.onBankingDetailsLoadFailed()
-
-        // Act
-        val actual = model.retryBankCredentials()
-
-        // Assert
-        assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
-        assertThat(openedSheets.last()).isEqualTo(MoneyAccountDetailsNavigation.BankDetailsError)
-        verify(exactly = 0) { router.push(any(), any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank details loaded WHEN reported THEN sheet replaced by details screen and bank details event sent`() =
-        runTest {
+        @Test
+        fun `GIVEN options sheet WHEN dismissed THEN slot cleared`() = runTest {
             // Arrange
             val model = createModel(activeAccount(balance = balance()))
             val openedSheets = model.bottomSheetNavigation.trackSlot()
             advanceUntilIdle()
-            model.onBankingDetailsLoadFailed()
+            model.uiState.value.onAddFundsClick()
 
             // Act
-            model.onBankDetailsLoaded(listOf(CREDENTIALS))
+            model.onDismissAddFunds()
 
             // Assert
             assertThat(openedSheets.last()).isNull()
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideSheetsOpenedFromOptions")
+        fun `GIVEN sheet opened from options WHEN options dismissal arrives late THEN that sheet stays`(
+            model: SheetFromOptionsModel,
+        ) = runTest {
+            // Arrange
+            val detailsModel = createModel(activeAccount(balance = balance()))
+            val openedSheets = detailsModel.bottomSheetNavigation.trackSlot()
+            advanceUntilIdle()
+            detailsModel.uiState.value.onAddFundsClick()
+            model.openSheet(detailsModel)
+
+            // Act
+            detailsModel.onDismissAddFunds()
+
+            // Assert
+            assertThat(openedSheets.last()).isEqualTo(model.expectedSheet)
+            detailsModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN banking details fail to load WHEN notified THEN options replaced by error sheet and event sent`() =
+            runTest {
+                // Arrange
+                val model = createModel(activeAccount(balance = balance()))
+                val openedSheets = model.bottomSheetNavigation.trackSlot()
+                advanceUntilIdle()
+                model.uiState.value.onAddFundsClick()
+
+                // Act
+                model.onBankingDetailsLoadFailed()
+
+                // Assert
+                assertThat(openedSheets.last()).isEqualTo(MoneyAccountDetailsNavigation.BankDetailsError)
+                verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsLoadFailed>()) }
+                model.onDestroy()
+            }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [false, true])
+        fun `GIVEN error sheet WHEN retried THEN credentials requested again, details pushed and retry event sent`(
+            isMxnEnabled: Boolean,
+        ) = runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isMxnEnabled } returns isMxnEnabled
+            coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, isMxnEnabled) } returns
+                listOf(CREDENTIALS).right()
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Act
+            val actual = model.retryBankCredentials()
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
             verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(listOf(CREDENTIALS)), any()) }
-            verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown()) }
+            verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsRetryTapped>()) }
             model.onDestroy()
         }
 
-    @Test
-    fun `GIVEN error sheet WHEN support clicked THEN sheet dismissed and support email sent with customer id`() =
-        runTest {
+        @Test
+        fun `GIVEN credentials fail WHEN error sheet retried THEN error returned and the error sheet kept`() = runTest {
             // Arrange
+            coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, false) } returns
+                TangemPayApiError.ServerUnavailable.left()
             val model = createModel(activeAccount(balance = balance()))
             val openedSheets = model.bottomSheetNavigation.trackSlot()
             advanceUntilIdle()
             model.onBankingDetailsLoadFailed()
 
             // Act
-            model.onBankDetailsSupportClick()
-            advanceUntilIdle()
+            val actual = model.retryBankCredentials()
 
             // Assert
-            assertThat(openedSheets.last()).isNull()
-            verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsErrorSupportTapped>()) }
-            verify(exactly = 0) { analytics.send(ofType<MoneyAccountAnalyticsEvents.SupportClicked>()) }
-            coVerify(exactly = 1) { sendFeedbackEmailUseCase(supportEmailType()) }
+            assertThat(actual).isEqualTo(TangemPayApiError.ServerUnavailable.left())
+            assertThat(openedSheets.last()).isEqualTo(MoneyAccountDetailsNavigation.BankDetailsError)
+            verify(exactly = 0) { router.push(any(), any()) }
             model.onDestroy()
         }
 
-    @Test
-    fun `GIVEN account menu WHEN support clicked THEN support event sent and support email sent with customer id`() =
-        runTest {
+        @Test
+        fun `GIVEN bank details loaded WHEN reported THEN sheet replaced by details screen and bank details event sent`() =
+            runTest {
+                // Arrange
+                val model = createModel(activeAccount(balance = balance()))
+                val openedSheets = model.bottomSheetNavigation.trackSlot()
+                advanceUntilIdle()
+                model.onBankingDetailsLoadFailed()
+
+                // Act
+                model.onBankDetailsLoaded(listOf(CREDENTIALS))
+
+                // Assert
+                assertThat(openedSheets.last()).isNull()
+                verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(listOf(CREDENTIALS)), any()) }
+                verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN error sheet WHEN support clicked THEN sheet dismissed and support email sent with customer id`() =
+            runTest {
+                // Arrange
+                val model = createModel(activeAccount(balance = balance()))
+                val openedSheets = model.bottomSheetNavigation.trackSlot()
+                advanceUntilIdle()
+                model.onBankingDetailsLoadFailed()
+
+                // Act
+                model.onBankDetailsSupportClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(openedSheets.last()).isNull()
+                verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsErrorSupportTapped>()) }
+                verify(exactly = 0) { analytics.send(ofType<MoneyAccountAnalyticsEvents.SupportClicked>()) }
+                coVerify(exactly = 1) { sendFeedbackEmailUseCase(supportEmailType()) }
+                model.onDestroy()
+            }
+
+        private fun provideTestModels() = listOf(
+            AddFundsModel(balance = balance(), expectedDepositAddress = DEPOSIT_ADDRESS),
+            AddFundsModel(balance = null, expectedDepositAddress = null),
+        )
+
+        private fun provideSheetsOpenedFromOptions() = listOf(
+            SheetFromOptionsModel(
+                openSheet = { model -> model.onReceiveClick(DEPOSIT_ADDRESS) },
+                expectedSheet = MoneyAccountDetailsNavigation.Receive(receiveConfig()),
+            ),
+            SheetFromOptionsModel(
+                openSheet = { model -> model.onBankingDetailsLoadFailed() },
+                expectedSheet = MoneyAccountDetailsNavigation.BankDetailsError,
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AccountMenu {
+
+        @Test
+        fun `GIVEN account menu WHEN support clicked THEN support event sent and support email sent with customer id`() =
+            runTest {
+                // Arrange
+                val model = createModel(activeAccount(balance = balance()))
+                advanceUntilIdle()
+
+                // Act
+                model.menuItem(resourceReference(R.string.tangempay_pay_support)).onClick()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.SupportClicked()) }
+                coVerify(exactly = 1) { sendFeedbackEmailUseCase(supportEmailType()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN account menu WHEN terms clicked THEN account terms event sent and terms opened`() = runTest {
             // Arrange
             val model = createModel(activeAccount(balance = balance()))
             advanceUntilIdle()
 
             // Act
-            model.menuItem(resourceReference(R.string.tangempay_pay_support)).onClick()
-            advanceUntilIdle()
+            model.menuItem(stringReference("Terms and Limits")).onClick()
 
             // Assert
-            verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.SupportClicked()) }
-            coVerify(exactly = 1) { sendFeedbackEmailUseCase(supportEmailType()) }
+            verify(exactly = 1) {
+                analytics.send(
+                    TangemPayAnalyticsEvents.TermsAndLimitsClicked(product = TangemPayAnalyticsEvents.Product.ACCOUNT),
+                )
+            }
+            verify(exactly = 1) { urlOpener.openUrl(TERMS_URL) }
             model.onDestroy()
         }
 
-    @Test
-    fun `GIVEN account menu WHEN terms clicked THEN account terms event sent and terms opened`() = runTest {
-        // Arrange
-        val model = createModel(activeAccount(balance = balance()))
-        advanceUntilIdle()
+        @Test
+        fun `GIVEN account screen WHEN menu opened THEN account menu event sent`() = runTest {
+            // Arrange
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
 
-        // Act
-        model.menuItem(stringReference("Terms and Limits")).onClick()
+            // Act
+            model.uiState.value.onMenuClick()
 
-        // Assert
-        verify(exactly = 1) {
-            analytics.send(
-                TangemPayAnalyticsEvents.TermsAndLimitsClicked(product = TangemPayAnalyticsEvents.Product.ACCOUNT),
-            )
+            // Assert
+            verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AccountMenuClicked()) }
+            model.onDestroy()
         }
-        verify(exactly = 1) { urlOpener.openUrl(TERMS_URL) }
-        model.onDestroy()
     }
 
-    @Test
-    fun `GIVEN account screen WHEN menu opened THEN account menu event sent`() = runTest {
-        // Arrange
-        val model = createModel(activeAccount(balance = balance()))
-        advanceUntilIdle()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ScreenAnalytics {
 
-        // Act
-        model.uiState.value.onMenuClick()
+        @ParameterizedTest
+        @MethodSource("provideScreenOpenedModels")
+        fun `GIVEN account WHEN first loaded THEN screen opened event sent with its state and balance band`(
+            model: ScreenOpenedModel,
+        ) = runTest {
+            // Act
+            val detailsModel = createModel(model.status)
+            advanceUntilIdle()
 
-        // Assert
-        verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AccountMenuClicked()) }
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideScreenOpenedModels")
-    fun `GIVEN account WHEN first loaded THEN screen opened event sent with its state and balance band`(
-        model: ScreenOpenedModel,
-    ) = runTest {
-        // Act
-        val detailsModel = createModel(model.status)
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { analytics.send(model.expectedEvent) }
-        detailsModel.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN account shown WHEN account updated THEN screen opened event not repeated`() = runTest {
-        // Arrange
-        val statuses = MutableStateFlow<MoneyAccountStatusValue>(activeAccount(balance = balance()))
-        val model = createModel(statuses)
-        advanceUntilIdle()
-
-        // Act
-        statuses.value = activeAccount(balance = balance(amount = BigDecimal.ZERO))
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.AccountScreenOpened>()) }
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideBalanceBannerModels")
-    fun `GIVEN account updates WHEN balance becomes unavailable THEN banner event sent once per appearance`(
-        model: BalanceBannerModel,
-    ) = runTest {
-        // Act
-        val detailsModel = createModel(model.accounts.asFlow())
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = model.expectedEvents) {
-            analytics.send(ofType<MoneyAccountAnalyticsEvents.BalanceErrorBannerShown>())
+            // Assert
+            verify(exactly = 1) { analytics.send(model.expectedEvent) }
+            detailsModel.onDestroy()
         }
-        detailsModel.onDestroy()
-    }
 
-    @ParameterizedTest
-    @MethodSource("provideTransactionClickModels")
-    fun `GIVEN history row WHEN clicked THEN account transaction event sent with its type and status`(
-        model: TransactionClickModel,
-    ) = runTest {
-        // Arrange
-        val detailsModel = createModel(activeAccount(balance = balance()))
-        advanceUntilIdle()
+        @Test
+        fun `GIVEN account shown WHEN account updated THEN screen opened event not repeated`() = runTest {
+            // Arrange
+            val statuses = MutableStateFlow<MoneyAccountStatusValue>(activeAccount(balance = balance()))
+            val model = createModel(statuses)
+            advanceUntilIdle()
 
-        // Act
-        detailsModel.onTransactionClick(model.item)
+            // Act
+            statuses.value = activeAccount(balance = balance(amount = BigDecimal.ZERO))
+            advanceUntilIdle()
 
-        // Assert
-        verify(exactly = 1) {
-            analytics.send(
-                TangemPayAnalyticsEvents.TransactionInListClicked(
-                    product = TangemPayAnalyticsEvents.Product.ACCOUNT,
-                    type = model.expectedType,
-                    status = model.expectedStatus,
+            // Assert
+            verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.AccountScreenOpened>()) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideBalanceBannerModels")
+        fun `GIVEN account updates WHEN balance becomes unavailable THEN banner event sent once per appearance`(
+            model: BalanceBannerModel,
+        ) = runTest {
+            // Act
+            val detailsModel = createModel(model.accounts.asFlow())
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = model.expectedEvents) {
+                analytics.send(ofType<MoneyAccountAnalyticsEvents.BalanceErrorBannerShown>())
+            }
+            detailsModel.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideTransactionClickModels")
+        fun `GIVEN history row WHEN clicked THEN account transaction event sent with its type and status`(
+            model: TransactionClickModel,
+        ) = runTest {
+            // Arrange
+            val detailsModel = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Act
+            detailsModel.onTransactionClick(model.item)
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(
+                    TangemPayAnalyticsEvents.TransactionInListClicked(
+                        product = TangemPayAnalyticsEvents.Product.ACCOUNT,
+                        type = model.expectedType,
+                        status = model.expectedStatus,
+                    ),
+                )
+            }
+            detailsModel.onDestroy()
+        }
+
+        private fun provideScreenOpenedModels() = listOf(
+            activeScreenOpenedModel(amount = BigDecimal.ZERO, expectedBand = BalanceBand.ZERO),
+            activeScreenOpenedModel(amount = BigDecimal("99.99"), expectedBand = BalanceBand.UNDER_100),
+            activeScreenOpenedModel(amount = BigDecimal("100"), expectedBand = BalanceBand.FROM_100_TO_1K),
+            activeScreenOpenedModel(amount = BigDecimal("1000"), expectedBand = BalanceBand.FROM_1K_TO_10K),
+            activeScreenOpenedModel(amount = BigDecimal("10000"), expectedBand = BalanceBand.FROM_1K_TO_10K),
+            activeScreenOpenedModel(amount = BigDecimal("25250.50"), expectedBand = BalanceBand.OVER_10K),
+            ScreenOpenedModel(
+                status = activeAccount(balance = null),
+                expectedEvent = MoneyAccountAnalyticsEvents.AccountScreenOpened(
+                    accountState = MoneyAccountAnalyticsEvents.AccountState.ACTIVE,
+                    balanceBand = null,
+                    currency = null,
                 ),
-            )
-        }
-        detailsModel.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN options sheet WHEN swap clicked THEN swap opens with the account token as TO`() = runTest {
-        // Arrange
-        val model = createModel(activeAccount(balance = balance()))
-        val openedSheets = model.bottomSheetNavigation.trackSlot()
-        advanceUntilIdle()
-        model.uiState.value.onAddFundsClick()
-
-        // Act
-        model.onSwapClick()
-
-        // Assert
-        assertThat(openedSheets.last()).isNull()
-        val expectedRoute = AppRoute.Swap(
-            userWalletId = userWalletId,
-            fromCryptoCurrency = token,
-            screenSource = "MoneyAccount",
-            fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
-            accountFlow = AppRoute.Swap.AccountFlow.MoneyTopUp,
+            ),
         )
-        verify(exactly = 1) { router.push(expectedRoute, any()) }
-        model.onDestroy()
+
+        private fun provideBalanceBannerModels() = listOf(
+            BalanceBannerModel(accounts = listOf(activeAccount(balance = null)), expectedEvents = 1),
+            BalanceBannerModel(accounts = listOf(activeAccount(balance = balance())), expectedEvents = 0),
+            BalanceBannerModel(
+                accounts = listOf(activeAccount(balance = balance()), activeAccount(balance = null)),
+                expectedEvents = 1,
+            ),
+            BalanceBannerModel(
+                accounts = listOf(activeAccount(balance = null), activeAccount(balance = null)),
+                expectedEvents = 1,
+            ),
+            BalanceBannerModel(
+                accounts = listOf(
+                    activeAccount(balance = null),
+                    activeAccount(balance = balance()),
+                    activeAccount(balance = null),
+                ),
+                expectedEvents = 2,
+            ),
+            BalanceBannerModel(
+                accounts = listOf(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.Unavailable)),
+                expectedEvents = 1,
+            ),
+            BalanceBannerModel(
+                accounts = listOf(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced)),
+                expectedEvents = 0,
+            ),
+            BalanceBannerModel(
+                accounts = listOf(activeAccount(balance = null, error = MoneyAccountStatusValue.Error.NotSynced)),
+                expectedEvents = 0,
+            ),
+            BalanceBannerModel(
+                accounts = listOf(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.ExposedDevice)),
+                expectedEvents = 1,
+            ),
+            BalanceBannerModel(
+                accounts = listOf(
+                    activeAccount(balance = balance()),
+                    activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.Unavailable),
+                    activeAccount(balance = null),
+                ),
+                expectedEvents = 1,
+            ),
+        )
+
+        private fun provideTransactionClickModels() = listOf(
+            TransactionClickModel(
+                item = OnChainTx.BSDK(txInfo(isOutgoing = false, status = TxInfo.TransactionStatus.Confirmed)),
+                expectedType = "deposit",
+                expectedStatus = "completed",
+            ),
+            TransactionClickModel(
+                item = OnChainTx.BSDK(txInfo(isOutgoing = true, status = TxInfo.TransactionStatus.Unconfirmed)),
+                expectedType = "send",
+                expectedStatus = "pending",
+            ),
+            TransactionClickModel(
+                item = OnChainTx.BSDK(txInfo(isOutgoing = true, status = TxInfo.TransactionStatus.Failed)),
+                expectedType = "send",
+                expectedStatus = "declined",
+            ),
+            TransactionClickModel(
+                item = ExpressTx.Swap(tx = mockk(), isOutgoing = true, txInfo = null),
+                expectedType = "send",
+                expectedStatus = "unknown",
+            ),
+            TransactionClickModel(
+                item = ExpressTx.Onramp(
+                    tx = mockk(),
+                    txInfo = OnChainTx.BSDK(txInfo(isOutgoing = false, status = TxInfo.TransactionStatus.Confirmed)),
+                ),
+                expectedType = "deposit",
+                expectedStatus = "completed",
+            ),
+            TransactionClickModel(
+                item = JointOperationTx(operation = mockk(), transfer = mockk(), txInfo = null),
+                expectedType = "send",
+                expectedStatus = "unknown",
+            ),
+            collateralClick(collateralType = TangemPayTxHistoryItem.Type.Deposit, expectedType = "deposit"),
+            collateralClick(collateralType = TangemPayTxHistoryItem.Type.Cashback, expectedType = "deposit"),
+            collateralClick(collateralType = TangemPayTxHistoryItem.Type.Withdrawal, expectedType = "send"),
+            spendClick(spendStatus = TangemPayTxHistoryItem.Status.PENDING, expectedStatus = "pending"),
+            spendClick(spendStatus = TangemPayTxHistoryItem.Status.RESERVED, expectedStatus = "pending"),
+            spendClick(spendStatus = TangemPayTxHistoryItem.Status.COMPLETED, expectedStatus = "completed"),
+            spendClick(spendStatus = TangemPayTxHistoryItem.Status.DECLINED, expectedStatus = "declined"),
+            spendClick(spendStatus = TangemPayTxHistoryItem.Status.REVERSED, expectedStatus = "declined"),
+            spendClick(spendStatus = TangemPayTxHistoryItem.Status.UNKNOWN, expectedStatus = "unknown"),
+            TransactionClickModel(
+                item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Payment>()),
+                expectedType = "send",
+                expectedStatus = "unknown",
+            ),
+            TransactionClickModel(
+                item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Fee>()),
+                expectedType = "send",
+                expectedStatus = "unknown",
+            ),
+        )
     }
 
-    @Test
-    fun `GIVEN account without balance WHEN swap clicked THEN swap not opened`() = runTest {
-        // Arrange
-        val model = createModel(activeAccount(balance = null))
-        advanceUntilIdle()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SwapAndSend {
 
-        // Act
-        model.onSwapClick()
+        @Test
+        fun `GIVEN options sheet WHEN swap clicked THEN swap opens with the account token as TO`() = runTest {
+            // Arrange
+            val model = createModel(activeAccount(balance = balance()))
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+            advanceUntilIdle()
+            model.uiState.value.onAddFundsClick()
 
-        // Assert
-        verify(exactly = 0) { router.push(any(), any()) }
-        model.onDestroy()
+            // Act
+            model.onSwapClick()
+
+            // Assert
+            assertThat(openedSheets.last()).isNull()
+            val expectedRoute = AppRoute.Swap(
+                userWalletId = userWalletId,
+                fromCryptoCurrency = token,
+                screenSource = "MoneyAccount",
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
+                accountFlow = AppRoute.Swap.AccountFlow.MoneyTopUp,
+            )
+            verify(exactly = 1) { router.push(expectedRoute, any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN account without balance WHEN swap clicked THEN swap not opened`() = runTest {
+            // Arrange
+            val model = createModel(activeAccount(balance = null))
+            advanceUntilIdle()
+
+            // Act
+            model.onSwapClick()
+
+            // Assert
+            verify(exactly = 0) { router.push(any(), any()) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideSendClickModels")
+        fun `GIVEN account WHEN send clicked THEN withdraw hub offers bank transfer only with the bank off-ramp channel`(
+            model: SendClickModel,
+        ) = runTest {
+            // Arrange
+            val pushedRoutes = mutableListOf<Route>()
+            every { router.push(capture(pushedRoutes), any()) } returns Unit
+            val detailsModel = createModel(model.status)
+            advanceUntilIdle()
+
+            // Act
+            detailsModel.uiState.value.onSendClick()
+
+            // Assert
+            assertThat(pushedRoutes).containsExactlyElementsIn(listOfNotNull(model.expectedRoute))
+            detailsModel.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideSendClickModels")
+        fun `GIVEN account WHEN send clicked THEN send button tap reported only when the hub opens`(
+            model: SendClickModel,
+        ) = runTest {
+            // Arrange
+            val detailsModel = createModel(model.status)
+            advanceUntilIdle()
+
+            // Act
+            detailsModel.uiState.value.onSendClick()
+
+            // Assert
+            val expectedTaps = if (model.expectedRoute == null) 0 else 1
+            verify(exactly = expectedTaps) { analytics.send(MoneyAccountAnalyticsEvents.SendClicked()) }
+            detailsModel.onDestroy()
+        }
+
+        private fun provideSendClickModels() = listOf(
+            SendClickModel(
+                status = activeAccount(balance(), isBankOfframpAvailable = true),
+                expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = PRODUCT_INSTANCE_ID),
+            ),
+            SendClickModel(
+                status = activeAccount(balance(), isBankOfframpAvailable = false),
+                expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
+            ),
+            SendClickModel(
+                status = activeAccount(balance(), isBankOfframpAvailable = null),
+                expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
+            ),
+            SendClickModel(
+                status = activeAccount(balance = null, isBankOfframpAvailable = true),
+            ),
+        )
     }
 
-    @ParameterizedTest
-    @MethodSource("provideSendClickModels")
-    fun `GIVEN account WHEN send clicked THEN withdraw hub offers bank transfer only with the bank off-ramp channel`(
-        model: SendClickModel,
-    ) = runTest {
-        // Arrange
-        val pushedRoutes = mutableListOf<Route>()
-        every { router.push(capture(pushedRoutes), any()) } returns Unit
-        val detailsModel = createModel(model.status)
-        advanceUntilIdle()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AccountStatusChanges {
 
-        // Act
-        detailsModel.uiState.value.onSendClick()
+        @ParameterizedTest
+        @MethodSource("provideNonAccountStatuses")
+        fun `GIVEN account shown WHEN its status stops being an account THEN screen stays open`(
+            status: MoneyAccountStatusValue,
+        ) = runTest {
+            // Arrange
+            val statuses = MutableStateFlow<MoneyAccountStatusValue>(activeAccount(balance = balance()))
+            val model = createModel(statuses)
+            advanceUntilIdle()
 
-        // Assert
-        assertThat(pushedRoutes).containsExactlyElementsIn(listOfNotNull(model.expectedRoute))
-        detailsModel.onDestroy()
-    }
+            // Act
+            statuses.value = status
+            advanceUntilIdle()
 
-    @ParameterizedTest
-    @MethodSource("provideSendClickModels")
-    fun `GIVEN account WHEN send clicked THEN send button tap reported only when the hub opens`(
-        model: SendClickModel,
-    ) = runTest {
-        // Arrange
-        val detailsModel = createModel(model.status)
-        advanceUntilIdle()
+            // Assert
+            verify(exactly = 0) { router.pop(any()) }
+            model.onDestroy()
+        }
 
-        // Act
-        detailsModel.uiState.value.onSendClick()
+        @ParameterizedTest
+        @MethodSource("provideNonAccountStatuses")
+        fun `GIVEN no account shown WHEN status is not an account THEN screen closed`(status: MoneyAccountStatusValue) =
+            runTest {
+                // Act
+                val model = createModel(status)
+                advanceUntilIdle()
 
-        // Assert
-        val expectedTaps = if (model.expectedRoute == null) 0 else 1
-        verify(exactly = expectedTaps) { analytics.send(MoneyAccountAnalyticsEvents.SendClicked()) }
-        detailsModel.onDestroy()
-    }
+                // Assert
+                verify(exactly = 1) { router.pop(any()) }
+                model.onDestroy()
+            }
 
-    @ParameterizedTest
-    @MethodSource("provideNonAccountStatuses")
-    fun `GIVEN account shown WHEN its status stops being an account THEN screen stays open`(
-        status: MoneyAccountStatusValue,
-    ) = runTest {
-        // Arrange
-        val statuses = MutableStateFlow<MoneyAccountStatusValue>(activeAccount(balance = balance()))
-        val model = createModel(statuses)
-        advanceUntilIdle()
+        @Test
+        fun `GIVEN account status WHEN model created THEN tx history currency is the account token`() = runTest {
+            // Act
+            val model = createModel(activeAccount(balance = null))
+            advanceUntilIdle()
 
-        // Act
-        statuses.value = status
-        advanceUntilIdle()
+            // Assert
+            assertThat(model.uiState.value.txHistoryCurrency).isEqualTo(token)
+            model.onDestroy()
+        }
 
-        // Assert
-        verify(exactly = 0) { router.pop(any()) }
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideNonAccountStatuses")
-    fun `GIVEN no account shown WHEN status is not an account THEN screen closed`(status: MoneyAccountStatusValue) =
-        runTest {
+        @ParameterizedTest
+        @MethodSource("provideNonAccountStatuses")
+        fun `GIVEN non account status WHEN model created THEN tx history currency is absent`(
+            status: MoneyAccountStatusValue,
+        ) = runTest {
             // Act
             val model = createModel(status)
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { router.pop(any()) }
+            assertThat(model.uiState.value.txHistoryCurrency).isNull()
             model.onDestroy()
         }
 
-    @Test
-    fun `GIVEN account status WHEN model created THEN tx history currency is the account token`() = runTest {
-        // Act
-        val model = createModel(activeAccount(balance = null))
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.uiState.value.txHistoryCurrency).isEqualTo(token)
-        model.onDestroy()
+        private fun provideNonAccountStatuses() = listOf(
+            MoneyAccountStatusValue.Error.Unavailable,
+            MoneyAccountStatusValue.Error.ExposedDevice,
+            MoneyAccountStatusValue.Empty,
+            MoneyAccountStatusValue.Onboarding.Activating(
+                source = StatusSource.ACTUAL,
+                customerId = CUSTOMER_ID,
+                step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
+            ),
+        )
     }
 
-    @ParameterizedTest
-    @MethodSource("provideNonAccountStatuses")
-    fun `GIVEN non account status WHEN model created THEN tx history currency is absent`(
-        status: MoneyAccountStatusValue,
-    ) = runTest {
-        // Act
-        val model = createModel(status)
-        advanceUntilIdle()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Refresh {
 
-        // Assert
-        assertThat(model.uiState.value.txHistoryCurrency).isNull()
-        model.onDestroy()
-    }
+        @Test
+        fun `GIVEN account shown WHEN pulled to refresh THEN status fetched tx history reloaded and indicator hidden`() =
+            runTest {
+                // Arrange
+                val model = createModel(activeAccount(balance = balance()))
+                advanceUntilIdle()
+                forgetOpeningRefresh()
 
-    @Test
-    fun `GIVEN account shown WHEN pulled to refresh THEN status fetched tx history reloaded and indicator hidden`() =
-        runTest {
-            // Arrange
-            val model = createModel(activeAccount(balance = balance()))
-            advanceUntilIdle()
-            forgetOpeningRefresh()
+                // Act
+                model.pullToRefresh()
+                advanceUntilIdle()
 
-            // Act
-            model.pullToRefresh()
-            advanceUntilIdle()
-
-            // Assert
-            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
-            coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
-            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN status fetch in progress WHEN account status updated THEN refresh indicator stays`() = runTest {
-        // Arrange
-        coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
-        val statuses = MutableStateFlow<MoneyAccountStatusValue>(activeAccount(balance = null))
-        val model = createModel(statuses)
-        advanceUntilIdle()
-        model.pullToRefresh()
-
-        // Act
-        statuses.value = activeAccount(balance = balance())
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isTrue()
-        assertThat(model.uiState.value.balance).isInstanceOf(MoneyAccountBalanceBlockState.Content::class.java)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN refresh in progress WHEN pulled again THEN status fetched once`() = runTest {
-        // Arrange
-        coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
-        val model = createModel(activeAccount(balance = balance()))
-        advanceUntilIdle()
-        forgetOpeningRefresh()
-        model.pullToRefresh()
-        advanceUntilIdle()
-
-        // Act
-        model.pullToRefresh()
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN account not loaded WHEN pulled to refresh THEN status fetched without tx history reload`() = runTest {
-        // Arrange
-        val model = createModel(emptyFlow())
-        advanceUntilIdle()
-        forgetOpeningRefresh()
-
-        // Act
-        model.pullToRefresh()
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
-        coVerify(exactly = 0) { txHistoryContentUpdateEmitter.triggerUpdate() }
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideErrorBannerModels")
-    fun `GIVEN account error and balance WHEN model created THEN matching banner shown and actions toggled`(
-        model: ErrorBannerModel,
-    ) = runTest {
-        // Arrange
-        val detailsModel = createModel(activeAccount(balance = model.balance, error = model.error))
-
-        // Act
-        advanceUntilIdle()
-
-        // Assert
-        val banner = detailsModel.uiState.value.messageBanner
-        assertThat(banner?.title).isEqualTo(model.expectedTitle)
-        assertThat(banner?.secondaryButton != null).isEqualTo(model.hasRenewButton)
-        assertThat(detailsModel.uiState.value.isAddFundsEnabled).isEqualTo(model.isAddFundsEnabled)
-        assertThat(detailsModel.uiState.value.isSendEnabled).isEqualTo(model.isSendEnabled)
-        assertThat(detailsModel.uiState.value.isBalanceUnavailable).isEqualTo(model.isBalanceUnavailable)
-        detailsModel.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN account WHEN screen opened THEN status fetched once without refresh indicator`() = runTest {
-        // Arrange
-        coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
-
-        // Act
-        val model = createModel(activeAccount(balance = balance()))
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
-        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN opening refresh running WHEN pulled to refresh THEN it is cancelled for the new one`() =
-        runTest {
-            // Arrange
-            var isOpeningRefreshCancelled = false
-            var fetchCount = 0
-            coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers {
-                fetchCount++
-                if (fetchCount == 1) {
-                    try {
-                        awaitCancellation()
-                    } finally {
-                        isOpeningRefreshCancelled = true
-                    }
-                }
-                Unit.right()
+                // Assert
+                coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+                coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+                assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+                model.onDestroy()
             }
+
+        @Test
+        fun `GIVEN status fetch in progress WHEN account status updated THEN refresh indicator stays`() = runTest {
+            // Arrange
+            coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
+            val statuses = MutableStateFlow<MoneyAccountStatusValue>(activeAccount(balance = null))
+            val model = createModel(statuses)
+            advanceUntilIdle()
+            model.pullToRefresh()
+
+            // Act
+            statuses.value = activeAccount(balance = balance())
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isTrue()
+            assertThat(model.uiState.value.balance).isInstanceOf(MoneyAccountBalanceBlockState.Content::class.java)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN refresh in progress WHEN pulled again THEN status fetched once`() = runTest {
+            // Arrange
+            coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
             val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+            forgetOpeningRefresh()
+            model.pullToRefresh()
             advanceUntilIdle()
 
             // Act
@@ -710,68 +825,222 @@ internal class MoneyAccountDetailsModelTest {
             advanceUntilIdle()
 
             // Assert
-            assertThat(isOpeningRefreshCancelled).isTrue()
-            assertThat(fetchCount).isEqualTo(2)
-            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
             model.onDestroy()
         }
 
-    @Test
-    fun `GIVEN history failed WHEN reload clicked THEN history and status reloaded without refresh indicator`() =
-        runTest {
+        @Test
+        fun `GIVEN account not loaded WHEN pulled to refresh THEN status fetched without tx history reload`() = runTest {
             // Arrange
-            val account = activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.Unavailable)
-            val model = createModel(account)
+            val model = createModel(emptyFlow())
             advanceUntilIdle()
             forgetOpeningRefresh()
 
             // Act
-            model.uiState.value.onTxHistoryReloadClick()
+            model.pullToRefresh()
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+            coVerify(exactly = 0) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN account WHEN screen opened THEN status fetched once without refresh indicator`() = runTest {
+            // Arrange
+            coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
+
+            // Act
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Assert
             coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
             assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
             model.onDestroy()
         }
 
-    @Test
-    fun `GIVEN not synced banner WHEN renew session succeeds THEN status fetched and progress hidden`() = runTest {
-        // Arrange
-        coEvery { renewTangemPaySessionUseCase(userWalletId) } returns Unit.right()
-        val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
-        advanceUntilIdle()
-        forgetOpeningRefresh()
+        @Test
+        fun `GIVEN opening refresh running WHEN pulled to refresh THEN it is cancelled for the new one`() =
+            runTest {
+                // Arrange
+                var isOpeningRefreshCancelled = false
+                var fetchCount = 0
+                coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers {
+                    fetchCount++
+                    if (fetchCount == 1) {
+                        try {
+                            awaitCancellation()
+                        } finally {
+                            isOpeningRefreshCancelled = true
+                        }
+                    }
+                    Unit.right()
+                }
+                val model = createModel(activeAccount(balance = balance()))
+                advanceUntilIdle()
 
-        // Act
-        model.renewSession()
-        advanceUntilIdle()
+                // Act
+                model.pullToRefresh()
+                advanceUntilIdle()
 
-        // Assert
-        coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
-        verify(exactly = 0) { uiMessageSender.send(any()) }
-        assertThat(model.uiState.value.messageBanner?.secondaryButton?.isLoading).isFalse()
-        model.onDestroy()
+                // Assert
+                assertThat(isOpeningRefreshCancelled).isTrue()
+                assertThat(fetchCount).isEqualTo(2)
+                assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN history failed WHEN reload clicked THEN history and status reloaded without refresh indicator`() =
+            runTest {
+                // Arrange
+                val account = activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.Unavailable)
+                val model = createModel(account)
+                advanceUntilIdle()
+                forgetOpeningRefresh()
+
+                // Act
+                model.uiState.value.onTxHistoryReloadClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+                coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+                assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+                model.onDestroy()
+            }
     }
 
-    @Test
-    fun `GIVEN not synced banner WHEN renew session fails THEN error shown and status not fetched`() = runTest {
-        // Arrange
-        coEvery { renewTangemPaySessionUseCase(userWalletId) } returns IllegalStateException().left()
-        val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
-        advanceUntilIdle()
-        forgetOpeningRefresh()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Banners {
 
-        // Act
-        model.renewSession()
-        advanceUntilIdle()
+        @ParameterizedTest
+        @MethodSource("provideErrorBannerModels")
+        fun `GIVEN account error and balance WHEN model created THEN matching banner shown and actions toggled`(
+            model: ErrorBannerModel,
+        ) = runTest {
+            // Arrange
+            val detailsModel = createModel(activeAccount(balance = model.balance, error = model.error))
 
-        // Assert
-        coVerify(exactly = 0) { moneyAccountStatusFetcher(any<UserWalletId>()) }
-        verify(exactly = 1) { uiMessageSender.send(match<SnackbarMessage> { true }) }
-        assertThat(model.uiState.value.messageBanner?.secondaryButton?.isLoading).isFalse()
-        model.onDestroy()
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            val banner = detailsModel.uiState.value.messageBanner
+            assertThat(banner?.title).isEqualTo(model.expectedTitle)
+            assertThat(banner?.secondaryButton != null).isEqualTo(model.hasRenewButton)
+            assertThat(detailsModel.uiState.value.isAddFundsEnabled).isEqualTo(model.isAddFundsEnabled)
+            assertThat(detailsModel.uiState.value.isSendEnabled).isEqualTo(model.isSendEnabled)
+            assertThat(detailsModel.uiState.value.isBalanceUnavailable).isEqualTo(model.isBalanceUnavailable)
+            detailsModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN not synced banner WHEN renew session succeeds THEN status fetched and progress hidden`() = runTest {
+            // Arrange
+            coEvery { renewTangemPaySessionUseCase(userWalletId) } returns Unit.right()
+            val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
+            advanceUntilIdle()
+            forgetOpeningRefresh()
+
+            // Act
+            model.renewSession()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            assertThat(model.uiState.value.messageBanner?.secondaryButton?.isLoading).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN not synced banner WHEN renew session fails THEN error shown and status not fetched`() = runTest {
+            // Arrange
+            coEvery { renewTangemPaySessionUseCase(userWalletId) } returns IllegalStateException().left()
+            val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
+            advanceUntilIdle()
+            forgetOpeningRefresh()
+
+            // Act
+            model.renewSession()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { moneyAccountStatusFetcher(any<UserWalletId>()) }
+            verify(exactly = 1) { uiMessageSender.send(match<SnackbarMessage> { true }) }
+            assertThat(model.uiState.value.messageBanner?.secondaryButton?.isLoading).isFalse()
+            model.onDestroy()
+        }
+
+        private fun provideErrorBannerModels() = listOf(
+            ErrorBannerModel(
+                balance = balance(),
+                error = null,
+                expectedTitle = null,
+                hasRenewButton = false,
+                isAddFundsEnabled = true,
+                isSendEnabled = true,
+                isBalanceUnavailable = false,
+            ),
+            ErrorBannerModel(
+                balance = null,
+                error = null,
+                expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
+                hasRenewButton = false,
+                isAddFundsEnabled = false,
+                isSendEnabled = false,
+                isBalanceUnavailable = true,
+            ),
+            ErrorBannerModel(
+                balance = balance(),
+                error = MoneyAccountStatusValue.Error.NotSynced,
+                expectedTitle = resourceReference(R.string.tangempay_sync_needed_title),
+                hasRenewButton = true,
+                isAddFundsEnabled = false,
+                isSendEnabled = false,
+                isBalanceUnavailable = false,
+            ),
+            ErrorBannerModel(
+                balance = null,
+                error = MoneyAccountStatusValue.Error.NotSynced,
+                expectedTitle = resourceReference(R.string.tangempay_sync_needed_title),
+                hasRenewButton = true,
+                isAddFundsEnabled = false,
+                isSendEnabled = false,
+                isBalanceUnavailable = true,
+            ),
+            ErrorBannerModel(
+                balance = balance(),
+                error = MoneyAccountStatusValue.Error.Unavailable,
+                expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
+                hasRenewButton = false,
+                isAddFundsEnabled = false,
+                isSendEnabled = false,
+                isBalanceUnavailable = true,
+            ),
+            ErrorBannerModel(
+                balance = null,
+                error = MoneyAccountStatusValue.Error.Unavailable,
+                expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
+                hasRenewButton = false,
+                isAddFundsEnabled = false,
+                isSendEnabled = false,
+                isBalanceUnavailable = true,
+            ),
+            ErrorBannerModel(
+                balance = balance(),
+                error = MoneyAccountStatusValue.Error.ExposedDevice,
+                expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
+                hasRenewButton = false,
+                isAddFundsEnabled = false,
+                isSendEnabled = false,
+                isBalanceUnavailable = true,
+            ),
+        )
     }
 
     private fun MoneyAccountDetailsModel.renewSession() {
@@ -811,72 +1080,6 @@ internal class MoneyAccountDetailsModelTest {
         )
     }
 
-    private fun provideErrorBannerModels() = listOf(
-        ErrorBannerModel(
-            balance = balance(),
-            error = null,
-            expectedTitle = null,
-            hasRenewButton = false,
-            isAddFundsEnabled = true,
-            isSendEnabled = true,
-            isBalanceUnavailable = false,
-        ),
-        ErrorBannerModel(
-            balance = null,
-            error = null,
-            expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
-            hasRenewButton = false,
-            isAddFundsEnabled = false,
-            isSendEnabled = false,
-            isBalanceUnavailable = true,
-        ),
-        ErrorBannerModel(
-            balance = balance(),
-            error = MoneyAccountStatusValue.Error.NotSynced,
-            expectedTitle = resourceReference(R.string.tangempay_sync_needed_title),
-            hasRenewButton = true,
-            isAddFundsEnabled = false,
-            isSendEnabled = false,
-            isBalanceUnavailable = false,
-        ),
-        ErrorBannerModel(
-            balance = null,
-            error = MoneyAccountStatusValue.Error.NotSynced,
-            expectedTitle = resourceReference(R.string.tangempay_sync_needed_title),
-            hasRenewButton = true,
-            isAddFundsEnabled = false,
-            isSendEnabled = false,
-            isBalanceUnavailable = true,
-        ),
-        ErrorBannerModel(
-            balance = balance(),
-            error = MoneyAccountStatusValue.Error.Unavailable,
-            expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
-            hasRenewButton = false,
-            isAddFundsEnabled = false,
-            isSendEnabled = false,
-            isBalanceUnavailable = true,
-        ),
-        ErrorBannerModel(
-            balance = null,
-            error = MoneyAccountStatusValue.Error.Unavailable,
-            expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
-            hasRenewButton = false,
-            isAddFundsEnabled = false,
-            isSendEnabled = false,
-            isBalanceUnavailable = true,
-        ),
-        ErrorBannerModel(
-            balance = balance(),
-            error = MoneyAccountStatusValue.Error.ExposedDevice,
-            expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
-            hasRenewButton = false,
-            isAddFundsEnabled = false,
-            isSendEnabled = false,
-            isBalanceUnavailable = true,
-        ),
-    )
-
     data class ErrorBannerModel(
         val balance: MoneyAccountStatusValue.Balance?,
         val error: MoneyAccountStatusValue.Error?,
@@ -889,60 +1092,14 @@ internal class MoneyAccountDetailsModelTest {
 
     data class AddFundsModel(val balance: MoneyAccountStatusValue.Balance?, val expectedDepositAddress: String?)
 
-    private fun provideSheetsOpenedFromOptions() = listOf(
-        SheetFromOptionsModel(
-            openSheet = { model -> model.onReceiveClick(DEPOSIT_ADDRESS) },
-            expectedSheet = MoneyAccountDetailsNavigation.Receive(receiveConfig()),
-        ),
-        SheetFromOptionsModel(
-            openSheet = { model -> model.onBankingDetailsLoadFailed() },
-            expectedSheet = MoneyAccountDetailsNavigation.BankDetailsError,
-        ),
-    )
-
     data class SheetFromOptionsModel(
         val openSheet: (MoneyAccountDetailsModel) -> Unit,
         val expectedSheet: MoneyAccountDetailsNavigation,
     )
 
-    private fun provideSendClickModels() = listOf(
-        SendClickModel(
-            status = activeAccount(balance(), isBankOfframpAvailable = true),
-            expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = PRODUCT_INSTANCE_ID),
-        ),
-        SendClickModel(
-            status = activeAccount(balance(), isBankOfframpAvailable = false),
-            expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
-        ),
-        SendClickModel(
-            status = activeAccount(balance(), isBankOfframpAvailable = null),
-            expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
-        ),
-        SendClickModel(
-            status = activeAccount(balance = null, isBankOfframpAvailable = true),
-        ),
-    )
-
     data class SendClickModel(
         val status: MoneyAccountStatusValue.Account,
         val expectedRoute: MoneyAccountDetailsRoute? = null,
-    )
-
-    private fun provideScreenOpenedModels() = listOf(
-        activeScreenOpenedModel(amount = BigDecimal.ZERO, expectedBand = BalanceBand.ZERO),
-        activeScreenOpenedModel(amount = BigDecimal("99.99"), expectedBand = BalanceBand.UNDER_100),
-        activeScreenOpenedModel(amount = BigDecimal("100"), expectedBand = BalanceBand.FROM_100_TO_1K),
-        activeScreenOpenedModel(amount = BigDecimal("1000"), expectedBand = BalanceBand.FROM_1K_TO_10K),
-        activeScreenOpenedModel(amount = BigDecimal("10000"), expectedBand = BalanceBand.FROM_1K_TO_10K),
-        activeScreenOpenedModel(amount = BigDecimal("25250.50"), expectedBand = BalanceBand.OVER_10K),
-        ScreenOpenedModel(
-            status = activeAccount(balance = null),
-            expectedEvent = MoneyAccountAnalyticsEvents.AccountScreenOpened(
-                accountState = MoneyAccountAnalyticsEvents.AccountState.ACTIVE,
-                balanceBand = null,
-                currency = null,
-            ),
-        ),
     )
 
     data class ScreenOpenedModel(
@@ -959,107 +1116,7 @@ internal class MoneyAccountDetailsModelTest {
         ),
     )
 
-    private fun provideBalanceBannerModels() = listOf(
-        BalanceBannerModel(accounts = listOf(activeAccount(balance = null)), expectedEvents = 1),
-        BalanceBannerModel(accounts = listOf(activeAccount(balance = balance())), expectedEvents = 0),
-        BalanceBannerModel(
-            accounts = listOf(activeAccount(balance = balance()), activeAccount(balance = null)),
-            expectedEvents = 1,
-        ),
-        BalanceBannerModel(
-            accounts = listOf(activeAccount(balance = null), activeAccount(balance = null)),
-            expectedEvents = 1,
-        ),
-        BalanceBannerModel(
-            accounts = listOf(
-                activeAccount(balance = null),
-                activeAccount(balance = balance()),
-                activeAccount(balance = null),
-            ),
-            expectedEvents = 2,
-        ),
-        BalanceBannerModel(
-            accounts = listOf(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.Unavailable)),
-            expectedEvents = 1,
-        ),
-        BalanceBannerModel(
-            accounts = listOf(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced)),
-            expectedEvents = 0,
-        ),
-        BalanceBannerModel(
-            accounts = listOf(activeAccount(balance = null, error = MoneyAccountStatusValue.Error.NotSynced)),
-            expectedEvents = 0,
-        ),
-        BalanceBannerModel(
-            accounts = listOf(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.ExposedDevice)),
-            expectedEvents = 1,
-        ),
-        BalanceBannerModel(
-            accounts = listOf(
-                activeAccount(balance = balance()),
-                activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.Unavailable),
-                activeAccount(balance = null),
-            ),
-            expectedEvents = 1,
-        ),
-    )
-
     data class BalanceBannerModel(val accounts: List<MoneyAccountStatusValue.Account>, val expectedEvents: Int)
-
-    private fun provideTransactionClickModels() = listOf(
-        TransactionClickModel(
-            item = OnChainTx.BSDK(txInfo(isOutgoing = false, status = TxInfo.TransactionStatus.Confirmed)),
-            expectedType = "deposit",
-            expectedStatus = "completed",
-        ),
-        TransactionClickModel(
-            item = OnChainTx.BSDK(txInfo(isOutgoing = true, status = TxInfo.TransactionStatus.Unconfirmed)),
-            expectedType = "send",
-            expectedStatus = "pending",
-        ),
-        TransactionClickModel(
-            item = OnChainTx.BSDK(txInfo(isOutgoing = true, status = TxInfo.TransactionStatus.Failed)),
-            expectedType = "send",
-            expectedStatus = "declined",
-        ),
-        TransactionClickModel(
-            item = ExpressTx.Swap(tx = mockk(), isOutgoing = true, txInfo = null),
-            expectedType = "send",
-            expectedStatus = "unknown",
-        ),
-        TransactionClickModel(
-            item = ExpressTx.Onramp(
-                tx = mockk(),
-                txInfo = OnChainTx.BSDK(txInfo(isOutgoing = false, status = TxInfo.TransactionStatus.Confirmed)),
-            ),
-            expectedType = "deposit",
-            expectedStatus = "completed",
-        ),
-        TransactionClickModel(
-            item = JointOperationTx(operation = mockk(), transfer = mockk(), txInfo = null),
-            expectedType = "send",
-            expectedStatus = "unknown",
-        ),
-        collateralClick(collateralType = TangemPayTxHistoryItem.Type.Deposit, expectedType = "deposit"),
-        collateralClick(collateralType = TangemPayTxHistoryItem.Type.Cashback, expectedType = "deposit"),
-        collateralClick(collateralType = TangemPayTxHistoryItem.Type.Withdrawal, expectedType = "send"),
-        spendClick(spendStatus = TangemPayTxHistoryItem.Status.PENDING, expectedStatus = "pending"),
-        spendClick(spendStatus = TangemPayTxHistoryItem.Status.RESERVED, expectedStatus = "pending"),
-        spendClick(spendStatus = TangemPayTxHistoryItem.Status.COMPLETED, expectedStatus = "completed"),
-        spendClick(spendStatus = TangemPayTxHistoryItem.Status.DECLINED, expectedStatus = "declined"),
-        spendClick(spendStatus = TangemPayTxHistoryItem.Status.REVERSED, expectedStatus = "declined"),
-        spendClick(spendStatus = TangemPayTxHistoryItem.Status.UNKNOWN, expectedStatus = "unknown"),
-        TransactionClickModel(
-            item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Payment>()),
-            expectedType = "send",
-            expectedStatus = "unknown",
-        ),
-        TransactionClickModel(
-            item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Fee>()),
-            expectedType = "send",
-            expectedStatus = "unknown",
-        ),
-    )
 
     private fun collateralClick(collateralType: TangemPayTxHistoryItem.Type, expectedType: String) =
         TransactionClickModel(
@@ -1075,17 +1132,6 @@ internal class MoneyAccountDetailsModelTest {
     )
 
     data class TransactionClickModel(val item: TxHistoryInfo, val expectedType: String, val expectedStatus: String)
-
-    private fun provideNonAccountStatuses() = listOf(
-        MoneyAccountStatusValue.Error.Unavailable,
-        MoneyAccountStatusValue.Error.ExposedDevice,
-        MoneyAccountStatusValue.Empty,
-        MoneyAccountStatusValue.Onboarding.Activating(
-            source = StatusSource.ACTUAL,
-            customerId = CUSTOMER_ID,
-            step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
-        ),
-    )
 
     private fun activeAccount(
         balance: MoneyAccountStatusValue.Balance?,
@@ -1119,10 +1165,6 @@ internal class MoneyAccountDetailsModelTest {
     )
 
     @Suppress("Unused") // need for ParameterizedTest 
-    private fun provideTestModels() = listOf(
-        AddFundsModel(balance = balance(), expectedDepositAddress = DEPOSIT_ADDRESS),
-        AddFundsModel(balance = null, expectedDepositAddress = null),
-    )
 
     private fun txInfo(isOutgoing: Boolean, status: TxInfo.TransactionStatus) = TxInfo.Single(
         txHash = "0xhash",
@@ -1136,7 +1178,7 @@ internal class MoneyAccountDetailsModelTest {
         amount = BigDecimal.ONE,
     )
 
-    private fun supportEmailType() = FeedbackEmailType.Visa.MoneyAccountRequest(
+    private fun supportEmailType() = FeedbackEmailType.TangemPay.MoneyAccountRequest(
         walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
         customerId = CUSTOMER_ID,
     )

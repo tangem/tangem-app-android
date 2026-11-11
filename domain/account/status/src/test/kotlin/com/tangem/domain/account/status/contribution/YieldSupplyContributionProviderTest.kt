@@ -5,12 +5,17 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.balance.ContributionResolver
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.domain.tokens.TokensFeatureToggles
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -22,11 +27,29 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class YieldSupplyContributionProviderTest {
 
-    private val provider = YieldSupplyContributionProvider()
+    private val tokensFeatureToggles: TokensFeatureToggles = mockk()
+    private val provider = YieldSupplyContributionProvider(tokensFeatureToggles = tokensFeatureToggles)
 
     private val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
     private val currency = cryptoCurrencyFactory.ethereum
     private val wallet = MockUserWalletFactory.create()
+
+    @BeforeEach
+    fun setUp() {
+        every { tokensFeatureToggles.isYieldContributionEnabled } returns false
+    }
+
+    @Test
+    fun `GIVEN yield positions source enabled WHEN contributions THEN the provider is silent`() = runTest {
+        // Arrange
+        every { tokensFeatureToggles.isYieldContributionEnabled } returns true
+
+        // Act
+        val actual = provider.contributions(wallet).first()
+
+        // Assert
+        assertThat(actual).isSameInstanceAs(ContributionResolver.Empty)
+    }
 
     @Test
     fun `GIVEN yield status for the currency WHEN resolve THEN a zero-delta contribution with the network source`() =

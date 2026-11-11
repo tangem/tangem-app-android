@@ -82,7 +82,6 @@ class UserWalletIdBuilder private constructor(
                     ProductType.Wallet2,
                     ProductType.Ring,
                     ProductType.Start2Coin,
-                    ProductType.Visa,
                     -> null
                 },
             )

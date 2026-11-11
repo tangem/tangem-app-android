@@ -69,10 +69,10 @@ import com.tangem.core.ui.res.generated.icons.ic_copy_16
 import com.tangem.core.ui.security.SensitiveContentEffect
 import com.tangem.core.ui.security.hideFromAccessibilityServices
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.isAwaitingActivation
-import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.isAwaitingActivation
+import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.features.tangempay.details.impl.R
 import kotlin.math.roundToInt
 
@@ -253,7 +253,7 @@ private fun TangemPayCardBackground(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer { alpha = freezeProgress },
-                painter = painterResource(R.drawable.img_tangem_pay_visa_frozen),
+                painter = painterResource(R.drawable.img_tangem_pay_card_frozen),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
             )

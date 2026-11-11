@@ -8,6 +8,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.pushZooming
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
@@ -16,8 +17,8 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -28,6 +29,7 @@ import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -62,6 +64,13 @@ internal class DefaultWalletRouter @Inject constructor(
             AppRoute.Details(
                 userWalletId = selectedWalletId,
             ),
+        )
+    }
+
+    override fun openAllServicesScreen() {
+        router.pushZooming(
+            route = AppRoute.AllServices,
+            sourceKey = WalletTopBarConfig.ALL_SERVICES_SHARED_TRANSITION_KEY,
         )
     }
 

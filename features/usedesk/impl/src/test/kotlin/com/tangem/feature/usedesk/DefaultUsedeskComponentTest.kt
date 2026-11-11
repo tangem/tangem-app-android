@@ -11,7 +11,6 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ModelsEntryPoint
-import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.usedesk.model.UsedeskModel
 import com.tangem.feature.usedesk.visibility.DefaultSupportChatVisibility
@@ -28,7 +27,6 @@ import javax.inject.Provider
 internal class DefaultUsedeskComponentTest {
 
     private val model: UsedeskModel = mockk(relaxed = true)
-    private val useDeskFeatureToggles: UseDeskFeatureToggles = mockk()
     private val supportChatVisibility = DefaultSupportChatVisibility()
     private val lifecycle = LifecycleRegistry()
 
@@ -81,7 +79,6 @@ internal class DefaultUsedeskComponentTest {
         appComponentContext = createAppComponentContext(),
         params = UsedeskComponent.Params(walletMetaInfo = mockk()),
         supportChatVisibility = supportChatVisibility,
-        useDeskFeatureToggles = useDeskFeatureToggles,
     )
 
     private fun createAppComponentContext(): AppComponentContext {

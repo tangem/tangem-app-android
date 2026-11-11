@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.deeplink
 
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.wallet.deeplink.TangemPayTransactionDeepLinkData
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger

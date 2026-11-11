@@ -42,12 +42,12 @@ internal fun selectionOf(category: MarketCategory): MarketCategorySelection = Ma
 
 internal fun createSelectorState(
     search: TangemSearch.State = createSearchState(),
-    isEdited: Boolean = false,
-    footer: MarketCategorySelectorFooterUM = MarketCategorySelectorFooterUM(onReset = {}, onApply = {}),
+    isResetVisible: Boolean = false,
+    footer: MarketCategorySelectorFooterUM = MarketCategorySelectorFooterUM(onReset = {}),
     content: MarketCategorySelectorUM.ContentUM = MarketCategorySelectorUM.ContentUM.Loading,
 ): MarketCategorySelectorUM = MarketCategorySelectorUM(
     search = search,
-    isEdited = isEdited,
+    isResetVisible = isResetVisible,
     footer = footer,
     content = content,
 )

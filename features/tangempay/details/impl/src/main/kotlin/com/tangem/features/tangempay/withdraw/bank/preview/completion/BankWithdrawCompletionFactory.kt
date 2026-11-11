@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.completion
 
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure

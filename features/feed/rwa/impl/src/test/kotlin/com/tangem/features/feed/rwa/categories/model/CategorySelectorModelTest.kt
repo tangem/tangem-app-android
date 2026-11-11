@@ -27,7 +27,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/** The umbrella id must never travel in a selection, and Featured is not a filter at all. */
+/**
+ * A tap applies and closes, except on a category with a sector choice, which Apply confirms. The umbrella
+ * id never travels in a selection, and Featured is not a filter at all.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class CategorySelectorModelTest {
 
@@ -55,20 +58,38 @@ internal class CategorySelectorModelTest {
     }
 
     @Test
-    fun `GIVEN no filter WHEN umbrella row tapped THEN the applied selection stays empty`() = runTest {
-        // Arrange
-        stubCategories(umbrella, stocks)
-        val callback = RecordingCallback()
-        val model = createModel(testScope = this, callback = callback)
-        advanceUntilIdle()
+    fun `GIVEN a filter applied WHEN umbrella row tapped THEN the filter is cleared and the screen closes`() =
+        runTest {
+            // Arrange
+            stubCategories(umbrella, stocks)
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
+            advanceUntilIdle()
 
-        // Act
-        model.items().items.first { it.id == umbrella.id }.onItemClick()
-        model.content().footer.onApply()
+            // Act
+            model.tapCategory(umbrella.id)
 
-        // Assert
-        assertThat(callback.selection).isEqualTo(CategorySelection())
-    }
+            // Assert
+            assertThat(callback.selection).isEqualTo(CategorySelection())
+            verify(exactly = 1) { router.pop(any()) }
+        }
+
+    @Test
+    fun `GIVEN a restricted region WHEN umbrella row tapped THEN the filter is cleared rather than defaulted`() =
+        runTest {
+            // Arrange — "All" is the reset, and it means no filter even where the tab opens on commodities
+            coEvery { userCountryResolver.resolve() } returns "US"
+            stubCategories(umbrella, stocks, commodities, country = "US")
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, selection = commoditiesSelection, callback = callback)
+            advanceUntilIdle()
+
+            // Act
+            model.tapCategory(umbrella.id)
+
+            // Assert
+            assertThat(callback.selection).isEqualTo(CategorySelection())
+        }
 
     @Test
     fun `GIVEN umbrella applied WHEN model created THEN its row is the checked one`() = runTest {
@@ -85,43 +106,127 @@ internal class CategorySelectorModelTest {
     }
 
     @Test
-    fun `GIVEN category with sector applied WHEN the same category tapped THEN the sector survives`() = runTest {
-        // Arrange
-        stubCategories(umbrella, stocks)
-        val callback = RecordingCallback()
-        val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
-        advanceUntilIdle()
+    fun `GIVEN category with sector applied WHEN a category without sector choice tapped THEN it applies alone`() =
+        runTest {
+            // Arrange
+            stubCategories(umbrella, stocks, bonds)
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
+            advanceUntilIdle()
 
-        // Act
-        model.items().items.first { it.id == stocks.id }.onItemClick()
-        model.content().footer.onApply()
+            // Act
+            model.tapCategory(bonds.id)
 
-        // Assert
-        assertThat(callback.selection).isEqualTo(stocksWithTechnology)
-    }
+            // Assert
+            assertThat(callback.selection).isEqualTo(bondsSelection)
+            verify(exactly = 1) { router.pop(any()) }
+        }
 
     @Test
-    fun `GIVEN category with sector applied WHEN another category tapped THEN the sector is dropped`() = runTest {
+    fun `GIVEN a category without sector choice applied WHEN tapped again THEN the tab is not told`() =
+        runTest {
+            // Arrange
+            stubCategories(umbrella, bonds)
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, selection = bondsSelection, callback = callback)
+            advanceUntilIdle()
+
+            // Act
+            model.tapCategory(bonds.id)
+
+            // Assert
+            assertThat(callback.selection).isNull()
+            verify(exactly = 1) { router.pop(any()) }
+        }
+
+    @Test
+    fun `GIVEN no filter WHEN a category with sectors tapped THEN Apply shows and nothing applies`() =
+        runTest {
+            // Arrange
+            stubCategories(umbrella, stocks)
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, callback = callback)
+            advanceUntilIdle()
+
+            // Act
+            model.tapCategory(stocks.id)
+
+            // Assert
+            assertThat(model.sectors()).isNotNull()
+            assertThat(model.content().isApplyVisible).isTrue()
+            assertThat(callback.selection).isNull()
+            verify(exactly = 0) { router.pop(any()) }
+        }
+
+    @Test
+    fun `GIVEN a picked category with sectors WHEN a sector tapped and applied THEN the pair reaches the tab`() =
+        runTest {
+            // Arrange
+            stubCategories(umbrella, stocks)
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, callback = callback)
+            advanceUntilIdle()
+            model.tapCategory(stocks.id)
+
+            // Act
+            model.tapSector("technology")
+            model.content().footer.onApply()
+
+            // Assert
+            assertThat(callback.selection).isEqualTo(stocksWithTechnology)
+            verify(exactly = 1) { router.pop(any()) }
+        }
+
+    @Test
+    fun `GIVEN category with sector applied WHEN its All sector applied THEN the whole category reaches the tab`() =
+        runTest {
+            // Arrange
+            stubCategories(umbrella, stocks)
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
+            advanceUntilIdle()
+
+            // Act
+            model.tapSector("__all__")
+            model.content().footer.onApply()
+
+            // Assert
+            assertThat(callback.selection).isEqualTo(CategorySelection(category = stocksWithTechnology.category))
+        }
+
+    @Test
+    fun `GIVEN category with sector applied WHEN the same category tapped THEN the sector survives unapplied`() =
+        runTest {
+            // Arrange
+            stubCategories(umbrella, stocks)
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
+            advanceUntilIdle()
+
+            // Act
+            model.tapCategory(stocks.id)
+
+            // Assert
+            val selectedSectors = requireNotNull(model.sectors()).sectors.filter { it.isSelected }
+            assertThat(selectedSectors.map { it.id }).containsExactly("technology")
+            assertThat(model.content().isApplyVisible).isFalse()
+            assertThat(callback.selection).isNull()
+            verify(exactly = 0) { router.pop(any()) }
+        }
+
+    @Test
+    fun `GIVEN another sector picked WHEN the applied one is picked back THEN Apply is hidden again`() = runTest {
         // Arrange
-        stubCategories(umbrella, stocks, bonds)
-        val callback = RecordingCallback()
-        val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
+        stubCategories(umbrella, stocks)
+        val model = createModel(testScope = this, selection = stocksWithTechnology)
         advanceUntilIdle()
+        model.tapSector("healthcare")
 
         // Act
-        model.items().items.first { it.id == bonds.id }.onItemClick()
-        model.content().footer.onApply()
+        model.tapSector("technology")
 
         // Assert
-        assertThat(callback.selection).isEqualTo(
-            CategorySelection(
-                category = CategorySelection.Entry(
-                    id = bonds.id,
-                    displayName = bonds.displayName,
-                    code = bonds.code,
-                ),
-            ),
-        )
+        assertThat(model.content().isApplyVisible).isFalse()
     }
 
     @Test
@@ -129,16 +234,9 @@ internal class CategorySelectorModelTest {
         runTest {
             // Arrange
             stubCategories(umbrella, bonds)
-            val selection = CategorySelection(
-                category = CategorySelection.Entry(
-                    id = bonds.id,
-                    displayName = bonds.displayName,
-                    code = bonds.code,
-                ),
-            )
 
             // Act
-            val model = createModel(testScope = this, selection = selection)
+            val model = createModel(testScope = this, selection = bondsSelection)
             advanceUntilIdle()
 
             // Assert
@@ -161,77 +259,6 @@ internal class CategorySelectorModelTest {
         val sectors = requireNotNull(model.sectors())
         assertThat(sectors.sectors.map { it.id }).containsExactly("__all__", "technology", "healthcare").inOrder()
         assertThat(sectors.sectors.first().isSelected).isTrue()
-    }
-
-    @Test
-    fun `GIVEN an unrestricted region WHEN reset tapped THEN the filter is cleared`() = runTest {
-        // Arrange
-        stubCategories(umbrella, stocks, commodities)
-        val callback = RecordingCallback()
-        val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
-        advanceUntilIdle()
-        // the footer carrying Reset only appears once something is edited, so take the route a user has
-        model.items().items.first { it.id == umbrella.id }.onItemClick()
-
-        // Act
-        model.content().footer.onReset()
-        model.content().footer.onApply()
-
-        // Assert
-        assertThat(callback.selection).isEqualTo(CategorySelection())
-    }
-
-    @Test
-    fun `GIVEN a restricted region WHEN reset tapped THEN the regional default comes back`() = runTest {
-        // Arrange
-        coEvery { userCountryResolver.resolve() } returns "US"
-        stubCategories(umbrella, stocks, commodities, country = "US")
-        val callback = RecordingCallback()
-        val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
-        advanceUntilIdle()
-        model.items().items.first { it.id == umbrella.id }.onItemClick()
-
-        // Act
-        model.content().footer.onReset()
-
-        // Assert — the reset differs from what the screen opened on, so it is there to be applied
-        assertThat(model.content().isEdited).isTrue()
-
-        // Act
-        model.content().footer.onApply()
-
-        // Assert
-        assertThat(callback.selection).isEqualTo(commoditiesSelection)
-    }
-
-    @Test
-    fun `GIVEN a restricted region opened on its default WHEN reset tapped THEN the footer is hidden`() = runTest {
-        // Arrange
-        coEvery { userCountryResolver.resolve() } returns "US"
-        stubCategories(umbrella, stocks, commodities, country = "US")
-        val model = createModel(testScope = this, selection = commoditiesSelection)
-        advanceUntilIdle()
-        model.items().items.first { it.id == stocks.id }.onItemClick()
-
-        // Act
-        model.content().footer.onReset()
-
-        // Assert
-        assertThat(model.content().isEdited).isFalse()
-    }
-
-    @Test
-    fun `GIVEN edited selection WHEN apply tapped THEN the screen is popped`() = runTest {
-        // Arrange
-        stubCategories(umbrella, stocks)
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Act
-        model.content().footer.onApply()
-
-        // Assert
-        verify(exactly = 1) { router.pop(any()) }
     }
 
     @Test
@@ -258,64 +285,17 @@ internal class CategorySelectorModelTest {
         assertThat(model.items().items.map { it.id }).containsExactly(umbrella.id, stocks.id)
     }
 
-    private fun stubCategories(vararg categories: CoinCategory, country: String = "DE") {
-        coEvery { getCoinCategoriesUseCase(country = country) } returns Either.Right(categories.toList())
-    }
-
     @Test
-    fun `GIVEN no filter WHEN model created THEN the footer is hidden`() = runTest {
+    fun `GIVEN category with sector applied WHEN model created THEN Apply is hidden`() = runTest {
         // Arrange
         stubCategories(umbrella, stocks)
 
         // Act
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.content().isEdited).isFalse()
-    }
-
-    @Test
-    fun `GIVEN no filter WHEN another category tapped THEN the footer is shown`() = runTest {
-        // Arrange
-        stubCategories(umbrella, stocks)
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Act
-        model.items().items.first { it.id == stocks.id }.onItemClick()
-
-        // Assert
-        assertThat(model.content().isEdited).isTrue()
-    }
-
-    @Test
-    fun `GIVEN an edited selection WHEN reset tapped THEN the footer is hidden again`() = runTest {
-        // Arrange
-        stubCategories(umbrella, stocks)
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-        model.items().items.first { it.id == stocks.id }.onItemClick()
-
-        // Act
-        model.content().footer.onReset()
-
-        // Assert
-        assertThat(model.content().isEdited).isFalse()
-    }
-
-    @Test
-    fun `GIVEN applied category WHEN the same category tapped THEN the footer stays hidden`() = runTest {
-        // Arrange
-        stubCategories(umbrella, stocks)
         val model = createModel(testScope = this, selection = stocksWithTechnology)
         advanceUntilIdle()
 
-        // Act
-        model.items().items.first { it.id == stocks.id }.onItemClick()
-
         // Assert
-        assertThat(model.content().isEdited).isFalse()
+        assertThat(model.content().isApplyVisible).isFalse()
     }
 
     @Test
@@ -369,7 +349,16 @@ internal class CategorySelectorModelTest {
         )
     }
 
+    private fun stubCategories(vararg categories: CoinCategory, country: String = "DE") {
+        coEvery { getCoinCategoriesUseCase(country = country) } returns Either.Right(categories.toList())
+    }
+
     private fun CategorySelectorModel.content() = uiState.value as CategorySelectorUM.Content
+
+    private fun CategorySelectorModel.tapCategory(id: String) = items().items.single { it.id == id }.onItemClick()
+
+    private fun CategorySelectorModel.tapSector(id: String) =
+        requireNotNull(sectors()).sectors.single { it.id == id }.onItemClick()
 
     private fun CategorySelectorModel.items() = content().sections
         .filterIsInstance<CategorySelectorSectionUM.Items>()
@@ -445,6 +434,10 @@ internal class CategorySelectorModelTest {
                 displayName = commodities.displayName,
                 code = commodities.code,
             ),
+        )
+
+        val bondsSelection = CategorySelection(
+            category = CategorySelection.Entry(id = bonds.id, displayName = bonds.displayName, code = bonds.code),
         )
 
         val stocksWithTechnology = CategorySelection(

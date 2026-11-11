@@ -18,6 +18,8 @@ sealed interface PredictionOrderStatus {
     /** Matched in full or in part; the fill is [PredictionOrderState.sizeMatched]. */
     data object Matched : PredictionOrderStatus
 
-    /** Anything the book reports other than a match, kept as it came for the log. */
+    data class Rejected(val raw: String) : PredictionOrderStatus
+
+    /** Still open on the book (`LIVE`) or a status this app does not know; the order may yet match. */
     data class Other(val raw: String?) : PredictionOrderStatus
 }

@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.pay.model.CashbackPromotions
+import com.tangem.domain.tangempay.model.CashbackPromotions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

@@ -176,7 +176,7 @@ internal class JointAccountToMembersUMConverterTest {
             )
 
             // Act
-            converter.convert(input).footer?.button?.onClick?.invoke()
+            (converter.convert(input).footer as? JointAccountMembersUM.FooterUM.Confirm)?.button?.onClick?.invoke()
 
             // Assert
             verify(exactly = 1) { onConfirmAddressClick(ACCOUNT_ID) }
@@ -220,7 +220,17 @@ internal class JointAccountToMembersUMConverterTest {
             val footer = converter.convert(input).footer
 
             // Assert
-            val actual = footer?.let { FooterExpectation(hint = it.hint, isButtonEnabled = it.button?.isEnabled) }
+            val actual = when (footer) {
+                is JointAccountMembersUM.FooterUM.Confirm -> FooterExpectation(
+                    hint = footer.hint,
+                    isButtonEnabled = footer.button.isEnabled,
+                )
+                is JointAccountMembersUM.FooterUM.AwaitingOthers -> FooterExpectation(
+                    hint = footer.text,
+                    isButtonEnabled = null,
+                )
+                null -> null
+            }
             assertThat(actual).isEqualTo(model.expected)
         }
 

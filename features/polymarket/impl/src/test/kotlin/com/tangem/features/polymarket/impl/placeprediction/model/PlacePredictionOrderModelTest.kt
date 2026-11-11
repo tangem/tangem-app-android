@@ -17,9 +17,14 @@ import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderStatus
+import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
+import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
@@ -30,6 +35,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
@@ -38,10 +44,12 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
+import com.tangem.features.polymarket.impl.placeprediction.entity.isTradable
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -64,6 +72,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import kotlinx.coroutines.CompletableDeferred
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
@@ -98,6 +109,122 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 router.replaceAll(match<PlacePredictionRoute.Status> { it.side == BUY_PARAMS.side }, onComplete = any())
             }
         }
+
+        @Test
+        fun `GIVEN a delayed order the book never settles WHEN place clicked THEN the still-processing result replaces the stack`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+                coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } returns
+                    DelayedPredictionOrderOutcome.Unconfirmed
+                val model = createQuotedModel()
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                val submit = model.uiState.value.submit as SubmitUM.Result
+                assertThat(submit.result).isEqualTo(PlaceResultUM.StillProcessing(placedAt = submit.result.placedAt))
+                verify(exactly = 0) { messageSender.send(any()) }
+                verify(exactly = 1) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN a delayed order matched with no shares WHEN close is tapped on the failure dialog THEN the order closes`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+                coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } returns
+                    DelayedPredictionOrderOutcome.Matched(
+                        order = PredictionOrderState(
+                            status = PredictionOrderStatus.Matched,
+                            price = BigDecimal("0.5"),
+                            originalSize = BigDecimal("23.2"),
+                            sizeMatched = BigDecimal.ZERO,
+                        ),
+                    )
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                dialog.captured.secondAction?.onClick()
+
+                // Assert
+                assertThat(dialog.captured.isDismissable).isFalse()
+                verify(exactly = 1) { router.pop(onComplete = any()) }
+                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN a matched order filled no shares WHEN close is tapped on the failure dialog THEN the order closes`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(takingAmount = BigDecimal.ZERO).right()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                dialog.captured.secondAction?.onClick()
+
+                // Assert
+                assertThat(dialog.captured.isDismissable).isFalse()
+                verify(exactly = 1) { router.pop(onComplete = any()) }
+                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN a matched order filled no shares WHEN support is tapped on the failure dialog THEN the order closes after the email`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(takingAmount = BigDecimal.ZERO).right()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                coEvery { getWalletMetaInfoUseCase(userWalletId = USER_WALLET_ID) } returns mockk<WalletMetaInfo>().right()
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                dialog.captured.firstAction.onClick()
+                dialog.captured.onDismissRequest()
+                runCurrent()
+
+                // Assert
+                coVerifyOrder {
+                    sendFeedbackEmailUseCase(any())
+                    router.pop(onComplete = any())
+                }
+                verify(exactly = 1) { router.pop(onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN no answer from the exchange WHEN the failure dialog is dismissed THEN the order stays open`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    PredictionPlaceOrderError.Ambiguous(detail = "timeout").left()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                dialog.captured.onDismissRequest()
+
+                // Assert
+                verify(exactly = 0) { router.pop(onComplete = any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            }
 
         @Test
         fun `GIVEN the screen leaves on success WHEN the order is placed THEN no quote is requested after it`() =
@@ -714,7 +841,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
             val model = createOrderModel(
                 testScope = this,
-                orderSubmitterFactory = mockk { every { create(any(), any(), any()) } returns refusingSubmitter },
+                orderSubmitterFactory = mockk { every { create(any(), any(), any(), any()) } returns refusingSubmitter },
             )
             advanceUntilIdle()
             model.onResume()
@@ -832,6 +959,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                     side = PredictionOrderSide.SELL,
                     userWalletId = USER_WALLET_ID,
                     positionId = null,
+                    isPositionClosed = true,
                 )
                 assertThat(status.captured).isEqualTo(expectedRoute)
                 coVerify(exactly = 1) {
@@ -841,6 +969,71 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 }
                 coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
                 verify(exactly = 0) { router.push(any<PlacePredictionRoute.Summary>(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the market end arrives after the sell is placed WHEN the result opens THEN it shows that date`() =
+            runOrderTest {
+                // Arrange
+                val marketEnd = Instant.parse("2028-11-08T04:59:00Z")
+                val event = CompletableDeferred<Either<PolymarketEventError, PolymarketEvent>>()
+                coEvery { getEventUseCase(any(), eventId = EVENT_ID) } coAnswers { event.await() }
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote(shares = HELD).right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(makingAmount = HELD, takingAmount = BigDecimal("11.01")).right()
+                val model = createQuotedModel(params = SELL_PARAMS)
+                val status = slot<PlacePredictionRoute.Status>()
+                every { router.replaceAll(capture(status), onComplete = any()) } returns Unit
+
+                // Act
+                model.tapPlace()
+                advanceTimeBy(delayTimeMillis = RESOLUTION_DATE_WAIT_MILLIS / 2)
+                event.complete(createEventEndingAt(marketEnd).right())
+                runCurrent()
+
+                // Assert
+                assertThat(status.captured.market.resolutionDateMillis).isEqualTo(marketEnd.toEpochMilli())
+            }
+
+        @Test
+        fun `GIVEN the market end still loading after the sell is placed WHEN back is checked THEN it is blocked`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getEventUseCase(any(), eventId = EVENT_ID) } coAnswers { awaitCancellation() }
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote(shares = HELD).right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(makingAmount = HELD, takingAmount = BigDecimal("11.01")).right()
+                val model = createQuotedModel(params = SELL_PARAMS)
+
+                // Act
+                model.tapPlace()
+                advanceTimeBy(delayTimeMillis = RESOLUTION_DATE_WAIT_MILLIS / 2)
+
+                // Assert
+                assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
+                assertThat(model.isSubmitting()).isTrue()
+                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN the market end never arrives WHEN a sell is placed THEN the result opens without a date`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getEventUseCase(any(), eventId = EVENT_ID) } coAnswers { awaitCancellation() }
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote(shares = HELD).right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(makingAmount = HELD, takingAmount = BigDecimal("11.01")).right()
+                val model = createQuotedModel(params = SELL_PARAMS)
+                val status = slot<PlacePredictionRoute.Status>()
+                every { router.replaceAll(capture(status), onComplete = any()) } returns Unit
+
+                // Act
+                model.tapPlace()
+                advanceTimeBy(delayTimeMillis = RESOLUTION_DATE_WAIT_MILLIS + 1)
+                runCurrent()
+
+                // Assert
+                assertThat(status.captured.market.resolutionDateMillis).isNull()
             }
 
         @Test
@@ -1077,26 +1270,47 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a fee capped max WHEN max clicked again before its quote returns THEN the fee cap holds`() =
+        fun `GIVEN a steep fee quote WHEN max clicked again before the next quote returns THEN its fee rate is not reused`() =
             runOrderTest {
                 // Arrange
-                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createQuote().copy(
-                    notional = BigDecimal(100),
-                    fees = PredictionOrderFees(
-                        market = BigDecimal(20),
-                        builder = BigDecimal.ZERO,
-                        total = BigDecimal(20),
-                    ),
-                ).right()
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns steepFeeQuote().right()
                 val model = createQuotedModel()
                 model.onMaxClick()
+                val afterFirstClick = model.uiState.value.amountValue
 
                 // Act
                 model.onMaxClick()
 
                 // Assert
-                assertThat(model.uiState.value.amountValue).isEqualTo("83.33")
+                assertThat(afterFirstClick).isEqualTo("83.33")
+                assertThat(model.uiState.value.amountValue).isEqualTo("90")
             }
+
+        @Test
+        fun `GIVEN a steep fee quote followed by a failed one WHEN max clicked THEN the old fee rate is not reused`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returnsMany listOf(
+                    steepFeeQuote().right(),
+                    PredictionOrderQuoteError.Network.left(),
+                )
+                val model = createQuotedModel()
+                model.onAmountChange(value = "20")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val quoteBeforeClick = model.uiState.value.quote
+
+                // Act
+                model.onMaxClick()
+
+                // Assert
+                assertThat(quoteBeforeClick).isInstanceOf(QuoteUM.Error::class.java)
+                assertThat(model.uiState.value.amountValue).isEqualTo("90")
+            }
+
+        private fun steepFeeQuote(): PredictionOrderQuote = createQuote().copy(
+            notional = BigDecimal(100),
+            fees = PredictionOrderFees(market = BigDecimal(20), builder = BigDecimal.ZERO, total = BigDecimal(20)),
+        )
 
         @Test
         fun `GIVEN a German locale WHEN max clicked THEN the amount is entered with a comma the screen reads back`() =
@@ -1175,6 +1389,64 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Assert
             coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
             assertThat(model.isSubmitting()).isFalse()
+        }
+    }
+
+    @Nested
+    inner class UntradableMarket {
+
+        @Test
+        fun `GIVEN the market takes no orders WHEN an amount is entered THEN it is quoted and the screen cannot trade`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getEventUseCase(any(), eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
+                val model = createOrderModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+
+                // Act
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Assert
+                coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
+                assertThat(model.uiState.value.isTradable()).isFalse()
+                assertThat(model.uiState.value.isReadyToPlace).isFalse()
+            }
+
+        @ParameterizedTest
+        @CsvSource("true, MarketClosed", "false, Unknown")
+        fun `GIVEN the price cannot be read before an amount WHEN polled THEN the screen shows why and stops polling`(
+            isMarketClosed: Boolean,
+            expected: PriceErrorUM,
+        ) = runOrderTest {
+            // Arrange
+            val error = if (isMarketClosed) PredictionPriceError.MarketClosed else PredictionPriceError.InvalidAsset
+            coEvery { getPriceUseCase(assetId = any(), side = any()) } returns error.left()
+            val model = createOrderModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onResume()
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+            // Assert
+            assertThat(model.uiState.value.priceError).isEqualTo(expected)
+            coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
+        }
+
+        @Test
+        fun `GIVEN the untradable sheet WHEN it is dismissed twice THEN the flow is left once`() = runOrderTest {
+            // Arrange
+            val model = createOrderModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onUntradableSheetDismiss()
+            model.onUntradableSheetDismiss()
+
+            // Assert
+            verify(exactly = 1) { router.pop(any()) }
         }
     }
 

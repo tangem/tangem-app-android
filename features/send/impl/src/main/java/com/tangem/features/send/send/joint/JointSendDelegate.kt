@@ -14,6 +14,7 @@ import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
@@ -202,13 +203,13 @@ internal class JointSendDelegate @Inject constructor(
         TransactionFeeExtended(transactionFee = tokenFee, feeTokenId = feeToken.id, nativeFee = nativeFee)
     }
 
-    suspend fun createOperation(
+    suspend fun prepareOperation(
         account: Account.Joint,
         currency: CryptoCurrency,
         amount: BigDecimal,
         destinationUM: DestinationUM,
         feeToken: CryptoCurrency.Token?,
-    ): Either<JointOperationCreateError, Unit> = either {
+    ): Either<JointOperationCreateError, PreparedJointOperation.Creation> = either {
         val intent = ensureNotNull(JointTransferIntentFactory.create(amount, destinationUM, currency)) {
             JointOperationCreateError.InvalidPayload
         }
@@ -216,8 +217,15 @@ internal class JointSendDelegate @Inject constructor(
             .mapLeft(JointOperationCreateError::Failed)
             .bind()
 
-        createJointOperationUseCase(account = account, network = currency.network, intent = intent, gasToken = gasToken)
+        createJointOperationUseCase
+            .prepare(account = account, network = currency.network, intent = intent, gasToken = gasToken)
             .bind()
+    }
+
+    suspend fun submitOperation(
+        prepared: PreparedJointOperation.Creation,
+    ): Either<JointOperationCreateError, CreateJointOperationUseCase.SubmitResult> {
+        return createJointOperationUseCase.submit(prepared = prepared)
     }
 
     private suspend fun resolveGasToken(

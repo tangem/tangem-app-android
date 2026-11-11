@@ -2,10 +2,8 @@ package com.tangem.features.jointaccount.confirmaddress.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -66,16 +64,16 @@ internal fun JointAccountConfirmAddressScreen(state: JointAccountConfirmAddressU
                 ),
         ) {
             Text(
-                modifier = Modifier.padding(horizontal = 8.dp),
+                modifier = Modifier.padding(horizontal = 4.dp),
                 text = stringResourceSafe(CoreUiR.string.joint_account_confirm_shared_address),
                 style = TangemTheme.typography3.heading.medium,
                 color = TangemTheme.colors3.text.primary,
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                modifier = Modifier.padding(horizontal = 8.dp),
+                modifier = Modifier.padding(horizontal = 4.dp),
                 text = stringResourceSafe(CoreUiR.string.joint_account_confirm_account_subtitle),
-                style = TangemTheme.typography3.body.medium,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
             Spacer(Modifier.height(24.dp))
@@ -121,21 +119,14 @@ private fun AddressCard(address: String?, onShareClick: () -> Unit, modifier: Mo
             )
         }
         Spacer(Modifier.width(12.dp))
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(TangemTheme.colors3.bg.tertiary)
-                .clickable(enabled = address != null, onClick = onShareClick),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.ic_share_android_20,
-                tint = TangemTheme.colors3.icon.primary,
-                contentDescription = stringResourceSafe(CoreUiR.string.common_share),
-                modifier = Modifier.size(20.dp),
-            )
-        }
+        TangemButton(
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X9,
+            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_share_android_20),
+            isEnabled = address != null,
+            contentDescription = stringResourceSafe(CoreUiR.string.common_share),
+            onClick = onShareClick,
+        )
     }
 }
 
@@ -179,6 +170,7 @@ private fun Footer(state: JointAccountConfirmAddressUM, modifier: Modifier = Mod
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(CoreUiR.string.joint_account_confirm_address_mismatch_button),
+                isEnabled = !state.isConfirming,
                 onClick = state.onMismatchClick,
             )
             TangemButton(

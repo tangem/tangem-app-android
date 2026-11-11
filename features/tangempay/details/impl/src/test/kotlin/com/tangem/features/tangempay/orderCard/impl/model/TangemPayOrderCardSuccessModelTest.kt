@@ -1,23 +1,21 @@
 package com.tangem.features.tangempay.orderCard.impl.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardSuccessComponent
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
-internal class TangemPayOrderCardSuccessModelTest {
+internal class TangemPayOrderCardSuccessModelTest : TangemPayModelTestBase() {
 
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val onFinish: () -> Unit = mockk(relaxed = true)
 
     @Test
@@ -72,17 +70,6 @@ internal class TangemPayOrderCardSuccessModelTest {
         dispatchers = createTestingCoroutineDispatcherProvider(),
         analytics = analytics,
     )
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 
     private companion object {
         const val ETA_DAYS = 20

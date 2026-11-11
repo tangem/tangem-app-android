@@ -10,13 +10,9 @@ class GetHotWalletAdditionRestrictionUseCase(
 ) {
 
     suspend operator fun invoke(): HotWalletAdditionRestriction? {
-        val userWallets = userWalletsListRepository.userWalletsSync()
+        if (!isMultipleHotWalletsEnabled()) return null
 
-        return when {
-            isMultipleHotWalletsEnabled() && userWallets.isHotWalletsLimitReached() -> {
-                HotWalletAdditionRestriction.LimitReached
-            }
-            else -> null
-        }
+        val userWallets = userWalletsListRepository.userWalletsSync()
+        return HotWalletAdditionRestriction.LimitReached.takeIf { userWallets.isHotWalletsLimitReached() }
     }
 }

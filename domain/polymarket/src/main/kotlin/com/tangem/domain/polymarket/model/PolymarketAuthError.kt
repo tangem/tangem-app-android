@@ -17,3 +17,11 @@ sealed interface PolymarketAuthError : PolymarketError {
     /** Anything else. */
     data class Unknown(val httpCode: Int?, val detail: String?) : PolymarketAuthError
 }
+
+fun PolymarketAuthError.isTransient(): Boolean = when (this) {
+    PolymarketAuthError.Network, PolymarketAuthError.RateLimited -> true
+    PolymarketAuthError.InvalidSignature, PolymarketAuthError.KeyNotFound -> false
+    is PolymarketAuthError.Unknown -> httpCode != null && httpCode >= SERVER_ERROR_CODE
+}
+
+private const val SERVER_ERROR_CODE = 500

@@ -59,6 +59,7 @@ import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTran
 import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTransformer.Section.PortfolioReview
 import com.tangem.features.foryou.impl.model.transformer.SetPortfolioReviewTransformer
 import com.tangem.features.foryou.model.ForYouPeriod
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -94,6 +95,7 @@ internal class ForYouModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletHeaderConverter: ForYouWalletHeaderConverter,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<ForYouComponent.Params>()
@@ -177,6 +179,7 @@ internal class ForYouModel @Inject constructor(
                     }.toPersistentList().asSingleForYouGroup(),
                 ),
                 portfolioFilter = TangemFilterItemUM.Loading(id = ForYouPortfolioFilterConverter.ID),
+                isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
                 portfolioReviewUM = PortfolioReviewUM.Loading(
                     marketChartUM = MarketChartUM.NoData(
                         title = resourceReference(R.string.market_chart_can_not_load_data),

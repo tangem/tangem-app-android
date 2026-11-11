@@ -10,7 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.pay.model.CashbackHistory
+import com.tangem.domain.tangempay.model.CashbackHistory
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM.Style
 import kotlinx.collections.immutable.toImmutableList

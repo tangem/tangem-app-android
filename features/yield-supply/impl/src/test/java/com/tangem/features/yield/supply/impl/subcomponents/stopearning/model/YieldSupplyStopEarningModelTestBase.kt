@@ -13,7 +13,6 @@ import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessBatchU
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
 import com.tangem.features.yield.supply.impl.common.YieldSupplyTxHistoryUpdater
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
@@ -42,7 +41,6 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
     protected val tangemBlogUrlBuilder: TangemBlogUrlBuilder = mockk()
     protected val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     protected val accountStatusList: AccountStatusList = mockk()
-    protected val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles = mockk()
     protected val estimateFeeForGaslessBatchUseCase: EstimateFeeForGaslessBatchUseCase = mockk()
     protected val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase = mockk()
     protected val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork = mockk()
@@ -60,7 +58,16 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
             withdrawalClaimPreparer.prepare(userWallet = any(), cryptoCurrencyStatus = any())
         } returns YieldPreClaim.Skip
         coEvery { accountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList
-        every { yieldSupplyFeatureToggles.isSmartGasEnabled } returns false
+        coEvery {
+            estimateFeeForGaslessBatchUseCase(
+                userWallet = any(),
+                operationTokenStatus = any(),
+                calls = any(),
+                sameTokenRule = any(),
+                isOperationTokenExcluded = any(),
+                feeCurrencyStatus = any(),
+            )
+        } returns null.right()
         every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
     }
 
@@ -96,7 +103,6 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
         appsFlyerRepository = appsFlyerRepository,
         yieldSupplyWithdrawalClaimPreparer = withdrawalClaimPreparer,
         yieldSupplyClaimTracker = claimTracker,
-        yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
         estimateFeeForGaslessBatchUseCase = estimateFeeForGaslessBatchUseCase,
         yieldSupplySmartGas = YieldSupplySmartGas(
             sendTransactionUseCase = sendTransactionUseCase,

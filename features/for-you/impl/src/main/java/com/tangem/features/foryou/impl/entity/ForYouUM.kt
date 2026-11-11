@@ -4,12 +4,15 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.model.ForYouNotification
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -19,6 +22,8 @@ internal data class ForYouUM(
     val notifications: ImmutableList<ForYouNotification>,
     val periodPickerUM: ImmutableList<TangemSegmentedControl.Item>,
     val portfolioFilter: TangemFilterItemUM,
+    @RemoveWithToggle(toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED", description = "Inline true")
+    val isRedesignedTokenRowsEnabled: Boolean = false,
 )
 
 @Immutable
@@ -96,6 +101,13 @@ internal data class ForYouTokenListItemUM(
     val isExpanded: Boolean,
     val isExpandable: Boolean,
     val segmentColor: DonutSegmentColor?,
+    val accountRow: ForYouAccountRowUM? = null,
+)
+
+@Immutable
+internal data class ForYouAccountRowUM(
+    val state: TangemAccountRow.State,
+    val avatar: TangemAvatar.UiState,
 )
 
 /**

@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +32,7 @@ import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.audits.AuditLabel
 import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.tooltip.TangemTooltip
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.extensions.annotatedReference
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.stringReference
@@ -42,6 +44,8 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_20
 import com.tangem.core.ui.test.FeeSelectorBlockTestTags
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -49,6 +53,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.*
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.send.impl.R
 import com.tangem.utils.extensions.isSingleItem
 import kotlinx.collections.immutable.persistentListOf
@@ -61,11 +66,16 @@ internal fun FeeSelectorBlockContent(
     state: FeeSelectorUM,
     onReadMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isPlain: Boolean = false,
+    appearance: FeeSelectorParams.BlockAppearance = FeeSelectorParams.BlockAppearance.Default,
 ) {
     if (state is FeeSelectorUM.Error && state.isHidden) {
         return
     }
+    if (appearance == FeeSelectorParams.BlockAppearance.Row) {
+        FeeSelectorRowContent(state = state, modifier = modifier)
+        return
+    }
+    val isPlain = appearance == FeeSelectorParams.BlockAppearance.Plain
 
     Row(
         modifier = modifier
@@ -219,7 +229,6 @@ private fun FeeLoading() {
 
 @Composable
 private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifier) {
-    val fiatRate = state.feeFiatRateUM
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         AuditLabel(
             state = AuditLabelUM(
@@ -229,22 +238,7 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
         )
 
         EllipsisText(
-            text = if (state.feeExtraInfo.isFeeConvertibleToFiat && fiatRate != null) {
-                getFiatString(
-                    value = state.selectedFeeItem.fee.amount.value,
-                    rate = fiatRate.rate,
-                    appCurrency = fiatRate.appCurrency,
-                    approximate = state.feeExtraInfo.isFeeApproximate,
-                )
-            } else {
-                state.selectedFeeItem.fee.amount.value
-                    .format {
-                        crypto(
-                            symbol = state.selectedFeeItem.fee.amount.currencySymbol,
-                            decimals = state.selectedFeeItem.fee.amount.decimals,
-                        ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
-                    }
-            },
+            text = state.feeAmountText(),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.End,
@@ -253,10 +247,7 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
                 .testTag(FeeSelectorBlockTestTags.FEE_AMOUNT),
         )
 
-        val isGaslessAvailable = state.feeExtraInfo.transactionFeeExtended != null ||
-            state.feeExtraInfo.sponsoredFee.isAvailable
-
-        if (!state.feeItems.isSingleItem() || isGaslessAvailable) {
+        if (state.isFeeSelectable) {
             Icon(
                 modifier = Modifier
                     .size(width = 18.dp, height = 24.dp)
@@ -266,6 +257,92 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
                 tint = TangemTheme.colors3.icon.secondary,
             )
         }
+    }
+}
+
+internal val FeeSelectorRowShape = RoundedCornerShape(24.dp)
+
+internal val FeeSelectorUM.Content.isFeeSelectable: Boolean
+    get() = !feeItems.isSingleItem() ||
+        feeExtraInfo.transactionFeeExtended != null ||
+        feeExtraInfo.sponsoredFee.isAvailable
+
+private fun FeeSelectorUM.Content.feeAmountText(): String {
+    val fiatRate = feeFiatRateUM
+    val fee = selectedFeeItem.fee.amount
+    return if (feeExtraInfo.isFeeConvertibleToFiat && fiatRate != null) {
+        getFiatString(
+            value = fee.value,
+            rate = fiatRate.rate,
+            appCurrency = fiatRate.appCurrency,
+            approximate = feeExtraInfo.isFeeApproximate,
+        )
+    } else {
+        fee.value.format {
+            crypto(symbol = fee.currencySymbol, decimals = fee.decimals).fee(canBeLower = feeExtraInfo.isFeeApproximate)
+        }
+    }
+}
+
+@Composable
+private fun FeeSelectorRowContent(state: FeeSelectorUM, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .background(color = TangemTheme.colors3.bg.secondary, shape = FeeSelectorRowShape)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .testTag(FeeSelectorBlockTestTags.SELECTOR_BLOCK),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = stringResourceSafe(R.string.common_network_fee_title),
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .testTag(FeeSelectorBlockTestTags.TITLE),
+        )
+        when (state) {
+            is FeeSelectorUM.Content -> FeeRowValue(state)
+            is FeeSelectorUM.Loading -> FeeLoading()
+            is FeeSelectorUM.Error -> FeeError(state)
+        }
+    }
+}
+
+@Composable
+private fun FeeRowValue(state: FeeSelectorUM.Content) {
+    TangemBadge(text = stringReference(state.selectedFeeItem.fee.amount.currencySymbol), size = TangemBadge.Size.X4)
+    Text(
+        text = state.feeAmountText(),
+        style = TangemTheme.typography3.body.medium,
+        color = TangemTheme.colors3.text.secondary,
+        maxLines = 1,
+        modifier = Modifier.testTag(FeeSelectorBlockTestTags.FEE_AMOUNT),
+    )
+    if (state.isFeeSelectable) {
+        Icon(
+            imageVector = Icons.ic_chevron_double_vertical_20,
+            contentDescription = null,
+            tint = TangemTheme.colors3.icon.secondary,
+            modifier = Modifier.testTag(FeeSelectorBlockTestTags.SELECT_FEE_ICON),
+        )
+    }
+}
+
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun FeeSelectorBlockContent_Row_Preview(@PreviewParameter(FeeSelectorUMProvider::class) state: FeeSelectorUM) {
+    TangemThemePreviewRedesign {
+        FeeSelectorBlockContent(
+            modifier = Modifier.fillMaxWidth(),
+            state = state,
+            onReadMoreClick = {},
+            appearance = FeeSelectorParams.BlockAppearance.Row,
+        )
     }
 }
 
@@ -295,7 +372,7 @@ private fun FeeSelectorBlockContent_Plain_Preview(
                 .background(TangemTheme.colors3.bg.primary),
             state = state,
             onReadMoreClick = {},
-            isPlain = true,
+            appearance = FeeSelectorParams.BlockAppearance.Plain,
         )
     }
 }

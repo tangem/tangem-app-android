@@ -16,7 +16,7 @@ dependencies {
 
     /** Domain */
     api(projects.domain.models)
-    api(projects.domain.visa.models)
+    api(projects.domain.tangempay.models)
 
     /** Other */
     api(deps.arrow.core)

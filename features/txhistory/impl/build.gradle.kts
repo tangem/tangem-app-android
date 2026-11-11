@@ -58,7 +58,7 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.visa.models)
+    implementation(projects.domain.tangempay.models)
     runtimeOnly(projects.domain.card)
     runtimeOnly(projects.domain.tokens)
 
