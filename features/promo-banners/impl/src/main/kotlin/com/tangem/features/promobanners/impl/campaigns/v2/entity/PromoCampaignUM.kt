@@ -3,6 +3,7 @@ package com.tangem.features.promobanners.impl.campaigns.v2.entity
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -25,6 +26,8 @@ internal data class PromoTokenSelectorUM(
     val selectedAccount: PromoSelectedAccountUM?,
     val accountTitle: TextReference,
     val onClick: () -> Unit,
+    val selectedTokenRow: TangemTokenRow.State? = null,
+    val isBalanceHidden: Boolean = false,
 )
 
 internal data class PromoSelectedAccountUM(
