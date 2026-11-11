@@ -51,6 +51,22 @@ class TangemPayBankWithdrawAmountPageObject(semanticsProvider: SemanticsNodeInte
         useUnmergedTree = true
     }
 
+    val networkFeeUnreachable: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_withdraw_bank_network_fee_unreachable))
+        useUnmergedTree = true
+    }
+
+    val networkFeeRefreshButton: KNode = child {
+        hasContentDescription(getResourceString(CoreResR.string.warning_button_refresh))
+        hasClickAction()
+        hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_AMOUNT_SCREEN))
+    }
+
+    fun routeSheetNote(text: String): KNode = child {
+        hasText(text)
+        useUnmergedTree = true
+    }
+
     fun amountError(text: String): KNode = child {
         hasText(text)
         hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_AMOUNT_SCREEN))

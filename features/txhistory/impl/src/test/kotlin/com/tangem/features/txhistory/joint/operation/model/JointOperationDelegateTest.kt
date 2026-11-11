@@ -1,6 +1,5 @@
 package com.tangem.features.txhistory.joint.operation.model
 
-import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
@@ -20,7 +19,6 @@ import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
-import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignerState
 import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.model.JointOperationTransfer
@@ -60,8 +58,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigInteger
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -428,51 +424,39 @@ internal class JointOperationDelegateTest {
     }
 
     @Test
-    fun `GIVEN blockaid says malicious WHEN sign THEN Malicious and nothing is submitted`() = runTest {
+    fun `GIVEN a sign state WHEN prepareSigning THEN the use case prepares the displayed intent`() = runTest {
         // Arrange
         val state = signState()
-        coEvery {
-            signJointOperationUseCase.prepare(state.account, jointCurrency.network, OPERATION_ID, TRANSFER_INTENT)
-        } returns prepared(verdict = JointOperationBlockaidGate.Verdict.Malicious).right()
-
-        // Act
-        val actual = createDelegate().sign(state = state, network = jointCurrency.network, operationId = OPERATION_ID)
-
-        // Assert
-        assertThat(actual).isEqualTo(JointOperationSignError.Malicious.left())
-        coVerify(exactly = 0) { signJointOperationUseCase.submit(any()) }
-    }
-
-    @ParameterizedTest
-    @MethodSource("submittedVerdicts")
-    fun `GIVEN a verdict short of malicious WHEN sign THEN the prepared operation is submitted`(
-        verdict: JointOperationBlockaidGate.Verdict,
-    ) = runTest {
-        // Arrange
-        val state = signState()
-        val prepared = prepared(verdict = verdict)
-        val signed: JointOperation = mockk()
+        val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Warning)
         coEvery {
             signJointOperationUseCase.prepare(state.account, jointCurrency.network, OPERATION_ID, TRANSFER_INTENT)
         } returns prepared.right()
+
+        // Act
+        val actual = createDelegate().prepareSigning(
+            state = state,
+            network = jointCurrency.network,
+            operationId = OPERATION_ID,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(prepared.right())
+        coVerify(exactly = 0) { signJointOperationUseCase.submit(any()) }
+    }
+
+    @Test
+    fun `GIVEN a prepared operation WHEN submitSigning THEN the use case result is returned`() = runTest {
+        // Arrange
+        val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe)
+        val signed: JointOperation = mockk()
         coEvery { signJointOperationUseCase.submit(prepared) } returns signed.right()
 
         // Act
-        val actual = createDelegate().sign(state = state, network = jointCurrency.network, operationId = OPERATION_ID)
+        val actual = createDelegate().submitSigning(prepared = prepared)
 
         // Assert
         assertThat(actual).isEqualTo(signed.right())
     }
-
-    private fun submittedVerdicts() = listOf(
-        JointOperationBlockaidGate.Verdict.Safe,
-        JointOperationBlockaidGate.Verdict.Warning,
-        JointOperationBlockaidGate.Verdict.NoVerdict(JointOperationBlockaidGate.Verdict.NoVerdict.Reason.ERROR),
-        JointOperationBlockaidGate.Verdict.NoVerdict(JointOperationBlockaidGate.Verdict.NoVerdict.Reason.TIMEOUT),
-        JointOperationBlockaidGate.Verdict.NoVerdict(
-            JointOperationBlockaidGate.Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK,
-        ),
-    )
 
     private fun signState(): JointOperationState {
         val account: Account.Joint = mockk()

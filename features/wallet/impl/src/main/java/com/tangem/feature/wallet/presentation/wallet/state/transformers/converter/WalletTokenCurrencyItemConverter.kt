@@ -12,7 +12,6 @@ import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledResourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -22,13 +21,13 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.yieldSupply
-import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletContentClickIntents
 import com.tangem.feature.wallet.impl.R
+import com.tangem.features.earn.api.overview.EarnHeadline
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.converter.Converter
@@ -49,19 +48,15 @@ internal class WalletTokenCurrencyItemConverter(
     private val shouldShowPromo: Boolean,
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val clickIntents: WalletContentClickIntents,
-    stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+    private val earnOverviews: EarnOverviews,
     private val userWalletId: UserWalletId,
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
 ) : Converter<CryptoCurrencyStatus, TangemTokenRowUM> {
 
     private val currencyToIconStateConverter = CryptoCurrencyToIconStateConverter()
-    private val earnApyConverter = EarnApyConverter(
-        yieldModuleApyMap = yieldModuleApyMap,
-        stakingApyMap = stakingAvailabilityMap,
-    )
 
     override fun convert(value: CryptoCurrencyStatus): TangemTokenRowUM {
-        val earnApyInfo = earnApyConverter.convert(value)
+        val headline = earnOverviews[value.currency.id]?.headline
         val pendingOperation = jointPendingOperations.firstOrNull { it.transfer.currency.id == value.currency.id }
 
         return TangemTokenRowUM.Content(
@@ -69,14 +64,14 @@ internal class WalletTokenCurrencyItemConverter(
             headIconUM = TangemIconUM.Currency(
                 currencyIconState = currencyToIconStateConverter.convert(value),
             ),
-            titleUM = toCurrencyRowTitle(value, earnApyInfo),
+            titleUM = toCurrencyRowTitle(value, headline),
             subtitleUM = toCurrencyRowSubtitle(value),
             topEndContentUM = toCurrencyRowTopEnd(value),
             bottomEndContentUM = toCurrencyRowBottomEnd(value),
             promoBannerUM = pendingOperation?.let(::toPendingOperationBubble) ?: toPromoBannerUM(
                 accountId,
                 value,
-                earnApyInfo.takeIf { shouldShowPromo },
+                yieldApyPercentOf(value.currency, yieldModuleApyMap).takeIf { shouldShowPromo },
             ),
             onItemClick = when (value.value) {
                 CryptoCurrencyStatus.Loading,
@@ -106,7 +101,7 @@ internal class WalletTokenCurrencyItemConverter(
 
     private fun toCurrencyRowTitle(
         currencyStatus: CryptoCurrencyStatus,
-        earnApyInfo: EarnApyConverter.EarnApyInfo?,
+        headline: EarnHeadline?,
     ): TangemTokenRowUM.TitleUM = when (val value = currencyStatus.value) {
         is CryptoCurrencyStatus.Loading,
         is CryptoCurrencyStatus.MissedDerivation,
@@ -125,23 +120,18 @@ internal class WalletTokenCurrencyItemConverter(
             TangemTokenRowUM.TitleUM.Content(
                 text = stringReference(currencyStatus.currency.name),
                 hasPending = value.hasCurrentNetworkTransactions,
-                badge = if (earnApyInfo != null && earnApyInfo.text != null) {
-                    TangemBadgeUM(
-                        type = TangemBadgeType.Solid,
-                        color = when {
-                            earnApyInfo.isActive -> TangemBadgeColor.Blue
-                            else -> TangemBadgeColor.Gray
-                        },
-                        shape = TangemBadgeShape.Rounded,
-                        size = TangemBadgeSize.X4,
-                        text = earnApyInfo.text,
-                    )
-                } else {
-                    null
-                },
+                badge = headline?.toBadgeUM(),
             )
         }
     }
+
+    private fun EarnHeadline.toBadgeUM() = TangemBadgeUM(
+        type = TangemBadgeType.Solid,
+        color = if (isActive) TangemBadgeColor.Blue else TangemBadgeColor.Gray,
+        shape = TangemBadgeShape.Rounded,
+        size = TangemBadgeSize.X4,
+        text = badge,
+    )
 
     private fun toCurrencyRowSubtitle(currencyStatus: CryptoCurrencyStatus): TangemTokenRowUM.SubtitleUM {
         return when (currencyStatus.value) {
@@ -281,26 +271,19 @@ internal class WalletTokenCurrencyItemConverter(
     private fun toPromoBannerUM(
         accountId: AccountId,
         currencyStatus: CryptoCurrencyStatus,
-        earnApyInfo: EarnApyConverter.EarnApyInfo?,
+        yieldApyPercent: BigDecimal?,
     ): TangemTokenRowUM.PromoBannerUM {
         val currency = currencyStatus.currency
-        val isTokenCurrency = currency is CryptoCurrency.Token
-        val isCurrencyStatusLoaded = currencyStatus.value is CryptoCurrencyStatus.Loaded
-        if (!isTokenCurrency || !isCurrencyStatusLoaded || earnApyInfo == null) {
+        if (currencyStatus.value !is CryptoCurrencyStatus.Loaded || yieldApyPercent == null) {
             return TangemTokenRowUM.PromoBannerUM.Empty
         }
 
         return TangemTokenRowUM.PromoBannerUM.Content(
-            title = resourceReference(
-                R.string.yield_module_main_screen_promo_banner_message,
-                wrappedList(earnApyInfo.rate.formatEarnRate()),
-            ),
+            title = yieldApyPercent.toYieldPromoText(),
             iconRes = R.drawable.ic_yield_mode_mini_12,
             type = TangemTokenRowUM.PromoBannerUM.Content.Type.Yield,
             onPromoBannerClick = {
-                // The earn screen takes the rate in percent, as the backend reports it
-                val apyPercent = earnApyInfo.rate.movePointRight(EarnApyConverter.PERCENT_POINT_SHIFT).toPlainString()
-                clickIntents.onYieldPromoClicked(accountId, currencyStatus, apyPercent)
+                clickIntents.onYieldPromoClicked(accountId, currencyStatus, yieldApyPercent.toPlainString())
             },
             onCloseClick = clickIntents::onYieldPromoCloseClick,
             onPromoShown = {

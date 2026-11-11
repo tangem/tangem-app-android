@@ -104,6 +104,100 @@ internal class YieldSupplyContributionExtTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ActiveYieldSupplySource {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN contributions WHEN activeYieldSupplySource THEN source of an active yield supply or null`(
+            model: SourceModel,
+        ) {
+            // Act
+            val actual = value(model.contributions).activeYieldSupplySource
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            SourceModel(contributions = emptyList(), expected = null),
+            SourceModel(contributions = listOf(OtherContribution), expected = null),
+            SourceModel(
+                contributions = listOf(yieldSupply(positionStatus, StatusSource.ACTUAL)),
+                expected = StatusSource.ACTUAL,
+            ),
+            SourceModel(
+                contributions = listOf(yieldSupply(positionStatus, StatusSource.CACHE)),
+                expected = StatusSource.CACHE,
+            ),
+            SourceModel(
+                contributions = listOf(yieldSupply(inactiveStatus(isInitialized = true), StatusSource.CACHE)),
+                expected = null,
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsSpendableAmountActual {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN network and yield sources WHEN isSpendableAmountActual THEN both must be actual`(
+            model: SpendableActualModel,
+        ) {
+            // Act
+            val actual = value(contributions = model.contributions, networkSource = model.networkSource)
+                .isSpendableAmountActual
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            SpendableActualModel(
+                name = "actual network, no yield",
+                networkSource = StatusSource.ACTUAL,
+                contributions = emptyList(),
+                expected = true,
+            ),
+            SpendableActualModel(
+                name = "cached network, no yield",
+                networkSource = StatusSource.CACHE,
+                contributions = emptyList(),
+                expected = false,
+            ),
+            SpendableActualModel(
+                name = "actual network, active position actual",
+                networkSource = StatusSource.ACTUAL,
+                contributions = listOf(yieldSupply(positionStatus, StatusSource.ACTUAL)),
+                expected = true,
+            ),
+            SpendableActualModel(
+                name = "actual network, active position cached",
+                networkSource = StatusSource.ACTUAL,
+                contributions = listOf(yieldSupply(positionStatus, StatusSource.ONLY_CACHE)),
+                expected = false,
+            ),
+            SpendableActualModel(
+                name = "actual network, inactive position cached: nothing folded",
+                networkSource = StatusSource.ACTUAL,
+                contributions = listOf(yieldSupply(inactiveStatus(isInitialized = true), StatusSource.CACHE)),
+                expected = true,
+            ),
+        )
+    }
+
+    data class SpendableActualModel(
+        val name: String,
+        val networkSource: StatusSource,
+        val contributions: List<BalanceContribution>,
+        val expected: Boolean,
+    ) {
+        override fun toString(): String = name
+    }
+
     data class YieldSupplyModel(
         val name: String,
         val field: YieldSupplyStatus?,
@@ -121,6 +215,7 @@ internal class YieldSupplyContributionExtTest {
     private fun value(
         contributions: List<BalanceContribution>,
         field: YieldSupplyStatus? = null,
+        networkSource: StatusSource = StatusSource.ACTUAL,
     ): CryptoCurrencyStatus.Value {
         return CryptoCurrencyStatus.Loaded(
             amount = BigDecimal.TEN,
@@ -133,7 +228,7 @@ internal class YieldSupplyContributionExtTest {
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "0x1", type = NetworkAddress.Address.Type.Primary),
             ),
-            sources = CryptoCurrencyStatus.Sources(),
+            sources = CryptoCurrencyStatus.Sources(networkSource = networkSource),
             contributions = contributions,
         )
     }

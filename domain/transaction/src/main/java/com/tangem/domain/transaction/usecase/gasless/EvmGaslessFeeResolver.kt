@@ -122,8 +122,6 @@ class EvmGaslessFeeResolver(
         val walletManager = prepareWalletManager(userWallet, network)
 
         val isYieldActive = tokenCurrencyStatus.value.yieldSupply?.isActive == true
-        // Both build a batch around the main tx; combining approve with yield-withdraw is not supported yet
-        if (approval != null && isYieldActive) raise(GaslessError.NetworkIsNotSupported)
 
         val initialTxFee = tokenFeeCalculator.calculateInitialFee(
             userWallet = userWallet,
@@ -302,8 +300,6 @@ class EvmGaslessFeeResolver(
                 val total = status.value.amount ?: BigDecimal.ZERO
                 total > BigDecimal.ZERO || status.value.yieldSupply?.isActive == true
             }
-            // An approve batch cannot be combined with a yield-withdraw batch yet
-            .filter { approval == null || it.value.yieldSupply?.isActive != true }
             .sortedByDescending { status -> status.value.amount ?: BigDecimal.ZERO }
 
         val tokenForPayFeeStatus = candidates.firstOrNull() ?: raise(GaslessError.NoSupportedTokensFound)

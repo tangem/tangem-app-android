@@ -179,6 +179,7 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
     private fun checked(missing: Set<String>) = PolymarketSessionKeyReconciliation.Checked(
         foreignSigners = emptyList(),
         missingOnExchange = missing,
+        listedSigners = emptySet(),
     )
 
     private companion object {

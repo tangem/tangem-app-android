@@ -34,6 +34,7 @@ import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.tap.domain.DefaultUserWalletSelectedHandler
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -493,6 +494,7 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    @RemoveWithToggle("TWI_1586_CARD_LINKED_STATUS_UPDATE_V2")
     fun provideReportCardLinkedWalletsBackupUseCase(
         userWalletsListRepository: UserWalletsListRepository,
         walletCardsBackupRepository: WalletCardsBackupRepository,
@@ -502,6 +504,30 @@ internal object WalletsDomainModule {
             userWalletsListRepository = userWalletsListRepository,
             walletCardsBackupRepository = walletCardsBackupRepository,
             reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportSeenWalletCardUseCase(
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+        isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    ): ReportSeenWalletCardUseCase {
+        return ReportSeenWalletCardUseCase(
+            walletCardsBackupRepository = walletCardsBackupRepository,
+            isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportSavedWalletsBackupUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        reportSeenWalletCardUseCase: ReportSeenWalletCardUseCase,
+    ): ReportSavedWalletsBackupUseCase {
+        return ReportSavedWalletsBackupUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            reportSeenWalletCardUseCase = reportSeenWalletCardUseCase,
         )
     }
 

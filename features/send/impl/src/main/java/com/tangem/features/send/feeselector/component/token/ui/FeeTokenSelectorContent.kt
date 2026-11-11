@@ -27,6 +27,7 @@ import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.selectedBorder
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -117,6 +118,10 @@ internal fun TokenListContent(state: FeeTokenSelectorUM, modifier: Modifier = Mo
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        if (state.tokens.all { it.tokenRow != null }) {
+            TokenRowsContent(state = state)
+            return@Column
+        }
         val (availableTokens, notAvailableTokens) = remember(state.tokens) {
             state.tokens.partition { it.isAvailable }.let { pair ->
                 Pair(
@@ -140,12 +145,7 @@ internal fun TokenListContent(state: FeeTokenSelectorUM, modifier: Modifier = Mo
         }
 
         if (notAvailableTokens.isNotEmpty()) {
-            Text(
-                modifier = Modifier.padding(start = 12.dp, top = 8.dp),
-                text = stringResourceSafe(R.string.common_not_available),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors3.text.secondary,
-            )
+            NotAvailableTokensTitle()
 
             notAvailableTokens.fastForEach { item ->
                 key(item.id) {
@@ -270,4 +270,47 @@ private fun Preview() {
                 .background(TangemTheme.colors3.bg.primary),
         )
     }
+}
+
+@Suppress("MagicNumber")
+@Composable
+private fun TokenRowsContent(state: FeeTokenSelectorUM) {
+    val (availableTokens, notAvailableTokens) = remember(state.tokens) { state.tokens.partition { it.isAvailable } }
+    availableTokens.fastForEach { item ->
+        val tokenRow = item.tokenRow ?: return@fastForEach
+        key(tokenRow.id) {
+            TangemTokenRow(
+                state = tokenRow,
+                modifier = Modifier
+                    .selectedBorder(isSelected = state.selectedToken.state.id == item.state.id)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(color = TangemTheme.colors3.bg.secondary),
+            )
+        }
+    }
+    if (notAvailableTokens.isNotEmpty()) {
+        NotAvailableTokensTitle()
+        notAvailableTokens.fastForEach { item ->
+            val tokenRow = item.tokenRow ?: return@fastForEach
+            key(tokenRow.id) {
+                TangemTokenRow(
+                    state = tokenRow,
+                    modifier = Modifier
+                        .graphicsLayer { alpha = 0.5f }
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(color = TangemTheme.colors3.bg.secondary),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NotAvailableTokensTitle() {
+    Text(
+        modifier = Modifier.padding(start = 12.dp, top = 8.dp),
+        text = stringResourceSafe(R.string.common_not_available),
+        style = TangemTheme.typography.subtitle2,
+        color = TangemTheme.colors3.text.secondary,
+    )
 }

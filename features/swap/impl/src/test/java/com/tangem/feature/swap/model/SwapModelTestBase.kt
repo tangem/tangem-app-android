@@ -19,6 +19,7 @@ import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSy
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.collectibles.usecase.WithdrawFromCollectiblesVaultUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -72,6 +73,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -128,6 +130,7 @@ internal abstract class SwapModelTestBase {
         mockk(relaxed = true)
     protected val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory = mockk()
     protected val submitPredictionWithdrawalInteractor: SubmitPredictionWithdrawalInteractor = mockk(relaxed = true)
+    protected val withdrawFromCollectiblesVaultUseCase: WithdrawFromCollectiblesVaultUseCase = mockk(relaxed = true)
     protected val predictionWithdrawalTracker: PredictionWithdrawalTracker = mockk(relaxUnitFun = true)
     protected val predictionFundingWindow: PredictionFundingWindow = mockk(relaxUnitFun = true)
     protected val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase = mockk(relaxed = true)
@@ -152,6 +155,7 @@ internal abstract class SwapModelTestBase {
         coEvery { this@mockk(any<MoneyAccountStatusFetcher.Params>()) } returns Unit.right()
     }
     protected val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxUnitFun = true)
+    protected val appTxHistoryFetcher: AppTxHistoryFetcher = mockk(relaxUnitFun = true)
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
     }
@@ -289,6 +293,7 @@ internal abstract class SwapModelTestBase {
         getPredictionWithdrawDestinationsUseCase = getPredictionWithdrawDestinationsUseCase,
         polymarketCollateralCurrencyFactory = polymarketCollateralCurrencyFactory,
         submitPredictionWithdrawalInteractor = submitPredictionWithdrawalInteractor,
+        withdrawFromCollectiblesVaultUseCase = withdrawFromCollectiblesVaultUseCase,
         predictionWithdrawalTracker = predictionWithdrawalTracker,
         predictionFundingWindow = predictionFundingWindow,
         derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
@@ -309,6 +314,7 @@ internal abstract class SwapModelTestBase {
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
+        appTxHistoryFetcher = appTxHistoryFetcher,
         performanceTracer = mockk(relaxed = true),
     )
 

@@ -6,17 +6,20 @@ set -eo pipefail
 # 1. Obtain OAuth access token
 # ----------------------------------------
 # Sending a POST request to retrieve access token using client credentials
-TOKEN=$(curl -s -v -X POST "https://connect-api.cloud.huawei.com/api/oauth2/v1/token" \
+TOKEN_RESPONSE=$(curl -sS -X POST "https://connect-api.cloud.huawei.com/api/oauth2/v1/token" \
   -H "Content-Type: application/json" \
   -d "{
         \"grant_type\": \"client_credentials\",
         \"client_id\": \"$CLIENT_ID\",
         \"client_secret\": \"$CLIENT_SECRET\"
-      }" | jq -r .access_token)
+      }")
+TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.access_token // empty')
 
-echo "------------------------------------------------"
-echo "[INFO] Token = $TOKEN"
-echo "------------------------------------------------"
+if [[ -z "$TOKEN" ]]; then
+  echo "[ERROR] Failed to obtain OAuth token: $(echo "$TOKEN_RESPONSE" | jq -c '.ret // .')"
+  exit 1
+fi
+echo "[INFO] OAuth token obtained"
 
 # ----------------------------------------
 # 2. Get upload information (temporary URL + required headers)
@@ -29,27 +32,23 @@ CONTENT_LENGTH=$(stat -c %s "$FILE_PATH")
 echo "[INFO] Content length = $CONTENT_LENGTH"
 
 # Request upload URL and headers for OBS (Huawei Object Storage Service)
-UPLOAD_INFO=$(curl -s -v -X GET \
+UPLOAD_INFO=$(curl -sS -X GET \
   "https://connect-api.cloud.huawei.com/api/publish/v2/upload-url/for-obs?appId=$APP_ID&fileName=$FILE_NAME&contentLength=$CONTENT_LENGTH" \
   -H "Authorization: Bearer $TOKEN" \
   -H "client_id: $CLIENT_ID" \
   -H "Content-Type: application/json")
 
-echo "------------------------------------------------"
-echo "[INFO] Upload: $UPLOAD_INFO"
-echo "------------------------------------------------"
-
 # ----------------------------------------
 # 3. Upload the AAB file to Huawei OBS using signed URL and headers
 # ----------------------------------------
 # Parse the response to get upload URL and required headers
-UPLOAD_URL=$(echo "$UPLOAD_INFO" | jq -r '.urlInfo.url')
+UPLOAD_URL=$(echo "$UPLOAD_INFO" | jq -r '.urlInfo.url // empty')
 HEADERS=$(echo "$UPLOAD_INFO" | jq -r '.urlInfo.headers')
 
-echo "------------------------------------------------"
-echo "[INFO] Parsed upload URL: $UPLOAD_URL"
-echo "[INFO] Extracting headers..."
-echo "------------------------------------------------"
+if [[ -z "$UPLOAD_URL" ]]; then
+  echo "[ERROR] Failed to get upload URL: $(echo "$UPLOAD_INFO" | jq -c '.ret // .')"
+  exit 1
+fi
 
 # Extract individual headers for the PUT request
 AUTH_HEADER=$(echo "$HEADERS" | jq -r '."Authorization"')
@@ -59,35 +58,24 @@ HOST_HEADER=$(echo "$HEADERS" | jq -r '."Host"')
 UA_HEADER=$(echo "$HEADERS" | jq -r '."user-agent"')
 CT_HEADER=$(echo "$HEADERS" | jq -r '."Content-Type"')
 
-# Log headers (for debug purposes)
-echo "[INFO] Authorization: $AUTH_HEADER"
-echo "[INFO] x-amz-content-sha256: $SHA256_HEADER"
-echo "[INFO] x-amz-date: $DATE_HEADER"
-echo "[INFO] Host: $HOST_HEADER"
-echo "[INFO] user-agent: $UA_HEADER"
-echo "[INFO] Content-Type: $CT_HEADER"
-echo "------------------------------------------------"
-
 # Perform the actual file upload using the signed PUT URL
 echo "[INFO] Uploading file '$FILE_PATH' to Huawei OBS..."
-RESPONSE=$(curl -v -X PUT "$UPLOAD_URL" \
+UPLOAD_RESPONSE_FILE=$(mktemp)
+HTTP_CODE=$(curl -sS -o "$UPLOAD_RESPONSE_FILE" -w "%{http_code}" -X PUT "$UPLOAD_URL" \
   -H "Authorization: $AUTH_HEADER" \
   -H "x-amz-content-sha256: $SHA256_HEADER" \
   -H "x-amz-date: $DATE_HEADER" \
   -H "Host: $HOST_HEADER" \
   -H "user-agent: $UA_HEADER" \
   -H "Content-Type: $CT_HEADER" \
-  --data-binary @"$FILE_PATH" 2>&1)
-
-echo "$RESPONSE"
-echo "------------------------------------------------"
+  --data-binary @"$FILE_PATH")
 
 # Check if upload succeeded
-if echo "$RESPONSE" | grep -q "HTTP/1.1 200"; then
+if [[ "$HTTP_CODE" == "200" ]]; then
   echo "[SUCCESS] File upload completed successfully."
 else
-  echo "[ERROR] File upload failed:"
-  echo "$RESPONSE"
+  echo "[ERROR] File upload failed with HTTP $HTTP_CODE:"
+  cat "$UPLOAD_RESPONSE_FILE"
   exit 1
 fi
 
@@ -113,7 +101,7 @@ EOF
 )
 
 # Send PUT request to finalize (commit) the uploaded file
-COMMIT_RESPONSE=$(curl -s -X PUT \
+COMMIT_RESPONSE=$(curl -sS -X PUT \
   "https://connect-api.cloud.huawei.com/api/publish/v2/app-file-info?appId=$APP_ID" \
   -H "Authorization: Bearer $TOKEN" \
   -H "client_id: $CLIENT_ID" \

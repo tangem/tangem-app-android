@@ -1,9 +1,11 @@
 package com.tangem.feature.tokendetails.deeplink
 
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
+import android.net.Uri
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
@@ -838,9 +840,6 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         isFromOnNewIntent: Boolean = false,
     ) {
         DefaultTokenDetailsDeepLinkHandler(
-            scope = scope,
-            queryParams = queryParams,
-            isFromOnNewIntent = isFromOnNewIntent,
             appRouter = appRouter,
             resolveAndSelectUserWalletUseCase = resolveAndSelectUserWalletUseCase,
             cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
@@ -851,6 +850,13 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             singleAccountListSupplier = singleAccountListSupplier,
             singleAccountListFetcher = singleAccountListFetcher,
             jointAccountCompromisedAlert = jointAccountCompromisedAlert,
+        ).handle(
+            request = DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = scope,
+                isFromOnNewIntent = isFromOnNewIntent,
+            ),
         )
     }
 }

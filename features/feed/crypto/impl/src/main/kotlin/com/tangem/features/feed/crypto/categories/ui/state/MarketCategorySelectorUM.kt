@@ -5,10 +5,11 @@ import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
+/** @property isResetVisible a filter is applied — Reset is the only way to clear it from this screen */
 @Immutable
 internal data class MarketCategorySelectorUM(
     val search: TangemSearch.State,
-    val isEdited: Boolean,
+    val isResetVisible: Boolean,
     val footer: MarketCategorySelectorFooterUM,
     val content: ContentUM,
 ) {
@@ -71,7 +72,4 @@ internal data class MarketCategoryItemUM(
 )
 
 @Immutable
-internal data class MarketCategorySelectorFooterUM(
-    val onReset: () -> Unit,
-    val onApply: () -> Unit,
-)
+internal data class MarketCategorySelectorFooterUM(val onReset: () -> Unit)

@@ -41,11 +41,6 @@ internal class JointOperationErrorMessageTest {
             message = CoreUiR.string.joint_operation_threshold_reached_subtitle,
         ),
         ConvertModel(
-            error = JointOperationSignError.Malicious,
-            title = CoreUiR.string.joint_operation_malicious_title,
-            message = CoreUiR.string.joint_operation_malicious_subtitle,
-        ),
-        ConvertModel(
             error = JointOperationSignError.VerificationFailed(reason = Reason.REFUND_MISMATCH),
             title = CoreUiR.string.joint_operation_signing_blocked_title,
             message = CoreUiR.string.joint_operation_signing_blocked_subtitle,
@@ -62,6 +57,7 @@ internal class JointOperationErrorMessageTest {
             message = CoreUiR.string.common_something_went_wrong,
         ),
         ConvertModel(error = JointOperationSignError.UserCancelled, title = null, message = null),
+        ConvertModel(error = JointOperationSignError.Malicious, title = null, message = null),
     )
 
     @Test

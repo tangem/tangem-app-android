@@ -31,6 +31,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.backup.SeenWalletCardReporter
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
@@ -77,6 +78,7 @@ internal class DefaultUserWalletsListRepository(
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
     private val walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
+    private val seenWalletCardReporter: Lazy<SeenWalletCardReporter>,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : UserWalletsListRepository {
 
@@ -177,6 +179,10 @@ internal class DefaultUserWalletsListRepository(
             // A newly added hot wallet is registered with the Tangem Auth Service right away, while its
             // unlock context is fresh (fire-and-forget, idempotent per walletId).
             walletRegistrationTrigger.get().onMobileWalletCreated(userWallet)
+        }
+
+        if (oldUserWallet == null && userWallet is UserWallet.Cold) {
+            seenWalletCardReporter.get().report(userWallet = userWallet, isNewWallet = true)
         }
 
         if (isFirstWallet) {
@@ -492,6 +498,12 @@ internal class DefaultUserWalletsListRepository(
     private suspend fun refreshStoredCardState(scanResponse: ScanResponse) {
         val walletId = UserWalletIdBuilder.scanResponse(scanResponse).build() ?: return
         val storedWallet = userWallets.value?.find { it.walletId == walletId } as? UserWallet.Cold ?: return
+
+        // reported before the stored card is reconciled: a scan of another card of the wallet does not replace it
+        seenWalletCardReporter.get().report(
+            userWallet = storedWallet.copy(scanResponse = scanResponse),
+            isNewWallet = false,
+        )
 
         val storedCard = storedWallet.scanResponse.card
         val scannedCard = scanResponse.card

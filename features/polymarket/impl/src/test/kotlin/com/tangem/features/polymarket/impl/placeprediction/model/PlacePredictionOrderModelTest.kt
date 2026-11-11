@@ -584,7 +584,28 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
-        fun `GIVEN a plain button WHEN the router picks the owner key THEN nothing is signed and owner confirmation is asked`() =
+        fun `GIVEN a plain hot wallet button WHEN the router picks the owner key THEN nothing is signed and hold is asked`() =
+            runOrderTest {
+                // Arrange
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                verify(exactly = 1) { messageSender.send(any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+            }
+
+        @Test
+        fun `GIVEN a plain card button WHEN the router picks the owner key THEN nothing is signed and the card is asked`() =
             runOrderTest {
                 // Arrange
                 coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
@@ -604,9 +625,31 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
-        fun `GIVEN the session key could not sign WHEN the screen resumes THEN a fresh check decides the style`() =
+        fun `GIVEN the session key of a card could not sign WHEN the card button is tapped THEN the card signs`() =
             runOrderTest {
                 // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
+                }
+            }
+
+        @Test
+        fun `GIVEN the session key of a hot wallet could not sign WHEN the screen resumes THEN a fresh check decides the style`() =
+            runOrderTest {
+                // Arrange
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
                 coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
                 val model = createQuotedModel()
@@ -648,6 +691,31 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
+        fun `GIVEN a plain card button WHEN the exchange refuses the session key THEN the card is asked for the next tap`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns SESSION_ROUTE
+                coEvery { placeOrderUseCase(any(), any(), any(), SESSION_ROUTE) } returns
+                    PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized/Invalid api key").left()
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 1) { signOrderInteractor(request = match { it.route == SESSION_ROUTE }) }
+                coVerify(exactly = 0) {
+                    signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
+                }
+                verify(exactly = 1) { messageSender.send(any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
         fun `GIVEN a card button WHEN the router picks the owner key THEN the owner key signs`() =
             runOrderTest {
                 // Arrange
@@ -665,9 +733,10 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
-        fun `GIVEN a plain tap WHEN the button already turned to the card THEN only the session key may sign`() =
+        fun `GIVEN a plain hot wallet tap WHEN the button already turned to hold THEN only the session key may sign`() =
             runOrderTest {
                 // Arrange
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
                 coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
                 val model = createQuotedModel()
@@ -678,7 +747,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
                 verify(exactly = 1) { messageSender.send(any()) }
             }
@@ -836,7 +905,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN the submitter refuses the order WHEN place clicked THEN the hold button is reset`() = runOrderTest {
             // Arrange
             val refusingSubmitter = mockk<PlacePredictionOrderSubmitter> {
-                coEvery { submit(prepared = any(), confirmedWith = any(), onKeyLost = any()) } returns null
+                coEvery { submit(prepared = any(), preference = any(), onKeyLost = any()) } returns null
                 every { isSubmitting() } returns false
             }
             val model = createOrderModel(
@@ -854,7 +923,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
-            coVerify(exactly = 1) { refusingSubmitter.submit(prepared = any(), confirmedWith = any(), onKeyLost = any()) }
+            coVerify(exactly = 1) { refusingSubmitter.submit(prepared = any(), preference = any(), onKeyLost = any()) }
             assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
         }
 

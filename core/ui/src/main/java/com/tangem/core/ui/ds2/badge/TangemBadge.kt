@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -45,7 +46,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * Design-system v2 badge: a compact pill displaying a short label with optional leading / trailing
  * icons.
  *
- * Version: 1.1.1
+ * Version: 1.1.2
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=2002-213)
  *
@@ -56,6 +57,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  *   their own colors intact.
  * - The badge is non-interactive by default. Pass [onClick] to make it clickable.
  * - A focused clickable badge draws the brand focus ring in place of its border.
+ * - The label is single-line and ellipsized; a [maxLines] above 1 lets it wrap into centered lines.
  *
  * @param text Badge label.
  * @param modifier Modifier applied to the badge container.
@@ -63,6 +65,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param status Status color scheme (Neutral / Info / Error / Success / Warning / Violet).
  * @param size Token-driven size preset controlling height, padding, icon size and text style.
  *   See [TangemBadge.Size].
+ * @param maxLines Maximum number of label lines before the label is ellipsized.
  * @param iconStart Optional leading icon.
  * @param iconEnd Optional trailing icon.
  * @param contentDescription Accessibility label announced by TalkBack. When non-null it overrides
@@ -78,6 +81,7 @@ fun TangemBadge(
     variant: TangemBadge.Variant = TangemBadge.Variant.Tinted,
     status: TangemBadge.Status = TangemBadge.Status.Neutral,
     size: TangemBadge.Size = TangemBadge.Size.X9,
+    maxLines: Int = 1,
     iconStart: TangemIconUM? = null,
     iconEnd: TangemIconUM? = null,
     contentDescription: String? = null,
@@ -108,6 +112,7 @@ fun TangemBadge(
             text = text,
             colorTokens = colorTokens,
             sizeTokens = sizeTokens,
+            maxLines = maxLines,
         )
     }
 }
@@ -119,6 +124,7 @@ internal fun BadgeContent(
     text: TextReference,
     colorTokens: BadgeColorTokens,
     sizeTokens: BadgeSizeTokens,
+    maxLines: Int = 1,
 ) {
     Row(
         modifier = Modifier
@@ -140,8 +146,9 @@ internal fun BadgeContent(
             text = text.resolveReference(),
             color = colorTokens.textColor,
             style = sizeTokens.textStyle,
-            maxLines = 1,
-            softWrap = false,
+            textAlign = TextAlign.Center,
+            maxLines = maxLines,
+            softWrap = maxLines > 1,
             overflow = TextOverflow.Ellipsis,
         )
         iconEnd?.let { icon ->
@@ -164,7 +171,7 @@ private fun TangemIconUM.applyTint(tint: Color): TangemIconUM = when (this) {
 
 object TangemBadge {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 1)
+    val version = DsVersion(major = 1, minor = 1, patch = 2)
 
     /**
      * Visual style of the badge.

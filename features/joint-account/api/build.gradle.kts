@@ -13,12 +13,14 @@ dependencies {
     api(deps.kotlin.coroutines)
 
     /** Core */
+    implementation(projects.core.analytics)
     api(projects.core.analytics.models)
     api(projects.core.decompose)
     implementation(projects.core.remote)
     api(projects.core.ui)
 
     /** Domain */
+    api(projects.domain.jointAccount)
     api(projects.domain.models)
 
     /** Common */

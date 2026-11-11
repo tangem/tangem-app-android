@@ -12,7 +12,6 @@ data class UserWalletItemUM(
     val name: TextReference,
     val titleBadge: TangemBadgeUM? = null,
     val isDimmed: Boolean = false,
-    val isSocialLogin: Boolean = false,
     val information: Information,
     val balance: Balance,
     val imageState: ImageState = ImageState.Loading,

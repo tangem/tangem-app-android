@@ -11,6 +11,8 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.value.subscribe
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -23,9 +25,11 @@ import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsCompone
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
+import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.navigation.settledUserWalletId
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.onboarding.PolymarketOnboardingComponent
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
@@ -74,6 +78,16 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         },
     )
 
+    init {
+        childStack.subscribe(lifecycle) { stack ->
+            model.onSettledWalletChanged(stack.items.map { it.configuration }.settledUserWalletId)
+        }
+        lifecycle.subscribe(
+            onStart = { model.onVisibilityChanged(isVisible = true) },
+            onStop = { model.onVisibilityChanged(isVisible = false) },
+        )
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val childStackValue by childStack.subscribeAsState()
@@ -105,6 +119,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             userWalletId = configuration.userWalletId,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
         )
+        is PolymarketRoute.Category -> createCategory(configuration, factoryContext)
         is PolymarketRoute.History -> PolymarketHistoryComponent(
             appComponentContext = factoryContext,
             params = PolymarketHistoryComponent.Params(userWalletId = configuration.userWalletId),
@@ -160,6 +175,12 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             params = PolymarketPositionResultComponent.Params(configuration.userWalletId, configuration.position),
         )
     }
+
+    private fun createCategory(configuration: PolymarketRoute.Category, factoryContext: AppComponentContext) =
+        PolymarketCategoryComponent(
+            context = factoryContext,
+            params = PolymarketCategoryComponent.Params(configuration.userWalletId, configuration.category),
+        )
 
     private fun createFastTradingSettings(
         configuration: PolymarketRoute.FastTradingSettings,

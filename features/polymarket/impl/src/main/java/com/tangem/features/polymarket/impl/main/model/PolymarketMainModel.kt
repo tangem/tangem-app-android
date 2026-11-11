@@ -15,6 +15,7 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketCategoryFilter
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
@@ -37,9 +38,10 @@ import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsCompo
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.features.polymarket.impl.main.addfunds.dismissIfShown
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryTabUMConverter
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryFilterUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -67,6 +69,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.tangem.features.polymarket.impl.common.feed.model.PolymarketFeedController
+import com.tangem.features.polymarket.impl.common.feed.model.PolymarketStaleDataReporter
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
 
 /** Model of the Discovery feed screen. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -129,8 +134,9 @@ internal class PolymarketMainModel @Inject constructor(
                     ),
                 ),
                 categories = persistentListOf(),
-                content = PolymarketMainUM.ContentUM.Loading,
+                content = PolymarketFeedContentUM.Loading,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
+                isFastTradingSettingsAvailable = polymarketFeatureToggles.isPolymarketSessionKeysEnabled,
             ),
         )
 
@@ -195,6 +201,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     private var categories: List<PolymarketCategory> = emptyList()
     private var selectedCategoryId: Int? = null
+    private var selectedFilter: PolymarketCategoryFilter? = null
     private val feedController = PolymarketFeedController(
         scope = modelScope,
         dispatchers = dispatchers,
@@ -227,6 +234,10 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onHistoryClick() {
         router.push(PolymarketRoute.History(userWalletId = params.userWalletId))
+    }
+
+    fun onFastTradingSettingsClick() {
+        router.push(PolymarketRoute.FastTradingSettings(userWalletId = params.userWalletId))
     }
 
     fun onSupportChatClick() {
@@ -282,12 +293,14 @@ internal class PolymarketMainModel @Inject constructor(
 
             categories = loadedCategories
             selectedCategoryId = loadedCategories.firstOrNull()?.id
-            uiState.update { it.copy(categories = buildTabs(), isCategoriesLoading = false) }
+            selectedFilter = availableFilters().firstOrNull()
+            updateCategoryTabs()
+            uiState.update { it.copy(isCategoriesLoading = false) }
 
             val categoryId = selectedCategoryId
             if (categoryId == null) {
                 TangemLogger.e("Main: no category to request the feed for, categories answered $result")
-                uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Error(onReloadClick = ::reload)) }
+                uiState.update { it.copy(content = PolymarketFeedContentUM.Error(onReloadClick = ::reload)) }
             } else {
                 selectFeed(categoryId = categoryId, reloadVisited = true)
             }
@@ -297,17 +310,47 @@ internal class PolymarketMainModel @Inject constructor(
     private fun onCategorySelected(categoryId: Int) {
         if (categoryId == selectedCategoryId) return
         selectedCategoryId = categoryId
-        uiState.update { it.copy(categories = buildTabs()) }
+        selectedFilter = availableFilters().firstOrNull()
+        updateCategoryTabs()
         selectFeed(categoryId = categoryId)
     }
 
+    private fun availableFilters() = selectedFeedCategory()?.takeIf { isPhaseTwoEnabled }?.selectableFilters.orEmpty()
+
+    private fun onFilterSelected(categoryId: Int, filter: PolymarketCategoryFilter) {
+        if (!isPhaseTwoEnabled || categoryId != selectedCategoryId || filter == selectedFilter) return
+        if (filter !in availableFilters()) return
+        selectedFilter = filter
+        updateCategoryTabs()
+        selectFeed(categoryId = categoryId)
+    }
+
+    private fun updateCategoryTabs() {
+        val category = selectedFeedCategory().takeIf { isPhaseTwoEnabled }
+        uiState.update { state ->
+            state.copy(
+                categories = buildTabs(),
+                filters = PolymarketCategoryFilterUMConverter.convert(category, selectedFilter) { filter ->
+                    category?.let { onFilterSelected(it.id, filter) }
+                },
+                onSeeAllClick = if (category?.subcategories.isNullOrEmpty()) null else ::openCategory,
+            )
+        }
+    }
+
+    private fun openCategory() {
+        val category = selectedFeedCategory() ?: return
+        router.push(PolymarketRoute.Category(userWalletId = params.userWalletId, category = category))
+    }
+
     private fun selectFeed(categoryId: Int, reloadVisited: Boolean = false) {
-        val scrollPosition = feedController.select(PolymarketEventsListConfig(category = categoryId), reloadVisited)
-        uiState.update { it.copy(pendingScrollPosition = scrollPosition) }
+        val selection = PolymarketEventsListConfig(category = categoryId, filter = selectedFilter)
+        val scrollPosition = feedController.select(selection, reloadVisited)
+        uiState.update { it.copy(selection = selection, pendingScrollPosition = scrollPosition) }
     }
 
     private fun reload() {
-        uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Loading) }
+        uiState.update { it.copy(content = PolymarketFeedContentUM.Loading) }
         if (categories.isEmpty()) loadCategories() else feedController.reload()
     }
 
@@ -318,6 +361,8 @@ internal class PolymarketMainModel @Inject constructor(
         ),
     )
 
+    private fun selectedFeedCategory(): PolymarketCategory? = categories.firstOrNull { it.id == selectedCategoryId }
+
     private fun reportStaleData() {
         messageSender.send(SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)))
     }
@@ -327,7 +372,7 @@ internal class PolymarketMainModel @Inject constructor(
             PolymarketRoute.EventDetails(
                 eventId = eventId,
                 userWalletId = params.userWalletId,
-                categoryLabel = categories.firstOrNull { it.id == selectedCategoryId }?.label,
+                categoryLabel = selectedFeedCategory()?.label,
             ),
         )
     }
