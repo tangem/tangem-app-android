@@ -11,6 +11,8 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.value.subscribe
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -27,6 +29,7 @@ import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.navigation.userWalletIdOrNull
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.onboarding.PolymarketOnboardingComponent
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
@@ -74,6 +77,16 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             )
         },
     )
+
+    init {
+        childStack.subscribe(lifecycle) { stack ->
+            model.onActiveWalletChanged(stack.active.configuration.userWalletIdOrNull)
+        }
+        lifecycle.subscribe(
+            onStart = { model.onVisibilityChanged(isVisible = true) },
+            onStop = { model.onVisibilityChanged(isVisible = false) },
+        )
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
