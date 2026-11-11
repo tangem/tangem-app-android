@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.tangem.domain.tangempay.model.AmountLimits
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import kotlinx.collections.immutable.ImmutableList
@@ -22,14 +23,13 @@ internal data class BankWithdrawOptions(
     val isLimitedPerRail: Boolean,
 ) {
 
-    fun destinationsFor(recipientRail: BankRail?): List<OfframpDestination> {
-        val compatible = if (recipientRail == BankRail.SPEI) {
-            destinations.filter { it.rail == BankRail.SPEI }
-        } else {
-            destinations.filterNot { it.rail == BankRail.SPEI }
-        }
-        return compatible.ifEmpty { destinations }
+    fun destinationsFor(recipientRail: BankRail?): List<OfframpDestination> = if (recipientRail == BankRail.SPEI) {
+        destinations.filter { it.rail == BankRail.SPEI }
+    } else {
+        destinations.filterNot { it.rail == BankRail.SPEI }
     }
+
+    fun canPay(account: BankAccount): Boolean = destinationsFor(account.details.rail).isNotEmpty()
 
     fun amountLimitsFor(destination: OfframpDestination): AmountLimits {
         val limits = destination.amountLimits?.takeIf { isLimitedPerRail } ?: return defaultAmountLimits

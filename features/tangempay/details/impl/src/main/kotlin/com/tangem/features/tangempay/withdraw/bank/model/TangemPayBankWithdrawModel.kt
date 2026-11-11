@@ -46,7 +46,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     val draft: StateFlow<BankWithdrawDraft>
         field = MutableStateFlow(BankWithdrawDraft(entry = params.entry))
 
-    /** Every saved account of the wallet: the recipient forms suggest from it while an account number is typed. */
+    /** Every saved account the withdrawal can pay: the recipient forms suggest from it as a number is typed. */
     val savedAccounts: StateFlow<List<BankAccount>>
         field = MutableStateFlow(emptyList<BankAccount>())
 
@@ -132,8 +132,9 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
             ).fold(
                 ifLeft = { error -> TangemLogger.withTag(TAG).e("Failed to load saved bank accounts: $error") },
                 ifRight = { accounts ->
-                    savedAccounts.value = accounts
-                    selectEntryRecipient(accounts)
+                    val payable = accounts.filter(params.options.value::canPay)
+                    savedAccounts.value = payable
+                    selectEntryRecipient(payable)
                 },
             )
         }
@@ -144,15 +145,18 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         accounts.firstOrNull { it.id == entry.bankAccountId }?.let(::onRecipientSelected)
     }
 
-    private fun BankWithdrawDraft.withSavedRecipient(account: BankAccount): BankWithdrawDraft = copy(
-        recipient = account,
-        destination = destination?.let { current ->
-            val allowed = params.options.value.destinationsFor(account.details.rail)
-            allowed.firstOrNull { it.rail == account.details.rail }
-                ?: current.takeIf { it in allowed }
-                ?: allowed.first()
-        },
-    )
+    private fun BankWithdrawDraft.withSavedRecipient(account: BankAccount): BankWithdrawDraft {
+        val allowed = params.options.value.destinationsFor(account.details.rail)
+        if (allowed.isEmpty()) return this
+        return copy(
+            recipient = account,
+            destination = destination?.let { current ->
+                allowed.firstOrNull { it.rail == account.details.rail }
+                    ?: current.takeIf { it in allowed }
+                    ?: allowed.first()
+            },
+        )
+    }
 }
 
 private const val TAG = "TangemPayBankWithdrawModel"

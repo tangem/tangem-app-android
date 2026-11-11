@@ -6,6 +6,7 @@ import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
+import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -46,11 +47,25 @@ internal class BankWithdrawOptionsTest {
         assertThat(actual).containsExactlyElementsIn(model.expected).inOrder()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideDestinationModels")
+    fun `GIVEN recipient rail WHEN canPay THEN true only when a rail is left for it`(model: DestinationsModel) {
+        // Arrange
+        val options = bankWithdrawOptions(destinations = model.offered)
+
+        // Act
+        val actual = options.canPay(bankAccount(rail = model.recipientRail))
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected.isNotEmpty())
+    }
+
     private fun provideDestinationModels() = listOf(
         DestinationsModel(recipientRail = BankRail.SPEI, offered = listOf(ACH, WIRE, SPEI), expected = listOf(SPEI)),
         DestinationsModel(recipientRail = BankRail.ACH, offered = listOf(ACH, WIRE, SPEI), expected = listOf(ACH, WIRE)),
         DestinationsModel(recipientRail = null, offered = listOf(SPEI, ACH), expected = listOf(ACH)),
-        DestinationsModel(recipientRail = BankRail.SPEI, offered = listOf(ACH, WIRE), expected = listOf(ACH, WIRE)),
+        DestinationsModel(recipientRail = BankRail.SPEI, offered = listOf(ACH, WIRE), expected = emptyList()),
+        DestinationsModel(recipientRail = BankRail.ACH, offered = listOf(SPEI), expected = emptyList()),
     )
 
     data class DestinationsModel(
