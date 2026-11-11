@@ -14,6 +14,7 @@ import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.model.AmountLimits
 import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
@@ -123,6 +124,47 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
             assertThat(model.content().route.rail).isEqualTo(BankRail.ACH)
             model.onDestroy()
         }
+
+        @ParameterizedTest
+        @MethodSource("provideEditedRailModels")
+        fun `GIVEN new recipient on a rail WHEN amount opened THEN editing keeps the rail family of the filled form`(
+            model: EditedRailModel,
+        ) {
+            // Arrange
+            val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, destination = model.destination)
+
+            // Act
+            val amountModel = createModel(draft = draft, step = model.step, options = model.options)
+            val route = amountModel.content().route
+            route.onClick?.invoke()
+
+            // Assert
+            val offeredRails = (amountModel.content().sheet as? SheetUM.Routes)?.items?.map { it.rail }
+                ?: listOf(route.rail)
+            assertThat(route.rail).isEqualTo(model.destination.rail)
+            assertThat(offeredRails).containsExactlyElementsIn(model.expectedRails).inOrder()
+            amountModel.onDestroy()
+        }
+
+        private fun provideEditedRailModels() = listOf(
+            EditedRailModel(step = EDIT_AMOUNT, destination = SPEI_DESTINATION, expectedRails = listOf(BankRail.SPEI)),
+            EditedRailModel(
+                step = EDIT_AMOUNT,
+                destination = offrampDestination(),
+                expectedRails = listOf(BankRail.ACH),
+            ),
+            EditedRailModel(
+                step = EDIT_AMOUNT,
+                destination = offrampDestination(),
+                expectedRails = listOf(BankRail.ACH, BankRail.WIRE),
+                options = US_AND_SPEI_OPTIONS,
+            ),
+            EditedRailModel(
+                step = TangemPayBankWithdrawInnerRoute.Amount,
+                destination = SPEI_DESTINATION,
+                expectedRails = listOf(BankRail.ACH, BankRail.SPEI),
+            ),
+        )
 
         @Test
         fun `GIVEN prepared options WHEN model created THEN first source and first rail preselected`() {
@@ -1181,9 +1223,17 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
 
     data class TypedAmountsModel(val priorAmounts: List<String>, val amount: String, val expectedEvents: Int)
 
+    data class EditedRailModel(
+        val step: TangemPayBankWithdrawInnerRoute,
+        val destination: OfframpDestination,
+        val expectedRails: List<BankRail>,
+        val options: BankWithdrawOptions = SPEI_OPTIONS,
+    )
+
     private companion object {
         val NETWORK_FEE = BigDecimal("0.04")
         val MONEY_ACCOUNT_LIMITS = AmountLimits(min = BigDecimal("10"), max = null, currency = "USD")
+        val EDIT_AMOUNT = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount)
         val SPEI_DESTINATION = offrampDestination(
             rail = BankRail.SPEI,
             fee = BigDecimal("1"),
@@ -1194,6 +1244,13 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
         val SPEI_OPTIONS = bankWithdrawOptions(
             destinations = listOf(offrampDestination(), SPEI_DESTINATION),
             isLimitedPerRail = true,
+        )
+        val US_AND_SPEI_OPTIONS = SPEI_OPTIONS.copy(
+            destinations = persistentListOf(
+                offrampDestination(),
+                offrampDestination(rail = BankRail.WIRE),
+                SPEI_DESTINATION,
+            ),
         )
         val RANGE_ERROR = resourceReference(
             R.string.tangempay_withdraw_bank_amount_error_range,
