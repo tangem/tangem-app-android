@@ -28,6 +28,9 @@ class SpendPreferencesKeys @Inject constructor() {
     fun paymentAccountRecents(userWalletId: UserWalletId): Preferences.Key<String> =
         stringPreferencesKey("tangem_pay_account_recents_${userWalletId.stringValue}")
 
+    fun orderRefs(userWalletId: UserWalletId): Preferences.Key<String> =
+        stringPreferencesKey("tangem_pay_order_refs_${userWalletId.stringValue}")
+
     fun moneyAccountRecents(userWalletId: UserWalletId): Preferences.Key<String> =
         stringPreferencesKey("money_account_recents_${userWalletId.stringValue}")
 
