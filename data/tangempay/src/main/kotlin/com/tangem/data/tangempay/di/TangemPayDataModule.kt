@@ -334,11 +334,13 @@ internal interface TangemPayDataModule {
             orderRepository: TangemPayOrderRepository,
             ordersStore: OrdersStore,
             orderPoller: OrderPoller,
+            onboardingRepository: OnboardingRepository,
         ): RestoreOrdersUseCase {
             return RestoreOrdersUseCase(
                 orderRepository = orderRepository,
                 ordersStore = ordersStore,
                 orderPoller = orderPoller,
+                onboardingRepository = onboardingRepository,
             )
         }
 

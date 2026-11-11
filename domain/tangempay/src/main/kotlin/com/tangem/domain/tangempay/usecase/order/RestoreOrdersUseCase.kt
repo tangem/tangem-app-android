@@ -6,6 +6,7 @@ import com.tangem.domain.tangempay.order.OrderPoller
 import com.tangem.domain.tangempay.order.OrderRef
 import com.tangem.domain.tangempay.order.OrdersStore
 import com.tangem.domain.tangempay.order.TangemPayOrderRepository
+import com.tangem.domain.tangempay.repository.OnboardingRepository
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
@@ -13,34 +14,38 @@ class RestoreOrdersUseCase(
     private val orderRepository: TangemPayOrderRepository,
     private val ordersStore: OrdersStore,
     private val orderPoller: OrderPoller,
+    private val onboardingRepository: OnboardingRepository,
 ) {
     suspend operator fun invoke(userWalletId: UserWalletId) {
-        ordersStore.getAll(userWalletId).forEach(orderPoller::poll)
+        if (!onboardingRepository.isTangemPayInitialDataProduced(userWalletId)) return
 
-        val activeOrders = findActiveOrders(userWalletId)
-            .map { order -> OrderRef(userWalletId = userWalletId, id = order.id) }
+        ordersStore.getAll(userWalletId).forEach(orderPoller::startPolling)
+
+        val activeOrders = findActiveOrders(userWalletId) ?: return
 
         val savedOrders = ordersStore.getAll(userWalletId)
-
         activeOrders
             .filterNot { it in savedOrders }
             .forEach { orderRef ->
                 ordersStore.save(orderRef)
-                orderPoller.poll(orderRef)
+                orderPoller.startPolling(orderRef)
             }
     }
 
-    private suspend fun findActiveOrders(userWalletId: UserWalletId): List<TangemPayOrder> {
+    private suspend fun findActiveOrders(userWalletId: UserWalletId): List<OrderRef>? {
         while (true) {
             orderRepository.findOrders(
                 userWalletId = userWalletId,
                 types = SUPPORTED_TYPES,
                 statuses = setOf(
                     TangemPayOrder.Status.NEW,
-                    TangemPayOrder.Status.PROCESSING
-                )
-            ).onRight { return it }
-
+                    TangemPayOrder.Status.PROCESSING,
+                ),
+            ).onRight { orders ->
+                return orders.map { OrderRef(userWalletId = userWalletId, id = it.id) }
+            }.onLeft { error ->
+                if (!error.isRetryable()) return null
+            }
             delay(5.seconds)
         }
     }
@@ -48,7 +53,7 @@ class RestoreOrdersUseCase(
     private companion object {
         val SUPPORTED_TYPES = setOf(
             TangemPayOrder.Type.CARD_FREEZE,
-            TangemPayOrder.Type.CARD_UNFREEZE
+            TangemPayOrder.Type.CARD_UNFREEZE,
         )
     }
 }
