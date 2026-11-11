@@ -13,7 +13,10 @@ private val OutOfDateBlock = EarnBlock(
 
 /** Stale data wins over the product's own block: the user must see why the numbers cannot be trusted first. */
 internal fun EarnActionItem.guardedBy(ready: EarnProductState.Ready): EarnActionItem =
-    if (ready.freshness?.isStale == true) copy(block = OutOfDateBlock) else this
+    guardedBy(isStale = ready.freshness?.isStale == true)
+
+internal fun EarnActionItem.guardedBy(isStale: Boolean): EarnActionItem =
+    if (isStale) copy(block = OutOfDateBlock) else this
 
 internal fun UiMessageSender.showReason(block: EarnBlock) {
     send(DialogMessage(message = block.reason))
