@@ -78,11 +78,11 @@ private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
                         items(
                             items = state.amountButtons,
                             key = OnrampAmountButtonUM::value,
-                        ) {
+                        ) { button ->
                             if (LocalOnrampDesignSystemEnabled.current) {
-                                OnrampAmountButtonDs(button = it)
+                                OnrampAmountButtonDs(button = button)
                             } else {
-                                AmountButton(button = it)
+                                AmountButton(button = button)
                             }
                         }
                     }
