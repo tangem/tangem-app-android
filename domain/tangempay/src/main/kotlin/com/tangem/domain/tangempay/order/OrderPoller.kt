@@ -31,6 +31,10 @@ class OrderPoller(
         }
     }
 
+    fun launchPolling(orderRef: OrderRef) {
+        getOrStartPolling(orderRef)
+    }
+
     fun stopPolling(userWalletIds: Collection<UserWalletId>) {
         val stopped = synchronized(lock) {
             val orderRefs = pollings.keys.filter { it.userWalletId in userWalletIds }

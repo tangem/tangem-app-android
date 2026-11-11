@@ -278,6 +278,46 @@ internal class OrderPollerTest {
         }
     }
 
+    @Test
+    fun `GIVEN completed order WHEN launchPolling THEN order is polled to the end and the stored order removed`() =
+        runTest {
+            // Arrange
+            coEvery {
+                orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
+            } returns order(status = TangemPayOrder.Status.COMPLETED).right()
+
+            // Act
+            createPoller().launchPolling(ORDER_REF)
+            runCurrent()
+
+            // Assert
+            coVerifyOrder {
+                ordersStore.save(ORDER_REF)
+                orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
+                ordersStore.remove(ORDER_REF)
+            }
+        }
+
+    @Test
+    fun `GIVEN polling ensured WHEN startPolling for the same order THEN subscribes to the existing polling`() =
+        runTest {
+            // Arrange
+            val completed = order(status = TangemPayOrder.Status.COMPLETED)
+            coEvery { orderRepository.getOrder(USER_WALLET_ID, ORDER_ID) } returnsMany listOf(
+                order(status = TangemPayOrder.Status.PROCESSING).right(),
+                completed.right(),
+            )
+            val poller = createPoller()
+            poller.launchPolling(ORDER_REF)
+
+            // Act
+            val states = poller.startPolling(ORDER_REF).toList()
+
+            // Assert
+            assertThat(states.last()).isEqualTo(OrderPollingState.Loaded(completed))
+            coVerify(exactly = 2) { orderRepository.getOrder(USER_WALLET_ID, ORDER_ID) }
+        }
+
     private fun TestScope.createPoller() = OrderPoller(
         orderRepository = orderRepository,
         ordersStore = ordersStore,
