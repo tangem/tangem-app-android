@@ -193,14 +193,8 @@ internal class BankCredentialsConverterTest {
         FeeModel(fee = legacyFee(type = "tiered", amount = "1.00"), expected = null),
         FeeModel(fee = legacyFee(type = null, amount = "1.00"), expected = null),
         FeeModel(fee = legacyFee(type = "flat", amount = null), expected = null),
-        FeeModel(
-            fee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0.00", currency = "USD"),
-            expected = fixedFee("0.00", currency = "USD"),
-        ),
-        FeeModel(
-            fee = sharedFee(type = "ACH_ONRAMP", calculationType = null, amount = "0.00", currency = "USD"),
-            expected = null,
-        ),
+        FeeModel(fee = legacyFee(type = "flat", amount = "n/a"), expected = null),
+        FeeModel(fee = legacyFee(type = "ACH_ONRAMP", amount = "0.00"), expected = null),
         FeeModel(
             fee = legacyFee(type = "variable", amount = "1.00"),
             depositFee = sharedFee(
@@ -222,14 +216,15 @@ internal class BankCredentialsConverterTest {
             depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
             expected = fixedFee("0", currency = "USD"),
         ),
+        FeeModel(
+            fee = legacyFee(type = "flat", amount = "n/a"),
+            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
+            expected = fixedFee("0", currency = "USD"),
+        ),
     )
 
-    private fun legacyFee(type: String?, amount: String?) = sharedFee(
-        type = type,
-        calculationType = null,
-        amount = amount,
-        currency = null,
-    )
+    private fun legacyFee(type: String?, amount: String?) =
+        BankCredentialsResponse.LegacyFee(type = type, amount = amount)
 
     private fun sharedFee(
         type: String?,
@@ -298,7 +293,7 @@ internal class BankCredentialsConverterTest {
     private fun result(
         rail: String? = "ACH",
         transferMessage: String? = "REF-A1B2C3D4",
-        fee: FeesResponse.Fee? = legacyFee(type = "flat", amount = "1.00"),
+        fee: BankCredentialsResponse.LegacyFee? = legacyFee(type = "flat", amount = "1.00"),
         depositFee: FeesResponse.Fee? = null,
         depositLimit: BankCredentialsResponse.DepositLimit? = BankCredentialsResponse.DepositLimit(
             amount = "10000",
@@ -328,7 +323,7 @@ internal class BankCredentialsConverterTest {
     )
 
     data class FeeModel(
-        val fee: FeesResponse.Fee?,
+        val fee: BankCredentialsResponse.LegacyFee?,
         val depositFee: FeesResponse.Fee? = null,
         val expected: BankCredentials.DepositFee?,
     )
