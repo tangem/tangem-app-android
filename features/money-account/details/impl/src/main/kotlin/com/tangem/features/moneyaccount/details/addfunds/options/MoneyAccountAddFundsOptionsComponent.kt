@@ -6,8 +6,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.model.BankCredentials
 
 internal class MoneyAccountAddFundsOptionsComponent(
     appComponentContext: AppComponentContext,

@@ -1,7 +1,7 @@
 package com.tangem.features.moneyaccount.details
 
 import com.tangem.core.decompose.navigation.Route
-import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.tangempay.model.BankCredentials
 import kotlinx.serialization.Serializable
 
 @Serializable
