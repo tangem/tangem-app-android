@@ -53,7 +53,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
 
     private val innerRouter = InnerRouter<PolymarketRoute>(
         stackNavigation = stackNavigation,
-        popCallback = { onChildBack() },
+        popCallback = ::onChildBack,
     )
 
     private val model: PolymarketModel = getOrCreateModel(
@@ -190,12 +190,8 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         params = PolymarketFastTradingSettingsComponent.Params(userWalletId = configuration.userWalletId),
     )
 
-    private fun onChildBack() {
-        if (childStack.value.backStack.isEmpty()) {
-            router.pop()
-        } else {
-            stackNavigation.pop()
-        }
+    private fun onChildBack(onComplete: (Boolean) -> Unit) {
+        stackNavigation.pop { isPopped -> if (isPopped) onComplete(true) else router.pop(onComplete) }
     }
 
     @AssistedFactory
