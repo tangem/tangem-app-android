@@ -14,6 +14,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.SolanaGaslessTransactionRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -27,7 +28,7 @@ import java.util.Base64
 import javax.inject.Inject
 
 /**
- * Decides whether the fee of a Solana DEX swap can be sponsored, and by whom.
+ * Decides whether the fee of a Solana swap can be sponsored, and by whom.
  * Calling the fee-payer route doubles as the availability check: it fails while the service has Solana switched off
  * or rejects the api key. The sponsored tx is then simulated, because the sponsor pays only the fee: rent for
  * a new token account still comes from the user, and the backend rejects such a tx only after the user has signed.
@@ -63,6 +64,9 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
         if (!isSponsorable(fromSwapCurrencyStatus.currency) || provider.providerId in UNSUPPORTED_PROVIDER_IDS) {
             return null
         }
+        // A CEX quote has no deposit address yet, so there is nothing to simulate: the sponsor is offered on its
+        // availability alone and resolveTransferFeePayer simulates the real transfer at send
+        if (provider.type == ExchangeProviderType.CEX) return getFeePayerOrNull()
         val dexTransaction = swapData?.transaction as? ExpressTransactionModel.DEX ?: return null
         // The sponsor pays only the network fee: a bridge fee would still come from the user's SOL, behind a $0 fee
         if (dexTransaction.otherNativeFeeWei?.signum() == 1) return null
@@ -78,14 +82,33 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
                 lastResolution = Resolution(key = key, feePayer = null)
                 return@withLock null
             }
-            val feePayer = solanaGaslessTransactionRepository.getFeePayer().getOrElse { error ->
-                TangemLogger.i("Solana gasless swap is not offered, fee payer unavailable: $error")
-                return@withLock null
-            }
-            feePayer.takeIf { simulates(fromSwapCurrencyStatus, txData, feePayer) }
+            val feePayer = getFeePayerOrNull() ?: return@withLock null
+            val transaction = TransactionData.Compiled(
+                value = TransactionData.Compiled.Data.Bytes(Base64.getDecoder().decode(txData)),
+            )
+            feePayer.takeIf { simulates(fromSwapCurrencyStatus, transaction, feePayer) }
                 .also { lastResolution = Resolution(key = key, feePayer = it) }
         }
     }
+
+    /**
+     * The sponsor of a CEX deposit [transfer], or null when the transfer fails its simulation: the sponsor does not
+     * pay the rent of the deposit address's token account, so a fresh address needs SOL the wallet may not have.
+     */
+    suspend fun resolveTransferFeePayer(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transfer: TransactionData.Uncompiled,
+    ): String? {
+        if (!isSponsorable(fromSwapCurrencyStatus.currency)) return null
+        val feePayer = getFeePayerOrNull() ?: return null
+        return feePayer.takeIf { simulates(fromSwapCurrencyStatus, transfer, feePayer) }
+    }
+
+    private suspend fun getFeePayerOrNull(): String? = solanaGaslessTransactionRepository.getFeePayer()
+        .getOrElse { error ->
+            TangemLogger.i("Solana gasless swap is not offered, fee payer unavailable: $error")
+            null
+        }
 
     // Swapping from SOL itself means wrapping it into a rent-paying wSOL account the user cannot fund
     private fun isSponsorable(fromCurrency: CryptoCurrency): Boolean = swapFeatureToggles.isSolanaGaslessEnabled &&
@@ -100,15 +123,13 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
     /** Fails open: an unreachable node must not hide gasless, the backend simulates the tx again on submit. */
     private suspend fun simulates(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
-        txData: String,
+        transaction: TransactionData,
         feePayer: String,
     ): Boolean {
         val simulation = walletManagersFacade.simulateSolanaGaslessTransaction(
             userWalletId = fromSwapCurrencyStatus.userWalletId,
             network = fromSwapCurrencyStatus.currency.network,
-            transactionData = TransactionData.Compiled(
-                value = TransactionData.Compiled.Data.Bytes(Base64.getDecoder().decode(txData)),
-            ),
+            transactionData = transaction,
             feePayer = feePayer,
         )
         val failed = (simulation as? Result.Success)?.data as? SolanaGaslessSimulation.Failed ?: return true
