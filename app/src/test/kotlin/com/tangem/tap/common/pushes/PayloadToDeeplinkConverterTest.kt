@@ -1,4 +1,4 @@
-package com.tangem.common.routing.deeplink
+package com.tangem.tap.common.pushes
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
