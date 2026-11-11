@@ -64,6 +64,13 @@ val generateToggles = tasks.register<GenerateTogglesTask>("generateToggles") {
     outputDir.set(layout.buildDirectory.dir("generated/source/toggles"))
 }
 
+// Tests read every stream file, registered or not, so an unregistered one must invalidate their cached result
+tasks.withType<Test>().configureEach {
+    inputs.files(rootProject.fileTree(rootDir) { include("*/config-toggles/feature_toggles.json") })
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+        .withPropertyName("featureToggleConfigs")
+}
+
 tasks.named("preBuild") {
     dependsOn(generateToggles)
 }
