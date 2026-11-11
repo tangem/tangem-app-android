@@ -45,7 +45,7 @@ internal class BankCredentialsResponseParsingTest {
                     type = "fiat",
                     accountNumber = "646180157000000004",
                     rail = "SPEI",
-                    fee = fee(type = "variable", amount = "1.00"),
+                    fee = legacyFee(type = "variable", amount = "1.00"),
                     depositFee = fee(
                         type = "SPEI_ONRAMP",
                         group = "ONRAMP",
@@ -78,7 +78,7 @@ internal class BankCredentialsResponseParsingTest {
                 result = baseResult().copy(
                     rail = "ACH",
                     transferMessage = "REF-A1B2C3D4",
-                    fee = fee(type = "flat", amount = "1.00"),
+                    fee = legacyFee(type = "flat", amount = "1.00"),
                     depositLimit = BankCredentialsResponse.DepositLimit(amount = "10000", period = "day"),
                 ),
             ),
@@ -91,15 +91,7 @@ internal class BankCredentialsResponseParsingTest {
             expected = BankCredentialsResponse(
                 result = baseResult().copy(
                     rail = "ACH",
-                    fee = fee(
-                        type = "ACH_ONRAMP",
-                        group = "ONRAMP",
-                        name = "ACH",
-                        calculationType = "FIXED",
-                        amount = "0.00",
-                        currency = "USD",
-                        description = "ACH onramp fee",
-                    ),
+                    fee = legacyFee(type = "ACH_ONRAMP", amount = "0.00"),
                     amountLimits = AmountLimitsResponse(min = BigDecimal("2"), max = null, currency = "USD"),
                 ),
             ),
@@ -111,9 +103,21 @@ internal class BankCredentialsResponseParsingTest {
             expected = BankCredentialsResponse(
                 result = baseResult().copy(
                     rail = "ACH",
-                    fee = fee(type = "flat", amount = "0.00"),
+                    fee = legacyFee(type = "flat", amount = "0.00"),
                     depositLimit = BankCredentialsResponse.DepositLimit(amount = "10000", period = "day"),
                     exchangeRate = BankCredentialsResponse.ExchangeRate(rate = "17.25", base = "USD", quote = "MXN"),
+                ),
+            ),
+        ),
+        ParsingModel(
+            raw = """{"result":{$BASE_FIELDS,"rail":"ACH","fee":{"type":"flat","amount":"n/a"},""" +
+                """"deposit_fee":{"type":"ACH_ONRAMP","calculation_type":"FIXED","amount":"0.00",""" +
+                """"currency":"USD"}},"error":null}""",
+            expected = BankCredentialsResponse(
+                result = baseResult().copy(
+                    rail = "ACH",
+                    fee = legacyFee(type = "flat", amount = "n/a"),
+                    depositFee = fee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0.00", currency = "USD"),
                 ),
             ),
         ),
@@ -187,6 +191,9 @@ internal class BankCredentialsResponseParsingTest {
         currency = currency,
         description = description,
     )
+
+    private fun legacyFee(type: String?, amount: String?) =
+        BankCredentialsResponse.LegacyFee(type = type, amount = amount)
 
     data class ParsingModel(val raw: String, val expected: BankCredentialsResponse)
 
