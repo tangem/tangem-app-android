@@ -1,6 +1,7 @@
 package com.tangem.data.tangempay.util
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.tangempay.model.AmountLimits
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
@@ -8,6 +9,7 @@ import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
 import com.tangem.domain.tangempay.model.bankofframp.OfframpFee
 import com.tangem.domain.tangempay.model.bankofframp.OfframpSource
 import com.tangem.domain.tangempay.model.bankofframp.OfframpToken
+import com.tangem.spend.datasource.tangempay.models.response.AmountLimitsResponse
 import com.tangem.spend.datasource.tangempay.models.response.BankOfframpOptionsResponse
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
@@ -46,8 +48,45 @@ internal class BankOfframpOptionsConverterTest {
                     description = "ACH offramp fee",
                 ),
                 eta = OfframpEta(minDays = 1, maxDays = 3),
+                amountLimits = AmountLimits(min = BigDecimal("10"), max = null, currency = "USD"),
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN percentage fee with a fixed part WHEN convert THEN both parts mapped`() {
+        // Arrange
+        val destination = destination(
+            rail = "SPEI",
+            feeName = "SPEI",
+            calculationType = "PERCENTAGE",
+            feeDescription = "SPEI offramp fee",
+            fixedAmount = BigDecimal("0.50"),
+        )
+
+        // Act
+        val actual = BankOfframpOptionsConverter.convert(result(destinations = listOf(destination)))
+
+        // Assert
+        assertThat(actual.destinations.single().fee).isEqualTo(
+            OfframpFee(
+                name = "SPEI",
+                calculationType = FeeCalculationType.PERCENTAGE,
+                amount = BigDecimal("1.50"),
+                currency = "USD",
+                description = "SPEI offramp fee",
+                fixedAmount = BigDecimal("0.50"),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN destination without amount limits WHEN convert THEN destination kept without limits`() {
+        // Act
+        val actual = BankOfframpOptionsConverter.convert(result(destinations = listOf(destination(amountLimits = null))))
+
+        // Assert
+        assertThat(actual.destinations.single().amountLimits).isNull()
     }
 
     @Test
@@ -89,6 +128,7 @@ internal class BankOfframpOptionsConverterTest {
                     description = "ACH offramp fee",
                 ),
                 eta = OfframpEta(minDays = 1, maxDays = 3),
+                amountLimits = AmountLimits(min = BigDecimal("10"), max = null, currency = "USD"),
             ),
         )
     }
@@ -120,6 +160,7 @@ internal class BankOfframpOptionsConverterTest {
                     description = "ACH offramp fee",
                 ),
                 eta = OfframpEta(minDays = 1, maxDays = 3),
+                amountLimits = AmountLimits(min = BigDecimal("10"), max = null, currency = "USD"),
             ),
             OfframpDestination(
                 rail = BankRail.SPEI,
@@ -132,6 +173,7 @@ internal class BankOfframpOptionsConverterTest {
                     description = "SPEI offramp fee",
                 ),
                 eta = OfframpEta(minDays = 1, maxDays = 3),
+                amountLimits = AmountLimits(min = BigDecimal("10"), max = null, currency = "USD"),
             ),
         ).inOrder()
     }
@@ -248,6 +290,8 @@ internal class BankOfframpOptionsConverterTest {
         feeName: String? = "ACH",
         calculationType: String? = "FIXED",
         feeDescription: String? = "ACH offramp fee",
+        fixedAmount: BigDecimal? = null,
+        amountLimits: AmountLimitsResponse? = AmountLimitsResponse(min = BigDecimal("10"), max = null, currency = "USD"),
         hasFee: Boolean = true,
         hasEta: Boolean = true,
     ) = BankOfframpOptionsResponse.Destination(
@@ -257,10 +301,12 @@ internal class BankOfframpOptionsConverterTest {
             name = feeName,
             calculationType = calculationType,
             amount = BigDecimal("1.50"),
+            fixedAmount = fixedAmount,
             currency = "USD",
             description = feeDescription,
         ).takeIf { hasFee },
         eta = BankOfframpOptionsResponse.Eta(minDays = 1, maxDays = 3).takeIf { hasEta },
+        amountLimits = amountLimits,
     )
 
     private fun provideTestModels() = listOf(

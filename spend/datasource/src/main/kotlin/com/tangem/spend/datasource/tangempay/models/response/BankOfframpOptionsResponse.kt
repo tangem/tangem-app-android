@@ -42,6 +42,7 @@ data class BankOfframpOptionsResponse(
         @SerialName("currency") val currency: String?,
         @SerialName("fee") val fee: Fee?,
         @SerialName("eta") val eta: Eta?,
+        @SerialName("amount_limits") val amountLimits: AmountLimitsResponse?,
     )
 
     @Serializable
@@ -49,6 +50,7 @@ data class BankOfframpOptionsResponse(
         @SerialName("name") val name: String?,
         @SerialName("calculation_type") val calculationType: String?,
         @SerialName("amount") val amount: SerializedBigDecimal?,
+        @SerialName("fixed_amount") val fixedAmount: SerializedBigDecimal?,
         @SerialName("currency") val currency: String?,
         @SerialName("description") val description: String?,
     )

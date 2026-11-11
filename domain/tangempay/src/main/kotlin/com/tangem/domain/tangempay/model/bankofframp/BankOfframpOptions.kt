@@ -1,5 +1,6 @@
 package com.tangem.domain.tangempay.model.bankofframp
 
+import com.tangem.domain.tangempay.model.AmountLimits
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -27,6 +28,7 @@ data class OfframpDestination(
     val currency: String?,
     val fee: OfframpFee,
     val eta: OfframpEta,
+    val amountLimits: AmountLimits? = null,
 )
 
 /** [name] is how the backend labels the rail ("ACH", "FedWire"); the app names it itself when it is absent. */
@@ -36,12 +38,14 @@ data class OfframpFee(
     val amount: BigDecimal,
     val currency: String,
     val description: String?,
+    val fixedAmount: BigDecimal? = null,
 ) {
 
     fun amountFor(transferAmount: BigDecimal): BigDecimal = when (calculationType) {
         FeeCalculationType.FIXED -> amount
         FeeCalculationType.PERCENTAGE -> transferAmount.multiply(amount)
             .movePointLeft(PERCENT_SCALE)
+            .add(fixedAmount ?: BigDecimal.ZERO)
             .setScale(CENT_SCALE, RoundingMode.HALF_UP)
     }
 
