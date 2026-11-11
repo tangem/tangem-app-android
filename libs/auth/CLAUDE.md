@@ -32,7 +32,7 @@ unchanged, so public and protected endpoints can share one interface. An annotat
 
 ### Which annotation
 
-| Annotation | DPoP headers on send | Refresh + one retry on 401/403 |
+| Annotation | DPoP headers on send | Refresh + one retry on 401 |
 |---|---|---|
 | `@RequiresSessionAuth` | yes | yes |
 | `@RequiresDpopProof` | yes | no |
@@ -46,9 +46,11 @@ deadlock. Never put `@RequiresSessionAuth` or `@RequiresSessionRefresh` on an en
 
 - Before sending, the interceptor makes sure the access token is valid and refreshes it if not, joining a
   refresh already in flight — a request never goes out with a token that is being rotated.
-- With no session at all (device not registered, tokens cleared) the request goes out **without** headers and
-  fails with 401; it is not queued until a session appears. Handle that like any other API error.
-- A 401/403 triggers at most one refresh and one retry; a second failure is returned to the caller.
+- With no tokens the interceptor authenticates the device first. Only if that fails (e.g. the device is not
+  registered) does the request go out **without** headers and fail with 401; it is not queued until a session
+  appears. Handle that like any other API error.
+- A 401 triggers at most one refresh and one retry; a second failure is returned to the caller. A 403 is
+  returned as is.
 
 ## Wallet linking
 
