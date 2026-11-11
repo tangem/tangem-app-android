@@ -21,16 +21,9 @@ internal object PaymentNetworkBlockchainResolver {
 
     /**
      * Resolves the mainnet [Blockchain] by chain id (EVM) or by name (non-EVM Tron), ignoring the testnet flag.
-     *
-     * Guards against a Long -> Int overflow: [Blockchain.fromChainId] takes an `Int`, and `chainId.toInt()`
-     * silently wraps for values outside the Int range, which could collide with a real EVM chain id
-     * (e.g. `137 + 2^32` wraps back to Polygon's `137`) and build a token on the wrong network — so
-     * `fromChainId` is only consulted when the chain id fits in an `Int`.
      */
     private fun resolveBlockchain(name: String, chainId: Long): Blockchain? {
-        if (chainId in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()) {
-            Blockchain.fromChainId(chainId.toInt())?.let { return it }
-        }
+        Blockchain.fromChainId(chainId)?.let { return it }
         return when (name.lowercase(Locale.US)) {
             "tron" -> Blockchain.Tron
             else -> null

@@ -24,6 +24,7 @@ dependencies {
     api(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.appCurrency)
+    implementation(projects.domain.balanceHiding)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
     implementation(projects.domain.feedback)

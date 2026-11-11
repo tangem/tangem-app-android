@@ -37,6 +37,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.YieldModuleSameTokenRule
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessProtocolData
+import com.tangem.domain.transaction.models.GaslessYieldWithdraw
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.clearMocks
@@ -361,14 +362,16 @@ internal class EstimateFeeForGaslessBatchUseCaseTest {
             val expected = tokenFeeExtended(
                 feeToken = usdt,
                 tokenFee = tokenFee,
-                gaslessFeePlan = GaslessFeePlan.TokenPayWithYieldWithdraw(
+                gaslessFeePlan = GaslessFeePlan.TokenPay(
                     feeToken = usdt,
                     fee = tokenFee,
-                    withdrawAmount = checkNotNull(tokenFee.amount.value).movePointRight(usdt.decimals)
-                        .setScale(0, RoundingMode.CEILING)
-                        .toBigInteger(),
-                    withdrawCallData = withdrawCallData,
-                    yieldModuleAddress = MODULE_ADDRESS,
+                    yieldWithdraw = GaslessYieldWithdraw(
+                        amount = checkNotNull(tokenFee.amount.value).movePointRight(usdt.decimals)
+                            .setScale(0, RoundingMode.CEILING)
+                            .toBigInteger(),
+                        callData = withdrawCallData,
+                        moduleAddress = MODULE_ADDRESS,
+                    ),
                 ),
                 withdrawGasLimit = BigInteger("280000"),
             )

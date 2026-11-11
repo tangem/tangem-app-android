@@ -26,7 +26,6 @@ import com.tangem.spend.datasource.tangempay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.tangempay.TangemPayEligibilityType
@@ -43,9 +42,13 @@ import com.tangem.domain.tangempay.model.CustomerOrderRequest
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.model.TangemPayInitialCredentials
+import com.tangem.domain.tangempay.order.OrderPoller
+import com.tangem.domain.tangempay.order.OrdersStore
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import dagger.Lazy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -70,6 +73,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val customerInfoStore: TangemPayCustomerInfoStore,
     private val derivationsRepository: DerivationsRepository,
     private val userPropertiesSender: TangemPayUserPropertiesSender,
+    private val orderPoller: Lazy<OrderPoller>,
+    private val ordersStore: OrdersStore,
 ) : OnboardingRepository {
 
     override suspend fun validateDeeplink(link: String): Either<TangemPayApiError, Boolean> {
@@ -414,6 +419,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 body = SetTangemPayEnabledRequest(isTangemPayEnabled = false),
             )
         }.map {
+            orderPoller.get().stopPolling(listOf(userWalletId))
+            ordersStore.clear(userWalletId)
             val address = requestHelper.getCustomerWalletAddress(userWalletId)
             tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
             txHistoryItemsStore.remove(userWalletId.stringValue)
