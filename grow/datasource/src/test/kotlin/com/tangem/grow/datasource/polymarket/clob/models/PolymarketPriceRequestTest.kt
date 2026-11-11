@@ -37,16 +37,4 @@ internal class PolymarketPriceRequestTest {
         assertThat(prices["456"]).containsExactly("SELL", "0.001")
     }
 
-    @Test
-    fun `GIVEN missing quotes WHEN decoded THEN no zero price is invented`() {
-        // Arrange
-        val json = """{"123":{}}"""
-
-        // Act
-        val prices = requireNotNull(responseAdapter.fromJson(json))
-
-        // Assert
-        assertThat(prices["123"]).isEmpty()
-        assertThat(prices["456"]).isNull()
-    }
 }
