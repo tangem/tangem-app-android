@@ -71,7 +71,7 @@ internal fun OnrampCountryListDs(state: CountryListUM, onCloseClick: () -> Unit,
             title = resourceReference(R.string.tangempay_order_data_country),
             onClose = onCloseClick,
         )
-        Box(modifier = Modifier.weight(1f).windowInsetsPadding(WindowInsets.ime)) {
+        Box(modifier = Modifier.weight(1f)) {
             when (state) {
                 is CountryListUM.Content -> CountryListContent(state = state)
                 is CountryListUM.Error -> CountryListError(state = state)
@@ -262,7 +262,9 @@ private fun CountrySearchFooter(state: TangemSearch.State, modifier: Modifier = 
     val navigationBarInset = navigationBarBottomInset()
 
     Box(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.ime),
         contentAlignment = Alignment.BottomCenter,
     ) {
         TangemFade(
