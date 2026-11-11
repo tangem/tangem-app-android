@@ -41,6 +41,7 @@ import com.tangem.features.onramp.main.entity.OnrampCountryButtonUM
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampMainTopBarUM
 import com.tangem.core.ui.R as CoreUiR
+import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
 internal fun OnrampMainScreen(
@@ -74,7 +75,13 @@ private fun OnrampTopBar(config: OnrampMainTopBarUM, modifier: Modifier = Modifi
             modifier = modifier,
             title = config.title,
             subtitle = config.subtitle,
-            startContent = { CountryButton(state = countryButton) },
+            startContent = {
+                if (LocalOnrampDesignSystemEnabled.current) {
+                    CountryButtonDs(state = countryButton)
+                } else {
+                    CountryButton(state = countryButton)
+                }
+            },
             endContent = { CloseButton(state = config.startButtonUM) },
         )
     } else {
@@ -89,6 +96,7 @@ private fun OnrampTopBar(config: OnrampMainTopBarUM, modifier: Modifier = Modifi
 }
 
 @Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 private fun CountryButton(state: OnrampCountryButtonUM, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier

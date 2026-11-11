@@ -2,7 +2,6 @@ package com.tangem.features.onramp.main.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,9 +41,9 @@ internal fun OnrampAllOffersButtonDs(config: OnrampAllOffersButtonConfig) {
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 internal fun OfferDs(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, roundBottom: Boolean = true) {
     val shape = if (roundBottom) {
-        RoundedCornerShape(14.dp)
+        RoundedCornerShape(24.dp)
     } else {
-        RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)
+        RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     }
     val isBuyEnabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
         onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted
@@ -53,7 +52,7 @@ internal fun OfferDs(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier
         color = TangemTheme.colors3.bg.secondary,
         shape = shape,
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -69,16 +68,14 @@ internal fun OfferDs(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier
                 }
                 SpacerWMax()
                 TangemButton(
-                    variant = TangemButton.Variant.Secondary,
-                    size = TangemButton.Size.X9,
+                    variant = TangemButton.Variant.Primary,
+                    size = TangemButton.Size.X10,
                     text = resourceReference(R.string.common_buy),
                     onClick = onrampOfferUM.onBuyClicked,
                     isEnabled = isBuyEnabled,
                 )
             }
-            SpacerH(10.dp)
-            HorizontalDivider(color = TangemTheme.colors3.border.secondary)
-            SpacerH(12.dp)
+            SpacerH(28.dp)
             PaymentBlockInOfferDs(
                 paymentMethod = onrampOfferUM.paymentMethod,
                 providerName = onrampOfferUM.providerName,

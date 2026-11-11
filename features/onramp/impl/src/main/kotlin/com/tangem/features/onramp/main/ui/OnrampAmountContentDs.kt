@@ -45,7 +45,7 @@ internal fun OnrampAmountContentDs(state: OnrampMainComponentUM.Content, modifie
             .fillMaxWidth()
             .animateContentSize(),
         color = TangemTheme.colors3.bg.secondary,
-        shape = RoundedCornerShape(size = 16.dp),
+        shape = RoundedCornerShape(size = 24.dp),
     ) {
         Column(
             modifier = Modifier
@@ -54,6 +54,8 @@ internal fun OnrampAmountContentDs(state: OnrampMainComponentUM.Content, modifie
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             OnrampHeaderTitle()
+
+            SpacerH(12.dp)
 
             OnrampAmountField(
                 amountField = state.amountBlockState.amountFieldModel,
@@ -68,7 +70,7 @@ internal fun OnrampAmountContentDs(state: OnrampMainComponentUM.Content, modifie
                 }
             }
 
-            SpacerH(20.dp)
+            SpacerH(12.dp)
 
             OnrampCurrencyIcon(currencyUM = state.amountBlockState.currencyUM)
         }
@@ -79,7 +81,7 @@ internal fun OnrampAmountContentDs(state: OnrampMainComponentUM.Content, modifie
 private fun OnrampHeaderTitle() {
     Text(
         text = stringResourceSafe(R.string.onramp_you_will_pay_title),
-        style = TangemTheme.typography3.body.medium,
+        style = TangemTheme.typography3.subheading.medium,
         color = TangemTheme.colors3.text.secondary,
     )
 }
@@ -107,7 +109,7 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
         onValueChange = amountField.onValueChange,
         keyboardOptions = amountField.keyboardOptions,
         keyboardActions = amountField.keyboardActions,
-        textStyle = TangemTheme.typography3.heading.medium.copy(
+        textStyle = TangemTheme.typography3.display.medium.copy(
             color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         ),
@@ -117,13 +119,7 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
         onValuePastedTriggerDismiss = amountField.onValuePastedTriggerDismiss,
         modifier = Modifier
             .focusRequester(requester)
-            .padding(
-                top = 8.dp,
-                bottom = 4.dp,
-                start = 12.dp,
-                end = 12.dp,
-            )
-            .requiredHeightIn(min = 32.dp)
+            .padding(horizontal = 12.dp)
             .testTag(BuyTokenDetailsScreenTestTags.FIAT_AMOUNT_TEXT_FIELD),
     )
 
@@ -160,17 +156,17 @@ private fun OnrampCurrencyIcon(currencyUM: OnrampCurrencyUM, modifier: Modifier 
     TangemSurface(
         modifier = modifier,
         color = TangemTheme.colors3.bg.transparent.secondary,
-        shape = RoundedCornerShape(14.dp),
+        shape = CircleShape,
         onClick = currencyUM.onClick,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+            modifier = Modifier.heightIn(min = 28.dp).padding(horizontal = 6.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             AsyncImage(
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(16.dp)
                     .clip(CircleShape)
                     .testTag(BuyTokenDetailsScreenTestTags.FIAT_CURRENCY_ICON),
                 model = currencyUM.iconUrl,
@@ -179,7 +175,7 @@ private fun OnrampCurrencyIcon(currencyUM: OnrampCurrencyUM, modifier: Modifier 
             Text(
                 text = currencyUM.code,
                 color = TangemTheme.colors3.text.primary,
-                style = TangemTheme.typography3.body.medium,
+                style = TangemTheme.typography3.subheading.medium,
                 textAlign = TextAlign.Center,
             )
             Icon(
