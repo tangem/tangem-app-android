@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -39,17 +40,22 @@ internal fun CountryButtonDs(state: OnrampCountryButtonUM, modifier: Modifier = 
         enabled = state.isEnabled,
         onClick = state.onClick,
     ) {
-        if (state.flagUrl != null) {
-            SubcomposeAsyncImage(
-                modifier = Modifier.size(24.dp).clip(CircleShape),
-                model = state.flagUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                loading = { CircleShimmer(modifier = Modifier.fillMaxSize()) },
-                error = {
-                    Box(Modifier.fillMaxSize().background(TangemTheme.colors3.border.primary, CircleShape))
-                },
-            )
+        Box(
+            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (state.flagUrl != null) {
+                SubcomposeAsyncImage(
+                    modifier = Modifier.size(24.dp).clip(CircleShape),
+                    model = state.flagUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    loading = { CircleShimmer(modifier = Modifier.fillMaxSize()) },
+                    error = {
+                        Box(Modifier.fillMaxSize().background(TangemTheme.colors3.border.primary, CircleShape))
+                    },
+                )
+            }
         }
     }
 }
