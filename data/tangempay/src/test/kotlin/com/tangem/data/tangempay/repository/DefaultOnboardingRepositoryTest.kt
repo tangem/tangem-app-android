@@ -13,6 +13,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.model.AccountFeeGroupType
 import com.tangem.domain.tangempay.model.CustomerOrderRequest
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.OrderType
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.order.OrderPoller
@@ -431,7 +432,7 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = "ACH",
                     group = AccountFeeGroupType.ONRAMP,
-                    calculationType = AccountFee.CalculationType.FIXED,
+                    calculationType = FeeCalculationType.FIXED,
                     amount = BigDecimal("1.00"),
                     currency = "USD",
                 ),
@@ -440,7 +441,7 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = "ACH",
                     group = AccountFeeGroupType.OFFRAMP,
-                    calculationType = AccountFee.CalculationType.FIXED,
+                    calculationType = FeeCalculationType.FIXED,
                     amount = BigDecimal("1.50"),
                     currency = "USD",
                 ),
@@ -489,7 +490,7 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = null,
                     group = AccountFeeGroupType.ONRAMP,
-                    calculationType = AccountFee.CalculationType.FIXED,
+                    calculationType = FeeCalculationType.FIXED,
                     amount = BigDecimal.ONE,
                     currency = "USD",
                 )
@@ -524,7 +525,7 @@ internal class DefaultOnboardingRepositoryTest {
                         name = "ACH",
                         paymentMethodId = "SPEI",
                         group = AccountFeeGroupType.ONRAMP,
-                        calculationType = AccountFee.CalculationType.PERCENTAGE,
+                        calculationType = FeeCalculationType.PERCENTAGE,
                         amount = BigDecimal.ONE,
                         currency = "USD",
                     ),
@@ -533,7 +534,7 @@ internal class DefaultOnboardingRepositoryTest {
                         name = "ACH",
                         paymentMethodId = "ACH",
                         group = AccountFeeGroupType.ONRAMP,
-                        calculationType = AccountFee.CalculationType.FIXED,
+                        calculationType = FeeCalculationType.FIXED,
                         amount = BigDecimal.ONE,
                         currency = "USD",
                     ),

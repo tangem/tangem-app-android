@@ -18,6 +18,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsScreenUM.DailyDepositLimitUM
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
@@ -158,7 +159,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
                 onrampFee(
                     type = "SPEI_ONRAMP",
                     name = "SPEI",
-                    calculationType = AccountFee.CalculationType.PERCENTAGE,
+                    calculationType = FeeCalculationType.PERCENTAGE,
                     amount = BigDecimal("1"),
                     currency = "MXN",
                 ),

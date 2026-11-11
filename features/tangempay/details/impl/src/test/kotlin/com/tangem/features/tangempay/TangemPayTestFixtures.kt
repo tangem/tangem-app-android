@@ -18,6 +18,7 @@ import com.tangem.domain.tangempay.model.OrderStatus
 import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.OrderType
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -44,7 +45,7 @@ internal fun bankCredentials(
 internal fun onrampFee(
     type: String = "ACH_ONRAMP",
     name: String = "ACH",
-    calculationType: AccountFee.CalculationType = AccountFee.CalculationType.FIXED,
+    calculationType: FeeCalculationType = FeeCalculationType.FIXED,
     amount: BigDecimal = BigDecimal.ZERO,
     currency: String = "USD",
 ): AccountFee = AccountFee(
