@@ -39,7 +39,6 @@ internal class SellRedirectDeepLinkHandler @Inject constructor(
         val memo = queryParams[MEMO_KEY]
         val requestId = queryParams[REQUEST_ID_KEY]
 
-        // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         getSelectedWalletSyncUseCase()
             .fold(
                 ifLeft = {
