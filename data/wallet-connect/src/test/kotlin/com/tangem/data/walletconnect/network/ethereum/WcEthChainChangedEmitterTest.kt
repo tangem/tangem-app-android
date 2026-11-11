@@ -54,6 +54,21 @@ internal class WcEthChainChangedEmitterTest {
     }
 
     @Test
+    fun `GIVEN chain id above Int WHEN emit THEN chainChanged carries the full hex chain id`() = runTest {
+        // Arrange
+        val zeniq = CAIP2(namespace = "eip155", reference = "383414847825")
+        every { wcSdk.sessionCarriesChain(TOPIC, zeniq.raw) } returns true
+        val paramsSlot = slot<Wallet.Params.SessionEmit>()
+        coEvery { wcSdk.emitSessionEvent(capture(paramsSlot)) } returns mockk<Wallet.Params.SessionEmit>().right()
+
+        // Act
+        emitter().emit(topic = TOPIC, chainId = zeniq)
+
+        // Assert
+        assertEquals("0x59454e4951", paramsSlot.captured.event.data)
+    }
+
+    @Test
     fun `GIVEN the chain is already carried WHEN emit THEN chainChanged is sent`() = runTest {
         // Arrange
         every { wcSdk.sessionCarriesChain(TOPIC, POLYGON_CAIP2.raw) } returns true

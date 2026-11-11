@@ -83,7 +83,7 @@ class CryptoCurrencyFactory(
         userWallet: UserWallet,
         accountIndex: DerivationIndex? = null,
     ): CryptoCurrency.Coin? {
-        val blockchain: Blockchain? = Chain.entries.find { it.id == chainId }?.blockchain
+        val blockchain: Blockchain? = Chain.entries.find { it.id == chainId.toLong() }?.blockchain
 
         return if (blockchain != null) {
             createCoin(

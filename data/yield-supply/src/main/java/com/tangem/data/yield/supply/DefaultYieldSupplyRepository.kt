@@ -118,15 +118,20 @@ internal class DefaultYieldSupplyRepository(
         withContext(dispatchers.io) {
             val blockchain = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)
             val chainId = blockchain?.getChainId() ?: error("Chain id is required for evm's")
-            val response = yieldSupplyApi.getYieldTokenStatus(chainId, cryptoCurrencyToken.contractAddress)
-                .getOrThrow()
+            val response = yieldSupplyApi.getYieldTokenStatus(
+                Math.toIntExact(chainId),
+                cryptoCurrencyToken.contractAddress,
+            ).getOrThrow()
             YieldMarketTokenConverter.convert(response)
         }
 
     override suspend fun getTokenChart(cryptoCurrencyToken: CryptoCurrency.Token): YieldSupplyMarketChartData {
         val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
             ?: error("Chain id is required for evm's")
-        val response = yieldSupplyApi.getYieldTokenChart(chainId, cryptoCurrencyToken.contractAddress).getOrThrow()
+        val response = yieldSupplyApi.getYieldTokenChart(
+            Math.toIntExact(chainId),
+            cryptoCurrencyToken.contractAddress,
+        ).getOrThrow()
         return YieldTokenChartConverter.convert(response)
     }
 
@@ -159,7 +164,7 @@ internal class DefaultYieldSupplyRepository(
         yieldSupplyApi.activateYieldModule(
             body = YieldSupplyChangeTokenStatusBody(
                 tokenAddress = cryptoCurrencyToken.contractAddress,
-                chainId = chainId,
+                chainId = Math.toIntExact(chainId),
                 userAddress = address,
             ),
             userWalletId = userWalletId.stringValue,
@@ -173,7 +178,7 @@ internal class DefaultYieldSupplyRepository(
             yieldSupplyApi.deactivateYieldModule(
                 YieldSupplyChangeTokenStatusBody(
                     tokenAddress = cryptoCurrencyToken.contractAddress,
-                    chainId = chainId,
+                    chainId = Math.toIntExact(chainId),
                     userAddress = address,
                 ),
             ).getOrThrow().isActive
@@ -225,7 +230,7 @@ internal class DefaultYieldSupplyRepository(
     private fun List<YieldMarketToken>.enrichNetworkIds(): List<YieldMarketToken> {
         val chainIdMap = Blockchain.entries.associate { it.getChainId() to it.toNetworkId() }
         return this.map { token ->
-            token.copy(backendId = chainIdMap[token.chainId])
+            token.copy(backendId = chainIdMap[token.chainId.toLong()])
         }
     }
 
