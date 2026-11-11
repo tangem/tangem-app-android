@@ -479,6 +479,23 @@ internal class CollectiblesPackOpeningModelTest {
     }
 
     @Test
+    fun `GIVEN a paid pack from main WHEN the screen starts THEN it is reopened without a purchase`() = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = true) } returns
+            flowOf(OpenPackStep.Opened(PACK))
+
+        // Act
+        val model = startModel(reopenTxId = TX_ID, isTurboEnabled = true)
+
+        // Assert
+        verify(exactly = 1) {
+            openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = true)
+        }
+        verify(exactly = 0) { openCollectiblePackUseCase(any(), ofType<OpenPackRequest.Buy>(), any()) }
+        assertThat(model.reveal().stage).isEqualTo(Stage.Launching)
+    }
+
+    @Test
     fun `GIVEN the pack is left unopened WHEN open pack tapped THEN it is opened again in place`() = runTest {
         // Arrange
         every { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = false) } returns
@@ -665,6 +682,23 @@ internal class CollectiblesPackOpeningModelTest {
 
         // Assert
         verify(exactly = 1) { router.pop(any()) }
+    }
+
+    @Test
+    fun `GIVEN a pack reopened from main WHEN open again tapped THEN its machine replaces the screen`() = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = true) } returns
+            flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal.TEN, pack = null))
+        val model = startModel(reopenTxId = TX_ID, isTurboEnabled = true)
+
+        // Act
+        model.onOpenAgain()
+
+        // Assert
+        verify(exactly = 1) {
+            router.replaceCurrent(CollectiblesRoute.MachineDetails(externalId = EXTERNAL_ID), any())
+        }
+        verify(exactly = 0) { router.pop(any()) }
     }
 
     @Test
@@ -1506,7 +1540,11 @@ internal class CollectiblesPackOpeningModelTest {
         vaultBalance = MockCollectibles.vaultBalance(amount = BigDecimal(usdcAmount), fiatRate = BigDecimal.ONE),
     )
 
-    private fun TestScope.startModel(isDarkTheme: Boolean? = null): CollectiblesPackOpeningModel {
+    private fun TestScope.startModel(
+        isDarkTheme: Boolean? = null,
+        reopenTxId: String? = null,
+        isTurboEnabled: Boolean = false,
+    ): CollectiblesPackOpeningModel {
         val model = CollectiblesPackOpeningModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getMachineUseCase = getMachineUseCase,
@@ -1524,7 +1562,8 @@ internal class CollectiblesPackOpeningModelTest {
                 CollectiblesPackOpeningComponent.Params(
                     userWalletId = USER_WALLET_ID,
                     externalId = EXTERNAL_ID,
-                    isTurboEnabled = false,
+                    isTurboEnabled = isTurboEnabled,
+                    reopenTxId = reopenTxId,
                 ),
             ),
         ).also { this@CollectiblesPackOpeningModelTest.model = it }

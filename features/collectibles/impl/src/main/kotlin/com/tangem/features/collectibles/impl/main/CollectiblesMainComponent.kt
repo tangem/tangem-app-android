@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.essenty.lifecycle.doOnResume
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
@@ -20,6 +20,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.impl.addfunds.CollectiblesAddFundsComponent
 import com.tangem.features.collectibles.impl.discovery.CollectiblesDiscoveryComponent
 import com.tangem.features.collectibles.impl.main.model.CollectiblesMainModel
+import com.tangem.features.collectibles.impl.main.sheet.CollectiblesPackUnopenedSheetComponent
+import com.tangem.features.collectibles.impl.main.sheet.CollectiblesPaymentInProgressSheetComponent
 import com.tangem.features.collectibles.impl.main.ui.CollectiblesMainScreen
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
@@ -36,10 +38,19 @@ internal class CollectiblesMainComponent @AssistedInject constructor(
 
     private val model: CollectiblesMainModel = getOrCreateModel(params = params)
 
-    private val discoveryComponent = discoveryComponentFactory.create(context = child(key = "discovery"))
+    private val discoveryComponent = discoveryComponentFactory.create(
+        context = child(key = "discovery"),
+        params = CollectiblesDiscoveryComponent.Params(
+            modelCallbacks = object : CollectiblesDiscoveryComponent.ModelCallbacks {
+                override fun onPackClick(externalId: String) {
+                    model.onPackClick(externalId)
+                }
+            },
+        ),
+    )
 
     init {
-        lifecycle.doOnResume { model.onScreenResumed() }
+        lifecycle.subscribe(onResume = model::onScreenResumed, onPause = model::onScreenPaused)
     }
 
     private val bottomSheetSlot = childSlot(
@@ -79,12 +90,17 @@ internal class CollectiblesMainComponent @AssistedInject constructor(
             context = childByContext(componentContext),
             params = TokenReceiveComponent.Params(
                 config = config.config,
-                onDismiss = {
-                    if (bottomSheetSlot.value.child?.configuration is CollectiblesMainBottomSheetConfig.Receive) {
-                        model.onDismissBottomSheet()
-                    }
-                },
+                onDismiss = { dismissBottomSheet(config) },
             ),
+        )
+        CollectiblesMainBottomSheetConfig.PaymentInProgress -> CollectiblesPaymentInProgressSheetComponent(
+            appComponentContext = childByContext(componentContext),
+            onDismiss = { dismissBottomSheet(config) },
+        )
+        is CollectiblesMainBottomSheetConfig.PackUnopened -> CollectiblesPackUnopenedSheetComponent(
+            appComponentContext = childByContext(componentContext),
+            onOpenPackClick = { model.onOpenUnopenedPack(config) },
+            onDismiss = { dismissBottomSheet(config) },
         )
         CollectiblesMainBottomSheetConfig.TopUp -> CollectiblesAddFundsComponent(
             appComponentContext = childByContext(componentContext),
@@ -99,13 +115,15 @@ internal class CollectiblesMainComponent @AssistedInject constructor(
                     }
 
                     override fun onDismissAddFunds() {
-                        if (bottomSheetSlot.value.child?.configuration is CollectiblesMainBottomSheetConfig.TopUp) {
-                            model.onDismissBottomSheet()
-                        }
+                        dismissBottomSheet(config)
                     }
                 },
             ),
         )
+    }
+
+    private fun dismissBottomSheet(config: CollectiblesMainBottomSheetConfig) {
+        if (bottomSheetSlot.value.child?.configuration == config) model.onDismissBottomSheet()
     }
 
     private fun onRefresh() {

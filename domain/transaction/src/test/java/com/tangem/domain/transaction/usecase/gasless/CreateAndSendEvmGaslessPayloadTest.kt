@@ -11,6 +11,7 @@ import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessTransactionData
+import com.tangem.domain.transaction.models.GaslessYieldWithdraw
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendEvmGaslessTransactionUseCase.GaslessPayload
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
@@ -133,7 +134,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
     }
 
     @Test
-    fun `GIVEN one call and TokenPayWithYieldWithdraw WHEN assembleGaslessPayload THEN withdraw appended last`() {
+    fun `GIVEN one call and TokenPay with yield withdraw WHEN assembleGaslessPayload THEN withdraw appended last`() {
         // Arrange
         val plan = yieldWithdrawPlan(withdrawCallData = fakeWithdrawCallData)
 
@@ -149,7 +150,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
     }
 
     @Test
-    fun `GIVEN two calls and TokenPayWithYieldWithdraw WHEN assembleGaslessPayload THEN Batch of three withdraw last`() {
+    fun `GIVEN two calls and TokenPay with yield withdraw WHEN assembleGaslessPayload THEN Batch of three withdraw last`() {
         // Arrange
         val plan = yieldWithdrawPlan(withdrawCallData = fakeWithdrawCallData)
 
@@ -242,21 +243,25 @@ internal class CreateAndSendEvmGaslessPayloadTest {
         UpgradePlanModel(plan = null, expected = false),
     )
 
-    private fun yieldWithdrawPlan(withdrawCallData: SmartContractCallData) = GaslessFeePlan.TokenPayWithYieldWithdraw(
+    private fun yieldWithdrawPlan(withdrawCallData: SmartContractCallData) = GaslessFeePlan.TokenPay(
         feeToken = fakeToken,
         fee = fakeTokenFee,
-        withdrawAmount = BigInteger.ONE,
-        withdrawCallData = withdrawCallData,
-        yieldModuleAddress = "0xmodule",
+        yieldWithdraw = yieldWithdraw(callData = withdrawCallData),
+    )
+
+    private fun yieldWithdraw(callData: SmartContractCallData) = GaslessYieldWithdraw(
+        amount = BigInteger.ONE,
+        callData = callData,
+        moduleAddress = "0xmodule",
     )
 
     data class UpgradePlanModel(val plan: GaslessFeePlan?, val expected: Boolean)
 
     @Test
-    fun `GIVEN TokenPayWithApproval and two calls WHEN assembleGaslessPayload THEN Batch with approve first`() {
+    fun `GIVEN TokenPay with approval and two calls WHEN assembleGaslessPayload THEN Batch with approve first`() {
         // Arrange
         val approveGasLimit = BigInteger.valueOf(65_000)
-        val plan = GaslessFeePlan.TokenPayWithApproval(
+        val plan = GaslessFeePlan.TokenPay(
             feeToken = fakeToken,
             fee = fakeTokenFee,
             approval = approval(extras = EthereumTransactionExtras(callData = fakeApproveCallData)),
@@ -284,9 +289,9 @@ internal class CreateAndSendEvmGaslessPayloadTest {
     }
 
     @Test
-    fun `GIVEN TokenPayWithApproval without approve call data WHEN assembleGaslessPayload THEN throws`() {
+    fun `GIVEN TokenPay with approval without approve call data WHEN assembleGaslessPayload THEN throws`() {
         // Arrange
-        val plan = GaslessFeePlan.TokenPayWithApproval(
+        val plan = GaslessFeePlan.TokenPay(
             feeToken = fakeToken,
             fee = fakeTokenFee,
             approval = approval(extras = null),
@@ -302,9 +307,9 @@ internal class CreateAndSendEvmGaslessPayloadTest {
     }
 
     @Test
-    fun `GIVEN TokenPayWithApproval without approve gas limit WHEN assembleGaslessPayload THEN throws`() {
+    fun `GIVEN TokenPay with approval without approve gas limit WHEN assembleGaslessPayload THEN throws`() {
         // Arrange
-        val plan = GaslessFeePlan.TokenPayWithApproval(
+        val plan = GaslessFeePlan.TokenPay(
             feeToken = fakeToken,
             fee = fakeTokenFee,
             approval = approval(extras = EthereumTransactionExtras(callData = fakeApproveCallData)),
@@ -315,6 +320,43 @@ internal class CreateAndSendEvmGaslessPayloadTest {
 
         // Assert
         assertThat(actual).isInstanceOf(IllegalStateException::class.java)
+    }
+
+    @Test
+    fun `GIVEN TokenPay with approval and yield withdraw WHEN assembleGaslessPayload THEN batch is approve calls withdraw`() {
+        // Arrange
+        val approveGasLimit = BigInteger.valueOf(65_000)
+        val plan = GaslessFeePlan.TokenPay(
+            feeToken = fakeToken,
+            fee = fakeTokenFee,
+            approval = approval(extras = EthereumTransactionExtras(callData = fakeApproveCallData)),
+            yieldWithdraw = yieldWithdraw(callData = fakeWithdrawCallData),
+        )
+        val planApproveTx = GaslessTransactionData.Transaction(
+            to = APPROVE_TOKEN_CONTRACT,
+            value = BigInteger.ZERO,
+            gasLimit = approveGasLimit,
+            data = fakeApproveCallData.data,
+        )
+
+        // Act
+        val result = assemble(
+            calls = listOf(mainTx),
+            plan = plan,
+            withdrawGasLimit = withdrawGasLimit,
+            approveGasLimit = approveGasLimit,
+        )
+
+        // Assert
+        assertThat(result).isEqualTo(
+            GaslessPayload.Batch(
+                GaslessBatchTransactionData(
+                    transactions = listOf(planApproveTx, mainTx, withdrawTx),
+                    fee = feeObj,
+                    nonce = nonce,
+                ),
+            ),
+        )
     }
 
     private val fakeApproveCallData = object : SmartContractCallData {

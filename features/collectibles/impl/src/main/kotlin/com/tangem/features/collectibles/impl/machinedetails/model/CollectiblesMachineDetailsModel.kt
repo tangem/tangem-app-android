@@ -207,7 +207,7 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
 
     private fun onBuyClick() {
         val isTurboEnabled = (uiState.value as? CollectiblesMachineDetailsUM.Content)?.footer?.isTurboEnabled == true
-        router.push(CollectiblesRoute.ConfirmOrder(externalId = params.externalId, isTurboEnabled = isTurboEnabled))
+        router.push(CollectiblesRoute.ConfirmOrder(machineId = params.externalId, isTurboEnabled = isTurboEnabled))
     }
 
     private fun onCloseClick() {
