@@ -15,6 +15,7 @@ import com.tangem.domain.polymarket.interactor.SubmitPredictionClaimInteractor
 import com.tangem.domain.polymarket.model.PolymarketRedeemError
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
 import com.tangem.features.polymarket.impl.positionresult.PolymarketPositionResultComponent
 import com.tangem.features.polymarket.impl.positionresult.ui.state.PolymarketPositionResultUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -35,6 +36,7 @@ internal class PolymarketPositionResultModel @Inject constructor(
     private val positionsUpdateEmitter: PredictionPositionsUpdateEmitter,
     private val messageSender: UiMessageSender,
     private val router: Router,
+    private val walletLinkGate: PolymarketWalletLinkGate,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketPositionResultComponent.Params>()
@@ -52,6 +54,10 @@ internal class PolymarketPositionResultModel @Inject constructor(
     private fun claim() {
         modelScope.launch {
             setClaimProgress(isInProgress = true)
+            if (!walletLinkGate.ensureLinked(params.userWalletId)) {
+                setClaimProgress(isInProgress = false)
+                return@launch
+            }
             val addresses = deriveAddresses.stored(params.userWalletId)
             if (addresses == null) {
                 setClaimProgress(isInProgress = false)

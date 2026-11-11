@@ -25,6 +25,7 @@ import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
+import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -63,6 +64,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val imagePreloader: ImagePreloader,
+    private val walletLinkGate: PolymarketWalletLinkGate,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -131,6 +133,11 @@ internal class PolymarketOnboardingModel @Inject constructor(
         uiState.value = current.copyInProgress(isInProgress = true)
 
         modelScope.launch {
+            if (!walletLinkGate.ensureLinked(userWalletId)) {
+                stopStarting()
+                return@launch
+            }
+
             val allowance = checkNewPolymarketAccountAllowed(userWalletId)
 
             ensureActive()

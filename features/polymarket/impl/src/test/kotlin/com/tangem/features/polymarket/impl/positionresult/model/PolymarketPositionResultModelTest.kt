@@ -20,6 +20,7 @@ import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionClaimReceipt
 import com.tangem.domain.polymarket.model.PredictionClaimState
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
 import com.tangem.features.polymarket.impl.positionresult.PolymarketPositionResultComponent
 import com.tangem.features.polymarket.impl.positionresult.ui.state.PolymarketPositionResultUM
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
@@ -47,6 +48,7 @@ internal class PolymarketPositionResultModelTest {
     private val positionsUpdateEmitter: PredictionPositionsUpdateEmitter = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
+    private val walletLinkGate: PolymarketWalletLinkGate = mockk()
     private val addresses: PolymarketAddresses = mockk {
         every { ownerAddress } returns OWNER
         every { depositWalletAddress } returns DEPOSIT_WALLET
@@ -215,6 +217,29 @@ internal class PolymarketPositionResultModelTest {
     }
 
     @Test
+    fun `GIVEN the wallet is not linked WHEN claiming THEN nothing is claimed AND the button is idle without an alert`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            coEvery { walletLinkGate.ensureLinked(WALLET) } returns false
+
+            // Act
+            model.onActionClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.action)
+                .isEqualTo(
+                    PolymarketPositionResultUM.Action.Claim(
+                        isInProgress = false,
+                        label = resourceReference(R.string.prediction_position_result_claim_action),
+                    ),
+                )
+            coVerify(exactly = 0) { claimInteractor.claim(any()) }
+            verify(exactly = 0) { messageSender.send(any()) }
+        }
+
+    @Test
     fun `GIVEN a dismiss action WHEN tapped THEN the screen pops without claiming`() = runTest {
         // Arrange
         val model = createModel(isRedeemable = false)
@@ -230,6 +255,7 @@ internal class PolymarketPositionResultModelTest {
 
     private fun TestScope.createModel(isRedeemable: Boolean = true): PolymarketPositionResultModel {
         coEvery { deriveAddresses.stored(WALLET) } returns addresses
+        coEvery { walletLinkGate.ensureLinked(WALLET) } returns true
         val position = createPolymarketPosition(
             result = PolymarketPositionResult.WON,
             resolutionStatus = PolymarketResolutionStatus.RESOLVED,
@@ -251,6 +277,7 @@ internal class PolymarketPositionResultModelTest {
             positionsUpdateEmitter = positionsUpdateEmitter,
             messageSender = messageSender,
             router = router,
+            walletLinkGate = walletLinkGate,
         ).also { model = it }
     }
 
