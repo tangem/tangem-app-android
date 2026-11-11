@@ -20,6 +20,7 @@ kotlin {
 dependencies {
 
     // region Kotlin
+    api(deps.kotlin.coroutines)
     api(deps.kotlin.serialization)
     // endregion
 
@@ -43,7 +44,7 @@ dependencies {
     api(projects.domain.onramp.models)
     api(projects.domain.staking)
     api(projects.domain.tokens.models)
-    implementation(projects.domain.visa.models)
+    implementation(projects.domain.tangempay.models)
     // endregion
 
     // region Tests

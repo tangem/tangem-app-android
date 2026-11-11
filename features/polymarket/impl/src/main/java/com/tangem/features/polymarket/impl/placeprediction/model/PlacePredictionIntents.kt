@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import java.math.BigDecimal
 
 internal interface PlacePredictionAmountIntents {
@@ -29,7 +30,7 @@ internal interface PlacePredictionSummaryIntents {
 
     fun onQuoteRetryClick()
 
-    fun onPlaceClick()
+    fun onPlaceClick(confirmedWith: PlaceButtonStyleUM)
 
     fun onPolymarketTermsClick()
 
@@ -56,13 +57,15 @@ internal interface PlacePredictionOrderIntents {
 
     fun onQuoteRetryClick()
 
-    fun onPlaceClick()
+    fun onPlaceClick(confirmedWith: PlaceButtonStyleUM)
 
     fun onPolymarketTermsClick()
 
     fun onTangemTermsClick()
 
     fun onCloseClick()
+
+    fun onUntradableSheetDismiss()
 }
 
 internal interface PlacePredictionSlippageIntents {
@@ -78,7 +81,7 @@ internal interface PlacePredictionSlippageIntents {
 
 internal interface PlacePredictionStatusIntents {
 
-    fun onToMainClick()
+    fun onCloseClick()
 
     fun onViewPositionClick()
 }

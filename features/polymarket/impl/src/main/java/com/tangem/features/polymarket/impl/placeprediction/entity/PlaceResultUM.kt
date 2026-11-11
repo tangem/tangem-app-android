@@ -24,4 +24,6 @@ internal sealed interface PlaceResultUM {
     data class NotFilled(override val placedAt: Long) : PlaceResultUM
 
     data class Submitted(override val placedAt: Long) : PlaceResultUM
+
+    data class StillProcessing(override val placedAt: Long) : PlaceResultUM
 }

@@ -6,7 +6,6 @@ import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.isSocialLoginWallet
 import com.tangem.feature.walletsettings.entity.DialogConfig
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
@@ -35,7 +34,6 @@ internal class WalletCardItemDelegate @AssistedInject constructor(
                 onClick = { openRenameWalletDialog(wallet) },
                 imageState = imageState,
                 additionalBlock = buildUpgradeToHardwareWalletBlockOrNull(wallet),
-                isSocialLogin = wallet.isSocialLoginWallet,
             )
         }
     }

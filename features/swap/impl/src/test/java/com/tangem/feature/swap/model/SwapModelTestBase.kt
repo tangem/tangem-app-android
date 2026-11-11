@@ -29,8 +29,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
-import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
+import com.tangem.domain.tangempay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionDepositCurrencyStatusesUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
@@ -52,6 +52,7 @@ import com.tangem.domain.swap.usecase.CalculateAmountUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -71,6 +72,8 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -93,6 +96,7 @@ internal abstract class SwapModelTestBase {
     protected val analyticsErrorEventHandler: AnalyticsErrorHandler = mockk(relaxed = true)
     protected val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk(relaxed = true)
     protected val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase = mockk(relaxed = true)
+    protected val balanceContributionsRefresher: BalanceContributionsRefresher = mockk(relaxed = true)
     protected val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase =
         mockk(relaxed = true)
     protected val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk(relaxed = true)
@@ -148,6 +152,8 @@ internal abstract class SwapModelTestBase {
     protected val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk {
         coEvery { this@mockk(any<MoneyAccountStatusFetcher.Params>()) } returns Unit.right()
     }
+    protected val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxUnitFun = true)
+    protected val appTxHistoryFetcher: AppTxHistoryFetcher = mockk(relaxUnitFun = true)
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
     }
@@ -256,6 +262,7 @@ internal abstract class SwapModelTestBase {
         analyticsErrorEventHandler = analyticsErrorEventHandler,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         updateDelayedCurrencyStatusUseCase = updateDelayedCurrencyStatusUseCase,
+        balanceContributionsRefresher = balanceContributionsRefresher,
         getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
         getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
         saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
@@ -303,6 +310,8 @@ internal abstract class SwapModelTestBase {
         backupErrorWarningSender = backupErrorWarningSender,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+        txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
+        appTxHistoryFetcher = appTxHistoryFetcher,
         performanceTracer = mockk(relaxed = true),
     )
 

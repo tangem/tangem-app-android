@@ -37,6 +37,7 @@ import com.tangem.domain.polymarket.signing.PolymarketSigningSession
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
+import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCase
@@ -54,16 +55,19 @@ import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUse
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStateService
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRunner
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
 import com.tangem.domain.polymarket.usecase.ValidatePredictionOrderUseCase
@@ -302,24 +306,23 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    @Suppress("LongParameterList")
     fun providePolymarketOrderSigningRouter(
         polymarketRepository: PolymarketRepository,
-        sessionKeyRepository: PolymarketSessionKeyRepository,
         sessionKeyStore: PolymarketSessionKeyStore,
         tradingStore: PolymarketSessionKeyTradingStore,
         sessionCredentialsProvider: PolymarketSessionCredentialsProvider,
-        deviceIdProvider: PolymarketDeviceIdProvider,
-        getApiCredentials: GetPolymarketApiCredentialsUseCase,
     ): PolymarketOrderSigningRouter = PolymarketOrderSigningRouter(
         polymarketRepository = polymarketRepository,
-        sessionKeyRepository = sessionKeyRepository,
         sessionKeyStore = sessionKeyStore,
         tradingStore = tradingStore,
         sessionCredentialsProvider = sessionCredentialsProvider,
-        deviceIdProvider = deviceIdProvider,
-        getApiCredentials = getApiCredentials,
     )
+
+    @Provides
+    @Singleton
+    fun provideCanSignPredictionOrderWithSessionKeyUseCase(
+        router: PolymarketOrderSigningRouter,
+    ): CanSignPredictionOrderWithSessionKeyUseCase = CanSignPredictionOrderWithSessionKeyUseCase(router = router)
 
     @Provides
     @Singleton
@@ -327,12 +330,12 @@ internal object PolymarketDomainModule {
         signOrder: SignPredictionOrderInteractor,
         placeOrder: PlacePredictionOrderUseCase,
         router: PolymarketOrderSigningRouter,
-        appCoroutineScope: AppCoroutineScope,
+        stateService: PolymarketSessionKeyStateService,
     ): SubmitPredictionOrderInteractor = SubmitPredictionOrderInteractor(
         signOrder = signOrder,
         placeOrder = placeOrder,
         router = router,
-        reconciliationScope = appCoroutineScope,
+        stateService = stateService,
     )
 
     @Provides
@@ -524,5 +527,39 @@ internal object PolymarketDomainModule {
     @Singleton
     fun providePolymarketSessionKeyStateService(
         reconcile: ReconcilePolymarketSessionKeysInteractor,
-    ): PolymarketSessionKeyStateService = PolymarketSessionKeyStateService(reconcile = reconcile)
+        appCoroutineScope: AppCoroutineScope,
+    ): PolymarketSessionKeyStateService = PolymarketSessionKeyStateService(
+        reconcile = reconcile,
+        scope = appCoroutineScope,
+    )
+
+    @Provides
+    @Singleton
+    fun providePolymarketSessionKeyOperationRunner(
+        manage: ManagePolymarketSessionKeyInteractor,
+        stateService: PolymarketSessionKeyStateService,
+        sessionKeyStore: PolymarketSessionKeyStore,
+        appCoroutineScope: AppCoroutineScope,
+    ): PolymarketSessionKeyOperationRunner = PolymarketSessionKeyOperationRunner(
+        manage = manage,
+        stateService = stateService,
+        sessionKeyStore = sessionKeyStore,
+        appScope = appCoroutineScope,
+    )
+
+    @Provides
+    @Singleton
+    fun provideObservePolymarketFastTradingUseCase(
+        stateService: PolymarketSessionKeyStateService,
+        runner: PolymarketSessionKeyOperationRunner,
+    ): ObservePolymarketFastTradingUseCase = ObservePolymarketFastTradingUseCase(
+        stateService = stateService,
+        runner = runner,
+    )
+
+    @Provides
+    @Singleton
+    fun provideRefreshPolymarketFastTradingUseCase(
+        stateService: PolymarketSessionKeyStateService,
+    ): RefreshPolymarketFastTradingUseCase = RefreshPolymarketFastTradingUseCase(stateService = stateService)
 }

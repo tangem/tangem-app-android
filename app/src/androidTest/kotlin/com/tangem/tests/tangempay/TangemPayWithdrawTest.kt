@@ -1,7 +1,6 @@
 package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
@@ -27,7 +26,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
     private val withdrawDataEndpoint = "/bff-v2/v1/customer/card/withdraw/data"
     private val withdrawEndpoint = "/bff-v2/v1/customer/card/withdraw"
     private val withdrawOrderEndpoint = "/bff-v2/v1/order/mock-tangempay-withdraw-order-001"
-    private val exchangeSentEndpoint = "/v1/exchange-sent"
+    private val exchangeSentEndpoint = "/v[12]/exchange-sent"
 
     private val minPollsToProveContinuation = 2
 
@@ -73,7 +72,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 }
             }
             step("Confirm swap by holding the button") {
-                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+                confirmTangemPayWithdrawByHolding()
             }
             step("Wait for 'Swap in progress' screen") {
                 onSwapSuccessScreen {
@@ -234,7 +233,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val receiveToken = "Bitcoin"
         val expectedSubmissions = 1
         // CEX withdraw submits via the Express swap endpoint — count it to prove a single submission.
-        val exchangeSentEndpointPattern = "/v1/exchange-sent"
+        val exchangeSentEndpointPattern = "/v[12]/exchange-sent"
 
         setupHooks(
             additionalBeforeSection = {
@@ -256,7 +255,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
             }
             val submissionsBefore = getWireMockRequestCount("POST", exchangeSentEndpointPattern)
             step("Confirm swap by holding the button") {
-                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+                confirmTangemPayWithdrawByHolding()
             }
             step("Wait for 'Swap in progress' screen") {
                 onSwapSuccessScreen {
@@ -316,7 +315,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 }
             }
             step("Confirm swap by holding the button") {
-                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+                confirmTangemPayWithdrawByHolding()
             }
             step("Wait for 'Swap in progress' screen") {
                 onSwapSuccessScreen {
@@ -387,7 +386,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
             }
             val withdrawalsBefore = findWireMockRequestBodies("POST", withdrawEndpoint).size
             step("Confirm swap by holding the button") {
-                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+                confirmTangemPayWithdrawByHolding()
             }
             step("Wait for 'Swap in progress' screen") {
                 onSwapSuccessScreen {
@@ -576,7 +575,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
             val withdrawBefore = getWireMockRequestCount("POST", withdrawEndpoint)
             val exchangeSentBefore = getWireMockRequestCount("POST", exchangeSentEndpoint)
             step("Confirm swap by holding the button") {
-                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+                confirmTangemPayWithdrawByHolding()
             }
             step("Assert the withdrawal error dialog is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -641,7 +640,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
             val orderBefore = getWireMockRequestCount("GET", withdrawOrderEndpoint)
             val exchangeSentBefore = getWireMockRequestCount("POST", exchangeSentEndpoint)
             step("Confirm swap by holding the button") {
-                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+                confirmTangemPayWithdrawByHolding()
             }
             step("Assert the withdrawal error dialog is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -703,7 +702,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
             val exchangeSentBefore = getWireMockRequestCount("POST", exchangeSentEndpoint)
             val ordersBeforeConfirm = getWireMockRequestCount("GET", withdrawOrderEndpoint)
             step("Confirm swap by holding the button") {
-                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+                confirmTangemPayWithdrawByHolding()
             }
             step("Assert 'Swap in progress' screen is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_VERY_LONG) { onSwapSuccessScreen { title.assertIsDisplayed() } }

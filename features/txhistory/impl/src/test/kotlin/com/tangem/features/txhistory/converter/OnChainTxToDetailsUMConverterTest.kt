@@ -916,7 +916,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val counterparty = ownConverter.convert(tx).counterparty
 
         // Assert
-        val moneyAccountName = resourceReference(R.string.tangempay_unified_onboarding_money_account_header)
+        val moneyAccountName = resourceReference(R.string.money_account_main_name)
         assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(moneyAccountName))
         assertThat(counterparty?.avatar).isEqualTo(
             TxHistoryDetailsUM.CounterpartyAvatar.Account(

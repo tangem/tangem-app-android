@@ -1,13 +1,14 @@
 package com.tangem.features.tangempay.deeplink
 
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.test.core.ProvideTestModels
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullAndEmptySource
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
@@ -17,7 +18,8 @@ import java.util.Currency
 class TangemPayPushPayloadToTxHistoryItemConverterTest {
 
     @Test
-    fun `convertSpend returns Spend tx with all fields when payload is complete`() {
+    fun `GIVEN a complete payload WHEN convertSpend THEN Spend with every field is returned`() {
+        // Arrange
         val payload = mapOf(
             "transaction_id" to "txn-123",
             "amount" to "5.24",
@@ -35,203 +37,95 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
             "declined_reason" to "",
             "authorized_at" to "2025-10-24T10:32:24.496Z",
         )
+        val expected = TangemPayTxHistoryItem.Spend(
+            id = "txn-123",
+            jsonRepresentation = payload.toString(),
+            date = DateTime.parse("2025-10-24T10:32:24.496Z").withZone(DateTimeZone.getDefault()),
+            amount = BigDecimal("5.24"),
+            currency = Currency.getInstance("USD"),
+            authorizedAmount = BigDecimal("5.24"),
+            localAmount = BigDecimal("5.24"),
+            localCurrency = Currency.getInstance("USD"),
+            enrichedMerchantName = "Playstation",
+            merchantName = "PLAYSTATION NETWORK",
+            enrichedMerchantCategory = "Gaming",
+            merchantCategoryCode = "5818",
+            merchantCategory = "Digital Goods",
+            status = TangemPayTxHistoryItem.Status.COMPLETED,
+            enrichedMerchantIconUrl = "https://example.com/icon.png",
+            declinedReason = "",
+        )
 
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
+        // Act
+        val actual = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
 
-        assertThat(result).isNotNull()
-        assertThat(result!!.id).isEqualTo("txn-123")
-        assertThat(result.amount).isEqualTo(BigDecimal("5.24"))
-        assertThat(result.currency.currencyCode).isEqualTo("USD")
-        assertThat(result.localAmount).isEqualTo(BigDecimal("5.24"))
-        assertThat(result.localCurrency?.currencyCode).isEqualTo("USD")
-        assertThat(result.authorizedAmount).isEqualTo(BigDecimal("5.24"))
-        assertThat(result.merchantName).isEqualTo("PLAYSTATION NETWORK")
-        assertThat(result.enrichedMerchantName).isEqualTo("Playstation")
-        assertThat(result.enrichedMerchantIconUrl).isEqualTo("https://example.com/icon.png")
-        assertThat(result.enrichedMerchantCategory).isEqualTo("Gaming")
-        assertThat(result.merchantCategory).isEqualTo("Digital Goods")
-        assertThat(result.merchantCategoryCode).isEqualTo("5818")
-        assertThat(result.status).isEqualTo(TangemPayTxHistoryItem.Status.COMPLETED)
+        // Assert
+        assertThat(actual).isEqualTo(expected)
     }
 
     @Test
-    fun `convertSpend returns null when transaction_id is missing`() {
-        val payload = mapOf(
-            "amount" to "5.24",
-            "currency" to "usd",
-            "merchant_name" to "Test",
-            "status" to "completed",
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
+    fun `GIVEN only the required fields WHEN convertSpend THEN the optional fields are empty`() {
+        // Arrange
+        val payload = requiredSpendPayload()
+        val expected = TangemPayTxHistoryItem.Spend(
+            id = "txn-123",
+            jsonRepresentation = payload.toString(),
+            date = DateTime.parse("2025-10-24T10:32:24.496Z").withZone(DateTimeZone.getDefault()),
+            amount = BigDecimal("5.24"),
+            currency = Currency.getInstance("USD"),
+            authorizedAmount = BigDecimal.ZERO,
+            localAmount = null,
+            localCurrency = null,
+            enrichedMerchantName = null,
+            merchantName = "Test",
+            enrichedMerchantCategory = null,
+            merchantCategoryCode = null,
+            merchantCategory = null,
+            status = TangemPayTxHistoryItem.Status.COMPLETED,
+            enrichedMerchantIconUrl = null,
+            declinedReason = null,
         )
 
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
+        // Act
+        val actual = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
 
-        assertThat(result).isNull()
+        // Assert
+        assertThat(actual).isEqualTo(expected)
     }
 
     @Test
-    fun `convertSpend returns null when amount is missing`() {
-        val payload = mapOf(
-            "transaction_id" to "txn-123",
-            "currency" to "usd",
-            "merchant_name" to "Test",
-            "status" to "completed",
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
-        )
+    fun `GIVEN merchant_name is absent WHEN convertSpend THEN enriched_merchant_name is used instead`() {
+        // Arrange
+        val payload = requiredSpendPayload() - "merchant_name" + ("enriched_merchant_name" to "Playstation")
 
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
+        // Act
+        val actual = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
 
-        assertThat(result).isNull()
+        // Assert
+        assertThat(actual?.merchantName).isEqualTo("Playstation")
     }
 
-    @Test
-    fun `convertSpend returns null when currency is missing`() {
-        val payload = mapOf(
-            "transaction_id" to "txn-123",
-            "amount" to "5.24",
-            "merchant_name" to "Test",
-            "status" to "completed",
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
-        )
+    @ParameterizedTest
+    @MethodSource("unusableSpendPayloads")
+    fun `GIVEN a required field missing or unusable WHEN convertSpend THEN returns null`(model: UnusableSpendModel) {
+        // Act
+        val actual = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(model.payload)
 
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
-
-        assertThat(result).isNull()
+        // Assert
+        assertThat(actual).isNull()
     }
 
-    @Test
-    fun `convertSpend returns null when merchant_name is missing`() {
-        val payload = mapOf(
-            "transaction_id" to "txn-123",
-            "amount" to "5.24",
-            "currency" to "usd",
-            "status" to "completed",
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
-        )
+    @ParameterizedTest
+    @MethodSource("spendStatusModels")
+    fun `GIVEN a push status WHEN convertSpend THEN it is mapped to the history status`(model: SpendStatusModel) {
+        // Arrange
+        val payload = requiredSpendPayload() + ("status" to model.status)
 
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
+        // Act
+        val actual = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
 
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `convertSpend falls back to enriched_merchant_name when merchant_name is absent`() {
-        val payload = mapOf(
-            "transaction_id" to "txn-123",
-            "amount" to "5.24",
-            "currency" to "usd",
-            "enriched_merchant_name" to "Playstation",
-            "status" to "completed",
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
-
-        assertThat(result).isNotNull()
-        assertThat(result!!.merchantName).isEqualTo("Playstation")
-    }
-
-    @Test
-    fun `convertSpend returns null when status is missing`() {
-        val payload = mapOf(
-            "transaction_id" to "txn-123",
-            "amount" to "5.24",
-            "currency" to "usd",
-            "merchant_name" to "Test",
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `convertSpend returns null when authorized_at is missing`() {
-        val payload = mapOf(
-            "transaction_id" to "txn-123",
-            "amount" to "5.24",
-            "currency" to "usd",
-            "merchant_name" to "Test",
-            "status" to "completed",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `convertSpend returns null when amount is not a number`() {
-        val payload = mapOf(
-            "transaction_id" to "txn-123",
-            "amount" to "abc",
-            "currency" to "usd",
-            "merchant_name" to "Test",
-            "status" to "completed",
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `convertSpend returns null when currency is invalid`() {
-        val payload = mapOf(
-            "transaction_id" to "txn-123",
-            "amount" to "5.24",
-            "currency" to "INVALID",
-            "merchant_name" to "Test",
-            "status" to "completed",
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `convertSpend maps all statuses correctly`() {
-        fun spendPayloadWithStatus(status: String) = mapOf(
-            "transaction_id" to "txn-123",
-            "amount" to "1.00",
-            "currency" to "usd",
-            "merchant_name" to "Test",
-            "status" to status,
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
-        )
-
-        assertThat(TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(spendPayloadWithStatus("pending"))!!.status)
-            .isEqualTo(TangemPayTxHistoryItem.Status.PENDING)
-        assertThat(TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(spendPayloadWithStatus("reserved"))!!.status)
-            .isEqualTo(TangemPayTxHistoryItem.Status.RESERVED)
-        assertThat(TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(spendPayloadWithStatus("completed"))!!.status)
-            .isEqualTo(TangemPayTxHistoryItem.Status.COMPLETED)
-        assertThat(TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(spendPayloadWithStatus("declined"))!!.status)
-            .isEqualTo(TangemPayTxHistoryItem.Status.DECLINED)
-        assertThat(TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(spendPayloadWithStatus("reversed"))!!.status)
-            .isEqualTo(TangemPayTxHistoryItem.Status.REVERSED)
-        assertThat(TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(spendPayloadWithStatus("unknown_value"))!!.status)
-            .isEqualTo(TangemPayTxHistoryItem.Status.UNKNOWN)
-    }
-
-    @Test
-    fun `convertSpend returns null when transaction_id is empty`() {
-        val payload = mapOf(
-            "transaction_id" to "",
-            "amount" to "5.24",
-            "currency" to "usd",
-            "merchant_name" to "Test",
-            "status" to "completed",
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
-
-        assertThat(result).isNull()
+        // Assert
+        assertThat(actual?.status).isEqualTo(model.expected)
     }
 
     @ParameterizedTest
@@ -313,6 +207,15 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         assertThat(result).isNull()
     }
 
+    @Test
+    fun `GIVEN an empty payload WHEN convertCollateral THEN returns null`() {
+        // Act
+        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(emptyMap())
+
+        // Assert
+        assertThat(result).isNull()
+    }
+
     @ParameterizedTest
     @NullAndEmptySource
     fun `GIVEN no transaction_hash WHEN convertCollateral THEN Collateral without hash`(transactionHash: String?) {
@@ -345,42 +248,6 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
 
         // Assert
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `convertSpend handles optional fields as null`() {
-        val payload = mapOf(
-            "transaction_id" to "txn-123",
-            "amount" to "5.24",
-            "currency" to "usd",
-            "merchant_name" to "Test",
-            "status" to "completed",
-            "authorized_at" to "2025-10-24T10:32:24.496Z",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
-
-        assertThat(result).isNotNull()
-        assertThat(result!!.localAmount).isNull()
-        assertThat(result.localCurrency).isNull()
-        assertThat(result.enrichedMerchantName).isNull()
-        assertThat(result.enrichedMerchantIconUrl).isNull()
-        assertThat(result.enrichedMerchantCategory).isNull()
-        assertThat(result.merchantCategory).isNull()
-        assertThat(result.merchantCategoryCode).isNull()
-        assertThat(result.declinedReason).isNull()
-    }
-
-    @Test
-    fun `convertSpend returns null for empty payload`() {
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(emptyMap())
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `convertCollateral returns null for empty payload`() {
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(emptyMap())
         assertThat(result).isNull()
     }
 
@@ -423,6 +290,15 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         assertThat(result.localAmount).isEqualTo(BigDecimal("11.80"))
     }
 
+    private fun requiredSpendPayload() = mapOf(
+        "transaction_id" to "txn-123",
+        "amount" to "5.24",
+        "currency" to "usd",
+        "merchant_name" to "Test",
+        "status" to "completed",
+        "authorized_at" to "2025-10-24T10:32:24.496Z",
+    )
+
     private fun spendPayload(type: String, amount: String, localAmount: String) = mapOf(
         "type" to type,
         "transaction_id" to "txn-123",
@@ -463,6 +339,28 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         type = type,
     )
 
+    private fun unusableSpendPayloads() = listOf(
+        UnusableSpendModel(field = "transaction_id missing", payload = requiredSpendPayload() - "transaction_id"),
+        UnusableSpendModel(field = "transaction_id empty", payload = requiredSpendPayload() + ("transaction_id" to "")),
+        UnusableSpendModel(field = "amount missing", payload = requiredSpendPayload() - "amount"),
+        UnusableSpendModel(field = "amount not a number", payload = requiredSpendPayload() + ("amount" to "abc")),
+        UnusableSpendModel(field = "currency missing", payload = requiredSpendPayload() - "currency"),
+        UnusableSpendModel(field = "currency invalid", payload = requiredSpendPayload() + ("currency" to "INVALID")),
+        UnusableSpendModel(field = "merchant_name missing", payload = requiredSpendPayload() - "merchant_name"),
+        UnusableSpendModel(field = "status missing", payload = requiredSpendPayload() - "status"),
+        UnusableSpendModel(field = "authorized_at missing", payload = requiredSpendPayload() - "authorized_at"),
+        UnusableSpendModel(field = "empty payload", payload = emptyMap()),
+    )
+
+    private fun spendStatusModels() = listOf(
+        SpendStatusModel(status = "pending", expected = TangemPayTxHistoryItem.Status.PENDING),
+        SpendStatusModel(status = "reserved", expected = TangemPayTxHistoryItem.Status.RESERVED),
+        SpendStatusModel(status = "completed", expected = TangemPayTxHistoryItem.Status.COMPLETED),
+        SpendStatusModel(status = "declined", expected = TangemPayTxHistoryItem.Status.DECLINED),
+        SpendStatusModel(status = "reversed", expected = TangemPayTxHistoryItem.Status.REVERSED),
+        SpendStatusModel(status = "unknown_value", expected = TangemPayTxHistoryItem.Status.UNKNOWN),
+    )
+
     private fun provideTestModels() = listOf(
         CollateralTypeModel(
             type = "collateral_deposit",
@@ -489,6 +387,10 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
             expectedAmount = "0.30",
         ),
     )
+
+    data class UnusableSpendModel(val field: String, val payload: Map<String, String>)
+
+    data class SpendStatusModel(val status: String, val expected: TangemPayTxHistoryItem.Status)
 
     data class CollateralTypeModel(
         val type: String,

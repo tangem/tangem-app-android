@@ -9,8 +9,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
-import com.tangem.features.polymarket.impl.placeprediction.model.BuyAmountCalculator
+import com.tangem.features.polymarket.impl.placeprediction.entity.canAcceptQuote
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
 
@@ -21,7 +20,7 @@ internal class SetQuoteResultTransformer(
 ) : Transformer<PlacePredictionUM> {
 
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
-        if (prevState.submit !is SubmitUM.Idle) return prevState
+        if (!prevState.submit.canAcceptQuote) return prevState
 
         val quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote)
         val updatedState = prevState.copy(
@@ -32,7 +31,6 @@ internal class SetQuoteResultTransformer(
                 prevState.market
             },
             minAmount = result.fold(ifLeft = { prevState.minAmount }, ifRight = { it.minAmount }),
-            lastFeeRate = result.getOrNull()?.let(BuyAmountCalculator::feeRate) ?: prevState.lastFeeRate,
         )
         val pricedQuote = result.getOrNull()?.takeIf { it.isPlaceable }
 

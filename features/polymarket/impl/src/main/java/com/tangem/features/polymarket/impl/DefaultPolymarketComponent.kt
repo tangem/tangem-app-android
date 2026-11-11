@@ -21,7 +21,9 @@ import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
+import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -104,10 +106,12 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             userWalletId = configuration.userWalletId,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
         )
+        is PolymarketRoute.Category -> createCategory(configuration, factoryContext)
         is PolymarketRoute.History -> PolymarketHistoryComponent(
             appComponentContext = factoryContext,
             params = PolymarketHistoryComponent.Params(userWalletId = configuration.userWalletId),
         )
+        is PolymarketRoute.FastTradingSettings -> createFastTradingSettings(configuration, factoryContext)
         is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
             appComponentContext = factoryContext,
             params = PolymarketEventDetailsComponent.Params(
@@ -158,6 +162,20 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             params = PolymarketPositionResultComponent.Params(configuration.userWalletId, configuration.position),
         )
     }
+
+    private fun createCategory(configuration: PolymarketRoute.Category, factoryContext: AppComponentContext) =
+        PolymarketCategoryComponent(
+            context = factoryContext,
+            params = PolymarketCategoryComponent.Params(configuration.userWalletId, configuration.category),
+        )
+
+    private fun createFastTradingSettings(
+        configuration: PolymarketRoute.FastTradingSettings,
+        factoryContext: AppComponentContext,
+    ) = PolymarketFastTradingSettingsComponent(
+        appComponentContext = factoryContext,
+        params = PolymarketFastTradingSettingsComponent.Params(userWalletId = configuration.userWalletId),
+    )
 
     private fun onChildBack() {
         if (childStack.value.backStack.isEmpty()) {

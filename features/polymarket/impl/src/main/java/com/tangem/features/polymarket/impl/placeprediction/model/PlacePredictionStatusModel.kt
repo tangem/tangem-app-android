@@ -42,8 +42,12 @@ internal class PlacePredictionStatusModel @Inject constructor(
         awaitCreatedPosition()
     }
 
-    override fun onToMainClick() {
-        router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
+    override fun onCloseClick() {
+        if (params.isPositionClosed) {
+            router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
+        } else {
+            router.pop()
+        }
     }
 
     override fun onViewPositionClick() {

@@ -17,6 +17,7 @@ import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.Environment
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.FailureReason
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.time.CurrentTimeProvider
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Singleton
@@ -34,13 +36,14 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
     private val sdk: MeaWalletGooglePay,
     private val activityBridge: DefaultPushProvisioningActivityBridge,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val currentTimeProvider: CurrentTimeProvider,
 ) : GoogleWalletProvisioner {
 
     private val logger = TangemLogger.withTag(PUSH_PROVISIONING_LOG_TAG)
 
     private val isSdkReady: Boolean by lazy(::initializeSdk)
 
-    private val recentlyAddedCards = mutableSetOf<String>()
+    private val recentlyAddedCards = mutableMapOf<String, Long>()
 
     override val environment: Environment by lazy {
         if (sdk.isProdSdk) Environment.PROD else Environment.TEST
@@ -155,7 +158,7 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
         onThrow = Throwable::describe,
     ) { complete ->
         sdk.getEnvironment { environment ->
-            complete(environment.fold(ifLeft = { "unknown, code $it" }, ifRight = { it }))
+            complete(environment.fold(ifLeft = { "unknown, ${it.describe()}" }, ifRight = { it }))
         }
     }
 
@@ -175,37 +178,37 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
     private suspend fun canPushCard(lastFourDigits: String): Boolean {
         if (!hasEligibleTokenizationTarget(lastFourDigits)) return false
 
-        val hardwareIdError = findStableHardwareIdError() ?: return true
-        logger.e("$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: $hardwareIdError, card treated as unsupported")
+        val failure = findStableHardwareIdFailure() ?: return true
+        logger.e("$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: ${failure.describe()}, card treated as unsupported")
         return false
     }
 
     private suspend fun checkStableHardwareId(): AddResult.Failed? {
-        val errorCode = findStableHardwareIdError() ?: return null
+        val failure = findStableHardwareIdFailure() ?: return null
 
         return AddResult.Failed(
-            reason = if (errorCode == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE) {
+            reason = if (failure.code == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE) {
                 FailureReason.UNSUPPORTED
             } else {
                 FailureReason.GOOGLE_WALLET_ERROR
             },
-            description = "$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: $errorCode",
-            walletErrorCode = errorCode,
+            description = "$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: ${failure.describe()}",
+            walletErrorCode = failure.code,
         )
     }
 
-    private suspend fun findStableHardwareIdError(): Int? {
-        val errorCode = awaitWalletCheck(sdk::checkStableHardwareId) ?: return null
-        val isAppUnverified = errorCode == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE
-        return if (isAppUnverified || !isWalletMissing()) errorCode else null
+    private suspend fun findStableHardwareIdFailure(): TapAndPayFailure? {
+        val failure = awaitWalletCheck(sdk::checkStableHardwareId) ?: return null
+        val isAppUnverified = failure.code == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE
+        return if (isAppUnverified || !isWalletMissing()) failure else null
     }
 
     private suspend fun isWalletMissing(): Boolean =
-        awaitWalletCheck(sdk::checkActiveWallet) == TapAndPayStatusCodes.TAP_AND_PAY_NO_ACTIVE_WALLET
+        awaitWalletCheck(sdk::checkActiveWallet)?.code == TapAndPayStatusCodes.TAP_AND_PAY_NO_ACTIVE_WALLET
 
-    private suspend fun awaitWalletCheck(check: (onComplete: (errorCode: Int?) -> Unit) -> Unit): Int? =
-        awaitSdk<Option<Int>>(onTimeout = { None }, onThrow = { None }) { complete ->
-            check { errorCode -> complete(errorCode.toOption()) }
+    private suspend fun awaitWalletCheck(check: (onComplete: (TapAndPayFailure?) -> Unit) -> Unit): TapAndPayFailure? =
+        awaitSdk<Option<TapAndPayFailure>>(onTimeout = { None }, onThrow = { None }) { complete ->
+            check { failure -> complete(failure.toOption()) }
         }.getOrNull()
 
     private suspend fun resumeAdding(lastFourDigits: String, displayName: String, activity: Activity): AddResult {
@@ -259,7 +262,12 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
     }
 
     private fun reconcileWithRecentlyAdded(lastFourDigits: String, status: CardStatus): CardStatus = when (status) {
-        CardStatus.NotAdded -> if (lastFourDigits in recentlyAddedCards) CardStatus.Added else status
+        CardStatus.NotAdded -> if (isAddedRecently(lastFourDigits)) {
+            CardStatus.Added
+        } else {
+            recentlyAddedCards -= lastFourDigits
+            status
+        }
         CardStatus.Added, CardStatus.Incomplete -> {
             recentlyAddedCards -= lastFourDigits
             status
@@ -267,15 +275,21 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
         CardStatus.Unsupported, CardStatus.Unknown -> status
     }
 
+    private fun isAddedRecently(lastFourDigits: String): Boolean {
+        val addedAtMillis = recentlyAddedCards[lastFourDigits] ?: return false
+        val elapsedMillis = currentTimeProvider.nowMillis() - addedAtMillis
+        return elapsedMillis in 0 until RECENTLY_ADDED_WINDOW.inWholeMilliseconds
+    }
+
     private fun onAddResult(lastFourDigits: String, result: AddResult): AddResult {
         when (result) {
             AddResult.Added -> {
                 logger.i("Push provisioning succeeded")
-                recentlyAddedCards += lastFourDigits
+                recentlyAddedCards[lastFourDigits] = currentTimeProvider.nowMillis()
             }
             AddResult.AlreadyAdded -> {
                 logger.i("Push provisioning found the card already in the wallet")
-                recentlyAddedCards += lastFourDigits
+                recentlyAddedCards[lastFourDigits] = currentTimeProvider.nowMillis()
             }
             AddResult.Cancelled -> logger.i("Push provisioning cancelled")
             is AddResult.Failed -> if (result.reason == FailureReason.ADDITION_IN_PROGRESS) {
@@ -301,5 +315,6 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
         const val ELIGIBILITY_TIMEOUT_REASON = "Tokenization target check timed out"
         const val WALLET_ENVIRONMENT_TIMEOUT_REASON = "check timed out"
         val SDK_CALLBACK_TIMEOUT = 10.seconds
+        val RECENTLY_ADDED_WINDOW = 1.minutes
     }
 }

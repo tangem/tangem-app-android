@@ -8,9 +8,9 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
-import com.tangem.domain.pay.model.bankofframp.OfframpEta
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
 import com.tangem.features.tangempay.details.impl.R
 import java.math.BigDecimal
 import java.util.Currency
@@ -22,6 +22,7 @@ internal fun OfframpDestination.toTitleReference(): TextReference =
 private fun BankRail.toDefaultTitleReference(): TextReference = when (this) {
     BankRail.ACH -> resourceReference(R.string.tangempay_bank_transfer_fee_ach)
     BankRail.WIRE -> resourceReference(R.string.tangempay_bank_transfer_fee_fedwire)
+    BankRail.SPEI -> stringReference(name)
 }
 
 internal fun OfframpEta.toTextReference(): TextReference = when {

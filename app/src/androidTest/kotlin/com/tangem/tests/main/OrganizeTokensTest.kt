@@ -6,6 +6,7 @@ import com.tangem.scenarios.addNewCardWalletWithoutSync
 import com.tangem.scenarios.assertOrganizeTokensMatch
 import com.tangem.scenarios.getMainScreenTokensOrder
 import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.switchToNextWallet
 import com.tangem.scenarios.switchToPreviousWallet
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAddAndManageBottomSheet
@@ -43,7 +44,7 @@ class OrganizeTokensTest : BaseTestCase() {
             assertOrganizeTokensMatch(firstWalletTokens)
 
             step("Switch to second wallet Main screen") {
-                onMainScreen { swipeToAdjacentWallet(toPrevious = false) }
+                switchToNextWallet()
             }
 
             val secondWalletTokens = getMainScreenTokensOrder()

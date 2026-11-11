@@ -82,28 +82,13 @@ internal class DefaultCollectiblesAccountRepository @Inject constructor(
             .onFailure { TangemLogger.e("Failed to clear the collectibles account of $userWalletId", it) }
     }
 
-    override suspend fun unregisterAccount(userWalletId: UserWalletId) {
-        runSuspendCatching {
-            val response = walletAccountsFetcher.fetch(userWalletId = userWalletId)
-            if (response.accounts.none(WalletAccountDTO::isCollectibles)) return@runSuspendCatching
-
-            val syncedResponse = walletAccountsSaver.push(
-                userWalletId = userWalletId,
-                accounts = response.accounts.filterNot(WalletAccountDTO::isCollectibles),
-            ) ?: error("Failed to unregister the collectibles account of $userWalletId")
-
-            walletAccountsSaver.store(userWalletId = userWalletId, response = syncedResponse)
-        }
-            .onFailure { TangemLogger.e("Failed to unregister the collectibles account of $userWalletId", it) }
-    }
-
     private suspend fun pushRecord(userWalletId: UserWalletId) {
         val response = walletAccountsFetcher.fetch(userWalletId = userWalletId)
         if (response.accounts.any(WalletAccountDTO::isCollectibles)) return
 
         val syncedResponse = walletAccountsSaver.push(
             userWalletId = userWalletId,
-            accounts = response.accounts + Account.Collectibles(userWalletId).toWalletAccountDTO(),
+            accounts = listOf(Account.Collectibles(userWalletId).toWalletAccountDTO()) + response.accounts,
         ) ?: error("Failed to register the collectibles account of $userWalletId")
 
         walletAccountsSaver.store(userWalletId = userWalletId, response = syncedResponse)

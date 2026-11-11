@@ -11,7 +11,7 @@ android {
 dependencies {
     /** Project - Domain */
     api(projects.domain.models)
-    api(projects.domain.visa.models)
+    api(projects.domain.tangempay.models)
 
     /** Tangem libraries */
     api(tangemDeps.card.core)

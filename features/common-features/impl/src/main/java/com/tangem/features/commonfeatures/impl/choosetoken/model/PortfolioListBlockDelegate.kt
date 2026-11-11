@@ -21,6 +21,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
 import com.tangem.features.commonfeatures.impl.choosetoken.SettingContextUseCase
 import com.tangem.features.commonfeatures.impl.choosetoken.converter.ChooseTokenListItemConverter
 import com.tangem.features.commonfeatures.impl.choosetoken.converter.ConverterConfig
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.mapNotNullValues
 import dagger.assisted.Assisted
@@ -37,6 +38,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
     private val settingContext: SettingContextUseCase,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val getWalletsUseCase: GetWalletsUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
     dispatchers: CoroutineDispatcherProvider,
     @Assisted private val modelScope: CoroutineScope,
     @Assisted private val searchQueryState: StateFlow<SearchQuery>,
@@ -121,6 +123,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
                             paymentAccountTokens = featureSettings.paymentAccountTokens,
                             balanceFilter = balanceFilter,
                             isJointAccountsShown = featureSettings.isJointAccountsShown,
+                            isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
                         ),
                     ).convert()
 

@@ -5,6 +5,7 @@ import com.tangem.data.polymarket.DefaultPolymarketActivityRepository
 import com.tangem.data.polymarket.DefaultPolymarketLiveScoresRepository
 import com.tangem.data.polymarket.DefaultPolymarketLiveQuotesRepository
 import com.tangem.data.polymarket.DefaultPolymarketRepository
+import com.tangem.data.polymarket.DefaultPolymarketPriceHistoryRepository
 import com.tangem.data.polymarket.DefaultPolymarketPositionsRepository
 import com.tangem.data.polymarket.DefaultPolymarketRedeemRepository
 import com.tangem.data.polymarket.DefaultPolymarketSessionKeyRepository
@@ -15,8 +16,6 @@ import com.tangem.data.polymarket.derivation.DefaultPolymarketDepositWalletDeriv
 import com.tangem.data.polymarket.derivation.DefaultPolymarketEoaDeriver
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusFetcher
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
-import com.tangem.data.polymarket.flow.DefaultPredictionPositionsValueFetcher
-import com.tangem.data.polymarket.flow.DefaultPredictionPositionsValueProducer
 import com.tangem.data.polymarket.quote.PolymarketQuoteStore
 import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
@@ -29,6 +28,7 @@ import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.PolymarketPriceHistoryRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
@@ -41,9 +41,6 @@ import com.tangem.domain.polymarket.flow.DefaultPredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusProducer
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueProducer
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
@@ -51,6 +48,7 @@ import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInterac
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.model.PredictionWithdrawalTrackingConfig
+import com.tangem.domain.polymarket.usecase.GetPolymarketPriceHistoryUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
@@ -77,6 +75,9 @@ internal interface PolymarketDataModule {
     @Binds
     @Singleton
     fun bindPolymarketRepository(impl: DefaultPolymarketRepository): PolymarketRepository
+
+    @Binds
+    fun bindPriceHistoryRepository(impl: DefaultPolymarketPriceHistoryRepository): PolymarketPriceHistoryRepository
 
     @Binds
     @Singleton
@@ -120,18 +121,6 @@ internal interface PolymarketDataModule {
 
     @Binds
     @Singleton
-    fun bindPredictionPositionsValueFetcher(
-        impl: DefaultPredictionPositionsValueFetcher,
-    ): PredictionPositionsValueFetcher
-
-    @Binds
-    @Singleton
-    fun bindPredictionPositionsValueProducerFactory(
-        impl: DefaultPredictionPositionsValueProducer.Factory,
-    ): PredictionPositionsValueProducer.Factory
-
-    @Binds
-    @Singleton
     fun bindPredictionDepositRequisitesStore(
         impl: DefaultPredictionDepositRequisitesStore,
     ): PredictionDepositRequisitesStore
@@ -159,6 +148,10 @@ internal interface PolymarketDataModule {
     companion object {
 
         @Provides
+        fun providePriceHistoryUseCase(repository: PolymarketPriceHistoryRepository): GetPolymarketPriceHistoryUseCase =
+            GetPolymarketPriceHistoryUseCase(repository)
+
+        @Provides
         @Singleton
         fun provideQuoteStore(): PolymarketQuoteStore = PolymarketQuoteStore(TimeSource.Monotonic)
 
@@ -175,30 +168,17 @@ internal interface PolymarketDataModule {
 
         @Provides
         @Singleton
-        fun providePredictionPositionsValueSupplier(
-            factory: PredictionPositionsValueProducer.Factory,
-        ): PredictionPositionsValueSupplier {
-            return object : PredictionPositionsValueSupplier(
-                factory = factory,
-                keyCreator = { params -> "prediction_positions_value_${params.userWalletId.stringValue}" },
-            ) {}
-        }
-
-        @Provides
-        @Singleton
         fun providePredictionBalancePollingConfig(): PredictionBalancePollingConfig = PredictionBalancePollingConfig()
 
         @Provides
         @Singleton
         fun providePredictionBalancePoller(
             statusFetcher: PredictionAccountStatusFetcher,
-            positionsValueFetcher: PredictionPositionsValueFetcher,
             fundingWindow: PredictionFundingWindow,
             config: PredictionBalancePollingConfig,
             appScope: AppCoroutineScope,
         ): PredictionBalancePoller = PredictionBalancePoller(
             statusFetcher = statusFetcher,
-            positionsValueFetcher = positionsValueFetcher,
             fundingWindow = fundingWindow,
             config = config,
             appScope = appScope,

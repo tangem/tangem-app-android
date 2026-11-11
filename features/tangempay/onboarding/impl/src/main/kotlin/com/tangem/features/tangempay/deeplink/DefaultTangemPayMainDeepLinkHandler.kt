@@ -5,13 +5,13 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
-import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.visa.model.TangemPayPushNotificationType
-import com.tangem.domain.visa.model.action
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.TangemPayPushNotificationType
+import com.tangem.domain.tangempay.model.action
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
@@ -42,7 +42,7 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
         val walletId = payload[CUSTOMER_WALLET_ID_KEY]
 
         scope.launch {
-            val userWalletId = walletId?.let(::UserWalletId) ?: run {
+            val userWalletId = walletId?.let(UserWalletId::fromHexOrNull) ?: run {
                 appRouter.popTo(AppRoute.Wallet)
                 return@launch
             }

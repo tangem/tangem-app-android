@@ -154,11 +154,14 @@ object TangemSurface {
      *   theme, light in dark theme.
      * - [Modal] — heavier material used by modal containers (`colors3.materialModal`), e.g.
      *   bottom sheets and the shtorka.
+     * - [Menu] — material of popup menus (`colors3.materialMenu`), e.g.
+     *   [com.tangem.core.ui.ds2.menu.TangemMenu].
      */
     enum class MaterialStyle {
         Default,
         Inverted,
         Modal,
+        Menu,
     }
 }
 
@@ -325,6 +328,15 @@ private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
             borderStart = colors.materialModal.border.start,
             borderMid = colors.materialModal.border.mid,
             borderEnd = colors.materialModal.border.end,
+        )
+        TangemSurface.MaterialStyle.Menu -> MaterialColors(
+            fillBlur = colors.materialMenu.fill.blur,
+            tintBlur = colors.materialMenu.tint.blur,
+            fillSolid = colors.materialMenu.fill.solid,
+            tintSolid = colors.materialMenu.tint.solid,
+            borderStart = colors.materialMenu.border.start,
+            borderMid = colors.materialMenu.border.mid,
+            borderEnd = colors.materialMenu.border.end,
         )
     }
 }

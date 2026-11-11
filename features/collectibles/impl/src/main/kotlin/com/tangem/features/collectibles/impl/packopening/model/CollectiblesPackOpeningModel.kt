@@ -13,7 +13,6 @@ import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.collectibles.account.covers
@@ -38,6 +37,7 @@ import com.tangem.features.collectibles.impl.common.formatter.formatUsd
 import com.tangem.features.collectibles.impl.packopening.CollectiblesConfirmOrderBottomSheetConfig
 import com.tangem.features.collectibles.impl.packopening.CollectiblesPackOpeningComponent
 import com.tangem.features.collectibles.impl.packopening.PackOpeningConst
+import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesAutoBuybackConverter
 import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesPackOpeningConverter
 import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesRewardCardConverter
 import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesSellBackButtonConverter
@@ -255,7 +255,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
             return
         }
 
-        runOpenPack(OpenPackRequest.Buy(machineId = params.externalId, isTurboEnabled = params.isTurboEnabled))
+        runOpenPack(OpenPackRequest.Buy(machineId = params.externalId))
     }
 
     private fun runOpenPack(request: OpenPackRequest) {
@@ -274,15 +274,21 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         }
 
         modelScope.launch {
-            openCollectiblePackUseCase(userWallet, request).collect { step ->
-                if (step is OpenPackStep.Failed) showOpenPackError(step)
-
+            openCollectiblePackUseCase(userWallet, request, params.isTurboEnabled).collect { step ->
                 openPackStep.value = step
 
-                // Thrown once the card is known: an earlier throw could not be taken back if the purchase then failed
-                if (step is OpenPackStep.Opened) {
-                    observeBuybackOfferPolling(step.pack)
-                    launchPack(step.pack)
+                when (step) {
+                    is OpenPackStep.Failed -> showOpenPackError(step)
+                    is OpenPackStep.AutoBuybacked -> showAutoBuyback(step)
+                    is OpenPackStep.Opened -> {
+                        observeBuybackOfferPolling(step.pack)
+                        launchPack(step.pack)
+                    }
+                    OpenPackStep.NotStarted,
+                    OpenPackStep.Generating,
+                    OpenPackStep.Confirming,
+                    OpenPackStep.Opening,
+                    -> Unit
                 }
             }
         }
@@ -320,13 +326,28 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
             OpenPackStep.Failed.LowInventory -> bottomSheetNavigation.activate(
                 CollectiblesConfirmOrderBottomSheetConfig.LowInventory,
             )
-            // TODO an expired and a refunded purchase will likely open screens of their own; not localized yet
-            OpenPackStep.Failed.Expired -> showSnackbar(stringReference("Your purchase has expired"))
-            OpenPackStep.Failed.Refunded -> showSnackbar(stringReference("Your payment has been refunded"))
+            OpenPackStep.Failed.OpenFailed -> router.replaceCurrent(CollectiblesRoute.PackOpenFailed)
+            OpenPackStep.Failed.Refunded,
+            OpenPackStep.Failed.Refunding,
+            -> bottomSheetNavigation.activate(CollectiblesConfirmOrderBottomSheetConfig.RefundOnTheWay)
             OpenPackStep.Failed.PurchaseFailed,
             OpenPackStep.Failed.Unexpected,
             -> showSnackbar(resourceReference(R.string.common_something_went_wrong))
         }
+    }
+
+    private suspend fun showAutoBuyback(step: OpenPackStep.AutoBuybacked) {
+        step.pack?.imageFrontUrl?.let { url ->
+            withTimeoutOrNull(PackOpeningConst.CARD_IMAGES_TIMEOUT_MS.milliseconds) {
+                imagePreloader.preload(url).job.await()
+            }
+        }
+
+        bottomSheetNavigation.activate(
+            CollectiblesAutoBuybackConverter.convert(
+                CollectiblesAutoBuybackConverter.Input(amount = step.amount, price = machine?.total, pack = step.pack),
+            ),
+        )
     }
 
     private fun showSnackbar(message: TextReference) {
@@ -339,6 +360,11 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     }
 
     fun onEnableTurboMode() {
+        bottomSheetNavigation.dismiss()
+        router.pop()
+    }
+
+    fun onOpenAgain() {
         bottomSheetNavigation.dismiss()
         router.pop()
     }

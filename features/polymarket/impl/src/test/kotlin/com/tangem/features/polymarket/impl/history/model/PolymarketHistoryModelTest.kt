@@ -18,6 +18,7 @@ import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.NextPage
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.PaginationStatus
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -111,6 +112,54 @@ internal class PolymarketHistoryModelTest {
             resourceReference(R.string.prediction_positions_split),
         ).inOrder()
         assertThat(tabs.map { it.id }.distinct()).hasSize(8)
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a history state WHEN shown THEN hides the filters only when all history is empty`(
+        case: TabsCase,
+    ) = runTest {
+        // Arrange
+        val model = createModel()
+        state.value = PolymarketActivityState(items = case.items, filter = case.filter, status = case.status)
+
+        // Act
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.tabs).hasSize(case.tabCount)
+    }
+
+    @Test
+    fun `GIVEN an empty history WHEN it reloads THEN keeps the filters hidden`() = runTest {
+        // Arrange
+        val model = createModel()
+        state.value = PolymarketActivityState(status = PaginationStatus.EndOfPagination)
+        runCurrent()
+
+        // Act
+        state.value = PolymarketActivityState(status = PaginationStatus.InitialLoading)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.content).isEqualTo(Content.Loading)
+        assertThat(model.uiState.value.tabs).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN an empty history WHEN activity arrives THEN shows the filters again`() = runTest {
+        // Arrange
+        val model = createModel()
+        state.value = PolymarketActivityState(status = PaginationStatus.EndOfPagination)
+        runCurrent()
+
+        // Act
+        state.value = PolymarketActivityState(listOf(historyTrade()), status = PaginationStatus.EndOfPagination)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.content).isInstanceOf(Content.Data::class.java)
+        assertThat(model.uiState.value.tabs).hasSize(8)
     }
 
     @ParameterizedTest
@@ -277,5 +326,27 @@ internal class PolymarketHistoryModelTest {
             messageSender = messageSender,
         ).also { model = it }
     }
+
+    private companion object {
+        @JvmStatic
+        fun provideTestModels() = listOf(
+            TabsCase(status = PaginationStatus.InitialLoading, tabCount = 8),
+            TabsCase(status = PaginationStatus.InitialLoadingError(IllegalStateException()), tabCount = 8),
+            TabsCase(status = PaginationStatus.EndOfPagination, tabCount = 0),
+            TabsCase(
+                filter = PolymarketActivityFilter(PolymarketActivity.Type.BUY),
+                status = PaginationStatus.EndOfPagination,
+                tabCount = 8,
+            ),
+            TabsCase(items = listOf(historyTrade()), status = PaginationStatus.EndOfPagination, tabCount = 8),
+        )
+    }
+
+    data class TabsCase(
+        val items: List<PolymarketActivity> = emptyList(),
+        val filter: PolymarketActivityFilter = PolymarketActivityFilter(),
+        val status: PaginationStatus<List<PolymarketActivity>>,
+        val tabCount: Int,
+    )
 
 }

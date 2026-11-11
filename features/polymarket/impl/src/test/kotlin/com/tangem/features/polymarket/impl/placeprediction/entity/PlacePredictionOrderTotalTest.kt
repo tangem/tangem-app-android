@@ -43,7 +43,11 @@ internal class PlacePredictionOrderTotalTest {
             expected = BigDecimal("43.09"),
         ),
         OrderTotalModel(side = PredictionOrderSide.BUY, quote = QuoteUM.Empty, expected = null),
-        OrderTotalModel(side = PredictionOrderSide.BUY, quote = QuoteUM.Loading, expected = null),
+        OrderTotalModel(
+            side = PredictionOrderSide.BUY,
+            quote = QuoteUM.Loading,
+            expected = null,
+        ),
         OrderTotalModel(
             side = PredictionOrderSide.SELL,
             quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),

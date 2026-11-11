@@ -10,6 +10,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.dialog.Dialogs.hotWalletsLimitReachedDialog
 import com.tangem.domain.cloudbackup.analytics.analyticsMessage
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
@@ -17,6 +18,9 @@ import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.usecase.GetBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
@@ -51,11 +55,13 @@ internal class RestoreCloudBackupModel @Inject constructor(
     cloudRestoreResultHolder: CloudRestoreResultHolder,
     private val restoreCloudBackupUseCase: RestoreCloudBackupUseCase,
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val mnemonicRepository: MnemonicRepository,
     private val hotWalletImporter: HotWalletImporter,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getBackupPasswordUseCase: GetBackupPasswordUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<RestoreCloudBackupComponent.Params>()
@@ -73,6 +79,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private var accountEmail: String? = null
     private var backups: List<CloudBackupInfo> = emptyList()
     private var selectedBackup: CloudBackupInfo? = null
+    private var addedWalletIds: Set<String> = emptySet()
 
     val uiState: StateFlow<RestoreCloudBackupUM>
         field = MutableStateFlow(resolveInitialState(cloudRestoreResultHolder))
@@ -107,7 +114,13 @@ internal class RestoreCloudBackupModel @Inject constructor(
 
         accountEmail = result?.accountEmail
         backups = loaded
-        return if (loaded.size == 1) {
+        addedWalletIds = if (hotWalletFeatureToggles.isMultipleHotWalletsEnabled) {
+            userWalletsListRepository.userWallets.value.orEmpty().mapTo(mutableSetOf()) { it.walletId.stringValue }
+        } else {
+            emptySet()
+        }
+        val isAnyBackupAdded = loaded.any { it.isAlreadyAdded() }
+        return if (loaded.size == 1 && !isAnyBackupAdded) {
             selectedBackup = loaded.first()
             sendEnterPasswordScreenEvent()
             buildEnterPasswordUM()
@@ -126,15 +139,19 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private fun buildBackupListUM(list: List<CloudBackupInfo>): RestoreCloudBackupUM.BackupList =
         RestoreCloudBackupUM.BackupList(
             items = list.map { info ->
+                val isAdded = info.isAlreadyAdded()
                 BackupRowUM(
                     walletName = info.walletName,
                     createdAtMillis = info.createdAtMillis,
-                    onClick = { showEnterPassword(info) },
+                    isAlreadyAdded = isAdded,
+                    onClick = { if (!isAdded) showEnterPassword(info) },
                 )
             }.toImmutableList(),
             accountEmail = accountEmail,
             onBack = ::onRootBack,
         )
+
+    private fun CloudBackupInfo.isAlreadyAdded(): Boolean = walletId in addedWalletIds
 
     private fun showEnterPassword(backup: CloudBackupInfo) {
         selectedBackup = backup
@@ -207,7 +224,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
     }
 
     private suspend fun runRestore(backup: CloudBackupInfo) {
-        restoreCloudBackupUseCase(fileId = backup.fileId, password = password).fold(
+        restoreCloudBackupUseCase(backup.fileId, password, accountName = backupAccountName()).fold(
             ifLeft = { error ->
                 if (error == CloudBackupError.WrongPassword) {
                     analyticsEventHandler.send(OnboardingAnalyticsEvent.Backup.WrongCloudBackupPassword())
@@ -288,10 +305,12 @@ internal class RestoreCloudBackupModel @Inject constructor(
             passphrase = passphrase?.takeIf { it.isNotEmpty() },
             name = name,
             isSeedPhraseBackedUp = false,
+            analyticsSource = params.analyticsSource,
         ).fold(
             ifLeft = { error ->
                 when (error) {
                     HotWalletImportError.AlreadySaved -> showAlreadyAdded()
+                    HotWalletImportError.LimitReached -> showLimitReached()
                     is HotWalletImportError.PassphraseTooLong,
                     is HotWalletImportError.Unknown,
                     -> showError(CloudBackupError.Unknown())
@@ -299,10 +318,19 @@ internal class RestoreCloudBackupModel @Inject constructor(
             },
             ifRight = { userWalletId ->
                 wipeSecrets()
-                setCloudBackupStateUseCase(userWalletId.stringValue, isBackedUp = true)
+                // the restored wallet keeps the account it came from, the other wallets keep theirs
+                setCloudBackupStateUseCase(userWalletId.stringValue, isBackedUp = true, backupAccountName())
                 params.callbacks.onWalletImported(userWalletId)
             },
         )
+    }
+
+    private fun backupAccountName() = accountEmail.takeIf { hotWalletFeatureToggles.isMultipleHotWalletsEnabled }
+
+    private fun showLimitReached() {
+        uiState.value = buildCurrentStepUM()
+        analyticsEventHandler.send(importLimitReachedEvent())
+        uiMessageSender.send(hotWalletsLimitReachedDialog())
     }
 
     private fun showAlreadyAdded() {
@@ -336,19 +364,6 @@ internal class RestoreCloudBackupModel @Inject constructor(
         else -> buildEnterPasswordUM()
     }
 
-    private fun errorDialog(error: CloudBackupError): DialogMessage {
-        val messageRes = if (error == CloudBackupError.NetworkError) {
-            R.string.hw_cloud_backup_error_network
-        } else {
-            R.string.hw_cloud_backup_restore_error_with_recovery
-        }
-        return DialogMessage(
-            title = resourceReference(R.string.hw_cloud_backup_restore_error_title),
-            message = resourceReference(messageRes),
-            firstAction = EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {}),
-        )
-    }
-
     private fun onRootBack() {
         wipeSecrets()
         params.callbacks.onBack()
@@ -377,4 +392,22 @@ internal class RestoreCloudBackupModel @Inject constructor(
         wipePassphrase()
         wipeRestoredSecret()
     }
+}
+
+private fun importLimitReachedEvent() = NoticeMobileWalletLimit(
+    type = NoticeMobileWalletLimit.Type.Import,
+    limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+)
+
+private fun errorDialog(error: CloudBackupError): DialogMessage {
+    val messageRes = if (error == CloudBackupError.NetworkError) {
+        R.string.hw_cloud_backup_error_network
+    } else {
+        R.string.hw_cloud_backup_restore_error_with_recovery
+    }
+    return DialogMessage(
+        title = resourceReference(R.string.hw_cloud_backup_restore_error_title),
+        message = resourceReference(messageRes),
+        firstAction = EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {}),
+    )
 }

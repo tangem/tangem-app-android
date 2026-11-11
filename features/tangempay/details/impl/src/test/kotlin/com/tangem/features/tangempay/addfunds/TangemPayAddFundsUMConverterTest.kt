@@ -9,7 +9,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_20
 import com.tangem.core.ui.res.generated.icons.ic_government_20
 import com.tangem.domain.models.account.VirtualAccountOnramp
-import com.tangem.domain.pay.model.TangemPayTopUpData
+import com.tangem.domain.tangempay.model.TangemPayTopUpData
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk

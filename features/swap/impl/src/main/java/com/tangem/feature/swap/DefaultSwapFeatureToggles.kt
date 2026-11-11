@@ -14,6 +14,11 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
             toggle = FeatureToggles.TWI_1850_TRON_GASLESS_DEX_SWAP_ENABLED,
         )
 
+    override val isEvmGaslessDexSwapEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_18712_EVM_GASLESS_DEX_SWAP_ENABLED,
+        )
+
     override val isTronClientEnergyEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.TWI_1858_TRON_CLIENT_ENERGY_ENABLED,
@@ -22,16 +27,6 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
     override val isTronLowerFeeTypeEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_17201_TRON_LOWER_FEE_TYPE_ENABLED,
-        )
-
-    override val isOverallBestPriceEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.TWI_1876_KYC_PRESCREENING_CEX_ENABLED,
-        )
-
-    override val isHideRejectedCexProviderEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.TWI_1876_KYC_PRESCREENING_CEX_ENABLED,
         )
 
     override val isSolanaGaslessEnabled: Boolean

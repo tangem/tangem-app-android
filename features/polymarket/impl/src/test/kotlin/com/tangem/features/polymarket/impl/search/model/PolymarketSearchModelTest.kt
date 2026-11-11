@@ -16,7 +16,7 @@ import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.createPredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.createPolymarketEvent
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
 import com.tangem.features.polymarket.impl.search.ui.state.PolymarketSearchUM
@@ -379,6 +379,7 @@ internal class PolymarketSearchModelTest {
             messageSender = messageSender,
             regionAccess = regionAccess,
             searchPolymarketEventsUseCase = searchEventsUseCase,
+            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
         ).also { model = it }
     }
 

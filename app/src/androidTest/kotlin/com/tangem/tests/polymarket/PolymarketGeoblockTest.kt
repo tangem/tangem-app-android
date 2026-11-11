@@ -7,7 +7,6 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.scenarios.POLYMARKET_AB_TEST_ON
 import com.tangem.scenarios.POLYMARKET_AB_TEST_PROPERTY
 import com.tangem.scenarios.POLYMARKET_BRIDGE_DEPOSIT_PATH
@@ -33,20 +32,14 @@ import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
 class PolymarketGeoblockTest : BaseTestCase() {
 
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.AND_16204_POLYMARKET_ENABLED.rawName to true,
-    )
-
     @Test
-    @Ignore("[REDACTED_JIRA]")
     @AllureId("12903")
-    @DisplayName("Polymarket: geoblock. Region restrictions are shown instead of onboarding for a new account")
+    @DisplayName("Polymarket: geoblock. Region restrictions are shown on start for a new account")
     fun regionBlockedNewAccountTest() {
         val blockedState = "Blocked"
 
@@ -67,13 +60,16 @@ class PolymarketGeoblockTest : BaseTestCase() {
             step("Open Polymarket from the 'Predictions' banner") {
                 openPolymarketFromMarketsBanner()
             }
+            step("Assert onboarding 'Welcome' screen is displayed") {
+                flakySafely { onPolymarketOnboardingScreen { welcomeScreen.assertIsDisplayed() } }
+            }
+            step("Click on 'Start predicting' button") {
+                clickPolymarketOnboardingActionButton()
+            }
             step("Assert 'Region restrictions' sheet is displayed") {
                 flakySafely {
                     onPolymarketOnboardingScreen { regionRestrictionsSheet.assertIsDisplayed() }
                 }
-            }
-            step("Assert onboarding 'Welcome' screen is not displayed") {
-                onPolymarketOnboardingScreen { welcomeScreen.assertDoesNotExist() }
             }
             step("Assert the account was not deployed") {
                 assertEquals(deployRequestsBefore, getWireMockRequestCount("POST", POLYMARKET_DEPLOY_PATH))
@@ -187,7 +183,10 @@ class PolymarketGeoblockTest : BaseTestCase() {
                 flakySafely { onPolymarketMainScreen { withdrawButton.assertIsEnabled() } }
             }
             step("Assert active positions are displayed") {
-                flakySafely { onPolymarketMainScreen { viewAllActivePositionsButton.assertIsDisplayed() } }
+                flakySafely { onPolymarketMainScreen { firstPositionCard.assertIsDisplayed() } }
+            }
+            step("Assert 'See all active positions' button is not displayed") {
+                onPolymarketMainScreen { viewAllActivePositionsButton.assertDoesNotExist() }
             }
             step("Click on 'More' button") {
                 onPolymarketMainScreen { moreButton.clickWithAssertion() }
@@ -365,7 +364,10 @@ class PolymarketGeoblockTest : BaseTestCase() {
                 flakySafely { onPolymarketMainScreen { withdrawButton.assertIsEnabled() } }
             }
             step("Assert active positions are displayed") {
-                flakySafely { onPolymarketMainScreen { viewAllActivePositionsButton.assertIsDisplayed() } }
+                flakySafely { onPolymarketMainScreen { firstPositionCard.assertIsDisplayed() } }
+            }
+            step("Assert 'See all active positions' button is not displayed") {
+                onPolymarketMainScreen { viewAllActivePositionsButton.assertDoesNotExist() }
             }
             step("Scroll to the first outcome button") {
                 flakySafely { onPolymarketMainScreen { scrollToFirstOutcomeButton() } }

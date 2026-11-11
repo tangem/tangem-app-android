@@ -6,10 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.media.VideoSurfaceState
-import com.tangem.core.ui.components.legal.LegalCaption
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.tangempay.ui.TangemPayBundleIntroductionLayout
-import com.tangem.features.tangempay.ui.TangemPayOnboardingLayout
 import com.tangem.features.tangempay.ui.TangemPayUnifiedOnboardingLayout
 
 @Composable
@@ -27,21 +25,8 @@ internal fun TangemPayHotWalletOnboardingScreen(
             onTermsClick = state.onTermsClick,
             onCloseClick = null,
         )
-    } else if (state.isPayBundleIntroductionEnabled) {
-        TangemPayBundleIntroductionLayout(state = state, video = video, modifier = modifier)
     } else {
-        TangemPayOnboardingLayout(
-            modifier = modifier,
-            isGetCardLoading = state.isLoading,
-            onGetCardClick = state.onGetCardClick,
-            onTermsClick = state.onTermsClick,
-            legalCaption = {
-                LegalCaption(
-                    onTermsOfServiceClick = state.onTermsOfServiceClick,
-                    onPrivacyPolicyClick = state.onPrivacyPolicyClick,
-                )
-            },
-        )
+        TangemPayBundleIntroductionLayout(state = state, video = video, modifier = modifier)
     }
 }
 
@@ -51,7 +36,6 @@ private fun TangemPayHotWalletOnboardingScreenPreview() {
     TangemThemePreviewRedesign {
         TangemPayHotWalletOnboardingScreen(
             state = TangemPayHotWalletOnboardingUM(
-                isPayBundleIntroductionEnabled = false,
                 isUnifiedOnboarding = false,
                 isLoading = false,
                 onGetCardClick = {},

@@ -10,15 +10,16 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.utils.StringsSigns.THREE_STARS
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
-import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
+import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -63,13 +64,13 @@ internal class CollectiblesMainModelTest {
     private val router: Router = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase = mockk()
     private val createOrReactivateUseCase: CreateOrReactivateCollectiblesAccountUseCase = mockk()
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
     private val accountRepository: CollectiblesAccountRepository = mockk()
     private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
-    private val hotDelegate: CollectiblesHotDelegate = mockk()
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
+    private val sessionKey: CollectiblesSessionKey = mockk()
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
 
     private val coldWallet = MockUserWalletFactory.create()
@@ -79,6 +80,7 @@ internal class CollectiblesMainModelTest {
 
     private lateinit var walletsFlow: MutableStateFlow<List<UserWallet>?>
     private lateinit var statusFlow: MutableStateFlow<CollectiblesAccountStatusValue>
+    private lateinit var isBalanceHiddenFlow: MutableStateFlow<Boolean>
 
     @BeforeEach
     fun resetMocks() {
@@ -86,23 +88,25 @@ internal class CollectiblesMainModelTest {
             router,
             messageSender,
             userWalletsListRepository,
-            closeCollectiblesVaultUseCase,
             createOrReactivateUseCase,
             accountStatusSupplier,
             accountRepository,
             accountStatusFetcher,
             getSelectedAppCurrencyUseCase,
-            hotDelegate,
+            getBalanceHidingSettingsUseCase,
+            sessionKey,
             clipboardManager,
         )
         walletsFlow = MutableStateFlow(listOf(coldWallet, selectedWallet))
         statusFlow = MutableStateFlow(CollectiblesAccountStatusValue.Loading)
+        isBalanceHiddenFlow = MutableStateFlow(false)
         every { userWalletsListRepository.userWallets } returns walletsFlow
         every { accountStatusSupplier(coldWallet.walletId) } returns statusFlow
         every { accountRepository.getStatus(coldWallet.walletId) } returns statusFlow
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns MutableStateFlow(AppCurrency.Default)
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
         coEvery { accountStatusFetcher(any()) } returns Unit.right()
-        coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns HotDelegatePublicKey(HOT_DELEGATE)
+        coEvery { sessionKey.getPublicKeyOrNull(any()) } returns SessionKeyPublicKey(SESSION_KEY)
     }
 
     @Nested
@@ -132,10 +136,56 @@ internal class CollectiblesMainModelTest {
 
             // Assert
             val expected = CollectiblesBalanceConverter().convert(
-                CollectiblesBalanceConverter.Input(status = PRICED_VAULT, appCurrency = AppCurrency.Default),
+                CollectiblesBalanceConverter.Input(
+                    status = PRICED_VAULT,
+                    appCurrency = AppCurrency.Default,
+                    isBalanceHidden = false,
+                ),
             )
             assertThat(model.uiState.value.balance).isEqualTo(expected)
             assertThat(model.uiState.value.balance.crypto).isNotEqualTo(stringReference(DASH_SIGN))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a priced vault WHEN balance hidden THEN every balance field is masked`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            statusFlow.value = PRICED_VAULT
+            advanceUntilIdle()
+
+            // Act
+            isBalanceHiddenFlow.value = true
+            advanceUntilIdle()
+
+            // Assert
+            val masked = stringReference(THREE_STARS)
+            val expected = CollectiblesMainUM.BalanceUM(fiatStyled = masked, fiatPlain = masked, crypto = masked)
+            assertThat(model.uiState.value.balance).isEqualTo(expected)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a hidden balance WHEN balance shown again THEN the account's balance is back`() = runTest {
+            // Arrange
+            isBalanceHiddenFlow.value = true
+            val model = createModel(testScope = this)
+            statusFlow.value = PRICED_VAULT
+            advanceUntilIdle()
+
+            // Act
+            isBalanceHiddenFlow.value = false
+            advanceUntilIdle()
+
+            // Assert
+            val expected = CollectiblesBalanceConverter().convert(
+                CollectiblesBalanceConverter.Input(
+                    status = PRICED_VAULT,
+                    appCurrency = AppCurrency.Default,
+                    isBalanceHidden = false,
+                ),
+            )
+            assertThat(model.uiState.value.balance).isEqualTo(expected)
             model.onDestroy()
         }
 
@@ -269,111 +319,36 @@ internal class CollectiblesMainModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class HotDelegate {
+    inner class SessionKey {
 
         @Test
-        fun `GIVEN a hot delegate WHEN its menu item clicked THEN the full address is copied`() = runTest {
+        fun `GIVEN a session key WHEN its menu item clicked THEN the full address is copied`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
             // Act
-            model.uiState.value.menu.items.single { it.id == "hot_delegate" }.onClick()
+            model.uiState.value.menu.items.single { it.id == "session_key" }.onClick()
 
             // Assert
-            verify(exactly = 1) { clipboardManager.setText(text = HOT_DELEGATE, isSensitive = false) }
+            verify(exactly = 1) { clipboardManager.setText(text = SESSION_KEY, isSensitive = false) }
             assertThat(model.uiState.value.menu.isShown).isFalse()
             model.onDestroy()
         }
 
         @Test
-        fun `GIVEN no hot delegate WHEN menu built THEN the item is absent`() = runTest {
+        fun `GIVEN no session key WHEN menu built THEN the item is absent`() = runTest {
             // Arrange
-            coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns null
+            coEvery { sessionKey.getPublicKeyOrNull(any()) } returns null
 
             // Act
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.uiState.value.menu.items.none { it.id == "hot_delegate" }).isTrue()
+            assertThat(model.uiState.value.menu.items.none { it.id == "session_key" }).isTrue()
             model.onDestroy()
         }
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class CloseAccount {
-
-        @Test
-        fun `GIVEN the vault closes WHEN close account clicked THEN the feature is popped`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            coEvery { closeCollectiblesVaultUseCase(coldWallet) } returns Unit.right()
-
-            // Act
-            model.uiState.value.menu.items.single { it.id == "close_account" }.onClick()
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) { router.pop(onComplete = any()) }
-            assertThat(model.uiState.value.menu.isShown).isFalse()
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN another wallet is selected WHEN close account clicked THEN the screen's wallet is closed`() =
-            runTest {
-                // Arrange
-                val model = createModel(testScope = this)
-                coEvery { closeCollectiblesVaultUseCase(any()) } returns Unit.right()
-
-                // Act
-                model.uiState.value.menu.items.single { it.id == "close_account" }.onClick()
-                advanceUntilIdle()
-
-                // Assert
-                coVerify(exactly = 1) { closeCollectiblesVaultUseCase(coldWallet) }
-                coVerify(exactly = 0) { closeCollectiblesVaultUseCase(selectedWallet) }
-                model.onDestroy()
-            }
-
-        @Test
-        fun `GIVEN the card refuses WHEN close account clicked THEN the account is kept`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            coEvery { closeCollectiblesVaultUseCase(coldWallet) } returns
-                CollectiblesAccountError.CardError(code = 50002, message = "50002").left()
-
-            // Act
-            model.uiState.value.menu.items.single { it.id == "close_account" }.onClick()
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 0) { router.pop(onComplete = any()) }
-            verify(exactly = 0) { messageSender.send(any()) }
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN the chain refuses WHEN close account clicked THEN a message is shown and the account is kept`() =
-            runTest {
-                // Arrange
-                val model = createModel(testScope = this)
-                coEvery { closeCollectiblesVaultUseCase(coldWallet) } returns
-                    CollectiblesAccountError.Vault(
-                        GachaVaultError.NetworkUnsupported,
-                    ).left()
-
-                // Act
-                model.uiState.value.menu.items.single { it.id == "close_account" }.onClick()
-                advanceUntilIdle()
-
-                // Assert
-                verify(exactly = 0) { router.pop(onComplete = any()) }
-                verify(exactly = 1) { messageSender.send(any()) }
-                model.onDestroy()
-            }
     }
 
     @Nested
@@ -553,7 +528,7 @@ internal class CollectiblesMainModelTest {
         }
 
         private fun relinkFailures() = listOf(
-            Arguments.of(CollectiblesAccountError.DelegateKeyCreationFailed(IllegalStateException("keystore")), true),
+            Arguments.of(CollectiblesAccountError.SessionKeyCreationFailed(IllegalStateException("keystore")), true),
             Arguments.of(CollectiblesAccountError.CardError(code = 1, message = "refused"), false),
             Arguments.of(CollectiblesAccountError.Cancelled, false),
         )
@@ -569,13 +544,13 @@ internal class CollectiblesMainModelTest {
             router = router,
             messageSender = messageSender,
             userWalletsListRepository = userWalletsListRepository,
-            closeCollectiblesVaultUseCase = closeCollectiblesVaultUseCase,
             createOrReactivateCollectiblesAccountUseCase = createOrReactivateUseCase,
             collectiblesAccountStatusSupplier = accountStatusSupplier,
             collectiblesAccountRepository = accountRepository,
             collectiblesAccountStatusFetcher = accountStatusFetcher,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-            hotDelegate = hotDelegate,
+            sessionKey = sessionKey,
+            getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             clipboardManager = clipboardManager,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         )
@@ -601,7 +576,7 @@ internal class CollectiblesMainModelTest {
 
     private companion object {
 
-        const val HOT_DELEGATE = "3hTCy6rJu8iXNWnFMB741HrVnbS5bViyfguEAMF5iT2P"
+        const val SESSION_KEY = "3hTCy6rJu8iXNWnFMB741HrVnbS5bViyfguEAMF5iT2P"
 
         val PRICED_VAULT = CollectiblesAccountStatusValue.Onboarded(
             source = StatusSource.ACTUAL,

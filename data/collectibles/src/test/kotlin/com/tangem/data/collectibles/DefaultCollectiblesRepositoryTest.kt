@@ -338,13 +338,13 @@ internal class DefaultCollectiblesRepositoryTest {
             runTest {
                 // Arrange
                 coEvery { collectiblesApi.purchaseTxSent(any(), any()) } returns
-                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PURCHASE_TX_HASH))
+                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PURCHASE_TX_SENT))
 
                 // Act
                 val actual = repository.reportPurchaseTxSent(userWalletId, txId = "tx-id", txHash = "hash")
 
                 // Assert
-                assertThat(actual).isEqualTo(CollectibleTxStatus.PURCHASE_TX_HASH)
+                assertThat(actual).isEqualTo(CollectibleTxStatus.PURCHASE_TX_SENT)
                 coVerify(exactly = 1) {
                     collectiblesApi.purchaseTxSent(
                         userWalletId = userWalletId.stringValue,
@@ -356,11 +356,19 @@ internal class DefaultCollectiblesRepositoryTest {
         @Test
         fun `GIVEN api fails WHEN getTxState THEN the api error is thrown`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.getTxStatus(userWalletId.stringValue, txId = "tx-id", includeNftWon = false) } returns
-                networkError<CollectibleTxResponse>()
+            coEvery {
+                collectiblesApi.getTxStatus(
+                    userWalletId = userWalletId.stringValue,
+                    txId = "tx-id",
+                    includeNftWon = false,
+                    includeAutoBuyback = true,
+                )
+            } returns networkError<CollectibleTxResponse>()
 
             // Act
-            val actual = runCatching { repository.getTxState(userWalletId, txId = "tx-id") }.exceptionOrNull()
+            val actual = runCatching {
+                repository.getTxState(userWalletId, txId = "tx-id", includeAutoBuyback = true)
+            }.exceptionOrNull()
 
             // Assert
             assertThat(actual).isInstanceOf(ApiResponseError.NetworkException::class.java)
@@ -379,6 +387,7 @@ internal class DefaultCollectiblesRepositoryTest {
                     userWalletId = userWalletId.stringValue,
                     body = CollectibleTxRequestBody(txId = "tx-id"),
                     includeNftWon = true,
+                    includeAutoBuyback = true,
                 )
             } returns ApiResponse.Success(
                 CollectibleTxResponse(
@@ -401,7 +410,7 @@ internal class DefaultCollectiblesRepositoryTest {
             )
 
             // Act
-            val actual = repository.openPack(userWalletId, txId = "tx-id")
+            val actual = repository.openPack(userWalletId, txId = "tx-id", includeAutoBuyback = true)
 
             // Assert
             assertThat(actual).isEqualTo(
@@ -427,11 +436,11 @@ internal class DefaultCollectiblesRepositoryTest {
         @Test
         fun `GIVEN no card in the answer WHEN openPack THEN only the status is returned`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.openPack(any(), any(), any()) } returns
+            coEvery { collectiblesApi.openPack(any(), any(), any(), any()) } returns
                 ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PACK_OPENED))
 
             // Act
-            val actual = repository.openPack(userWalletId, txId = "tx-id")
+            val actual = repository.openPack(userWalletId, txId = "tx-id", includeAutoBuyback = true)
 
             // Assert
             assertThat(actual).isEqualTo(CollectibleTxState(status = CollectibleTxStatus.PACK_OPENED, pack = null))
@@ -440,7 +449,7 @@ internal class DefaultCollectiblesRepositoryTest {
         @Test
         fun `GIVEN an auto buyback in the answer WHEN openPack THEN the payout is returned in whole USDC`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.openPack(any(), any(), any()) } returns ApiResponse.Success(
+            coEvery { collectiblesApi.openPack(any(), any(), any(), any()) } returns ApiResponse.Success(
                 CollectibleTxResponse(
                     txId = "tx-id",
                     status = CollectibleTxStatusDTO.AUTO_BUYBACKED,
@@ -460,7 +469,7 @@ internal class DefaultCollectiblesRepositoryTest {
             )
 
             // Act
-            val actual = repository.openPack(userWalletId, txId = "tx-id")
+            val actual = repository.openPack(userWalletId, txId = "tx-id", includeAutoBuyback = true)
 
             // Assert
             assertThat(actual).isEqualTo(
@@ -471,7 +480,55 @@ internal class DefaultCollectiblesRepositoryTest {
                 ),
             )
         }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a backend error WHEN openPack THEN it is thrown by its code`(model: OpenPackErrorModel) = runTest {
+            // Arrange
+            coEvery { collectiblesApi.openPack(any(), any(), any(), any()) } returns
+                httpError(code = model.httpCode, body = model.body)
+
+            // Act
+            val actual = runCatching { repository.openPack(userWalletId, txId = "tx-id", includeAutoBuyback = false) }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            OpenPackErrorModel(
+                httpCode = ApiResponseError.HttpException.Code.CONFLICT,
+                body = """{"status":409,"detail":"Pack is not ready","code":3009}""",
+                expected = CollectibleException.PackOpeningRefused::class.java,
+            ),
+            OpenPackErrorModel(
+                httpCode = ApiResponseError.HttpException.Code.BAD_GATEWAY,
+                body = """{"status":502,"detail":"Machine empty","code":3010}""",
+                expected = CollectibleException.PackOpeningRefused::class.java,
+            ),
+            OpenPackErrorModel(
+                httpCode = ApiResponseError.HttpException.Code.BAD_REQUEST,
+                body = """{"status":400,"detail":"Refund in progress","code":3999}""",
+                expected = CollectibleException.RefundInProgress::class.java,
+            ),
+            OpenPackErrorModel(
+                httpCode = ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE,
+                body = """{"status":503,"detail":"Provider is unavailable","code":3015}""",
+                expected = ApiResponseError.HttpException::class.java,
+            ),
+            OpenPackErrorModel(
+                httpCode = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR,
+                body = null,
+                expected = ApiResponseError.HttpException::class.java,
+            ),
+        )
     }
+
+    data class OpenPackErrorModel(
+        val httpCode: ApiResponseError.HttpException.Code,
+        val body: String?,
+        val expected: Class<out Throwable>,
+    )
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

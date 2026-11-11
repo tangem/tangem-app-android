@@ -65,6 +65,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -129,42 +130,11 @@ internal fun LazyListScope.tokensListItems2(
                 }
             }
         }
-        is WalletTokensListUM.Content -> {
-            walletTokensListUM.tokenList.fastForEachIndexed { index, listItem ->
-                when (listItem) {
-                    is TokensListItemUM2.GroupTitle,
-                    is TokensListItemUM2.Token,
-                    -> tokenItem(
-                        listItem = listItem,
-                        index = index,
-                        lastIndex = walletTokensListUM.tokenList.lastIndex,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = modifier,
-                    )
-                    is TokensListItemUM2.Portfolio -> portfolioItem(
-                        listItem = listItem,
-                        index = index,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = modifier,
-                    )
-                    is TokensListItemUM2.JointPending -> jointPendingItem(
-                        listItem = listItem,
-                        index = index,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = modifier,
-                    )
-                    is TokensListItemUM2.AccountV2 -> accountItemV2(
-                        listItem = listItem,
-                        index = index,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = modifier,
-                    )
-                    is TokensListItemUM2.SectionV2,
-                    is TokensListItemUM2.TokenV2,
-                    -> Unit
-                }
-            }
-        }
+        is WalletTokensListUM.Content -> contentItems2(
+            tokenList = walletTokensListUM.tokenList,
+            isBalanceHidden = isBalanceHidden,
+            modifier = modifier,
+        )
         is WalletTokensListUM.Empty -> nonContentItem2(
             onEmptyClick = walletTokensListUM.onEmptyClick,
             modifier = modifier,
@@ -172,6 +142,60 @@ internal fun LazyListScope.tokensListItems2(
     }
 }
 
+private fun LazyListScope.contentItems2(
+    tokenList: ImmutableList<TokensListItemUM2>,
+    isBalanceHidden: Boolean,
+    modifier: Modifier,
+) {
+    tokenList.fastForEachIndexed { index, listItem ->
+        when (listItem) {
+            is TokensListItemUM2.GroupTitle,
+            is TokensListItemUM2.Token,
+            -> tokenItem(
+                listItem = listItem,
+                index = index,
+                lastIndex = tokenList.lastIndex,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokensListItemUM2.Portfolio -> portfolioItem(
+                listItem = listItem,
+                index = index,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokensListItemUM2.JointPending -> jointPendingItem(
+                listItem = listItem,
+                index = index,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokensListItemUM2.Collectibles -> collectiblesItem(
+                listItem = listItem,
+                index = index,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokensListItemUM2.AccountV2 -> accountItemV2(
+                listItem = listItem,
+                index = index,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokensListItemUM2.SectionV2,
+            is TokensListItemUM2.TokenV2,
+            -> tokenItemV2(
+                listItem = listItem,
+                index = index,
+                lastIndex = tokenList.lastIndex,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+        }
+    }
+}
+
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun LazyListScope.tokenItem(
     listItem: TokensListItemUM2,
     index: Int,
@@ -220,6 +244,41 @@ private fun LazyListScope.tokenItem(
     }
 }
 
+private fun LazyListScope.tokenItemV2(
+    listItem: TokensListItemUM2,
+    index: Int,
+    lastIndex: Int,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    item(key = listItem.id, contentType = listItem::class.java) {
+        val itemModifier = modifier
+            .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            .semantics { lazyListItemPosition = index }
+            .padding(top = if (index == 0) 12.dp else 0.dp)
+            .roundedShapeItemDecoration(
+                radius = 24.dp,
+                currentIndex = index,
+                addDefaultPadding = false,
+                lastIndex = lastIndex,
+                backgroundColor = TangemTheme.colors3.bg.secondary,
+            )
+
+        when (listItem) {
+            is TokensListItemUM2.TokenV2 -> TokenRowV2(
+                item = listItem,
+                isBalanceHidden = isBalanceHidden,
+                modifier = itemModifier,
+            )
+            is TokensListItemUM2.SectionV2 -> TangemAccountRow.Section(
+                title = listItem.title,
+                modifier = itemModifier,
+            )
+            else -> Unit
+        }
+    }
+}
+
 private fun LazyListScope.jointPendingItem(
     listItem: TokensListItemUM2.JointPending,
     index: Int,
@@ -227,6 +286,26 @@ private fun LazyListScope.jointPendingItem(
     modifier: Modifier = Modifier,
 ) {
     item(key = listItem.id, contentType = TokensListItemUM2.JointPending::class.java) {
+        TangemAccountRow(
+            avatar = listItem.avatar,
+            state = listItem.state,
+            isBalanceHidden = isBalanceHidden,
+            modifier = modifier
+                .padding(top = if (index == 0) 12.dp else 8.dp)
+                .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+                .semantics { lazyListItemPosition = index }
+                .animateContentSize(),
+        )
+    }
+}
+
+private fun LazyListScope.collectiblesItem(
+    listItem: TokensListItemUM2.Collectibles,
+    index: Int,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    item(key = listItem.id, contentType = TokensListItemUM2.Collectibles::class.java) {
         TangemAccountRow(
             avatar = listItem.avatar,
             state = listItem.state,

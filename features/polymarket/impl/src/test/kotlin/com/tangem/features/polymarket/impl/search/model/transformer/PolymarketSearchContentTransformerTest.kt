@@ -4,8 +4,8 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchListState
 import com.tangem.features.polymarket.impl.createPolymarketEvent
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.search.ui.state.PolymarketSearchUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchFetchResult
@@ -36,7 +36,7 @@ internal class PolymarketSearchContentTransformerTest {
     ): PolymarketSearchUM = PolymarketSearchContentTransformer(
         batchListState = state,
         isQueryActive = isQueryActive,
-        eventUMConverter = PolymarketEventUMConverter(onEventClick = {}, onOutcomeClick = { _, _, _ -> }),
+        eventUMConverter = PolymarketEventUMConverter(onEventClick = {}, onOutcomeClick = { _, _, _ -> }, isPhaseTwoEnabled = false),
         onReloadClick = { reloadClicks++ },
         onNextPageRetryClick = { nextPageRetryClicks++ },
     ).transform(prevState = PREV_STATE)

@@ -3,7 +3,9 @@ package com.tangem.features.send.networkselection.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
+import com.tangem.common.ui.tokens.TokenRowStateConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.features.send.send.analytics.SendAnalyticEvents
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -36,6 +38,8 @@ import com.tangem.features.send.api.NetworkSelectionComponent
 import com.tangem.features.send.networkselection.entity.AccountGroupUM
 import com.tangem.features.send.networkselection.entity.NetworkSelectionUM
 import com.tangem.features.send.networkselection.entity.WalletGroupUM
+import com.tangem.features.wallet.WalletFeatureToggles
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -44,6 +48,7 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class NetworkSelectionModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -51,6 +56,7 @@ internal class NetworkSelectionModel @Inject constructor(
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : Model() {
 
     private val params: NetworkSelectionComponent.Params = paramsContainer.require()
@@ -113,6 +119,7 @@ internal class NetworkSelectionModel @Inject constructor(
             searchBar = createSearchBar(query),
             walletGroups = walletGroups,
             isBalanceHidden = isBalanceHidden,
+            isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
         )
     }
 
@@ -165,10 +172,8 @@ internal class NetworkSelectionModel @Inject constructor(
         context: TokenMappingParams,
         iconState: CurrencyIconState.CryptoPortfolio?,
     ): AccountGroupUM? {
-        val tokens = accountGroup.currencies
-            .filter { matchesQuery(it, query) }
-            .map { currency -> buildTokenItem(currency, context) }
-            .toImmutableList()
+        val currencies = accountGroup.currencies.filter { matchesQuery(it, query) }
+        val tokens = currencies.map { currency -> buildTokenItem(currency, context) }.toImmutableList()
 
         if (tokens.isEmpty()) return null
 
@@ -177,6 +182,11 @@ internal class NetworkSelectionModel @Inject constructor(
             iconState = iconState,
             tokens = tokens,
             hiddenTokensCount = accountGroup.hiddenTokensCount,
+            tokenRows = if (walletFeatureToggles.isRedesignedTokenRowsEnabled) {
+                currencies.map { currency -> buildTokenRow(currency, context) }.toImmutableList()
+            } else {
+                persistentListOf()
+            },
         )
     }
 
@@ -200,6 +210,26 @@ internal class NetworkSelectionModel @Inject constructor(
             currency.network.name.lowercase().contains(lowerQuery)
     }
 
+    // TODO [REDACTED_TASK_KEY] Show the network instead of the price once TangemTokenRow supports a network subtitle
+    private fun buildTokenRow(currency: CryptoCurrency, context: TokenMappingParams): TangemTokenRow.State {
+        val status = context.statusMap[currency.id] ?: return TangemTokenRow.State.Shimmer(id = currency.id.value)
+        return TokenRowStateConverter(context.appCurrency).convert(
+            currencyStatus = status,
+            onClick = { onTokenClick(currency, context) },
+        )
+    }
+
+    private fun onTokenClick(currency: CryptoCurrency, context: TokenMappingParams) {
+        analyticsEventHandler.send(
+            SendAnalyticEvents.TokenSelected(
+                token = currency.symbol,
+                blockchain = currency.network.name,
+            ),
+        )
+        params.onTokenSelected(context.userWalletId, currency)
+    }
+
+    @RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
     private fun buildTokenItem(currency: CryptoCurrency, context: TokenMappingParams): TokenItemState {
         val status = context.statusMap[currency.id]
         if (status == null) {
@@ -232,15 +262,7 @@ internal class NetworkSelectionModel @Inject constructor(
                 text = cryptoAmount.format { crypto(currency) },
                 isFlickering = isFlickering,
             ),
-            onItemClick = {
-                analyticsEventHandler.send(
-                    SendAnalyticEvents.TokenSelected(
-                        token = currency.symbol,
-                        blockchain = currency.network.name,
-                    ),
-                )
-                params.onTokenSelected(context.userWalletId, currency)
-            },
+            onItemClick = { onTokenClick(currency, context) },
             onItemLongClick = null,
         )
     }

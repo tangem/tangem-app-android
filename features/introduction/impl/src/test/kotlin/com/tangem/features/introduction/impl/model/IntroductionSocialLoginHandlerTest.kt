@@ -13,9 +13,11 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SelectWalletError
 import com.tangem.domain.models.wallet.UserWallet
@@ -23,6 +25,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUseCase
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.features.hotwallet.SocialLoginConsent
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
@@ -58,6 +61,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import java.util.Locale
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
@@ -446,6 +450,44 @@ internal class IntroductionSocialLoginHandlerTest {
             .isEqualTo(resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved))
     }
 
+    @Test
+    fun `GIVEN hot wallets limit reached WHEN signIn THEN the limit is reported and the dialog is shown`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
+            SocialLoginError.HotWalletsLimitReached.left()
+        val message = slot<DialogMessage>()
+        every { uiMessageSender.send(capture(message)) } just Runs
+
+        // Act
+        handler.signIn(PROVIDER, host)
+
+        // Assert
+        assertThat(message.captured.message).isEqualTo(Dialogs.hotWalletsLimitReachedDialog().message)
+        verify(exactly = 1) {
+            analyticsEventHandler.send(SocialLoginAnalyticsEvents.ErrorShown(errorMessage = "Mobile wallets limit reached"))
+        }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                NoticeMobileWalletLimit(
+                    type = NoticeMobileWalletLimit.Type.SocialLogin,
+                    limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN another failure WHEN signIn THEN no limit notice is sent`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.NetworkError.left()
+
+        // Act
+        handler.signIn(PROVIDER, host)
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<NoticeMobileWalletLimit>()) }
+    }
+
     private fun provideSilentErrors() = listOf(
         SocialLoginError.SignInCanceled,
         SocialLoginError.ConsentDeclined,
@@ -659,6 +701,43 @@ internal class IntroductionSocialLoginHandlerTest {
         // Assert
         assertThat(host.progress).containsExactly(host.progress[0], null, null).inOrder()
         assertThat(host.progress[0]).isNotNull()
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["en", "de", "zh-Hans"])
+    fun `GIVEN any app language WHEN learn more is clicked THEN the blog article opens without a language`(
+        languageTag: String,
+    ) = runTest {
+        // Arrange
+        val defaultLocale = Locale.getDefault()
+        Locale.setDefault(Locale.forLanguageTag(languageTag))
+        val requestConsent = slot<suspend () -> SocialLoginConsent?>()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), capture(requestConsent)) } coAnswers {
+            host.onConsentShown = { consent ->
+                consent.description.learnMoreClick()
+                consent.onAcknowledgedChange(true)
+                host.consent!!.onConfirmClick(CONSENT_TEXT)
+            }
+            requestConsent.captured()
+            SocialLoginOutcome.WalletCreated(WALLET_ID).right()
+        }
+
+        try {
+            // Act
+            handler.signIn(PROVIDER, host)
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/blog/post/cloud-login") }
+        } finally {
+            Locale.setDefault(defaultLocale)
+        }
+    }
+
+    private fun TextReference.learnMoreClick() {
+        val link = (this as TextReference.Combined).refs
+            .filterIsInstance<TextReference.StyledRes>()
+            .single { it.id == CoreResR.string.social_login_consent_learn_more }
+        link.onClick!!.invoke()
     }
 
     @ParameterizedTest

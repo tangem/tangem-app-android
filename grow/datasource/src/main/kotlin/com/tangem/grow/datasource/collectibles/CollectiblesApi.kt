@@ -6,6 +6,7 @@ import com.tangem.grow.datasource.collectibles.models.request.CollectibleTxReque
 import com.tangem.grow.datasource.collectibles.models.request.GenerateBuybackDataRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.GeneratePurchaseTxRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequestBody
+import com.tangem.grow.datasource.collectibles.models.response.ActiveTxsResponse
 import com.tangem.grow.datasource.collectibles.models.response.BuybackAvailabilityResponse
 import com.tangem.grow.datasource.collectibles.models.response.BuybackStatusResponse
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
@@ -59,7 +60,7 @@ interface CollectiblesApi {
 
     /** Issues the gacha's memo and price for one spin; the app builds, signs and sends the transaction itself. */
     @RequiresSessionAuth
-    @POST("api/v1/collectible/generate-purchase-tx")
+    @POST("api/v1/collectible/purchase-data")
     suspend fun generatePurchaseTx(
         @Header("user-id") userWalletId: String,
         @Body body: GeneratePurchaseTxRequestBody,
@@ -78,6 +79,7 @@ interface CollectiblesApi {
         @Header("user-id") userWalletId: String,
         @Query("txId") txId: String,
         @Query("includeNftWon") includeNftWon: Boolean,
+        @Query("includeAutoBuyback") includeAutoBuyback: Boolean,
     ): ApiResponse<CollectibleTxResponse>
 
     /** Only meaningful once the purchase is confirmed; before that the gacha answers "No spin transaction found". */
@@ -87,7 +89,15 @@ interface CollectiblesApi {
         @Header("user-id") userWalletId: String,
         @Body body: CollectibleTxRequestBody,
         @Query("includeNftWon") includeNftWon: Boolean,
+        @Query("includeAutoBuyback") includeAutoBuyback: Boolean,
     ): ApiResponse<CollectibleTxResponse>
+
+    @RequiresSessionAuth
+    @GET("api/v1/collectible/active-txs")
+    suspend fun getActiveTxs(
+        @Header("user-id") userWalletId: String,
+        @Query("includeMachine") includeMachine: Boolean,
+    ): ApiResponse<ActiveTxsResponse>
 
     @RequiresSessionAuth
     @GET("api/v1/buyback/available")

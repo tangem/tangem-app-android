@@ -7,6 +7,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
@@ -18,6 +19,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteU
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
@@ -46,7 +48,7 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.notifications).containsExactlyElementsIn(model.expectedNotifications)
-        assertThat(actual.isPrimaryButtonEnabled).isEqualTo(model.expectedButtonEnabled)
+        assertThat(actual.isReadyToPlace).isEqualTo(model.expectedButtonEnabled)
     }
 
     internal data class GateModel(
@@ -76,7 +78,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         ),
         GateModel(
             quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-            expectedNotifications = emptyList(),
+            expectedNotifications = listOf(PredictionNotificationUM.BelowMinOrder),
             expectedButtonEnabled = false,
         ),
         GateModel(
@@ -145,7 +147,7 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert — an unanswered region check must not read as a restriction on the user
         assertThat(actual.notifications).doesNotContain(PredictionNotificationUM.RegionRestricted)
-        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+        assertThat(actual.isReadyToPlace).isFalse()
     }
 
     @Test
@@ -173,7 +175,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         // Assert
         assertThat(actual.amountCaption)
             .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForFees, payout = QUOTE_PAYOUT))
-        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+        assertThat(actual.isReadyToPlace).isFalse()
     }
 
     @Test
@@ -199,7 +201,7 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.ToWin(payout = QUOTE_PAYOUT))
-        assertThat(actual.isPrimaryButtonEnabled).isTrue()
+        assertThat(actual.isReadyToPlace).isTrue()
     }
 
     @Test
@@ -212,7 +214,46 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("4.5")))
-        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+        assertThat(actual.isReadyToPlace).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a buy below the share minimum under the stated minimum WHEN the gate runs THEN only the caption explains it`() {
+        // Arrange
+        val state = createState(
+            amountValue = "1",
+            minAmount = BigDecimal("4.5"),
+            quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).doesNotContain(PredictionNotificationUM.BelowMinOrder)
+        assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("4.5")))
+        assertThat(actual.isReadyToPlace).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a sell below the share minimum WHEN the gate runs THEN no notification is shown AND it stays placeable`() {
+        // Arrange
+        val state = createState(
+            amountValue = "3",
+            quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+            order = OrderSideUM.Sell(
+                position = SellPositionUM.Held(available = BigDecimal("51.23")),
+                proceeds = SharesProceedsUM.Unavailable,
+                balance = null,
+            ),
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).isEmpty()
+        assertThat(actual.isReadyToPlace).isTrue()
     }
 
     @Test
@@ -231,7 +272,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         // Assert
         assertThat(actual.amountCaption)
             .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet, payout = QUOTE_PAYOUT))
-        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+        assertThat(actual.isReadyToPlace).isFalse()
     }
 
     @Test
@@ -245,7 +286,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         // Assert
         assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.ToWin(payout = QUOTE_PAYOUT))
         assertThat((actual.order as OrderSideUM.Buy).hasSufficientBalance).isFalse()
-        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+        assertThat(actual.isReadyToPlace).isFalse()
     }
 
     @Test
@@ -258,7 +299,7 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
-        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+        assertThat(actual.isReadyToPlace).isFalse()
     }
 
     @Test
@@ -271,7 +312,7 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.notifications).containsExactly(PredictionNotificationUM.PriceFailed)
-        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+        assertThat(actual.isReadyToPlace).isFalse()
     }
 
     @Test
@@ -299,7 +340,7 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
-        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+        assertThat(actual.isReadyToPlace).isFalse()
     }
 
     @Test
@@ -339,7 +380,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             val actual = state.recomputeGate()
 
             // Assert
-            assertThat(actual.isPrimaryButtonEnabled).isEqualTo(model.expectedButtonEnabled)
+            assertThat(actual.isReadyToPlace).isEqualTo(model.expectedButtonEnabled)
             assertThat((actual.order as OrderSideUM.Sell).proceeds).isEqualTo(model.expectedProceeds)
             assertThat(actual.amountCaption).isNull()
         }
@@ -452,7 +493,7 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.notifications).containsExactly(PredictionNotificationUM.PositionUnavailable)
-        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+        assertThat(actual.isReadyToPlace).isFalse()
     }
 
     @Test
@@ -472,8 +513,68 @@ internal class PlacePredictionNotificationsFactoryTest {
         val actual = state.recomputeGate()
 
         // Assert
-        assertThat(actual.isPrimaryButtonEnabled).isTrue()
+        assertThat(actual.isReadyToPlace).isTrue()
         assertThat(actual.notifications).isEmpty()
+    }
+
+    @Nested
+    inner class WhileQuoting {
+
+        @Test
+        fun `GIVEN a covered amount awaiting its quote WHEN the gate runs THEN it stays blocked`() {
+            // Arrange
+            val state = createState(balance = BigDecimal("100"), quote = QuoteUM.Loading)
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.placeAction).isEqualTo(PlaceActionUM.Unavailable)
+        }
+
+        @Test
+        fun `GIVEN a sell within the held shares awaiting its quote WHEN the gate runs THEN it stays blocked`() {
+            // Arrange
+            val state = createState(
+                amountValue = "5",
+                quote = QuoteUM.Loading,
+                order = OrderSideUM.Sell(
+                    position = SellPositionUM.Held(available = BigDecimal("10")),
+                    proceeds = SharesProceedsUM.Unavailable,
+                    balance = null,
+                ),
+            )
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.placeAction).isEqualTo(PlaceActionUM.Unavailable)
+        }
+
+        @Test
+        fun `GIVEN a quote that has arrived WHEN the gate runs THEN it is ready to place`() {
+            // Arrange
+            val state = createState(balance = BigDecimal("100"), quote = createQuote())
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.placeAction).isEqualTo(PlaceActionUM.Ready)
+        }
+
+        @Test
+        fun `GIVEN no amount is priced WHEN the gate runs THEN it stays blocked`() {
+            // Arrange
+            val state = createState(balance = BigDecimal("100"), quote = QuoteUM.Empty)
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.placeAction).isEqualTo(PlaceActionUM.Unavailable)
+        }
     }
 
     private fun createState(
@@ -505,7 +606,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         tradingPermission = tradingPermission,
         notifications = persistentListOf(),
         submit = submit,
-        isPrimaryButtonEnabled = false,
+        placeAction = PlaceActionUM.Unavailable,
     )
 
     private fun createQuote(

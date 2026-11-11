@@ -39,7 +39,7 @@ import com.tangem.core.ui.res.generated.icons.ic_clock_12
 import com.tangem.core.ui.res.generated.icons.ic_cloud_12_filled
 import com.tangem.core.ui.res.generated.icons.ic_snowflake_16
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.tangempay.TangemPayCardType
 
 private const val DEFAULT_CARD_BG = 0xFF1C1F29
 private const val REISSUING_CARD_BG = 0xFF1E1E1E

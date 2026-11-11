@@ -14,6 +14,7 @@ import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.model.Amount
@@ -36,36 +37,59 @@ internal class OnrampStateFactory(
         currency: String,
         onClose: () -> Unit,
         openSettings: () -> Unit,
+        isCountryByIpEnabled: Boolean = false,
     ): OnrampMainComponentUM.InitialLoading {
         return OnrampMainComponentUM.InitialLoading(
             errorNotification = null,
             topBarConfig = OnrampMainTopBarUM(
                 title = combinedReference(resourceReference(R.string.common_buy), stringReference(" $currency")),
+                subtitle = getNetworkSubtitle(),
                 startButtonUM = TopAppBarButtonUM.Close(
                     onCloseClick = onClose,
                     enabled = true,
                 ),
-                endButtonUM = TopAppBarButtonUM.Icon(
-                    iconRes = R.drawable.ic_more_vertical_24,
-                    onClicked = openSettings,
-                    isEnabled = false,
-                ),
+                endButtonUM = if (isCountryByIpEnabled) {
+                    null
+                } else {
+                    TopAppBarButtonUM.Icon(
+                        iconRes = R.drawable.ic_more_vertical_24,
+                        onClicked = openSettings,
+                        isEnabled = false,
+                    )
+                },
+                countryButtonUM = OnrampCountryButtonUM(flagUrl = null, isEnabled = false, onClick = openSettings)
+                    .takeIf { isCountryByIpEnabled },
             ),
         )
+    }
+
+    private fun getNetworkSubtitle(): TextReference {
+        val networkName = cryptoCurrency.network.name
+        return when (cryptoCurrency) {
+            is CryptoCurrency.Token -> {
+                val standardName = cryptoCurrency.network.standardType
+                    .takeIf { it !is Network.StandardType.Unspecified }
+                    ?.name
+                if (standardName != null) {
+                    resourceReference(
+                        R.string.token_details_toolbar_subtitle_standard,
+                        wrappedList(standardName, networkName),
+                    )
+                } else {
+                    resourceReference(R.string.token_details_toolbar_subtitle_network, wrappedList(networkName))
+                }
+            }
+            is CryptoCurrency.Coin -> resourceReference(R.string.common_main_network)
+        }
     }
 
     fun getReadyState(currency: OnrampCurrency, initialFiatAmount: BigDecimal? = null): OnrampMainComponentUM.Content {
         val state = currentStateProvider()
 
-        val endButton = when (val button = state.topBarConfig.endButtonUM) {
-            is TopAppBarButtonUM.Icon -> button.copy(isEnabled = true)
-            is TopAppBarButtonUM.Text -> button.copy(isEnabled = true)
-        }
-
         val initialAmountBlockState = getInitialAmountBlockState(currency, initialFiatAmount)
 
         return OnrampMainComponentUM.Content(
-            topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
+            topBarConfig = state.topBarConfig.enableButtons(),
             amountBlockState = initialAmountBlockState,
             offersBlockState = OnrampOffersBlockUM.Empty,
             errorNotification = null,
@@ -96,14 +120,10 @@ internal class OnrampStateFactory(
 
     fun getErrorState(errorCode: String? = null, onRefresh: () -> Unit): OnrampMainComponentUM {
         val state = currentStateProvider()
-        val endButton = when (val button = state.topBarConfig.endButtonUM) {
-            is TopAppBarButtonUM.Icon -> button.copy(isEnabled = true)
-            is TopAppBarButtonUM.Text -> button.copy(isEnabled = true)
-        }
 
         return when (state) {
             is OnrampMainComponentUM.Content -> state.copy(
-                topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
+                topBarConfig = state.topBarConfig.enableButtons(),
                 offersBlockState = OnrampOffersBlockUM.Empty,
                 errorNotification = NotificationUM.Warning.OnrampErrorNotification(
                     errorCode = errorCode,
@@ -123,9 +143,38 @@ internal class OnrampStateFactory(
         }
     }
 
-    fun getBuyNotSupportedState(state: OnrampMainComponentUM = currentStateProvider()): OnrampMainComponentUM {
-        val message = buildBuyNotSupportedMessage()
+    private fun OnrampMainTopBarUM.enableButtons(): OnrampMainTopBarUM = copy(
+        endButtonUM = when (endButtonUM) {
+            is TopAppBarButtonUM.Icon -> endButtonUM.copy(isEnabled = true)
+            is TopAppBarButtonUM.Text -> endButtonUM.copy(isEnabled = true)
+            else -> endButtonUM
+        },
+        countryButtonUM = countryButtonUM?.copy(isEnabled = true),
+    )
 
+    fun getCountryFlagState(
+        state: OnrampMainComponentUM,
+        flagUrl: String,
+        countryName: String,
+    ): OnrampMainComponentUM {
+        val topBar = state.topBarConfig.copy(
+            countryButtonUM = state.topBarConfig.countryButtonUM?.copy(flagUrl = flagUrl, countryName = countryName),
+        )
+        return when (state) {
+            is OnrampMainComponentUM.Content -> state.copy(topBarConfig = topBar)
+            is OnrampMainComponentUM.InitialLoading -> state.copy(topBarConfig = topBar)
+        }
+    }
+
+    fun getBuyNotSupportedState(state: OnrampMainComponentUM = currentStateProvider()): OnrampMainComponentUM {
+        return getBlockedState(state, buildBuyNotSupportedMessage())
+    }
+
+    fun getCountryNotSupportedState(state: OnrampMainComponentUM = currentStateProvider()): OnrampMainComponentUM {
+        return getBlockedState(state, buildCountryNotSupportedMessage())
+    }
+
+    private fun getBlockedState(state: OnrampMainComponentUM, message: TangemMessageUM): OnrampMainComponentUM {
         return when (state) {
             is OnrampMainComponentUM.Content -> state.copy(
                 buyNotSupportedMessage = message,
@@ -143,6 +192,18 @@ internal class OnrampStateFactory(
             )
         }
     }
+
+    private fun buildCountryNotSupportedMessage(): TangemMessageUM = TangemMessageUM(
+        id = "country_not_supported",
+        title = resourceReference(R.string.onramp_residency_bottomsheet_country_not_supported),
+        subtitle = resourceReference(R.string.onramp_settings_residence_description),
+        messageEffect = TangemMessageEffect.None,
+        iconUM = TangemIconUM.Icon(
+            iconRes = CoreUiR.drawable.ic_attention_default_24,
+            tintReference = { TangemTheme.colors3.icon.accent.yellow },
+        ),
+        iconPosition = TangemMessageIconPosition.Leading,
+    )
 
     private fun buildBuyNotSupportedMessage(): TangemMessageUM = TangemMessageUM(
         id = "buy_not_supported",

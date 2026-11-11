@@ -54,7 +54,6 @@ import com.tangem.domain.models.network.isJoint
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessTransactionRepository
-import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -89,7 +88,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     private val jointRefundReceiverProvider: JointRefundReceiverProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
-    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
     private val yieldSendUpgradeDecisions: YieldSendUpgradeDecisions,
 ) : WalletManagersFacade {
 
@@ -860,7 +858,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     destinationAddress = estimationFeeAddressFactory.makeAddress(blockchain),
                     amount = amount,
                 )
-                if (yieldModuleFeatureToggles.isYieldModuleV3Enabled && isYieldModuleUpgradeAllowed) {
+                if (isYieldModuleUpgradeAllowed) {
                     yieldSendUpgradeDecisions.remember(userWalletId, network) {
                         walletManager.wrapWithYieldModuleUpgradeIfAvailable(sendCallData)
                     }

@@ -19,11 +19,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.TangemPayEligibilityManager
+import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
@@ -54,15 +53,12 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val uiMessageSender: UiMessageSender,
-    tangemPayFeatureToggles: TangemPayFeatureToggles,
     videoFactory: LoopingVideoController.Factory,
 ) : Model(), TangemPayWalletSelectorComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
 
-    private val video = if (
-        tangemPayFeatureToggles.isPayBundleIntroductionEnabled && moneyAccountFeatureToggles.isMoneyAccountsEnabled
-    ) {
+    private val video = if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
         videoFactory.createPayBundleVideo(scope = modelScope)
     } else {
         null
@@ -86,6 +82,17 @@ internal class TangemPayOnboardingModel @Inject constructor(
         -> TangemPayOnboardingStarter.Mode.StartOnboarding
     }
 
+    private val entryChannel = when (params) {
+        is TangemPayOnboardingComponent.Params.FromBannerOnMain -> TangemPayAnalyticsEvents.EntryChannel.BANNER
+        is TangemPayOnboardingComponent.Params.FromBannerInSettings -> TangemPayAnalyticsEvents.EntryChannel.DETAILS
+        is TangemPayOnboardingComponent.Params.Deeplink,
+        is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink,
+        -> TangemPayAnalyticsEvents.EntryChannel.DEEPLINK
+        is TangemPayOnboardingComponent.Params.ContinueOnboarding,
+        is TangemPayOnboardingComponent.Params.HotWalletOnboarding,
+        -> null
+    }
+
     private val starterCallbacks = TangemPayOnboardingStarter.Callbacks(
         onLoadingChange = { isLoading ->
             uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = isLoading))
@@ -96,7 +103,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     )
 
     init {
-        analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened())
+        analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened(entryChannel = entryChannel))
         init()
     }
 
@@ -177,7 +184,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     }
 
     private fun onGetCardClick() {
-        analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
+        analytics.send(TangemPayAnalyticsEvents.GetCardClicked(entryChannel = entryChannel))
         val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
         modelScope.launch {
             val walletsIds =

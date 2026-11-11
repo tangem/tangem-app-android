@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.components
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 
 interface TangemPayDetailsContainerComponent : ComposableContentComponent {
     data class Params(

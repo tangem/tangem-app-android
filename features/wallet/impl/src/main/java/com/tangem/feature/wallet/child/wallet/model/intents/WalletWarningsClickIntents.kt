@@ -45,6 +45,7 @@ import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.wallets.registration.WalletLinkError
 import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
+import com.tangem.feature.wallet.link.WalletLinkAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLinkProgressHolder
@@ -476,6 +477,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     /** On success the banner goes away by itself: the link status flow re-emits and the banner condition is false. */
     override fun onLinkWalletClick(userWallet: UserWallet) {
         if (!walletLinkProgressHolder.tryStart(userWallet.walletId)) return
+        analyticsEventHandler.send(WalletLinkAnalyticsEvent.ButtonLinkWallet())
 
         modelScope.launch {
             val result = try {
@@ -485,7 +487,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             }
 
             result.onLeft { error ->
-                if (error !is WalletLinkError.Cancelled) {
+                if (error is WalletLinkError.Cancelled) analyticsEventHandler.send(WalletLinkAnalyticsEvent.Canceled())
+                if (error !is WalletLinkError.Cancelled && error !is WalletLinkError.WrongCard) {
                     uiMessageSender.send(
                         DialogMessage(
                             title = resourceReference(CoreResR.string.common_something_went_wrong),

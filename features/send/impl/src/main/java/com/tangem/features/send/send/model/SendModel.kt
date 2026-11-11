@@ -34,6 +34,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.yield.supply.isSpendableAmountActual
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
@@ -290,7 +291,7 @@ internal class SendModel @Inject constructor(
     private suspend fun prepareTransferTransaction(): Either<Throwable, TransactionData> {
         val predefinedValues = predefinedValues
         val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
-        val amount = currentSentAmount() ?: error("Invalid amount")
+        val amount = currentSentAmount() ?: return IllegalStateException("Invalid amount").left()
         return when (predefinedValues) {
             is PredefinedValues.Content.Deeplink -> {
                 createTransferTransactionUseCase(
@@ -302,17 +303,22 @@ internal class SendModel @Inject constructor(
                 )
             }
             is PredefinedValues.Content.QrCode -> {
+                val editedDestination = editedDestinationOrNull()
                 createTransferTransactionUseCase(
                     amount = amount.convertToSdkAmount(cryptoCurrencyStatus),
-                    memo = predefinedValues.memo,
-                    destination = predefinedValues.address,
+                    memo = if (editedDestination != null) {
+                        editedDestination.memoTextField?.value
+                    } else {
+                        predefinedValues.memo
+                    },
+                    destination = editedDestination?.addressTextField?.actualAddress ?: predefinedValues.address,
                     userWalletId = userWallet.walletId,
                     network = cryptoCurrency.network,
                 )
             }
             PredefinedValues.Empty -> {
                 val destinationUM = uiState.value.destinationUM as? DestinationUM.Content
-                    ?: error("Invalid destination")
+                    ?: return IllegalStateException("Invalid destination").left()
                 val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
                 val enteredMemo = destinationUM.memoTextField?.value
 
@@ -326,6 +332,9 @@ internal class SendModel @Inject constructor(
             }
         }
     }
+
+    private fun editedDestinationOrNull(): DestinationUM.Content? =
+        (uiState.value.destinationUM as? DestinationUM.Content)?.takeIf { it.isInitialized }
 
     /**
      * The amount the transfer transaction is built with, shared by [prepareTransferTransaction] and the
@@ -608,7 +617,7 @@ internal class SendModel @Inject constructor(
         this.value is CryptoCurrencyStatus.NoAccount
 
     private fun CryptoCurrencyStatus.isAvailableForSend(): Boolean =
-        this.hasAvailableStatus() && this.value.sources.networkSource.isActual()
+        this.hasAvailableStatus() && this.value.isSpendableAmountActual
 
     private fun CryptoCurrencyStatus.isUnavailableForSend(): Boolean =
         this.hasUnavailableStatus() && this.value.sources.networkSource.isActual()
@@ -638,8 +647,10 @@ internal class SendModel @Inject constructor(
         val amount = parsedQrCode?.amount
             ?.takeIf { it.signum() > 0 }
             ?.parseBigDecimal(cryptoCurrency.decimals)
+        // A scan without an amount must not drop the one a send intent already carries: nothing else supplies it
+        val keptAmount = (predefinedValues as? PredefinedValues.Content.QrCode)?.amount
         predefinedValues = PredefinedValues.Content.QrCode(
-            amount = amount.orEmpty(),
+            amount = amount ?: keptAmount.orEmpty(),
             address = parsedQrCode?.address.orEmpty(),
             memo = parsedQrCode?.memo,
             source = PredefinedValues.Source.SEND_SCREEN,

@@ -55,38 +55,32 @@ internal class PlacePredictionAmountFundingTest : PlacePredictionModelTestBase()
         }
 
         @Test
-        fun `GIVEN the requisites failed WHEN add funds is tapped THEN the failure is reported instead of the sheet`() =
-            runTest {
-                // Arrange
-                coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Unavailable.left()
-                val model = createAmountModel(testScope = this)
-                val slot = FakeSlotHost(model.fundingSheetNavigation)
-                advanceUntilIdle()
-
-                // Act
-                model.onAddFundsClick()
-
-                // Assert
-                assertThat(slot.configuration).isNull()
-                verify { messageSender.send(any<DialogMessage>()) }
-            }
-
-        @Test
-        fun `GIVEN the requisites failed WHEN the failure is dismissed THEN they are requested again`() = runTest {
+        fun `GIVEN the requisites failed WHEN the screen opens THEN add funds is not offered`() = runTest {
             // Arrange
             coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Unavailable.left()
-            val model = createAmountModel(testScope = this)
-            advanceUntilIdle()
-            val message = slot<DialogMessage>()
-            every { messageSender.send(capture(message)) } returns Unit
-            model.onAddFundsClick()
 
             // Act
-            message.captured.onDismissRequest()
+            val model = createAmountModel(testScope = this)
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+            assertThat((model.uiState.value.order as OrderSideUM.Buy).isAddFundsEnabled).isFalse()
+        }
+
+        @Test
+        fun `GIVEN the requisites failed WHEN add funds is tapped THEN nothing is opened or reported`() = runTest {
+            // Arrange
+            coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Unavailable.left()
+            val model = createAmountModel(testScope = this)
+            val slot = FakeSlotHost(model.fundingSheetNavigation)
+            advanceUntilIdle()
+
+            // Act
+            model.onAddFundsClick()
+
+            // Assert
+            assertThat(slot.configuration).isNull()
+            verify(exactly = 0) { messageSender.send(any<DialogMessage>()) }
         }
 
         @Test

@@ -16,7 +16,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.domain.notifications.models.NotificationType
-import com.tangem.domain.visa.model.TangemPayPushNotificationType
+import com.tangem.domain.tangempay.model.TangemPayPushNotificationType
 import com.tangem.utils.converter.Converter
 
 /**
@@ -34,7 +34,11 @@ import com.tangem.utils.converter.Converter
  */
 object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
 
-    private val jointAccountTypes = setOf(NotificationType.JointMembers.type, NotificationType.JointOverview.type)
+    private val jointAccountTypes = setOf(
+        NotificationType.JointMembers.type,
+        NotificationType.JointOverview.type,
+        NotificationType.JointTokens.type,
+    )
 
     override fun convert(value: Map<String, String>): String? {
         return when {
@@ -111,12 +115,15 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         val entry = when (type) {
             NotificationType.JointMembers.type -> DeepLinkRoute.JointAccount.ENTRY_MEMBERS
             NotificationType.JointOverview.type -> DeepLinkRoute.JointAccount.ENTRY_OVERVIEW
+            NotificationType.JointTokens.type -> null
             else -> return null
         }
 
         return DeepLinkBuilder().setScheme(DeepLinkScheme.Tangem.scheme).apply {
             setAction(DeepLinkRoute.JointAccount.host)
-            addQueryParam(ENTRY_KEY, entry)
+            if (entry != null) {
+                addQueryParam(ENTRY_KEY, entry)
+            }
             addQueryParam(WALLET_ID_KEY, walletId)
             addQueryParam(ACCOUNT_ID_KEY, accountId)
             addQueryParam(TYPE_KEY, type)

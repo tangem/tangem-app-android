@@ -59,14 +59,12 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.models)
     api(projects.domain.onramp.models)
-    api(projects.domain.staking)
     api(projects.domain.tokens.models)
     api(projects.domain.transaction.models)
     api(projects.core.decompose)
     implementation(projects.domain.account.status)
     implementation(projects.domain.card)
     implementation(projects.domain.feedback)
-    implementation(projects.domain.staking.models)
     // endregion
 
     // region Project - Libs

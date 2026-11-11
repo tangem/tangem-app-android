@@ -1,16 +1,8 @@
 package com.tangem.features.feed.components.v2.blocks
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
@@ -20,15 +12,14 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_sign_plus_16
+import com.tangem.core.ui.utils.zoomTransitionSource
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
 import com.tangem.features.feed.components.v2.blocks.model.AddAccountBlockModel
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.ui.v2.FeedBlockShape
 import com.tangem.features.feed.ui.v2.FeedShortcutCard
 import kotlinx.coroutines.flow.StateFlow
 
@@ -66,8 +57,8 @@ internal class AddAccountBlockComponent(
         FeedShortcutCard(
             title = stringResourceSafe(R.string.account_form_title_create),
             onClick = ::onClick,
-            modifier = modifier,
-            icon = { AddAccountIcon() },
+            modifier = modifier.zoomTransitionSource(key = SHARED_TRANSITION_KEY, shape = FeedBlockShape),
+            icon = { FeedPlusIcon() },
         )
     }
 
@@ -76,6 +67,8 @@ internal class AddAccountBlockComponent(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         bottomSheet.child?.instance?.BottomSheet()
+
+        AfterModalsClosed(pending = model.routeAwaitingSheetClose, onClose = model::onSheetsClosed)
     }
 
     private fun onClick() {
@@ -125,23 +118,6 @@ internal class AddAccountBlockComponent(
 
     companion object {
         const val KEY = "add_account"
-    }
-}
-
-@Composable
-private fun AddAccountIcon(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(size = 24.dp)
-            .clip(shape = CircleShape)
-            .background(color = TangemTheme.colors3.bg.accent.blue),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = Icons.ic_sign_plus_16,
-            contentDescription = null,
-            tint = TangemTheme.colors3.icon.staticDark,
-            modifier = Modifier.size(size = 20.dp),
-        )
+        const val SHARED_TRANSITION_KEY = "feed_add_account_block"
     }
 }

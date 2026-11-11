@@ -102,6 +102,20 @@ internal class WalletWarningsAnalyticsSenderTest {
         }
     }
 
+    @Test
+    fun `GIVEN link wallet notice sent WHEN the banner shows link progress THEN the notice is not sent again`() {
+        // Arrange
+        send(notifications = persistentListOf(createLinkWalletBanner(shouldShowProgress = false)))
+
+        // Act
+        send(notifications = persistentListOf(createLinkWalletBanner(shouldShowProgress = true)))
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(any<WalletScreenAnalyticsEvent.MainScreen.NoticeLinkWallet>())
+        }
+    }
+
     private fun send(notifications: ImmutableList<WalletNotificationUM>, userWalletId: UserWalletId = WALLET_ID) {
         sender.send(
             userWalletId = userWalletId,
@@ -124,6 +138,13 @@ internal class WalletWarningsAnalyticsSenderTest {
             onUpgradeClick = { clickTarget.hashCode() },
         )
     }
+
+    private fun createLinkWalletBanner(shouldShowProgress: Boolean) = WalletNotificationUM.LinkWalletToDevice(
+        tangemIcon = null,
+        isHotWallet = true,
+        shouldShowProgress = shouldShowProgress,
+        onLinkClick = {},
+    )
 
     private fun createWalletUM(): WalletUM = mockk {
         every { pullToRefreshConfig } returns PullToRefreshConfig(isRefreshing = false, onRefresh = {})

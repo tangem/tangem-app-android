@@ -106,10 +106,14 @@ internal class DragAndDropAdapter(
     }
 
     override fun onItemDragged(from: ItemPosition, to: ItemPosition) {
+        onItemMoved(from = from.index, to = to.index)
+    }
+
+    override fun onItemMoved(from: Int, to: Int) {
         dragAndDropUpdates.value = DragOperation(
             type = DragOperation.Type.Dragged,
             tokenList = tokensUM.tokenList.mutate {
-                it.add(to.index, it.removeAt(from.index))
+                it.add(to, it.removeAt(from))
             }.toPersistentList(),
         )
     }

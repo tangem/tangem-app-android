@@ -20,6 +20,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledResourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
@@ -29,6 +30,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUseCase
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
 import com.tangem.features.hotwallet.SocialLoginUseCase
@@ -36,7 +38,6 @@ import com.tangem.features.introduction.impl.analytics.SocialLoginAnalyticsEvent
 import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
-import com.tangem.utils.TangemHelpCenterUrlBuilder
 import com.tangem.utils.logging.TangemLogger
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
@@ -176,15 +177,15 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         ) + stringReference(" ") + styledResourceReference(
             id = CoreResR.string.social_login_consent_learn_more,
             spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.primary) },
-            onClick = ::openHelpArticle,
+            onClick = ::openLearnMoreArticle,
         ),
         acknowledgement = providerReference(CoreResR.string.social_login_consent_acknowledge, provider),
         onStateChanged = onConsent,
         onEvent = { event -> onConsentEvent(event, onConfirmed) },
     )
 
-    private fun openHelpArticle() {
-        urlOpener.openUrl(TangemHelpCenterUrlBuilder.helpCenterUrl(HELP_ARTICLE_PATH, HELP_ARTICLE_ANCHOR))
+    private fun openLearnMoreArticle() {
+        urlOpener.openUrl(LEARN_MORE_URL)
     }
 
     /**
@@ -327,6 +328,15 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             SocialLoginError.WalletAlreadySaved -> uiMessageSender.send(
                 DialogMessage(message = resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved)),
             )
+            SocialLoginError.HotWalletsLimitReached -> {
+                analyticsEventHandler.send(
+                    NoticeMobileWalletLimit(
+                        type = NoticeMobileWalletLimit.Type.SocialLogin,
+                        limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                    ),
+                )
+                uiMessageSender.send(Dialogs.hotWalletsLimitReachedDialog())
+            }
             else -> uiMessageSender.send(SnackbarMessage(error.toMessage()))
         }
     }
@@ -379,6 +389,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         SocialLoginError.NetworkError -> "No internet connection"
         is SocialLoginError.BackupWriteFailed -> "Couldn't save backup"
         SocialLoginError.WalletAlreadySaved -> "This wallet has already been saved"
+        SocialLoginError.HotWalletsLimitReached -> "Mobile wallets limit reached"
         else -> "Something went wrong"
     }
 
@@ -386,8 +397,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
     private companion object {
         const val SEED_PHRASE_LENGTH = 12
-        const val HELP_ARTICLE_PATH = "getting-started-with-mobile-wallet/how-to-create-a-mobile-wallet"
-        const val HELP_ARTICLE_ANCHOR = "create-a-wallet-with-google-or-apple"
+        const val LEARN_MORE_URL = "https://tangem.com/blog/post/cloud-login"
     }
 }
 

@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
@@ -179,6 +179,13 @@ internal class BankWithdrawAnalyticsTest {
                         params = mapOf("amount_usdc" to "12.5", "method" to "bank_transfer_wire"),
                     ),
                 ),
+            ),
+            MoneyAccountModel(
+                step = "send attempted over SPEI",
+                report = {
+                    onSendAttempted(savedRecipientDraft().copy(destination = offrampDestination(rail = BankRail.SPEI)))
+                },
+                expectedEvents = emptyList(),
             ),
             MoneyAccountModel(
                 step = "send attempted without an amount",

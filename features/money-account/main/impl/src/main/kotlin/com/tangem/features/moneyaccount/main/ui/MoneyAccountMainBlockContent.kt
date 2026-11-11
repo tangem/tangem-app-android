@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -23,8 +24,6 @@ import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.assets.il_account_safe
-import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.MoneyAccountTestTags
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
@@ -45,6 +44,12 @@ internal fun MoneyAccountMainBlockContent(
             modifier = modifier,
             onClick = state.onClick,
         )
+        is MoneyAccountMainUM.Failed -> MoneyAccountRow(
+            subtitle = state.subtitle,
+            modifier = modifier,
+            onClick = state.onClick,
+            subtitleColor = TangemTheme.colors3.text.status.error,
+        )
         is MoneyAccountMainUM.Content -> MoneyAccountRow(
             subtitle = state.subtitle,
             balance = state.balance,
@@ -63,6 +68,7 @@ private fun MoneyAccountRow(
     modifier: Modifier = Modifier,
     balance: MoneyAccountMainUM.BalanceUM? = null,
     isBalanceHidden: Boolean = false,
+    subtitleColor: Color = TangemTheme.colors3.text.secondary,
 ) {
     TangemRow(
         modifier = modifier
@@ -82,7 +88,7 @@ private fun MoneyAccountRow(
             {
                 Text(
                     text = subtitle.resolveReference(),
-                    color = TangemTheme.colors3.text.secondary,
+                    color = subtitleColor,
                     style = TangemTheme.typography3.caption.medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -109,7 +115,9 @@ private fun MoneyAccountRow(
 @Composable
 private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
     TangemRow(
-        modifier = modifier.moneyAccountCard(),
+        modifier = modifier
+            .moneyAccountCard()
+            .testTag(MoneyAccountTestTags.MAIN_ROW),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { MoneyAccountIcon() },
@@ -133,10 +141,7 @@ private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
 @Composable
 private fun MoneyAccountIcon() {
     TangemAvatar(
-        state = TangemAvatar.UiState.Account(
-            imageVector = Icons.il_account_safe,
-            color = TangemAvatar.FillColor.Money,
-        ),
+        state = TangemAvatar.UiState.Account(kind = TangemAvatar.AccountKind.Money),
         size = TangemAvatar.Size.X40,
     )
 }
@@ -149,7 +154,9 @@ private fun MoneyAccountFiatAmount(text: String, isBalanceFlickering: Boolean, i
     ) {
         if (isBalanceFromCache) {
             Icon(
-                modifier = Modifier.size(12.dp),
+                modifier = Modifier
+                    .size(12.dp)
+                    .testTag(MoneyAccountTestTags.MAIN_ROW_CACHE_ICON),
                 painter = painterResource(CoreUiR.drawable.ic_error_sync_24),
                 tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
@@ -197,6 +204,7 @@ private class MoneyAccountMainBlockContentPreviewParameterProvider :
         collection = listOf(
             MoneyAccountMainUM.Unavailable,
             MoneyAccountMainUM.Onboarding(subtitle = TextReference.Str("Activating…"), onClick = {}),
+            MoneyAccountMainUM.Failed(subtitle = TextReference.Str("Failed"), onClick = {}),
             MoneyAccountMainUM.Content(
                 subtitle = TextReference.Str("Polygon network"),
                 balance = previewBalance.copy(isFlickering = true, isFromCache = true),

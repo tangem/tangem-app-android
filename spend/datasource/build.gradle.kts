@@ -32,7 +32,7 @@ dependencies {
     // TangemPayTxHistoryItem, ...)
     api(projects.domain.models)
     // Exposed in TangemPayTxHistoryItemsStore (TangemPayTxHistoryItem)
-    api(projects.domain.visa.models)
+    api(projects.domain.tangempay.models)
     implementation(projects.core.local)
 
     testImplementation(projects.test.core)

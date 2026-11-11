@@ -4,6 +4,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
+import com.tangem.core.ui.test.TopAppBarTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -22,6 +23,11 @@ class HotWalletAccessCodePageObject(semanticsProvider: SemanticsNodeInteractions
     val unlockDialogAccessCodeInput: KNode = child {
         addSemanticsMatcher(unlockDialogAccessCodeInputMatcher)
         useUnmergedTree = true
+    }
+
+    val unlockDialogBackButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
+        hasAnyAncestor(withDialog())
     }
 }
 

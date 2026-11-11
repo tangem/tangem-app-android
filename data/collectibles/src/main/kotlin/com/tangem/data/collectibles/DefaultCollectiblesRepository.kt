@@ -120,33 +120,41 @@ internal class DefaultCollectiblesRepository @Inject constructor(
             body = PurchaseTxSentRequestBody(txId = txId, txHash = txHash),
         ).getOrThrow()
 
-        CollectibleTxStatusConverter.convert(response.status)
+        CollectibleTxStatusConverter.convert(response)
     }
 
     override suspend fun getTxState(
         userWalletId: UserWalletId,
         txId: String,
+        includeAutoBuyback: Boolean,
         includeNftWon: Boolean,
     ): CollectibleTxState = withContext(dispatchers.io) {
         val response = collectiblesApi.getTxStatus(
             userWalletId = userWalletId.stringValue,
             txId = txId,
             includeNftWon = includeNftWon,
+            includeAutoBuyback = includeAutoBuyback,
         ).getOrThrow()
 
         CollectibleTxStateConverter.convert(response)
     }
 
-    override suspend fun openPack(userWalletId: UserWalletId, txId: String): CollectibleTxState =
-        withContext(dispatchers.io) {
-            val response = collectiblesApi.openPack(
+    override suspend fun openPack(
+        userWalletId: UserWalletId,
+        txId: String,
+        includeAutoBuyback: Boolean,
+    ): CollectibleTxState = withContext(dispatchers.io) {
+        val response = errorResolver.getOrThrow(
+            collectiblesApi.openPack(
                 userWalletId = userWalletId.stringValue,
                 body = CollectibleTxRequestBody(txId = txId),
                 includeNftWon = true,
-            ).getOrThrow()
+                includeAutoBuyback = includeAutoBuyback,
+            ),
+        )
 
-            CollectibleTxStateConverter.convert(response)
-        }
+        CollectibleTxStateConverter.convert(response)
+    }
 
     override suspend fun getBuybackOffer(userWalletId: UserWalletId, nftAddress: String): CollectibleBuybackOffer? =
         withContext(dispatchers.io) {

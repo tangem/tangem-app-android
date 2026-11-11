@@ -47,7 +47,6 @@ import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadT
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
-import com.tangem.features.swap.v2.api.SwapV2FeatureToggles
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
@@ -112,7 +111,6 @@ internal class SendWithSwapConfirmModelTest {
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger = mockk(relaxed = true)
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger = mockk(relaxed = true)
     private val swapAlertFactory: SwapAlertFactory = mockk(relaxed = true)
-    private val swapV2FeatureToggles: SwapV2FeatureToggles = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val swapTransactionSender: SwapTransactionSender = mockk(relaxed = true)
     private val swapTransactionSenderFactory: SwapTransactionSender.Factory = mockk {
@@ -165,7 +163,6 @@ internal class SendWithSwapConfirmModelTest {
             swapAmountUpdateTrigger,
             feeSelectorReloadTrigger,
             swapAlertFactory,
-            swapV2FeatureToggles,
             analyticsEventHandler,
             swapTransactionSender,
         )
@@ -262,10 +259,9 @@ internal class SendWithSwapConfirmModelTest {
         private val rejectedError = ExpressError.ExchangeProviderAddressBannedByAmlError(code = 2264)
 
         @Test
-        fun `GIVEN hiding enabled and provider rejected WHEN send THEN provider hidden and named in alert`() = runTest {
+        fun `GIVEN provider rejected WHEN send THEN provider hidden and named in alert`() = runTest {
             // Arrange
             val callback: SendWithSwapConfirmComponent.ModelCallback = mockk(relaxed = true)
-            every { swapV2FeatureToggles.isHideRejectedCexProviderEnabled } returns true
             val model = createModelFailingWith(testScope = this, error = rejectedError, callback = callback)
 
             // Act
@@ -288,36 +284,13 @@ internal class SendWithSwapConfirmModelTest {
                     expressError = rejectedError,
                     onFailedTxEmailClick = any(),
                     popBack = any(),
+                    isSwapAttemptAlert = true,
                     providerName = "ChangeHero",
+                    amountCurrency = primaryCurrencyStatus.currency,
                 )
             }
             model.onDestroy()
         }
-
-        @Test
-        fun `GIVEN hiding disabled and provider rejected WHEN send THEN provider kept and not named in alert`() =
-            runTest {
-                // Arrange
-                val callback: SendWithSwapConfirmComponent.ModelCallback = mockk(relaxed = true)
-                every { swapV2FeatureToggles.isHideRejectedCexProviderEnabled } returns false
-                val model = createModelFailingWith(testScope = this, error = rejectedError, callback = callback)
-
-                // Act
-                model.primaryButtonUM(contentConfirmUM()).onClick()
-                advanceUntilIdle()
-
-                // Assert
-                verify(exactly = 0) { callback.onProviderHidden(any()) }
-                verify {
-                    swapAlertFactory.getGenericErrorState(
-                        expressError = rejectedError,
-                        onFailedTxEmailClick = any(),
-                        popBack = any(),
-                        providerName = null,
-                    )
-                }
-                model.onDestroy()
-            }
 
         private fun createModelFailingWith(
             testScope: TestScope,
@@ -668,7 +641,6 @@ internal class SendWithSwapConfirmModelTest {
             swapAlertFactory = swapAlertFactory,
             analyticsEventHandler = analyticsEventHandler,
             appScope = TestAppCoroutineScope(testScope),
-            swapV2FeatureToggles = swapV2FeatureToggles,
             swapTransactionSenderFactory = swapTransactionSenderFactory,
             paramsContainer = MutableParamsContainer(value = params),
         )

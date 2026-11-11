@@ -7,10 +7,39 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PlacePredictionUMTest {
+
+    @ParameterizedTest
+    @CsvSource(
+        "true, false, true",
+        "false, false, false",
+        "true, true, false",
+    )
+    fun `GIVEN the market and its notifications WHEN tradability is read THEN only an open unflagged market trades`(
+        isMarketAcceptingOrders: Boolean,
+        isMarketClosedNotified: Boolean,
+        expected: Boolean,
+    ) {
+        // Arrange
+        val notifications = if (isMarketClosedNotified) {
+            persistentListOf(PredictionNotificationUM.MarketClosed)
+        } else {
+            persistentListOf(PredictionNotificationUM.PartialFill)
+        }
+        val state = PlacePredictionUM.initial(side = PredictionOrderSide.BUY)
+            .copy(isMarketAcceptingOrders = isMarketAcceptingOrders, notifications = notifications)
+
+        // Act
+        val actual = state.isTradable()
+
+        // Assert
+        assertThat(actual).isEqualTo(expected)
+    }
 
     @ParameterizedTest
     @ProvideTestModels

@@ -36,7 +36,9 @@ internal fun CameraView(executor: () -> ExecutorService, analyzer: () -> MLKitBa
         cameraController.cameraControl?.enableTorch(isFlash)
     }
 
-    previewView.controller = cameraController
+    runCatching {
+        previewView.controller = cameraController
+    }
 
     AndroidView({ previewView }, modifier = Modifier.fillMaxSize())
 }

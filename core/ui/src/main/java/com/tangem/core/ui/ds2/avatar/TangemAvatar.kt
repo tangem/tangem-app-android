@@ -23,6 +23,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.assets.il_account_airplane
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
@@ -32,7 +33,7 @@ import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
  * coloured glyph or letter, a person's initial, an address identicon, a status glyph, a transaction's icon,
  * or an arbitrary image asset.
  *
- * Version: 1.3.0
+ * Version: 1.3.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9737-838)
  *
@@ -43,7 +44,8 @@ import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
  *   its colour, matching the Figma `Fallback` state.
  * - The pending indicator is drawn only for [TangemAvatar.UiState.Account] at [TangemAvatar.Size.X72],
  *   [TangemAvatar.Size.X44] and [TangemAvatar.Size.X40] — Figma defines no indicator at
- *   [TangemAvatar.Size.X16]. It overhangs the avatar's corner and punches a transparent ring behind itself.
+ *   [TangemAvatar.Size.X16]. It sits flush with the corner at [TangemAvatar.Size.X72], overhangs it by 1dp
+ *   at the smaller sizes, and punches a transparent ring behind itself.
  *
  * @param state What the avatar shows. See [TangemAvatar.UiState].
  * @param size One of the fixed [TangemAvatar.Size] presets driving every dimension.
@@ -70,15 +72,15 @@ fun TangemAvatar(
 /** Public API surface of [TangemAvatar]. */
 object TangemAvatar {
 
-    val version = DsVersion(major = 1, minor = 3, patch = 0)
+    val version = DsVersion(major = 1, minor = 3, patch = 1)
 
     /** Fixed size presets: `X72` = 72dp … `X16` = 16dp. */
     enum class Size { X72, X44, X40, X16 }
 
     /**
-     * Fill palette of the [UiState.Account] and [UiState.User] variants, mirroring the Figma
-     * `Avatar Module [Fill Color]`. The first twelve are user-selectable account colours; the last four are
-     * reserved for the built-in account kinds.
+     * Fill palette of the [UiState.Account] and [UiState.User] variants — the twelve user-selectable account
+     * colours of the Figma `Avatar Module [Fill Color]`. The built-in account kinds carry their own fill, see
+     * [AccountKind].
      */
     enum class FillColor {
         AzureBlue,
@@ -93,9 +95,22 @@ object TangemAvatar {
         Pattypan,
         UfoGreen,
         VitalGreen,
-        Predictions,
+    }
+
+    /**
+     * Built-in accounts of the Figma `Avatar Module [Account]`, each with a fixed fill and icon of its own.
+     */
+    enum class AccountKind {
+        /** Violet fill with the two-tone predictions icon. */
+        Prediction,
+
+        /** Yellow fill with the two-tone gacha cards icon. */
         Gacha,
-        PayVisa,
+
+        /** Visa-violet fill with the Visa wordmark, drawn larger than the other account icons. */
+        Visa,
+
+        /** Green fill with the safe icon. */
         Money,
     }
 
@@ -118,12 +133,15 @@ object TangemAvatar {
         abstract val shape: Shape
 
         /**
-         * Account variant — filled with [color] and carrying a white icon (half the avatar's side) or a
-         * single letter, uppercased when drawn. Pick the content through the `iconRes`, `imageVector` or
-         * `letter` constructor. The `TextReference` form takes the first character of the resolved text, so a
-         * name defined as a string resource can be passed whole, and shows only the fill when it resolves empty.
+         * Account variant. Pick the content through a constructor:
+         * - `iconRes` / `imageVector` with a [FillColor] — the Figma `Crypto` account: the colour fill with
+         *   the icon (half the avatar's side) tinted white at 80%. Pass a single-colour icon; its own colours
+         *   are replaced by the tint.
+         * - `letter` with a [FillColor] — a single letter, uppercased when drawn. The `TextReference` form
+         *   takes the first character of the resolved text, so a name defined as a string resource can be
+         *   passed whole, and shows only the fill when it resolves empty.
+         * - `kind` — one of the built-in accounts, with its own fill and icon. See [AccountKind].
          *
-         * @param color Fill colour. See [FillColor].
          * @param hasIndicator Draws the pending clock badge over the bottom-end corner. Ignored at
          * [Size.X16].
          * @param shape Outline. Defaults to [Shape.RoundedSquare], unlike every other variant.
@@ -131,7 +149,6 @@ object TangemAvatar {
         @ConsistentCopyVisibility
         data class Account internal constructor(
             internal val glyph: AvatarAccountGlyph,
-            val color: FillColor,
             val hasIndicator: Boolean,
             override val shape: Shape,
         ) : UiState() {
@@ -141,28 +158,34 @@ object TangemAvatar {
                 color: FillColor,
                 hasIndicator: Boolean = false,
                 shape: Shape = Shape.RoundedSquare,
-            ) : this(AvatarAccountGlyph.Icon(Either.Left(iconRes)), color, hasIndicator, shape)
+            ) : this(AvatarAccountGlyph.Icon(Either.Left(iconRes), color), hasIndicator, shape)
 
             constructor(
                 imageVector: ImageVector,
                 color: FillColor,
                 hasIndicator: Boolean = false,
                 shape: Shape = Shape.RoundedSquare,
-            ) : this(AvatarAccountGlyph.Icon(Either.Right(imageVector)), color, hasIndicator, shape)
+            ) : this(AvatarAccountGlyph.Icon(Either.Right(imageVector), color), hasIndicator, shape)
 
             constructor(
                 letter: Char,
                 color: FillColor,
                 hasIndicator: Boolean = false,
                 shape: Shape = Shape.RoundedSquare,
-            ) : this(AvatarAccountGlyph.Letter(stringReference(letter.toString())), color, hasIndicator, shape)
+            ) : this(AvatarAccountGlyph.Letter(stringReference(letter.toString()), color), hasIndicator, shape)
 
             constructor(
                 letter: TextReference,
                 color: FillColor,
                 hasIndicator: Boolean = false,
                 shape: Shape = Shape.RoundedSquare,
-            ) : this(AvatarAccountGlyph.Letter(letter), color, hasIndicator, shape)
+            ) : this(AvatarAccountGlyph.Letter(letter, color), hasIndicator, shape)
+
+            constructor(
+                kind: AccountKind,
+                hasIndicator: Boolean = false,
+                shape: Shape = Shape.RoundedSquare,
+            ) : this(AvatarAccountGlyph.Kind(kind), hasIndicator, shape)
         }
 
         /**
@@ -284,7 +307,7 @@ private fun TangemAvatarPreview() {
     PreviewContainer {
         PreviewRow(
             state = TangemAvatar.UiState.Account(
-                iconRes = R.drawable.ic_airplane_mode_24,
+                imageVector = Icons.il_account_airplane,
                 color = TangemAvatar.FillColor.AzureBlue,
             ),
         )
@@ -294,7 +317,7 @@ private fun TangemAvatarPreview() {
         PreviewRow(
             state = TangemAvatar.UiState.Account(
                 letter = 'A',
-                color = TangemAvatar.FillColor.Predictions,
+                color = TangemAvatar.FillColor.CandyGrapeFizz,
                 hasIndicator = true,
             ),
         )
@@ -312,6 +335,22 @@ private fun TangemAvatarPreview() {
                 shape = TangemAvatar.Shape.RoundedSquare,
             ),
         )
+    }
+}
+
+@Preview(name = "Account kinds Light", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Account kinds Dark",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+private fun TangemAvatarAccountKindsPreview() {
+    PreviewContainer {
+        TangemAvatar.AccountKind.entries.forEach { kind ->
+            PreviewRow(state = TangemAvatar.UiState.Account(kind = kind, hasIndicator = true))
+        }
     }
 }
 
