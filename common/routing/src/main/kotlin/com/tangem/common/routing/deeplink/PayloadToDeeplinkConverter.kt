@@ -28,8 +28,8 @@ import com.tangem.utils.converter.Converter
  * 5. [WEBLINK_KEY] — the destination of a marketing / Customer.io push (`link` is also Customer.io's own
  *    deeplink key). It is deliberately last, so it can never preempt a backend-generated transactional push.
  *
- * The result is not validated here — the caller applies [PushDeeplinkPolicy] and decides how to dispatch it.
- * A value that no handler routes falls back to a browser only for trusted web hosts, which is why an
+ * The result is not validated here — the caller checks [DeepLinkHandler.isOpenableFromPush] and decides how to
+ * dispatch it. A value that no handler routes falls back to a browser only for trusted web hosts, which is why an
  * arbitrary [WEBLINK_KEY] value may be returned from here.
  */
 object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {

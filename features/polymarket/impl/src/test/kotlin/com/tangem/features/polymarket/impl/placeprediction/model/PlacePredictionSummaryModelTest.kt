@@ -1215,8 +1215,9 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         }
 
         @Test
-        fun `GIVEN a plain tap on the summary WHEN the router picks the owner key THEN nothing is signed`() = runTest {
+        fun `GIVEN a plain hot wallet tap on the summary WHEN the router picks the owner key THEN nothing is signed`() = runTest {
             // Arrange
+            every { getUserWalletUseCase(any()) } returns hotWallet().right()
             every { featureToggles.isPolymarketSessionKeysEnabled } returns true
             coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
             val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
@@ -1228,8 +1229,46 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             // Assert
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
         }
+
+        @Test
+        fun `GIVEN a plain card tap on the summary WHEN the router picks the owner key THEN the card is asked for the next tap`() =
+            runTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
+
+                // Act
+                model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.PLAIN)
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN the session key of a card could not sign on the summary WHEN the card is tapped THEN the card signs`() =
+            runTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
+                model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.PLAIN)
+                advanceUntilIdle()
+
+                // Act
+                model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.CARD)
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
+                }
+            }
 
         @Test
         fun `GIVEN a usable session key WHEN the summary resumes THEN the button is plain`() = runTest {

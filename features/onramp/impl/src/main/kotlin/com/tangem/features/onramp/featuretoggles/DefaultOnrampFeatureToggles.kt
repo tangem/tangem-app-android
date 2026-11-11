@@ -10,4 +10,7 @@ internal class DefaultOnrampFeatureToggles @Inject constructor(
 
     override val isCountryByIpEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18954_ONRAMP_COUNTRY_BY_IP_ENABLED)
+
+    override val isNewDesignSystemEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED)
 }

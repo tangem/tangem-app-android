@@ -1171,30 +1171,34 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class IsEntrySuspended {
+    inner class GetYieldModuleVersionStatus {
 
         @BeforeEach
         fun resetMocks() = resetNativeMocks()
 
         @Test
-        fun `GIVEN suspended entry WHEN isEntrySuspended THEN true`() = runTest {
-            // Arrange
-            coEvery { nativeWalletManager.isEntrySuspended(NATIVE_WETH_ADDRESS) } returns true
+        fun `GIVEN module needs upgrade WHEN getYieldModuleVersionStatus THEN returns status of wallet manager`() =
+            runTest {
+                // Arrange
+                val expected = YieldModuleVersionStatus.UpgradeUnavailable(currentImplementation = OLD_IMPLEMENTATION)
+                coEvery { nativeWalletManager.checkModuleVersionStatus() } returns expected
 
-            // Act
-            val actual = nativeRepository.isEntrySuspended(userWalletId, nativeWeth)
+                // Act
+                val actual = nativeRepository.getYieldModuleVersionStatus(userWalletId, ethereum)
 
-            // Assert
-            Truth.assertThat(actual).isTrue()
-        }
+                // Assert
+                Truth.assertThat(actual).isEqualTo(expected)
+            }
 
         @Test
-        fun `GIVEN read fails WHEN isEntrySuspended THEN throws`() = runTest {
+        fun `GIVEN read fails WHEN getYieldModuleVersionStatus THEN throws`() = runTest {
             // Arrange
-            coEvery { nativeWalletManager.isEntrySuspended(NATIVE_WETH_ADDRESS) } throws IllegalStateException("rpc")
+            coEvery { nativeWalletManager.checkModuleVersionStatus() } throws IllegalStateException("rpc")
 
             // Act
-            val actual = runCatching { nativeRepository.isEntrySuspended(userWalletId, nativeWeth) }.exceptionOrNull()
+            val actual = runCatching {
+                nativeRepository.getYieldModuleVersionStatus(userWalletId, ethereum)
+            }.exceptionOrNull()
 
             // Assert
             Truth.assertThat(actual).isInstanceOf(IllegalStateException::class.java)

@@ -1,6 +1,9 @@
 package com.tangem.tap.common.pushes
 
 import android.net.Uri
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
@@ -23,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.net.URI
+import javax.inject.Provider
 
 /**
  * Characterization of the foreground push path.
@@ -31,6 +35,14 @@ import java.net.URI
  * returned `null` for one and `onMessageReceived` bailed out. These cases pin both that addition and the
  * pre-existing flat-key reaction it must not have displaced.
  */
+private val openableFromPush = DeepLinkHandler {}
+
+private val notOpenableFromPush = object : DeepLinkHandler {
+    override val isOpenableFromPush: Boolean = false
+
+    override fun handle(request: DeepLinkRequest) = Unit
+}
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PushMessageHandlerTest {
 
@@ -39,6 +51,15 @@ internal class PushMessageHandlerTest {
     private val jointAccountPushHandler: JointAccountPushHandler = mockk(relaxed = true)
 
     private val handler = PushMessageHandler(
+        deepLinkHandlerRegistry = DeepLinkHandlerRegistry(
+            handlers = mapOf(
+                "tangem://token" to openableFromPush,
+                "tangem://joint_account" to openableFromPush,
+                "tangem://main" to openableFromPush,
+                "tangem://wc" to notOpenableFromPush,
+                "tangem://redirect_sell" to notOpenableFromPush,
+            ).mapValues { (_, handler) -> Provider { handler } },
+        ),
         tokenDetailsPushHandler = tokenDetailsPushHandler,
         jointAccountPushHandler = jointAccountPushHandler,
     )
@@ -130,7 +151,7 @@ internal class PushMessageHandlerTest {
         Model(payload = mapOf(WEBLINK_KEY to "https://tangem.com/pricing/"), expectedTokenParams = null),
         // Another routable host has no reaction in this path either
         Model(payload = mapOf(WEBLINK_KEY to "tangem://main"), expectedTokenParams = null),
-        // Blocked by PushDeeplinkPolicy before any routing happens
+        // Their handlers are not openable from push, so no routing happens
         Model(payload = mapOf(WEBLINK_KEY to "tangem://wc?uri=wc:topic@2"), expectedTokenParams = null),
         Model(payload = mapOf(DEEPLINK_KEY to "tangem://redirect_sell?transactionId=1"), expectedTokenParams = null),
         // Tangem Pay keys win over `link` and route to their own host, so no token reaction
@@ -166,6 +187,7 @@ internal class PushMessageHandlerTest {
         return mockk {
             every { scheme } returns parsed.scheme
             every { host } returns parsed.authority
+            every { pathSegments } returns parsed.path.orEmpty().split('/').filter(String::isNotEmpty)
             every { queryParameterNames } returns queryParams.keys
             every { getQueryParameter(any()) } answers { queryParams[firstArg()] }
         }
