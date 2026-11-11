@@ -6,7 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -50,8 +50,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chevron_left_24
-import com.tangem.core.ui.res.generated.icons.ic_cross_24
+import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
+import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodStatus
 import com.tangem.domain.onramp.model.PaymentMethodType
@@ -218,8 +218,8 @@ private object IntrinsicFreeMeasurePolicyDs : MeasurePolicy {
 @Composable
 private fun ProviderTitleDs(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
     TangemModal.TopNavigation(
-        startButton = { NavigationDiscButtonDs(icon = Icons.ic_chevron_left_24, onClick = onBackClick) },
-        endButton = { NavigationDiscButtonDs(icon = Icons.ic_cross_24, onClick = onCloseClick) },
+        startButton = { NavigationDiscButtonDs(icon = Icons.ic_chevron_left_20, onClick = onBackClick) },
+        endButton = { NavigationDiscButtonDs(icon = Icons.ic_cross_20, onClick = onCloseClick) },
         contentColumn = {
             TitleSubtitleDs(
                 title = TextReference.Res(R.string.onramp_all_offers_button_title),
@@ -233,7 +233,7 @@ private fun ProviderTitleDs(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
 @Composable
 private fun PaymentMethodTitleDs(onCloseClick: () -> Unit) {
     TangemModal.TopNavigation(
-        endButton = { NavigationDiscButtonDs(icon = Icons.ic_cross_24, onClick = onCloseClick) },
+        endButton = { NavigationDiscButtonDs(icon = Icons.ic_cross_20, onClick = onCloseClick) },
         contentColumn = {
             TitleSubtitleDs(
                 title = TextReference.Res(R.string.onramp_all_offers_button_title),
@@ -256,16 +256,17 @@ private fun ColumnScope.TitleSubtitleDs(title: TextReference, subtitle: TextRefe
 private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit) {
     TangemSurface(
         modifier = Modifier.size(44.dp).semantics { role = Role.Button },
-        isMaterial = true,
+        color = TangemTheme.colors3.bg.transparent.primary,
+        border = BorderStroke(1.dp, TangemTheme.colors3.bg.transparent.secondary),
         shape = CircleShape,
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(18.dp),
                 imageVector = icon,
                 tint = TangemTheme.colors3.icon.primary,
                 contentDescription = null,
