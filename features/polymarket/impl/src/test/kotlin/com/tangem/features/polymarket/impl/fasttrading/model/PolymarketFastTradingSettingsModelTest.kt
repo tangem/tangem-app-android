@@ -294,6 +294,25 @@ internal class PolymarketFastTradingSettingsModelTest {
         verify(exactly = 0) { startOperation(any(), any()) }
     }
 
+    @Test
+    fun `GIVEN the key address changed only its case meanwhile WHEN revoke confirmed THEN revocation starts`() =
+        runTest {
+            // Arrange
+            val model = createContentModel()
+            content(model).onActionClick(DEVICE_REVOKE)
+            advanceUntilIdle()
+            val recasedKeys = OVERVIEW.wallet.sessionKeys.map { it.copy(address = "0x" + KEY_ADDRESS.removePrefix("0x").uppercase()) }
+            states.emit(createState(OVERVIEW.copy(wallet = OVERVIEW.wallet.copy(sessionKeys = recasedKeys)).right()))
+            advanceUntilIdle()
+
+            // Act
+            sentModal().buttons.first().onClick(TangemModalActionScope {})
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { startOperation(USER_WALLET_ID, REVOKE) }
+        }
+
     private suspend fun TestScope.createContentModel(): PolymarketFastTradingSettingsModel {
         val model = createModel()
         states.emit(createState(OVERVIEW.right()))

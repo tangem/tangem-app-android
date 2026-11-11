@@ -38,6 +38,7 @@ internal data class FastTradingKeysUM(
 internal data class FastTradingUnknownSignerUM(
     val address: String,
     val actions: ImmutableList<FastTradingKeyActionUM>,
+    val isRevoking: Boolean = false,
 )
 
 @Immutable

@@ -119,7 +119,7 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
         if (!keys.areActionsEnabled) return false
         val rows = listOfNotNull(keys.thisDevice) + keys.otherDevices
         val actions = rows.flatMap { it.actions } + keys.unknownSigners.flatMap { it.actions }
-        return actions.any { it is FastTradingKeyActionUM.Revoke && it.address == address }
+        return actions.any { it is FastTradingKeyActionUM.Revoke && it.address.equals(address, ignoreCase = true) }
     }
 
     private fun start(request: PolymarketSessionKeyOperationRequest) {
