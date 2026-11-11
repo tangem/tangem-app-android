@@ -41,7 +41,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_copy_20
+import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
@@ -167,7 +167,7 @@ private fun DetailRow(
         titleSlot = { RowTitle(text = title) },
         valueSlot = {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -178,10 +178,10 @@ private fun DetailRow(
                 )
                 if (onClick != null) {
                     Icon(
-                        imageVector = Icons.ic_copy_20,
+                        imageVector = Icons.ic_copy_24,
                         contentDescription = null,
-                        tint = TangemTheme.colors3.icon.secondary,
-                        modifier = Modifier.size(20.dp),
+                        tint = TangemTheme.colors3.icon.primary,
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             }
