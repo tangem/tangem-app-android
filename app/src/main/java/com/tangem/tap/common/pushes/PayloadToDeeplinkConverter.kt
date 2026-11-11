@@ -19,6 +19,8 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.tangempay.model.TangemPayPushNotificationType
+import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
+import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.utils.converter.Converter
 
 /**
@@ -35,6 +37,8 @@ import com.tangem.utils.converter.Converter
  * arbitrary [WEBLINK_KEY] value may be returned from here.
  */
 object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
+
+    private const val SCHEME_SEPARATOR = "://"
 
     private val jointAccountTypes = setOf(
         NotificationType.JointMembers.type,
@@ -75,8 +79,7 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         val name = payload[NAME_KEY]
         val accountId = payload[ACCOUNT_ID_KEY]?.takeIf(String::isNotBlank)
 
-        return DeepLinkBuilder().setScheme(DeepLinkScheme.Tangem.scheme).apply {
-            setAction(DeepLinkRoute.TokenDetails.host)
+        return deepLinkBuilder(key = TokenDetailsDeepLinkHandler.DEEPLINK_KEY).apply {
             addQueryParam(NETWORK_ID_KEY, networkId)
             addQueryParam(TOKEN_ID_KEY, tokenId)
             addQueryParam(TYPE_KEY, type)
@@ -115,14 +118,13 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         val walletId = payload[WALLET_ID_KEY]?.takeIf(String::isNotBlank) ?: return null
         val accountId = payload[ACCOUNT_ID_KEY]?.takeIf(String::isNotBlank) ?: return null
         val entry = when (type) {
-            NotificationType.JointMembers.type -> DeepLinkRoute.JointAccount.ENTRY_MEMBERS
-            NotificationType.JointOverview.type -> DeepLinkRoute.JointAccount.ENTRY_OVERVIEW
+            NotificationType.JointMembers.type -> JointAccountDeepLinkHandler.ENTRY_MEMBERS
+            NotificationType.JointOverview.type -> JointAccountDeepLinkHandler.ENTRY_OVERVIEW
             NotificationType.JointTokens.type -> null
             else -> return null
         }
 
-        return DeepLinkBuilder().setScheme(DeepLinkScheme.Tangem.scheme).apply {
-            setAction(DeepLinkRoute.JointAccount.host)
+        return deepLinkBuilder(key = JointAccountDeepLinkHandler.DEEPLINK_KEY).apply {
             if (entry != null) {
                 addQueryParam(ENTRY_KEY, entry)
             }
@@ -147,4 +149,9 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
             payload.forEach { (key, value) -> addQueryParam(key, value) }
         }.build()
     }
+
+    /** Starts a deep link of a handler [key] in the `scheme://host` form. */
+    private fun deepLinkBuilder(key: String): DeepLinkBuilder = DeepLinkBuilder()
+        .setScheme(key.substringBefore(SCHEME_SEPARATOR))
+        .setAction(key.substringAfter(SCHEME_SEPARATOR))
 }
