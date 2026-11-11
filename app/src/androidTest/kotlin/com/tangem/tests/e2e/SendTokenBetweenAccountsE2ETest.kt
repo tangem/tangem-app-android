@@ -17,6 +17,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Assert.assertEquals
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 @HiltAndroidTest
@@ -31,9 +32,10 @@ class SendTokenBetweenAccountsE2ETest : BaseTestCase() {
     @Test
     fun sendTokenFromRicherAccountToOtherTest() {
         val network = E2eCatalog.network
-        val token = requireNotNull(network.token) {
-            "The token Send test needs a token in the catalog (qa-tools network.token)"
-        }
+        // A network-only CI dispatch runs every *E2ETest; a network without a token in the catalog is a valid
+        // config for the other tests, so skip this one rather than failing it.
+        assumeTrue("Skipped: no token configured for this network (qa-tools network.token)", network.token != null)
+        val token = network.token!!
         setupHooks(useWireMock = false).run {
             assertEquals(
                 "The Send test needs two account addresses from the catalog (qa-tools defaultAddress + customAddress)",
