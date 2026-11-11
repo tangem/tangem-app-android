@@ -29,7 +29,7 @@ class StartOrderUseCase(
         val orderRef = OrderRef(userWalletId = userWalletId, id = orderId)
         RunningOrder(
             ref = orderRef,
-            state = orderPoller.poll(orderRef),
+            state = orderPoller.startPolling(orderRef),
         )
     }
 }
