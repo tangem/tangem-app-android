@@ -45,8 +45,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.WalletConnectBottomSheetTestTags
 import com.tangem.domain.models.account.AccountName
+import com.tangem.utils.annotations.RemoveWithToggle
 import java.util.UUID
 
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 @Composable
 fun AddTokenContent(state: AddTokenUM, modifier: Modifier = Modifier) {
     Column(
