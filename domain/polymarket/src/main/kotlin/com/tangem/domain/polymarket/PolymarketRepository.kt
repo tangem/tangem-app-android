@@ -115,6 +115,7 @@ interface PolymarketRepository {
      * Batch book-side prices, deduplicated and split to the CLOB request limit.
      * Every requested asset is present in a successful result; null means a missing quote or an empty book.
      * A rejected batch does not identify which market failed, so HTTP failures never imply all markets closed.
+     * A malformed price or a failed request fails the whole snapshot; no partial result is returned.
      */
     suspend fun getPrices(
         assetIds: List<String>,

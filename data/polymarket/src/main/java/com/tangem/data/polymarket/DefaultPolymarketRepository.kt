@@ -369,7 +369,10 @@ internal class DefaultPolymarketRepository @Inject constructor(
                         price.takeUnless { it.compareTo(side.emptyBookSentinel()) == 0 }
                     }
                 }
-            }.mapLeft { PredictionPriceError.Unknown(httpCode = null, detail = it.message) }
+            }.mapLeft { error ->
+                TangemLogger.e("Unreadable batch book price", error)
+                PredictionPriceError.Unknown(httpCode = null, detail = error.message)
+            }
         },
         onError = { error ->
             when (error) {

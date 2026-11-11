@@ -1342,6 +1342,24 @@ internal class DefaultPolymarketRepositoryTest {
     @Nested
     inner class GetPrices {
 
+        @ParameterizedTest
+        @ValueSource(strings = ["0", "0.000"])
+        fun `GIVEN empty bids WHEN fetched THEN BUY is sent and one remains a valid price`(emptyPrice: String) = runTest {
+            // Arrange
+            coEvery { clobApi.getPrices(any()) } returns ApiResponse.Success(
+                mapOf("empty" to mapOf("BUY" to emptyPrice), "one" to mapOf("BUY" to "1")),
+            )
+
+            // Act
+            val result = repository.getPrices(listOf("empty", "one"), PredictionOrderSide.BUY)
+
+            // Assert
+            assertThat(result.getOrNull()).containsExactly("empty", null, "one", BigDecimal.ONE)
+            coVerify(exactly = 1) {
+                clobApi.getPrices(listOf(PolymarketPriceRequest("empty", "BUY"), PolymarketPriceRequest("one", "BUY")))
+            }
+        }
+
         @Test
         fun `GIVEN duplicate assets exceeding a batch WHEN fetched THEN unique requests stay within the limit`() = runTest {
             // Arrange
