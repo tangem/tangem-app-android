@@ -14,6 +14,7 @@ import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionPricesUseCase
 import com.tangem.domain.polymarket.interactor.CheckNewPolymarketAccountAllowedInteractor
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
@@ -240,6 +241,11 @@ internal object PolymarketDomainUseCasesModule {
         GetPredictionPriceUseCase(
             polymarketRepository = polymarketRepository,
         )
+
+    @Provides
+    @Singleton
+    fun provideGetPredictionPricesUseCase(polymarketRepository: PolymarketRepository): GetPredictionPricesUseCase =
+        GetPredictionPricesUseCase(polymarketRepository)
 
     @Provides
     @Singleton
