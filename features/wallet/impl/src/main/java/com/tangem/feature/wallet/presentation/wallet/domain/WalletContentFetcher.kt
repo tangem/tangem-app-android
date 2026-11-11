@@ -1,7 +1,14 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
+import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -27,6 +34,9 @@ import javax.inject.Singleton
 @Singleton
 internal class WalletContentFetcher @Inject constructor(
     private val walletBalanceFetcher: WalletBalanceFetcher,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val accountsCRUDRepository: AccountsCRUDRepository,
+    private val singleAccountListFetcher: SingleAccountListFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletDataCleaner {
 
@@ -35,6 +45,14 @@ internal class WalletContentFetcher @Inject constructor(
 
     suspend operator fun invoke(userWalletId: UserWalletId, forceUpdate: Boolean = false) = supervisorScope {
         withContext(dispatchers.default) {
+            val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId)
+
+            if (userWallet?.isLocked == true) {
+                fetchLockedWalletAccounts(userWallet)
+
+                return@withContext
+            }
+
             // Use mutex to ensure thread safety
             val fetchingJob = mutex.withLock {
                 val savedJobHolder = fetchingJobMap[userWalletId]
@@ -74,6 +92,20 @@ internal class WalletContentFetcher @Inject constructor(
 
             TangemLogger.d("Finish fetching for $userWalletId")
         }
+    }
+
+    /**
+     * The content of a locked wallet can't be fetched, but the account lists of all wallets are combined, so a wallet
+     * whose accounts were never saved would keep the other wallets loading forever.
+     */
+    private suspend fun fetchLockedWalletAccounts(userWallet: UserWallet) {
+        if (!userWallet.isMultiCurrency) return
+
+        val userWalletId = userWallet.walletId
+        if (accountsCRUDRepository.getAccountListSync(userWalletId).isSome()) return
+
+        singleAccountListFetcher(params = SingleAccountListFetcher.Params(userWalletId))
+            .onLeft { TangemLogger.e("Failed to fetch accounts of locked wallet $userWalletId", it) }
     }
 
     /**
