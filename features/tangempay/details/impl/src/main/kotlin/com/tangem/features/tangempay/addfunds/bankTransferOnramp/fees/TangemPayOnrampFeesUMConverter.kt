@@ -9,6 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -26,8 +27,8 @@ internal class TangemPayOnrampFeesUMConverter(
         type = fee.type,
         title = stringReference(fee.name),
         value = when (fee.calculationType) {
-            AccountFee.CalculationType.FIXED -> fee.amount.formatFiatAmount(currencyCode = fee.currency)
-            AccountFee.CalculationType.PERCENTAGE -> fee.amount.formatPercentageFee()
+            FeeCalculationType.FIXED -> fee.amount.formatFiatAmount(currencyCode = fee.currency)
+            FeeCalculationType.PERCENTAGE -> fee.amount.formatPercentageFee()
         },
     )
 }
