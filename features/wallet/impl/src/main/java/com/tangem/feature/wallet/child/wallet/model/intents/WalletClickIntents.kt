@@ -7,7 +7,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -88,9 +87,7 @@ internal class WalletClickIntents @Inject constructor(
             stateController.update { it.copy(selectedWalletIndex = index) }
 
             maybeUserWallet.onRight { userWallet ->
-                if (!userWallet.isLocked) {
-                    launch { walletContentFetcher(userWalletId = userWallet.walletId) }
-                }
+                launch { walletContentFetcher(userWalletId = userWallet.walletId) }
 
                 walletScreenContentLoader.load(userWallet = userWallet, coroutineScope = modelScope)
             }
