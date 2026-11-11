@@ -42,6 +42,7 @@ sealed class IntroductionProcess(
             CreateWallet("Create Wallet"),
             IHaveWallet("I Have Wallet"),
             ImportExisting("Import Existing"),
+            AddWallet("Add Wallet"),
         }
 
         enum class DismissReason(val value: String) {
@@ -95,9 +96,14 @@ sealed class IntroductionProcess(
      * Carries its own Product Type: no mobile wallet context is installed when the I have a wallet sheet sends it, and
      * a card context left over from an abandoned card onboarding must not override it.
      */
-    class ButtonImportExistingWallet : IntroductionProcess(
+    class ButtonImportExistingWallet(
+        source: AnalyticsParam.ScreensSources? = null,
+    ) : IntroductionProcess(
         event = "Button - Import Existing Wallet",
-        params = mapOf(AnalyticsParam.PRODUCT_TYPE to AnalyticsParam.ProductType.MobileWallet.value),
+        params = buildMap {
+            put(AnalyticsParam.PRODUCT_TYPE, AnalyticsParam.ProductType.MobileWallet.value)
+            if (source != null) put(AnalyticsParam.SOURCE, source.value)
+        },
     )
 
     /**
