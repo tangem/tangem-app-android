@@ -60,7 +60,7 @@ dependencies {
     // endregion
 
     // region Project - Features
-    api(projects.features.moneyAccount.details.api) // AND_15325_MONEY_ACCOUNTS_ENABLED
+    implementation(projects.domain.moneyAccount.models)
     // endregion
 
     // region Project - Common

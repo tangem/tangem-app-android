@@ -52,7 +52,6 @@ dependencies {
     // endregion
 
     // region Features
-    api(projects.features.moneyAccount.details.api) // AND_15325_MONEY_ACCOUNTS_ENABLED
     api(projects.features.collectibles.api) // TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED
     // endregion
 

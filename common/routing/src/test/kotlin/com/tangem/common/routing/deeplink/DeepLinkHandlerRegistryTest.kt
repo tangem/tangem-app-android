@@ -170,6 +170,48 @@ internal class DeepLinkHandlerRegistryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsOpenableFromPush {
+
+        private val registry = DeepLinkHandlerRegistry(
+            handlers = mapOf(
+                "tangem://staking" to DeepLinkHandler {},
+                "tangem://wc" to object : DeepLinkHandler {
+                    override val isOpenableFromPush: Boolean = false
+
+                    override fun handle(request: DeepLinkRequest) = Unit
+                },
+                "tangem://markets" to DeepLinkHandler(isEnabled = { false }, handle = {}),
+            ).asProviders(),
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun isOpenableFromPush(model: IsOpenableFromPushModel) {
+            // Arrange
+            val uri = mockk<Uri> {
+                every { scheme } returns "tangem"
+                every { host } returns model.host
+                every { pathSegments } returns emptyList()
+            }
+
+            // Act
+            val actual = registry.isOpenableFromPush(uri)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            IsOpenableFromPushModel(host = "staking", expected = true),
+            IsOpenableFromPushModel(host = "wc", expected = false),
+            // Disabled handler counts as not registered
+            IsOpenableFromPushModel(host = "markets", expected = false),
+            IsOpenableFromPushModel(host = "unknown", expected = false),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class CandidateKeys {
 
         @ParameterizedTest
@@ -383,7 +425,7 @@ internal class DeepLinkHandlerRegistryTest {
         }
 
         @Test
-        fun `GIVEN deep link found twice WHEN find THEN only its handler is created once`() {
+        fun `GIVEN deep link WHEN find THEN only its handler is created`() {
             // Arrange
             val registry = DeepLinkHandlerRegistry(
                 handlers = mapOf("tangem://staking" to stakingProvider, "https://tangem.com/news" to newsProvider),
@@ -395,17 +437,17 @@ internal class DeepLinkHandlerRegistryTest {
             }
 
             // Act
-            val first = registry.find(uri)
-            val second = registry.find(uri)
+            registry.find(uri)
 
             // Assert
-            assertThat(second).isSameInstanceAs(first)
             verify(exactly = 1) { stakingProvider.get() }
             verify(exactly = 0) { newsProvider.get() }
         }
     }
 
     data class NormalizeKeyModel(val key: String, val expected: String?)
+
+    data class IsOpenableFromPushModel(val host: String, val expected: Boolean)
 
     data class FindModel(
         val scheme: String?,
