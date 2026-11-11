@@ -12,6 +12,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1525_MONEY_ACCOUNT_YIELD_MODE_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
         "version": "undefined"
     },
@@ -129,6 +133,10 @@
     },
     {
         "name": "AND_15342_ORDER_FRAMEWORK_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED",
         "version": "undefined"
     }
 ]

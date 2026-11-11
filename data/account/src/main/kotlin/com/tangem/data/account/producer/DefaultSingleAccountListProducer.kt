@@ -14,7 +14,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isTangemPayCompatible
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.isPredictionAccountSupported
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted

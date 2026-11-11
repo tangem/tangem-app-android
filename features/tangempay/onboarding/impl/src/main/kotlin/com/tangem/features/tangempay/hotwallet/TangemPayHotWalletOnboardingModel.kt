@@ -9,7 +9,7 @@ import com.tangem.core.media.LoopingVideoController
 import com.tangem.core.media.LoopingVideoState
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.model.createPayBundleVideo

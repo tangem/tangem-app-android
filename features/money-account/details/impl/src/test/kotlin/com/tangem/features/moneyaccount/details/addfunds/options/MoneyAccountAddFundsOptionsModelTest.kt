@@ -13,7 +13,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider

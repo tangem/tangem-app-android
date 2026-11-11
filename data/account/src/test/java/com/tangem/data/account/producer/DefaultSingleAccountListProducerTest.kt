@@ -12,7 +12,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider

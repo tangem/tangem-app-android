@@ -21,18 +21,24 @@ internal sealed interface PolymarketFastTradingSettingsUM {
         override val onBackClick: () -> Unit,
         val keys: FastTradingKeysUM,
         val pullToRefreshConfig: PullToRefreshConfig,
+        val onActionClick: (FastTradingKeyActionUM) -> Unit,
     ) : PolymarketFastTradingSettingsUM
 }
 
 @Immutable
 internal data class FastTradingKeysUM(
+    val isUnknownSignersWarningShown: Boolean,
     val unknownSigners: ImmutableList<FastTradingUnknownSignerUM>,
     val thisDevice: FastTradingKeyRowUM?,
     val otherDevices: ImmutableList<FastTradingKeyRowUM>,
+    val areActionsEnabled: Boolean,
 )
 
 @Immutable
-internal data class FastTradingUnknownSignerUM(val address: String)
+internal data class FastTradingUnknownSignerUM(
+    val address: String,
+    val actions: ImmutableList<FastTradingKeyActionUM>,
+)
 
 @Immutable
 internal data class FastTradingKeyRowUM(
@@ -40,7 +46,21 @@ internal data class FastTradingKeyRowUM(
     val deviceName: TextReference,
     val status: FastTradingKeyStatusUM,
     val isExpiringSoon: Boolean,
+    val actions: ImmutableList<FastTradingKeyActionUM>,
 )
+
+@Immutable
+internal sealed interface FastTradingKeyActionUM {
+
+    data class Revoke(val address: String, val subject: RevokeSubject) : FastTradingKeyActionUM
+
+    sealed interface RevokeSubject {
+
+        data class Device(val name: TextReference) : RevokeSubject
+
+        data object UnknownSigner : RevokeSubject
+    }
+}
 
 @Immutable
 internal sealed interface FastTradingKeyStatusUM {
@@ -64,6 +84,8 @@ internal sealed interface FastTradingKeyStatusUM {
     data object ActivationFailed : FastTradingKeyStatusUM
 
     data object ReconnectNeeded : FastTradingKeyStatusUM
+
+    data object UnknownSigner : FastTradingKeyStatusUM
 
     data object Unknown : FastTradingKeyStatusUM
 }

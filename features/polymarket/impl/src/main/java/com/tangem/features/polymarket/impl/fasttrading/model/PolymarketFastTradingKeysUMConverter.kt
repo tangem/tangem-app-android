@@ -10,10 +10,13 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliatio
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyRowUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyStatusUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeysUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingUnknownSignerUM
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.time.Clock
 import java.time.Duration
@@ -38,28 +41,81 @@ internal class PolymarketFastTradingKeysUMConverter(
         val missingOnExchange = reconciliation?.missingOnExchange.orEmpty()
         val submittedOperation = operation?.takeIf { it.stage != PolymarketSessionKeyOperationStage.SIGNING }
         val localKeyAddress = overview.localKeyAddress
+        val foreignSigners = reconciliation?.foreignSigners.orEmpty()
+        val listedSigners = reconciliation?.listedSigners.orEmpty()
+        val foreignAddresses = foreignSigners.mapTo(mutableSetOf()) { it.address.lowercase() }
 
-        val rows = overview.wallet.sessionKeys
+        val shownKeys = overview.wallet.sessionKeys
             .filter { it.status != PolymarketSessionKeyStatus.REVOKED }
-            .map { key ->
+            .map { it.address.lowercase() to it }
+        val shownAddresses = shownKeys.mapTo(mutableSetOf()) { (address, _) -> address }
+        val rows = shownKeys
+            .map { (address, key) ->
                 val isOwn = key.address.equals(localKeyAddress, ignoreCase = true)
+                val isForeign = address in foreignAddresses
+                val status = submittedOperation?.statusFor(key.address, isOwn)
+                    ?: if (isForeign) FastTradingKeyStatusUM.UnknownSigner else key.status(now, missingOnExchange)
+                val deviceName = key.deviceName?.let(::stringReference)
+                    ?: resourceReference(R.string.prediction_session_key_unknown_device)
                 key.address to FastTradingKeyRowUM(
                     id = key.address,
-                    deviceName = key.deviceName?.let(::stringReference)
-                        ?: resourceReference(R.string.prediction_session_key_unknown_device),
-                    status = submittedOperation?.statusFor(key.address, isOwn) ?: key.status(now, missingOnExchange),
-                    isExpiringSoon = key.isExpiringSoon(now),
+                    deviceName = deviceName,
+                    status = status,
+                    isExpiringSoon = !isForeign && key.isExpiringSoon(now),
+                    actions = actionsFor(
+                        revoke = revokeOf(
+                            address = key.address,
+                            subject = if (isForeign) {
+                                FastTradingKeyActionUM.RevokeSubject.UnknownSigner
+                            } else {
+                                FastTradingKeyActionUM.RevokeSubject.Device(deviceName)
+                            },
+                        ),
+                        status = status,
+                        isListed = address in listedSigners,
+                    ),
                 )
             }
         val ownRow = rows.firstOrNull { (address, _) -> address.equals(localKeyAddress, ignoreCase = true) }?.second
 
         return FastTradingKeysUM(
-            unknownSigners = reconciliation?.foreignSigners.orEmpty()
-                .map { FastTradingUnknownSignerUM(address = it.address) }
+            isUnknownSignersWarningShown = foreignSigners.isNotEmpty(),
+            unknownSigners = foreignSigners
+                .filter { it.address.lowercase() !in shownAddresses }
+                .map { signer ->
+                    val revoke = revokeOf(signer.address, FastTradingKeyActionUM.RevokeSubject.UnknownSigner)
+                    FastTradingUnknownSignerUM(address = signer.address, actions = persistentListOf(revoke))
+                }
                 .toImmutableList(),
             thisDevice = ownRow ?: submittedOperation?.pendingThisDeviceRow(),
             otherDevices = rows.map { it.second }.filter { it !== ownRow }.toImmutableList(),
+            areActionsEnabled = operation == null,
         )
+    }
+
+    private fun revokeOf(address: String, subject: FastTradingKeyActionUM.RevokeSubject) =
+        FastTradingKeyActionUM.Revoke(address = address, subject = subject)
+
+    private fun actionsFor(
+        revoke: FastTradingKeyActionUM.Revoke,
+        status: FastTradingKeyStatusUM,
+        isListed: Boolean,
+    ): ImmutableList<FastTradingKeyActionUM> = when (status) {
+        is FastTradingKeyStatusUM.Active,
+        is FastTradingKeyStatusUM.Paused,
+        FastTradingKeyStatusUM.UnknownSigner,
+        -> persistentListOf(revoke)
+        is FastTradingKeyStatusUM.Expired,
+        FastTradingKeyStatusUM.ReconnectNeeded,
+        FastTradingKeyStatusUM.ActivationFailed,
+        FastTradingKeyStatusUM.Unknown,
+        -> if (isListed) persistentListOf(revoke) else persistentListOf()
+        FastTradingKeyStatusUM.Activating,
+        FastTradingKeyStatusUM.Revoking,
+        FastTradingKeyStatusUM.Pausing,
+        FastTradingKeyStatusUM.Resuming,
+        FastTradingKeyStatusUM.Extending,
+        -> persistentListOf()
     }
 
     private fun PolymarketSessionKey.status(now: Instant, missingOnExchange: Set<String>): FastTradingKeyStatusUM =
@@ -132,6 +188,7 @@ internal class PolymarketFastTradingKeysUMConverter(
             deviceName = stringReference(thisDeviceName),
             status = status,
             isExpiringSoon = false,
+            actions = persistentListOf(),
         )
     }
 
