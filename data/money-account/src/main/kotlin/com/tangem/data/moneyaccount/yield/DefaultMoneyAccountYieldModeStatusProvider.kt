@@ -12,7 +12,6 @@ import com.tangem.domain.yield.supply.models.status.toYieldSupplyStatus
 import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
 import com.tangem.domain.yield.supply.status.YieldModuleStatusProducer
 import com.tangem.domain.yield.supply.status.YieldModuleStatusSupplier
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 internal class DefaultMoneyAccountYieldModeStatusProvider @Inject constructor(
