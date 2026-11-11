@@ -19,7 +19,6 @@ import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -59,9 +58,26 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
         bankOfframpOrderRepository.createTransfer(userWalletId = userWalletId, quoteId = quote.quoteId).fold(
             ifLeft = { error -> onTransferRequestFailed(error = error, request = request, onState = onState) },
             ifRight = { transfer ->
-                send(transfer = transfer, token = token, maxNetworkFee = draft.networkFee, onState = onState)
+                if (transfer.matches(quote = quote, amount = request.amount)) {
+                    send(transfer = transfer, token = token, maxNetworkFee = draft.networkFee, onState = onState)
+                } else {
+                    onTransferMismatch(transfer = transfer, quote = quote, onState = onState)
+                }
             },
         )
+    }
+
+    private fun onTransferMismatch(
+        transfer: BankOfframpTransfer,
+        quote: BankOfframpQuote,
+        onState: (CompletionState) -> Unit,
+    ) {
+        TangemLogger.withTag(TAG).e(
+            "SPEI transfer ${transfer.transferId} asks for ${transfer.sourceAmount}, quote ${quote.quoteId} " +
+                "for ${quote.sourceAmount}; nothing sent",
+        )
+        attempt = null
+        onState(CompletionState.Failed(PreviewFailure.General))
     }
 
     private suspend fun showNewQuote(request: QuoteRequest, onState: (CompletionState) -> Unit) {
@@ -160,6 +176,9 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
 
     private fun BankOfframpError.isOutcomeUnknown(): Boolean = this is BankOfframpError.Unknown && isOutcomeUnknown
 
+    private fun BankOfframpTransfer.matches(quote: BankOfframpQuote, amount: BigDecimal): Boolean =
+        sourceAmount.compareTo(quote.sourceAmount) == 0 && quote.sourceAmount.compareTo(amount) == 0
+
     private data class QuoteRequest(val amount: BigDecimal, val recipient: BankOfframpRecipient)
 
     private data class QuoteAttempt(
@@ -168,8 +187,7 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
         val quote: BankOfframpQuote? = null,
     ) {
 
-        fun sendableQuoteFor(request: QuoteRequest): BankOfframpQuote? =
-            quote?.takeIf { this.request == request && DateTime.now().isBefore(it.sendDeadline) }
+        fun sendableQuoteFor(request: QuoteRequest): BankOfframpQuote? = quote?.takeIf { this.request == request }
     }
 
     @AssistedFactory
