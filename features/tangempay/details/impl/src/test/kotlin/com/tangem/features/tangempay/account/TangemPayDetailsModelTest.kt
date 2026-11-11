@@ -17,7 +17,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.account.VirtualAccountOnramp
@@ -89,6 +88,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.util.Currency
 import com.tangem.core.ui.R as CoreUiR
+import com.tangem.domain.tangempay.model.BankCredentials
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

@@ -5,7 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.Wallet.Model
-import com.tangem.blockchain.extensions.hexToInt
+import com.tangem.blockchain.extensions.hexToBigInteger
 import com.tangem.data.walletconnect.model.CAIP10
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork.NamespaceConverter.Companion.ETH_NAMESPACE_KEY
@@ -121,7 +121,9 @@ internal class WcEthAddSwitchCommonDelegate @AssistedInject constructor(
 
     private val wallet: UserWallet get() = context.session.wallet
 
-    fun hexChainIdToCAIP2(hexChainId: String): CAIP2? = CAIP2.fromRaw("$ETH_NAMESPACE_KEY:${hexChainId.hexToInt()}")
+    fun hexChainIdToCAIP2(hexChainId: String): CAIP2? = CAIP2.fromRaw(
+        "$ETH_NAMESPACE_KEY:${hexChainId.hexToBigInteger()}",
+    )
 
     fun existInWcSession(network: Network): Boolean {
         return context.session.networks.any { it.rawId == network.rawId }

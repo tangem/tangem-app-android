@@ -23,6 +23,7 @@ import com.tangem.features.tangempay.components.TangemPayWithdrawHubComponent
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -37,6 +38,7 @@ internal class DefaultMoneyAccountDetailsComponent @AssistedInject constructor(
     private val bankTransferOnrampDetailsComponentFactory: TangemPayBankTransferOnrampDetailsComponent.Factory,
     private val withdrawHubComponentFactory: TangemPayWithdrawHubComponent.Factory,
     private val bankDetailsAnalytics: MoneyAccountBankDetailsAnalytics,
+    private val yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
 ) : MoneyAccountDetailsComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<MoneyAccountDetailsRoute>()
@@ -74,6 +76,7 @@ internal class DefaultMoneyAccountDetailsComponent @AssistedInject constructor(
             txHistoryComponentFactory = txHistoryComponentFactory,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             bankingDetailsErrorComponentFactory = bankingDetailsErrorComponentFactory,
+            yieldSupplyComponentFactory = yieldSupplyComponentFactory,
         )
         is MoneyAccountDetailsRoute.BankDetails -> bankTransferOnrampDetailsComponentFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),

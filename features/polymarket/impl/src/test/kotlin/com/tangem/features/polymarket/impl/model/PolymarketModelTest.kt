@@ -108,7 +108,7 @@ internal class PolymarketModelTest {
     }
 
     @Test
-    fun `GIVEN outcome finished before wallet is active WHEN wallet becomes active THEN toast is sent once`() =
+    fun `GIVEN outcome finished before wallet is settled WHEN wallet becomes settled THEN toast is sent once`() =
         runTest {
             // Arrange
             finish(USER_WALLET_ID, REVOKE_FAILED)
@@ -117,7 +117,7 @@ internal class PolymarketModelTest {
             advanceUntilIdle()
 
             // Act
-            model.onActiveWalletChanged(USER_WALLET_ID)
+            model.onSettledWalletChanged(USER_WALLET_ID)
             advanceUntilIdle()
 
             // Assert
@@ -129,7 +129,7 @@ internal class PolymarketModelTest {
     fun `GIVEN host not visible WHEN outcome arrives THEN nothing is sent or acknowledged`() = runTest {
         // Arrange
         val model = createModel()
-        model.onActiveWalletChanged(USER_WALLET_ID)
+        model.onSettledWalletChanged(USER_WALLET_ID)
         advanceUntilIdle()
 
         // Act
@@ -145,7 +145,7 @@ internal class PolymarketModelTest {
         runTest {
             // Arrange
             val model = createModel()
-            model.onActiveWalletChanged(USER_WALLET_ID)
+            model.onSettledWalletChanged(USER_WALLET_ID)
             finish(USER_WALLET_ID, REVOKE_FAILED)
 
             // Act
@@ -174,13 +174,13 @@ internal class PolymarketModelTest {
         }
 
     @Test
-    fun `GIVEN active wallet WHEN stack returns to a route without wallet THEN later outcomes are not toasted`() =
+    fun `GIVEN settled wallet WHEN the wallet is no longer settled THEN later outcomes are not toasted`() =
         runTest {
             // Arrange
             val model = createVisibleModel(USER_WALLET_ID)
 
             // Act
-            model.onActiveWalletChanged(null)
+            model.onSettledWalletChanged(null)
             advanceUntilIdle()
             finish(USER_WALLET_ID, REVOKE_FAILED)
 
@@ -190,13 +190,13 @@ internal class PolymarketModelTest {
         }
 
     @Test
-    fun `GIVEN active wallet WHEN another wallet becomes active THEN only the new wallet outcomes are toasted`() =
+    fun `GIVEN settled wallet WHEN another wallet becomes settled THEN only the new wallet outcomes are toasted`() =
         runTest {
             // Arrange
             val model = createVisibleModel(USER_WALLET_ID)
 
             // Act
-            model.onActiveWalletChanged(OTHER_WALLET_ID)
+            model.onSettledWalletChanged(OTHER_WALLET_ID)
             advanceUntilIdle()
             finish(USER_WALLET_ID, REVOKE_FAILED)
             finish(OTHER_WALLET_ID, OTHER_REVOKE_FAILED)
@@ -224,7 +224,7 @@ internal class PolymarketModelTest {
     }
 
     @Test
-    fun `GIVEN no active wallet WHEN host becomes visible THEN outcomes are not observed`() = runTest {
+    fun `GIVEN no settled wallet WHEN host becomes visible THEN outcomes are not observed`() = runTest {
         // Arrange
         val model = createModel()
 
@@ -334,7 +334,7 @@ internal class PolymarketModelTest {
     private fun TestScope.createVisibleModel(walletId: UserWalletId): PolymarketModel {
         val model = createModel()
         model.onVisibilityChanged(isVisible = true)
-        model.onActiveWalletChanged(walletId)
+        model.onSettledWalletChanged(walletId)
         advanceUntilIdle()
         return model
     }

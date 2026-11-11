@@ -19,8 +19,13 @@ internal sealed interface CollectiblesRoute : Route {
     @Serializable
     data class MachineDetails(val externalId: String) : CollectiblesRoute
 
+    /** @property reopenTxId a paid pack left unopened: the screen opens it at once instead of offering a purchase */
     @Serializable
-    data class ConfirmOrder(val externalId: String, val isTurboEnabled: Boolean) : CollectiblesRoute
+    data class ConfirmOrder(
+        val machineId: String,
+        val isTurboEnabled: Boolean,
+        val reopenTxId: String? = null,
+    ) : CollectiblesRoute
 
     @Serializable
     data object PackOpenFailed : CollectiblesRoute

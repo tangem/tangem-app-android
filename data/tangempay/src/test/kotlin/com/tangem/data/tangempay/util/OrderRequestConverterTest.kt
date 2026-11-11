@@ -229,6 +229,6 @@ internal class OrderRequestConverterTest {
         const val PRODUCT_INSTANCE_ID = "pi-1"
         const val LAST_FOUR_DIGITS = "8252"
         const val TARGET_PLAN = "plan-plus"
-        const val CHAIN_ID = 137
+        const val CHAIN_ID = 137L
     }
 }

@@ -15,6 +15,7 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketCategoryFilter
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
@@ -38,6 +39,7 @@ import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetC
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.features.polymarket.impl.main.addfunds.dismissIfShown
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryTabUMConverter
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryFilterUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
@@ -199,6 +201,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     private var categories: List<PolymarketCategory> = emptyList()
     private var selectedCategoryId: Int? = null
+    private var selectedFilter: PolymarketCategoryFilter? = null
     private val feedController = PolymarketFeedController(
         scope = modelScope,
         dispatchers = dispatchers,
@@ -290,6 +293,7 @@ internal class PolymarketMainModel @Inject constructor(
 
             categories = loadedCategories
             selectedCategoryId = loadedCategories.firstOrNull()?.id
+            selectedFilter = availableFilters().firstOrNull()
             updateCategoryTabs()
             uiState.update { it.copy(isCategoriesLoading = false) }
 
@@ -306,6 +310,17 @@ internal class PolymarketMainModel @Inject constructor(
     private fun onCategorySelected(categoryId: Int) {
         if (categoryId == selectedCategoryId) return
         selectedCategoryId = categoryId
+        selectedFilter = availableFilters().firstOrNull()
+        updateCategoryTabs()
+        selectFeed(categoryId = categoryId)
+    }
+
+    private fun availableFilters() = selectedFeedCategory()?.takeIf { isPhaseTwoEnabled }?.selectableFilters.orEmpty()
+
+    private fun onFilterSelected(categoryId: Int, filter: PolymarketCategoryFilter) {
+        if (!isPhaseTwoEnabled || categoryId != selectedCategoryId || filter == selectedFilter) return
+        if (filter !in availableFilters()) return
+        selectedFilter = filter
         updateCategoryTabs()
         selectFeed(categoryId = categoryId)
     }
@@ -315,6 +330,9 @@ internal class PolymarketMainModel @Inject constructor(
         uiState.update { state ->
             state.copy(
                 categories = buildTabs(),
+                filters = PolymarketCategoryFilterUMConverter.convert(category, selectedFilter) { filter ->
+                    category?.let { onFilterSelected(it.id, filter) }
+                },
                 onSeeAllClick = if (category?.subcategories.isNullOrEmpty()) null else ::openCategory,
             )
         }
@@ -326,7 +344,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun selectFeed(categoryId: Int, reloadVisited: Boolean = false) {
-        val selection = PolymarketEventsListConfig(category = categoryId)
+        val selection = PolymarketEventsListConfig(category = categoryId, filter = selectedFilter)
         val scrollPosition = feedController.select(selection, reloadVisited)
         uiState.update { it.copy(selection = selection, pendingScrollPosition = scrollPosition) }
     }

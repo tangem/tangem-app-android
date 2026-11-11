@@ -3,10 +3,10 @@ package com.tangem.domain.moneyaccount.usecase
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.utils.annotations.RemoveWithToggle
 
 class GetMoneyAccountBankCredentialsUseCase(

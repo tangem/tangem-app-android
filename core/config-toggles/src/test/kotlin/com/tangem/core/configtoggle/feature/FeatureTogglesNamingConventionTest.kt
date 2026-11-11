@@ -3,6 +3,7 @@ package com.tangem.core.configtoggle.feature
 import com.google.common.truth.Truth
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.storage.ConfigToggle
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -11,7 +12,7 @@ internal class FeatureTogglesNamingConventionTest {
 
     @Test
     fun `all new feature toggles must follow AND_id or TWI_id naming`() {
-        val toggles = parseToggles(CONFIG_FILE)
+        val toggles = CONFIG_FILES.flatMap(::parseToggles)
 
         val invalid = toggles
             .map(ConfigToggle::name)
@@ -24,6 +25,21 @@ internal class FeatureTogglesNamingConventionTest {
         ).that(invalid).isEmpty()
     }
 
+    @Test
+    fun `GIVEN stream config files WHEN compared with generated enum THEN every file is registered`() {
+        // Arrange
+        val configNames = CONFIG_FILES.flatMap(::parseToggles).map(ConfigToggle::name)
+
+        // Act
+        val generatedNames = FeatureToggles.entries.map(FeatureToggles::rawName)
+
+        // Assert
+        Truth.assertWithMessage(
+            """Every <stream>/config-toggles/feature_toggles.json must be listed in featureTogglesStreams of core/config-toggles/build.gradle.kts.
+              |Found: ${CONFIG_FILES.joinToString { it.relativeTo(REPO_ROOT).path }}""".trimMargin(),
+        ).that(generatedNames).containsExactlyElementsIn(configNames)
+    }
+
     private fun parseToggles(file: File): List<ConfigToggle> {
         val moshi = Moshi.Builder().build()
         val listType = Types.newParameterizedType(List::class.java, ConfigToggle::class.java)
@@ -34,7 +50,13 @@ internal class FeatureTogglesNamingConventionTest {
     private companion object {
         val VALID_NAME_PATTERN = Regex("""^(AND|TWI)_\d+(?:_[A-Z0-9]+)+$""")
 
-        val CONFIG_FILE = File("src/main/assets/configs/feature_toggles_config.json")
+        /** Unit tests run from the module directory, `core/config-toggles` */
+        val REPO_ROOT: File = File("../..").canonicalFile
+
+        val CONFIG_FILES: List<File> = REPO_ROOT.listFiles().orEmpty()
+            .map { File(it, "config-toggles/feature_toggles.json") }
+            .filter(File::isFile)
+            .sorted()
 
         /** Toggles created before the AND_/TWI_ naming convention. Do NOT add new entries. */
         val EXCLUDED_TOGGLES_LIST = setOf(
