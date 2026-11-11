@@ -41,6 +41,7 @@ dependencies {
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.txhistory.api)
+    implementation(projects.features.yieldSupply.api)
 
     /** Compose */
     implementation(deps.compose.foundation)

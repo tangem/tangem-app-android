@@ -8,7 +8,7 @@ import arrow.core.raise.ensure
 import arrow.core.right
 import com.tangem.data.tangempay.util.BankOfframpQuoteRequestConverter
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
@@ -284,7 +284,7 @@ internal class MockBankOfframpOrderRepository(
 
         fun fixedFee(name: String, amount: String) = OfframpFee(
             name = name,
-            calculationType = AccountFee.CalculationType.FIXED,
+            calculationType = FeeCalculationType.FIXED,
             amount = BigDecimal(amount),
             currency = USD,
             description = null,

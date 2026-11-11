@@ -13,8 +13,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.model.AccountFeeGroupType
 import com.tangem.domain.tangempay.model.CustomerOrderRequest
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.OrderType
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.order.OrderPoller
+import com.tangem.domain.tangempay.order.OrdersStore
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.models.request.OrderRequest
 import com.tangem.spend.datasource.tangempay.models.response.BankCredentialsListResponse
@@ -25,6 +28,7 @@ import com.tangem.spend.datasource.tangempay.models.response.OrderResponse
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.tangempay.MockBankCredentials
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import dagger.Lazy
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -46,6 +50,8 @@ internal class DefaultOnboardingRepositoryTest {
     private val tangemPayStorage: TangemPayStorage = mockk(relaxed = true)
     private val cashbackSummaryStore: CashbackSummaryStore = mockk(relaxed = true)
     private val userPropertiesSender: TangemPayUserPropertiesSender = mockk(relaxed = true)
+    private val orderPoller: OrderPoller = mockk(relaxed = true)
+    private val ordersStore: OrdersStore = mockk(relaxed = true)
 
     private val repository = DefaultOnboardingRepository(
         analytics = mockk(relaxed = true),
@@ -62,11 +68,21 @@ internal class DefaultOnboardingRepositoryTest {
         customerInfoStore = mockk(relaxed = true),
         derivationsRepository = mockk(relaxed = true),
         userPropertiesSender = userPropertiesSender,
+        orderPoller = Lazy { orderPoller },
+        ordersStore = ordersStore,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemPayApi, requestHelper, tangemPayStorage, cashbackSummaryStore, userPropertiesSender)
+        clearMocks(
+            tangemPayApi,
+            requestHelper,
+            tangemPayStorage,
+            cashbackSummaryStore,
+            userPropertiesSender,
+            orderPoller,
+            ordersStore,
+        )
 
         coEvery {
             requestHelper.performRequest<Any>(userWalletId = any(), requestBlock = any())
@@ -354,6 +370,34 @@ internal class DefaultOnboardingRepositoryTest {
             // Assert
             coVerify(exactly = 0) { cashbackSummaryStore.remove(any()) }
         }
+
+        @Test
+        fun `GIVEN backend accepts WHEN disableTangemPay THEN order polling stopped and stored orders cleared`() =
+            runTest {
+                // Arrange
+                coEvery { tangemPayApi.setTangemPayEnabledStatus(any(), any()) } returns ApiResponse.Success(Unit)
+
+                // Act
+                repository.disableTangemPay(USER_WALLET_ID)
+
+                // Assert
+                verify(exactly = 1) { orderPoller.stopPolling(listOf(USER_WALLET_ID)) }
+                coVerify(exactly = 1) { ordersStore.clear(USER_WALLET_ID) }
+            }
+
+        @Test
+        fun `GIVEN backend error WHEN disableTangemPay THEN order polling and stored orders kept`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.setTangemPayEnabledStatus(any(), any()) } returns
+                ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Unit>
+
+            // Act
+            repository.disableTangemPay(USER_WALLET_ID)
+
+            // Assert
+            verify(exactly = 0) { orderPoller.stopPolling(any()) }
+            coVerify(exactly = 0) { ordersStore.clear(any()) }
+        }
     }
 
     @Nested
@@ -388,7 +432,7 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = "ACH",
                     group = AccountFeeGroupType.ONRAMP,
-                    calculationType = AccountFee.CalculationType.FIXED,
+                    calculationType = FeeCalculationType.FIXED,
                     amount = BigDecimal("1.00"),
                     currency = "USD",
                 ),
@@ -397,7 +441,7 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = "ACH",
                     group = AccountFeeGroupType.OFFRAMP,
-                    calculationType = AccountFee.CalculationType.FIXED,
+                    calculationType = FeeCalculationType.FIXED,
                     amount = BigDecimal("1.50"),
                     currency = "USD",
                 ),
@@ -446,7 +490,7 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = null,
                     group = AccountFeeGroupType.ONRAMP,
-                    calculationType = AccountFee.CalculationType.FIXED,
+                    calculationType = FeeCalculationType.FIXED,
                     amount = BigDecimal.ONE,
                     currency = "USD",
                 )
@@ -481,7 +525,7 @@ internal class DefaultOnboardingRepositoryTest {
                         name = "ACH",
                         paymentMethodId = "SPEI",
                         group = AccountFeeGroupType.ONRAMP,
-                        calculationType = AccountFee.CalculationType.PERCENTAGE,
+                        calculationType = FeeCalculationType.PERCENTAGE,
                         amount = BigDecimal.ONE,
                         currency = "USD",
                     ),
@@ -490,7 +534,7 @@ internal class DefaultOnboardingRepositoryTest {
                         name = "ACH",
                         paymentMethodId = "ACH",
                         group = AccountFeeGroupType.ONRAMP,
-                        calculationType = AccountFee.CalculationType.FIXED,
+                        calculationType = FeeCalculationType.FIXED,
                         amount = BigDecimal.ONE,
                         currency = "USD",
                     ),
@@ -562,6 +606,7 @@ internal class DefaultOnboardingRepositoryTest {
             paymentMethodId = paymentMethodId,
             calculationType = calculationType,
             amount = amount,
+            fixedAmount = null,
             currency = currency,
             description = "fee",
         )
@@ -682,7 +727,9 @@ internal class DefaultOnboardingRepositoryTest {
                 rail = rail,
                 transferMessage = null,
                 fee = null,
+                depositFee = null,
                 depositLimit = null,
+                amountLimits = null,
                 exchangeRate = null,
             )
     }

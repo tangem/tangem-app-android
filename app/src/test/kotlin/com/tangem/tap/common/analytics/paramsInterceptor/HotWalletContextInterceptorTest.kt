@@ -3,7 +3,10 @@ package com.tangem.tap.common.analytics.paramsInterceptor
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 internal class HotWalletContextInterceptorTest {
 
@@ -19,6 +22,24 @@ internal class HotWalletContextInterceptorTest {
 
         // Assert
         assertThat(actual).isFalse()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN import wallet request WHEN canBeAppliedTo THEN applied only when the selected wallet is related`(
+        isSelectedWalletUnrelated: Boolean,
+    ) {
+        // Arrange
+        val event = OnboardingAnalyticsEvent.Backup.ImportWalletRequest(
+            cloudBackup = AnalyticsParam.CloudBackupAvailability.Available,
+            isSelectedWalletUnrelated = isSelectedWalletUnrelated,
+        )
+
+        // Act
+        val actual = interceptor.canBeAppliedTo(event)
+
+        // Assert
+        assertThat(actual).isEqualTo(!isSelectedWalletUnrelated)
     }
 
     @Test

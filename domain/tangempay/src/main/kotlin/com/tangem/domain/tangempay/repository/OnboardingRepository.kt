@@ -2,7 +2,6 @@ package com.tangem.domain.tangempay.repository
 
 import arrow.core.Either
 import com.tangem.core.error.UniversalError
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.tangempay.TangemPayEligibilityType
 import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.tangempay.TangemPayProduct
@@ -12,6 +11,7 @@ import com.tangem.domain.tangempay.model.AccountFeeGroupType
 import com.tangem.domain.tangempay.model.CustomerInfo
 import com.tangem.domain.tangempay.model.CustomerOrderRequest
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.model.TangemPayInitialCredentials
 import kotlinx.coroutines.flow.Flow
 

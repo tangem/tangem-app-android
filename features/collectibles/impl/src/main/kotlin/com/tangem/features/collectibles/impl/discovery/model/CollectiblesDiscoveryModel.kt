@@ -2,7 +2,7 @@ package com.tangem.features.collectibles.impl.discovery.model
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchAction
@@ -11,8 +11,8 @@ import com.tangem.domain.collectibles.models.CollectibleGachaMachineCategories
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesListConfig
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineCategoriesUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachinesBatchFlowUseCase
-import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.R
+import com.tangem.features.collectibles.impl.discovery.CollectiblesDiscoveryComponent
 import com.tangem.features.collectibles.impl.discovery.model.converter.CollectiblesDiscoveryPackConverter
 import com.tangem.features.collectibles.impl.discovery.model.converter.CollectiblesDiscoveryTabsConverter
 import com.tangem.features.collectibles.impl.discovery.model.transformer.CollectiblesDiscoveryContentTransformer
@@ -33,9 +33,11 @@ import javax.inject.Inject
 internal class CollectiblesDiscoveryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getCategoriesUseCase: GetCollectibleGachaMachineCategoriesUseCase,
-    private val router: Router,
+    paramsContainer: ParamsContainer,
     getMachinesBatchFlowUseCase: GetCollectibleGachaMachinesBatchFlowUseCase,
 ) : Model() {
+
+    private val params = paramsContainer.require<CollectiblesDiscoveryComponent.Params>()
 
     val uiState: StateFlow<CollectiblesDiscoveryUM>
         field = MutableStateFlow(buildInitialState())
@@ -233,7 +235,7 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
     }
 
     private fun onPackClick(externalId: String) {
-        router.push(CollectiblesRoute.MachineDetails(externalId = externalId))
+        params.modelCallbacks.onPackClick(externalId)
     }
 
     private companion object {

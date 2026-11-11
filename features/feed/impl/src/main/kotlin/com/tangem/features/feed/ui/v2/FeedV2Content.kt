@@ -110,6 +110,8 @@ internal fun FeedV2Content(
         }
     }
 
+    val blockColor by animateFeedBlockColor(isExpanded)
+
     val feedHazeState = rememberFeedHazeState()
     val tabContentPadding = rememberTabContentPadding(
         contentPadding = contentPadding,
@@ -133,12 +135,14 @@ internal fun FeedV2Content(
             CompositionLocalProvider(LocalOverscrollFactory provides null) {
                 tabContent(Modifier.fillMaxSize(), tabContentPadding)
             }
-            CollapsingTopBlocks(
-                offsetState = topBlocksOffsetState,
-                heightPx = topBlocksHeightPx,
-                contentPadding = contentPadding,
-                content = topBlocks,
-            )
+            CompositionLocalProvider(LocalFeedBlockColor provides blockColor) {
+                CollapsingTopBlocks(
+                    offsetState = topBlocksOffsetState,
+                    heightPx = topBlocksHeightPx,
+                    contentPadding = contentPadding,
+                    content = topBlocks,
+                )
+            }
         }
         FeedChromeOverlay(
             tabs = tabs,

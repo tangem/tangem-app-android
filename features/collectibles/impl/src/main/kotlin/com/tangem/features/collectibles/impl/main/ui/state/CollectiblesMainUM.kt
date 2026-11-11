@@ -13,6 +13,7 @@ internal data class CollectiblesMainUM(
     val actions: ImmutableList<TangemButtonUM>,
     val collection: CollectionUM?,
     val relink: RelinkUM,
+    val pendingPacks: ImmutableList<PendingPackUM>,
     val menu: MenuUM,
     val isBalanceRefreshing: Boolean,
     val onBackClick: () -> Unit,

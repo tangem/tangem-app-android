@@ -1,10 +1,10 @@
 package com.tangem.domain.tangempay.usecase
 
 import arrow.core.Either
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.BankCredentials
 
 class GetBankCredentialsUseCase(
     private val onboardingRepository: OnboardingRepository,

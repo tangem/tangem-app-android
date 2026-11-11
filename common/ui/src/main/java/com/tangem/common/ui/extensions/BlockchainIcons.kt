@@ -152,6 +152,9 @@ private fun iconSetOf(blockchain: Blockchain): IconSet? = when (blockchain) {
     Blockchain.Kaspa,
     Blockchain.KaspaTestnet,
     -> IconSet(active = R.drawable.img_kaspa_22, greyedOut = R.drawable.ic_kaspa_22)
+    Blockchain.Katana,
+    Blockchain.KatanaTestnet,
+    -> IconSet(active = R.drawable.img_katana_22, greyedOut = R.drawable.ic_katana_22)
     Blockchain.Kava,
     Blockchain.KavaTestnet,
     -> IconSet(active = R.drawable.img_kava_22, greyedOut = R.drawable.ic_kava_22)
@@ -231,6 +234,9 @@ private fun iconSetOf(blockchain: Blockchain): IconSet? = when (blockchain) {
     Blockchain.Igra,
     Blockchain.IgraTestnet,
     -> IconSet(active = R.drawable.img_igra_22, greyedOut = R.drawable.ic_igra_22)
+    Blockchain.Ink,
+    Blockchain.InkTestnet,
+    -> IconSet(active = R.drawable.img_ink_22, greyedOut = R.drawable.ic_ink_22)
     Blockchain.Electroneum,
     Blockchain.ElectroneumTestnet,
     -> IconSet(active = R.drawable.img_electroneum_22, greyedOut = R.drawable.ic_electroneum_22)
@@ -298,12 +304,16 @@ private fun iconSetOf(blockchain: Blockchain): IconSet? = when (blockchain) {
     -> IconSet(active = R.drawable.img_xrp_22, greyedOut = R.drawable.ic_xrp_22)
     Blockchain.Xodex,
     -> IconSet(active = R.drawable.img_xodex_22, greyedOut = R.drawable.ic_xodex_22)
+    Blockchain.XLayer,
+    Blockchain.XLayerTestnet,
+    -> IconSet(active = R.drawable.img_xlayer_22, greyedOut = R.drawable.ic_xlayer_22)
     Blockchain.ZkLinkNova,
     Blockchain.ZkLinkNovaTestnet,
     -> IconSet(active = R.drawable.img_zklink_22, greyedOut = R.drawable.ic_zklink_22)
     Blockchain.ZkSyncEra,
     Blockchain.ZkSyncEraTestnet,
     -> IconSet(active = R.drawable.img_zksync_22, greyedOut = R.drawable.ic_zksync_22)
+    Blockchain.Zeniq -> IconSet(active = R.drawable.img_zeniq_22, greyedOut = R.drawable.ic_zeniq_22)
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
     Blockchain.Unknown,

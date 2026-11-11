@@ -184,6 +184,8 @@ class Wallet2CardConfigTest {
         Blockchain.RobinhoodTestnet to EllipticCurve.Secp256k1,
         Blockchain.Igra to EllipticCurve.Secp256k1,
         Blockchain.IgraTestnet to EllipticCurve.Secp256k1,
+        Blockchain.Ink to EllipticCurve.Secp256k1,
+        Blockchain.InkTestnet to EllipticCurve.Secp256k1,
         Blockchain.Electroneum to EllipticCurve.Secp256k1,
         Blockchain.ElectroneumTestnet to EllipticCurve.Secp256k1,
         Blockchain.Arc to EllipticCurve.Secp256k1,
@@ -191,6 +193,11 @@ class Wallet2CardConfigTest {
         Blockchain.Onyx to EllipticCurve.Secp256k1,
         Blockchain.OnyxTestnet to EllipticCurve.Secp256k1,
         Blockchain.PublicMasterpiece to EllipticCurve.Secp256k1,
+        Blockchain.Zeniq to EllipticCurve.Secp256k1,
+        Blockchain.Katana to EllipticCurve.Secp256k1,
+        Blockchain.KatanaTestnet to EllipticCurve.Secp256k1,
+        Blockchain.XLayer to EllipticCurve.Secp256k1,
+        Blockchain.XLayerTestnet to EllipticCurve.Secp256k1,
     )
 
     @Test
