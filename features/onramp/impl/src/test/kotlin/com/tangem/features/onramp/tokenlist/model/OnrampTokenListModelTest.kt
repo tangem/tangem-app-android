@@ -57,6 +57,7 @@ internal class OnrampTokenListModelTest : OnrampModelTestBase() {
             getAssetRequirementsUseCase = mockk(),
             singleAccountStatusListSupplier = supplier,
             isAccountsModeEnabledUseCase = mode,
+            walletFeatureToggles = mockk { every { isRedesignedTokenRowsEnabled } returns false },
         )
         advanceUntilIdle()
 

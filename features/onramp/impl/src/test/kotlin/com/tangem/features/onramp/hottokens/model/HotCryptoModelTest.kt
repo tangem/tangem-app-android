@@ -56,6 +56,7 @@ internal class HotCryptoModelTest : OnrampModelTestBase() {
         val model = HotCryptoModel(
             MutableParamsContainer(params), HotCryptoModelCallbackDelegate(), testDispatchers(), loader,
             mockk(), mockk(), fetcher,
+            walletFeatureToggles = mockk { every { isRedesignedTokenRowsEnabled } returns false },
         )
         advanceUntilIdle()
         assertThat(model.state.value.items.first()).isInstanceOf(TokensListItemUM.GroupTitle::class.java)
