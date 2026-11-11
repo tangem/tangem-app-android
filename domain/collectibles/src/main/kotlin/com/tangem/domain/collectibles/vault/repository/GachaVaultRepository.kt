@@ -60,7 +60,7 @@ interface GachaVaultRepository {
 
     /**
      * Pays for one spin with `purchase_pack`, signed by the session key without a prompt. Not idempotent: never call
-     * again for the same [memo] while the outcome is unknown.
+     * again for the same [memo] while the outcome is unknown — [CollectiblesAccountError.MaybeSent].
      *
      * @param amount the pack price in base units of USDC, as the backend issued it
      * @param feeAmount Tangem's fee in base units of USDC, charged on top of [amount]
