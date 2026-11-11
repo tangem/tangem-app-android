@@ -1,18 +1,12 @@
 package com.tangem.core.ui.ds2.button
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
@@ -23,10 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -35,6 +26,7 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.LineHeightStyle
@@ -43,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.animation.TangemTransition
@@ -50,11 +43,8 @@ import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.haptic.TangemHapticEffect
-import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.BaseButtonTestTags
-import kotlinx.coroutines.launch
 
 /**
  * Shared body of [TangemButton] and [TangemButton.HoldToConfirm]: the [TangemSurface] shell with
@@ -95,26 +85,22 @@ internal fun TangemButtonContainer(
     val backgroundColor =
         if (hasEnabledAppearance) colorTokens.backgroundColor else colorTokens.disabledBackgroundColor
     val accessibilityLabel = contentDescription ?: resolveLoadingLabel(shouldShowLoader, loadingText, text)
+    val loadingStateDescription = if (isLoading) stringResourceSafe(R.string.common_in_progress) else null
 
     TangemSurface(
         modifier = modifier
-            .buttonSemantics(isEnabled = isEnabled, label = accessibilityLabel, hold = hold)
+            .then(hold.shakeModifier())
+            .buttonSemantics(
+                isEnabled = isEnabled,
+                label = accessibilityLabel,
+                stateDescription = loadingStateDescription,
+                hold = hold,
+            )
             .conditional(isFocused) {
                 border(width = 2.dp, color = colorTokens.focusRingColor, shape = CircleShape)
             }
             .alpha(disabledAlpha)
-            .then(
-                if (hold != null) {
-                    Modifier.holdChrome(
-                        hold = hold,
-                        backgroundColor = backgroundColor,
-                        isEnabled = isEnabled,
-                        interactionSource = interactionSource,
-                    )
-                } else {
-                    Modifier
-                },
-            ),
+            .then(hold.chromeModifier(backgroundColor, isEnabled, interactionSource)),
         onClick = onClick,
         enabled = isEnabled,
         color = if (hold != null) Color.Transparent else backgroundColor,
@@ -131,129 +117,57 @@ internal fun TangemButtonContainer(
             iconStart = iconStart,
             iconEnd = iconEnd,
             text = if (isLoaderInline) loadingText else text,
+            hint = hold.visibleHint(text),
             colorTokens = colorTokens,
             sizeTokens = sizeTokens,
         )
     }
 }
 
-private fun Modifier.buttonSemantics(isEnabled: Boolean, label: String?, hold: HoldToConfirmSpec?): Modifier =
-    semantics(mergeDescendants = true) {
-        role = Role.Button
-        if (!isEnabled) disabled()
-        label?.let { contentDescription = it }
-        if (hold?.isActionEnabled == true) {
-            onClick(
-                action = {
-                    hold.onConfirm()
-                    true
-                },
-            )
-        }
-    }
+private fun HoldToConfirmSpec?.shakeModifier(): Modifier = if (this == null) Modifier else Modifier.holdShake(state)
 
-/**
- * Focusability, background and hold overlay of a hold-to-confirm button. The background is painted
- * here rather than by [TangemSurface] so the overlay lands between the fill and the content.
- */
-private fun Modifier.holdChrome(
-    hold: HoldToConfirmSpec,
+private fun HoldToConfirmSpec?.chromeModifier(
     backgroundColor: Color,
     isEnabled: Boolean,
     interactionSource: MutableInteractionSource,
-): Modifier = focusable(enabled = isEnabled, interactionSource = interactionSource)
-    .clip(CircleShape)
-    .background(backgroundColor)
-    .drawBehind {
-        val progress = hold.progress().coerceIn(0f, 1f)
-        if (progress > 0f) {
-            drawRect(color = hold.overlayColor, size = size.copy(width = size.width * progress))
-        }
+): Modifier = if (this == null) {
+    Modifier
+} else {
+    Modifier.holdChrome(
+        hold = this,
+        backgroundColor = backgroundColor,
+        isEnabled = isEnabled,
+        interactionSource = interactionSource,
+    )
+}
+
+/** The hold hint while it's due on screen; icon-only buttons have no label to swap, so never get one. */
+private fun HoldToConfirmSpec?.visibleHint(text: TextReference?): TextReference? =
+    this?.hint?.takeIf { state.isHintVisible && text != null }
+
+private fun Modifier.buttonSemantics(
+    isEnabled: Boolean,
+    label: String?,
+    stateDescription: String?,
+    hold: HoldToConfirmSpec?,
+): Modifier = semantics(mergeDescendants = true) {
+    role = Role.Button
+    if (!isEnabled) disabled()
+    label?.let { contentDescription = it }
+    stateDescription?.let { this.stateDescription = it }
+    if (hold?.isActionEnabled == true) {
+        onClick(
+            action = {
+                hold.onConfirm()
+                true
+            },
+        )
     }
+}
 
 @Composable
 private fun resolveLoadingLabel(isLoading: Boolean, loadingText: TextReference?, text: TextReference?): String? {
     return if (isLoading) (loadingText ?: text)?.resolveReference() else null
-}
-
-/**
- * Hold-to-confirm wiring for [TangemButtonContainer].
- *
- * @property progress Hold progress in `0..1`, read at draw time; the overlay covers that fraction
- *   of the width from the start edge.
- * @property isActionEnabled Whether accessibility services may trigger [onConfirm] directly.
- */
-@Immutable
-internal class HoldToConfirmSpec(
-    val progress: () -> Float,
-    val overlayColor: Color,
-    val isActionEnabled: Boolean,
-    val onConfirm: () -> Unit,
-)
-
-/**
- * Press-and-hold gesture driving [progress]: the fill runs `0 → 1` over [HOLD_DURATION_MS] while
- * the pointer stays down, then [onConfirm] fires and the fill resets. Releasing (or a parent
- * scroll stealing the pointer) before the end retracts the fill and confirms nothing.
- *
- * The fill runs in a scope outside the pointer handler, so turning [isEnabled] off mid-hold has to
- * stop it explicitly — otherwise a button that just became disabled or loading could still confirm.
- */
-@Composable
-internal fun rememberHoldToConfirmGesture(
-    isEnabled: Boolean,
-    progress: Animatable<Float, AnimationVector1D>,
-    onConfirm: () -> Unit,
-): Modifier {
-    val scope = rememberCoroutineScope()
-    val hapticManager = LocalHapticManager.current
-    val currentOnConfirm by rememberUpdatedState(onConfirm)
-
-    LaunchedEffect(isEnabled) {
-        if (!isEnabled) {
-            progress.stop()
-            progress.snapTo(0f)
-        }
-    }
-
-    return Modifier.pointerInput(isEnabled) {
-        if (!isEnabled) return@pointerInput
-        awaitEachGesture {
-            awaitFirstDown()
-            val fillJob = scope.launch {
-                progress.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(durationMillis = HOLD_DURATION_MS, easing = LinearEasing),
-                )
-                hapticManager.perform(TangemHapticEffect.View.Confirm)
-                currentOnConfirm()
-                progress.snapTo(0f)
-            }
-            waitForUpOrCancellation()
-            if (fillJob.isActive) {
-                fillJob.cancel()
-                hapticManager.perform(TangemHapticEffect.View.Reject)
-                scope.launch {
-                    progress.animateTo(targetValue = 0f, animationSpec = tween(durationMillis = RETRACT_DURATION_MS))
-                }
-            }
-        }
-    }
-}
-
-private const val HOLD_DURATION_MS = 1500
-private const val RETRACT_DURATION_MS = 200
-
-internal fun TangemButton.HoldVariant.toVariant(): TangemButton.Variant = when (this) {
-    TangemButton.HoldVariant.Brand -> TangemButton.Variant.Brand
-    TangemButton.HoldVariant.Primary -> TangemButton.Variant.Primary
-}
-
-@Composable
-@ReadOnlyComposable
-internal fun TangemButton.HoldVariant.holdOverlayColor(): Color = when (this) {
-    TangemButton.HoldVariant.Brand -> TangemTheme.colors3.interaction.press.staticLight
-    TangemButton.HoldVariant.Primary -> TangemTheme.colors3.interaction.press.inverse
 }
 
 /**
@@ -276,6 +190,7 @@ internal fun TangemButtonInternal(
     colorTokens: ColorTokens,
     sizeTokens: SizeTokens,
     modifier: Modifier = Modifier,
+    hint: TextReference? = null,
 ) {
     val resolvedIconStart = iconStart?.resolveTint(colorTokens, isEnabled)
     val resolvedIconEnd = iconEnd?.resolveTint(colorTokens, isEnabled)
@@ -311,6 +226,7 @@ internal fun TangemButtonInternal(
             iconStart = resolvedIconStart,
             iconEnd = resolvedIconEnd,
             text = text,
+            hint = hint,
             colorTokens = colorTokens,
             sizeTokens = sizeTokens,
         )
@@ -342,6 +258,7 @@ private fun ContentRow(
     iconStart: TangemIconUM?,
     iconEnd: TangemIconUM?,
     text: TextReference?,
+    hint: TextReference?,
     colorTokens: ColorTokens,
     sizeTokens: SizeTokens,
     modifier: Modifier = Modifier,
@@ -349,6 +266,7 @@ private fun ContentRow(
     val displayedIconStart = rememberLastNonNull(iconStart)
     val displayedIconEnd = rememberLastNonNull(iconEnd)
     val displayedText = rememberLastNonNull(text)
+    val displayedHint = rememberLastNonNull(hint)
 
     Row(
         modifier = modifier,
@@ -373,7 +291,19 @@ private fun ContentRow(
             exit = TangemTransition.SlotExitHorizontally,
         ) {
             displayedText?.let { textRef ->
-                ButtonLabel(text = textRef, isEnabled = isEnabled, colorTokens = colorTokens, sizeTokens = sizeTokens)
+                AnimatedContent(
+                    targetState = hint != null,
+                    transitionSpec = { labelHintCrossfade(isToHint = targetState) },
+                    contentAlignment = Alignment.Center,
+                    label = "labelHint",
+                ) { isHint ->
+                    ButtonLabel(
+                        text = if (isHint) displayedHint ?: textRef else textRef,
+                        isEnabled = isEnabled,
+                        colorTokens = colorTokens,
+                        sizeTokens = sizeTokens,
+                    )
+                }
             }
         }
 
@@ -394,6 +324,20 @@ private fun ContentRow(
             }
         }
     }
+}
+
+/**
+ * Hold hint ↔ label swap from the Figma "Hold and release" animation: the outgoing text fades over
+ * [HINT_FADE_MS], the incoming one starts [HINT_FADE_IN_DELAY_MS] later, and the hugging width follows
+ * the fade-out — ease in towards the hint, ease out back to the label.
+ */
+private fun labelHintCrossfade(isToHint: Boolean): ContentTransform {
+    val easing = if (isToHint) EaseIn else EaseOut
+    return ContentTransform(
+        targetContentEnter = fadeIn(tween(HINT_FADE_MS, delayMillis = HINT_FADE_IN_DELAY_MS, easing = easing)),
+        initialContentExit = fadeOut(tween(HINT_FADE_MS, easing = easing)),
+        sizeTransform = SizeTransform(clip = false) { _, _ -> tween(HINT_FADE_MS, easing = easing) },
+    )
 }
 
 @Composable
