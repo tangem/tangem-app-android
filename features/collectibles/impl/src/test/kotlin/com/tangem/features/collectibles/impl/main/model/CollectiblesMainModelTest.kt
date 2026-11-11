@@ -17,6 +17,9 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
+import com.tangem.domain.collectibles.models.CollectiblePendingPack
+import com.tangem.domain.collectibles.usecase.DismissCollectiblePendingPackUseCase
+import com.tangem.domain.collectibles.usecase.GetCollectiblePendingPacksUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
@@ -45,6 +48,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -72,6 +76,8 @@ internal class CollectiblesMainModelTest {
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val sessionKey: CollectiblesSessionKey = mockk()
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
+    private val getPendingPacksUseCase: GetCollectiblePendingPacksUseCase = mockk()
+    private val dismissPendingPackUseCase: DismissCollectiblePendingPackUseCase = mockk(relaxed = true)
 
     private val coldWallet = MockUserWalletFactory.create()
 
@@ -81,6 +87,7 @@ internal class CollectiblesMainModelTest {
     private lateinit var walletsFlow: MutableStateFlow<List<UserWallet>?>
     private lateinit var statusFlow: MutableStateFlow<CollectiblesAccountStatusValue>
     private lateinit var isBalanceHiddenFlow: MutableStateFlow<Boolean>
+    private lateinit var pendingPacksFlow: MutableSharedFlow<List<CollectiblePendingPack>>
 
     @BeforeEach
     fun resetMocks() {
@@ -96,7 +103,10 @@ internal class CollectiblesMainModelTest {
             getBalanceHidingSettingsUseCase,
             sessionKey,
             clipboardManager,
+            getPendingPacksUseCase,
+            dismissPendingPackUseCase,
         )
+        pendingPacksFlow = MutableSharedFlow(replay = 1)
         walletsFlow = MutableStateFlow(listOf(coldWallet, selectedWallet))
         statusFlow = MutableStateFlow(CollectiblesAccountStatusValue.Loading)
         isBalanceHiddenFlow = MutableStateFlow(false)
@@ -107,6 +117,7 @@ internal class CollectiblesMainModelTest {
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
         coEvery { accountStatusFetcher(any()) } returns Unit.right()
         coEvery { sessionKey.getPublicKeyOrNull(any()) } returns SessionKeyPublicKey(SESSION_KEY)
+        every { getPendingPacksUseCase(coldWallet.walletId) } returns pendingPacksFlow
     }
 
     @Nested
@@ -534,6 +545,171 @@ internal class CollectiblesMainModelTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PendingPacks {
+
+        @Test
+        fun `GIVEN pending packs WHEN the screen is resumed THEN each gets a banner in the backend's order`() =
+            runTest {
+                // Arrange
+                val model = createModel(testScope = this)
+                pendingPacksFlow.tryEmit(listOf(PAYMENT_IN_PROGRESS, READY_TO_OPEN, OPEN_FAILED, REFUNDING))
+
+                // Act
+                model.onScreenResumed()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.pendingPacks.map { it.txId })
+                    .containsExactly("payment", "ready", "failed", "refunding")
+                    .inOrder()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the screen is resumed WHEN it is paused THEN the pending packs are no longer polled`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            model.onScreenResumed()
+            advanceUntilIdle()
+
+            // Act
+            model.onScreenPaused()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(pendingPacksFlow.subscriptionCount.value).isEqualTo(0)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the screen is resumed WHEN refreshed THEN the pending packs are read again`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            model.onScreenResumed()
+            advanceUntilIdle()
+
+            // Act
+            model.onRefresh()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 2) { getPendingPacksUseCase(coldWallet.walletId) }
+            assertThat(pendingPacksFlow.subscriptionCount.value).isEqualTo(1)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a paid pack is unopened WHEN a pack is clicked THEN the unopened sheet offers that pack`() =
+            runTest {
+                // Arrange
+                val model = createResumedModel(packs = listOf(PAYMENT_IN_PROGRESS, READY_TO_OPEN))
+                val slot = FakeSlotHost(model.bottomSheetNavigation)
+
+                // Act
+                model.onPackClick(externalId = "other_machine")
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(slot.configuration).isEqualTo(
+                    CollectiblesMainBottomSheetConfig.PackUnopened(
+                        txId = "ready",
+                        machineId = "pokemon_50",
+                        isTurboModeEnabled = true,
+                    ),
+                )
+                verify(exactly = 0) { router.push(any()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a payment is in progress WHEN a pack is clicked THEN the payment sheet is shown`() = runTest {
+            // Arrange
+            val model = createResumedModel(packs = listOf(PAYMENT_IN_PROGRESS))
+            val slot = FakeSlotHost(model.bottomSheetNavigation)
+
+            // Act
+            model.onPackClick(externalId = "pokemon_50")
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(slot.configuration).isEqualTo(CollectiblesMainBottomSheetConfig.PaymentInProgress)
+            verify(exactly = 0) { router.push(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN only failed and refunded packs WHEN a pack is clicked THEN its details open`() = runTest {
+            // Arrange
+            val model = createResumedModel(packs = listOf(OPEN_FAILED, REFUNDING))
+            val slot = FakeSlotHost(model.bottomSheetNavigation)
+
+            // Act
+            model.onPackClick(externalId = "pokemon_50")
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(slot.configuration).isNull()
+            verify(exactly = 1) { router.push(CollectiblesRoute.MachineDetails(externalId = "pokemon_50")) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the unopened sheet WHEN open pack clicked THEN the confirm order reopens that pack`() = runTest {
+            // Arrange
+            val model = createResumedModel(packs = listOf(READY_TO_OPEN))
+            val slot = FakeSlotHost(model.bottomSheetNavigation)
+            model.onPackClick(externalId = "other_machine")
+            val sheet = slot.configuration as CollectiblesMainBottomSheetConfig.PackUnopened
+
+            // Act
+            model.onOpenUnopenedPack(sheet)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(slot.configuration).isNull()
+            verify(exactly = 1) { router.push(REOPEN_ROUTE) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a pack to open banner WHEN its button clicked THEN the confirm order reopens that pack`() =
+            runTest {
+                // Arrange
+                val model = createResumedModel(packs = listOf(READY_TO_OPEN))
+
+                // Act
+                requireNotNull(model.uiState.value.pendingPacks.single().button).onClick()
+
+                // Assert
+                verify(exactly = 1) { router.push(REOPEN_ROUTE) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a failed pack banner WHEN it is closed THEN the pack is dismissed`() = runTest {
+            // Arrange
+            val model = createResumedModel(packs = listOf(OPEN_FAILED))
+
+            // Act
+            requireNotNull(model.uiState.value.pendingPacks.single().onCloseClick).invoke()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { dismissPendingPackUseCase("failed") }
+            model.onDestroy()
+        }
+
+        private fun TestScope.createResumedModel(packs: List<CollectiblePendingPack>): CollectiblesMainModel {
+            val model = createModel(testScope = this)
+            pendingPacksFlow.tryEmit(packs)
+            model.onScreenResumed()
+            advanceUntilIdle()
+            return model
+        }
+    }
+
     private fun CollectiblesMainModel.shownRelink() = uiState.value.relink as? CollectiblesMainUM.RelinkUM.Shown
 
     private fun createModel(testScope: TestScope): CollectiblesMainModel {
@@ -552,6 +728,8 @@ internal class CollectiblesMainModelTest {
             sessionKey = sessionKey,
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             clipboardManager = clipboardManager,
+            getCollectiblePendingPacksUseCase = getPendingPacksUseCase,
+            dismissCollectiblePendingPackUseCase = dismissPendingPackUseCase,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         )
     }
@@ -577,6 +755,21 @@ internal class CollectiblesMainModelTest {
     private companion object {
 
         const val SESSION_KEY = "3hTCy6rJu8iXNWnFMB741HrVnbS5bViyfguEAMF5iT2P"
+
+        val PAYMENT_IN_PROGRESS = CollectiblePendingPack.PaymentInProgress(txId = "payment")
+        val READY_TO_OPEN = CollectiblePendingPack.ReadyToOpen(
+            txId = "ready",
+            machineId = "pokemon_50",
+            isTurboModeEnabled = true,
+        )
+        val OPEN_FAILED = CollectiblePendingPack.OpenFailed(txId = "failed")
+        val REFUNDING = CollectiblePendingPack.Refunding(txId = "refunding")
+
+        val REOPEN_ROUTE = CollectiblesRoute.ConfirmOrder(
+            machineId = "pokemon_50",
+            isTurboEnabled = true,
+            reopenTxId = "ready",
+        )
 
         val PRICED_VAULT = CollectiblesAccountStatusValue.Onboarded(
             source = StatusSource.ACTUAL,
