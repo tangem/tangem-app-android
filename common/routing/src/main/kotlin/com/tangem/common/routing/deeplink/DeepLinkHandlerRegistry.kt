@@ -24,8 +24,7 @@ import javax.inject.Provider
  */
 class DeepLinkHandlerRegistry(handlers: Map<String, Provider<DeepLinkHandler>>) {
 
-    private val handlers: Map<String, Lazy<DeepLinkHandler>> = normalizeKeys(handlers)
-        .mapValues { (_, provider) -> lazy(provider::get) }
+    private val handlers: Map<String, Provider<DeepLinkHandler>> = normalizeKeys(handlers)
 
     /** Deeper path prefixes can't match any key, so candidates are bounded by the deepest registered key. */
     private val maxPathSegments: Int = this.handlers.keys.maxOfOrNull(::pathSegmentsCount) ?: 0
@@ -38,9 +37,12 @@ class DeepLinkHandlerRegistry(handlers: Map<String, Provider<DeepLinkHandler>>) 
             maxPathSegments = maxPathSegments,
         )
         val registeredKeys = candidateKeys.filter(handlers::containsKey)
-        val key = registeredKeys.firstOrNull { handlers.getValue(it).value.isEnabled }
+        val found = registeredKeys
+            .asSequence()
+            .map { key -> key to handlers.getValue(key).get() }
+            .firstOrNull { (_, handler) -> handler.isEnabled }
 
-        if (key == null) {
+        if (found == null) {
             TangemLogger.i(
                 """
                     No enabled deep link handler registered
@@ -52,6 +54,7 @@ class DeepLinkHandlerRegistry(handlers: Map<String, Provider<DeepLinkHandler>>) 
             return null
         }
 
+        val (key, handler) = found
         TangemLogger.i(
             """
                 Found deep link handler
@@ -61,8 +64,11 @@ class DeepLinkHandlerRegistry(handlers: Map<String, Provider<DeepLinkHandler>>) 
             """.trimIndent(),
         )
 
-        return handlers.getValue(key).value
+        return handler
     }
+
+    /** Whether [uri] may be opened from an untrusted source such as a push payload: a link no handler claims may not. */
+    fun isOpenableFromPush(uri: Uri): Boolean = find(uri)?.isOpenableFromPush == true
 
     internal companion object {
 

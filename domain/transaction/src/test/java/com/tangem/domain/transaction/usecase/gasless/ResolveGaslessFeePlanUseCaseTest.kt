@@ -14,14 +14,20 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.GaslessFeePlan
+import com.tangem.domain.transaction.models.GaslessYieldWithdraw
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -135,13 +141,13 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         )
 
         assertThat(result.isRight()).isTrue()
-        val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
-        assertThat(plan).isNotNull()
+        val withdraw = (result.getOrNull() as? GaslessFeePlan.TokenPay)?.yieldWithdraw
+        assertThat(withdraw).isNotNull()
         // Must be 10000001 (CEILING of the fee), not the module balance and not floor.
-        assertThat(plan!!.withdrawAmount).isEqualTo(expectedWithdrawAmount)
-        assertThat(plan.withdrawAmount).isEqualTo(BigInteger.valueOf(10_000_001))
-        assertThat(plan.yieldModuleAddress).isEqualTo("0xmodule")
-        assertThat(plan.withdrawCallData).isEqualTo(mockCallData)
+        assertThat(withdraw!!.amount).isEqualTo(expectedWithdrawAmount)
+        assertThat(withdraw.amount).isEqualTo(BigInteger.valueOf(10_000_001))
+        assertThat(withdraw.moduleAddress).isEqualTo("0xmodule")
+        assertThat(withdraw.callData).isEqualTo(mockCallData)
     }
 
     // ─── Case 2b: send amount counts toward sufficiency but NOT toward the withdraw ────────────
@@ -188,12 +194,12 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         )
 
         assertThat(result.isRight()).isTrue()
-        val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
-        assertThat(plan).isNotNull()
-        assertThat(plan!!.withdrawAmount).isEqualTo(expectedWithdrawAmount)
-        assertThat(plan.withdrawAmount).isEqualTo(BigInteger.valueOf(3_000_000))
-        assertThat(plan.yieldModuleAddress).isEqualTo("0xmodule")
-        assertThat(plan.withdrawCallData).isEqualTo(mockCallData)
+        val withdraw = (result.getOrNull() as? GaslessFeePlan.TokenPay)?.yieldWithdraw
+        assertThat(withdraw).isNotNull()
+        assertThat(withdraw!!.amount).isEqualTo(expectedWithdrawAmount)
+        assertThat(withdraw.amount).isEqualTo(BigInteger.valueOf(3_000_000))
+        assertThat(withdraw.moduleAddress).isEqualTo("0xmodule")
+        assertThat(withdraw.callData).isEqualTo(mockCallData)
     }
 
     // ─── Case 2c: module cannot cover send + fee → NotEnoughFunds ──────────────
@@ -323,7 +329,7 @@ internal class ResolveGaslessFeePlanUseCaseTest {
     // ─── Case 7: liquid EOA balance covers most of send+fee, protocol alone does not ──────────────
 
     @Test
-    fun `GIVEN liquid covers send but protocol alone does not WHEN yield active THEN TokenPayWithYieldWithdraw`() =
+    fun `GIVEN liquid covers send but protocol alone does not WHEN yield active THEN TokenPay with yield withdraw`() =
         runTest {
             // Arrange — required = send(3.00) + fee(0.05) < total(3.585624), so funds are sufficient even
             // though the module alone (0.6) is not. The old check compared the module against required.
@@ -363,9 +369,9 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
             // Assert
             assertThat(result.isRight()).isTrue()
-            val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
-            assertThat(plan).isNotNull()
-            assertThat(plan!!.withdrawAmount).isEqualTo(expectedWithdrawAmount)
+            val withdraw = (result.getOrNull() as? GaslessFeePlan.TokenPay)?.yieldWithdraw
+            assertThat(withdraw).isNotNull()
+            assertThat(withdraw!!.amount).isEqualTo(expectedWithdrawAmount)
         }
 
     // ─── Case 8: liquid EOA balance alone covers send + fee → no withdraw needed ───────────────────
@@ -607,10 +613,10 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
         // Assert
         assertThat(result.isRight()).isTrue()
-        val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
-        assertThat(plan).isNotNull()
-        assertThat(plan!!.withdrawAmount).isEqualTo(BigInteger.valueOf(12_696))
-        assertThat(plan.withdrawAmount).isGreaterThan(shrunkWithdraw)
+        val withdraw = (result.getOrNull() as? GaslessFeePlan.TokenPay)?.yieldWithdraw
+        assertThat(withdraw).isNotNull()
+        assertThat(withdraw!!.amount).isEqualTo(BigInteger.valueOf(12_696))
+        assertThat(withdraw.amount).isGreaterThan(shrunkWithdraw)
     }
 
     @Test
@@ -642,9 +648,9 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         )
 
         // Assert
-        val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
-        assertThat(plan).isNotNull()
-        assertThat(plan!!.withdrawAmount).isEqualTo(BigInteger.valueOf(200_000))
+        val withdraw = (result.getOrNull() as? GaslessFeePlan.TokenPay)?.yieldWithdraw
+        assertThat(withdraw).isNotNull()
+        assertThat(withdraw!!.amount).isEqualTo(BigInteger.valueOf(200_000))
     }
 
     @Test
@@ -727,9 +733,9 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         )
 
         // Assert
-        val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
-        assertThat(plan).isNotNull()
-        assertThat(plan!!.withdrawAmount).isEqualTo(BigInteger.valueOf(350_000))
+        val withdraw = (result.getOrNull() as? GaslessFeePlan.TokenPay)?.yieldWithdraw
+        assertThat(withdraw).isNotNull()
+        assertThat(withdraw!!.amount).isEqualTo(BigInteger.valueOf(350_000))
     }
 
     @Test
@@ -804,10 +810,85 @@ internal class ResolveGaslessFeePlanUseCaseTest {
             )
 
             // Assert
-            val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
-            assertThat(plan).isNotNull()
-            assertThat(plan!!.withdrawAmount).isEqualTo(BigInteger.valueOf(1_000_000))
+            val withdraw = (result.getOrNull() as? GaslessFeePlan.TokenPay)?.yieldWithdraw
+            assertThat(withdraw).isNotNull()
+            assertThat(withdraw!!.amount).isEqualTo(BigInteger.valueOf(1_000_000))
         }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Approval {
+
+        private val approval = GaslessApproval(
+            spenderAddress = "0xspender",
+            approvalTransaction = mockk(relaxed = true),
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN approval WHEN resolve THEN plan keeps the approval in every branch`(model: ApprovalModel) = runTest {
+            // Arrange
+            val tokenStatus = tokenStatus(plainBalance = model.totalBalance)
+            val tokenFee = tokenFee(feeAmount = BigDecimal("5"))
+            val withdrawCallData = mockk<SmartContractCallData>(relaxed = true)
+            coEvery {
+                gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
+            } returns model.moduleBalance
+            coEvery {
+                gaslessYieldRepository.createPartialWithdrawCallData(mockUserWalletId, any(), any())
+            } returns withdrawCallData
+            coEvery { gaslessYieldRepository.getYieldContractAddress(mockUserWalletId, any()) } returns "0xmodule"
+
+            // Act
+            val result = useCase(
+                userWallet = mockUserWallet,
+                tokenStatus = tokenStatus,
+                tokenFee = tokenFee,
+                isYieldActive = model.isYieldActive,
+                sendAmountInFeeToken = BigDecimal.ZERO,
+                approval = approval,
+            )
+
+            // Assert
+            val expected = GaslessFeePlan.TokenPay(
+                feeToken = tokenStatus.currency as CryptoCurrency.Token,
+                fee = tokenFee,
+                approval = approval,
+                yieldWithdraw = model.expectedWithdrawAmount?.let { amount ->
+                    GaslessYieldWithdraw(amount = amount, callData = withdrawCallData, moduleAddress = "0xmodule")
+                },
+            )
+            assertThat(result.getOrNull()).isEqualTo(expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            ApprovalModel(
+                isYieldActive = false,
+                totalBalance = BigDecimal("10"),
+                moduleBalance = null,
+                expectedWithdrawAmount = null,
+            ),
+            ApprovalModel(
+                isYieldActive = true,
+                totalBalance = BigDecimal("100"),
+                moduleBalance = BigDecimal("50"),
+                expectedWithdrawAmount = null,
+            ),
+            ApprovalModel(
+                isYieldActive = true,
+                totalBalance = BigDecimal("100"),
+                moduleBalance = BigDecimal("98"),
+                expectedWithdrawAmount = BigInteger.valueOf(3_000_000),
+            ),
+        )
+    }
+
+    data class ApprovalModel(
+        val isYieldActive: Boolean,
+        val totalBalance: BigDecimal,
+        val moduleBalance: BigDecimal?,
+        val expectedWithdrawAmount: BigInteger?,
+    )
 
     // ─── Helpers ────────────────────────────────────────────────────────────────
 

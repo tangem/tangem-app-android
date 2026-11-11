@@ -28,7 +28,7 @@ features/collectibles/
     di/             — Component, Model and FeatureToggles Hilt modules
     onboarding/     — First screen; marketing copy, FAQ, "Create Gacha account"
     stories/        — Slide-based explainer, reachable again from the main menu
-    main/           — Account chrome: balance, actions, collection widget, context menu, the LazyColumn
+    main/           — Account chrome: balance, actions, pending pack banners, collection widget, context menu, the LazyColumn
     addfunds/       — "Add funds" sheet opened from main (swap from a Tangem wallet / receive from another)
     discovery/      — The packs catalogue: tabs, search, paginated pack rows
     machinedetails/ — One machine: hero, odds, pack facts, paginated prize pool, Turbo switch, pinned CTA footer
@@ -96,10 +96,13 @@ AppRoute.Collectibles(userWalletId, startRoute) → DefaultCollectiblesEntryComp
   ├─ CollectiblesRoute.Main(userWalletId)       → CollectiblesMainComponent       → CollectiblesMainModel
   │     menu "How it works" → router.push(Stories)
   │     slot: TopUp (CollectiblesAddFundsComponent) / Receive (TokenReceiveComponent)
+  │           / PaymentInProgress (CollectiblesPaymentInProgressSheetComponent)
+  │           / PackUnopened (CollectiblesPackUnopenedSheetComponent)
+  │     "Open pack" on a banner or the unopened sheet → router.push(ConfirmOrder(machineId, turbo, reopenTxId))
   │     "From Tangem wallet" → AppRoute.Swap(accountFlow = CollectiblesTopUp)   [app router]
   │     embedded child (NOT a stack or slot entry): child(key = "discovery")
   │         → CollectiblesDiscoveryComponent → CollectiblesDiscoveryModel
-  │             pack tap → router.push(MachineDetails(externalId))
+  │             pack tap → Params.onPackClick → main: a pending pack's sheet, or router.push(MachineDetails(externalId))
   ├─ CollectiblesRoute.MachineDetails(externalId) → CollectiblesMachineDetailsComponent → CollectiblesMachineDetailsModel
   │     slot: TurboInfo sheet
   │     "Open for N USDC" → router.push(ConfirmOrder(externalId, isTurboEnabled))
@@ -184,6 +187,20 @@ The backend pages with a body-level keyset `cursor`, which is why `data/collecti
 `CollectibleGachaMachinesBatchFetcher` instead of the stock `CursorBatchFetcher` (the latter derives the
 cursor from the last item) and signals exhaustion with `BatchFetchResult.Error(EndOfPaginationException())`.
 
+## Pending packs
+
+`GetCollectiblePendingPacksUseCase` reads `GET /collectible/active-txs` (the user's purchases short of a final
+status, not in the swagger yet) and maps each to a `CollectiblePendingPack`: `PaymentInProgress` (created …
+waiting-for-payment), `ReadyToOpen` (pack-purchased), `OpenFailed` (pack-opening-error) or `Refunding`
+(pack-opening-error with `packOpeningErrorCode` 3999, a placeholder shared with the `/open-pack` refund code in
+`CollectiblesErrorCodes`). It re-reads every 5 s only while a payment is in progress, and drops the dismissed
+`OpenFailed` / `Refunding` ids (`CollectiblesDismissedTxRepository`, the latest 100 in a DataStore).
+
+The main model collects it from `onScreenResumed` to `onScreenPaused`, so returning from the confirm order asks again.
+Each pack is a `TangemMessageBanner` in the header, the backend's order; two or more go into a pager with dots.
+`PaymentInProgress` and `ReadyToOpen` block a new spin: a pack tap opens their sheet instead of the machine.
+`ConfirmOrder(reopenTxId = …)` starts `OpenPackRequest.Reopen` as soon as the screen opens.
+
 ## Pack opening
 
 `CollectiblesPackOpeningModel` loads the machine (from memory when opened from the catalogue), watches the
@@ -193,7 +210,8 @@ emits `Generating → Confirming → Opening → Opened(pack)`, `AutoBuybacked(a
 back (the `/status` or `/open-pack` answer is `auto-buybacked` with an `autoBuyback.toAmount`; once `/status` says
 so, `/open-pack` is skipped), or an `OpenPackStep.Failed`:
 `LowInventory` / `PackUnopened(txId)` open a sheet (`PackUnopened` retries with `OpenPackRequest.Reopen`),
-`AutoBuybacked` opens the payout sheet instead of a card, `OpenFailed` replaces the route with `PackOpenFailed`,
+`AutoBuybacked` opens the payout sheet instead of a card, `OpenFailed` (also `/status` `pack-opening-error`) replaces
+the route with `PackOpenFailed`,
 `Refunded` and `Refunding` (`/open-pack` code 3999, a placeholder until the backend names it) open the
 "Your refund is on the way" sheet, everything else is a snackbar.
 

@@ -47,6 +47,10 @@ dependencies {
     implementation(projects.grow.datasource)
     // endregion
 
+    // region Data
+    implementation(projects.data.common)
+    // endregion
+
     // region Domain
     api(projects.domain.transaction)
     api(projects.domain.walletManager)
@@ -69,5 +73,6 @@ dependencies {
     testImplementation(deps.arrow.core)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
+    testImplementation(projects.common.test)
     // endregion
 }

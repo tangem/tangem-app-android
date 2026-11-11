@@ -9,6 +9,8 @@ import com.tangem.data.tangempay.store.TangemPayStorage
 import com.tangem.spend.datasource.tangempay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.order.OrderPoller
+import com.tangem.domain.tangempay.order.OrdersStore
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -20,9 +22,12 @@ internal class TangemPayUserWalletDataCleaner @Inject constructor(
     private val customerInfoStore: TangemPayCustomerInfoStore,
     private val customerSummaryStore: TangemPayCustomerSummaryStore,
     private val requestPerformer: TangemPayRequestPerformer,
+    private val orderPoller: OrderPoller,
+    private val ordersStore: OrdersStore,
 ) : UserWalletDataCleaner {
 
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
+        orderPoller.stopPolling(userWalletIds)
         userWalletIds.forEach { clearStoredData(it) }
 
         paymentAccountStatusesStore.remove(userWalletIds)
@@ -39,5 +44,6 @@ internal class TangemPayUserWalletDataCleaner @Inject constructor(
 
         tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = customerWalletAddress)
         tangemPayStorage.clearIsTangemPayDeactivated(userWalletId)
+        ordersStore.clear(userWalletId)
     }
 }
