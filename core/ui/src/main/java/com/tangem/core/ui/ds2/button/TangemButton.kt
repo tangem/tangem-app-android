@@ -1,37 +1,23 @@
 package com.tangem.core.ui.ds2.button
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.disabled
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.DsVersion
-import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.conditional
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -39,7 +25,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 button supporting an optional leading icon, label, and trailing icon.
  *
- * Version: 1.2.3
+ * Version: 1.3.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=0-1)
  *
@@ -59,6 +45,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * - Variants with a disabled alpha fade the whole button as one layer, so the label never picks up
  *   the faded fill. The focus ring is drawn outside that layer, at full opacity, whenever the button
  *   is focused — disabled buttons remain clearly highlighted for keyboard / accessibility focus.
+ * - For an action confirmed by press-and-hold (Figma `State = Hold`) use [TangemButton.HoldToConfirm].
  *
  * @param variant Visual style. See [TangemButton.Variant].
  * @param size Token-driven size preset controlling height, padding, and icon size.
@@ -99,60 +86,26 @@ fun TangemButton(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     onClick: () -> Unit,
 ) {
-    val isLoaderInline = isLoading && loadingText != null
-    val isIconOnly = text == null && !isLoaderInline
-    val shouldShowLoader = isLoading || iconStart == null && iconEnd == null && text == null
-    val colorTokens = variant.tokens()
-    val sizeTokens = size.tokens()
-    val isFocused by interactionSource.collectIsFocusedAsState()
-
-    val hasEnabledAppearance = isEnabled && !isDimmed
-    val disabledAlpha = if (hasEnabledAppearance) 1f else colorTokens.disabledAlpha
-    val backgroundColor =
-        if (hasEnabledAppearance) colorTokens.backgroundColor else colorTokens.disabledBackgroundColor
-    val accessibilityLabel = contentDescription ?: resolveLoadingLabel(shouldShowLoader, loadingText, text)
-
-    TangemSurface(
-        modifier = modifier
-            .semantics(mergeDescendants = true) {
-                role = Role.Button
-                if (!isEnabled) disabled()
-                accessibilityLabel?.let { this.contentDescription = it }
-            }
-            .conditional(isFocused) {
-                border(width = 2.dp, color = colorTokens.focusRingColor, shape = CircleShape)
-            }
-            .alpha(disabledAlpha),
-        onClick = onClick,
-        enabled = isEnabled,
-        color = backgroundColor,
-        border = colorTokens.defaultBorderColor?.let { BorderStroke(width = 1.dp, color = it) },
-        shape = CircleShape,
+    TangemButtonContainer(
+        modifier = modifier,
+        variant = variant,
+        size = size,
+        isLoading = isLoading,
+        isEnabled = isEnabled,
+        isDimmed = isDimmed,
+        iconStart = iconStart,
+        iconEnd = iconEnd,
+        text = text,
+        loadingText = loadingText,
+        contentDescription = contentDescription,
         interactionSource = interactionSource,
-        isMaterial = variant == TangemButton.Variant.Material,
-    ) {
-        TangemButtonInternal(
-            isIconOnly = isIconOnly,
-            isEnabled = hasEnabledAppearance,
-            isLoading = shouldShowLoader,
-            isLoaderInline = isLoaderInline,
-            iconStart = iconStart,
-            iconEnd = iconEnd,
-            text = if (isLoaderInline) loadingText else text,
-            colorTokens = colorTokens,
-            sizeTokens = sizeTokens,
-        )
-    }
-}
-
-@Composable
-private fun resolveLoadingLabel(isLoading: Boolean, loadingText: TextReference?, text: TextReference?): String? {
-    return if (isLoading) (loadingText ?: text)?.resolveReference() else null
+        onClick = onClick,
+    )
 }
 
 object TangemButton {
 
-    val version = DsVersion(major = 1, minor = 2, patch = 3)
+    val version = DsVersion(major = 1, minor = 3, patch = 0)
 
     /**
      * Visual style of the button.
@@ -195,6 +148,15 @@ object TangemButton {
         X8,
         X7,
     }
+
+    /**
+     * Visual style of [TangemButton.HoldToConfirm]. Only the variants that ship the Figma `Hold`
+     * state are offered; each maps to the [Variant] of the same name.
+     */
+    enum class HoldVariant {
+        Brand,
+        Primary,
+    }
 }
 
 @Preview(name = "Light", showBackground = true)
@@ -215,6 +177,11 @@ private fun TangemButtonPreview() {
             }
             PreviewSection(label = "Sizes (Primary)") {
                 PreviewSizeRow()
+            }
+            PreviewSection(label = "Hold (progress 0 / 0.5 / 1)") {
+                TangemButton.HoldVariant.entries.forEach { variant ->
+                    PreviewHoldRow(variant = variant)
+                }
             }
         }
     }
@@ -268,6 +235,37 @@ private fun PreviewSizeRow() {
     ) {
         TangemButton.Size.entries.forEach { size ->
             TangemButton(size = size, text = stringReference(size.name), onClick = {})
+        }
+    }
+}
+
+@Suppress("MagicNumber")
+@Composable
+private fun PreviewHoldRow(variant: TangemButton.HoldVariant) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        listOf(0f, 0.5f, 1f).forEach { progress ->
+            TangemButtonContainer(
+                variant = variant.toVariant(),
+                size = TangemButton.Size.X10,
+                isLoading = false,
+                isEnabled = true,
+                isDimmed = false,
+                iconStart = null,
+                iconEnd = null,
+                text = stringReference("Hold ${variant.name}"),
+                loadingText = null,
+                contentDescription = null,
+                interactionSource = remember { MutableInteractionSource() },
+                hold = HoldToConfirmSpec(
+                    progress = { progress },
+                    overlayColor = variant.holdOverlayColor(),
+                    isActionEnabled = true,
+                    onConfirm = {},
+                ),
+            )
         }
     }
 }
