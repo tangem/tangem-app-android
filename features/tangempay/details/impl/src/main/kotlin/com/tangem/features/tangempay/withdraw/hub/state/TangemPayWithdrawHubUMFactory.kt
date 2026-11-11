@@ -112,7 +112,7 @@ internal class TangemPayWithdrawHubUMFactory(
 
     private fun createLoadedRecents(state: RecentsState.Loaded, options: BankWithdrawOptions?): RecentsUM {
         val accounts = options?.let { state.accounts.filter(it::canPay) } ?: state.accounts
-        return if (accounts.isEmpty()) {
+        return if (accounts.isEmpty() && !state.hasMoreAccounts) {
             RecentsUM.Empty
         } else {
             RecentsUM.Content(

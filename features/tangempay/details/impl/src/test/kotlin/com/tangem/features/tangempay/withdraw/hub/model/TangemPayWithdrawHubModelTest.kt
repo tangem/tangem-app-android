@@ -491,6 +491,24 @@ internal class TangemPayWithdrawHubModelTest : TangemPayModelTestBase() {
         }
 
         @Test
+        fun `GIVEN no recent recipient with a rail but more saved WHEN model created THEN only see all shown`() {
+            // Arrange
+            coEvery { getRecentBankAccountsUseCase(userWalletId, any()) } returns recentBankAccounts(
+                recents = listOf(bankAccount(id = "acc-2", rail = BankRail.SPEI)),
+                hasMoreAccounts = true,
+            ).right()
+
+            // Act
+            val model = createModel()
+
+            // Assert
+            val recents = model.recents() as RecentsUM.Content
+            assertThat(recents.recipients).isEmpty()
+            assertThat(recents.onSeeAllClick).isNotNull()
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN model created WHEN recents loaded THEN bank accounts requested once`() {
             // Act
             val model = createModel()
