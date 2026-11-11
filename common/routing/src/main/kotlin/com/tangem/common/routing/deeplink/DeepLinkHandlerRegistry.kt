@@ -3,6 +3,7 @@ package com.tangem.common.routing.deeplink
 import android.net.Uri
 import com.tangem.utils.logging.TangemLogger
 import java.net.URI
+import javax.inject.Provider
 
 /**
  * Finds the [DeepLinkHandler] for a deep link among the handlers contributed by features, keyed by [DeepLinkKey].
@@ -17,10 +18,14 @@ import java.net.URI
  *
  * Registered keys are validated and normalized the same way as the candidates, so a trailing or doubled slash in a
  * [DeepLinkKey] does not matter. A malformed key, or two keys that normalize to the same one, fail the construction.
- */
-class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
+ *
 
-    private val handlers: Map<String, DeepLinkHandler> = normalizeKeys(handlers)
+ * registry would build every feature's dependencies on app start.
+ */
+class DeepLinkHandlerRegistry(handlers: Map<String, Provider<DeepLinkHandler>>) {
+
+    private val handlers: Map<String, Lazy<DeepLinkHandler>> = normalizeKeys(handlers)
+        .mapValues { (_, provider) -> lazy(provider::get) }
 
     /** Deeper path prefixes can't match any key, so candidates are bounded by the deepest registered key. */
     private val maxPathSegments: Int = this.handlers.keys.maxOfOrNull(::pathSegmentsCount) ?: 0
@@ -33,7 +38,7 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             maxPathSegments = maxPathSegments,
         )
         val registeredKeys = candidateKeys.filter(handlers::containsKey)
-        val key = registeredKeys.firstOrNull { handlers.getValue(it).isEnabled }
+        val key = registeredKeys.firstOrNull { handlers.getValue(it).value.isEnabled }
 
         if (key == null) {
             TangemLogger.i(
@@ -56,7 +61,7 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             """.trimIndent(),
         )
 
-        return handlers.getValue(key)
+        return handlers.getValue(key).value
     }
 
     internal companion object {
@@ -88,7 +93,7 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             return decoded
         }
 
-        private fun normalizeKeys(handlers: Map<String, DeepLinkHandler>): Map<String, DeepLinkHandler> {
+        private fun <T> normalizeKeys(handlers: Map<String, T>): Map<String, T> {
             val keysByNormalized = handlers.keys.groupBy(::normalizeKey)
             val collisions = keysByNormalized.filterValues { it.size > 1 }
             require(collisions.isEmpty()) {

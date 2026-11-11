@@ -221,7 +221,10 @@ internal class ReferralBlockModelTest {
 
         // Assert
         verify(exactly = 1) {
-            router.push(route = AppRoute.ReferralProgram(userWalletId = walletAId), onComplete = any())
+            router.push(
+                route = AppRoute.ReferralProgram(userWalletId = walletAId),
+                onComplete = any(),
+            )
         }
         assertThat(openedSheets).isEmpty()
         model.onDestroy()
@@ -246,7 +249,7 @@ internal class ReferralBlockModelTest {
     }
 
     @Test
-    fun `GIVEN the chooser is open WHEN a wallet is picked THEN the sheet closes AND that wallet opens`() = runTest {
+    fun `GIVEN the chooser is open WHEN a wallet is picked THEN the sheet closes AND the wallet awaits it`() = runTest {
         // Arrange
         val walletB = hotWallet(walletBId)
         wallets.value = listOf(hotWallet(walletAId), walletB)
@@ -261,12 +264,38 @@ internal class ReferralBlockModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) {
-            router.push(route = AppRoute.ReferralProgram(userWalletId = walletBId), onComplete = any())
-        }
+        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        assertThat(model.walletAwaitingSheetClose.value).isEqualTo(walletBId)
         assertThat(openedSheets)
             .containsExactly(ReferralBlockComponent.WalletSelectorConfig, null)
             .inOrder()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a picked wallet awaits the sheet WHEN the sheet has closed THEN that wallet opens`() = runTest {
+        // Arrange
+        val walletB = hotWallet(walletBId)
+        wallets.value = listOf(hotWallet(walletAId), walletB)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onClick()
+        advanceUntilIdle()
+        selection.value = walletB to accountStatus
+        advanceUntilIdle()
+
+        // Act
+        model.onWalletSheetClosed(walletBId)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(
+                route = AppRoute.ReferralProgram(userWalletId = walletBId),
+                onComplete = any(),
+            )
+        }
+        assertThat(model.walletAwaitingSheetClose.value).isNull()
         model.onDestroy()
     }
 
@@ -321,6 +350,8 @@ internal class ReferralBlockModelTest {
         advanceUntilIdle()
         model.onClick()
         selection.value = walletA to accountStatus
+        advanceUntilIdle()
+        model.onWalletSheetClosed(walletAId)
         advanceUntilIdle()
         coEvery { referralRepository.getReferralStatus(walletAId.stringValue) } returns
             referralStatus(isActive = true)

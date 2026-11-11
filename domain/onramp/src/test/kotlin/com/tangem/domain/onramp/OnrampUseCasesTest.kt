@@ -371,6 +371,7 @@ internal class OnrampUseCasesTest {
             val country = country()
             val currency = country.defaultCurrency
             coEvery { repository.getDefaultCurrencySync() } returns currency
+            coEvery { repository.getSelectedCurrencySync() } returns null
 
             // Act
             val result = OnrampGetDefaultCurrencyUseCase(repository, errorResolver)()
@@ -382,7 +383,8 @@ internal class OnrampUseCasesTest {
             assertThat(saveCountry.isRight()).isTrue()
             assertThat(saveCurrency.isRight()).isTrue()
             coVerify { repository.saveDefaultCountry(country) }
-            coVerify { repository.saveDefaultCurrency(currency) }
+            coVerify(exactly = 1) { repository.saveSelectedCurrency(currency) }
+            coVerify(exactly = 0) { repository.saveDefaultCurrency(any()) }
         }
 
         @Test
@@ -855,7 +857,8 @@ internal class OnrampUseCasesTest {
             coEvery { repository.getStatus(userWallet, "tx") } throws thrown
             coEvery { settingsRepository.isGooglePayAvailability() } throws thrown
             coEvery { repository.saveDefaultCountry(any()) } throws thrown
-            coEvery { repository.saveDefaultCurrency(any()) } throws thrown
+            coEvery { repository.saveSelectedCurrency(any()) } throws thrown
+            coEvery { repository.getSelectedCurrencySync() } returns null
             coEvery { repository.getDefaultCountrySync() } returns country
             coEvery { repository.getDefaultCurrencySync() } returns country.defaultCurrency
             coEvery { repository.fetchPairs(any(), any(), any(), any()) } throws thrown

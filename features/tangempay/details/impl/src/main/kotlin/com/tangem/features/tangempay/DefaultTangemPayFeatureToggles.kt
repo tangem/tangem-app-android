@@ -17,6 +17,6 @@ internal class DefaultTangemPayFeatureToggles(
     override val isGoogleWalletButtonAlwaysShown: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1062_GOOGLE_WALLET_BUTTON_ALWAYS_SHOWN)
 
-    override val isPayBundleIntroductionEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1728_PAY_BUNDLE_INTRODUCTION_ENABLED)
+    override val isOrderFrameworkEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15342_ORDER_FRAMEWORK_ENABLED)
 }

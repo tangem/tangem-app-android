@@ -20,12 +20,13 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
-import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
@@ -50,6 +51,7 @@ internal abstract class YieldSupplyActionModelTestBase {
     protected val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase = mockk()
     protected val sendTransactionUseCase: SendTransactionUseCase = mockk()
     protected val getFeeUseCase: GetFeeUseCase = mockk()
+    protected val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase = mockk()
     protected val urlOpener: UrlOpener = mockk(relaxed = true)
     protected val notificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger = mockk(relaxed = true)
     protected val alertFactory: YieldSupplyAlertFactory = mockk(relaxed = true)
@@ -72,6 +74,15 @@ internal abstract class YieldSupplyActionModelTestBase {
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
         every { notificationsUpdateTrigger.hasErrorFlow } returns MutableStateFlow(false)
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns cryptoCurrencyStatus.right()
+        coEvery {
+            getAvailableFeeTokensUseCase(
+                userWallet = any(),
+                network = any(),
+                sentCurrencyStatus = any(),
+                nativeFeeAmount = any(),
+                enteringYieldTokenId = any(),
+            )
+        } returns AvailableFeeTokens(tokens = listOf(statusOf(coin), cryptoCurrencyStatus)).right()
     }
 
     /** Network fee is paid in the native coin (token amounts are rejected by `increaseGasLimitBy`). */

@@ -9,6 +9,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.polymarket.impl.walletblock.ui.PolymarketWalletBlockContent
+import com.tangem.features.wallet.WalletFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -20,6 +21,7 @@ private const val PREDICTION_ACCOUNT_CONTENT_TYPE = "PredictionAccount"
 internal class DefaultPolymarketWalletBlockComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: Unit,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : PolymarketWalletBlockComponent, AppComponentContext by context {
 
     override fun LazyListScope.polymarketWalletBlockContent(
@@ -36,6 +38,7 @@ internal class DefaultPolymarketWalletBlockComponent @AssistedInject constructor
             PolymarketWalletBlockContent(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
+                isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
                 modifier = modifier
                     .animateContentSize()
                     .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM),

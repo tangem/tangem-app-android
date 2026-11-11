@@ -1,6 +1,7 @@
 package com.tangem.tap.common.pushes
 
 import android.net.Uri
+import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
@@ -35,7 +36,12 @@ internal class PushMessageHandlerTest {
 
     private val tokenDetailsPushHandler: TokenDetailsPushHandler = mockk(relaxed = true)
 
-    private val handler = PushMessageHandler(tokenDetailsPushHandler = tokenDetailsPushHandler)
+    private val jointAccountPushHandler: JointAccountPushHandler = mockk(relaxed = true)
+
+    private val handler = PushMessageHandler(
+        tokenDetailsPushHandler = tokenDetailsPushHandler,
+        jointAccountPushHandler = jointAccountPushHandler,
+    )
 
     /**
      * `Uri.parse` is not available on the JVM, so it is redirected to a [URI]-based parser. The authority is read
@@ -64,7 +70,7 @@ internal class PushMessageHandlerTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(tokenDetailsPushHandler)
+        clearMocks(tokenDetailsPushHandler, jointAccountPushHandler)
     }
 
     @ParameterizedTest
@@ -80,9 +86,19 @@ internal class PushMessageHandlerTest {
         } else {
             verify(inverse = true) { tokenDetailsPushHandler.handle(any()) }
         }
+        val expectedJointParams = model.expectedJointParams
+        if (expectedJointParams != null) {
+            verify(exactly = 1) { jointAccountPushHandler.handle(expectedJointParams) }
+        } else {
+            verify(inverse = true) { jointAccountPushHandler.handle(any()) }
+        }
     }
 
-    data class Model(val payload: Map<String, String>, val expectedTokenParams: Map<String, String>?)
+    data class Model(
+        val payload: Map<String, String>,
+        val expectedTokenParams: Map<String, String>?,
+        val expectedJointParams: Map<String, String>? = null,
+    )
 
     private fun provideTestModels() = listOf(
         // The token flat keys the backend sends — the reaction that existed before `link` was routed
@@ -125,6 +141,15 @@ internal class PushMessageHandlerTest {
                 WEBLINK_KEY to "tangem://token?network_id=ethereum&token_id=0x123",
             ),
             expectedTokenParams = null,
+        ),
+        Model(
+            payload = mapOf(TYPE_KEY to "joint_tokens", WALLET_ID_KEY to "wallet123", ACCOUNT_ID_KEY to "account123"),
+            expectedTokenParams = null,
+            expectedJointParams = mapOf(
+                WALLET_ID_KEY to "wallet123",
+                ACCOUNT_ID_KEY to "account123",
+                TYPE_KEY to "joint_tokens",
+            ),
         ),
         // Nothing to convert
         Model(payload = emptyMap(), expectedTokenParams = null),

@@ -25,11 +25,11 @@ internal interface MeaWalletGooglePay {
 
     fun hasEligibleTokenizationTarget(lastFourDigits: String, listener: GooglePayHasEligibleTokenizationTargetListener)
 
-    fun checkStableHardwareId(onComplete: (errorCode: Int?) -> Unit)
+    fun checkStableHardwareId(onComplete: (failure: TapAndPayFailure?) -> Unit)
 
-    fun checkActiveWallet(onComplete: (errorCode: Int?) -> Unit)
+    fun checkActiveWallet(onComplete: (failure: TapAndPayFailure?) -> Unit)
 
-    fun getEnvironment(onComplete: (environment: Either<Int, String>) -> Unit)
+    fun getEnvironment(onComplete: (environment: Either<TapAndPayFailure, String>) -> Unit)
 
     fun push(card: GoogleWalletProvisioner.Card, activity: Activity, listener: MppPushCardToGooglePayListener)
 

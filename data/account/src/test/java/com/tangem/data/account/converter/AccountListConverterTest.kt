@@ -9,6 +9,9 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
@@ -102,6 +105,46 @@ class AccountListConverterTest {
                 mainAccount,
                 Account.Collectibles(userWalletId = userWallet.walletId).takeIf { isCollectiblesEnabled },
             )
+            Truth.assertThat(actual.accounts).containsExactlyElementsIn(expected).inOrder()
+        }
+
+        @Test
+        fun `GIVEN the collectibles record between portfolios WHEN convert THEN it keeps its row position`() {
+            // Arrange
+            every { collectiblesFeatureToggles.isCollectiblesEnabled } returns true
+            val response = createGetWalletAccountsResponse(userWallet.walletId)
+            val mainRow = response.accounts.single()
+            val secondAccount = Account.Personal(
+                accountId = AccountId.forCryptoPortfolio(
+                    userWalletId = userWallet.walletId,
+                    derivationIndex = DerivationIndex(value = 1).getOrNull()!!,
+                ),
+                name = "Second",
+                icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+                derivationIndex = 1,
+            ).getOrNull()!!
+            val secondRow = mainRow.copy(id = secondAccount.accountId.value, derivationIndex = 1)
+            val collectiblesRow = createWalletAccountDTO(
+                userWalletId = userWallet.walletId,
+                accountId = "5A0E8F2C7B9D4163A8E1C3F5B7D9024E6A8C0E2F4B6D8A0C2E4F6A8B0C2D4E6F",
+                derivationIndex = 999799,
+                tokens = null,
+                type = WalletAccountDTO.Type.COLLECTIBLES,
+            )
+            val mainAccount = Account.Personal.createMainAccount(userWalletId = userWallet.walletId)
+            every { cryptoPortfolioConverter.convert(mainRow) } returns mainAccount
+            every { cryptoPortfolioConverter.convert(secondRow) } returns secondAccount
+
+            // Act
+            val actual = converter.convert(
+                response.copy(
+                    wallet = response.wallet.copy(totalAccounts = 2),
+                    accounts = listOf(secondRow, collectiblesRow, mainRow),
+                ),
+            )
+
+            // Assert
+            val expected = listOf(secondAccount, Account.Collectibles(userWalletId = userWallet.walletId), mainAccount)
             Truth.assertThat(actual.accounts).containsExactlyElementsIn(expected).inOrder()
         }
 

@@ -4,6 +4,7 @@ import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
@@ -26,7 +27,7 @@ internal object PlacePredictionNotificationsFactory {
 
         if (!state.isMarketAcceptingOrders) add(PredictionNotificationUM.MarketClosed)
 
-        addAll(state.quote.notifications())
+        addAll(state.quoteNotifications())
 
         when (state.priceError) {
             PriceErrorUM.MarketClosed -> add(PredictionNotificationUM.MarketClosed)
@@ -51,18 +52,24 @@ internal object PlacePredictionNotificationsFactory {
         }
     }.distinct().toImmutableList()
 
-    private fun QuoteUM.notifications(): List<PredictionNotificationUM> = when (this) {
-        is QuoteUM.Content -> when (status) {
+    private fun PlacePredictionUM.quoteNotifications(): List<PredictionNotificationUM> = when (quote) {
+        is QuoteUM.Content -> when (quote.status) {
             PredictionQuoteStatus.PARTIAL -> listOf(PredictionNotificationUM.PartialFill)
+            PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE -> belowMinOrderNotifications()
             else -> emptyList()
         }
-        is QuoteUM.Unavailable -> when (status) {
+        is QuoteUM.Unavailable -> when (quote.status) {
             PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY -> listOf(PredictionNotificationUM.NoLiquidity)
             PredictionQuoteStatus.MARKET_CLOSED -> listOf(PredictionNotificationUM.MarketClosed)
             else -> emptyList()
         }
         is QuoteUM.Error -> listOf(PredictionNotificationUM.QuoteFailed)
-        QuoteUM.Empty, QuoteUM.Loading -> emptyList()
+        QuoteUM.Empty, is QuoteUM.Loading -> emptyList()
+    }
+
+    private fun PlacePredictionUM.belowMinOrderNotifications(): List<PredictionNotificationUM> = when {
+        order is OrderSideUM.Buy && !isBelowMinAmount() -> listOf(PredictionNotificationUM.BelowMinOrder)
+        else -> emptyList()
     }
 }
 
@@ -70,7 +77,7 @@ internal object PlacePredictionNotificationsFactory {
  * The single place the primary button is gated.
  *
  * Every transformer ends with this, so the notifications and the button can never disagree with the state
- * that produced them. Nothing else — no model, no composable — may compute `isPrimaryButtonEnabled`: the
+ * that produced them. Nothing else — no model, no composable — may compute `placeAction`: the
  * flow this one is modelled on gates its button from three places, one of them outside the notifications.
  */
 internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
@@ -83,16 +90,19 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
     }
     val notifications = PlacePredictionNotificationsFactory.build(state = priced)
 
-    return priced.copy(
-        notifications = notifications,
-        isPrimaryButtonEnabled = notifications.none { it.isBlocking } &&
-            quote is QuoteUM.Content &&
-            priced.order.isPlaceable(status = quote.status) &&
-            !isBelowMinAmount &&
-            submit is SubmitUM.Idle &&
-            tradingPermission == TradingPermissionUM.Allowed &&
-            priced.order.allowsPlacing(entered = entered),
-    )
+    val isPlaceableApartFromQuote = notifications.none { it.isBlocking } &&
+        !isBelowMinAmount &&
+        submit is SubmitUM.Idle &&
+        tradingPermission == TradingPermissionUM.Allowed &&
+        priced.order.allowsPlacing(entered = entered)
+
+    val placeAction = when {
+        !isPlaceableApartFromQuote -> PlaceActionUM.Unavailable
+        quote is QuoteUM.Content && priced.order.isPlaceable(status = quote.status) -> PlaceActionUM.Ready
+        else -> PlaceActionUM.Unavailable
+    }
+
+    return priced.copy(notifications = notifications, placeAction = placeAction)
 }
 
 private fun OrderSideUM.isPlaceable(status: PredictionQuoteStatus): Boolean = when (this) {

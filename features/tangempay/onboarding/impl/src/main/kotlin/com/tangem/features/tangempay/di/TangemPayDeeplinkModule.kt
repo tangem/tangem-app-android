@@ -2,12 +2,11 @@ package com.tangem.features.tangempay.di
 
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkKey
-import com.tangem.features.tangempay.deeplink.DefaultOnboardVisaDeepLinkHandler
-import com.tangem.features.tangempay.deeplink.DefaultTangemPayAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.DefaultTangemPayMainDeepLinkHandler
-import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.DefaultTangemPayOnboardDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayOnboardDeepLinkHandler
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -22,7 +21,9 @@ internal interface TangemPayDeeplinkModule {
 
     @Binds
     @Singleton
-    fun bindDeepLinkHandlerFactory(impl: DefaultOnboardVisaDeepLinkHandler.Factory): OnboardVisaDeepLinkHandler.Factory
+    fun bindDeepLinkHandlerFactory(
+        impl: DefaultTangemPayOnboardDeepLinkHandler.Factory,
+    ): TangemPayOnboardDeepLinkHandler.Factory
 
     @Binds
     @Singleton
@@ -31,10 +32,9 @@ internal interface TangemPayDeeplinkModule {
     ): TangemPayMainDeepLinkHandler.Factory
 
     @Binds
-    @Singleton
-    fun bindTangemPayAccountDeepLinkHandlerFactory(
-        impl: DefaultTangemPayAccountDeepLinkHandler.Factory,
-    ): TangemPayAccountDeepLinkHandler.Factory
+    @IntoMap
+    @DeepLinkKey(TangemPayAccountDeepLinkHandler.DEEPLINK_KEY)
+    fun bindTangemPayAccountDeepLinkHandler(impl: TangemPayAccountDeepLinkHandler): DeepLinkHandler
 
     companion object {
 
@@ -42,17 +42,18 @@ internal interface TangemPayDeeplinkModule {
         // bound here as a DeepLinkHandler instead of a lambda over its factory.
         @Provides
         @IntoMap
-        @DeepLinkKey(DefaultOnboardVisaDeepLinkHandler.TANGEM_DEEPLINK_KEY)
-        fun provideOnboardVisaDeepLinkHandler(factory: OnboardVisaDeepLinkHandler.Factory): DeepLinkHandler =
-            onboardVisaDeepLinkHandler(factory)
+        @DeepLinkKey(DefaultTangemPayOnboardDeepLinkHandler.TANGEM_DEEPLINK_KEY)
+        fun provideTangemPayOnboardDeepLinkHandler(factory: TangemPayOnboardDeepLinkHandler.Factory): DeepLinkHandler =
+            tangemPayOnboardDeepLinkHandler(factory)
 
         // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
         // bound here as a DeepLinkHandler instead of a lambda over its factory.
         @Provides
         @IntoMap
-        @DeepLinkKey(DefaultOnboardVisaDeepLinkHandler.HTTPS_DEEPLINK_KEY)
-        fun provideOnboardVisaHttpsDeepLinkHandler(factory: OnboardVisaDeepLinkHandler.Factory): DeepLinkHandler =
-            onboardVisaDeepLinkHandler(factory)
+        @DeepLinkKey(DefaultTangemPayOnboardDeepLinkHandler.HTTPS_DEEPLINK_KEY)
+        fun provideTangemPayOnboardHttpsDeepLinkHandler(
+            factory: TangemPayOnboardDeepLinkHandler.Factory,
+        ): DeepLinkHandler = tangemPayOnboardDeepLinkHandler(factory)
 
         // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
         // bound here as a DeepLinkHandler instead of a lambda over its factory.
@@ -70,15 +71,7 @@ internal interface TangemPayDeeplinkModule {
         fun provideTangemPayMainHttpsDeepLinkHandler(factory: TangemPayMainDeepLinkHandler.Factory): DeepLinkHandler =
             tangemPayMainDeepLinkHandler(factory)
 
-        // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
-        // bound here as a DeepLinkHandler instead of a lambda over its factory.
-        @Provides
-        @IntoMap
-        @DeepLinkKey(DefaultTangemPayAccountDeepLinkHandler.DEEPLINK_KEY)
-        fun provideTangemPayAccountDeepLinkHandler(factory: TangemPayAccountDeepLinkHandler.Factory): DeepLinkHandler =
-            DeepLinkHandler { request -> factory.create(scope = request.scope, queryParams = request.queryParams) }
-
-        private fun onboardVisaDeepLinkHandler(factory: OnboardVisaDeepLinkHandler.Factory): DeepLinkHandler =
+        private fun tangemPayOnboardDeepLinkHandler(factory: TangemPayOnboardDeepLinkHandler.Factory): DeepLinkHandler =
             DeepLinkHandler { request -> factory.create(uri = request.uri) }
 
         private fun tangemPayMainDeepLinkHandler(factory: TangemPayMainDeepLinkHandler.Factory): DeepLinkHandler =

@@ -11,7 +11,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.model.createPayBundleVideo
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -30,25 +29,17 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val analytics: AnalyticsEventHandler,
-    tangemPayFeatureToggles: TangemPayFeatureToggles,
     moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     videoFactory: LoopingVideoController.Factory,
 ) : Model() {
 
-    private val isPayBundleIntroductionEnabled = tangemPayFeatureToggles.isPayBundleIntroductionEnabled
+    private val video = videoFactory.createPayBundleVideo(scope = modelScope)
 
-    private val video = if (isPayBundleIntroductionEnabled) {
-        videoFactory.createPayBundleVideo(scope = modelScope)
-    } else {
-        null
-    }
-
-    val videoState: StateFlow<LoopingVideoState>? = video?.state
+    val videoState: StateFlow<LoopingVideoState> = video.state
 
     val uiState: StateFlow<TangemPayHotWalletOnboardingUM>
         field = MutableStateFlow(
             TangemPayHotWalletOnboardingUM(
-                isPayBundleIntroductionEnabled = isPayBundleIntroductionEnabled,
                 isUnifiedOnboarding = moneyAccountFeatureToggles.isMoneyAccountsEnabled,
                 isLoading = false,
                 onGetCardClick = ::onGetCardClick,
@@ -63,11 +54,11 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     }
 
     fun setVideoRunning(isRunning: Boolean) {
-        video?.setRunning(isRunning = isRunning)
+        video.setRunning(isRunning = isRunning)
     }
 
     override fun onDestroy() {
-        video?.release()
+        video.release()
         super.onDestroy()
     }
 

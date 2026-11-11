@@ -1,0 +1,306 @@
+package com.tangem.store.features.cardsettings.impl.resetcard.model
+
+import androidx.compose.runtime.Stable
+import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
+import com.tangem.domain.card.ResetCardUseCase
+import com.tangem.domain.card.ResetCardUserCodeParams
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.store.features.cardsettings.impl.common.CardSettingsAnalyticsEvent
+import com.tangem.store.features.cardsettings.impl.common.utils.getResetToFactoryDescription
+import com.tangem.store.features.cardsettings.impl.domain.CardSettingsInteractor
+import com.tangem.store.features.cardsettings.impl.resetcard.ResetCardDialog
+import com.tangem.store.features.cardsettings.impl.resetcard.ui.state.ResetCardUM
+import com.tangem.store.features.cardsettings.impl.resetcard.api.ResetCardComponent
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@Suppress("LongParameterList")
+@Stable
+@ModelScoped
+internal class ResetCardModel @Inject constructor(
+    override val dispatchers: CoroutineDispatcherProvider,
+    paramsContainer: ParamsContainer,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val resetCardUseCase: ResetCardUseCase,
+    private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val cardSettingsInteractor: CardSettingsInteractor,
+    private val router: Router,
+) : Model() {
+
+    private val params = paramsContainer.require<ResetCardComponent.Params>()
+
+    // region Card-set specific data. All cards from single set have the same userWalletId and cardTypesResolver
+    private val currentUserWalletId = params.userWalletId
+
+    // Use only for card-specific data
+    private val userWallet = getUserWalletUseCase(userWalletId = currentUserWalletId)
+        .getOrElse { error("Failed to get user wallet: $it") }
+        .requireColdWallet()
+
+    private val currentCardTypesResolver = userWallet.cardTypesResolver
+    private val currentUserCodeParams = ResetCardUserCodeParams(
+        isAccessCodeSet = userWallet.scanResponse.card.isAccessCodeSet,
+        isPasscodeSet = userWallet.scanResponse.card.isPasscodeSet,
+    )
+    // endregion
+
+    // region Data of card that was scanned on CardSettings
+    private val primaryCardId: String = params.cardId
+
+    private val isActiveBackupPrimaryCard = params.isActiveBackupStatus
+
+    private val primaryBackupCardsCount = params.backupCardsCount
+    // endregion
+
+    // TODO: move logic to separate domain entity
+    private var resetBackupCardCount = 0
+
+    private var warningsMap = emptyMap<ResetCardUM.WarningType, ResetCardUM.WarningUM>()
+
+    val uiState: StateFlow<ResetCardUM>
+        field = MutableStateFlow(getInitialState())
+
+    private fun getInitialState(): ResetCardUM {
+        return ResetCardUM(
+            isResetButtonEnabled = false,
+            descriptionText = getResetToFactoryDescription(
+                isActiveBackupStatus = isActiveBackupPrimaryCard,
+                typesResolver = currentCardTypesResolver,
+            ),
+            warningsToShow = buildInitialItems(),
+            onResetButtonClick = { showDialog(ResetCardDialog.StartResetDialog) },
+            onToggleWarning = ::toggleCondition,
+            dialog = null,
+        )
+    }
+
+    private fun shouldShowResetPasswordButton(): Boolean {
+        val isTangemWallet = currentCardTypesResolver.isTangemWallet() || currentCardTypesResolver.isWallet2()
+
+        return isTangemWallet && isActiveBackupPrimaryCard
+    }
+
+    private fun buildInitialItems(): ImmutableList<ResetCardUM.WarningUM> {
+        val shouldShowResetPasswordButton = shouldShowResetPasswordButton()
+        val shouldShowResetTangemPayButton = params.hasTangemPay
+
+        val lostWalletUM = ResetCardUM.WarningUM(
+            isChecked = false,
+            type = ResetCardUM.WarningType.LOST_WALLET_ACCESS,
+            description = TextReference.Res(id = R.string.reset_card_to_factory_condition_1),
+        )
+        val lostPasswordUM = ResetCardUM.WarningUM(
+            isChecked = false,
+            type = ResetCardUM.WarningType.LOST_PASSWORD_RESTORE,
+            description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
+        )
+        val lostTangemPayUM = ResetCardUM.WarningUM(
+            isChecked = false,
+            type = ResetCardUM.WarningType.LOST_TANGEM_PAY,
+            description = TextReference.Res(R.string.reset_card_to_factory_condition_3),
+        )
+
+        warningsMap = buildMap {
+            put(ResetCardUM.WarningType.LOST_WALLET_ACCESS, lostWalletUM)
+            if (shouldShowResetPasswordButton) {
+                put(ResetCardUM.WarningType.LOST_PASSWORD_RESTORE, lostPasswordUM)
+            }
+            if (shouldShowResetTangemPayButton) {
+                put(ResetCardUM.WarningType.LOST_TANGEM_PAY, lostTangemPayUM)
+            }
+        }
+        return warningsMap.values.toImmutableList()
+    }
+
+    private fun toggleCondition(type: ResetCardUM.WarningType) {
+        uiState.update { prevState ->
+            warningsMap[type]?.let { current ->
+                warningsMap = warningsMap + (type to current.copy(isChecked = !current.isChecked))
+            }
+            prevState.copy(
+                warningsToShow = warningsMap.values.toImmutableList(),
+                isResetButtonEnabled = warningsMap.values.all { it.isChecked },
+            )
+        }
+    }
+
+    private fun createDialog(dialog: ResetCardDialog): ResetCardUM.Dialog {
+        return when (dialog) {
+            ResetCardDialog.StartResetDialog -> {
+                ResetCardUM.Dialog.StartReset(
+                    onConfirmClick = ::onStartResetClick,
+                    onDismiss = ::dismissDialog,
+                )
+            }
+            ResetCardDialog.ContinueResetDialog -> {
+                ResetCardUM.Dialog.ContinueReset(
+                    onConfirmClick = ::onContinueResetClick,
+                    onDismiss = ::onContinueResetDialogDismiss,
+                )
+            }
+            ResetCardDialog.InterruptedResetDialog -> {
+                ResetCardUM.Dialog.InterruptedReset(
+                    onConfirmClick = ::onContinueResetClick,
+                    onDismiss = ::onInterruptedResetDialogDismiss,
+                )
+            }
+            ResetCardDialog.CompletedResetDialog -> {
+                ResetCardUM.Dialog.CompletedReset(
+                    onConfirmClick = ::dismissAndFinishFullReset,
+                )
+            }
+        }
+    }
+
+    private fun onStartResetClick() {
+        dismissDialog()
+
+        makeFullReset()
+    }
+
+    private fun makeFullReset() {
+        modelScope.launch {
+            resetCardUseCase(cardId = primaryCardId, params = currentUserCodeParams).onRight {
+                deleteSavedAccessCodesUseCase(cardId = primaryCardId)
+                deleteWalletUseCase(userWalletId = currentUserWalletId).getOrElse { error ->
+                    TangemLogger.e("Unable to delete user wallet: $error")
+                    return@launch
+                }
+
+                delay(DELAY_SDK_DIALOG_CLOSE)
+
+                checkRemainingBackupCards()
+            }
+                .onLeft {
+                    TangemLogger.e("Failed to reset card: $it")
+                }
+        }
+    }
+
+    private fun onContinueResetClick() {
+        dismissDialog()
+
+        modelScope.launch {
+            resetCardUseCase(
+                cardNumber = resetBackupCardCount + 1,
+                params = currentUserCodeParams,
+                userWallet = userWallet,
+            )
+                .onRight { isResetCompleted ->
+                    if (isResetCompleted) {
+                        resetBackupCardCount++
+                    }
+
+                    delay(DELAY_SDK_DIALOG_CLOSE)
+
+                    checkRemainingBackupCards()
+                }
+                .onLeft { showDialog(ResetCardDialog.InterruptedResetDialog) }
+        }
+    }
+
+    private fun onContinueResetDialogDismiss() {
+        dismissDialog()
+
+        showDialog(ResetCardDialog.InterruptedResetDialog)
+    }
+
+    private fun onInterruptedResetDialogDismiss() {
+        analyticsEventHandler.send(
+            CardSettingsAnalyticsEvent.FactoryResetCanceled(cardsCount = resetBackupCardCount + 1),
+        )
+
+        dismissAndFinishFullReset()
+    }
+
+    private fun checkRemainingBackupCards() {
+        val backupCardsCount = getBackupCardsCount()
+
+        when {
+            backupCardsCount > resetBackupCardCount -> showDialog(ResetCardDialog.ContinueResetDialog)
+            backupCardsCount == resetBackupCardCount -> {
+                analyticsEventHandler.send(
+                    event = CardSettingsAnalyticsEvent.FactoryResetFinished(cardsCount = resetBackupCardCount + 1),
+                )
+                showDialog(ResetCardDialog.CompletedResetDialog)
+            }
+            else -> finishFullReset()
+        }
+    }
+
+    private fun dismissAndFinishFullReset() {
+        dismissDialog()
+
+        finishFullReset()
+    }
+
+    /**
+     * The user wallet is deleted right after the primary card is reset, while the backup cards are still ahead. Until
+     * the flow is finished the whole screen stack belongs to a wallet that no longer exists, so leaving the screen has
+     * to go through the same completion path as the dialogs instead of a plain pop.
+     */
+    fun onBackClick() {
+        val isUserWalletDeleted = getUserWalletUseCase(userWalletId = currentUserWalletId).isLeft()
+
+        if (isUserWalletDeleted) {
+            analyticsEventHandler.send(
+                CardSettingsAnalyticsEvent.FactoryResetCanceled(cardsCount = resetBackupCardCount + 1),
+            )
+
+            finishFullReset()
+        } else {
+            router.pop()
+        }
+    }
+
+    private fun finishFullReset() {
+        cardSettingsInteractor.clear()
+
+        val newSelectedWallet = getSelectedWalletSyncUseCase.invoke().getOrNull()
+
+        if (newSelectedWallet != null) {
+            router.popTo(AppRoute.Wallet::class)
+        } else {
+            router.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
+        }
+    }
+
+    private fun showDialog(dialog: ResetCardDialog) {
+        uiState.update { it.copy(dialog = createDialog(dialog)) }
+    }
+
+    private fun dismissDialog() {
+        uiState.update { it.copy(dialog = null) }
+    }
+
+    private fun getBackupCardsCount(): Int {
+        if (!currentCardTypesResolver.isMultiwalletAllowed()) return 0
+
+        return primaryBackupCardsCount
+    }
+}

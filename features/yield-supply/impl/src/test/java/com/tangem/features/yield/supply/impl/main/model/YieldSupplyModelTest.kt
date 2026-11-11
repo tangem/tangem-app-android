@@ -24,14 +24,17 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.stories.models.StoryContentIds
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
+import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.*
@@ -65,6 +68,8 @@ internal class YieldSupplyModelTest {
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
+    private val yieldModuleStatusFetcher: YieldModuleStatusFetcher = mockk()
+    private val tokensFeatureToggles: TokensFeatureToggles = mockk()
     private val getTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase = mockk()
     private val isAvailableUseCase: YieldSupplyIsAvailableUseCase = mockk()
     private val activateUseCase: YieldSupplyActivateUseCase = mockk()
@@ -98,6 +103,8 @@ internal class YieldSupplyModelTest {
         every { enterStatusFlowUseCase(any(), any()) } returns flowOf(null)
         coEvery { enterStatusUseCase(any(), any()) } returns null.right()
         coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
+        coEvery { yieldModuleStatusFetcher(any()) } returns Unit.right()
+        every { tokensFeatureToggles.isYieldContributionEnabled } returns false
         coEvery { getTokenStatusUseCase(any()) } returns marketToken(isActive = true).right()
         coEvery { isBoostPromoEnabledUseCase(any(), any()) } returns false.right()
         coEvery { activateUseCase(any(), any(), any()) } returns true.right()
@@ -144,6 +151,34 @@ internal class YieldSupplyModelTest {
         assertThat(model.uiStateLegacy.value).isEqualTo(YieldSupplyUM.Initial)
         verify(exactly = 0) { accountStatusListSupplier(any<UserWalletId>()) }
         coVerify(exactly = 1) { singleNetworkStatusFetcher(any()) }
+    }
+
+    @Test
+    fun `GIVEN yield positions source enabled WHEN model created THEN position of the token is fetched`() = runTest {
+        // Arrange
+        every { tokensFeatureToggles.isYieldContributionEnabled } returns true
+
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            yieldModuleStatusFetcher(
+                YieldModuleStatusFetcher.Params(userWalletId = userWalletId, tokens = setOf(token)),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN yield positions source disabled WHEN model created THEN no position is fetched`() = runTest {
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { singleNetworkStatusFetcher(any()) }
+        coVerify(exactly = 0) { yieldModuleStatusFetcher(any()) }
     }
 
     @Test
@@ -374,6 +409,24 @@ internal class YieldSupplyModelTest {
     }
 
     @Test
+    fun `GIVEN unchanged currency status WHEN pending enter saved THEN processing enter`() = runTest {
+        // Arrange
+        val pendingStatusFlow = MutableStateFlow<YieldSupplyPendingStatus?>(null)
+        every { enterStatusFlowUseCase(any(), any()) } returns pendingStatusFlow
+        val model = createModel()
+        advanceUntilIdle()
+        val pendingEnter = YieldSupplyPendingStatus.Enter(txIds = listOf("0x1"))
+        coEvery { enterStatusUseCase(any(), any()) } returns pendingEnter.right()
+
+        // Act
+        pendingStatusFlow.value = pendingEnter
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiStateLegacy.value).isEqualTo(YieldSupplyUM.Processing.Enter)
+    }
+
+    @Test
     fun `GIVEN processing state WHEN cached status emitted THEN keeps processing`() = runTest {
         // Arrange — first emission sets Processing.Enter, second (from cache) must be ignored
         val firstList: AccountStatusList = mockk()
@@ -544,6 +597,35 @@ internal class YieldSupplyModelTest {
     }
 
     @Test
+    fun `GIVEN cached active position on actual network WHEN status emitted THEN protocol status not sent`() =
+        runTest {
+            // Arrange
+            stubStatus(positionStatus(positionSource = StatusSource.CACHE).some())
+
+            // Act
+            createModel()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { activateUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) { deactivateUseCase(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN actual active position on actual network WHEN status emitted THEN activates protocol`() = runTest {
+        // Arrange
+        stubStatus(positionStatus(positionSource = StatusSource.ACTUAL).some())
+
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { activateUseCase(userWalletId, token, SOURCE_ADDRESS) }
+        coVerify(exactly = 0) { deactivateUseCase(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN missing network address WHEN status emitted THEN protocol status not sent`() = runTest {
         // Arrange — a Loading value carries no network address, so the side-effect must short-circuit
         stubStatus(CryptoCurrencyStatus(currency = token, value = CryptoCurrencyStatus.Loading).some())
@@ -640,6 +722,8 @@ internal class YieldSupplyModelTest {
         getUserWalletUseCase = getUserWalletUseCase,
         singleAccountStatusListSupplier = accountStatusListSupplier,
         singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+        yieldModuleStatusFetcher = yieldModuleStatusFetcher,
+        tokensFeatureToggles = tokensFeatureToggles,
         yieldSupplyGetTokenStatusUseCase = getTokenStatusUseCase,
         yieldSupplyIsAvailableUseCase = isAvailableUseCase,
         yieldSupplyActivateUseCase = activateUseCase,
@@ -696,6 +780,21 @@ internal class YieldSupplyModelTest {
             sources = CryptoCurrencyStatus.Sources(networkSource = networkSource),
         ),
     )
+
+    /** An active Yield Module position with the network field empty, as under the positions source toggle */
+    private fun positionStatus(positionSource: StatusSource): CryptoCurrencyStatus {
+        val base = status(isActive = true, effectiveProtocolBalance = BigDecimal.TEN)
+        val value = base.value as CryptoCurrencyStatus.Custom
+        val position = YieldSupplyContribution(status = value.yieldSupplyStatus!!, source = positionSource)
+
+        return base.copy(
+            value = value.copy(
+                yieldSupplyStatus = null,
+                contributions = listOf(position),
+                sources = value.sources.copy(contributionSources = listOf(positionSource)),
+            ),
+        )
+    }
 
     private fun marketToken(isActive: Boolean, apy: BigDecimal = BigDecimal("5")): YieldMarketToken = YieldMarketToken(
         tokenAddress = "0xToken",

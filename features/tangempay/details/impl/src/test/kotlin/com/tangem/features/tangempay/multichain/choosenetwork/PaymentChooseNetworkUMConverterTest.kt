@@ -129,7 +129,7 @@ internal class PaymentChooseNetworkUMConverterTest {
     }
 
     @Test
-    fun `WHEN convert THEN dismiss delegates to the callback`() {
+    fun `GIVEN a dismiss callback WHEN convert THEN dismiss delegates to the callback`() {
         // Act
         val result = converter.convert(emptyList())
         result.dismiss()

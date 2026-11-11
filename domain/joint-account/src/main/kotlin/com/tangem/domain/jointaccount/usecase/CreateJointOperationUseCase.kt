@@ -3,7 +3,6 @@ package com.tangem.domain.jointaccount.usecase
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
-import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
@@ -16,14 +15,13 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationSigningError
 import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeInnerCall
-import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
-import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.supplier.find
@@ -33,7 +31,7 @@ import java.math.BigInteger
 
 /**
  * Creates a send operation of a joint account: the slot gate on a fresh account read, the on-chain
- * composition check, the payload-form check, then build → sign → create.
+ * composition check, the payload-form check, then build → Blockaid in [prepare] and sign → create in [submit].
  */
 @Suppress("LongParameterList")
 class CreateJointOperationUseCase(
@@ -49,12 +47,12 @@ class CreateJointOperationUseCase(
     private val ownerAddressResolver: JointOwnerAddressResolver,
 ) {
 
-    suspend operator fun invoke(
+    suspend fun prepare(
         account: Account.Joint,
         network: Network,
         intent: JointTransferIntent,
         gasToken: SafeGasToken,
-    ): Either<JointOperationCreateError, Unit> = either {
+    ): Either<JointOperationCreateError, PreparedJointOperation.Creation> = either {
         val userWalletId = account.accountId.userWalletId
 
         // The slot gate reads the backend, not the cache: another member may have taken the slot
@@ -76,49 +74,74 @@ class CreateJointOperationUseCase(
 
         val call = createInnerCall(intent = intent, safeAddress = safeAddress).bind()
 
-        val created = checkBuildSignAndCreate(
+        val ownerAddress = ownerAddressResolver
+            .resolve(userWalletId = userWalletId, ownerKeyIndex = account.ownerKeyIndex)
+            .mapLeft(JointOperationCreateError::Failed)
+            .bind()
+            ?: raise(JointOperationCreateError.Failed(cause = IllegalStateException("The owner key is not derived")))
+
+        checkBuildAndVerify(
             account = account,
-            jointAccount = jointAccount,
             network = network,
+            jointAccount = jointAccount,
             call = call,
+            gasToken = gasToken,
             chainId = chainId,
             safeAddress = safeAddress,
-            gasToken = gasToken,
-        )
-
-        created.getOrElse { error ->
-            // The network moved under the first attempt — re-check, rebuild from fresh state and ask for a new signature
-            if (error is JointOperationCreateError.NetworkStateMoved) {
-                checkBuildSignAndCreate(
-                    account = account,
-                    jointAccount = jointAccount,
-                    network = network,
-                    call = call,
-                    chainId = chainId,
-                    safeAddress = safeAddress,
-                    gasToken = gasToken,
-                ).bind()
-            } else {
-                raise(error)
-            }
-        }
-
-        // The operation exists on the backend, so a failed refresh must not fail the creation — the list
-        // catches up on the next fetch; only success is never reported before this read completes
-        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse {}
+            ownerAddress = ownerAddress,
+        ).bind()
     }
 
-    /** One signing attempt — the composition is re-checked every time a signature is about to be requested */
-    @Suppress("LongParameterList")
-    private suspend fun checkBuildSignAndCreate(
+    suspend fun submit(prepared: PreparedJointOperation.Creation): Either<JointOperationCreateError, SubmitResult> =
+        either {
+            ensure(prepared.verdict != JointOperationBlockaidGate.Verdict.Malicious) {
+                JointOperationCreateError.Malicious
+            }
+
+            signAndCreate(prepared = prepared).fold(
+                ifLeft = { error -> rebuildAfterNetworkMoved(prepared = prepared, error = error).bind() },
+                ifRight = {
+                    // The operation exists on the backend, so a failed refresh must not fail the creation — the list
+                    // catches up on the next fetch; only success is never reported before this read completes
+                    val userWalletId = prepared.account.accountId.userWalletId
+                    fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse {}
+                    SubmitResult.Created
+                },
+            )
+        }
+
+    private suspend fun rebuildAfterNetworkMoved(
+        prepared: PreparedJointOperation.Creation,
+        error: JointOperationCreateError,
+    ): Either<JointOperationCreateError, SubmitResult.Rebuilt> = either {
+        ensure(error is JointOperationCreateError.NetworkStateMoved && !prepared.isRebuilt) { error }
+
+        val rebuilt = with(prepared) {
+            checkBuildAndVerify(
+                account = account,
+                network = network,
+                jointAccount = jointAccount,
+                call = call,
+                gasToken = gasToken,
+                chainId = chainId,
+                safeAddress = safeAddress,
+                ownerAddress = ownerAddress,
+            )
+        }.bind().copy(isRebuilt = true)
+
+        SubmitResult.Rebuilt(prepared = rebuilt)
+    }
+
+    private suspend fun checkBuildAndVerify(
         account: Account.Joint,
-        jointAccount: JointAccount,
         network: Network,
+        jointAccount: JointAccount,
         call: SafeInnerCall,
+        gasToken: SafeGasToken,
         chainId: Long,
         safeAddress: String,
-        gasToken: SafeGasToken,
-    ): Either<JointOperationCreateError, Unit> = either {
+        ownerAddress: String,
+    ): Either<JointOperationCreateError, PreparedJointOperation.Creation> = either {
         val userWalletId = account.accountId.userWalletId
 
         val deployment = compositionChecker
@@ -136,53 +159,6 @@ class CreateJointOperationUseCase(
             .mapLeft(JointOperationCreateError::Failed)
             .bind()
 
-        checkBlockaid(
-            account = account,
-            network = network,
-            safeTx = safeTx,
-            chainId = chainId,
-            safeAddress = safeAddress,
-            deployment = deployment,
-        )
-
-        val signature = signer
-            .signOperation(
-                userWalletId = userWalletId,
-                ownerKeyIndex = account.ownerKeyIndex,
-                safeTx = safeTx,
-                chainId = chainId,
-                safeAddress = safeAddress,
-            )
-            .mapLeft(::toCreateError)
-            .bind()
-
-        repository
-            .createOperation(
-                userWalletId = userWalletId,
-                safeAddress = safeAddress,
-                chainId = chainId,
-                safeTx = safeTx,
-                signature = signature,
-            )
-            .bind()
-    }
-
-    /** The initiator's operation passes the same Blockaid check a co-signer runs; only a clear verdict lets it be signed */
-    @Suppress("LongParameterList")
-    private suspend fun Raise<JointOperationCreateError>.checkBlockaid(
-        account: Account.Joint,
-        network: Network,
-        safeTx: SafeTx,
-        chainId: Long,
-        safeAddress: String,
-        deployment: SafeDeployment,
-    ) {
-        val ownerAddress = ownerAddressResolver
-            .resolve(userWalletId = account.accountId.userWalletId, ownerKeyIndex = account.ownerKeyIndex)
-            .mapLeft(JointOperationCreateError::Failed)
-            .bind()
-            ?: raise(JointOperationCreateError.Failed(cause = IllegalStateException("The owner key is not derived")))
-
         val verdict = blockaidGate.verify(
             network = network,
             safeTx = safeTx,
@@ -192,18 +168,45 @@ class CreateJointOperationUseCase(
             deployment = deployment,
         )
 
-        when (verdict) {
-            JointOperationBlockaidGate.Verdict.SAFE,
-            JointOperationBlockaidGate.Verdict.WARNING,
-            -> Unit
-            JointOperationBlockaidGate.Verdict.MALICIOUS -> raise(JointOperationCreateError.Malicious)
-            JointOperationBlockaidGate.Verdict.UNAVAILABLE -> raise(
-                JointOperationCreateError.Failed(cause = IllegalStateException("Blockaid is unavailable")),
+        PreparedJointOperation.Creation(
+            account = account,
+            network = network,
+            safeTx = safeTx,
+            verdict = verdict,
+            jointAccount = jointAccount,
+            call = call,
+            gasToken = gasToken,
+            chainId = chainId,
+            safeAddress = safeAddress,
+            ownerAddress = ownerAddress,
+        )
+    }
+
+    private suspend fun signAndCreate(
+        prepared: PreparedJointOperation.Creation,
+    ): Either<JointOperationCreateError, Unit> = either {
+        val userWalletId = prepared.account.accountId.userWalletId
+
+        val signature = signer
+            .signOperation(
+                userWalletId = userWalletId,
+                ownerKeyIndex = prepared.account.ownerKeyIndex,
+                safeTx = prepared.safeTx,
+                chainId = prepared.chainId,
+                safeAddress = prepared.safeAddress,
             )
-            JointOperationBlockaidGate.Verdict.UNKNOWN -> raise(
-                JointOperationCreateError.Failed(cause = IllegalStateException("Blockaid returned no verdict")),
+            .mapLeft(::toCreateError)
+            .bind()
+
+        repository
+            .createOperation(
+                userWalletId = userWalletId,
+                safeAddress = prepared.safeAddress,
+                chainId = prepared.chainId,
+                safeTx = prepared.safeTx,
+                signature = signature,
             )
-        }
+            .bind()
     }
 
     /** Only the two known transfer shapes exist, and the Safe never calls itself */
@@ -234,6 +237,13 @@ class CreateJointOperationUseCase(
             cause = IllegalStateException("The owner key of the account is not derived"),
         )
         is JointOperationSigningError.Failed -> JointOperationCreateError.Failed(cause = error.cause)
+    }
+
+    sealed interface SubmitResult {
+
+        data object Created : SubmitResult
+
+        data class Rebuilt(val prepared: PreparedJointOperation.Creation) : SubmitResult
     }
 
     private companion object {

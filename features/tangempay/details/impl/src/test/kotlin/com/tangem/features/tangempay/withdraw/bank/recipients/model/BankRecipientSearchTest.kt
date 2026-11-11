@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.recipients.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance

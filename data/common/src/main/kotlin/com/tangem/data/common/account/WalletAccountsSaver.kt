@@ -27,4 +27,6 @@ interface WalletAccountsSaver {
     /** Push wallet accounts [accounts] by [userWalletId] */
     @Throws
     suspend fun push(userWalletId: UserWalletId, accounts: List<WalletAccountDTO>): GetWalletAccountsResponse?
+
+    suspend fun syncTokens(userWalletId: UserWalletId)
 }

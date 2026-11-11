@@ -25,6 +25,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import io.mockk.mockk
 import io.mockk.verify
 import com.tangem.test.core.ProvideTestModels
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PolymarketPositionUMConverterTest {
@@ -96,6 +97,28 @@ internal class PolymarketPositionUMConverterTest {
         )
     }
 
+    @Test
+    fun `GIVEN active lost position with zero current value WHEN converted THEN badge shows lifetime loss`() {
+        // Arrange
+        val position = createPolymarketPosition(
+            result = PolymarketPositionResult.LOST,
+            currentValue = BigDecimal.ZERO,
+            cashPnl = BigDecimal("-10"),
+            realizedPnl = BigDecimal("2"),
+        )
+
+        // Act
+        val actual = converter.convert(position)
+
+        // Assert
+        assertThat(actual.result?.text).isEqualTo(
+            resourceReference(
+                R.string.prediction_positions_result_amount,
+                wrappedList(resourceReference(R.string.prediction_positions_lost), "$8.00"),
+            ),
+        )
+    }
+
     private fun provideTestModels() = listOf(
         ResultModel(
             PolymarketPositionResult.WON,
@@ -115,7 +138,7 @@ internal class PolymarketPositionUMConverterTest {
             TangemBadgeUM(
                 text = resourceReference(
                     R.string.prediction_positions_result_amount,
-                    wrappedList(resourceReference(R.string.prediction_positions_lost), "$9.97"),
+                    wrappedList(resourceReference(R.string.prediction_positions_lost), "$11.97"),
                 ),
                 status = TangemBadge.Status.Error,
                 size = TangemBadge.Size.X6,

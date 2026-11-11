@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
-import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 
@@ -65,7 +65,7 @@ internal class BankWithdrawAnalytics(
         val method = when (destination?.rail) {
             BankRail.ACH -> MoneyAccountAnalyticsEvents.SendMethod.BANK_TRANSFER_ACH
             BankRail.WIRE -> MoneyAccountAnalyticsEvents.SendMethod.BANK_TRANSFER_WIRE
-            null -> return null
+            BankRail.SPEI, null -> return null
         }
         return MoneyAccountAnalyticsEvents.SendConfirmed(amountUsdc = amount, method = method)
     }

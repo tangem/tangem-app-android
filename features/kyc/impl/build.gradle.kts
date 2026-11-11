@@ -16,8 +16,8 @@ dependencies {
     api(projects.features.kyc.api)
 
     /** Domain */
-    api(projects.domain.visa)
-    api(projects.domain.visa.models)
+    api(projects.domain.tangempay)
+    api(projects.domain.tangempay.models)
     implementation(projects.domain.models)
 
     /** Core modules */

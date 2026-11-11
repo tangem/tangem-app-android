@@ -29,7 +29,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.userwallet.CardImage
-import com.tangem.common.ui.userwallet.SocialLoginWalletIcon
 import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.SpacerH8
@@ -111,6 +110,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
             val offsetModifier = when (item) {
                 is WalletSettingsAccountsUM.Account,
                 is WalletSettingsAccountsUM.JointAccount,
+                is WalletSettingsAccountsUM.CollectiblesAccount,
                 is WalletSettingsAccountsUM.Footer,
                 -> Modifier.padding(horizontal = 16.dp)
                 else -> Modifier.padding(
@@ -155,6 +155,13 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     modifier = itemModifier,
                 )
                 is WalletSettingsAccountsUM.JointAccount -> ReorderableAccountItem(
+                    id = item.id,
+                    accountState = item.state,
+                    reorderableListState = reorderableListState,
+                    accountReorderUM = state.accountReorderUM,
+                    modifier = itemModifier,
+                )
+                is WalletSettingsAccountsUM.CollectiblesAccount -> ReorderableAccountItem(
                     id = item.id,
                     accountState = item.state,
                     reorderableListState = reorderableListState,
@@ -230,20 +237,13 @@ private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier 
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(
-                            modifier = Modifier.weight(weight = 1f, fill = false),
-                            text = model.text.resolveReference(),
-                            color = TangemTheme.colors3.text.primary,
-                            style = TangemTheme.typography3.body.medium,
-                            overflow = TextOverflow.Ellipsis,
-                            maxLines = 1,
-                        )
-                        if (model.isSocialLogin) SocialLoginWalletIcon()
-                    }
+                    Text(
+                        text = model.text.resolveReference(),
+                        color = TangemTheme.colors3.text.primary,
+                        style = TangemTheme.typography3.body.medium,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                    )
                 }
                 SecondarySmallButton(
                     modifier = Modifier.testTag(WalletSettingsScreenTestTags.RENAME_BUTTON),

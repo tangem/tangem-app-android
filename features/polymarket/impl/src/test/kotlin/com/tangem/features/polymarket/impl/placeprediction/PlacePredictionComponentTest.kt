@@ -29,6 +29,7 @@ import com.tangem.features.polymarket.impl.placeprediction.model.PlacePrediction
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryModel
 import com.tangem.features.polymarket.impl.placeprediction.model.QUOTE_DEBOUNCE_MILLIS
 import com.tangem.features.polymarket.impl.placeprediction.model.QUOTE_POLL_INTERVAL_MILLIS
+import com.tangem.features.polymarket.impl.placeprediction.model.tapPlace
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import dagger.hilt.EntryPoints
 import io.mockk.clearMocks
@@ -132,7 +133,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         val summary = models.filterIsInstance<PlacePredictionSummaryModel>().single()
 
         // Act
-        summary.onPlaceClick()
+        summary.tapPlace()
         runCurrent()
         val status = models.filterIsInstance<PlacePredictionStatusModel>().single()
         assertThat(status.viewPosition.value).isEqualTo(ViewPositionUM.Awaiting)
@@ -165,7 +166,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
         amount.onNextClick()
         val summary = models.filterIsInstance<PlacePredictionSummaryModel>().single()
-        summary.onPlaceClick()
+        summary.tapPlace()
         runCurrent()
 
         // Act
@@ -220,7 +221,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         val order = models.filterIsInstance<PlacePredictionOrderModel>().single()
         order.onAmountChange("10")
         advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
-        order.onPlaceClick()
+        order.tapPlace()
         runCurrent()
 
         // Act
@@ -250,7 +251,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
             val order = models.filterIsInstance<PlacePredictionOrderModel>().single()
             order.onAmountChange("10")
             advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
-            order.onPlaceClick()
+            order.tapPlace()
             runCurrent()
             clearMocks(getQuoteUseCase, getPriceUseCase, answers = false)
 
@@ -294,7 +295,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
 
         // Act
-        order.onPlaceClick()
+        order.tapPlace()
         runCurrent()
         advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
 

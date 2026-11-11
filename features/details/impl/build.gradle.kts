@@ -18,7 +18,6 @@ dependencies {
     api(projects.features.wallet.api)
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.mcp.api)
-    implementation(projects.features.tangempay.details.api)
 
     /* Project - Core */
     api(projects.core.analytics)
@@ -35,14 +34,12 @@ dependencies {
     /* Project - Domain */
     api(projects.domain.card)
     api(projects.domain.feedback)
-    api(projects.domain.settings)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.walletConnect)
     api(projects.domain.wallets)
     implementation(projects.domain.common)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
-    implementation(projects.domain.wallets.models)
     runtimeOnly(projects.domain.appCurrency)
     runtimeOnly(projects.domain.balanceHiding)
     runtimeOnly(projects.domain.tokens)

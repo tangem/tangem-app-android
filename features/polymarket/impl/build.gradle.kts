@@ -16,9 +16,11 @@ dependencies {
     implementation(projects.features.polymarket.api)
     api(projects.features.commonFeatures.api)
     implementation(projects.features.tokenRecieve.api)
+    implementation(projects.features.wallet.api)
 
     /** Common */
     implementation(projects.common.ui)
+    implementation(projects.common.uiCharts)
     implementation(projects.common.routing)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
@@ -42,6 +44,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.stories)
     implementation(projects.domain.stories.models)
+    implementation(projects.domain.wallets)
 
     /** Kotlin */
     implementation(deps.jodatime)
@@ -54,6 +57,8 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(tangemDeps.vico.core)
+    implementation(tangemDeps.vico.compose)
 
     /** Decompose */
     implementation(deps.decompose)

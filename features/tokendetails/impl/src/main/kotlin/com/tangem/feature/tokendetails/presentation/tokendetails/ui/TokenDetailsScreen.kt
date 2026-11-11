@@ -21,8 +21,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.earn.EarnBlock
 import com.tangem.common.ui.earn.EarnBlockUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.common.ui.notifications.notifications
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
@@ -47,8 +45,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.ZeroBalanceActionsBlock
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
-import com.tangem.features.rating.RatingComponent
-import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.txhistory.component.JointCosignRequestsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.JointCosignRequestsUM
@@ -56,7 +52,6 @@ import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,13 +69,10 @@ internal fun TokenDetailsScreen(
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
     yieldSupplyComponent: YieldSupplyComponent,
     txHistoryComponent: TxHistoryComponent,
-    expressTransactionsComponent: ExpressTransactionsComponent,
     jointCosignRequestsComponent: JointCosignRequestsComponent,
-    ratingComponent: RatingComponent?,
     marketingBannerComponent: MarketingBannerComponent,
     modifier: Modifier = Modifier,
 ) {
-    val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
     val jointCosignRequestsState by jointCosignRequestsComponent.state.collectAsStateWithLifecycle()
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
     val topBarTotalHeight = TopBarHeight + statusBarHeight
@@ -112,8 +104,6 @@ internal fun TokenDetailsScreen(
                     tokenDetailsUM = tokenDetailsUM,
                     yieldSupplyComponent = yieldSupplyComponent,
                     txHistoryComponent = txHistoryComponent,
-                    expressTransactionsComponent = expressTransactionsComponent,
-                    expressTransactionsToDisplay = expressState.transactionsToDisplay,
                     jointCosignRequestsComponent = jointCosignRequestsComponent,
                     jointCosignRequestsState = jointCosignRequestsState,
                     marketingBannerComponent = marketingBannerComponent,
@@ -133,10 +123,6 @@ internal fun TokenDetailsScreen(
                     onHeightChange = { marketBlockHeight = it },
                 )
             }
-
-            expressState.bottomSheetSlot?.content(
-                ratingComponent?.let { comp -> { comp.Content(modifier = Modifier.fillMaxWidth()) } },
-            )
         }
     }
 }
@@ -180,8 +166,6 @@ private fun TokenDetailsBody(
     tokenDetailsUM: TokenDetailsUM,
     yieldSupplyComponent: YieldSupplyComponent,
     txHistoryComponent: TxHistoryComponent,
-    expressTransactionsComponent: ExpressTransactionsComponent,
-    expressTransactionsToDisplay: PersistentList<ExpressTransactionStateUM>,
     jointCosignRequestsComponent: JointCosignRequestsComponent,
     jointCosignRequestsState: JointCosignRequestsUM,
     marketingBannerComponent: MarketingBannerComponent,
@@ -196,10 +180,6 @@ private fun TokenDetailsBody(
     val itemModifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = 16.dp)
-
-    val expressTransactionModifier = Modifier
-        .fillMaxWidth()
-        .padding(start = 16.dp, end = 16.dp, top = 16.dp)
 
     LazyColumn(
         modifier = modifier
@@ -266,12 +246,6 @@ private fun TokenDetailsBody(
                     modifier = itemModifier.padding(vertical = 8.dp),
                 )
             }
-        }
-        with(expressTransactionsComponent) {
-            expressTransactionsContent(
-                state = expressTransactionsToDisplay,
-                modifier = expressTransactionModifier,
-            )
         }
         with(jointCosignRequestsComponent) {
             jointCosignRequestsContent(state = jointCosignRequestsState)
@@ -345,9 +319,7 @@ private fun TokenDetailsScreen_Preview() {
                 @Composable
                 override fun Content(modifier: Modifier) = Unit
             },
-            expressTransactionsComponent = PreviewExpressTransactionsComponent,
             jointCosignRequestsComponent = PreviewJointCosignRequestsComponent,
-            ratingComponent = null,
             marketingBannerComponent = object : MarketingBannerComponent {
                 @Composable
                 override fun Content(modifier: Modifier) = Unit
@@ -370,20 +342,5 @@ private val PreviewJointCosignRequestsComponent = object : JointCosignRequestsCo
 
     @Composable
     override fun Content(modifier: Modifier) = Unit
-}
-
-private val PreviewExpressTransactionsComponent = object : ExpressTransactionsComponent {
-    override val state: StateFlow<ExpressTransactionsBlockState> = MutableStateFlow(
-        ExpressTransactionsBlockState(
-            transactions = persistentListOf(),
-            transactionsToDisplay = persistentListOf(),
-            bottomSheetSlot = null,
-        ),
-    )
-
-    override fun LazyListScope.expressTransactionsContent(
-        state: PersistentList<ExpressTransactionStateUM>,
-        modifier: Modifier,
-    ) = Unit
 }
 // endregion Preview

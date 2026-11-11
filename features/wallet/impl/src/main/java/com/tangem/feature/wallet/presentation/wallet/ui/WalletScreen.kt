@@ -9,6 +9,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
@@ -28,6 +30,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -69,8 +72,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
-import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockComponent
-import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
@@ -94,7 +95,6 @@ internal fun WalletScreen(
     tangemPayComponent: TangemPayMainBlockComponent,
     moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
-    collectiblesComponent: CollectiblesWalletBlockComponent,
     modifier: Modifier = Modifier,
     @RemoveWithToggle("AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED")
     isRedesignedAccountRowsEnabled: Boolean = false,
@@ -148,7 +148,6 @@ internal fun WalletScreen(
         promoBannersBlockComponent = promoBannersBlockComponent,
         moneyAccountComponent = moneyAccountComponent,
         polymarketComponent = polymarketComponent,
-        collectiblesComponent = collectiblesComponent,
         behavior = behavior,
         isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
         isShtorkaBlurEnabled = isShtorkaBlurEnabled,
@@ -181,7 +180,6 @@ private fun WalletContent(
     tangemPayComponent: TangemPayMainBlockComponent,
     moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
-    collectiblesComponent: CollectiblesWalletBlockComponent,
     behavior: TangemCollapsingAppBarBehavior,
     listStates: ImmutableMap<Int, LazyListState>,
     modifier: Modifier = Modifier,
@@ -383,8 +381,9 @@ private fun WalletContent(
                                         walletId = currentWalletId,
                                         moneyAccountComponent = moneyAccountComponent,
                                         polymarketComponent = polymarketComponent,
-                                        collectiblesComponent = collectiblesComponent,
-                                        onOrganizeButtonBoundsChange = remember(currentWalletIndex) {
+                                        onOrganizeButtonBoundsChange = remember(
+                                            currentWalletIndex,
+                                        ) {
                                             { bounds ->
                                                 if (bounds != null) {
                                                     organizeButtonBounds[currentWalletIndex] = bounds
@@ -523,7 +522,19 @@ private fun ShtorkaScaffoldWithMarkets(
             }
         }
 
-        Box(modifier = modifier.fillMaxSize()) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .pointerInput(shtorkaState) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        val isHalfOpen = shtorkaState.targetDetent == ShtorkaSemiOpenDetent
+                        if (isHalfOpen && down.position.y < sheetHandle.topOffset()) {
+                            shtorkaState.animateTo(ShtorkaCollapsedDetent)
+                        }
+                    }
+                },
+        ) {
             content(contentPadding, sheetHandle)
             appBarContent()
 
@@ -673,14 +684,6 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
             polymarketComponent = object : PolymarketWalletBlockComponent {
                 override fun LazyListScope.polymarketWalletBlockContent(
                     state: PolymarketWalletBlockUM,
-                    isBalanceHidden: Boolean,
-                    modifier: Modifier,
-                ) {
-                }
-            },
-            collectiblesComponent = object : CollectiblesWalletBlockComponent {
-                override fun LazyListScope.collectiblesWalletBlockContent(
-                    state: CollectiblesWalletBlockUM,
                     isBalanceHidden: Boolean,
                     modifier: Modifier,
                 ) {

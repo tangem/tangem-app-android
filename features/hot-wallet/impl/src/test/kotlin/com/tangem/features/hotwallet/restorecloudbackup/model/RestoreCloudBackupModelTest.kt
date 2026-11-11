@@ -4,12 +4,14 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.cloudbackup.usecase.GetBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.models.CloudBackupError
@@ -18,7 +20,11 @@ import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
@@ -26,7 +32,9 @@ import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
 import com.tangem.domain.cloudbackup.restore.CloudRestoreResultHolder
 import com.tangem.features.hotwallet.restorecloudbackup.RestoreCloudBackupComponent
 import com.tangem.features.hotwallet.restorecloudbackup.entity.RestoreCloudBackupUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -34,11 +42,15 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class RestoreCloudBackupModelTest {
@@ -55,6 +67,11 @@ internal class RestoreCloudBackupModelTest {
     private val callbacks: RestoreCloudBackupComponent.ModelCallbacks = mockk(relaxed = true)
     private var model: RestoreCloudBackupModel? = null
     private val paramsContainer: ParamsContainer = mockk()
+    private val userWallets = MutableStateFlow<List<UserWallet>?>(emptyList())
+    private val userWalletsListRepository: UserWalletsListRepository = mockk {
+        every { this@mockk.userWallets } returns this@RestoreCloudBackupModelTest.userWallets
+    }
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
 
     private val walletId = UserWalletId("011")
     private val mnemonic: Mnemonic = mockk()
@@ -76,6 +93,8 @@ internal class RestoreCloudBackupModelTest {
 
     @BeforeEach
     fun setUp() {
+        userWallets.value = emptyList()
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
         every { paramsContainer.require<RestoreCloudBackupComponent.Params>() } returns
             RestoreCloudBackupComponent.Params(callbacks)
     }
@@ -188,7 +207,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN correct password WHEN restore clicked THEN import invoked with backed-up words`() = runTest {
         // Arrange
         val words = (1..MNEMONIC_WORDS).joinToString(separator = " ") { "word$it" }
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
             restoredBackup(mnemonic = words).right()
         val capturedMnemonicString = slot<String>()
         every { mnemonicRepository.generateMnemonic(capture(capturedMnemonicString)) } returns mnemonic
@@ -209,16 +228,64 @@ internal class RestoreCloudBackupModelTest {
         coVerify(exactly = 1) {
             hotWalletImporter.import(any(), mnemonic, null, "My Wallet", isSeedPhraseBackedUp = false)
         }
-        coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true) }
+        coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true, accountName = ACCOUNT_EMAIL) }
         verify(exactly = 1) { callbacks.onWalletImported(walletId) }
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<NoticeMobileWalletLimit>()) }
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN backups listed in an account WHEN restore clicked THEN the backup is read in that account`() = runTest {
+        // Arrange
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
+            CloudBackupError.WrongPassword.left()
+        val model = createModel(this, holderOf(backupInfo, accountEmail = OTHER_ACCOUNT_EMAIL))
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+        (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            restoreCloudBackupUseCase(fileId = backupInfo.fileId, password = any(), accountName = OTHER_ACCOUNT_EMAIL)
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN multiple hot wallets disabled WHEN restored THEN no account is passed to the read and the state`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
+                restoredBackup(mnemonic = "word1 word2").right()
+            every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
+            coEvery {
+                hotWalletImporter.import(any(), mnemonic, null, "My Wallet", isSeedPhraseBackedUp = false)
+            } returns walletId.right()
+            val model = createModel(this, holderOf(backupInfo, accountEmail = OTHER_ACCOUNT_EMAIL))
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                restoreCloudBackupUseCase(fileId = backupInfo.fileId, password = any(), accountName = null)
+            }
+            coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true, accountName = null) }
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN cloud restore WHEN wallet imported THEN seed phrase is not marked as backed up`() = runTest {
         // Arrange
         val capturedBackedUp = slot<Boolean>()
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
             restoredBackup(mnemonic = "word1 word2").right()
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
         coEvery {
@@ -243,7 +310,7 @@ internal class RestoreCloudBackupModelTest {
         runTest {
             // Arrange
             val fullName = "Wallet with a very long name"
-            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
                 restoredBackup(mnemonic = "word1 word2", walletName = fullName).right()
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
             coEvery {
@@ -269,7 +336,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN passphraseRequired backup WHEN password entered THEN passphrase screen shown AND import waits`() =
         runTest {
             // Arrange
-            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
                 restoredBackup(mnemonic = "word1 word2", isPassphraseRequired = true).right()
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
 
@@ -291,7 +358,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN passphrase screen WHEN back THEN the restored mnemonic is wiped`() = runTest {
         // Arrange
         val mnemonicChars = "word1 word2".toCharArray()
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
             RestoredCloudBackup(
                 walletName = "My Wallet",
                 secret = CloudBackupSecretData(mnemonic = mnemonicChars, isPassphraseRequired = true),
@@ -315,7 +382,7 @@ internal class RestoreCloudBackupModelTest {
     @Test
     fun `GIVEN passphrase screen WHEN passphrase entered THEN import invoked with that passphrase`() = runTest {
         // Arrange
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
             restoredBackup(mnemonic = "word1 word2", isPassphraseRequired = true).right()
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
         val capturedPassphrase = slot<CharArray>()
@@ -350,7 +417,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN wallet already added WHEN restore clicked THEN already-added dialog shown AND no import callback`() =
         runTest {
             // Arrange
-            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
                 restoredBackup(mnemonic = "word1 word2").right()
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
             coEvery {
@@ -372,6 +439,44 @@ internal class RestoreCloudBackupModelTest {
                 .isEqualTo(resourceReference(R.string.user_wallet_list_error_wallet_already_saved))
             assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
             verify(exactly = 0) { callbacks.onWalletImported(any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<NoticeMobileWalletLimit>()) }
+            coVerify(exactly = 0) { setCloudBackupStateUseCase(any(), any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN hot wallets limit reached WHEN restore clicked THEN limit reported AND dialog shown AND no import`() =
+        runTest {
+            // Arrange
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
+                restoredBackup(mnemonic = "word1 word2").right()
+            every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
+            coEvery {
+                hotWalletImporter.import(any(), mnemonic, null, "My Wallet", isSeedPhraseBackedUp = false)
+            } returns HotWalletImportError.LimitReached.left()
+
+            val model = createModel(this, holderOf(backupInfo))
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+            advanceUntilIdle()
+
+            // Assert
+            val dialog = slot<DialogMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(dialog)) }
+            assertThat(dialog.captured.message).isEqualTo(Dialogs.hotWalletsLimitReachedDialog().message)
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    NoticeMobileWalletLimit(
+                        type = NoticeMobileWalletLimit.Type.Import,
+                        limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                    ),
+                )
+            }
+            assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
+            verify(exactly = 0) { callbacks.onWalletImported(any()) }
             coVerify(exactly = 0) { setCloudBackupStateUseCase(any(), any()) }
             model.onDestroy()
         }
@@ -380,7 +485,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN wrong password WHEN restore clicked THEN state stays EnterPassword with error AND no import`() =
         runTest {
             // Arrange
-            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.WrongPassword.left()
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.WrongPassword.left()
 
             val model = createModel(this, holderOf(backupInfo))
             advanceUntilIdle()
@@ -402,7 +507,7 @@ internal class RestoreCloudBackupModelTest {
     @Test
     fun `GIVEN download fails WHEN restore clicked THEN error dialog shown AND stays on EnterPassword`() = runTest {
         // Arrange
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.ReadError().left()
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.ReadError().left()
 
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
@@ -422,7 +527,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN no network WHEN restore clicked THEN dialog explains the connection AND stays on EnterPassword`() =
         runTest {
             // Arrange
-            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.NetworkError.left()
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.NetworkError.left()
 
             val model = createModel(this, holderOf(backupInfo))
             advanceUntilIdle()
@@ -444,7 +549,7 @@ internal class RestoreCloudBackupModelTest {
     @Test
     fun `GIVEN malformed backup WHEN restore clicked THEN error dialog shown AND stays on EnterPassword`() = runTest {
         // Arrange
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.InvalidBackupFile.left()
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.InvalidBackupFile.left()
 
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
@@ -458,6 +563,219 @@ internal class RestoreCloudBackupModelTest {
         verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
         assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
         model.onDestroy()
+    }
+
+    @Nested
+    inner class AlreadyAddedBackups {
+
+        @Test
+        fun `GIVEN one of two backups is in the app WHEN model created THEN list marks only that one`() = runTest {
+            // Arrange
+            userWallets.value = listOf(walletInApp(id = "012"))
+
+            // Act
+            val model = createModel(this, holderOf(backupInfo, secondBackupInfo))
+            advanceUntilIdle()
+
+            // Assert
+            val list = model.uiState.value as RestoreCloudBackupUM.BackupList
+            assertThat(list.items.map { it.walletName to it.isAlreadyAdded })
+                .containsExactly("Savings" to true, "My Wallet" to false)
+                .inOrder()
+            assertThat(list.areAllAdded).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN added backup row WHEN clicked THEN password step is not opened`() = runTest {
+            // Arrange
+            userWallets.value = listOf(walletInApp(id = "012"))
+            val model = createModel(this, holderOf(backupInfo, secondBackupInfo))
+            advanceUntilIdle()
+            val list = model.uiState.value as RestoreCloudBackupUM.BackupList
+
+            // Act
+            list.items.first { it.isAlreadyAdded }.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isEqualTo(list)
+            verify(exactly = 0) {
+                analyticsEventHandler.send(match<OnboardingAnalyticsEvent.Backup.EnterCloudBackupPasswordScreen> { true })
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the only backup is in the app WHEN model created THEN list with the mark is shown`() = runTest {
+            // Arrange
+            userWallets.value = listOf(walletInApp(id = "011"))
+
+            // Act
+            val model = createModel(this, holderOf(backupInfo))
+            advanceUntilIdle()
+
+            // Assert
+            val list = model.uiState.value as RestoreCloudBackupUM.BackupList
+            assertThat(list.items.map { it.isAlreadyAdded }).containsExactly(true)
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    OnboardingAnalyticsEvent.Backup.SelectCloudBackupScreen(backupCount = 1),
+                )
+            }
+            verify(exactly = 0) { callbacks.onBack() }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN all backups are in the app WHEN model created THEN every row is marked and count is total`() =
+            runTest {
+                // Arrange
+                userWallets.value = listOf(walletInApp(id = "011"), walletInApp(id = "012"))
+
+                // Act
+                val model = createModel(this, holderOf(backupInfo, secondBackupInfo))
+                advanceUntilIdle()
+
+                // Assert
+                val list = model.uiState.value as RestoreCloudBackupUM.BackupList
+                assertThat(list.items.map { it.isAlreadyAdded }).containsExactly(true, true)
+                assertThat(list.areAllAdded).isTrue()
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        OnboardingAnalyticsEvent.Backup.SelectCloudBackupScreen(backupCount = 2),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN single backup not in the app WHEN model created THEN password step opens directly`() = runTest {
+            // Arrange
+            userWallets.value = listOf(walletInApp(id = "999"))
+
+            // Act
+            val model = createModel(this, holderOf(backupInfo))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN legacy backup without walletId WHEN model created THEN it is not treated as added`() = runTest {
+            // Arrange
+            userWallets.value = listOf(walletInApp(id = "011"))
+            val legacyBackup = backupInfo.copy(walletId = null)
+
+            // Act
+            val model = createModel(this, holderOf(legacyBackup))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN toggle off AND the only backup is in the app WHEN model created THEN password step opens`() =
+            runTest {
+                // Arrange
+                every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+                userWallets.value = listOf(walletInApp(id = "011"))
+
+                // Act
+                val model = createModel(this, holderOf(backupInfo))
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN toggle off AND backups are in the app WHEN model created THEN no row is marked`() = runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+            userWallets.value = listOf(walletInApp(id = "011"), walletInApp(id = "012"))
+
+            // Act
+            val model = createModel(this, holderOf(backupInfo, secondBackupInfo))
+            advanceUntilIdle()
+
+            // Assert
+            val list = model.uiState.value as RestoreCloudBackupUM.BackupList
+            assertThat(list.items.map { it.isAlreadyAdded }).containsExactly(false, false)
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AnalyticsSource {
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(hotWalletImporter, restoreCloudBackupUseCase, mnemonicRepository, callbacks)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN params with a source WHEN restore clicked THEN the import reports that source`(
+            model: SourceModel,
+        ) = runTest {
+            // Arrange
+            every { paramsContainer.require<RestoreCloudBackupComponent.Params>() } returns model.params(callbacks)
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
+                restoredBackup(mnemonic = "word1 word2").right()
+            every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
+            coEvery {
+                hotWalletImporter.import(any(), any(), any(), any(), any(), any(), any())
+            } returns walletId.right()
+            val restoreModel = createModel(this, holderOf(backupInfo))
+            advanceUntilIdle()
+
+            // Act
+            (restoreModel.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+            (restoreModel.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                hotWalletImporter.import(
+                    scope = any(),
+                    mnemonic = mnemonic,
+                    passphrase = null,
+                    name = "My Wallet",
+                    isSeedPhraseBackedUp = false,
+                    creationType = any(),
+                    analyticsSource = model.expectedSource,
+                )
+            }
+            restoreModel.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            SourceModel(
+                name = "default source",
+                params = { RestoreCloudBackupComponent.Params(it) },
+                expectedSource = AnalyticsParam.ScreensSources.ImportWallet,
+            ),
+            SourceModel(
+                name = "add new wallet source",
+                params = { RestoreCloudBackupComponent.Params(it, AnalyticsParam.ScreensSources.AddNewWallet) },
+                expectedSource = AnalyticsParam.ScreensSources.AddNewWallet,
+            ),
+        )
+    }
+
+    internal data class SourceModel(
+        val name: String,
+        val params: (RestoreCloudBackupComponent.ModelCallbacks) -> RestoreCloudBackupComponent.Params,
+        val expectedSource: AnalyticsParam.ScreensSources,
+    ) {
+        override fun toString(): String = name
     }
 
     private fun restoredBackup(
@@ -484,18 +802,22 @@ internal class RestoreCloudBackupModelTest {
             cloudRestoreResultHolder = holder,
             restoreCloudBackupUseCase = restoreCloudBackupUseCase,
             setCloudBackupStateUseCase = setCloudBackupStateUseCase,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
             mnemonicRepository = mnemonicRepository,
             hotWalletImporter = hotWalletImporter,
             uiMessageSender = uiMessageSender,
             analyticsEventHandler = analyticsEventHandler,
             getBackupPasswordUseCase = getBackupPasswordUseCase,
+            userWalletsListRepository = userWalletsListRepository,
         )
     }
+
+    private fun walletInApp(id: String): UserWallet = mockk { every { walletId } returns UserWalletId(id) }
 
     @Test
     fun `GIVEN wrong password WHEN restore clicked THEN wrong password event sent`() = runTest {
         // Arrange
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.WrongPassword.left()
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.WrongPassword.left()
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
 
@@ -514,7 +836,7 @@ internal class RestoreCloudBackupModelTest {
     @Test
     fun `GIVEN download fails WHEN restore clicked THEN import error event sent with message`() = runTest {
         // Arrange
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.ReadError().left()
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.ReadError().left()
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
 
@@ -549,5 +871,6 @@ internal class RestoreCloudBackupModelTest {
         const val PASSWORD = "Str0ng!Pass"
         const val MNEMONIC_WORDS = 12
         const val ACCOUNT_EMAIL = "user@gmail.com"
+        const val OTHER_ACCOUNT_EMAIL = "other@gmail.com"
     }
 }

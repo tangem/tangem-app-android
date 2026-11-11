@@ -51,7 +51,6 @@ import com.tangem.features.send.api.subcomponents.notifications.SendNotification
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
-import com.tangem.features.swap.v2.api.SwapV2FeatureToggles
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
@@ -60,6 +59,7 @@ import com.tangem.features.swap.v2.impl.amount.model.SwapAmountQuoteUtils
 import com.tangem.features.swap.v2.impl.common.ConfirmData
 import com.tangem.features.swap.v2.impl.common.SwapAlertFactory
 import com.tangem.features.swap.v2.impl.common.SwapUtils.INCREASE_GAS_LIMIT_FOR_CEX
+import com.tangem.features.swap.v2.impl.common.resolveAmountErrorCurrency
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent.Params.SwapNotificationData
@@ -109,7 +109,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val swapAlertFactory: SwapAlertFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appScope: AppCoroutineScope,
-    private val swapV2FeatureToggles: SwapV2FeatureToggles,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
 ) : Model(), FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
@@ -350,10 +349,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 confirmData = confirmData,
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 onExpressError = { expressError ->
-                    val isHideRejectedProviderEnabled = swapV2FeatureToggles.isHideRejectedCexProviderEnabled
-                    if (isHideRejectedProviderEnabled) {
-                        hideProviderIfRejected(provider = provider, error = expressError)
-                    }
+                    hideProviderIfRejected(provider = provider, error = expressError)
                     uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
                     val fromCurrency = confirmData.fromCryptoCurrencyStatus?.currency
                     val toCurrency = confirmData.toCryptoCurrencyStatus?.currency
@@ -366,9 +362,16 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                             ),
                         )
                     }
+                    val amountCurrency = if (fromCurrency != null && toCurrency != null) {
+                        resolveAmountErrorCurrency(fromCurrency, toCurrency, confirmData.amountType)
+                    } else {
+                        null
+                    }
                     swapAlertFactory.getGenericErrorState(
                         expressError = expressError,
-                        providerName = provider.name.takeIf { isHideRejectedProviderEnabled },
+                        isSwapAttemptAlert = true,
+                        providerName = provider.name,
+                        amountCurrency = amountCurrency,
                         onFailedTxEmailClick = {
                             modelScope.launch {
                                 swapAlertFactory.onFailedTxEmailClick(

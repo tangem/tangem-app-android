@@ -3,21 +3,19 @@ package com.tangem.features.tangempay.withdraw.bank.recipients.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
-import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.domain.pay.model.bankofframp.BankOfframpError
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
-import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
@@ -34,17 +32,14 @@ import kotlinx.coroutines.CompletableDeferred
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class TangemPayBankWithdrawRecipientsModelTest {
+internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("011")
     private val paymentAccount = BankWithdrawSourceAccount.Payment(userWalletId)
     private val moneyAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1")
-    private val router: Router = mockk(relaxed = true)
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
     private val onRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val basit = bankAccount(

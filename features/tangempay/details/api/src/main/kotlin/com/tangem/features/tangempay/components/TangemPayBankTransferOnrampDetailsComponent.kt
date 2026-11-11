@@ -3,14 +3,14 @@ package com.tangem.features.tangempay.components
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 
 interface TangemPayBankTransferOnrampDetailsComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
-        val bankCredentials: BankCredentials,
+        val bankCredentials: List<BankCredentials>,
         val feeSource: FeeSource,
         val analytics: Analytics,
     )
@@ -29,6 +29,8 @@ interface TangemPayBankTransferOnrampDetailsComponent : ComposableContentCompone
     enum class RequisiteField {
         ACCOUNT_NUMBER,
         ROUTING_NUMBER,
+        CLABE,
+        REFERENCE,
         BENEFICIARY_NAME,
         BENEFICIARY_ADDRESS,
         BANK_NAME,

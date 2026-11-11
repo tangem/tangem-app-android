@@ -47,7 +47,7 @@ import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 
 /**
  * A joint account on the wallet screen: its lifecycle state comes from the joint accounts the wallet participates
@@ -227,7 +227,6 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
                     PredictionAccountStatusValue.NotOnboarded,
                 )
             },
-            polymarketFeatureToggles = mockk { every { this@mockk.isPolymarketEnabled } returns false },
             // the toggle is off, so the supplier is never invoked
             collectiblesAccountStatusSupplier = mockk(),
             collectiblesFeatureToggles = mockk { every { isCollectiblesEnabled } returns false },
@@ -242,6 +241,7 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
                 )
             },
             balanceContributionProviders = emptySet(),
+            tokensFeatureToggles = mockk { every { isYieldContributionEnabled } returns false },
         )
     }
 

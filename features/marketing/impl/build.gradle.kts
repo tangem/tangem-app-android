@@ -14,7 +14,6 @@ android {
 dependencies {
     /** Project - API */
     implementation(projects.features.marketing.api)
-    implementation(projects.features.usedesk.api)
 
     /** Domain */
     implementation(projects.domain.marketing)
@@ -26,6 +25,8 @@ dependencies {
     implementation(projects.common.routing)
 
     /** Core */
+    implementation(projects.common)
+    implementation(projects.common.routing)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)

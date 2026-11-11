@@ -16,6 +16,7 @@ internal class SetNothingToFoundStateTransformer(
         return prevState.copy(
             availableItems = persistentListOf(),
             unavailableItems = persistentListOf(),
+            groups = persistentListOf(),
             tokensListData = TokenListUMData.TokenList(
                 tokensList = persistentListOf(
                     TokensListItemUM.Text(

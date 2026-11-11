@@ -13,11 +13,14 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketPriceHistoryUseCase
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.R
 import com.tangem.features.polymarket.impl.common.PolymarketUrlBuilder
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
+import com.tangem.features.polymarket.impl.details.model.chart.PolymarketEventChartController
 import com.tangem.features.polymarket.impl.details.model.transformer.PolymarketEventDetailsContentTransformer
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -25,13 +28,14 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.time.CurrentTimeProvider
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Model of the event-details screen: loads the event with all of its markets, keeps it fresh while the screen
@@ -52,6 +56,9 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val regionAccess: PredictionRegionAccess,
     private val urlOpener: UrlOpener,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
+    getPriceHistoryUseCase: GetPolymarketPriceHistoryUseCase,
+    currentTimeProvider: CurrentTimeProvider,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketEventDetailsComponent.Params>()
@@ -68,9 +75,19 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     private val loadJob = JobHolder()
     private val pollJob = JobHolder()
 
+    private val chartController = PolymarketEventChartController(
+        scope = modelScope,
+        getHistory = getPriceHistoryUseCase,
+        currentTimeProvider = currentTimeProvider,
+        isEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
+    )
+    val chartState = chartController.state
+
     init {
         load()
     }
+
+    fun onChartPeriodChange(id: String) = chartController.selectPeriod(id)
 
     fun onBackClick() {
         router.pop()
@@ -78,12 +95,14 @@ internal class PolymarketEventDetailsModel @Inject constructor(
 
     fun onResume() {
         isResumed = true
+        chartController.onResume()
         if (uiState.value is PolymarketEventDetailsUM.Content) startPolling(refreshNow = true)
     }
 
     fun onPause() {
         isResumed = false
         pollJob.cancel()
+        chartController.onPause()
     }
 
     private fun load() {
@@ -117,6 +136,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
             ifLeft = { error ->
                 TangemLogger.e("Event details: refresh of ${params.eventId} failed, keeping the last data: $error")
                 reportStaleDataOnce()
+                chartController.onRefreshFailed()
             },
             ifRight = { loaded ->
                 isStaleDataReported = false
@@ -141,6 +161,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
 
     private fun showEvent(loaded: PolymarketEvent) {
         event = loaded
+        chartController.update(loaded)
         refreshContent()
     }
 
@@ -152,6 +173,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
             isDescriptionExpanded = isDescriptionExpanded,
             onShareClick = ::onShareClick,
             onOutcomeClick = ::onOutcomeClick,
+            isTeamAbbreviationEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
             onClosedMarketsClick = ::onClosedMarketsClick,
             onReadMoreClick = ::onReadMoreClick,
             onResolutionSourceClick = urlOpener::openUrl,

@@ -45,10 +45,10 @@ internal class DefaultCollectiblesAccountRepositoryTest {
     }
 
     @Test
-    fun `GIVEN no collectibles record WHEN registerAccount THEN it is pushed with the others and stored`() =
+    fun `GIVEN no collectibles record WHEN registerAccount THEN it is pushed first and stored`() =
         runTest {
             // Arrange
-            val synced = accountsResponse(PORTFOLIO_RECORD, COLLECTIBLES_RECORD)
+            val synced = accountsResponse(COLLECTIBLES_RECORD, PORTFOLIO_RECORD)
             coEvery { walletAccountsFetcher.fetch(WALLET) } returns accountsResponse(PORTFOLIO_RECORD)
             coEvery { walletAccountsSaver.push(userWalletId = WALLET, accounts = any()) } returns synced
             val repository = createRepository(testScope = this)
@@ -59,7 +59,7 @@ internal class DefaultCollectiblesAccountRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) {
-                walletAccountsSaver.push(userWalletId = WALLET, accounts = listOf(PORTFOLIO_RECORD, COLLECTIBLES_RECORD))
+                walletAccountsSaver.push(userWalletId = WALLET, accounts = listOf(COLLECTIBLES_RECORD, PORTFOLIO_RECORD))
                 walletAccountsSaver.store(userWalletId = WALLET, response = synced)
             }
         }
@@ -120,53 +120,6 @@ internal class DefaultCollectiblesAccountRepositoryTest {
         // Assert
         assertThat(repository.getStatusSync(WALLET)).isEqualTo(ONBOARDED)
         coVerify(exactly = 0) { walletAccountsSaver.push(userWalletId = any(), accounts = any()) }
-    }
-
-    @Test
-    fun `GIVEN a collectibles record WHEN unregisterAccount THEN the others are pushed without it and stored`() =
-        runTest {
-            // Arrange
-            val synced = accountsResponse(PORTFOLIO_RECORD)
-            coEvery { walletAccountsFetcher.fetch(WALLET) } returns
-                accountsResponse(PORTFOLIO_RECORD, COLLECTIBLES_RECORD)
-            coEvery { walletAccountsSaver.push(userWalletId = WALLET, accounts = any()) } returns synced
-            val repository = createRepository(testScope = this)
-
-            // Act
-            repository.unregisterAccount(WALLET)
-
-            // Assert
-            coVerify(exactly = 1) {
-                walletAccountsSaver.push(userWalletId = WALLET, accounts = listOf(PORTFOLIO_RECORD))
-                walletAccountsSaver.store(userWalletId = WALLET, response = synced)
-            }
-        }
-
-    @Test
-    fun `GIVEN no collectibles record WHEN unregisterAccount THEN nothing is pushed`() = runTest {
-        // Arrange
-        coEvery { walletAccountsFetcher.fetch(WALLET) } returns accountsResponse(PORTFOLIO_RECORD)
-        val repository = createRepository(testScope = this)
-
-        // Act
-        repository.unregisterAccount(WALLET)
-
-        // Assert
-        coVerify(exactly = 0) { walletAccountsSaver.push(userWalletId = any(), accounts = any()) }
-    }
-
-    @Test
-    fun `GIVEN the backend fails WHEN unregisterAccount THEN it does not throw and stores nothing`() = runTest {
-        // Arrange
-        coEvery { walletAccountsFetcher.fetch(WALLET) } throws IllegalStateException("GET /accounts failed")
-        val repository = createRepository(testScope = this)
-
-        // Act
-        val actual = runCatching { repository.unregisterAccount(WALLET) }.exceptionOrNull()
-
-        // Assert
-        assertThat(actual).isNull()
-        coVerify(exactly = 0) { walletAccountsSaver.store(userWalletId = any(), response = any()) }
     }
 
     @Test

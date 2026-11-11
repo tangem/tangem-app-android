@@ -9,7 +9,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.core.res.R as CommonR
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.domain.models.scan.ProductType
@@ -170,15 +169,14 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(
             // The sheet is optional, so wait for it or for the Finish screen that replaces it — deciding
             // before either has rendered leaves the sheet up. Wallet creation runs in between and on a
             // cold launch outlasts the ordinary timeout.
+            val dontAllowText = hasText(getResourceString(CoreUiR.string.save_user_wallet_agreement_dont_allow))
             composeTestRule.waitUntilAtLeastOneExists(
-                matcher = hasText(getResourceString(CoreUiR.string.save_user_wallet_agreement_dont_allow))
-                    or hasText(getResourceString(CommonR.string.common_finish)),
+                matcher = dontAllowText or hasText(getResourceString(CommonR.string.common_finish)),
                 timeoutMillis = WAIT_UNTIL_TIMEOUT_WALLET_CREATION,
             )
-            onBiometryDialog {
-                if (dontAllowButton.isDisplayedSafely()) {
-                    dontAllowButton.performClick()
-                }
+            // Raw Compose on purpose: a Kakao check of the absent sheet waits out a 10 s flaky-safety retry.
+            if (composeTestRule.onAllNodes(dontAllowText, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) {
+                onBiometryDialog { dontAllowButton.performClick() }
             }
         }
     } else {

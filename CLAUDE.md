@@ -95,7 +95,7 @@ The project is a heavily modularized Android app (~290 modules) organized in lay
 - **`features/`** — UI features using **API/Impl split pattern**: `features:foo:api` defines the public contract, `features:foo:impl` contains the implementation. This enforces clean dependency boundaries
 - **`core/`** — Cross-cutting concerns: `ui`, `analytics`, `datasource`, `decompose`, `navigation`, `res`, `utils`, `security`, `pagination`, `media` (looping video; `media:ui` — its Compose surface)
 - **`common/`** — Shared models, routing, UI components, test utilities
-- **`libs/`** — SDK wrappers: `blockchain-sdk`, `tangem-sdk-api`, `crypto`, `auth`, `visa`
+- **`libs/`** — SDK wrappers: `blockchain-sdk`, `tangem-sdk-api`, `crypto`, `auth`
 
 ### Component Architecture (Decompose)
 
@@ -158,6 +158,7 @@ duplication for new code. References: `ScanFailsModel`, `AppSettingsModel`.
 - **Error handling:** Arrow's `Either<Error, Success>` pattern throughout domain/data layers. `DataError` sealed hierarchy for domain errors. See `domain/core/CLAUDE.md` for the LCE pattern
 - **Analytics:** `AnalyticsEvent(category, event, params)` in `core/analytics/models/`. Feature events are sealed class hierarchies extending `AnalyticsEvent`. Send via injected `AnalyticsEventHandler`. New/changed events require unit tests — see `.claude/rules/analytics-testing.md`
 - **Feature toggles:** `FeatureTogglesManager` in `core/config-toggles/`. See `core/config-toggles/CLAUDE.md`.
+- **Transaction history:** background sync (fetchers → Room) and reading (one merged timeline) are decoupled — a fetcher never calls the screen back. The whole pipeline, the row model and the extension checklists live in one doc: `data/txhistory/CLAUDE.md` (`domain/txhistory` and `features/txhistory` only point at it)
 - **Supported languages:** `SupportedLanguages` in `core/utils/` defines the app's supported locales: en, ru, de, fr, it, ja, uk, zh, es. `getCurrentSupportedLanguageCode()` returns the device locale if supported, otherwise falls back to English. Used by API calls that accept a language parameter
 
 ### Build System

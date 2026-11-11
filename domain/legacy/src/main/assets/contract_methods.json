@@ -212,10 +212,30 @@
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
         "name": "enterProtocolByOwner"
     },
+    "0x3e44dfd2": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "enterProtocolByOwner"
+    },
     "0xc65e6dcf": {
         "info": "yieldModule",
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
         "name": "withdrawAndDeactivate"
+    },
+    "0x0921ecd4": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "enterProtocolByOwnerWithNative"
+    },
+    "0x84276d81": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "withdrawNative"
+    },
+    "0x4423380d": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "withdrawAndDeactivateNative"
     },
     "0xebd4b81c": {
         "info": "yieldModule",

@@ -16,6 +16,9 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.message.EventMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
@@ -75,6 +78,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -116,7 +120,7 @@ internal class CollectiblesPackOpeningModelTest {
             imagePreloader,
         )
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
-        every { openCollectiblePackUseCase(any(), any()) } returns flowOf(OpenPackStep.Opened(PACK))
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flowOf(OpenPackStep.Opened(PACK))
         statusFlow.value = onboarded(usdcAmount = "1000")
         videoLoadState.value = VideoLoadState.Loading
         every { playerFactory.create(any(), capture(playerListener)) } returns player
@@ -262,7 +266,7 @@ internal class CollectiblesPackOpeningModelTest {
 
         // Assert
         verify(exactly = 1) {
-            openCollectiblePackUseCase(userWallet, OpenPackRequest.Buy(EXTERNAL_ID, isTurboEnabled = false))
+            openCollectiblePackUseCase(userWallet, OpenPackRequest.Buy(EXTERNAL_ID), isTurboEnabled = false)
         }
         assertThat(model.reveal().stage).isEqualTo(Stage.Launching)
     }
@@ -284,7 +288,7 @@ internal class CollectiblesPackOpeningModelTest {
     @Test
     fun `GIVEN a purchase not finished WHEN state read THEN there is no card yet`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(any(), any()) } returns flow {
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flow {
             emit(OpenPackStep.Opening)
             awaitCancellation()
         }
@@ -313,14 +317,14 @@ internal class CollectiblesPackOpeningModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { openCollectiblePackUseCase(any(), any()) }
+        verify(exactly = 0) { openCollectiblePackUseCase(any(), any(), any()) }
         verify(exactly = 1) { messageSender.send(any()) }
     }
 
     @Test
     fun `GIVEN a purchase in progress WHEN state read THEN the button is a disabled progress label`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(any(), any()) } returns flow {
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flow {
             emit(OpenPackStep.Confirming)
             awaitCancellation()
         }
@@ -343,7 +347,7 @@ internal class CollectiblesPackOpeningModelTest {
     @Test
     fun `GIVEN a purchase in progress WHEN back tapped THEN the screen stays`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(any(), any()) } returns flow {
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flow {
             emit(OpenPackStep.Confirming)
             awaitCancellation()
         }
@@ -361,7 +365,7 @@ internal class CollectiblesPackOpeningModelTest {
     @Test
     fun `GIVEN a failed purchase whose flow is still open WHEN back tapped THEN the flow is left`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(any(), any()) } returns flow {
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flow {
             emit(OpenPackStep.Failed.PurchaseFailed)
             awaitCancellation()
         }
@@ -379,7 +383,7 @@ internal class CollectiblesPackOpeningModelTest {
     @Test
     fun `GIVEN a purchase in progress WHEN close tapped THEN the screen stays`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(any(), any()) } returns flow {
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flow {
             emit(OpenPackStep.Confirming)
             awaitCancellation()
         }
@@ -397,7 +401,7 @@ internal class CollectiblesPackOpeningModelTest {
     @Test
     fun `GIVEN a failure before the payment WHEN approve tapped THEN a snackbar is shown`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(any(), any()) } returns flowOf(OpenPackStep.Failed.PurchaseFailed)
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flowOf(OpenPackStep.Failed.PurchaseFailed)
         val message = slot<EventMessage>()
         every { messageSender.send(capture(message)) } returns Unit
         val model = startModel()
@@ -414,7 +418,8 @@ internal class CollectiblesPackOpeningModelTest {
     @Test
     fun `GIVEN the pack is left unopened WHEN approve tapped THEN its sheet is shown`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(any(), any()) } returns flowOf(OpenPackStep.Failed.PackUnopened(TX_ID))
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns
+            flowOf(OpenPackStep.Failed.PackUnopened(TX_ID))
         val model = startModel()
         var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
         model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
@@ -425,6 +430,40 @@ internal class CollectiblesPackOpeningModelTest {
 
         // Assert
         assertThat(shownSheet).isEqualTo(CollectiblesConfirmOrderBottomSheetConfig.PackUnopened(TX_ID))
+    }
+
+    @Test
+    fun `GIVEN the pack cannot be opened WHEN approve tapped THEN the failure screen replaces the order`() = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flowOf(OpenPackStep.Failed.OpenFailed)
+        val model = startModel()
+        var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+        model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+        // Act
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.replaceCurrent(CollectiblesRoute.PackOpenFailed, any()) }
+        assertThat(shownSheet).isNull()
+    }
+
+    @ParameterizedTest
+    @MethodSource("refundFailures")
+    fun `GIVEN a refund WHEN approve tapped THEN the refund sheet is shown`(failure: OpenPackStep.Failed) = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flowOf(failure)
+        val model = startModel()
+        var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+        model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+        // Act
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(shownSheet).isEqualTo(CollectiblesConfirmOrderBottomSheetConfig.RefundOnTheWay)
     }
 
     @Test
@@ -442,7 +481,7 @@ internal class CollectiblesPackOpeningModelTest {
     @Test
     fun `GIVEN the pack is left unopened WHEN open pack tapped THEN it is opened again in place`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID)) } returns
+        every { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = false) } returns
             flowOf(OpenPackStep.Opened(PACK))
         val model = startModel()
 
@@ -451,7 +490,9 @@ internal class CollectiblesPackOpeningModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID)) }
+        verify(exactly = 1) {
+            openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = false)
+        }
         verify(exactly = 0) { router.popTo(any<Route>(), any()) }
         assertThat(model.reveal().stage).isEqualTo(Stage.Launching)
     }
@@ -460,7 +501,7 @@ internal class CollectiblesPackOpeningModelTest {
     fun `GIVEN a purchase that has not reported a step WHEN approve tapped twice THEN one purchase runs`() =
         runTest {
             // Arrange
-            every { openCollectiblePackUseCase(any(), any()) } returns flow { awaitCancellation() }
+            every { openCollectiblePackUseCase(any(), any(), any()) } returns flow { awaitCancellation() }
             val model = startModel()
 
             // Act
@@ -469,13 +510,13 @@ internal class CollectiblesPackOpeningModelTest {
             runCurrent()
 
             // Assert
-            verify(exactly = 1) { openCollectiblePackUseCase(any(), any()) }
+            verify(exactly = 1) { openCollectiblePackUseCase(any(), any(), any()) }
         }
 
     @Test
     fun `GIVEN a failed purchase WHEN approve tapped again THEN it is retried`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(any(), any()) } returns flowOf(OpenPackStep.Failed.PurchaseFailed)
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flowOf(OpenPackStep.Failed.PurchaseFailed)
         val model = startModel()
         model.content().onApproveClick()
         advanceUntilIdle()
@@ -485,7 +526,7 @@ internal class CollectiblesPackOpeningModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 2) { openCollectiblePackUseCase(any(), any()) }
+        verify(exactly = 2) { openCollectiblePackUseCase(any(), any(), any()) }
     }
 
     @Test
@@ -504,13 +545,13 @@ internal class CollectiblesPackOpeningModelTest {
         verify(exactly = 2) {
             messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_something_went_wrong)))
         }
-        verify(exactly = 0) { openCollectiblePackUseCase(any(), any()) }
+        verify(exactly = 0) { openCollectiblePackUseCase(any(), any(), any()) }
     }
 
     @Test
     fun `GIVEN low inventory WHEN approve tapped THEN its sheet is shown`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(any(), any()) } returns flowOf(OpenPackStep.Failed.LowInventory)
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns flowOf(OpenPackStep.Failed.LowInventory)
         val model = startModel()
         var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
         model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
@@ -521,6 +562,109 @@ internal class CollectiblesPackOpeningModelTest {
 
         // Assert
         assertThat(shownSheet).isEqualTo(CollectiblesConfirmOrderBottomSheetConfig.LowInventory)
+    }
+
+    @Test
+    fun `GIVEN turbo sold the card back WHEN approve tapped THEN the payout sheet is shown`() = runTest {
+        // Arrange
+        coEvery { getMachineUseCase(any(), any()) } returns createMachine(
+            price = BigDecimal("50"),
+            feeAmount = BigDecimal("1"),
+        ).right()
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns
+            flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = createOpenedPack()))
+        val model = startModel()
+        var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+        model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+        // Act
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(shownSheet).isEqualTo(
+            CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback(
+                amount = "+" + usdc("42.5"),
+                price = usdc("51", minDecimals = 0),
+                cardImageUrl = "https://tangem.com/front.png",
+                cardTitle = "2024 Series One #216",
+            ),
+        )
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN turbo sold the card back WHEN its image is still loading THEN the payout sheet waits for it`() = runTest {
+        // Arrange
+        val image = CompletableDeferred<ImageResult>()
+        stubCardImages(image)
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns
+            flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = PACK))
+        val model = startModel()
+        var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+        model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+        model.content().onApproveClick()
+        runCurrent()
+        val sheetWhileLoading = shownSheet
+
+        // Act
+        image.complete(mockk())
+        runCurrent()
+
+        // Assert
+        assertThat(sheetWhileLoading).isNull()
+        assertThat(shownSheet).isInstanceOf(CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback::class.java)
+        verify(exactly = 1) { imagePreloader.preload(PACK.imageFrontUrl!!) }
+    }
+
+    @Test
+    fun `GIVEN turbo sold the card back WHEN its image never loads THEN the payout sheet is shown after the timeout`() =
+        runTest {
+            // Arrange
+            stubCardImages(CompletableDeferred())
+            every { openCollectiblePackUseCase(any(), any(), any()) } returns
+                flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = PACK))
+            val model = startModel()
+            var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+            model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+            model.content().onApproveClick()
+
+            // Act
+            advanceTimeBy(PackOpeningConst.CARD_IMAGES_TIMEOUT_MS + 1)
+
+            // Assert
+            assertThat(shownSheet).isInstanceOf(CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback::class.java)
+        }
+
+    @Test
+    fun `GIVEN turbo sold an unknown card back WHEN approve tapped THEN the payout sheet is shown without preloading`() =
+        runTest {
+            // Arrange
+            every { openCollectiblePackUseCase(any(), any(), any()) } returns
+                flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = null))
+            val model = startModel()
+            var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+            model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+            // Act
+            model.content().onApproveClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(shownSheet).isInstanceOf(CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback::class.java)
+            verify(exactly = 0) { imagePreloader.preload(any()) }
+        }
+
+    @Test
+    fun `GIVEN the payout sheet WHEN open again tapped THEN the flow goes back to the machine`() = runTest {
+        // Arrange
+        val model = startModel()
+
+        // Act
+        model.onOpenAgain()
+
+        // Assert
+        verify(exactly = 1) { router.pop(any()) }
     }
 
     @Test
@@ -1352,7 +1496,12 @@ internal class CollectiblesPackOpeningModelTest {
 
     private fun CollectiblesPackOpeningModel.order() = (uiState.value as CollectiblesPackOpeningUM.Content).order
 
-    private fun onboarded(usdcAmount: String) = CollectiblesAccountStatusValue.Onboarded(
+    private fun usdc(amount: String, minDecimals: Int? = null) = BigDecimal(amount).format {
+        val usdc = crypto(cryptoCurrency = MockCollectibles.usdc, ignoreSymbolPosition = true)
+        if (minDecimals == null) usdc else usdc.anyDecimals(minDecimals = minDecimals)
+    }
+
+    private fun onboarded(usdcAmount: String) =CollectiblesAccountStatusValue.Onboarded(
         source = StatusSource.ACTUAL,
         vaultBalance = MockCollectibles.vaultBalance(amount = BigDecimal(usdcAmount), fiatRate = BigDecimal.ONE),
     )
@@ -1387,6 +1536,9 @@ internal class CollectiblesPackOpeningModelTest {
     }
 
     private companion object {
+
+        @JvmStatic
+        fun refundFailures() = listOf(OpenPackStep.Failed.Refunded, OpenPackStep.Failed.Refunding)
 
         const val TX_ID = "tx-id"
 

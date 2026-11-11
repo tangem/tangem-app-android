@@ -1,6 +1,7 @@
 package com.tangem.features.hotwallet
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 
@@ -10,6 +11,8 @@ interface AddExistingWalletComponent : ComposableContentComponent {
         val mode: AppRoute.AddExistingWallet.Mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase,
         /** `false` when the screen that led here has already reported the onboarding start. */
         val shouldSendOnboardingStarted: Boolean = false,
+        /** Reported with the onboarding finish and the created wallet */
+        val analyticsSource: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.ImportWallet,
     )
 
     interface Factory : ComponentFactory<Params, AddExistingWalletComponent>

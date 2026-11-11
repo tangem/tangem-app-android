@@ -16,6 +16,7 @@ import io.mockk.every
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import java.math.BigDecimal
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -266,6 +267,97 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
         verify(exactly = 0) { router.replaceAll(any<PolymarketRoute.Main>(), any(), onComplete = any()) }
     }
 
+    @Test
+    fun `GIVEN a buy fills WHEN close clicked THEN the order flow closes back to where it was opened`() = runTest {
+        // Arrange
+        val amountModel = createAmountModel(testScope = this)
+        advanceUntilIdle()
+        amountModel.onResume()
+        amountModel.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        val model = placeAndCreateStatusModel(testScope = this, amountModel = amountModel)
+
+        // Act
+        model.onCloseClick()
+
+        // Assert
+        verify(exactly = 1) { router.pop(onComplete = any()) }
+        verify(exactly = 0) { router.popTo(any<PolymarketRoute.Main>(), onComplete = any()) }
+    }
+
+    @Test
+    fun `GIVEN a sell leaves shares in the position WHEN close clicked THEN the order flow closes back to the position`() =
+        runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
+            coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                createPlaceResult(makingAmount = BigDecimal("12.8"), takingAmount = BigDecimal("11.01")).right()
+            val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            amountModel.onResume()
+            amountModel.onAmountChange(value = "12.80")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val model = placeAndCreateStatusModel(testScope = this, amountModel = amountModel)
+
+            // Act
+            model.onCloseClick()
+
+            // Assert
+            verify(exactly = 1) { router.pop(onComplete = any()) }
+            verify(exactly = 0) { router.popTo(any<PolymarketRoute.Main>(), onComplete = any()) }
+        }
+
+    @Test
+    fun `GIVEN a sell closes the whole position WHEN close clicked THEN main is shown instead of the sold position`() =
+        runTest {
+            // Arrange
+            val held = BigDecimal("51.234567")
+            coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote(shares = held).right()
+            coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                createPlaceResult(makingAmount = held, takingAmount = BigDecimal("43.55")).right()
+            val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            amountModel.onResume()
+            amountModel.onAmountChange(value = held.toPlainString())
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val model = placeAndCreateStatusModel(testScope = this, amountModel = amountModel)
+
+            // Act
+            model.onCloseClick()
+
+            // Assert
+            verify(exactly = 1) {
+                router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), onComplete = any())
+            }
+            verify(exactly = 0) { router.pop(onComplete = any()) }
+        }
+
+    @Test
+    fun `GIVEN the position shrank before signing WHEN a sell takes the rest AND close clicked THEN main is shown`() =
+        runTest {
+            // Arrange
+            val rest = BigDecimal("12.8")
+            coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote(shares = rest).right()
+            coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                createPlaceResult(makingAmount = rest, takingAmount = BigDecimal("11.01")).right()
+            val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            amountModel.onResume()
+            amountModel.onAmountChange(value = "12.80")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                createPosition(size = rest).right()
+            val model = placeAndCreateStatusModel(testScope = this, amountModel = amountModel)
+
+            // Act
+            model.onCloseClick()
+
+            // Assert
+            verify(exactly = 1) {
+                router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), onComplete = any())
+            }
+        }
+
     private fun placeAndCreateStatusModel(
         testScope: TestScope,
         amountModel: PlacePredictionAmountModel,
@@ -273,7 +365,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
         val summary = createSummaryModel(testScope = testScope, amountModel = amountModel)
         val route = slot<PlacePredictionRoute.Status>()
         every { router.replaceAll(capture(route), onComplete = any()) } returns Unit
-        summary.onPlaceClick()
+        summary.tapPlace()
         testScope.runCurrent()
         summary.onDestroy()
         amountModel.onDestroy()

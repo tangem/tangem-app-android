@@ -1,8 +1,10 @@
 package com.tangem.features.onramp.main.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
@@ -10,17 +12,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.ds.message.TangemMessage
+import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
+import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.marketing.api.MarketingBannerComponent
+import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.main.entity.OnrampCountryButtonUM
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
+import com.tangem.features.onramp.main.entity.OnrampMainTopBarUM
+import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun OnrampMainScreen(
@@ -32,13 +51,7 @@ internal fun OnrampMainScreen(
 ) {
     Scaffold(
         modifier = modifier.systemBarsPadding(),
-        topBar = {
-            TangemTopAppBar(
-                startButton = state.topBarConfig.startButtonUM,
-                endButton = state.topBarConfig.endButtonUM,
-                title = state.topBarConfig.title.resolveReference(),
-            )
-        },
+        topBar = { OnrampTopBar(config = state.topBarConfig) },
         contentWindowInsets = WindowInsetsZero,
         containerColor = TangemTheme.colors3.bg.primary,
     ) { scaffoldPaddings ->
@@ -50,6 +63,72 @@ internal fun OnrampMainScreen(
             modifier = Modifier.padding(scaffoldPaddings),
         )
     }
+}
+
+@Composable
+private fun OnrampTopBar(config: OnrampMainTopBarUM, modifier: Modifier = Modifier) {
+    val countryButton = config.countryButtonUM
+    if (countryButton != null) {
+        TangemTopBar(
+            modifier = modifier,
+            title = config.title,
+            subtitle = config.subtitle,
+            startContent = { CountryButton(state = countryButton) },
+            endContent = { CloseButton(state = config.startButtonUM) },
+        )
+    } else {
+        TangemTopAppBar(
+            modifier = modifier,
+            startButton = config.startButtonUM,
+            endButton = config.endButtonUM,
+            title = config.title.resolveReference(),
+            subtitle = config.subtitle.resolveReference(),
+        )
+    }
+}
+
+@Composable
+private fun CountryButton(state: OnrampCountryButtonUM, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .clickable(
+                enabled = state.isEnabled,
+                role = Role.Button,
+                onClickLabel = stringResourceSafe(R.string.onramp_settings_residence),
+                onClick = state.onClick,
+            )
+            .semantics { state.countryName?.let { contentDescription = it } }
+            .testTag(TopAppBarTestTags.MORE_BUTTON),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (state.flagUrl != null) {
+            SubcomposeAsyncImage(
+                modifier = Modifier.fillMaxSize(),
+                model = state.flagUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                loading = { CircleShimmer(modifier = Modifier.fillMaxSize()) },
+                error = {
+                    Box(Modifier.fillMaxSize().background(TangemTheme.colors.stroke.primary, CircleShape))
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun CloseButton(state: TopAppBarButtonUM, modifier: Modifier = Modifier) {
+    TangemTopBarActionContent(
+        actionUM = TangemTopBarActionUM(
+            iconRes = CoreUiR.drawable.ic_close_24,
+            isActionable = state.isEnabled,
+            onClick = state.onClicked,
+            ghostModeProgress = 1f,
+        ),
+        modifier = modifier.testTag(TopAppBarTestTags.CLOSE_BUTTON),
+    )
 }
 
 @Composable

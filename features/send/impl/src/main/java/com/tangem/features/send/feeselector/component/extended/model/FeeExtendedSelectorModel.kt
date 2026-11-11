@@ -13,6 +13,7 @@ import com.tangem.features.send.feeselector.component.FeeSelectorComponentParams
 import com.tangem.features.send.feeselector.component.extended.entity.FeeExtendedSelectorUM
 import com.tangem.features.send.feeselector.component.token.model.asSponsoredFee
 import com.tangem.features.send.feeselector.route.FeeSelectorRoute
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -26,6 +27,7 @@ class FeeExtendedSelectorModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val router: Router,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<FeeSelectorComponentParams>()
@@ -77,6 +79,7 @@ class FeeExtendedSelectorModel @Inject constructor(
             token = token,
             fee = state.selectedFeeItem,
             onFeeClick = { router.push(FeeSelectorRoute.ChooseSpeed) },
+            isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
         )
     }
 }

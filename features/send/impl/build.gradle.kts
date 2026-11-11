@@ -49,6 +49,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.wallets.models)
+    implementation(projects.features.wallet.api)
     implementation(projects.domain.wallets)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appCurrency)
@@ -73,7 +74,7 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.core.analytics.models)
     implementation(projects.domain.core)
-    implementation(projects.domain.visa)
+    implementation(projects.domain.tangempay)
     implementation(projects.domain.mcp)
     implementation(projects.domain.mcp.models)
 
@@ -103,7 +104,6 @@ dependencies {
     kapt(deps.hilt.kapt)
     
     testImplementation(projects.common.test)
-    testImplementation(projects.core.remote)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.arrow.core)

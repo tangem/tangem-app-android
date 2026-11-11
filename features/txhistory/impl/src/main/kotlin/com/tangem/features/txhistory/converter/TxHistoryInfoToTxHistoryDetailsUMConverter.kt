@@ -33,7 +33,6 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     shareText: TextReference? = null,
     onShare: (String) -> Unit = {},
     onExplore: (() -> Unit)? = null,
-    refundCurrency: CryptoCurrency? = null,
     onLearnMoreAboutRefundsClick: () -> Unit = {},
     onGoToRefundedTokenClick: (CryptoCurrency) -> Unit = {},
     lookup: TxHistoryLookupContext = TxHistoryLookupContext(
@@ -74,7 +73,6 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         onGoToProvider = onGoToProvider,
         lookup = lookup,
         menu = menu,
-        refundCurrency = refundCurrency,
         isBalanceHidden = isBalanceHidden,
         onLearnMoreAboutRefundsClick = onLearnMoreAboutRefundsClick,
         onGoToRefundedTokenClick = onGoToRefundedTokenClick,

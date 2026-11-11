@@ -2,9 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCase
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
-import com.tangem.domain.pay.usecase.RestoreActiveCardOrdersUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.tangempay.usecase.RestoreActiveCardOrdersUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import dagger.assisted.Assisted
@@ -25,21 +25,18 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
     private val analytics: WalletTangemPayAnalyticsEventSender,
 ) : WalletSubscriber() {
 
-    override fun create(coroutineScope: CoroutineScope): Flow<*> {
-        coroutineScope.launch {
+    override fun create(coroutineScope: CoroutineScope): Flow<*> = channelFlow<Any> {
+        launch {
             // TODO: Doston move this logic to proper place(e.g. WalletBalanceFetcher)
             tangemPayWithdrawRepository.pollWithdrawOrdersIfNeeds(userWallet)
         }
-        coroutineScope.launch {
+        launch {
             restoreActiveCardOrdersUseCase(userWallet.walletId)
         }
         if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
-            coroutineScope.launch {
-                pollTangemPayAccountStatusesUseCase(userWallet.walletId)
-            }
+            pollTangemPayAccountStatusesUseCase(userWallet.walletId).launchIn(this)
         }
-        subscribeToStatus(coroutineScope)
-        return emptyFlow<Any>()
+        subscribeToStatus(this)
     }
 
     private fun subscribeToStatus(coroutineScope: CoroutineScope) {

@@ -51,7 +51,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.polymarket)
-    runtimeOnly(projects.domain.visa)
+    runtimeOnly(projects.domain.tangempay)
     runtimeOnly(projects.domain.wallets)
     // endregion
 
@@ -61,7 +61,6 @@ dependencies {
 
     // region Project - Features
     api(projects.features.moneyAccount.details.api) // AND_15325_MONEY_ACCOUNTS_ENABLED
-    implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
     // endregion
 
     // region Project - Common

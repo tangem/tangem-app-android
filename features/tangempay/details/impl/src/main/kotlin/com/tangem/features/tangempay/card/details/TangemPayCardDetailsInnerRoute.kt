@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.card.details
 
 import com.tangem.core.decompose.navigation.Route
-import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCard
 import kotlinx.serialization.Serializable
 
 @Serializable

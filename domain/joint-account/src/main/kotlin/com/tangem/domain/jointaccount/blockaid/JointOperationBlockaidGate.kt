@@ -20,15 +20,21 @@ interface JointOperationBlockaidGate {
         deployment: SafeDeployment,
     ): Verdict
 
-    enum class Verdict {
-        SAFE,
-        WARNING,
-        MALICIOUS,
+    sealed interface Verdict {
 
-        /** Blockaid answered, but could not validate the payload — or the check could not be built for it at all */
-        UNKNOWN,
+        data object Safe : Verdict
 
-        /** Blockaid did not answer: the request failed on the way, or the answer could not be read */
-        UNAVAILABLE,
+        data object Warning : Verdict
+
+        data object Malicious : Verdict
+
+        data class NoVerdict(val reason: Reason) : Verdict {
+
+            enum class Reason {
+                ERROR,
+                TIMEOUT,
+                UNSUPPORTED_NETWORK,
+            }
+        }
     }
 }
