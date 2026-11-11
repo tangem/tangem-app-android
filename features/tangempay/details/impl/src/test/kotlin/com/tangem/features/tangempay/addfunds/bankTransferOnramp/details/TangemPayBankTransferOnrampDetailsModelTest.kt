@@ -12,12 +12,13 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.AmountLimits
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsScreenUM.DailyDepositLimitUM
@@ -151,7 +152,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
     }
 
     @Test
-    fun `GIVEN onramp fees returned WHEN model created THEN fixed fee shown as amount and percentage as percent`() =
+    fun `GIVEN onramp fees returned WHEN model created THEN fixed fee as amount and percentage with its fixed part`() =
         runTest {
             // Arrange
             coEvery { getOnrampFeesUseCase(userWalletId, product) } returns listOf(
@@ -162,6 +163,14 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
                     calculationType = FeeCalculationType.PERCENTAGE,
                     amount = BigDecimal("1"),
                     currency = "MXN",
+                ),
+                onrampFee(
+                    type = "SPEI_OFFRAMP",
+                    name = "SPEI withdrawal",
+                    calculationType = FeeCalculationType.PERCENTAGE,
+                    amount = BigDecimal("1"),
+                    currency = "USD",
+                    fixedAmount = BigDecimal("0.50"),
                 ),
             ).right()
 
@@ -175,6 +184,11 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
                     rows = persistentListOf(
                         TangemPayOnrampFeesUM.FeeRow(type = "ACH_ONRAMP", title = stringReference("ACH"), value = "$1"),
                         TangemPayOnrampFeesUM.FeeRow(type = "SPEI_ONRAMP", title = stringReference("SPEI"), value = "1%"),
+                        TangemPayOnrampFeesUM.FeeRow(
+                            type = "SPEI_OFFRAMP",
+                            title = stringReference("SPEI withdrawal"),
+                            value = "$0.50 + 1%",
+                        ),
                     ),
                 ),
             )
@@ -344,16 +358,40 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
                 ),
             ),
         )
-        assertThat(state.dailyDepositLimit).isEqualTo(
-            DailyDepositLimitUM(
-                value = stringReference("$10,000"),
-                hint = resourceReference(
-                    id = R.string.tangempay_bank_transfer_details_daily_deposits_hint,
-                    formatArgs = wrappedList("$10,000"),
-                ),
-            ),
-        )
+        assertThat(state.minimumDeposit).isEqualTo(stringReference("$2"))
+        assertThat(state.dailyDepositLimit).isNull()
     }
+
+    @ParameterizedTest
+    @MethodSource("provideMinimumDepositModels")
+    fun `GIVEN route credentials WHEN shown THEN minimum deposit follows the amount limits and no daily limit`(
+        model: MinimumDepositModel,
+    ) = runTest {
+        // Act
+        val detailsModel = createModel(
+            bankCredentials = USD_ROUTE.copy(amountLimits = model.amountLimits),
+            feeSource = FeeSource.Route,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val state = detailsModel.uiState.value
+        assertThat(state.minimumDeposit).isEqualTo(model.expected)
+        assertThat(state.dailyDepositLimit).isNull()
+    }
+
+    @Test
+    fun `GIVEN catalogue fee source with amount limits WHEN shown THEN no minimum deposit and the daily limit stays`() =
+        runTest {
+            // Act
+            val model = createModel(bankCredentials = USD_ROUTE, feeSource = FeeSource.Catalogue(product))
+            advanceUntilIdle()
+
+            // Assert
+            val state = model.uiState.value
+            assertThat(state.minimumDeposit).isNull()
+            assertThat(state.dailyDepositLimit).isNotNull()
+        }
 
     @Test
     fun `GIVEN ACH route with a transfer message WHEN shown THEN no reference row or warning`() = runTest {
@@ -448,9 +486,8 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
                 notes = persistentListOf(CONVERSION_NOTICE, RATE_DISCLAIMER),
             ),
         )
-        assertThat(state.dailyDepositLimit).isEqualTo(
-            DailyDepositLimitUM(value = stringReference("$10,000"), hint = null),
-        )
+        assertThat(state.minimumDeposit).isEqualTo(stringReference("$2"))
+        assertThat(state.dailyDepositLimit).isNull()
     }
 
     @Test
@@ -554,7 +591,10 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
         ),
         RouteFeesModel(
             credentials = SPEI_CREDENTIALS.copy(
-                depositFee = BankCredentials.DepositFee(BigDecimal("15"), BankCredentials.DepositFee.Type.FLAT),
+                depositFee = BankCredentials.DepositFee(
+                    calculationType = FeeCalculationType.FIXED,
+                    amount = BigDecimal("15"),
+                ),
                 exchangeRate = null,
             ),
             expected = TangemPayOnrampFeesUM.Content(
@@ -611,23 +651,50 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
         val achRow = { value: String ->
             TangemPayOnrampFeesUM.FeeRow(type = "ACH", title = stringReference("ACH"), value = value)
         }
-        val flatFee = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.FLAT)
+        val fixedFee = BankCredentials.DepositFee(
+            calculationType = FeeCalculationType.FIXED,
+            amount = BigDecimal("1.00"),
+        )
+        val percentageFee = BankCredentials.DepositFee(
+            calculationType = FeeCalculationType.PERCENTAGE,
+            amount = BigDecimal("1"),
+        )
         return listOf(
-            RouteFeeModel(rail = "ACH", depositFee = flatFee, expectedRows = persistentListOf(achRow("$1"))),
+            RouteFeeModel(rail = "ACH", depositFee = fixedFee, expectedRows = persistentListOf(achRow("$1"))),
+            RouteFeeModel(rail = "ACH", depositFee = percentageFee, expectedRows = persistentListOf(achRow("1%"))),
             RouteFeeModel(
                 rail = "ACH",
-                depositFee = BankCredentials.DepositFee(BigDecimal("1"), BankCredentials.DepositFee.Type.PERCENTAGE),
+                depositFee = percentageFee.copy(fixedAmount = BigDecimal("0.50"), currency = "USD"),
+                expectedRows = persistentListOf(achRow("$0.50 + 1%")),
+            ),
+            RouteFeeModel(
+                rail = "ACH",
+                depositFee = percentageFee.copy(fixedAmount = BigDecimal.ZERO),
                 expectedRows = persistentListOf(achRow("1%")),
             ),
             RouteFeeModel(
                 rail = "ACH",
-                depositFee = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.UNKNOWN),
-                expectedRows = persistentListOf(),
+                depositFee = fixedFee.copy(currency = "MXN"),
+                expectedRows = persistentListOf(achRow("MX$1")),
             ),
             RouteFeeModel(rail = "ACH", depositFee = null, expectedRows = persistentListOf()),
-            RouteFeeModel(rail = null, depositFee = flatFee, expectedRows = persistentListOf()),
+            RouteFeeModel(rail = null, depositFee = fixedFee, expectedRows = persistentListOf()),
         )
     }
+
+    private fun provideMinimumDepositModels() = listOf(
+        MinimumDepositModel(
+            amountLimits = AmountLimits(min = BigDecimal("2"), max = null, currency = "USD"),
+            expected = stringReference("$2"),
+        ),
+        MinimumDepositModel(
+            amountLimits = AmountLimits(min = BigDecimal("2.50"), max = BigDecimal("10000"), currency = "USD"),
+            expected = stringReference("$2.50"),
+        ),
+        MinimumDepositModel(amountLimits = null, expected = null),
+    )
+
+    data class MinimumDepositModel(val amountLimits: AmountLimits?, val expected: TextReference?)
 
     private fun provideTestModels() = listOf(
         HiddenLimitModel(depositLimit = null),
@@ -650,18 +717,25 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
     private companion object {
         val SPEI_CREDENTIALS = MockBankCredentials.speiBankCredentials(transferMessage = "TNG7K2Q9")
         val USD_ROUTE = bankCredentials(
-            depositFee = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.FLAT),
+            depositFee = BankCredentials.DepositFee(
+                calculationType = FeeCalculationType.FIXED,
+                amount = BigDecimal("1.00"),
+            ),
             depositLimit = BankCredentials.DepositLimit(
                 amount = BigDecimal("10000"),
                 period = BankCredentials.DepositLimit.Period.DAY,
             ),
-        )
+        ).copy(amountLimits = AmountLimits(min = BigDecimal("2"), max = null, currency = "USD"))
         val CONVERSION_NOTICE = resourceReference(
             id = R.string.tangempay_bank_transfer_details_conversion_notice,
             formatArgs = wrappedList("MXN"),
         )
         val RATE_DISCLAIMER = resourceReference(R.string.tangempay_bank_transfer_details_rate_disclaimer)
-        val SPEI_FEE_ROW = TangemPayOnrampFeesUM.FeeRow(type = "SPEI", title = stringReference("SPEI"), value = "1%")
+        val SPEI_FEE_ROW = TangemPayOnrampFeesUM.FeeRow(
+            type = "SPEI",
+            title = stringReference("SPEI"),
+            value = "MX$10 + 1%",
+        )
         val RATE_ROW = TangemPayOnrampFeesUM.FeeRow(
             type = "EXCHANGE_RATE",
             title = resourceReference(R.string.tangempay_bank_transfer_details_exchange_rate),

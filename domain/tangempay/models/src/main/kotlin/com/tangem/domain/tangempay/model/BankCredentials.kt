@@ -1,4 +1,4 @@
-package com.tangem.domain.models.account
+package com.tangem.domain.tangempay.model
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
@@ -18,6 +18,7 @@ data class BankCredentials(
     val depositFee: DepositFee?,
     val depositLimit: DepositLimit?,
     val exchangeRate: ExchangeRate? = null,
+    val amountLimits: AmountLimits? = null,
 ) {
 
     val isSpei: Boolean
@@ -28,26 +29,11 @@ data class BankCredentials(
 
     @Serializable
     data class DepositFee(
+        val calculationType: FeeCalculationType,
         val amount: SerializedBigDecimal,
-        val type: Type,
-    ) {
-        enum class Type {
-            FLAT,
-            PERCENTAGE,
-            UNKNOWN,
-            ;
-
-            companion object {
-                fun fromString(value: String) = when (value.uppercase(Locale.US)) {
-                    "FLAT" -> FLAT
-                    "PERCENTAGE",
-                    "VARIABLE",
-                    -> PERCENTAGE
-                    else -> UNKNOWN
-                }
-            }
-        }
-    }
+        val fixedAmount: SerializedBigDecimal? = null,
+        val currency: String? = null,
+    )
 
     @Serializable
     data class DepositLimit(

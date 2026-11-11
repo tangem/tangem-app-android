@@ -1,6 +1,8 @@
 package com.tangem.test.mock.tangempay
 
-import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.tangempay.model.AmountLimits
+import com.tangem.domain.tangempay.model.BankCredentials
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import java.math.BigDecimal
 
 object MockBankCredentials {
@@ -19,6 +21,7 @@ object MockBankCredentials {
         depositFee: BankCredentials.DepositFee? = null,
         depositLimit: BankCredentials.DepositLimit? = null,
         exchangeRate: BankCredentials.ExchangeRate? = null,
+        amountLimits: AmountLimits? = null,
     ) = BankCredentials(
         type = type,
         beneficiaryName = beneficiaryName,
@@ -32,19 +35,19 @@ object MockBankCredentials {
         depositFee = depositFee,
         depositLimit = depositLimit,
         exchangeRate = exchangeRate,
+        amountLimits = amountLimits,
     )
 
     fun speiBankCredentials(
         accountNumber: String = "646180157000000004",
         transferMessage: String? = null,
         depositFee: BankCredentials.DepositFee? = BankCredentials.DepositFee(
+            calculationType = FeeCalculationType.PERCENTAGE,
             amount = BigDecimal("1.00"),
-            type = BankCredentials.DepositFee.Type.PERCENTAGE,
+            fixedAmount = BigDecimal("10.00"),
+            currency = "MXN",
         ),
-        depositLimit: BankCredentials.DepositLimit? = BankCredentials.DepositLimit(
-            amount = BigDecimal("10000"),
-            period = BankCredentials.DepositLimit.Period.DAY,
-        ),
+        amountLimits: AmountLimits? = AmountLimits(min = BigDecimal("2"), max = null, currency = "USD"),
         exchangeRate: BankCredentials.ExchangeRate? = BankCredentials.ExchangeRate(
             rate = BigDecimal("18.541575"),
             base = "USD",
@@ -60,7 +63,7 @@ object MockBankCredentials {
         rail = "SPEI",
         transferMessage = transferMessage,
         depositFee = depositFee,
-        depositLimit = depositLimit,
         exchangeRate = exchangeRate,
+        amountLimits = amountLimits,
     )
 }

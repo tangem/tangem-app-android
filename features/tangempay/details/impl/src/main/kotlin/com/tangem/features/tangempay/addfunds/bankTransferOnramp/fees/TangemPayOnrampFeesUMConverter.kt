@@ -29,7 +29,11 @@ internal class TangemPayOnrampFeesUMConverter(
         title = stringReference(fee.name),
         value = when (fee.calculationType) {
             FeeCalculationType.FIXED -> fee.amount.formatFiatAmount(currencyCode = fee.currency)
-            FeeCalculationType.PERCENTAGE -> fee.amount.formatPercentageFee()
+            FeeCalculationType.PERCENTAGE -> formatPercentageFee(
+                percentage = fee.amount,
+                fixedAmount = fee.fixedAmount,
+                currencyCode = fee.currency,
+            )
         },
     )
 }

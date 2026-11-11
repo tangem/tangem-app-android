@@ -1,10 +1,18 @@
 package com.tangem.data.tangempay.util
 
-import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.tangempay.model.BankCredentials
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.spend.datasource.tangempay.models.response.BankCredentialsResponse
+import com.tangem.spend.datasource.tangempay.models.response.FeesResponse
 import com.tangem.utils.converter.Converter
+import java.math.BigDecimal
+import java.util.Locale
 
 internal object BankCredentialsConverter : Converter<BankCredentialsResponse.Result, BankCredentials> {
+
+    private const val LEGACY_FIXED_TYPE = "FLAT"
+    private const val LEGACY_PERCENTAGE_TYPE = "VARIABLE"
+
     override fun convert(value: BankCredentialsResponse.Result): BankCredentials {
         return BankCredentials(
             type = value.type.orEmpty(),
@@ -16,19 +24,46 @@ internal object BankCredentialsConverter : Converter<BankCredentialsResponse.Res
             routingNumber = value.routingNumber.orEmpty(),
             rail = value.rail?.takeIf(String::isNotBlank),
             transferMessage = value.transferMessage?.takeIf(String::isNotBlank),
-            depositFee = convertDepositFee(value.fee),
+            depositFee = value.depositFee?.let(::convertDepositFee) ?: value.legacyFee()?.let(::convertLegacyFee),
             depositLimit = convertDepositLimit(value.depositLimit),
             exchangeRate = convertExchangeRate(value.exchangeRate),
+            amountLimits = value.amountLimits?.let(AmountLimitsConverter::convert),
         )
     }
 
-    private fun convertDepositFee(value: BankCredentialsResponse.Fee?): BankCredentials.DepositFee? {
-        val amount = value?.amount?.toBigDecimalOrNull() ?: return null
-        val type = value.type?.let(BankCredentials.DepositFee.Type::fromString)
+    private fun convertDepositFee(value: FeesResponse.Fee): BankCredentials.DepositFee? = depositFee(
+        kind = value.calculationType ?: value.type,
+        amount = value.amount,
+        fixedAmount = value.fixedAmount,
+        currency = value.currency,
+    )
+
+    private fun convertLegacyFee(value: BankCredentialsResponse.LegacyFee): BankCredentials.DepositFee? =
+        depositFee(kind = value.type, amount = value.amount?.toBigDecimalOrNull())
+
+    private fun depositFee(
+        kind: String?,
+        amount: BigDecimal?,
+        fixedAmount: BigDecimal? = null,
+        currency: String? = null,
+    ): BankCredentials.DepositFee? {
         return BankCredentials.DepositFee(
-            amount = amount,
-            type = type ?: BankCredentials.DepositFee.Type.UNKNOWN,
+            calculationType = convertCalculationType(kind) ?: return null,
+            amount = amount ?: return null,
+            fixedAmount = fixedAmount,
+            currency = currency?.takeIf(String::isNotBlank),
         )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun BankCredentialsResponse.Result.legacyFee(): BankCredentialsResponse.LegacyFee? = fee
+
+    private fun convertCalculationType(kind: String?): FeeCalculationType? {
+        return when (kind?.uppercase(Locale.US)) {
+            FeeCalculationType.FIXED.name, LEGACY_FIXED_TYPE -> FeeCalculationType.FIXED
+            FeeCalculationType.PERCENTAGE.name, LEGACY_PERCENTAGE_TYPE -> FeeCalculationType.PERCENTAGE
+            else -> null
+        }
     }
 
     private fun convertDepositLimit(value: BankCredentialsResponse.DepositLimit?): BankCredentials.DepositLimit? {

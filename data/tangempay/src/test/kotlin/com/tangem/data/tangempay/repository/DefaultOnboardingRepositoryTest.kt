@@ -606,6 +606,7 @@ internal class DefaultOnboardingRepositoryTest {
             paymentMethodId = paymentMethodId,
             calculationType = calculationType,
             amount = amount,
+            fixedAmount = null,
             currency = currency,
             description = "fee",
         )
@@ -726,7 +727,9 @@ internal class DefaultOnboardingRepositoryTest {
                 rail = rail,
                 transferMessage = null,
                 fee = null,
+                depositFee = null,
                 depositLimit = null,
+                amountLimits = null,
                 exchangeRate = null,
             )
     }
