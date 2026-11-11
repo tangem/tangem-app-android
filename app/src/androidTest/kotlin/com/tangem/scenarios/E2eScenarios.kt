@@ -504,8 +504,11 @@ private fun BaseTestCase.setCustomFeeAboveMarket(percent: Int) {
         onSendSelectNetworkFeeBottomSheet { marketRaw = inputTextFieldValue(maxFeeTitle).extractEditableText() }
         val market = numericPart(marketRaw)
         require(market > BigDecimal.ZERO) { "Prefilled market max fee is not a positive number: '$marketRaw'" }
+        // maxFeePerGas is in gwei and can be a fraction of a gwei on cheap networks; keep the field's full
+        // precision and round UP so the bump is always a representable value strictly above market (rounding to
+        // 2 dp could erase a small bump — 0.01→0.01 — or floor a low fee to 0, failing the assertion below).
         val bumped = market.multiply(BigDecimal(100 + percent)).divide(BigDecimal(100))
-            .setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+            .setScale(9, RoundingMode.UP).stripTrailingZeros().toPlainString()
         onSendSelectNetworkFeeBottomSheet {
             inputTextFieldValue(maxFeeTitle).performClick()
             inputTextFieldValue(maxFeeTitle).performTextReplacement(bumped)
