@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.addtoken.AddTokenContent
+import com.tangem.common.ui.addtoken.AddTokenContentV2
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -13,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.onramp.hottokens.portfolio.model.OnrampAddTokenModel
+import com.tangem.features.wallet.WalletFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.Flow
 internal class OnrampAddTokenComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: Params,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : AppComponentContext by context, ComposableContentComponent {
 
     private val model: OnrampAddTokenModel = getOrCreateModel(params)
@@ -29,10 +32,11 @@ internal class OnrampAddTokenComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state = model.uiState.collectAsStateWithLifecycle()
         val um = state.value ?: return
-        AddTokenContent(
-            modifier = modifier,
-            state = um,
-        )
+        if (walletFeatureToggles.isRedesignedTokenRowsEnabled) {
+            AddTokenContentV2(modifier = modifier, state = um)
+        } else {
+            AddTokenContent(modifier = modifier, state = um)
+        }
     }
 
     data class Params(
