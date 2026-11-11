@@ -107,6 +107,7 @@ internal class MoneyAccountDetailsModelTest {
         clearMocks(renewTangemPaySessionUseCase, uiMessageSender, getBalanceHidingSettingsUseCase)
         clearMocks(moneyAccountFeatureToggles, getExploreUrlUseCase)
         every { moneyAccountFeatureToggles.isMxnEnabled } returns false
+        every { moneyAccountFeatureToggles.isYieldModeEnabled } returns false
         isBalanceHiddenFlow.value = false
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
         coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
@@ -739,6 +740,41 @@ internal class MoneyAccountDetailsModelTest {
 
             // Assert
             assertThat(model.uiState.value.txHistoryCurrency).isEqualTo(token)
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN yield mode toggle WHEN account loaded THEN yield supply currency follows toggle`(
+            isYieldModeEnabled: Boolean,
+        ) = runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isYieldModeEnabled } returns isYieldModeEnabled
+
+            // Act
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Assert
+            val expected = token.takeIf { isYieldModeEnabled }
+            assertThat(model.uiState.value.yieldSupplyCurrency).isEqualTo(expected)
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideNonAccountStatuses")
+        fun `GIVEN yield mode enabled WHEN status is not an account THEN yield supply currency is absent`(
+            status: MoneyAccountStatusValue,
+        ) = runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isYieldModeEnabled } returns true
+
+            // Act
+            val model = createModel(status)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.yieldSupplyCurrency).isNull()
             model.onDestroy()
         }
 
