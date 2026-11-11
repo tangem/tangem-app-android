@@ -1,5 +1,6 @@
 package com.tangem.features.feed.ui.v2
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -7,12 +8,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
@@ -25,6 +29,20 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_16
 
 internal val FeedBlockShape = RoundedCornerShape(size = 20.dp)
+
+/** Card background the blocks share; the feed animates it with the shtorka's detent. */
+internal val LocalFeedBlockColor = compositionLocalOf { Color.Unspecified }
+
+/** Semi-open shtorka shows the blocks on its material; fully open, they sit on an opaque surface. */
+@Composable
+internal fun animateFeedBlockColor(isSheetExpanded: Boolean): State<Color> = animateColorAsState(
+    targetValue = if (isSheetExpanded) {
+        TangemTheme.colors3.bg.secondary
+    } else {
+        TangemTheme.colors3.bg.transparent.onMaterial.primary
+    },
+    label = "feedBlockColor",
+)
 
 private const val TITLE_SKELETON_WIDTH_FRACTION = 0.45f
 private const val DESCRIPTION_SKELETON_WIDTH_FRACTION = 0.6f
@@ -43,7 +61,7 @@ internal fun FeedShortcutCard(
 ) {
     TangemSurface(
         modifier = modifier,
-        color = TangemTheme.colors3.bg.secondary,
+        color = feedBlockColor(),
         shape = FeedBlockShape,
         onClick = onClick,
     ) {
@@ -144,7 +162,7 @@ private fun FeedPromoCardFrame(
 ) {
     TangemSurface(
         modifier = modifier,
-        color = TangemTheme.colors3.bg.transparent.primary,
+        color = feedBlockColor(),
         shape = FeedBlockShape,
         onClick = onClick,
     ) {
@@ -187,7 +205,7 @@ private fun FeedPromoCardFrame(
 internal fun FeedTitleCard(title: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(
         modifier = modifier,
-        color = TangemTheme.colors3.bg.transparent.primary,
+        color = feedBlockColor(),
         shape = FeedBlockShape,
         onClick = onClick,
     ) {
@@ -200,6 +218,9 @@ internal fun FeedTitleCard(title: String, onClick: () -> Unit, modifier: Modifie
         }
     }
 }
+
+@Composable
+private fun feedBlockColor(): Color = LocalFeedBlockColor.current.takeOrElse { TangemTheme.colors3.bg.secondary }
 
 @Composable
 private fun FixedFontScale(content: @Composable () -> Unit) {
