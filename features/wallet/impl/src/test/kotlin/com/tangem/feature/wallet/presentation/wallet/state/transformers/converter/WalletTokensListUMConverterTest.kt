@@ -38,6 +38,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.StringsSigns
 import io.mockk.every
@@ -86,6 +87,7 @@ internal class WalletTokensListUMConverterTest {
         isRedesignedAccountRowsEnabled: Boolean = false,
         isRedesignedTokenRowsEnabled: Boolean = false,
         jointPendingOperations: List<JointPendingOperation> = emptyList(),
+        earnOverviews: EarnOverviews = EarnOverviews.Empty,
     ): WalletTokensListUMConverter = WalletTokensListUMConverter(
         appCurrency = AppCurrency.Default,
         selectedWallet = selectedWallet,
@@ -93,7 +95,7 @@ internal class WalletTokensListUMConverterTest {
         yieldModuleApyMap = emptyMap(),
         isAccountsModeEnabled = isAccountsModeEnabled,
         expandedAccounts = emptySet(),
-        stakingAvailabilityMap = emptyMap(),
+        earnOverviews = earnOverviews,
         shouldShowMainPromo = false,
         jointPendingOperations = jointPendingOperations,
         isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
@@ -111,6 +113,25 @@ internal class WalletTokensListUMConverterTest {
         return mockk<UserWallet.Cold>(relaxed = true) {
             every { this@mockk.scanResponse } returns scanResponse
         }
+    }
+
+    @Test
+    fun `GIVEN an overview with a headline for a token WHEN convert THEN that token row carries the badge text`() {
+        // Arrange
+        val tokenList = ungroupedTokenList()
+        val currency = tokenList.currencies.first().currency
+        val converter = createConverter(
+            selectedWallet = mockColdWallet(isSingleCurrency = false, isSingleWalletWithToken = false),
+            earnOverviews = earnOverviewsOf(currency, earnHeadline(isActive = true)),
+        )
+
+        // Act
+        val result = converter.convert(accountListOf(personalStatus(tokenList)))
+
+        // Assert
+        val row = (result as WalletTokensListUM.Content).tokenList.single() as TokensListItemUM2.Token
+        val title = row.tokenRowUM.titleUM as TangemTokenRowUM.TitleUM.Content
+        assertThat(title.badge?.text).isEqualTo(TEST_EARN_BADGE_TEXT)
     }
 
     @Test

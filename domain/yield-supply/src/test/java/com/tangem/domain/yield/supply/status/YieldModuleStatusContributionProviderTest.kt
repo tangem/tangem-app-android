@@ -5,6 +5,8 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.balance.ContributionResolver
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -79,6 +82,100 @@ internal class YieldModuleStatusContributionProviderTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SpendableDelta {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a position and a network status WHEN resolve THEN spendable delta makes amount the paired total`(
+            model: SpendableModel,
+        ) = runTest {
+            // Arrange
+            every {
+                yieldModuleStatusSupplier(YieldModuleStatusProducer.Params(userWalletId = userWalletId))
+            } returns flowOf(setOf(model.position))
+
+            // Act
+            val actual = provider.contributions(userWallet).first()
+                .resolve(currency = token, networkStatus = model.networkStatus)
+                ?.spendableDeltaCryptoAmount()
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = spendableModels()
+    }
+
+    private fun spendableModels() = listOf(
+        SpendableModel(
+            name = "network amount read with the position: the supplied part",
+            position = status(effectiveProtocolBalance = BigDecimal("7"), effectiveBalance = BigDecimal("10")),
+            networkStatus = verified(amount = BigDecimal("3")),
+            expected = BigDecimal("7"),
+        ),
+        SpendableModel(
+            name = "network amount observed after an exit: nothing on top",
+            position = status(effectiveProtocolBalance = BigDecimal("7"), effectiveBalance = BigDecimal("10")),
+            networkStatus = verified(amount = BigDecimal("10")),
+            expected = BigDecimal.ZERO,
+        ),
+        SpendableModel(
+            name = "network amount ahead of the position: negative",
+            position = status(effectiveProtocolBalance = BigDecimal("7"), effectiveBalance = BigDecimal("10")),
+            networkStatus = verified(amount = BigDecimal("12")),
+            expected = BigDecimal("-2"),
+        ),
+        SpendableModel(
+            name = "network amount already holds the supplied funds",
+            position = status(effectiveProtocolBalance = BigDecimal("7"), effectiveBalance = BigDecimal("10")),
+            networkStatus = verified(
+                amount = BigDecimal("10"),
+                yieldStatus = YieldSupplyStatus(
+                    isActive = true,
+                    isInitialized = true,
+                    isAllowedToSpend = true,
+                    effectiveProtocolBalance = BigDecimal("7"),
+                ),
+            ),
+            expected = BigDecimal.ZERO,
+        ),
+        SpendableModel(
+            name = "position stored without the paired total: the supplied part",
+            position = status(effectiveProtocolBalance = BigDecimal("7"), effectiveBalance = null),
+            networkStatus = verified(amount = BigDecimal("3")),
+            expected = BigDecimal("7"),
+        ),
+        SpendableModel(
+            name = "inactive position",
+            position = status(isActive = false, effectiveProtocolBalance = null),
+            networkStatus = verified(amount = BigDecimal("3")),
+            expected = BigDecimal.ZERO,
+        ),
+        SpendableModel(
+            name = "network status unreachable",
+            position = status(effectiveProtocolBalance = BigDecimal("7"), effectiveBalance = BigDecimal("10")),
+            networkStatus = NetworkStatus(network = token.network, value = NetworkStatus.Unreachable(address = null)),
+            expected = BigDecimal.ZERO,
+        ),
+        SpendableModel(
+            name = "no network status",
+            position = status(effectiveProtocolBalance = BigDecimal("7"), effectiveBalance = BigDecimal("10")),
+            networkStatus = null,
+            expected = BigDecimal.ZERO,
+        ),
+    )
+
+    data class SpendableModel(
+        val name: String,
+        val position: YieldModuleStatus,
+        val networkStatus: NetworkStatus?,
+        val expected: BigDecimal,
+    ) {
+        override fun toString(): String = name
     }
 
     @Suppress("unused")
@@ -144,6 +241,7 @@ internal class YieldModuleStatusContributionProviderTest {
         tokenAddress: String = "0xtokenabc",
         isActive: Boolean = true,
         effectiveProtocolBalance: BigDecimal? = BigDecimal.ONE,
+        effectiveBalance: BigDecimal? = null,
     ) = YieldModuleStatus(
         networkId = networkId,
         tokenAddress = tokenAddress,
@@ -151,7 +249,22 @@ internal class YieldModuleStatusContributionProviderTest {
         isInitialized = true,
         isAllowedToSpend = true,
         effectiveProtocolBalance = effectiveProtocolBalance,
+        effectiveBalance = effectiveBalance,
         source = StatusSource.ONLY_CACHE,
+    )
+
+    /** Verified network status of [token]; [yieldStatus] non-null is the SDK still reporting the effective balance. */
+    private fun verified(amount: BigDecimal, yieldStatus: YieldSupplyStatus? = null) = NetworkStatus(
+        network = token.network,
+        value = NetworkStatus.Verified(
+            address = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(value = "0x1", type = NetworkAddress.Address.Type.Primary),
+            ),
+            amounts = mapOf(token.id to NetworkStatus.Amount.Loaded(value = amount)),
+            pendingTransactions = emptyMap(),
+            yieldSupplyStatuses = mapOf(token.id to yieldStatus),
+            source = StatusSource.ACTUAL,
+        ),
     )
 
     data class ResolveModel(

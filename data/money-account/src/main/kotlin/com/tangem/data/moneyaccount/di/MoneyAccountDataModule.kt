@@ -97,6 +97,7 @@ internal interface MoneyAccountDataModule {
             scope: AppCoroutineScope,
             converter: MoneyAccountStatusValueDMConverter,
             dataStoreFactory: AppDataStoreFactory,
+            userWalletsListRepository: UserWalletsListRepository,
         ): MoneyAccountStatusesStore {
             return MoneyAccountStatusesStore(
                 runtimeStore = RuntimeSharedStore(),
@@ -110,6 +111,7 @@ internal interface MoneyAccountDataModule {
                     scope = scope,
                 ),
                 converter = converter,
+                userWalletsListRepository = userWalletsListRepository,
                 scope = scope,
             )
         }

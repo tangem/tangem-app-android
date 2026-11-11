@@ -297,6 +297,7 @@ internal class SingleAccountStatusListProducerContributionsTest {
         isInitialized = true,
         isAllowedToSpend = false,
         effectiveProtocolBalance = BigDecimal("7"),
+        effectiveBalance = BigDecimal("10"),
         source = StatusSource.ONLY_CACHE,
     )
 

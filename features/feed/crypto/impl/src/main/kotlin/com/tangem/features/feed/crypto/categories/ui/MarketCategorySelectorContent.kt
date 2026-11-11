@@ -29,7 +29,6 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.*
@@ -66,7 +65,7 @@ internal fun MarketCategorySelectorContent(state: MarketCategorySelectorUM, modi
 
         Footer(
             state = state.footer,
-            isEnabled = state.isEdited,
+            isVisible = state.isResetVisible,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
@@ -203,14 +202,11 @@ private fun FooterSpacer() {
     )
 }
 
-/**
- * Always present, so a filter arrived at with a selection can still be changed and applied; both
- * actions only mean something once the draft diverges from what is already applied.
- */
+/** A tap on a category applies it, so the footer only offers Reset — and only once there is a filter to clear. */
 @Composable
-private fun Footer(state: MarketCategorySelectorFooterUM, isEnabled: Boolean, modifier: Modifier = Modifier) {
+private fun Footer(state: MarketCategorySelectorFooterUM, isVisible: Boolean, modifier: Modifier = Modifier) {
     AnimatedVisibility(
-        visible = isEnabled,
+        visible = isVisible,
         // the default size transitions clip for good, cutting off the part of the footer fade drawn above it
         enter = fadeIn() + expandIn(clip = false),
         exit = shrinkOut(clip = false) + fadeOut(),
@@ -222,20 +218,13 @@ private fun Footer(state: MarketCategorySelectorFooterUM, isEnabled: Boolean, mo
             // inside the feed modal the blur samples the screen behind the sheet, not the list under the footer
             blurBackground = false,
         ) {
-            TangemButtonGroup {
-                TangemButton(
-                    variant = TangemButton.Variant.Secondary,
-                    size = TangemButton.Size.X12,
-                    text = resourceReference(R.string.common_reset),
-                    onClick = state.onReset,
-                )
-                TangemButton(
-                    variant = TangemButton.Variant.Primary,
-                    size = TangemButton.Size.X12,
-                    text = resourceReference(R.string.common_apply),
-                    onClick = state.onApply,
-                )
-            }
+            TangemButton(
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_reset),
+                onClick = state.onReset,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -362,8 +351,8 @@ private fun MarketCategorySelectorContent_Preview(
 private class MarketCategorySelectorPreviewProvider : PreviewParameterProvider<MarketCategorySelectorUM> {
     override val values: Sequence<MarketCategorySelectorUM>
         get() = sequenceOf(
-            previewState(body = previewBody(withFeatured = true), isEdited = true),
-            previewState(body = previewBody(withFeatured = false), isEdited = false),
+            previewState(body = previewBody(withFeatured = true), isResetVisible = true),
+            previewState(body = previewBody(withFeatured = false), isResetVisible = false),
             previewState(body = previewBody(withFeatured = false, query = "mem"), query = "mem"),
             previewState(body = MarketCategorySelectorUM.ContentUM.Empty, query = "zzz"),
             previewState(body = MarketCategorySelectorUM.ContentUM.Loading),
@@ -373,7 +362,7 @@ private class MarketCategorySelectorPreviewProvider : PreviewParameterProvider<M
 
 private fun previewState(
     body: MarketCategorySelectorUM.ContentUM,
-    isEdited: Boolean = false,
+    isResetVisible: Boolean = false,
     query: String = "",
 ): MarketCategorySelectorUM = MarketCategorySelectorUM(
     search = TangemSearch.State(
@@ -383,8 +372,8 @@ private fun previewState(
         isActive = query.isNotEmpty(),
         onActiveChange = {},
     ),
-    isEdited = isEdited,
-    footer = MarketCategorySelectorFooterUM(onReset = {}, onApply = {}),
+    isResetVisible = isResetVisible,
+    footer = MarketCategorySelectorFooterUM(onReset = {}),
     content = body,
 )
 

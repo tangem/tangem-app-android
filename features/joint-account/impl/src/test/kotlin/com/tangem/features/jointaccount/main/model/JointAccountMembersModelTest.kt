@@ -521,7 +521,7 @@ internal class JointAccountMembersModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.footer!!.button!!.onClick()
+        (model.uiState.value.footer as JointAccountMembersUM.FooterUM.Confirm).button.onClick()
 
         // Assert
         verify(exactly = 1) { router.push(JointAccountMembersRoute.ConfirmAddress(cryptoAccountId = ACCOUNT_ID)) }

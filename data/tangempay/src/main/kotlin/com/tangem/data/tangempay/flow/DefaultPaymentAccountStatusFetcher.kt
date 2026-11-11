@@ -29,7 +29,7 @@ import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.tangempay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

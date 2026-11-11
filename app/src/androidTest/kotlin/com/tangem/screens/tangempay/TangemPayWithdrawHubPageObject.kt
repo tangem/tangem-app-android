@@ -35,6 +35,12 @@ class TangemPayWithdrawHubPageObject(semanticsProvider: SemanticsNodeInteraction
         useUnmergedTree = true
     }
 
+    fun hubText(text: String): KNode = child {
+        hasText(text)
+        hasAnyAncestor(withTestTag(TangemPayTestTags.WITHDRAW_HUB_SCREEN))
+        useUnmergedTree = true
+    }
+
     val swapRecentsEmpty: KNode = recentsEmpty(sectionTag = TangemPayTestTags.WITHDRAW_HUB_SWAP_SECTION)
 
     val bankRecentsEmpty: KNode = recentsEmpty(sectionTag = TangemPayTestTags.WITHDRAW_HUB_BANK_SECTION)

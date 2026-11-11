@@ -17,6 +17,7 @@ import com.tangem.features.send.feeselector.component.token.FeeTokenSelectorInte
 import com.tangem.features.send.feeselector.component.token.entity.FeeTokenItemState
 import com.tangem.features.send.feeselector.component.token.entity.FeeTokenSelectorUM
 import com.tangem.features.send.feeselector.model.FeeSelectorIntents
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
@@ -36,6 +37,7 @@ internal class FeeTokenSelectorModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val urlOpener: UrlOpener,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : Model(), FeeTokenSelectorIntents,
     FeeSelectorIntents by paramsContainer.require<FeeSelectorComponentParams>().intents {
 
@@ -97,6 +99,7 @@ internal class FeeTokenSelectorModel @Inject constructor(
             canPayFee = true,
             onTokenClick = ::onSponsoredFeeSelected,
             isSponsoredFee = true,
+            isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
         ).convert(status)
     }
 
@@ -108,6 +111,7 @@ internal class FeeTokenSelectorModel @Inject constructor(
             appCurrencyProvider = Provider { appCurrency },
             canPayFee = status.currency.id !in notEnoughForFee,
             onTokenClick = { onTokenSelected(status) },
+            isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
         ).convert(status)
     }
 

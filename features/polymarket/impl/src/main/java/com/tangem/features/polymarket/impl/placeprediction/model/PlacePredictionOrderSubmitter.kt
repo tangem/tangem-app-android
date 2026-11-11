@@ -27,9 +27,7 @@ import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
-import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
@@ -68,7 +66,6 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val submitPredictionOrderInteractor: SubmitPredictionOrderInteractor,
-    private val featureToggles: PolymarketFeatureToggles,
     private val awaitDelayedPredictionOrderUseCase: AwaitDelayedPredictionOrderUseCase,
     private val positionsRepository: PolymarketPositionsRepository,
     private val predictionFundingWindow: PredictionFundingWindow,
@@ -78,18 +75,17 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     private var isAwaitingResultDate = false
 
     /**
-     * @param confirmedWith the button the user confirmed the order on; a plain tap allows the session key only
+     * @param preference how the confirmed button may sign; null when it no longer can
      * @param onKeyLost told when an order confirmed for the session key cannot be signed with it
      */
     suspend fun submit(
         prepared: PreparedPrediction,
-        confirmedWith: PlaceButtonStyleUM,
+        preference: PredictionOrderSigningPreference?,
         onKeyLost: () -> Unit,
     ): PlaceResultUM? {
         if (uiState.value.submit !is SubmitUM.Idle || !uiState.value.isReadyToPlace) return null
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
-        val preference = confirmedWith.toSigningPreference(featureToggles.isPolymarketSessionKeysEnabled)
-            ?: return onSessionKeyLost(onKeyLost)
+        preference ?: return onSessionKeyLost(onKeyLost)
         val result = place(prepared = prepared, preference = preference, onKeyLost = onKeyLost) ?: return null
         isAwaitingResultDate = true
         prepared.awaitLiveResolutionDateMillis()
@@ -409,14 +405,6 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         val logger = TangemLogger.withTag(tag = "PlacePredictionOrderSubmitter")
     }
 }
-
-private fun PlaceButtonStyleUM.toSigningPreference(isSessionKeysEnabled: Boolean): PredictionOrderSigningPreference? =
-    when {
-        this == PlaceButtonStyleUM.PLAIN && !isSessionKeysEnabled -> null
-        this == PlaceButtonStyleUM.PLAIN -> PredictionOrderSigningPreference.SESSION_KEY_ONLY
-        isSessionKeysEnabled -> PredictionOrderSigningPreference.AUTOMATIC
-        else -> PredictionOrderSigningPreference.OWNER_ONLY
-    }
 
 private sealed interface SpendingPower {
 

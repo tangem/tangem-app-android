@@ -26,6 +26,7 @@ internal class YieldModuleStatusDMTest {
             isInitialized = true,
             isAllowedToSpend = true,
             effectiveProtocolBalance = BigDecimal("1.000001"),
+            effectiveBalance = BigDecimal("3.000001"),
         )
 
         // Act
@@ -37,7 +38,7 @@ internal class YieldModuleStatusDMTest {
 
     @Test
     fun `GIVEN stored file WHEN decoded THEN fields are read by their persisted names`() {
-        // Arrange
+        // Arrange — the second entry is the shape written before positions carried the paired total
         val json = """
             {
                 "011": [
@@ -49,7 +50,8 @@ internal class YieldModuleStatusDMTest {
                         "is_active": true,
                         "is_initialized": true,
                         "is_allowed_to_spend": false,
-                        "effective_protocol_balance": "5.25"
+                        "effective_protocol_balance": "5.25",
+                        "effective_balance": "8.5"
                     },
                     {
                         "network_id": "base",
@@ -78,6 +80,7 @@ internal class YieldModuleStatusDMTest {
                     isInitialized = true,
                     isAllowedToSpend = false,
                     effectiveProtocolBalance = BigDecimal("5.25"),
+                    effectiveBalance = BigDecimal("8.5"),
                 ),
                 YieldModuleStatusDM(
                     networkId = "base",

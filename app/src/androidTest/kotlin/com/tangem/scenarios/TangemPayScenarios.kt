@@ -465,6 +465,22 @@ fun BaseTestCase.enterHotWalletUnlockAccessCode(accessCode: String) {
     }
 }
 
+@OptIn(ExperimentalTestApi::class)
+fun BaseTestCase.waitForHotWalletUnlockDialog() {
+    composeTestRule.waitUntilAtLeastOneExists(unlockDialogAccessCodeInputMatcher, WAIT_UNTIL_TIMEOUT)
+}
+
+@OptIn(ExperimentalTestApi::class)
+fun BaseTestCase.cancelHotWalletUnlock() {
+    step("Assert access code dialog is displayed") { waitForHotWalletUnlockDialog() }
+    step("Click on 'Back' button of the access code dialog") {
+        onHotWalletAccessCodeScreen { unlockDialogBackButton.performClick() }
+    }
+    step("Assert access code dialog is not displayed") {
+        composeTestRule.waitUntilDoesNotExist(unlockDialogAccessCodeInputMatcher, WAIT_UNTIL_TIMEOUT)
+    }
+}
+
 fun BaseTestCase.assertTangemPayRenewSessionAvailableAfterFailure() {
     step("Assert 'Renew session' button stops loading") {
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {

@@ -19,11 +19,13 @@ import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
@@ -56,7 +58,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
         @ProvideTestModels
         fun isEligible(model: EligibilityModel) {
             // Arrange
-            val status = createStatus(model.yieldSupplyStatus)
+            val status = createStatus(model.yieldSupplyStatus, model.contributions)
 
             // Act
             val actual = isEligibleFeeToken(status)
@@ -71,12 +73,26 @@ internal class GetAvailableFeeTokensUseCaseTest {
             EligibilityModel(yieldSupplyStatus = ACTIVE_YIELD, expected = true),
             // Inactive yield status: excluded (no module to withdraw from).
             EligibilityModel(yieldSupplyStatus = INACTIVE_YIELD, expected = false),
+            // Positions source: an inactive position (or a wallet without a module) is a plain token, as before.
+            EligibilityModel(
+                yieldSupplyStatus = null,
+                contributions = listOf(YieldSupplyContribution(status = INACTIVE_YIELD, source = StatusSource.ACTUAL)),
+                expected = true,
+            ),
+            EligibilityModel(
+                yieldSupplyStatus = null,
+                contributions = listOf(YieldSupplyContribution(status = ACTIVE_YIELD, source = StatusSource.ACTUAL)),
+                expected = true,
+            ),
         )
 
-        private fun createStatus(yieldSupplyStatus: YieldSupplyStatus?): CryptoCurrencyStatus {
+        private fun createStatus(
+            yieldSupplyStatus: YieldSupplyStatus?,
+            contributions: List<BalanceContribution>,
+        ): CryptoCurrencyStatus {
             val status = mockk<CryptoCurrencyStatus>()
             every { status.value.yieldSupplyStatus } returns yieldSupplyStatus
-            every { status.value.contributions } returns emptyList()
+            every { status.value.contributions } returns contributions
             return status
         }
     }
@@ -669,6 +685,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
     internal data class EligibilityModel(
         val yieldSupplyStatus: YieldSupplyStatus?,
         val expected: Boolean,
+        val contributions: List<BalanceContribution> = emptyList(),
     )
 
     // endregion

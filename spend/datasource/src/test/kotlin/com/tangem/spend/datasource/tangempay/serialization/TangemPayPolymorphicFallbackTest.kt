@@ -3,6 +3,7 @@ package com.tangem.spend.datasource.tangempay.serialization
 import com.google.common.truth.Truth.assertThat
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.TangemPayAuthApi
+import com.tangem.spend.datasource.tangempay.TangemPayOrderApi
 import com.tangem.spend.datasource.tangempay.TangemPayProvisioningApi
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -28,6 +29,7 @@ internal class TangemPayPolymorphicFallbackTest {
 
     private val apis = listOf(
         TangemPayApi::class,
+        TangemPayOrderApi::class,
         TangemPayProvisioningApi::class,
         TangemPayAuthApi::class,
     )

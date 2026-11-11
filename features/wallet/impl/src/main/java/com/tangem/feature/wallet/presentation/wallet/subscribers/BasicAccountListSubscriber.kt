@@ -7,12 +7,11 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListTransformer
+import com.tangem.features.earn.api.overview.EarnOverviews
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import java.math.BigDecimal
@@ -43,7 +42,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         expandedAccounts: Set<AccountId>,
         isAccountMode: Boolean,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
-        stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
+        earnOverviews: EarnOverviews = EarnOverviews.Empty,
         shouldShowMainPromo: Boolean = false,
         isHotBackedUp: Boolean? = null,
         jointPendingOperations: List<JointPendingOperation> = emptyList(),
@@ -56,7 +55,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 appCurrency = appCurrency,
                 clickIntents = clickIntents,
                 yieldSupplyApyMap = yieldSupplyApyMap,
-                stakingAvailabilityMap = stakingAvailabilityMap,
+                earnOverviews = earnOverviews,
                 shouldShowMainPromo = shouldShowMainPromo,
                 isAccountsModeEnabled = isAccountMode,
                 isHotBackedUp = isHotBackedUp,

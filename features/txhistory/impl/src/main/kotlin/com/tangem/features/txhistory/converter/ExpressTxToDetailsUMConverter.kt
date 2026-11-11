@@ -60,7 +60,6 @@ internal class ExpressTxToDetailsUMConverter(
     private val lookup: TxHistoryLookupContext,
     private val menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
     private val isBalanceHidden: Boolean,
-    private val refundCurrency: CryptoCurrency? = null,
     private val onLearnMoreAboutRefundsClick: () -> Unit = {},
     private val onGoToRefundedTokenClick: (CryptoCurrency) -> Unit = {},
     private val nowMillis: () -> Long = System::currentTimeMillis,
@@ -84,7 +83,7 @@ internal class ExpressTxToDetailsUMConverter(
         val legOwners = lookup.resolveSwapLegOwners(swap)
         val fromOwner = legOwners.from?.toAssetOwnerUM()
         val toOwner = legOwners.to?.toAssetOwnerUM()
-        val refundToken = refundCurrency.takeIf { swap.tx.status == ExpressExchangeStatus.Refunded }
+        val refundToken = swap.tx.refundCurrency.takeIf { swap.tx.status == ExpressExchangeStatus.Refunded }
         val isLongRunning = swap.tx.isLongRunning(nowMillis())
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
