@@ -3,34 +3,31 @@ package com.tangem.features.jointaccount.deeplink
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.utils.pushIfAbsent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private const val PATH_SEGMENT_JOINT_ACCOUNT = "joint-account"
 private const val PATH_SEGMENT_JOIN = "join"
 private const val EXPECTED_PATH_SEGMENTS_COUNT = 3
 
-internal class DefaultJointAccountInviteDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val scope: CoroutineScope,
-    @Assisted private val deeplinkUri: Uri,
+internal class JointAccountInviteDeepLinkHandler @Inject constructor(
     private val appRouter: AppRouter,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
-) : JointAccountInviteDeepLinkHandler {
+) : DeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
+    override val isEnabled: Boolean
+        get() = jointAccountFeatureToggles.isJointAccountEnabled
 
-    private fun handleDeepLink() {
+    override fun handle(request: DeepLinkRequest) {
+        val deeplinkUri = request.uri
         if (!jointAccountFeatureToggles.isJointAccountEnabled) {
             TangemLogger.e("Joint account feature is disabled, ignoring deeplink")
             appRouter.popTo(AppRoute.Wallet)
@@ -49,16 +46,11 @@ internal class DefaultJointAccountInviteDeepLinkHandler @AssistedInject construc
             return
         }
 
-        scope.launch {
+        request.scope.launch {
             val route = AppRoute.JointAccountJoin(inviteId = inviteId)
             if (route !in appRouter.stack) analyticsEventHandler.send(JointAccountAnalyticsEvent.InviteLinkOpened())
             appRouter.pushIfAbsent(route)
         }
-    }
-
-    @AssistedFactory
-    interface Factory : JointAccountInviteDeepLinkHandler.Factory {
-        override fun create(coroutineScope: CoroutineScope, deeplinkUri: Uri): DefaultJointAccountInviteDeepLinkHandler
     }
 
     companion object {

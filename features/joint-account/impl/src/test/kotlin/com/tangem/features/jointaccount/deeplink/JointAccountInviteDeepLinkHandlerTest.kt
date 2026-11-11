@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.deeplink
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
@@ -23,7 +24,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class DefaultJointAccountInviteDeepLinkHandlerTest {
+internal class JointAccountInviteDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk()
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
@@ -132,12 +133,17 @@ internal class DefaultJointAccountInviteDeepLinkHandlerTest {
     }
 
     private fun createHandler(scope: CoroutineScope, deeplinkUri: Uri) {
-        DefaultJointAccountInviteDeepLinkHandler(
-            scope = scope,
-            deeplinkUri = deeplinkUri,
+        JointAccountInviteDeepLinkHandler(
             appRouter = appRouter,
             jointAccountFeatureToggles = jointAccountFeatureToggles,
             analyticsEventHandler = analyticsEventHandler,
+        ).handle(
+            request = DeepLinkRequest(
+                uri = deeplinkUri,
+                queryParams = emptyMap(),
+                scope = scope,
+                isFromOnNewIntent = false,
+            ),
         )
     }
 }
