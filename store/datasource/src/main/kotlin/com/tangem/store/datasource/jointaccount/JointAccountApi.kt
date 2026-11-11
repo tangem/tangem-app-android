@@ -1,6 +1,7 @@
 package com.tangem.store.datasource.jointaccount
 
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.lib.auth.api.RequiresSessionAuth
 import com.tangem.store.datasource.jointaccount.models.ConfirmJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
@@ -43,6 +44,7 @@ interface JointAccountApi {
      * is already registered in a joint account. On 409 do NOT retry under the next derivation index — resolve with
      * [getJointAccounts], which will show that account.
      */
+    @RequiresSessionAuth
     @POST("api/v1/wallets/{walletId}/joint-accounts")
     suspend fun createJointAccount(
         @Path("walletId") walletId: String,
@@ -56,6 +58,7 @@ interface JointAccountApi {
      * Errors: 400 — `slot` outside `1..membersCount - 1`; 403 — a member, not the creator; 404 — no such account for
      * the wallet; 409 — the account left `pending`, or the slot is taken.
      */
+    @RequiresSessionAuth
     @POST("api/v1/wallets/{walletId}/joint-accounts/invites")
     suspend fun issueJointAccountInvite(
         @Path("walletId") walletId: String,
@@ -70,6 +73,7 @@ interface JointAccountApi {
      * The response carries an ETag covering everything the list shows — a member, a status, an operation, a vote —
      * so [eTag] asks the backend to answer `304` while nothing of it moved. Refresh on push and on screen opening.
      */
+    @RequiresSessionAuth
     @GET("api/v1/wallets/{walletId}/joint-accounts")
     suspend fun getJointAccounts(
         @Path("walletId") walletId: String,
@@ -84,6 +88,7 @@ interface JointAccountApi {
      * Errors: 404 — no such invite, a code replaced by a reissue included; 409 — the invite expired or is already
      * redeemed, the account no longer accepts participants, or this wallet already holds a slot.
      */
+    @RequiresSessionAuth
     @GET("api/v1/wallets/{walletId}/joint-accounts/invites/{inviteId}")
     suspend fun getJointAccountInvite(
         @Path("walletId") walletId: String,
@@ -100,6 +105,7 @@ interface JointAccountApi {
      * invite among them — except `member.address` already registered, which is resolved as in creation. A joiner who lost the response finds the account in [getJointAccounts]; retrying
      * is 409.
      */
+    @RequiresSessionAuth
     @POST("api/v1/wallets/{walletId}/joint-accounts/join")
     suspend fun joinJointAccount(
         @Path("walletId") walletId: String,
@@ -116,18 +122,21 @@ interface JointAccountApi {
      * `pending` account included; 409 — the account is cancelled, or `payload` differs from what the account
      * holds.
      */
+    @RequiresSessionAuth
     @POST("api/v1/wallets/{walletId}/joint-accounts/confirm")
     suspend fun confirmJointAccount(
         @Path("walletId") walletId: String,
         @Body body: ConfirmJointAccountRequest,
     ): ApiResponse<JointAccountDto>
 
+    @RequiresSessionAuth
     @POST("api/v1/wallets/{walletId}/joint-accounts/operations")
     suspend fun createJointOperation(
         @Path("walletId") walletId: String,
         @Body body: CreateJointOperationRequest,
     ): ApiResponse<JointOperationDto>
 
+    @RequiresSessionAuth
     @POST("api/v1/wallets/{walletId}/joint-accounts/operations/{operationId}/sign")
     suspend fun signJointOperation(
         @Path("walletId") walletId: String,
@@ -135,6 +144,7 @@ interface JointAccountApi {
         @Body body: SignJointOperationRequest,
     ): ApiResponse<JointOperationDto>
 
+    @RequiresSessionAuth
     @POST("api/v1/wallets/{walletId}/joint-accounts/operations/{operationId}/reject")
     suspend fun rejectJointOperation(
         @Path("walletId") walletId: String,
@@ -146,6 +156,7 @@ interface JointAccountApi {
      *
      * @param afterCursor `endCursor` of the previous page; absent on the first page
      */
+    @RequiresSessionAuth
     @GET("api/v1/wallets/{walletId}/joint-accounts/operations/history")
     suspend fun getJointOperationHistory(
         @Path("walletId") walletId: String,
@@ -158,6 +169,7 @@ interface JointAccountApi {
      *
      * @param beforeCursor `startDeltaCursor` of the first history page, then `startCursor` of the previous delta page
      */
+    @RequiresSessionAuth
     @GET("api/v1/wallets/{walletId}/joint-accounts/operations/history/delta")
     suspend fun getJointOperationHistoryDelta(
         @Path("walletId") walletId: String,
@@ -170,6 +182,7 @@ interface JointAccountApi {
      *
      * Errors: 403 — the wallet holds no slot in the operation's joint account; 404 — no such operation.
      */
+    @RequiresSessionAuth
     @GET("api/v1/wallets/{walletId}/joint-accounts/operations/{operationId}")
     suspend fun getJointOperation(
         @Path("walletId") walletId: String,

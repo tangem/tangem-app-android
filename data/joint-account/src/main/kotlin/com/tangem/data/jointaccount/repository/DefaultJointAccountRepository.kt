@@ -22,6 +22,7 @@ import com.tangem.data.jointaccount.converter.JointOperationRejectErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
 import com.tangem.data.jointaccount.converter.SafeTxConverter
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.store.datasource.jointaccount.JointWalletNotLinkedResolver
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.IssueJointAccountInviteRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
@@ -63,7 +64,8 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private val logger = TangemLogger.withTag(tag = TAG)
     private val createErrorConverter = JointOperationCreateErrorConverter(moshi)
     private val signErrorConverter = JointOperationSignErrorConverter()
-    private val rejectErrorConverter = JointOperationRejectErrorConverter()
+    private val walletNotLinkedResolver = JointWalletNotLinkedResolver(moshi)
+    private val rejectErrorConverter = JointOperationRejectErrorConverter(walletNotLinkedResolver)
 
     override suspend fun getFreeOwnerDerivationIndex(userWalletId: UserWalletId): Int {
         return withContext(dispatchers.io) {
@@ -231,7 +233,8 @@ internal class DefaultJointAccountRepository @Inject constructor(
             },
             onError = { error ->
                 val isSlotUnavailable = error is ApiResponseError.HttpException &&
-                    error.code in SLOT_UNAVAILABLE_CODES
+                    error.code in SLOT_UNAVAILABLE_CODES &&
+                    !walletNotLinkedResolver.isWalletNotLinked(error)
                 if (isSlotUnavailable) {
                     JointAccountInviteIssueError.SlotUnavailable(cause = error).left()
                 } else {
