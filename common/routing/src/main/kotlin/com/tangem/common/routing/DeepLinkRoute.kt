@@ -4,10 +4,6 @@ sealed class DeepLinkRoute {
 
     abstract val host: String
 
-    data object TokenDetails : DeepLinkRoute() {
-        override val host: String = "token"
-    }
-
     data object TangemPayOnboard : DeepLinkRoute() {
         override val host: String = "onboard-visa"
     }
@@ -18,13 +14,6 @@ sealed class DeepLinkRoute {
 
     data object PayAppMain : DeepLinkRoute() {
         override val host: String = "pay-app-main"
-    }
-
-    data object JointAccount : DeepLinkRoute() {
-        override val host: String = "joint_account"
-
-        const val ENTRY_MEMBERS: String = "members"
-        const val ENTRY_OVERVIEW: String = "overview"
     }
 }
 
