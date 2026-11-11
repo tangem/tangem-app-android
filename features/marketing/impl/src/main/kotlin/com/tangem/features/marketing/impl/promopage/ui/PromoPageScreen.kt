@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import com.tangem.common.uri.PromoPageUrlValidator
+import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.loader.TangemLoader
@@ -54,7 +55,13 @@ internal fun PromoPageScreen(
     TangemTopBarScaffold(
         modifier = modifier,
         topBar = {
-            TangemTopNavigation(endButton = { TangemButton.Close(onClick = onCloseClick) })
+            // A blur draws the WebView once more into its own layer, and a WebView drawn twice a frame flickers
+            ProvideHaze {
+                TangemTopNavigation(
+                    blurBackground = false,
+                    endButton = { TangemButton.Close(onClick = onCloseClick) },
+                )
+            }
         },
     ) { contentPadding ->
         Box(
