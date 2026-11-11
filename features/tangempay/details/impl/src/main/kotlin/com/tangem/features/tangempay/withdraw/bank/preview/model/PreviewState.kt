@@ -35,6 +35,11 @@ internal fun BankOfframpError.toFailure(): PreviewFailure = when (this) {
     BankOfframpError.Validation,
     BankOfframpError.PollingTimeout,
     BankOfframpError.WithdrawalInProgress,
+    BankOfframpError.QuoteExpired,
+    BankOfframpError.VerificationIncomplete,
+    BankOfframpError.Conflict,
+    BankOfframpError.AmountOutOfLimits,
+    BankOfframpError.Rejected,
     is BankOfframpError.Unknown,
     -> PreviewFailure.General
 }
