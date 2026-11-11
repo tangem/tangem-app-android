@@ -29,11 +29,14 @@ import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_cross_24
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectTopBarUM
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectUM
@@ -56,7 +59,7 @@ internal fun OnrampRedirectContentDs(state: OnrampRedirectUM, modifier: Modifier
             contentAlign = TangemTopNavigation.ContentAlign.Start,
             blurBackground = false,
             fadeEnabled = false,
-            onClose = state.topBarConfig.startButtonUM.onClicked,
+            endButton = { RedirectCloseButton(onClick = state.topBarConfig.startButtonUM.onClicked) },
         )
         Content(
             state = state,
@@ -89,6 +92,28 @@ private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
+    }
+}
+
+@Composable
+private fun RedirectCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemSurface(
+        modifier = modifier.size(44.dp),
+        isMaterial = true,
+        shape = CircleShape,
+        onClick = onClick,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                imageVector = Icons.ic_cross_24,
+                tint = TangemTheme.colors3.icon.primary,
+                contentDescription = null,
+            )
+        }
     }
 }
 
