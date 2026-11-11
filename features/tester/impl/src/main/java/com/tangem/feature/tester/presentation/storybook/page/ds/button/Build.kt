@@ -13,13 +13,19 @@ internal fun StateUpdater<TangemButtonStory>.build(): TangemButtonStory {
         isLoading = false,
         hasLoadingText = false,
         isEnabled = true,
+        isHoldToConfirm = false,
         hasIconStart = false,
         hasIconEnd = false,
         hasText = true,
         isBlurEnabled = true,
         textScale = 1f,
         onVariantChange = { variant ->
-            updateStory { it.copy(variant = variant) }
+            updateStory { story ->
+                story.copy(
+                    variant = variant,
+                    isLoading = story.isLoading && !story.isHoldToConfirm,
+                )
+            }
         },
         onSizeChange = { size ->
             updateStory { it.copy(size = size) }
@@ -35,6 +41,18 @@ internal fun StateUpdater<TangemButtonStory>.build(): TangemButtonStory {
         },
         onEnabledToggle = {
             updateStory { it.copy(isEnabled = !it.isEnabled) }
+        },
+        onHoldToConfirmToggle = {
+            updateStory { story ->
+                val isHoldToConfirm = !story.isHoldToConfirm
+                story.copy(
+                    isHoldToConfirm = isHoldToConfirm,
+                    isLoading = story.isLoading && isHoldToConfirm,
+                )
+            }
+        },
+        onHoldConfirm = {
+            updateStory { it.copy(isLoading = true) }
         },
         onIconStartToggle = {
             updateStory { it.copy(hasIconStart = !it.hasIconStart) }
