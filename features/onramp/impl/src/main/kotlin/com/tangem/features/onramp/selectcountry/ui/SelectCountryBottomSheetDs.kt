@@ -71,7 +71,7 @@ internal fun OnrampCountryListDs(state: CountryListUM, onCloseClick: () -> Unit,
             title = resourceReference(R.string.tangempay_order_data_country),
             onClose = onCloseClick,
         )
-        Box(modifier = Modifier.weight(1f)) {
+        Box(modifier = Modifier.weight(1f).windowInsetsPadding(WindowInsets.ime)) {
             when (state) {
                 is CountryListUM.Content -> CountryListContent(state = state)
                 is CountryListUM.Error -> CountryListError(state = state)
@@ -96,7 +96,7 @@ private fun CountryListContent(state: CountryListUM.Content, modifier: Modifier 
         modifier = modifier
             .fillMaxSize()
             .testTag(SelectCountryBottomSheetTestTags.LAZY_LIST),
-        contentPadding = PaddingValues(bottom = FOOTER_INSET + maxOf(navigationBarBottomInset(), imeBottomInset())),
+        contentPadding = PaddingValues(bottom = FOOTER_INSET + navigationBarBottomInset()),
     ) {
         if (selectedItems.isNotEmpty()) {
             item(key = "selected_header") {
@@ -258,16 +258,11 @@ private fun navigationBarBottomInset(): Dp = WindowInsets.navigationBars
     .calculateBottomPadding()
 
 @Composable
-private fun imeBottomInset(): Dp = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
-
-@Composable
 private fun CountrySearchFooter(state: TangemSearch.State, modifier: Modifier = Modifier) {
     val navigationBarInset = navigationBarBottomInset()
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.ime),
+        modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.BottomCenter,
     ) {
         TangemFade(
