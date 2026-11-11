@@ -21,7 +21,6 @@ import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.modal.TangemModal
@@ -116,7 +115,7 @@ private fun NetworksBlock(
         networks.fastForEach { item -> NetworkRow(item = item) }
 
         if (hasFooter) {
-            SpacerH(FOOTER_HEIGHT)
+            SpacerH(80.dp)
         }
     }
 }
@@ -176,34 +175,21 @@ private fun NetworkRow(item: EarnFilterNetworkUM, modifier: Modifier = Modifier)
 private fun Footer(state: EarnFilterFooterUM, modifier: Modifier = Modifier) {
     TangemFooter(
         modifier = modifier,
-        // the insets and the padding repeat what this footer looked like before it became a TangemFooter
         windowInsets = WindowInsets(0),
-        contentPadding = PaddingValues(all = FOOTER_PADDING),
+        contentPadding = PaddingValues(all = 16.dp),
         // inside a modal the fade samples the screen behind the sheet rather than the list under it,
         // so the blur costs a pass per frame and shows nothing
         blurBackground = false,
     ) {
-        TangemButtonGroup {
-            TangemButton(
-                variant = TangemButton.Variant.Secondary,
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.common_reset),
-                onClick = state.onReset,
-            )
-            TangemButton(
-                variant = TangemButton.Variant.Primary,
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.common_apply),
-                onClick = state.onApply,
-            )
-        }
+        TangemButton(
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X12,
+            text = resourceReference(R.string.common_apply),
+            onClick = state.onApply,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
-
-private val FOOTER_PADDING = 16.dp
-
-/** Scroll reserve under the last network: the footer's two [TangemButton.Size.X12] buttons and its padding. */
-private val FOOTER_HEIGHT = FOOTER_PADDING * 2 + 48.dp * 2 + 8.dp
 
 // region Preview
 
@@ -212,20 +198,29 @@ private val FOOTER_HEIGHT = FOOTER_PADDING * 2 + 48.dp * 2 + 8.dp
 @Composable
 private fun PreviewV2() {
     TangemThemePreviewRedesign {
-        EarnFilterByNetworkBottomSheet(config = previewConfig(withFooter = false))
+        EarnFilterByNetworkBottomSheet(config = previewConfig(isNetworkSelected = false))
     }
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Preview(showBackground = true, widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewWithFooterV2() {
+private fun PreviewNetworkSelectedV2() {
     TangemThemePreviewRedesign {
-        EarnFilterByNetworkBottomSheet(config = previewConfig(withFooter = true))
+        EarnFilterByNetworkBottomSheet(config = previewConfig(isNetworkSelected = true))
     }
 }
 
-private fun previewConfig(withFooter: Boolean) = TangemBottomSheetConfig(
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Preview(showBackground = true, widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewScopeSwitchedV2() {
+    TangemThemePreviewRedesign {
+        EarnFilterByNetworkBottomSheet(config = previewConfig(isNetworkSelected = false, hasFooter = true))
+    }
+}
+
+private fun previewConfig(isNetworkSelected: Boolean, hasFooter: Boolean = false) = TangemBottomSheetConfig(
     isShown = true,
     onDismissRequest = {},
     content = EarnFilterByNetworkBottomSheetContentUM(
@@ -243,13 +238,13 @@ private fun previewConfig(withFooter: Boolean) = TangemBottomSheetConfig(
             ),
         ),
         networks = persistentListOf(
-            EarnFilterNetworkUM.All(isSelected = !withFooter, onClick = {}),
+            EarnFilterNetworkUM.All(isSelected = !isNetworkSelected, onClick = {}),
             EarnFilterNetworkUM.Network(
                 id = "ethereum",
                 name = stringReference("Ethereum"),
                 symbol = "ETH",
                 iconRes = R.drawable.img_btc_22,
-                isSelected = withFooter,
+                isSelected = isNetworkSelected,
                 onClick = {},
             ),
             EarnFilterNetworkUM.Network(
@@ -261,7 +256,7 @@ private fun previewConfig(withFooter: Boolean) = TangemBottomSheetConfig(
                 onClick = {},
             ),
         ),
-        footer = EarnFilterFooterUM(onReset = {}, onApply = {}).takeIf { withFooter },
+        footer = EarnFilterFooterUM(onApply = {}).takeIf { hasFooter },
     ),
 )
 
