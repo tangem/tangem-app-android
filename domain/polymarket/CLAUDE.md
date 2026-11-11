@@ -17,7 +17,7 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 
 ## Invariants — expensive to break
 
-1. **Opening a screen prompts for nothing.** Background reads use `stored` / `withoutPrompting`; their `null` means
+1. **Opening a screen prompts for nothing**, except the device-link sheet at the feature entry. Background reads use `stored` / `withoutPrompting`; their `null` means
    "not derived here", never "no account".
 2. **One tap per onboarding run** (`PolymarketSigningSession`): derivation, reads and every signature share one
    card session / unlock. The derived key is stored at once, so a retry costs one tap too.
