@@ -1,0 +1,31 @@
+package com.tangem.features.tangempay.deeplink
+
+import android.net.Uri
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+
+internal class DefaultTangemPayOnboardDeepLinkHandler @AssistedInject constructor(
+    @Assisted uri: Uri,
+    appRouter: AppRouter,
+) : TangemPayOnboardDeepLinkHandler {
+
+    init {
+        val mode = AppRoute.TangemPayOnboarding.Mode.Deeplink(
+            deeplink = uri.toString(),
+        )
+        appRouter.push(AppRoute.TangemPayOnboarding(mode))
+    }
+
+    @AssistedFactory
+    interface Factory : TangemPayOnboardDeepLinkHandler.Factory {
+        override fun create(uri: Uri): DefaultTangemPayOnboardDeepLinkHandler
+    }
+
+    companion object {
+        const val TANGEM_DEEPLINK_KEY = "tangem://onboard-visa"
+        const val HTTPS_DEEPLINK_KEY = "https://tangem.com/pay-app"
+    }
+}

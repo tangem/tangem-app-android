@@ -22,6 +22,8 @@ import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.YieldBalanceItem
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -703,6 +705,251 @@ class CryptoCurrencyStatusFactoryTest {
     ) {
 
         override fun toString(): String = description
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class YieldSupplyStatusSource {
+
+        private val networkYieldStatus = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = true,
+            effectiveProtocolBalance = BigDecimal("4"),
+        )
+        private val positionYieldStatus = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = false,
+            effectiveProtocolBalance = BigDecimal("7"),
+        )
+        private val token = cryptoCurrencyFactory.createToken(blockchain = Blockchain.Ethereum)
+        private val customToken = token.copy(isCustom = true)
+
+        @ParameterizedTest
+        @MethodSource("provideYieldSourceModels")
+        fun `GIVEN yield status in network and contribution WHEN create THEN yield comes from the toggled source`(
+            model: YieldSourceModel,
+        ) {
+            // Arrange
+            val networkStatus = NetworkStatus(
+                network = model.currency.network,
+                value = createVerified(
+                    amounts = mapOf(model.currency.id to Amount.Loaded(value = BigDecimal.TEN)),
+                    yieldSupplyStatuses = mapOf(model.currency.id to networkYieldStatus),
+                ),
+            )
+
+            // Act
+            val actual = CryptoCurrencyStatusFactory.create(
+                currency = model.currency,
+                maybeNetworkStatus = networkStatus.some(),
+                maybeQuoteStatus = QuoteStatus(
+                    rawCurrencyId = model.currency.id.rawCurrencyId!!,
+                    value = model.quote,
+                ).some(),
+                contributions = model.contributions,
+                isYieldContributionEnabled = model.isYieldPositionsSourceEnabled,
+            )
+
+            // Assert
+            Truth.assertThat(actual.value).isInstanceOf(model.expectedShape)
+            Truth.assertThat(actual.value.yieldSupplyStatus).isEqualTo(model.expectedField)
+            Truth.assertThat(actual.value.yieldSupply).isEqualTo(model.expectedYieldSupply)
+        }
+
+        private fun provideYieldSourceModels(): List<YieldSourceModel> {
+            val contribution = YieldSupplyContribution(status = positionYieldStatus, source = StatusSource.ACTUAL)
+
+            return listOf(
+                YieldSourceModel(
+                    description = "disabled, Loaded: the field carries the network status and wins over a contribution",
+                    currency = token,
+                    quote = fullQuote,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = false,
+                    expectedShape = CryptoCurrencyStatus.Loaded::class.java,
+                    expectedField = networkYieldStatus,
+                    expectedYieldSupply = networkYieldStatus,
+                ),
+                YieldSourceModel(
+                    description = "enabled, Loaded: empty field, yield from the contribution",
+                    currency = token,
+                    quote = fullQuote,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = true,
+                    expectedShape = CryptoCurrencyStatus.Loaded::class.java,
+                    expectedField = null,
+                    expectedYieldSupply = positionYieldStatus,
+                ),
+                YieldSourceModel(
+                    description = "enabled, Loaded, no contribution: no fallback to the network status",
+                    currency = token,
+                    quote = fullQuote,
+                    contributions = emptyList(),
+                    isYieldPositionsSourceEnabled = true,
+                    expectedShape = CryptoCurrencyStatus.Loaded::class.java,
+                    expectedField = null,
+                    expectedYieldSupply = null,
+                ),
+                YieldSourceModel(
+                    description = "enabled, NoQuote: empty field, yield from the contribution",
+                    currency = token,
+                    quote = QuoteStatus.Empty,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = true,
+                    expectedShape = CryptoCurrencyStatus.NoQuote::class.java,
+                    expectedField = null,
+                    expectedYieldSupply = positionYieldStatus,
+                ),
+                YieldSourceModel(
+                    description = "disabled, NoQuote: network status",
+                    currency = token,
+                    quote = QuoteStatus.Empty,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = false,
+                    expectedShape = CryptoCurrencyStatus.NoQuote::class.java,
+                    expectedField = networkYieldStatus,
+                    expectedYieldSupply = networkYieldStatus,
+                ),
+                YieldSourceModel(
+                    description = "enabled, Custom: empty field, yield from the contribution",
+                    currency = customToken,
+                    quote = fullQuote,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = true,
+                    expectedShape = CryptoCurrencyStatus.Custom::class.java,
+                    expectedField = null,
+                    expectedYieldSupply = positionYieldStatus,
+                ),
+                YieldSourceModel(
+                    description = "disabled, Custom: network status",
+                    currency = customToken,
+                    quote = fullQuote,
+                    contributions = listOf(contribution),
+                    isYieldPositionsSourceEnabled = false,
+                    expectedShape = CryptoCurrencyStatus.Custom::class.java,
+                    expectedField = networkYieldStatus,
+                    expectedYieldSupply = networkYieldStatus,
+                ),
+            )
+        }
+    }
+
+    data class YieldSourceModel(
+        val description: String,
+        val currency: CryptoCurrency,
+        val quote: QuoteStatus.Value,
+        val contributions: List<BalanceContribution>,
+        val isYieldPositionsSourceEnabled: Boolean,
+        val expectedShape: Class<out CryptoCurrencyStatus.Value>,
+        val expectedField: YieldSupplyStatus?,
+        val expectedYieldSupply: YieldSupplyStatus?,
+    ) {
+
+        override fun toString(): String = description
+    }
+
+    /**
+     * The spendable part of a contribution is folded into `amount` (and so into `fiatAmount`), so every reader of
+     * `amount` keeps seeing what can be sent; a non-spendable balance such as a stake never is.
+     */
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SpendableFold {
+
+        private val token = cryptoCurrencyFactory.createToken(blockchain = Blockchain.Ethereum)
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN contributions WHEN create THEN only their spendable part is folded into the amount`(
+            model: FoldModel,
+        ) {
+            // Arrange
+            val quote = QuoteStatus(rawCurrencyId = model.currency.id.rawCurrencyId!!, value = model.quote)
+
+            // Act
+            val actual = create(
+                currency = model.currency,
+                contributions = model.contributions,
+                maybeQuoteStatus = quote.some(),
+            )
+
+            // Assert
+            Truth.assertThat(actual.value).isInstanceOf(model.expectedShape)
+            Truth.assertThat(FoldResult(actual.value.amount, actual.value.fiatAmount)).isEqualTo(model.expected)
+            Truth.assertThat(actual.value.contributions).isEqualTo(model.contributions)
+        }
+
+        private fun provideTestModels(): List<FoldModel> {
+            val stake = FakeContribution(total = BigDecimal("5"), spendable = BigDecimal.ZERO)
+            val supplied = FakeContribution(total = BigDecimal.ZERO, spendable = BigDecimal("7"))
+            val custom = token.copy(isCustom = true)
+
+            return listOf(
+                FoldModel(
+                    description = "Loaded, no contributions: the network amount",
+                    currency = token,
+                    quote = fullQuote,
+                    contributions = emptyList(),
+                    expectedShape = CryptoCurrencyStatus.Loaded::class.java,
+                    expected = FoldResult(amount = BigDecimal("10"), fiatAmount = BigDecimal("18000.0")),
+                ),
+                FoldModel(
+                    description = "Loaded, stake only: nothing folded",
+                    currency = token,
+                    quote = fullQuote,
+                    contributions = listOf(stake),
+                    expectedShape = CryptoCurrencyStatus.Loaded::class.java,
+                    expected = FoldResult(amount = BigDecimal("10"), fiatAmount = BigDecimal("18000.0")),
+                ),
+                FoldModel(
+                    description = "Loaded, spendable contribution next to a stake: only the spendable part",
+                    currency = token,
+                    quote = fullQuote,
+                    contributions = listOf(supplied, stake),
+                    expectedShape = CryptoCurrencyStatus.Loaded::class.java,
+                    expected = FoldResult(amount = BigDecimal("17"), fiatAmount = BigDecimal("30600.0")),
+                ),
+                FoldModel(
+                    description = "NoQuote, spendable contribution: folded, no fiat",
+                    currency = token,
+                    quote = QuoteStatus.Empty,
+                    contributions = listOf(supplied),
+                    expectedShape = CryptoCurrencyStatus.NoQuote::class.java,
+                    expected = FoldResult(amount = BigDecimal("17"), fiatAmount = null),
+                ),
+                FoldModel(
+                    description = "Custom, spendable contribution: folded",
+                    currency = custom,
+                    quote = fullQuote,
+                    contributions = listOf(supplied),
+                    expectedShape = CryptoCurrencyStatus.Custom::class.java,
+                    expected = FoldResult(amount = BigDecimal("17"), fiatAmount = BigDecimal("30600.0")),
+                ),
+            )
+        }
+    }
+
+    data class FoldModel(
+        val description: String,
+        val currency: CryptoCurrency,
+        val quote: QuoteStatus.Value,
+        val contributions: List<BalanceContribution>,
+        val expectedShape: Class<out CryptoCurrencyStatus.Value>,
+        val expected: FoldResult,
+    ) {
+
+        override fun toString(): String = description
+    }
+
+    data class FoldResult(val amount: BigDecimal?, val fiatAmount: BigDecimal?)
+
+    private data class FakeContribution(val total: BigDecimal, val spendable: BigDecimal) : BalanceContribution {
+        override val kind: String = "fake"
+        override val source: StatusSource = StatusSource.ACTUAL
+        override fun totalDeltaCryptoAmount(): BigDecimal = total
+        override fun spendableDeltaCryptoAmount(): BigDecimal = spendable
     }
 
     // region Extra-balance fixtures

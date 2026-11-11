@@ -45,8 +45,8 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
 import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
@@ -462,6 +462,22 @@ fun BaseTestCase.enterHotWalletUnlockAccessCode(accessCode: String) {
     step("Dismiss keyboard") {
         Espresso.closeSoftKeyboard()
         waitForIdle()
+    }
+}
+
+@OptIn(ExperimentalTestApi::class)
+fun BaseTestCase.waitForHotWalletUnlockDialog() {
+    composeTestRule.waitUntilAtLeastOneExists(unlockDialogAccessCodeInputMatcher, WAIT_UNTIL_TIMEOUT)
+}
+
+@OptIn(ExperimentalTestApi::class)
+fun BaseTestCase.cancelHotWalletUnlock() {
+    step("Assert access code dialog is displayed") { waitForHotWalletUnlockDialog() }
+    step("Click on 'Back' button of the access code dialog") {
+        onHotWalletAccessCodeScreen { unlockDialogBackButton.performClick() }
+    }
+    step("Assert access code dialog is not displayed") {
+        composeTestRule.waitUntilDoesNotExist(unlockDialogAccessCodeInputMatcher, WAIT_UNTIL_TIMEOUT)
     }
 }
 

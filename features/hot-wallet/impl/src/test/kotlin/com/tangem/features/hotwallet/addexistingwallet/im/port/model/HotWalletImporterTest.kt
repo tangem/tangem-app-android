@@ -5,6 +5,9 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
@@ -30,9 +33,12 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -361,12 +367,73 @@ internal class HotWalletImporterTest {
                 coVerify(exactly = 0) { discardUnsavedHotWalletUseCase(any()) }
                 verify(exactly = 0) { analyticsEventHandler.send(any()) }
             }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an analytics source WHEN import succeeds THEN the onboarding events carry it`(
+            model: SourceModel,
+        ) = runTest {
+            // Arrange
+            every { mnemonic.mnemonicComponents } returns List(SEED_PHRASE_LENGTH) { "word$it" }
+            coEvery { appsFlyerRepository.getConversionData() } returns null
+            coEvery { saveUserWalletUseCase(any(), any(), any()) } returns Unit.right()
+            val sentEvents = mutableListOf<AnalyticsEvent>()
+            every { analyticsEventHandler.send(capture(sentEvents)) } just runs
+
+            // Act
+            val actual = model.import(importer, backgroundScope, mnemonic)
+
+            // Assert
+            assertThat(actual).isEqualTo(USER_WALLET.walletId.right())
+            assertThat(sentEvents).containsExactly(
+                OnboardingAnalyticsEvent.Onboarding.Finished(source = model.expectedSource),
+                OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
+                    source = model.expectedSource,
+                    creationType = AnalyticsParam.WalletCreationType.SeedImport,
+                    seedPhraseLength = SEED_PHRASE_LENGTH,
+                    passPhraseState = AnalyticsParam.EmptyFull.Empty,
+                    referralId = null,
+                ),
+            ).inOrder()
+        }
+
+        private fun provideTestModels() = listOf(
+            SourceModel(
+                name = "default source",
+                expectedSource = AnalyticsParam.ScreensSources.ImportWallet,
+                import = { importer, scope, mnemonic ->
+                    importer.import(scope, mnemonic, passphrase = null, isSeedPhraseBackedUp = true)
+                },
+            ),
+            SourceModel(
+                name = "add new wallet source",
+                expectedSource = AnalyticsParam.ScreensSources.AddNewWallet,
+                import = { importer, scope, mnemonic ->
+                    importer.import(
+                        scope = scope,
+                        mnemonic = mnemonic,
+                        passphrase = null,
+                        isSeedPhraseBackedUp = true,
+                        analyticsSource = AnalyticsParam.ScreensSources.AddNewWallet,
+                    )
+                },
+            ),
+        )
+    }
+
+    data class SourceModel(
+        val name: String,
+        val expectedSource: AnalyticsParam.ScreensSources,
+        val import: suspend (HotWalletImporter, CoroutineScope, Mnemonic) -> Either<HotWalletImportError, UserWalletId>,
+    ) {
+        override fun toString(): String = name
     }
 
     data class SaveErrorModel(val saveError: SaveWalletError, val expected: HotWalletImportError)
 
     private companion object {
         const val MAX_PASSPHRASE_BYTES = 256
+        const val SEED_PHRASE_LENGTH = 12
         const val WALLET_NAME = "Imported"
         const val SAVE_DURATION_MS = 1_000L
         val HOT_WALLET_ID = HotWalletId(value = "hot", authType = HotWalletId.AuthType.NoPassword)

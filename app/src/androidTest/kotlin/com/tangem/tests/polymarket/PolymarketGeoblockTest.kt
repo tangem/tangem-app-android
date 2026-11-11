@@ -183,7 +183,10 @@ class PolymarketGeoblockTest : BaseTestCase() {
                 flakySafely { onPolymarketMainScreen { withdrawButton.assertIsEnabled() } }
             }
             step("Assert active positions are displayed") {
-                flakySafely { onPolymarketMainScreen { viewAllActivePositionsButton.assertIsDisplayed() } }
+                flakySafely { onPolymarketMainScreen { firstPositionCard.assertIsDisplayed() } }
+            }
+            step("Assert 'See all active positions' button is not displayed") {
+                onPolymarketMainScreen { viewAllActivePositionsButton.assertDoesNotExist() }
             }
             step("Click on 'More' button") {
                 onPolymarketMainScreen { moreButton.clickWithAssertion() }
@@ -361,7 +364,10 @@ class PolymarketGeoblockTest : BaseTestCase() {
                 flakySafely { onPolymarketMainScreen { withdrawButton.assertIsEnabled() } }
             }
             step("Assert active positions are displayed") {
-                flakySafely { onPolymarketMainScreen { viewAllActivePositionsButton.assertIsDisplayed() } }
+                flakySafely { onPolymarketMainScreen { firstPositionCard.assertIsDisplayed() } }
+            }
+            step("Assert 'See all active positions' button is not displayed") {
+                onPolymarketMainScreen { viewAllActivePositionsButton.assertDoesNotExist() }
             }
             step("Scroll to the first outcome button") {
                 flakySafely { onPolymarketMainScreen { scrollToFirstOutcomeButton() } }

@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.polymarket.model.PolymarketActivity
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityRowUM
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityRowUM.Type
@@ -14,6 +15,8 @@ import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.StringsSigns.PLUS
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.Clock
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -51,22 +54,26 @@ internal class PolymarketActivityUMConverter(
         onActivityClick: ((PolymarketActivity) -> Unit)?,
     ): PolymarketActivityRowUM {
         val type = activity.rowType()
-        val money = activity.amount.abs().formatPolymarketMoney()
         return PolymarketActivityRowUM(
             id = activity.id,
             type = type,
             title = type.title(),
             subtitle = activity.rowSubtitle(),
-            amount = stringReference(
-                when (type) {
-                    Type.LOST -> MINUS
-                    Type.BOUGHT, Type.WITHDRAWN -> "$MINUS $money"
-                    Type.SOLD, Type.FUNDS_ADDED, Type.REDEEMED, Type.SPLIT -> "$PLUS $money"
-                },
-            ),
+            amount = stringReference(type.rowAmount(activity.amount)),
             iconUrl = activity.historyIconUrl,
             onClick = onActivityClick?.let { { it(activity) } },
         )
+    }
+
+    private fun Type.rowAmount(amount: BigDecimal): String {
+        val displayed = amount.abs().setScale(PolymarketConst.COLLATERAL_DISPLAY_DECIMALS, RoundingMode.HALF_UP)
+        if (displayed.signum() <= 0) return MINUS
+        val money = displayed.formatPolymarketMoney()
+        return when (this) {
+            Type.LOST -> MINUS
+            Type.BOUGHT, Type.WITHDRAWN -> "$MINUS $money"
+            Type.SOLD, Type.FUNDS_ADDED, Type.REDEEMED, Type.SPLIT -> "$PLUS $money"
+        }
     }
 }
 

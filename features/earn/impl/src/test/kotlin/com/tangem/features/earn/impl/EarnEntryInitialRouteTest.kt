@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.EarnEntryStart
+import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.navigation.EarnRoute
 import com.tangem.test.core.ProvideTestModels
@@ -14,7 +15,7 @@ internal class EarnEntryInitialRouteTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN entry start WHEN toInitialRoute THEN picker route matches`(model: InitialRouteModel) {
+    fun `GIVEN entry start WHEN toInitialRoute THEN initial route matches`(model: InitialRouteModel) {
         // Act
         val actual = model.start.toInitialRoute()
 
@@ -33,7 +34,7 @@ internal class EarnEntryInitialRouteTest {
         ),
         InitialRouteModel(
             start = EarnEntryStart.Info(productId = LENDING),
-            expected = EarnPickerRoute(preselected = LENDING, shouldRedirectToActive = false),
+            expected = EarnInfoRoute(productId = LENDING),
         ),
         InitialRouteModel(
             start = EarnEntryStart.Auto,

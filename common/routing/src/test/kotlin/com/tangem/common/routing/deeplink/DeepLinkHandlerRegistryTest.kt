@@ -5,10 +5,12 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import javax.inject.Provider
 
 internal class DeepLinkHandlerRegistryTest {
 
@@ -27,7 +29,7 @@ internal class DeepLinkHandlerRegistryTest {
                 "https://tangem.com/news" to newsHandler,
                 "https://tangem.com/news/details" to newsDetailsHandler,
                 "wc:" to walletConnectHandler,
-            ),
+            ).asProviders(),
         )
 
         @ParameterizedTest
@@ -85,7 +87,7 @@ internal class DeepLinkHandlerRegistryTest {
                 handlers = mapOf(
                     "https://tangem.com/news" to newsHandler,
                     "https://tangem.com/news/details" to toggledDetailsHandler,
-                ),
+                ).asProviders(),
             )
             val uri = createUri(scheme = "https", host = "tangem.com", path = "/news/details/1")
 
@@ -103,7 +105,9 @@ internal class DeepLinkHandlerRegistryTest {
         fun `GIVEN only disabled handler WHEN find THEN returns null`() {
             // Arrange
             val disabledRegistry = DeepLinkHandlerRegistry(
-                handlers = mapOf("tangem://staking" to DeepLinkHandler(isEnabled = { false }, handle = {})),
+                handlers = mapOf(
+                    "tangem://staking" to DeepLinkHandler(isEnabled = { false }, handle = {}),
+                ).asProviders(),
             )
 
             // Act
@@ -294,7 +298,7 @@ internal class DeepLinkHandlerRegistryTest {
         fun `GIVEN key with trailing slash WHEN find THEN handler is found`() {
             // Arrange
             val handler = DeepLinkHandler {}
-            val registry = DeepLinkHandlerRegistry(handlers = mapOf("tangem://staking/" to handler))
+            val registry = DeepLinkHandlerRegistry(handlers = mapOf("tangem://staking/" to handler).asProviders())
             val uri = mockk<Uri> {
                 every { scheme } returns "tangem"
                 every { host } returns "staking"
@@ -312,7 +316,9 @@ internal class DeepLinkHandlerRegistryTest {
         fun `GIVEN percent encoded key WHEN find decoded segment THEN handler is found`() {
             // Arrange
             val handler = DeepLinkHandler {}
-            val registry = DeepLinkHandlerRegistry(handlers = mapOf("https://tangem.com/foo%20bar" to handler))
+            val registry = DeepLinkHandlerRegistry(
+                handlers = mapOf("https://tangem.com/foo%20bar" to handler).asProviders(),
+            )
             val uri = mockk<Uri> {
                 every { scheme } returns "https"
                 every { host } returns "tangem.com"
@@ -331,7 +337,10 @@ internal class DeepLinkHandlerRegistryTest {
             // Act
             val actual = runCatching {
                 DeepLinkHandlerRegistry(
-                    handlers = mapOf("tangem://staking" to mockk(), "tangem://staking/" to mockk()),
+                    handlers = mapOf(
+                        "tangem://staking" to mockk<DeepLinkHandler>(),
+                        "tangem://staking/" to mockk(),
+                    ).asProviders(),
                 )
             }
 
@@ -342,10 +351,57 @@ internal class DeepLinkHandlerRegistryTest {
         @Test
         fun `GIVEN malformed key WHEN registry created THEN fails`() {
             // Act
-            val actual = runCatching { DeepLinkHandlerRegistry(handlers = mapOf("tangem:/staking" to mockk())) }
+            val actual = runCatching {
+                DeepLinkHandlerRegistry(handlers = mapOf("tangem:/staking" to mockk<DeepLinkHandler>()).asProviders())
+            }
 
             // Assert
             assertThat(actual.exceptionOrNull()).isInstanceOf(IllegalArgumentException::class.java)
+        }
+    }
+
+    @Nested
+    inner class Laziness {
+
+        private val stakingProvider: Provider<DeepLinkHandler> = mockk {
+            every { get() } returns DeepLinkHandler {}
+        }
+        private val newsProvider: Provider<DeepLinkHandler> = mockk {
+            every { get() } returns DeepLinkHandler {}
+        }
+
+        @Test
+        fun `GIVEN registered handlers WHEN registry created THEN no handler is created`() {
+            // Act
+            DeepLinkHandlerRegistry(
+                handlers = mapOf("tangem://staking" to stakingProvider, "https://tangem.com/news" to newsProvider),
+            )
+
+            // Assert
+            verify(exactly = 0) { stakingProvider.get() }
+            verify(exactly = 0) { newsProvider.get() }
+        }
+
+        @Test
+        fun `GIVEN deep link found twice WHEN find THEN only its handler is created once`() {
+            // Arrange
+            val registry = DeepLinkHandlerRegistry(
+                handlers = mapOf("tangem://staking" to stakingProvider, "https://tangem.com/news" to newsProvider),
+            )
+            val uri = mockk<Uri> {
+                every { scheme } returns "tangem"
+                every { host } returns "staking"
+                every { pathSegments } returns emptyList()
+            }
+
+            // Act
+            val first = registry.find(uri)
+            val second = registry.find(uri)
+
+            // Assert
+            assertThat(second).isSameInstanceAs(first)
+            verify(exactly = 1) { stakingProvider.get() }
+            verify(exactly = 0) { newsProvider.get() }
         }
     }
 
@@ -365,4 +421,8 @@ internal class DeepLinkHandlerRegistryTest {
         val maxPathSegments: Int = Int.MAX_VALUE,
         val expected: List<String>,
     )
+}
+
+private fun Map<String, DeepLinkHandler>.asProviders(): Map<String, Provider<DeepLinkHandler>> {
+    return mapValues { (_, handler) -> Provider { handler } }
 }

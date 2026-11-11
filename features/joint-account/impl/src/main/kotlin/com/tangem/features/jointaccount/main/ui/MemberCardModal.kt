@@ -92,7 +92,7 @@ private fun MemberCardContent(
                     value = CryptoPortfolioIcon.Icon.Letter,
                     color = avatar.color,
                 ),
-                size = AccountIconSize.ContactLarge,
+                size = AccountIconSize.ContactMedium,
             )
 
             Spacer(Modifier.height(32.dp))

@@ -1,0 +1,77 @@
+package com.tangem.features.mcp.impl.deeplink
+
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.common.routing.deeplink.DeeplinkConst.INTENT_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.SOURCE_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.mcp.McpRequestService
+import com.tangem.domain.mcp.models.McpRequest
+import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
+import com.tangem.features.mcp.api.McpFeatureToggles
+import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
+
+/**
+ * Handles the `tangem://intent?id=...&source=...&type=...` deep link.
+ *
+ * Only Express exchange intents and Transaction Service send intents are acted on; an intent of any other service or
+ * operation is dropped, so it never takes the place of a supported flow in the request queue. Express links may omit
+ * `type`, as the exchange is the only operation it has had so far.
+ */
+internal class McpIntentDeepLinkHandler @Inject constructor(
+    private val mcpRequestService: McpRequestService,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val mcpFeatureToggles: McpFeatureToggles,
+) : DeepLinkHandler {
+
+    override val isEnabled: Boolean
+        get() = mcpFeatureToggles.isMcpEnabled
+
+    override fun handle(request: DeepLinkRequest) {
+        val queryParams = request.queryParams
+        val id = queryParams[INTENT_ID_KEY]?.takeIf { it.isNotBlank() }
+        val source = queryParams[SOURCE_KEY]?.takeIf { it.isNotBlank() }
+        val type = queryParams[TYPE_KEY]?.takeIf { it.isNotBlank() }
+
+        if (id == null || source == null) {
+            TangemLogger.e("MCP intent deeplink requires $INTENT_ID_KEY and $SOURCE_KEY parameters")
+        } else {
+            val intentSource = parseSource(source = source, type = type)
+            if (intentSource != null && intentSource in SUPPORTED_SOURCES) {
+                analyticsEventHandler.send(McpIntentAnalyticsEvent.IntentReceived(intentId = id, source = intentSource))
+                mcpRequestService.request(McpRequest.Intent(id = id, source = intentSource))
+            } else {
+                TangemLogger.e("MCP intent of an unsupported kind: $SOURCE_KEY=$source, $TYPE_KEY=$type")
+            }
+        }
+    }
+
+    private fun parseSource(source: String, type: String?): McpRequest.Intent.Source? = when (source) {
+        SOURCE_EXPRESS -> {
+            val expressType = if (type == null) {
+                McpRequest.Intent.Source.Express.Type.EXCHANGE
+            } else {
+                McpRequest.Intent.Source.Express.Type.entries.firstOrNull { it.name.lowercase() == type }
+            }
+            expressType?.let(McpRequest.Intent.Source::Express)
+        }
+        SOURCE_TRANSACTION -> McpRequest.Intent.Source.Transaction.Type.entries
+            .firstOrNull { it.name.lowercase() == type }
+            ?.let(McpRequest.Intent.Source::Transaction)
+        else -> null
+    }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://intent"
+
+        private const val SOURCE_EXPRESS = "express"
+        private const val SOURCE_TRANSACTION = "transaction"
+
+        private val SUPPORTED_SOURCES = setOf(
+            McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE),
+            McpRequest.Intent.Source.Transaction(McpRequest.Intent.Source.Transaction.Type.SEND),
+        )
+    }
+}

@@ -18,6 +18,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
@@ -117,7 +118,9 @@ class EstimateFeeForGaslessBatchUseCase(
                     ),
                 ).map { tokenFee ->
                     tokenFee.copy(
-                        callGasLimits = callFees.map { tokenFeeCalculator.withSubCallGasMargin(it.gasLimit) },
+                        // The calls carry the gas limits they are sent with natively, Yield Mode margin included:
+                        // padding them again doubles the margin in the signed limits and in the fee.
+                        callGasLimits = callFees.map { it.gasLimit },
                         nativeFee = nativeFee,
                     )
                 }.getOrElse { error ->
@@ -228,7 +231,7 @@ class EstimateFeeForGaslessBatchUseCase(
             .filter { (it.currency as CryptoCurrency.Token).contractAddress.lowercase() in supportedGaslessTokens }
             .filter { status ->
                 val total = status.value.amount ?: BigDecimal.ZERO
-                total > BigDecimal.ZERO || status.value.yieldSupplyStatus?.isActive == true
+                total > BigDecimal.ZERO || status.value.yieldSupply?.isActive == true
             }
             .sortedByDescending { status -> status.value.amount ?: BigDecimal.ZERO }
             .toList()
@@ -290,6 +293,7 @@ class EstimateFeeForGaslessBatchUseCase(
                     nativeCurrencyStatus = nativeCurrencyStatus,
                     initialFee = initialFee,
                     userWallet = userWallet,
+                    isCallGasLimitFinal = true,
                 ).bind()
                 attachGaslessFeePlan(
                     resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
@@ -311,6 +315,7 @@ class EstimateFeeForGaslessBatchUseCase(
                     // The fee is taken after exit has moved the module balance to the EOA, so the liquid balance
                     // at estimation time (often zero, reverting the fee-transfer probe) does not limit it.
                     isLiquidBalanceCheckSkipped = true,
+                    isCallGasLimitFinal = true,
                 ).bind()
                 val tokenFee = tokenFeeExtended.transactionFee.normal as? Fee.Ethereum.TokenCurrency
                     ?: raiseIllegalStateError("gasless token fee must be Fee.Ethereum.TokenCurrency")
@@ -331,7 +336,7 @@ class EstimateFeeForGaslessBatchUseCase(
         nativeCurrencyStatus: CryptoCurrencyStatus,
         tokenForPayFeeStatus: CryptoCurrencyStatus,
     ): TransactionFeeExtended {
-        val isYieldActive = tokenForPayFeeStatus.value.yieldSupplyStatus?.isActive == true
+        val isYieldActive = tokenForPayFeeStatus.value.yieldSupply?.isActive == true
         val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
             walletManager = walletManager,
             tokenForPayFeeStatus = tokenForPayFeeStatus,
@@ -339,6 +344,7 @@ class EstimateFeeForGaslessBatchUseCase(
             initialFee = initialFee,
             isYieldActive = isYieldActive,
             userWallet = userWallet,
+            isCallGasLimitFinal = true,
         ).bind()
 
         if (!isYieldActive) return tokenFeeExtended

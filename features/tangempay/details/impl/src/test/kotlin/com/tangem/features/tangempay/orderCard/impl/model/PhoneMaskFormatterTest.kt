@@ -70,8 +70,10 @@ internal class PhoneMaskFormatterTest {
     @ParameterizedTest
     @MethodSource("enteredLengthCases")
     fun enteredLength(model: MaskModel) {
+        // Act
         val entered = PhoneMaskFormatter.enteredLength(model.raw, model.mask)
 
+        // Assert
         assertThat(PhoneMaskFormatter.applyWithHint(model.raw, model.mask).take(entered))
             .isEqualTo(model.expected)
     }

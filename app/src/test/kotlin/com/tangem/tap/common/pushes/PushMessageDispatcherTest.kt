@@ -4,7 +4,6 @@ import android.content.Context
 import com.google.firebase.messaging.RemoteMessage
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.feature.usedesk.api.SupportChatVisibilityProvider
-import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.customer.messagingpush.CustomerIOFirebaseMessagingService
 import io.mockk.clearMocks
@@ -26,7 +25,6 @@ internal class PushMessageDispatcherTest {
     private val pushMessageHandler: PushMessageHandler = mockk(relaxed = true)
     private val pushNotificationDelegate: PushNotificationDelegate = mockk(relaxed = true)
     private val supportChatVisibilityProvider: SupportChatVisibilityProvider = mockk()
-    private val useDeskFeatureToggles: UseDeskFeatureToggles = mockk()
     private val message: RemoteMessage = mockk()
     private val notification: RemoteMessage.Notification = mockk()
 
@@ -35,7 +33,6 @@ internal class PushMessageDispatcherTest {
         pushMessageHandler = pushMessageHandler,
         pushNotificationDelegate = pushNotificationDelegate,
         supportChatVisibilityProvider = supportChatVisibilityProvider,
-        useDeskFeatureToggles = useDeskFeatureToggles,
     )
 
     @BeforeAll
@@ -62,7 +59,6 @@ internal class PushMessageDispatcherTest {
             pushMessageHandler,
             pushNotificationDelegate,
             supportChatVisibilityProvider,
-            useDeskFeatureToggles,
             message,
             notification,
         )
@@ -71,7 +67,7 @@ internal class PushMessageDispatcherTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN push type, toggle and chat visibility WHEN dispatch THEN only support push with visible chat is muted`(
+    fun `GIVEN push type and chat visibility WHEN dispatch THEN only support push with visible chat is muted`(
         model: Model,
     ) {
         // Arrange
@@ -80,7 +76,6 @@ internal class PushMessageDispatcherTest {
             put("title", "Support")
             put("body", "New reply")
         }
-        every { useDeskFeatureToggles.isSupportChatDeepLinkEnabled } returns model.isToggleEnabled
         every { supportChatVisibilityProvider.isChatVisible } returns model.isChatVisible
         every { message.data } returns data
         every { message.priority } returns RemoteMessage.PRIORITY_HIGH
@@ -129,25 +124,21 @@ internal class PushMessageDispatcherTest {
 
     data class Model(
         val type: String?,
-        val isToggleEnabled: Boolean,
         val isChatVisible: Boolean,
         val hasNotificationBlock: Boolean,
         val expectedShowCount: Int,
     )
 
     private fun provideTestModels(): List<Model> = listOf(SUPPORT_MESSAGE_TYPE, OTHER_TYPE, null).flatMap { type ->
-        listOf(true, false).flatMap { isToggleEnabled ->
-            listOf(true, false).flatMap { isChatVisible ->
-                listOf(false, true).map { hasNotificationBlock ->
-                    val isMuted = isToggleEnabled && type == SUPPORT_MESSAGE_TYPE && isChatVisible
-                    Model(
-                        type = type,
-                        isToggleEnabled = isToggleEnabled,
-                        isChatVisible = isChatVisible,
-                        hasNotificationBlock = hasNotificationBlock,
-                        expectedShowCount = if (isMuted) 0 else 1,
-                    )
-                }
+        listOf(true, false).flatMap { isChatVisible ->
+            listOf(false, true).map { hasNotificationBlock ->
+                val isMuted = type == SUPPORT_MESSAGE_TYPE && isChatVisible
+                Model(
+                    type = type,
+                    isChatVisible = isChatVisible,
+                    hasNotificationBlock = hasNotificationBlock,
+                    expectedShowCount = if (isMuted) 0 else 1,
+                )
             }
         }
     }

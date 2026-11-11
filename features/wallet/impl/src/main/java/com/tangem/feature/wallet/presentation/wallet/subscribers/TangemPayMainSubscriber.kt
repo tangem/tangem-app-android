@@ -2,9 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCase
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
-import com.tangem.domain.pay.usecase.RestoreActiveCardOrdersUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.tangempay.usecase.RestoreActiveCardOrdersUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import dagger.assisted.Assisted

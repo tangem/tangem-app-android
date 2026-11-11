@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 import java.util.Currency

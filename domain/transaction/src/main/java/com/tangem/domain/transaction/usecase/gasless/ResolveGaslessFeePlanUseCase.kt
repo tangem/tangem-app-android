@@ -11,6 +11,7 @@ import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndetermina
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
@@ -142,7 +143,7 @@ class ResolveGaslessFeePlanUseCase(
         tokenStatus: CryptoCurrencyStatus,
         token: CryptoCurrency.Token,
     ): BigDecimal {
-        val yieldSupplyStatus = tokenStatus.value.yieldSupplyStatus
+        val yieldSupplyStatus = tokenStatus.value.yieldSupply
 
         yieldSupplyStatus?.effectiveProtocolBalance?.let { return it }
         if (yieldSupplyStatus?.isInitialized == false) return BigDecimal.ZERO

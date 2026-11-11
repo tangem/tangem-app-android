@@ -81,6 +81,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import java.time.Instant
 
 internal abstract class PlacePredictionModelTestBase {
 
@@ -268,10 +269,12 @@ internal abstract class PlacePredictionModelTestBase {
             params: PlacePredictionComponent.Params,
             uiState: MutableStateFlow<PlacePredictionUM>,
             scope: CoroutineScope,
+            closeOrder: () -> Unit,
         ) = PlacePredictionOrderSubmitter(
             params = params,
             uiState = uiState,
             scope = scope,
+            closeOrder = closeOrder,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             messageSender = messageSender,
@@ -425,6 +428,7 @@ internal abstract class PlacePredictionModelTestBase {
         createPolymarketPosition(assetId = ASSET_ID).copy(
             id = POSITION_ID,
             marketId = MARKET_ID,
+            eventId = EVENT_ID,
             size = size,
             isNegRisk = false,
         )
@@ -436,6 +440,11 @@ internal abstract class PlacePredictionModelTestBase {
         expectedExecutionAmount = BigDecimal("11.01"),
         total = BigDecimal("10.48"),
     )
+
+    protected fun createEventEndingAt(end: Instant): PolymarketEvent {
+        val event = createEvent()
+        return event.copy(markets = event.markets.map { it.copy(endDate = end.toString()) })
+    }
 
     protected fun createEvent(isAcceptingOrders: Boolean = true, conditionId: String? = null): PolymarketEvent =
         createPolymarketEvent(

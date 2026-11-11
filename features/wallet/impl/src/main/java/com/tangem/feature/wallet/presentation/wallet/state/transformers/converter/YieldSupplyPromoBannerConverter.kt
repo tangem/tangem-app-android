@@ -5,6 +5,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.common.ui.tokens.TokenConverterParams
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -26,7 +27,7 @@ internal class YieldSupplyPromoBannerConverter(
 
         val cryptoCurrencyStatuses = currencies.filter { it.currency is CryptoCurrency.Token }
 
-        if (cryptoCurrencyStatuses.any { it.value.yieldSupplyStatus?.isActive == true }) return null
+        if (cryptoCurrencyStatuses.any { it.value.yieldSupply?.isActive == true }) return null
         if (yieldModuleApyMap.isEmpty()) return null
 
         val max = cryptoCurrencyStatuses.asSequence()
@@ -55,7 +56,7 @@ internal class YieldSupplyPromoBannerConverter(
 
         val cryptoCurrencyStatuses = currencies.filter { it.currency is CryptoCurrency.Token }
 
-        if (cryptoCurrencyStatuses.any { it.value.yieldSupplyStatus?.isActive == true }) return null
+        if (cryptoCurrencyStatuses.any { it.value.yieldSupply?.isActive == true }) return null
         if (yieldModuleApyMap.isEmpty()) return null
 
         val max = cryptoCurrencyStatuses.asSequence()

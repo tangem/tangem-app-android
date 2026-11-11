@@ -46,8 +46,8 @@ data class DerivationIndex private constructor(
 
         /**
          * Predefined instance of [DerivationIndex] for the collectibles account. One of the app's reserved key nodes
-         * (`999999'` Visa, `999998'` money account, `999899'` Polymarket owner, `888888'` joint account owners) rather
-         * than a chain account; the backend accounts document accepts only `999700..999799` for it.
+         * (`999999'` Tangem Pay, `999998'` money account, `999899'` Polymarket owner, `888888'` joint account owners)
+         * rather than a chain account; the backend accounts document accepts only `999700..999799` for it.
          */
         val Collectibles: DerivationIndex = DerivationIndex(value = COLLECTIBLES_ACCOUNT_DERIVATION_INDEX)
 

@@ -40,8 +40,8 @@ internal class FetchStakingOptionsUseCaseTest {
         clearMocks(stakeKitRepository, p2pEthPoolRepository, stakingErrorResolver)
         every { stakingErrorResolver.resolve(any()) } returns StakingError.DomainError("resolved")
         coEvery { stakeKitRepository.fetchYields() } just Runs
-        coEvery { p2pEthPoolRepository.fetchVaults(any()) } just Runs
-        coEvery { p2pEthPoolRepository.fetchVaultLimits() } just Runs
+        coEvery { p2pEthPoolRepository.fetchVaults(any()) } returns Unit.right()
+        coEvery { p2pEthPoolRepository.fetchVaultLimits() } returns Unit.right()
     }
 
     @Test
@@ -67,10 +67,12 @@ internal class FetchStakingOptionsUseCaseTest {
         coEvery { p2pEthPoolRepository.fetchVaults(any()) } coAnswers {
             delay(SLOW_FETCH_MILLIS)
             completedFetches += "vaults"
+            Unit.right()
         }
         coEvery { p2pEthPoolRepository.fetchVaultLimits() } coAnswers {
             delay(SLOW_FETCH_MILLIS)
             completedFetches += "limits"
+            Unit.right()
         }
 
         // Act
@@ -94,6 +96,7 @@ internal class FetchStakingOptionsUseCaseTest {
         coEvery { p2pEthPoolRepository.fetchVaultLimits() } coAnswers {
             delay(SLOW_FETCH_MILLIS)
             completedFetches += "limits"
+            Unit.right()
         }
 
         // Act

@@ -5,7 +5,7 @@ package com.tangem.common.routing.deeplink
  *
  * ```kotlin
  * @Binds @IntoMap @DeepLinkKey("tangem://staking")
- * fun bindStakingDeepLinkHandler(impl: DefaultStakingDeepLinkHandler): DeepLinkHandler
+ * fun bindStakingDeepLinkHandler(impl: StakingDeepLinkHandler): DeepLinkHandler
  * ```
  */
 fun interface DeepLinkHandler {

@@ -1,0 +1,108 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
+plugins {
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
+    id("configuration")
+}
+
+android {
+    namespace = "com.tangem.data.tangempay"
+
+    // `src/prodDi/` holds production DI bindings for TangemPay repos with a `mocked` counterpart.
+    // Wired into every build type EXCEPT `mocked`, which supplies its own bindings from `src/mocked/`.
+    buildTypes.configureEach {
+        if (name != "mocked") {
+            sourceSets.named(name) {
+                java.srcDir("src/prodDi/kotlin")
+            }
+        }
+    }
+}
+dependencies {
+    implementation(projects.core.remote)
+
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
+    // endregion
+
+    // region Other libraries
+    implementation(deps.androidx.datastore)
+    implementation(deps.arrow.core)
+    implementation(deps.jodatime)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // endregion
+
+    // region Libs - Tangem
+    api(tangemDeps.hot.core)
+    implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
+    // AndroidSecureStorageV2 for TangemPay secure token storage (see com.tangem.data.tangempay.store).
+    implementation(tangemDeps.card.android) {
+        exclude(module = "joda-time")
+    }
+    // endregion
+
+    // region DI
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Project - Core
+    api(projects.core.analytics)
+    implementation(projects.core.local)
+    implementation(projects.store.datasource)
+    api(projects.spend.datasource)
+    api(projects.core.security)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
+    implementation(projects.core.error)
+    implementation(projects.core.error.ext)
+    implementation(projects.core.pagination)
+    // endregion
+
+    // region Project - Data
+    api(projects.data.common)
+    implementation(projects.data.wallets)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.common)
+    api(projects.domain.core)
+    api(projects.domain.account)
+    api(projects.domain.quotes)
+    api(projects.domain.tangempay)
+    api(projects.domain.wallets)
+    implementation(projects.domain.card)
+    implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.models)
+    runtimeOnly(projects.domain.tokens)
+    // endregion
+
+    // region Project - Domain models
+    api(projects.domain.tangempay.models)
+    // endregion
+
+    // region Project - Features
+    api(projects.features.swap.domain)
+    implementation(projects.features.moneyAccount.details.api)
+    // endregion
+
+    // region Project - Libs
+    api(projects.libs.blockchainSdk)
+    api(projects.libs.tangemSdkApi)
+    // endregion
+
+    // region Mocked build
+    mockedImplementation(projects.test.mock)
+    // endregion
+
+    // region Test
+    testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
+    testImplementation(deps.web3j.core)
+    // endregion
+}

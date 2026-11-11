@@ -55,12 +55,19 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
 
+    private var isLeavingUntradable = false
+
     val uiState: StateFlow<PlacePredictionUM>
         field = MutableStateFlow(PlacePredictionUM.initial(side = params.side))
 
     private val quoteEngine = quoteEngineFactory.create(params = params, uiState = uiState, scope = modelScope)
 
-    private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
+    private val orderSubmitter = orderSubmitterFactory.create(
+        params = params,
+        uiState = uiState,
+        scope = modelScope,
+        closeOrder = ::onCloseClick,
+    )
 
     private val buttonStyle = buttonStyleFactory.create(
         userWalletId = params.userWalletId,
@@ -198,7 +205,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
                     settleButtonIfIdle()
                     return@holdDuring
                 }
-                router.replaceAll(prepared.toStatusRoute(result = result))
+                router.replaceAll(prepared.toStatusRoute(result = result, current = uiState.value))
             }
         }
     }
@@ -221,10 +228,17 @@ internal class PlacePredictionOrderModel @Inject constructor(
         router.pop()
     }
 
+    override fun onUntradableSheetDismiss() {
+        if (isLeavingUntradable) return
+
+        isLeavingUntradable = true
+        router.pop()
+    }
+
     private fun maxBuyAmount(balance: BigDecimal): BigDecimal? = BuyAmountCalculator.fraction(
         balance = balance,
         fraction = AmountFractionUM.Max,
-        feeRate = uiState.value.lastFeeRate,
+        feeRate = BuyAmountCalculator.feeRate(quote = uiState.value.quote),
     ).takeIf { it >= MIN_QUOTABLE_AMOUNT }
 
     private fun BigDecimal.toCollateralInput(): String =

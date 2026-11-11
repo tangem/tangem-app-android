@@ -11,10 +11,13 @@ import com.tangem.domain.marketing.ObserveDemandSurveyCompletedUseCase
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
 import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.domain.onramp.GetOnrampQuotesUseCase
 import com.tangem.domain.onramp.OnrampFetchPairsUseCase
+import com.tangem.domain.onramp.ResetOnrampCountryUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
+import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampQuote
@@ -27,13 +30,19 @@ import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.deeplink.DefaultConciergeWaitlistTrigger
+import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -88,7 +97,10 @@ internal class OnrampMainComponentModelTest {
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase = mockk()
     private val fetchPairsUseCase: OnrampFetchPairsUseCase = mockk()
+    private val resetOnrampCountryUseCase: ResetOnrampCountryUseCase = mockk()
+    private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase = mockk()
     private val observeDemandSurveyCompletedUseCase: ObserveDemandSurveyCompletedUseCase = mockk()
+    private val onrampFeatureToggles: OnrampFeatureToggles = mockk()
 
     private val cryptoCurrency = MockCryptoCurrencyFactory().ethereum
     private val userWallet: UserWallet = mockk(relaxed = true) {
@@ -106,12 +118,18 @@ internal class OnrampMainComponentModelTest {
             getWalletsUseCase,
             getOnrampCountryUseCase,
             fetchPairsUseCase,
+            resetOnrampCountryUseCase,
+            checkOnrampAvailabilityUseCase,
             observeDemandSurveyCompletedUseCase,
+            onrampFeatureToggles,
         )
         every { observeDemandSurveyCompletedUseCase(any()) } returns flowOf(false)
         every { getWalletsUseCase.invokeSync() } returns listOf(userWallet)
         every { getOnrampCountryUseCase.invoke() } returns emptyFlow()
         coEvery { fetchPairsUseCase.invoke(any(), any()) } returns Unit.right()
+        coEvery { resetOnrampCountryUseCase.invoke() } returns Unit.right()
+        coEvery { checkOnrampAvailabilityUseCase.invoke(any(), any()) } returns
+            OnrampAvailability.Available(onrampCountry("USD"), onrampCountry("USD").defaultCurrency).right()
         sentEvents.clear()
         every { analyticsEventHandler.send(capture(sentEvents)) } just Runs
     }
@@ -376,12 +394,12 @@ internal class OnrampMainComponentModelTest {
     }
 
     @Test
-    fun `GIVEN residency confirmation open WHEN waitlist deeplink triggered THEN survey not opened`() {
+    fun `GIVEN country selection open WHEN waitlist deeplink triggered THEN survey not opened`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()
         val model = createModel(scheduler = scheduler, quotes = emptyList())
-        val residency = OnrampMainBottomSheetConfig.ConfirmResidency(country = mockk(relaxed = true))
-        val bottomSheetSlot = model.attachBottomSheetSlot(initial = residency)
+        val countrySelection = OnrampMainBottomSheetConfig.SelectCountry
+        val bottomSheetSlot = model.attachBottomSheetSlot(initial = countrySelection)
         val activatedSurveys = model.collectActivatedSurveys()
         model.onStart()
         scheduler.runCurrent()
@@ -390,8 +408,113 @@ internal class OnrampMainComponentModelTest {
         triggerWaitlist(scheduler)
 
         // Assert
-        assertThat(bottomSheetSlot.config).isEqualTo(residency)
+        assertThat(bottomSheetSlot.config).isEqualTo(countrySelection)
         assertThat(activatedSurveys).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model created WHEN init THEN saved country reset before availability check`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+
+        // Act
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        scheduler.runCurrent()
+
+        // Assert
+        coVerifyOrder {
+            resetOnrampCountryUseCase.invoke()
+            checkOnrampAvailabilityUseCase.invoke(userWallet, true)
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN country with onramp available WHEN country emitted THEN flag shown`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns
+            flowOf(onrampCountry("USD").copy(image = "https://flag.png").right())
+
+        // Act
+        val model = createModel(scheduler = scheduler, quotesFlow = flowOf(emptyList<OnrampQuote>().right()))
+        scheduler.runCurrent()
+
+        // Assert
+        val countryButton = model.state.value.topBarConfig.countryButtonUM
+        assertThat(countryButton?.flagUrl).isEqualTo("https://flag.png")
+        assertThat(countryButton?.isEnabled).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN country without onramp WHEN country emitted THEN onramp blocked with warning`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns
+            flowOf(onrampCountry("USD").copy(isOnrampAvailable = false).right())
+
+        // Act
+        val model = createModel(scheduler = scheduler, quotesFlow = flowOf(emptyList<OnrampQuote>().right()))
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+        coVerify(exactly = 0) { fetchPairsUseCase.invoke(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN availability check rejects country WHEN model created THEN onramp blocked with warning`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        coEvery { checkOnrampAvailabilityUseCase.invoke(any(), any()) } returns
+            OnrampAvailability.NotSupported(onrampCountry("USD").copy(isOnrampAvailable = false)).right()
+
+        // Act
+        val model = createModel(scheduler = scheduler, quotesFlow = flowOf(emptyList<OnrampQuote>().right()))
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN blocked country WHEN quotes arrive late THEN offers stay empty`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns
+            flowOf(onrampCountry("USD").copy(isOnrampAvailable = false).right())
+        val quotesFlow = quotesFlow()
+        val model = createModel(scheduler = scheduler, quotesFlow = quotesFlow)
+        scheduler.runCurrent()
+
+        // Act
+        quotesFlow.tryEmit(listOf(createQuote(isRestricted = false, providerName = "Mercuryo")).right())
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+        assertThat(geoRestrictionEvents()).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN loaded screen WHEN country button clicked THEN country selection opened`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        val bottomSheetSlot = model.attachBottomSheetSlot(initial = null)
+        scheduler.runCurrent()
+
+        // Act
+        model.state.value.topBarConfig.countryButtonUM?.onClick?.invoke()
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(bottomSheetSlot.config).isEqualTo(OnrampMainBottomSheetConfig.SelectCountry)
         model.onDestroy()
     }
 
@@ -688,6 +811,120 @@ internal class OnrampMainComponentModelTest {
         isOnrampAvailable = true,
     )
 
+    @Test
+    fun `GIVEN toggle off WHEN model created THEN legacy availability check requested and country not reset`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+
+        // Act
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            isCountryByIpEnabled = false,
+        )
+        scheduler.runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { checkOnrampAvailabilityUseCase.invoke(userWallet, false) }
+        coVerify(exactly = 0) { resetOnrampCountryUseCase.invoke() }
+        assertThat(model.state.value.topBarConfig.countryButtonUM).isNull()
+        assertThat(model.state.value.topBarConfig.endButtonUM).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN toggle off WHEN openSettings THEN settings screen opened`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        var settingsOpened = false
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            isCountryByIpEnabled = false,
+            openSettings = { settingsOpened = true },
+        )
+
+        // Act
+        model.openSettings()
+
+        // Assert
+        assertThat(settingsOpened).isTrue()
+    }
+
+    @Test
+    fun `GIVEN toggle on WHEN model created THEN country button shown and country reset`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+
+        // Act
+        val model = createModel(scheduler = scheduler, quotesFlow = flowOf(emptyList<OnrampQuote>().right()))
+        scheduler.runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { checkOnrampAvailabilityUseCase.invoke(userWallet, true) }
+        coVerify(exactly = 1) { resetOnrampCountryUseCase.invoke() }
+        assertThat(model.state.value.topBarConfig.countryButtonUM).isNotNull()
+        assertThat(model.state.value.topBarConfig.endButtonUM).isNull()
+    }
+
+    @Test
+    fun `GIVEN toggle on WHEN model destroyed THEN country reset runs outside the cancelled model scope`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotesFlow = flowOf(emptyList<OnrampQuote>().right()))
+        scheduler.runCurrent()
+
+        // Act
+        model.onDestroy()
+
+        // Assert
+        coVerify(exactly = 2) { resetOnrampCountryUseCase.invoke() }
+    }
+
+    @Test
+    fun `GIVEN toggle off WHEN model destroyed THEN country not reset`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            isCountryByIpEnabled = false,
+        )
+        scheduler.runCurrent()
+
+        // Act
+        model.onDestroy()
+
+        // Assert
+        coVerify(exactly = 0) { resetOnrampCountryUseCase.invoke() }
+    }
+
+    @Test
+    fun `GIVEN token not supported for buy WHEN another country selected THEN flag follows the latest country`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val rampStateManager: RampStateManager = mockk()
+        coEvery { rampStateManager.availableForBuy(any(), any()) } returns
+            ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrencyName = cryptoCurrency.name)
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(
+            onrampCountry("USD").copy(name = "First", image = "https://first.png").right(),
+            onrampCountry("EUR").copy(name = "Second", image = "https://second.png").right(),
+        )
+
+        // Act
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            rampStateManager = rampStateManager,
+        )
+        scheduler.runCurrent()
+
+        // Assert
+        val countryButton = model.state.value.topBarConfig.countryButtonUM
+        assertThat(countryButton?.flagUrl).isEqualTo("https://second.png")
+        assertThat(countryButton?.countryName).isEqualTo("Second")
+        model.onDestroy()
+    }
+
     private fun geoRestrictionEvents() = sentEvents.filterIsInstance<OnrampAnalyticsEvent.NoticeGeoRestriction>()
 
     private fun geoRestrictionEvent(providerName: String) = OnrampAnalyticsEvent.NoticeGeoRestriction(
@@ -710,34 +947,39 @@ internal class OnrampMainComponentModelTest {
     private fun createModel(
         scheduler: TestCoroutineScheduler,
         quotesFlow: Flow<Either<OnrampError, List<OnrampQuote>>>,
+        isCountryByIpEnabled: Boolean = true,
+        openSettings: () -> Unit = {},
+        rampStateManager: RampStateManager = mockk(relaxed = true),
     ): OnrampMainComponentModel {
         every { getOnrampQuotesUseCase.invoke() } returns quotesFlow
+        every { onrampFeatureToggles.isCountryByIpEnabled } returns isCountryByIpEnabled
         val params = OnrampMainComponent.Params(
             userWalletId = USER_WALLET_ID,
             cryptoCurrency = cryptoCurrency,
             source = OnrampSource.TOKEN_DETAILS,
-            openSettings = {},
+            openSettings = openSettings,
             openRedirectPage = {},
         )
         return OnrampMainComponentModel(
             dispatchers = scheduler.createTestingCoroutineDispatcherProvider(),
             analyticsEventHandler = analyticsEventHandler,
             router = mockk(relaxed = true),
-            checkOnrampAvailabilityUseCase = mockk(relaxed = true) {
-                coEvery { this@mockk.invoke(any()) } returns mockk(relaxed = true)
-            },
+            checkOnrampAvailabilityUseCase = checkOnrampAvailabilityUseCase,
             getOnrampCountryUseCase = getOnrampCountryUseCase,
             clearOnrampCacheUseCase = mockk(relaxed = true),
+            resetOnrampCountryUseCase = resetOnrampCountryUseCase,
             fetchQuotesUseCase = mockk(relaxed = true),
             getOnrampQuotesUseCase = getOnrampQuotesUseCase,
             fetchPairsUseCase = fetchPairsUseCase,
-            rampStateManager = mockk(relaxed = true),
+            rampStateManager = rampStateManager,
             amountInputManager = mockk(relaxed = true),
             getOnrampOffersUseCase = mockk(relaxed = true),
             isDemoCardUseCase = mockk(relaxed = true),
             messageSender = mockk(relaxed = true),
             conciergeWaitlistListener = conciergeWaitlistTrigger,
             observeDemandSurveyCompletedUseCase = observeDemandSurveyCompletedUseCase,
+            onrampFeatureToggles = onrampFeatureToggles,
+            appCoroutineScope = TestAppCoroutineScope(),
             paramsContainer = MutableParamsContainer(value = params),
             getWalletsUseCase = getWalletsUseCase,
         )

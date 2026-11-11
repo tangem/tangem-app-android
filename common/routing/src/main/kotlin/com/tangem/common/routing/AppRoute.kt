@@ -21,10 +21,11 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.earn.PreselectedEarnType
-import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
@@ -109,11 +110,6 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/details/${userWalletId.stringValue}")
 
-    @Serializable
-    data class DetailsSecurity(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/details/security")
-
     /**
      * Support chat (Usedesk) screen.
      *
@@ -144,32 +140,6 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
         val startRoute: CollectiblesStartRoute,
     ) : AppRoute(path = "/collectibles")
-
-    /**
-     * Reset to factory
-     *
-     * @property userWalletId         user wallet id
-     * @property cardId               reset card id
-     * @property isActiveBackupStatus reset backup card status
-     * @property backupCardsCount     backup cards count
-     */
-    @Serializable
-    data class ResetToFactory(
-        val userWalletId: UserWalletId,
-        val cardId: String,
-        val isActiveBackupStatus: Boolean,
-        val backupCardsCount: Int,
-        val hasTangemPay: Boolean,
-    ) : AppRoute(
-        path = "/reset_to_factory" +
-            "/${userWalletId.stringValue}" +
-            "/$cardId" +
-            "/$isActiveBackupStatus" +
-            "/$backupCardsCount",
-    )
-
-    @Serializable
-    data object AccessCodeRecovery : AppRoute(path = "/access_code_recovery")
 
     @Serializable
     data class ManageTokens(
@@ -491,6 +461,7 @@ sealed class AppRoute(val path: String) : Route {
     data class AddExistingWallet(
         val mode: Mode = Mode.RecoveryPhrase,
         val shouldSendOnboardingStarted: Boolean = false,
+        val analyticsSource: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.ImportWallet,
     ) : AppRoute(path = "/add_existing_wallet") {
 
         @Serializable
@@ -600,6 +571,9 @@ sealed class AppRoute(val path: String) : Route {
     data object TangemPayHotWalletOnboarding : AppRoute(path = "/tangem_pay_hot_wallet_onboarding")
 
     @Serializable
+    data object AllServices : AppRoute(path = "/all_services")
+
+    @Serializable
     data class TangemPayCampaign(
         val campaignKey: String,
     ) : AppRoute(path = "/tangem_pay_campaign")
@@ -668,6 +642,31 @@ sealed class AppRoute(val path: String) : Route {
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
     ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+
+    @Serializable
+    data class EarnEntry(
+        val userWalletId: UserWalletId,
+        val cryptoCurrency: CryptoCurrency,
+        val source: Source,
+        val start: Start = Start.Auto,
+    ) : AppRoute(path = "/earn_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}") {
+
+        @Serializable
+        enum class Source { TokenPage, Markets, Deeplink, EarnBanner, YieldSheet, ForYou }
+
+        @Serializable
+        sealed interface Start {
+
+            @Serializable
+            data object Auto : Start
+
+            @Serializable
+            data class Picker(val preselected: EarnProductId? = null) : Start
+
+            @Serializable
+            data class Info(val productId: EarnProductId) : Start
+        }
+    }
 
     @Serializable
     data class Polymarket(

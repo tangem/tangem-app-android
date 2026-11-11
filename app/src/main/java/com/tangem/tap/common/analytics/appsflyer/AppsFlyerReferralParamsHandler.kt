@@ -5,12 +5,14 @@ import com.tangem.core.analytics.api.AppsFlyerDeepLink
 import com.tangem.core.analytics.api.AppsFlyerDeepLinkHandler
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
+import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.domain.wallets.models.ReferralParamValidator
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.extensions.uriValidate
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,19 +20,26 @@ import javax.inject.Singleton
 @Singleton
 class AppsFlyerReferralParamsHandler @Inject constructor(
     private val appsFlyerRepository: AppsFlyerRepository,
+    private val marketingUidBindingRepository: MarketingUidBindingRepository,
     private val coroutineScope: AppCoroutineScope,
 ) : AppsFlyerConversionDataHandler, AppsFlyerDeepLinkHandler {
 
     private val isDeferredDeepLinkHandled = AtomicBoolean(false)
 
+    // A deferred click arrives both as UDL and as conversion data, in either order
+    private val boundMarketingUids = ConcurrentHashMap.newKeySet<String>()
+
     override fun handle(conversionData: Map<String?, Any?>) {
-        if (isDeferredDeepLinkHandled.get()) {
-            TangemLogger.i("Skipping AppsFlyer conversion data: the deferred deep link is already handled by UDL")
+        if (!isFirstLaunch(conversionData)) {
+            TangemLogger.i("Skipping AppsFlyer conversion data: cached install payload replayed on app open")
             return
         }
 
-        if (!isFirstLaunch(conversionData)) {
-            TangemLogger.i("Skipping AppsFlyer conversion data: cached install payload replayed on app open")
+        val uid = conversionData[DEEP_LINK_SUB_3] as? String
+        bindMarketingUid(uid = uid)
+
+        if (isDeferredDeepLinkHandled.get()) {
+            TangemLogger.i("Skipping AppsFlyer conversion data: the deferred deep link is already handled by UDL")
             return
         }
 
@@ -39,6 +48,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
             afDp = conversionData[AF_DP] as? String,
             deepLinkSub1 = conversionData[DEEP_LINK_SUB_1] as? String,
             deepLinkSub2 = conversionData[DEEP_LINK_SUB_2] as? String,
+            deepLinkSub3 = uid,
             isDeferredDelivery = true,
         )
     }
@@ -51,6 +61,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
             afDp = deepLink.afDp,
             deepLinkSub1 = deepLink.deepLinkSub1,
             deepLinkSub2 = deepLink.deepLinkSub2,
+            deepLinkSub3 = deepLink.deepLinkSub3,
             isDeferredDelivery = isDeferredDelivery,
         )
 
@@ -63,15 +74,18 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         afDp: String?,
         deepLinkSub1: String?,
         deepLinkSub2: String?,
+        deepLinkSub3: String?,
         isDeferredDelivery: Boolean,
     ): Boolean {
         @Suppress("NullableToStringCall")
         TangemLogger.i(
-            "AppsFlyer deeplink received: value=$deepLinkValue, af_dp=$afDp, sub1=$deepLinkSub1, sub2=$deepLinkSub2",
+            "AppsFlyer deeplink received: value=$deepLinkValue, af_dp=$afDp, " +
+                "sub1=$deepLinkSub1, sub2=$deepLinkSub2, sub3=$deepLinkSub3",
         )
 
         // Referral params are stored for any deep_link_value: a scenario link may also carry a referral code.
         storeReferralParams(refcode = deepLinkSub1, campaign = deepLinkSub2)
+        bindMarketingUid(uid = deepLinkSub3)
 
         return when {
             storeTarget(deepLinkValue, isDeferredDelivery) -> true
@@ -133,6 +147,13 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         storeConversionData(refcode = validRefcode, campaign = validCampaign)
     }
 
+    private fun bindMarketingUid(uid: String?) {
+        val validUid = ReferralParamValidator.sanitize(uid) ?: return
+        if (!boundMarketingUids.add(validUid)) return
+
+        coroutineScope.launch { marketingUidBindingRepository.bind(validUid) }
+    }
+
     private fun storeNavigationDeeplink(deepLinkValue: String) {
         coroutineScope.launch {
             appsFlyerRepository.storeNavigationDeeplink(deepLinkValue)
@@ -154,6 +175,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         const val DEEP_LINK_VALUE = "deep_link_value"
         const val DEEP_LINK_SUB_1 = "deep_link_sub1"
         const val DEEP_LINK_SUB_2 = "deep_link_sub2"
+        const val DEEP_LINK_SUB_3 = "deep_link_sub3"
         const val AF_DP = "af_dp"
     }
 }

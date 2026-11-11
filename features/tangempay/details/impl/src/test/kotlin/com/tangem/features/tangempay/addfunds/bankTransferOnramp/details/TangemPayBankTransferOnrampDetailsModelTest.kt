@@ -5,7 +5,6 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
@@ -14,11 +13,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsScreenUM.DailyDepositLimitUM
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.isEmpty
@@ -30,7 +30,7 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.onrampFee
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
-import com.tangem.test.mock.pay.MockBankCredentials
+import com.tangem.test.mock.tangempay.MockBankCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -53,16 +53,15 @@ import java.math.BigDecimal
 import java.util.Locale
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class TangemPayBankTransferOnrampDetailsModelTest {
+internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val product = TangemPayProduct.PAYMENT_ACCOUNT
 
-    private val router: Router = mockk(relaxed = true)
     private val getOnrampFeesUseCase: GetOnrampFeesUseCase = mockk()
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
-    private val analytics: TangemPayBankTransferOnrampDetailsComponent.Analytics = mockk(relaxed = true)
+    private val detailsAnalytics: TangemPayBankTransferOnrampDetailsComponent.Analytics = mockk(relaxed = true)
 
     private val defaultLocale = Locale.getDefault()
 
@@ -70,7 +69,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     fun resetMocks() {
         Locale.setDefault(Locale.US)
         clearMocks(router, getOnrampFeesUseCase, clipboardManager, shareManager)
-        clearMocks(analytics)
+        clearMocks(detailsAnalytics)
         coEvery { getOnrampFeesUseCase(userWalletId, product) } returns emptyList<AccountFee>().right()
     }
 
@@ -95,7 +94,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                 "Bank name" to "SSB Bank",
                 "Bank address" to "8700 Perry Highway",
             ).inOrder()
-            verify(exactly = 1) { analytics.onDetailsShown() }
+            verify(exactly = 1) { detailsAnalytics.onDetailsShown() }
         }
 
     @Test
@@ -218,7 +217,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     fun `GIVEN fees request fails WHEN retry succeeds THEN fee rows shown`() = runTest {
         // Arrange
         coEvery { getOnrampFeesUseCase(userWalletId, product) } returnsMany listOf(
-            VisaApiError.Unspecified.left(),
+            TangemPayApiError.Unspecified.left(),
             listOf(onrampFee(amount = BigDecimal("1.00"))).right(),
         )
         val model = createModel()
@@ -238,11 +237,11 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     fun `GIVEN fees retry in flight WHEN retry clicked again THEN shimmer shown and fees requested once more`() =
         runTest {
             // Arrange
-            val pending = CompletableDeferred<Either<VisaApiError, List<AccountFee>>>()
+            val pending = CompletableDeferred<Either<TangemPayApiError, List<AccountFee>>>()
             var calls = 0
             coEvery { getOnrampFeesUseCase(userWalletId, product) } coAnswers {
                 calls++
-                if (calls == 1) VisaApiError.Unspecified.left() else pending.await()
+                if (calls == 1) TangemPayApiError.Unspecified.left() else pending.await()
             }
             val model = createModel()
             advanceUntilIdle()
@@ -272,7 +271,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
 
         // Assert
         verify(exactly = 1) { clipboardManager.setText(text = "123456", isSensitive = true) }
-        verify(exactly = 1) { analytics.onFieldCopied(RequisiteField.ACCOUNT_NUMBER) }
+        verify(exactly = 1) { detailsAnalytics.onFieldCopied(RequisiteField.ACCOUNT_NUMBER) }
     }
 
     @Test
@@ -295,7 +294,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                     "Bank address: 8700 Perry Highway",
             )
         }
-        verify(exactly = 1) { analytics.onShareClicked() }
+        verify(exactly = 1) { detailsAnalytics.onShareClicked() }
     }
 
     @Test
@@ -509,7 +508,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
 
         // Assert
         verify(exactly = 1) { clipboardManager.setText(text = model.value, isSensitive = true) }
-        verify(exactly = 1) { analytics.onFieldCopied(model.field) }
+        verify(exactly = 1) { detailsAnalytics.onFieldCopied(model.field) }
     }
 
     private fun TestScope.createModelWithRails(
@@ -521,7 +520,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                 userWalletId = userWalletId,
                 bankCredentials = rails,
                 feeSource = feeSource,
-                analytics = analytics,
+                analytics = detailsAnalytics,
             ),
         ),
         dispatchers = createTestingCoroutineDispatcherProvider(),

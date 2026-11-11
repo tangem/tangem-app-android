@@ -24,6 +24,7 @@ import com.tangem.features.collectibles.api.CollectiblesEntryComponent
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsComponent
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
+import com.tangem.features.collectibles.impl.packopenfailed.CollectiblesPackOpenFailedComponent
 import com.tangem.features.collectibles.impl.packopening.CollectiblesPackOpeningComponent
 import com.tangem.features.collectibles.impl.stories.CollectiblesStoriesComponent
 import dagger.assisted.Assisted
@@ -63,7 +64,9 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
     )
 
     private val CollectiblesRoute.isModalFlow: Boolean
-        get() = this is CollectiblesRoute.MachineDetails || this is CollectiblesRoute.ConfirmOrder
+        get() = this is CollectiblesRoute.MachineDetails ||
+            this is CollectiblesRoute.ConfirmOrder ||
+            this is CollectiblesRoute.PackOpenFailed
 
     private fun resolveStartRoute(): CollectiblesRoute = when (params.startRoute) {
         CollectiblesStartRoute.Onboarding -> CollectiblesRoute.Onboarding(params.userWalletId)
@@ -88,7 +91,7 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
         }
     }
 
-    /** Machine details and its confirm order form one modal flow: it slides up over the screen it was opened from. */
+    /** Machine details, confirm order and its failure form one modal flow: it slides up over the screen it came from. */
     private fun selectAnimator(route: CollectiblesRoute, otherRoute: CollectiblesRoute): StackAnimator = when {
         route.isModalFlow == otherRoute.isModalFlow -> slide()
         route.isModalFlow -> slide(orientation = Orientation.Vertical)
@@ -119,6 +122,10 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
                     externalId = route.externalId,
                     isTurboEnabled = route.isTurboEnabled,
                 ),
+            )
+            CollectiblesRoute.PackOpenFailed -> CollectiblesPackOpenFailedComponent(
+                context = childContext,
+                params = CollectiblesPackOpenFailedComponent.Params(userWalletId = params.userWalletId),
             )
         }
     }

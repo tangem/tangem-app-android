@@ -12,12 +12,12 @@ import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
-import com.tangem.test.mock.pay.MockBankCredentials
+import com.tangem.test.mock.tangempay.MockBankCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -188,7 +188,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     fun `GIVEN MXN toggle and prefetch in flight WHEN bank option clicked THEN it waits for the prefetch`() = runTest {
         // Arrange
         every { moneyAccountFeatureToggles.isMxnEnabled } returns true
-        val pending = CompletableDeferred<Either<VisaApiError, List<BankCredentials>>>()
+        val pending = CompletableDeferred<Either<TangemPayApiError, List<BankCredentials>>>()
         coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } coAnswers { pending.await() }
         val model = createModel(depositAddress = DEPOSIT_ADDRESS)
         advanceUntilIdle()
@@ -214,7 +214,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
             // Arrange
             every { moneyAccountFeatureToggles.isMxnEnabled } returns true
             coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } returns
-                VisaApiError.ServerUnavailable.left()
+                TangemPayApiError.ServerUnavailable.left()
             val model = createModel(depositAddress = DEPOSIT_ADDRESS)
             advanceUntilIdle()
 
@@ -235,7 +235,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
         // Arrange
         every { moneyAccountFeatureToggles.isMxnEnabled } returns true
         coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } returnsMany listOf(
-            VisaApiError.ServerUnavailable.left(),
+            TangemPayApiError.ServerUnavailable.left(),
             ROUTES.right(),
         )
         val model = createModel(depositAddress = DEPOSIT_ADDRESS)
@@ -255,7 +255,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     fun `GIVEN credentials fail WHEN bank option clicked THEN listener notified and loading reset`() = runTest {
         // Arrange
         coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, false) } returns
-            VisaApiError.ServerUnavailable.left()
+            TangemPayApiError.ServerUnavailable.left()
         val model = createModel(depositAddress = DEPOSIT_ADDRESS)
 
         // Act
@@ -274,7 +274,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     fun `GIVEN credentials in flight WHEN bank option tapped twice THEN one request and one method event sent`() =
         runTest {
             // Arrange
-            val pending = CompletableDeferred<Either<VisaApiError, List<BankCredentials>>>()
+            val pending = CompletableDeferred<Either<TangemPayApiError, List<BankCredentials>>>()
             coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, false) } coAnswers { pending.await() }
             val model = createModel(depositAddress = DEPOSIT_ADDRESS)
             val onBankClick = requireNotNull(model.bankOption().onClick)
@@ -338,7 +338,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
             expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_body),
         ),
         BankDescriptionModel(
-            credentials = VisaApiError.ServerUnavailable.left(),
+            credentials = TangemPayApiError.ServerUnavailable.left(),
             expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_body),
         ),
     )
@@ -367,7 +367,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     }
 
     data class BankDescriptionModel(
-        val credentials: Either<VisaApiError, List<BankCredentials>>,
+        val credentials: Either<TangemPayApiError, List<BankCredentials>>,
         val expectedDescription: TextReference,
     )
 

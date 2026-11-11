@@ -46,7 +46,4 @@ interface CollectiblesAccountRepository {
 
     /** Removes whatever is recorded for [userWalletId]. */
     suspend fun clearAccount(userWalletId: UserWalletId)
-
-    /** Drops the account from the wallet's backend accounts document; the backend archives the row. */
-    suspend fun unregisterAccount(userWalletId: UserWalletId)
 }
