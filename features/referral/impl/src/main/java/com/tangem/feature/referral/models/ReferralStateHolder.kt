@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.feature.referral.domain.models.ExpectedAwards
 
 internal data class ReferralStateHolder(
@@ -68,5 +69,6 @@ internal data class ReferralStateHolder(
         val tokenState: TokenItemState,
         val isBalanceHidden: Boolean,
         val accountSelectUM: PortfolioSelectUM,
+        val tokenRow: TangemTokenRow.State? = null,
     )
 }

@@ -75,7 +75,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             val result = orderSubmitter.submit(
                 prepared = order,
-                confirmedWith = confirmedWith,
+                preference = buttonStyle.signingPreference(confirmedWith = confirmedWith),
                 onKeyLost = buttonStyle::onSessionKeyLost,
             )
             if (result == null) {

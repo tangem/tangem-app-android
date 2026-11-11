@@ -21,13 +21,13 @@ internal class MarketingDeeplinkTest {
     internal data class ResolveModel(val link: String, val expected: MarketingDeeplink)
 
     private fun provideTestModels() = listOf(
-        // tangem:// swap/buy -> contextual
-        ResolveModel(link = "tangem://swap", expected = MarketingDeeplink.SWAP),
+        // tangem://buy -> contextual
         ResolveModel(link = "tangem://buy", expected = MarketingDeeplink.BUY),
-        ResolveModel(link = "tangem://swap?from_token_id=ethereum", expected = MarketingDeeplink.SWAP),
         ResolveModel(link = "tangem://buy/extra", expected = MarketingDeeplink.BUY),
-        ResolveModel(link = "TANGEM://swap", expected = MarketingDeeplink.SWAP),
-        // tangem:// other hosts -> external
+        ResolveModel(link = "TANGEM://buy", expected = MarketingDeeplink.BUY),
+        // tangem:// other hosts -> external; swap is handled by the generic launcher
+        ResolveModel(link = "tangem://swap", expected = MarketingDeeplink.EXTERNAL),
+        ResolveModel(link = "tangem://swap?from_token_id=ethereum", expected = MarketingDeeplink.EXTERNAL),
         ResolveModel(link = "tangem://token", expected = MarketingDeeplink.EXTERNAL),
         ResolveModel(link = "tangem://promo", expected = MarketingDeeplink.EXTERNAL),
         // https T&S links -> external (iOS treats these as .link too)
