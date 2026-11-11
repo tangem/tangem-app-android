@@ -3,6 +3,8 @@ package com.tangem.features.collectibles.impl.discovery.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.features.collectibles.impl.discovery.CollectiblesDiscoveryComponent
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchAction
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchFlow
@@ -11,10 +13,8 @@ import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchingContext
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesBatch
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesListConfig
 import com.tangem.domain.collectibles.models.CollectiblesError
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineCategoriesUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachinesBatchFlowUseCase
-import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.createBatchListState
 import com.tangem.features.collectibles.impl.createCategories
 import com.tangem.features.collectibles.impl.createCategory
@@ -54,7 +54,7 @@ import org.junit.jupiter.api.Test
 internal class CollectiblesDiscoveryModelTest {
 
     private val getCategoriesUseCase: GetCollectibleGachaMachineCategoriesUseCase = mockk()
-    private val router: Router = mockk(relaxed = true)
+    private val modelCallbacks: CollectiblesDiscoveryComponent.ModelCallbacks = mockk(relaxed = true)
     private val getMachinesBatchFlowUseCase: GetCollectibleGachaMachinesBatchFlowUseCase = mockk()
 
     private val batchListState = MutableStateFlow(
@@ -501,7 +501,7 @@ internal class CollectiblesDiscoveryModelTest {
     }
 
     @Test
-    fun `GIVEN a loaded pack WHEN it is clicked THEN the pack details screen is pushed`() = runTest {
+    fun `GIVEN a loaded pack WHEN it is clicked THEN the host gets its external id`() = runTest {
         // Arrange
         val fixture = startModel()
         batchListState.value = createBatchListState(
@@ -514,7 +514,7 @@ internal class CollectiblesDiscoveryModelTest {
         content.rows.first().packs.first().onClick()
 
         // Assert
-        verify(exactly = 1) { router.push(CollectiblesRoute.MachineDetails(externalId = "pokemon_50")) }
+        verify(exactly = 1) { modelCallbacks.onPackClick("pokemon_50") }
     }
 
     /**
@@ -530,7 +530,7 @@ internal class CollectiblesDiscoveryModelTest {
         val model = CollectiblesDiscoveryModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getCategoriesUseCase = getCategoriesUseCase,
-            router = router,
+            paramsContainer = MutableParamsContainer(CollectiblesDiscoveryComponent.Params(modelCallbacks = modelCallbacks)),
             getMachinesBatchFlowUseCase = getMachinesBatchFlowUseCase,
         ).also { this@CollectiblesDiscoveryModelTest.model = it }
 

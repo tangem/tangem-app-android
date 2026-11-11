@@ -75,8 +75,16 @@ internal class CollectiblesPackOpeningComponent @AssistedInject constructor(
         ),
     )
 
-    /** @property externalId the machine's public id (e.g. `pokemon_50`), not its internal id */
-    data class Params(val userWalletId: UserWalletId, val externalId: String, val isTurboEnabled: Boolean)
+    /**
+     * @property externalId the machine's public id (e.g. `pokemon_50`), not its internal id
+     * @property reopenTxId a paid pack left unopened, opened as soon as the screen starts
+     */
+    data class Params(
+        val userWalletId: UserWalletId,
+        val externalId: String,
+        val isTurboEnabled: Boolean,
+        val reopenTxId: String? = null,
+    )
 
     @AssistedFactory
     interface Factory {
