@@ -4,6 +4,7 @@ import android.net.Uri
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
@@ -16,21 +17,28 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.net.URI
 import javax.inject.Provider
 
+private val openableFromPush = DeepLinkHandler {}
+
+private val notOpenableFromPush = object : DeepLinkHandler {
+    override val isOpenableFromPush: Boolean = false
+
+    override fun handle(request: DeepLinkRequest) = Unit
+}
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultQrDeepLinkMatcherTest {
 
     private val matcher = DefaultQrDeepLinkMatcher(
         deepLinkHandlerRegistry = DeepLinkHandlerRegistry(
-            handlers = listOf(
-                "tangem://markets",
-                "tangem://promo",
-                "tangem://wc",
-                "tangem://mcp.authorization",
-                "tangem://redirect_sell",
-                "tangem://redirect",
-                "https://tangem.com/news",
-                "wc:",
-            ).associateWith { Provider { DeepLinkHandler {} } },
+            handlers = mapOf(
+                "tangem://markets" to openableFromPush,
+                "tangem://promo" to openableFromPush,
+                "tangem://wc" to notOpenableFromPush,
+                "tangem://mcp.authorization" to notOpenableFromPush,
+                "tangem://redirect_sell" to notOpenableFromPush,
+                "https://tangem.com/news" to openableFromPush,
+                "wc:" to notOpenableFromPush,
+            ).mapValues { (_, handler) -> Provider { handler } },
         ),
     )
 
