@@ -17,6 +17,17 @@ class TangemPayKycSheetPageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
+    val icon: KNode = child {
+        hasTestTag(WarningBottomSheetTestTags.ICON)
+        useUnmergedTree = true
+    }
+
+    fun message(text: String): KNode = child {
+        hasTestTag(WarningBottomSheetTestTags.MESSAGE)
+        hasText(text)
+        useUnmergedTree = true
+    }
+
     fun primaryButtonWithText(text: String): KNode = child {
         hasTestTag(WarningBottomSheetTestTags.BUTTON_PRIMARY)
         hasAnyDescendant(withText(text))
