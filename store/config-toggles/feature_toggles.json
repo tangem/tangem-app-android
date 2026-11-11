@@ -50,5 +50,9 @@
     {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE_V2",
         "version": "6.8"
+    },
+    {
+        "name": "TWI_1720_ALL_SERVICES_ENABLED",
+        "version": "undefined"
     }
 ]
