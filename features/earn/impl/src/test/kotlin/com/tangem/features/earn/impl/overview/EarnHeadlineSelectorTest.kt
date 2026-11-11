@@ -410,6 +410,64 @@ internal class EarnHeadlineSelectorTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class WinnerOf {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN candidates WHEN winnerOf THEN the summary the headline is built from or null`(
+            model: BestActiveModel,
+        ) {
+            // Act
+            val actual = selector.winnerOf(model.summaries)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<BestActiveModel> {
+            val inactiveLending = product(lendingId, rate = "0.03")
+            val activeLending = product(lendingId, rate = "0.03", isActive = true)
+            val inactiveVault = product(vaultId, rate = "0.08")
+            val vaultWithoutRate = product(vaultId, rate = null)
+            val fullVault = product(vaultId, rate = "0.09", availability = ProductAvailability.Full)
+
+            return listOf(
+                BestActiveModel(
+                    description = "two inactive products, the higher rate wins",
+                    summaries = listOf(inactiveLending, inactiveVault),
+                    expected = inactiveVault,
+                ),
+                BestActiveModel(
+                    description = "an active product wins over a higher rate",
+                    summaries = listOf(activeLending, inactiveVault),
+                    expected = activeLending,
+                ),
+                BestActiveModel(
+                    description = "a product without a rate is not a candidate",
+                    summaries = listOf(inactiveLending, vaultWithoutRate),
+                    expected = inactiveLending,
+                ),
+                BestActiveModel(
+                    description = "a full product without a position is not a candidate",
+                    summaries = listOf(inactiveLending, fullVault),
+                    expected = inactiveLending,
+                ),
+                BestActiveModel(
+                    description = "no live candidates",
+                    summaries = listOf(vaultWithoutRate, fullVault),
+                    expected = null,
+                ),
+                BestActiveModel(
+                    description = "no candidates",
+                    summaries = emptyList(),
+                    expected = null,
+                ),
+            )
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class BadgeAccentOfWinner {
 
         private val infoProductId = EarnProductId("info_product")
