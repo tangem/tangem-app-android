@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope

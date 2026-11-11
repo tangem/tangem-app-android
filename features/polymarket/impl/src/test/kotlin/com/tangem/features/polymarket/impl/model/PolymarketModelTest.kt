@@ -10,10 +10,13 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyLifecycleError
 import com.tangem.domain.polymarket.model.PolymarketSigningError
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationFailure
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationOutcome
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
 import com.tangem.domain.polymarket.usecase.AcknowledgePolymarketSessionKeyOutcomeUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOutcomeUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -39,16 +42,21 @@ internal class PolymarketModelTest {
     private val featureToggles: PolymarketFeatureToggles = mockk()
     private val observeOutcome: ObservePolymarketSessionKeyOutcomeUseCase = mockk()
     private val acknowledgeOutcome: AcknowledgePolymarketSessionKeyOutcomeUseCase = mockk()
+    private val observeOperation: ObservePolymarketSessionKeyOperationUseCase = mockk()
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val outcomes = mapOf(
         USER_WALLET_ID to MutableStateFlow<PolymarketSessionKeyOperationOutcome?>(null),
         OTHER_WALLET_ID to MutableStateFlow<PolymarketSessionKeyOperationOutcome?>(null),
     )
+    private val operations = mapOf(
+        USER_WALLET_ID to MutableStateFlow<PolymarketSessionKeyOperation?>(null),
+        OTHER_WALLET_ID to MutableStateFlow<PolymarketSessionKeyOperation?>(null),
+    )
     private var model: PolymarketModel? = null
 
     @BeforeEach
     fun setup() {
-        clearMocks(featureToggles, observeOutcome, acknowledgeOutcome, messageSender)
+        clearMocks(featureToggles, observeOutcome, acknowledgeOutcome, observeOperation, messageSender)
         every { featureToggles.isPolymarketSessionKeysEnabled } returns true
         outcomes.forEach { (walletId, finished) ->
             finished.value = null
@@ -56,6 +64,10 @@ internal class PolymarketModelTest {
             every { acknowledgeOutcome(walletId, any()) } answers {
                 finished.value = finished.value?.takeIf { it.id != secondArg<Long>() }
             }
+        }
+        operations.forEach { (walletId, running) ->
+            running.value = null
+            every { observeOperation(walletId) } returns running
         }
     }
 
@@ -206,6 +218,7 @@ internal class PolymarketModelTest {
 
         // Assert
         verify(exactly = 0) { observeOutcome(any()) }
+        verify(exactly = 0) { observeOperation(any()) }
         verify(exactly = 0) { messageSender.send(any()) }
         verify(exactly = 0) { acknowledgeOutcome(any(), any()) }
     }
@@ -221,6 +234,96 @@ internal class PolymarketModelTest {
 
         // Assert
         verify(exactly = 0) { observeOutcome(any()) }
+    }
+
+    @Test
+    fun `GIVEN visible host WHEN revocation leaves signing THEN revoking toast is sent`() = runTest {
+        // Arrange
+        createVisibleModel(USER_WALLET_ID)
+        val message = slot<SnackbarMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
+
+        // Act
+        run(USER_WALLET_ID, revocation(PolymarketSessionKeyOperationStage.SIGNING))
+        run(USER_WALLET_ID, revocation(PolymarketSessionKeyOperationStage.REVOKING))
+
+        // Assert
+        verify(exactly = 1) { messageSender.send(any()) }
+        assertThat(message.captured.message)
+            .isEqualTo(resourceReference(R.string.prediction_session_key_toast_revoking))
+    }
+
+    @Test
+    fun `GIVEN visible host WHEN revocation ends at signing THEN nothing is sent`() = runTest {
+        // Arrange
+        createVisibleModel(USER_WALLET_ID)
+
+        // Act
+        run(USER_WALLET_ID, revocation(PolymarketSessionKeyOperationStage.SIGNING))
+        run(USER_WALLET_ID, null)
+
+        // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN visible host WHEN revocation passes several stages after signing THEN revoking toast is sent once`() =
+        runTest {
+            // Arrange
+            createVisibleModel(USER_WALLET_ID)
+
+            // Act
+            run(USER_WALLET_ID, revocation(PolymarketSessionKeyOperationStage.SIGNING))
+            run(USER_WALLET_ID, revocation(PolymarketSessionKeyOperationStage.REVOKING))
+            run(USER_WALLET_ID, revocation(PolymarketSessionKeyOperationStage.REVOKED))
+
+            // Assert
+            verify(exactly = 1) { messageSender.send(any()) }
+        }
+
+    @Test
+    fun `GIVEN revocation already revoked WHEN host first sees it THEN nothing is sent`() = runTest {
+        // Arrange
+        createVisibleModel(USER_WALLET_ID)
+
+        // Act
+        run(USER_WALLET_ID, revocation(PolymarketSessionKeyOperationStage.REVOKED))
+
+        // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN visible host WHEN another operation leaves signing THEN nothing is sent`() = runTest {
+        // Arrange
+        createVisibleModel(USER_WALLET_ID)
+
+        // Act
+        run(USER_WALLET_ID, EXTEND.copy(stage = PolymarketSessionKeyOperationStage.SIGNING))
+        run(USER_WALLET_ID, EXTEND.copy(stage = PolymarketSessionKeyOperationStage.REVOKING))
+        run(USER_WALLET_ID, EXTEND.copy(stage = PolymarketSessionKeyOperationStage.AUTHORIZING))
+
+        // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN two revocations WHEN each leaves signing THEN each is toasted`() = runTest {
+        // Arrange
+        createVisibleModel(USER_WALLET_ID)
+
+        // Act
+        run(USER_WALLET_ID, revocation(PolymarketSessionKeyOperationStage.REVOKING))
+        run(USER_WALLET_ID, null)
+        run(USER_WALLET_ID, revocation(PolymarketSessionKeyOperationStage.REVOKING).copy(id = 9L))
+
+        // Assert
+        verify(exactly = 2) { messageSender.send(any()) }
+    }
+
+    private fun TestScope.run(walletId: UserWalletId, operation: PolymarketSessionKeyOperation?) {
+        operations.getValue(walletId).value = operation
+        advanceUntilIdle()
     }
 
     private fun TestScope.finish(walletId: UserWalletId, outcome: PolymarketSessionKeyOperationOutcome) {
@@ -240,6 +343,7 @@ internal class PolymarketModelTest {
         featureToggles = featureToggles,
         observeSessionKeyOutcome = observeOutcome,
         acknowledgeSessionKeyOutcome = acknowledgeOutcome,
+        observeSessionKeyOperation = observeOperation,
         messageSender = messageSender,
         dispatchers = createTestingCoroutineDispatcherProvider(),
     ).also { model = it }
@@ -258,6 +362,20 @@ internal class PolymarketModelTest {
                 ),
                 isAfterRevocation = false,
             ).left(),
+        )
+
+        val EXTEND = PolymarketSessionKeyOperation(
+            id = 8L,
+            request = PolymarketSessionKeyOperationRequest.Extend,
+            targetAddress = "0x1",
+            stage = PolymarketSessionKeyOperationStage.SIGNING,
+        )
+
+        fun revocation(stage: PolymarketSessionKeyOperationStage) = PolymarketSessionKeyOperation(
+            id = 4L,
+            request = PolymarketSessionKeyOperationRequest.Revoke(sessionKeyAddress = "0x1"),
+            targetAddress = "0x1",
+            stage = stage,
         )
 
         fun revokeFailed(id: Long) = PolymarketSessionKeyOperationOutcome(

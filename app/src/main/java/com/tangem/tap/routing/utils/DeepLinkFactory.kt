@@ -4,7 +4,6 @@ import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
-import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst
@@ -27,7 +26,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import javax.inject.Provider
 
 @ActivityScoped
 internal class DeepLinkFactory @Inject constructor(
@@ -36,9 +34,8 @@ internal class DeepLinkFactory @Inject constructor(
     private val marketingFeatureToggles: MarketingFeatureToggles,
     private val marketingUidBindingRepository: MarketingUidBindingRepository,
     private val appCoroutineScope: AppCoroutineScope,
-    deepLinkHandlers: Map<String, @JvmSuppressWildcards Provider<DeepLinkHandler>>,
+    private val deepLinkHandlerRegistry: DeepLinkHandlerRegistry,
 ) {
-    private val deepLinkHandlerRegistry = DeepLinkHandlerRegistry(deepLinkHandlers)
     private val permittedAppRoute = MutableStateFlow(false)
 
     private var parkedDeeplink: ParkedDeeplink? = null
