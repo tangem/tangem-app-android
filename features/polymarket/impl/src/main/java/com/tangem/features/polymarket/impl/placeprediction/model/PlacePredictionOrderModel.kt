@@ -197,7 +197,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
             quoteEngine.holdDuring {
                 val result = orderSubmitter.submit(
                     prepared = prepared,
-                    confirmedWith = confirmedWith,
+                    preference = buttonStyle.signingPreference(confirmedWith = confirmedWith),
                     onKeyLost = buttonStyle::onSessionKeyLost,
                 )
                 if (result == null) {

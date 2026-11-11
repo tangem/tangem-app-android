@@ -29,6 +29,7 @@ internal class MoneyAccountDetailsStateFactory(
     private val onRefresh: () -> Unit,
     private val onTxHistoryReload: () -> Unit,
     private val onRenewSession: () -> Unit,
+    private val isYieldModeEnabled: Boolean,
 ) {
     fun createInitialState(): MoneyAccountDetailsUM = MoneyAccountDetailsUM(
         title = resourceReference(R.string.virtual_account_title),
@@ -62,6 +63,7 @@ internal class MoneyAccountDetailsStateFactory(
         isAddFundsEnabled = true,
         isSendEnabled = true,
         txHistoryCurrency = null,
+        yieldSupplyCurrency = null,
         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
         onTxHistoryReloadClick = onTxHistoryReload,
     )
@@ -89,6 +91,7 @@ internal class MoneyAccountDetailsStateFactory(
                 )
             },
             txHistoryCurrency = account.cryptoCurrency,
+            yieldSupplyCurrency = account.cryptoCurrency.takeIf { isYieldModeEnabled },
             isBalanceUnavailable = account.isBalanceUnavailable,
             isAddFundsEnabled = isActionAvailable,
             isSendEnabled = isActionAvailable,

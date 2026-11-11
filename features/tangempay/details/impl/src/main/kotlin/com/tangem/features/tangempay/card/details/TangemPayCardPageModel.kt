@@ -33,7 +33,6 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.findCardWithId
 import com.tangem.domain.models.tangempay.TangemPayCard
@@ -89,6 +88,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
+import com.tangem.domain.tangempay.model.BankCredentials
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @Stable

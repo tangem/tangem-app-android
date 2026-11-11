@@ -16,6 +16,7 @@ data class FeesResponse(
         @SerialName("payment_method_id") val paymentMethodId: String?,
         @SerialName("calculation_type") val calculationType: String?,
         @SerialName("amount") val amount: SerializedBigDecimal?,
+        @SerialName("fixed_amount") val fixedAmount: SerializedBigDecimal?,
         @SerialName("currency") val currency: String?,
         @SerialName("description") val description: String?,
     )

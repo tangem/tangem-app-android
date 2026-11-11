@@ -1,5 +1,6 @@
 package com.tangem.domain.onramp
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.core.utils.EitherFlow
@@ -30,8 +31,8 @@ class GetOnrampOffersUseCase(
         ) { quotes, transactions ->
             processOffers(quotes, transactions)
         }
-            .map { offers -> offers.right() }
-            .catch { throwable -> errorResolver.resolve(throwable).left() }
+            .map<List<OnrampOffersBlock>, Either<OnrampError, List<OnrampOffersBlock>>> { it.right() }
+            .catch { emit(errorResolver.resolve(it).left()) }
     }
 
     private suspend fun processOffers(

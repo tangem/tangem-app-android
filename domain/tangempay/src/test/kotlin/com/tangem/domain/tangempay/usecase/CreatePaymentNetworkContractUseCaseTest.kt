@@ -30,7 +30,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val network = network(Blockchain.Polygon)
-    private val chainId = 137 // Polygon's EVM chain id — what the use case must derive from [network]
+    private val chainId = 137L // Polygon's EVM chain id — what the use case must derive from [network]
 
     // Polling is fire-and-forget in the app scope; the Unconfined test scope runs the launched poll
     // eagerly (until its first suspension), so calls are observable right after invoke() returns.

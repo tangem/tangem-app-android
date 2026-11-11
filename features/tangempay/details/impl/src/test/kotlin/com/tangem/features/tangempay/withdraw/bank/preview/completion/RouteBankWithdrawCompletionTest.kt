@@ -4,7 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRoute
@@ -122,7 +122,7 @@ internal class RouteBankWithdrawCompletionTest {
         runTest {
             // Arrange
             coEvery { bankOfframpOrderRepository.createRoute(userWalletId, any(), any(), any(), any()) } returns
-                route(calculationType = AccountFee.CalculationType.PERCENTAGE).right()
+                route(calculationType = FeeCalculationType.PERCENTAGE).right()
             val completion = createCompletion()
 
             // Act
@@ -338,7 +338,7 @@ internal class RouteBankWithdrawCompletionTest {
 
     private fun route(
         fee: BigDecimal = BigDecimal("1.00"),
-        calculationType: AccountFee.CalculationType = AccountFee.CalculationType.FIXED,
+        calculationType: FeeCalculationType = FeeCalculationType.FIXED,
         minDays: Int = 1,
         maxDays: Int = 3,
     ) = BankOfframpRoute(

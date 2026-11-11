@@ -33,7 +33,9 @@ class MockedGaslessTransactionRepository(
 
     override fun getChainIdForNetwork(network: Network): Int {
         val networkBlockchain = network.toBlockchain()
-        return networkBlockchain.getChainId() ?: error("ChainId not found for blockchain ${networkBlockchain.name}")
+        val chainId = networkBlockchain.getChainId()
+            ?: error("ChainId not found for blockchain ${networkBlockchain.name}")
+        return Math.toIntExact(chainId)
     }
 
     override suspend fun getGaslessFeeAddresses(): Set<String> {

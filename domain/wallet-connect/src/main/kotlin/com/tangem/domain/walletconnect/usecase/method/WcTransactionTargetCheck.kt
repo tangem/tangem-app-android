@@ -36,6 +36,6 @@ interface WcTransactionTargetCheck {
         data object RecipientIsNotContract : Status
 
         /** The transaction names a chain other than the one it was requested on. */
-        data class ChainMismatch(val declaredChainId: Int) : Status
+        data class ChainMismatch(val declaredChainId: Long) : Status
     }
 }

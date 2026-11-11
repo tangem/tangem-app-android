@@ -1,6 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -17,7 +16,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -68,9 +66,7 @@ internal object QrScanningDomainModule {
 
     @Provides
     @Singleton
-    fun provideQrDeepLinkMatcher(
-        deepLinkHandlers: Map<String, @JvmSuppressWildcards Provider<DeepLinkHandler>>,
-    ): QrDeepLinkMatcher {
-        return DefaultQrDeepLinkMatcher(deepLinkHandlerRegistry = DeepLinkHandlerRegistry(deepLinkHandlers))
+    fun provideQrDeepLinkMatcher(deepLinkHandlerRegistry: DeepLinkHandlerRegistry): QrDeepLinkMatcher {
+        return DefaultQrDeepLinkMatcher(deepLinkHandlerRegistry = deepLinkHandlerRegistry)
     }
 }
