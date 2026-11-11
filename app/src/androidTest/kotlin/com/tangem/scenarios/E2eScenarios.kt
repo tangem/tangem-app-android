@@ -1,14 +1,23 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasScrollToIndexAction
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.E2eCatalog
+import com.tangem.core.ui.test.ManageTokensScreenTestTags
+import com.tangem.core.ui.test.SwitchTestTags
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.extractEditableText
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.isDisplayedNow
 import com.tangem.common.extensions.parseNumericBalance
@@ -175,6 +184,38 @@ private fun BaseTestCase.revealAccountTokenOnMain(accountName: String, tokenName
 }
 
 private fun BaseTestCase.enableInManageTokensAndReturn(searchQuery: String, tokenName: String, networkLabel: String) {
+    // A symbol like "USDC" recurs across dozens of result rows (bridged variants, meme tokens that reuse the
+    // ticker), and each row's text includes that symbol — so matching by text alone is ambiguous. The genuine
+    // coin is the only row whose *title* (the row's first text) equals the token name; every other row has a
+    // different title ("UpSideDownCat", "USD CoinVertible", …).
+    val genuineToken = {
+        composeTestRule.onNode(
+            SemanticsMatcher("TOKEN_ITEM titled '$tokenName'") { node ->
+                val config = node.config
+                val isTokenItem = SemanticsProperties.TestTag in config &&
+                    config[SemanticsProperties.TestTag] == ManageTokensScreenTestTags.TOKEN_ITEM
+                val title = if (SemanticsProperties.Text in config) {
+                    config[SemanticsProperties.Text].firstOrNull()?.text
+                } else {
+                    null
+                }
+                isTokenItem && title == tokenName
+            },
+        )
+    }
+    // Network switches render only under an expanded token, so their presence is a reliable "expanded" signal.
+    val anyNetworkSwitchPresent = {
+        composeTestRule.onAllNodes(hasTestTag(SwitchTestTags.SWITCH)).fetchSemanticsNodes().isNotEmpty()
+    }
+    // Scroll to index 0 first: the genuine coin is the first result and the LazyColumn renders behind the sticky
+    // search bar, so a slightly-scrolled list leaves the top row clipped under the bar and the tap would miss.
+    val expandGenuineToken = {
+        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(0)
+        waitForIdle()
+        genuineToken().performClick()
+        waitForIdle()
+    }
+
     step("Search for '$searchQuery' in Manage Tokens") {
         onManageTokensScreen {
             searchField.performClick()
@@ -184,13 +225,16 @@ private fun BaseTestCase.enableInManageTokensAndReturn(searchQuery: String, toke
         Espresso.closeSoftKeyboard()
         waitForIdle()
     }
-    step("Expand '$tokenName'") {
-        awaitSuccess { onManageTokensScreen { tokenItem(tokenName).assertIsDisplayed() } }
-        onManageTokensScreen { tokenItem(tokenName).performClick() }
-        waitForIdle()
-    }
-    step("Ensure the '$networkLabel' network is enabled") {
-        awaitSuccess { onManageTokensScreen { networkSwitch(networkLabel).assertIsDisplayed() } }
+    step("Expand '$tokenName' and enable the '$networkLabel' network") {
+        // The token list keeps refreshing while the portfolio fetches balances for the token just added to the
+        // previous account, and every refresh collapses the expanded row. So (re-)expand and locate the target
+        // network switch in a single retry loop that survives those recompositions — performScrollTo throws when
+        // the switch is absent (row collapsed or switch below the fold), which drives another expand+scroll pass.
+        awaitSuccess {
+            if (!anyNetworkSwitchPresent()) expandGenuineToken()
+            onManageTokensScreen { networkSwitch(networkLabel).performScrollTo() }
+            onManageTokensScreen { networkSwitch(networkLabel).assertIsDisplayed() }
+        }
         // Toggle only when OFF — never disable an already-enabled network.
         val alreadyEnabled = runCatching {
             onManageTokensScreen { networkSwitch(networkLabel).assertIsOn() }
@@ -446,14 +490,18 @@ private fun BaseTestCase.performSendFromRicherAccount(
 private fun BaseTestCase.setCustomFeeAboveMarket(percent: Int) {
     val maxFeeTitle = getResourceString(CoreUiR.string.send_custom_evm_max_fee)
     step("Open the fee selector and select Custom") {
+        // The fee keeps computing after the confirm screen appears; the selector is a no-op until it is ready.
+        // The ⇕ select-fee icon renders only once the fee is loaded and selectable, so wait for it before tapping.
+        awaitSuccess { onSendConfirmScreen { selectFeeIcon.assertIsDisplayed() } }
         onSendConfirmScreen { feeSelectorIcon.performClick() }
+        awaitSuccess { onSendSelectNetworkFeeBottomSheet { chooseSpeedTitle.assertIsDisplayed() } }
         awaitSuccess { onSendSelectNetworkFeeBottomSheet { customSelectorItem.assertIsDisplayed() } }
         onSendSelectNetworkFeeBottomSheet { customSelectorItem.performClick() }
     }
     step("Set the custom max fee $percent% above market") {
         awaitSuccess { onSendSelectNetworkFeeBottomSheet { inputTextFieldValue(maxFeeTitle).assertIsDisplayed() } }
         var marketRaw = ""
-        onSendSelectNetworkFeeBottomSheet { marketRaw = inputTextFieldValue(maxFeeTitle).extractText() }
+        onSendSelectNetworkFeeBottomSheet { marketRaw = inputTextFieldValue(maxFeeTitle).extractEditableText() }
         val market = numericPart(marketRaw)
         require(market > BigDecimal.ZERO) { "Prefilled market max fee is not a positive number: '$marketRaw'" }
         val bumped = market.multiply(BigDecimal(100 + percent)).divide(BigDecimal(100))
@@ -463,7 +511,7 @@ private fun BaseTestCase.setCustomFeeAboveMarket(percent: Int) {
             inputTextFieldValue(maxFeeTitle).performTextReplacement(bumped)
         }
         var appliedRaw = ""
-        onSendSelectNetworkFeeBottomSheet { appliedRaw = inputTextFieldValue(maxFeeTitle).extractText() }
+        onSendSelectNetworkFeeBottomSheet { appliedRaw = inputTextFieldValue(maxFeeTitle).extractEditableText() }
         require(numericPart(appliedRaw) > market) {
             "Custom max fee did not increase above market: market='$marketRaw' applied='$appliedRaw'"
         }
