@@ -19,6 +19,7 @@ import com.tangem.core.ui.message.ModalMessage
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketCategoryFilter
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
@@ -1839,42 +1840,193 @@ internal class PolymarketMainModelTest {
     )
 
     @Test
-    fun `GIVEN a parent with children WHEN See all tapped THEN the category screen opens`() = runTest {
+    fun `GIVEN D2 and advertised filters WHEN loaded THEN first server filter is selected and requested`() = runTest {
         // Arrange
-        val category = PolymarketCategory(
-            id = 6, label = "Sports", icon = null,
-            subcategories = listOf(PolymarketCategory(id = 14, label = "Soccer", icon = null)),
-        )
-        coEvery { getCategoriesUseCase(any()) } returns listOf(category).right()
+        val categories = sportsCategories().map {
+            if (it.id == 6) it.copy(filters = listOf(PolymarketCategoryFilter.Props, PolymarketCategoryFilter.Games)) else it
+        }
+        coEvery { getCategoriesUseCase(any()) } returns categories.right()
+
+        // Act
         val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.filters.map { it.id }).containsExactly("props", "games").inOrder()
+        assertThat(model.uiState.value.filters.map { it.isSelected }).containsExactly(true, false).inOrder()
+        assertThat(model.uiState.value.filters.first().label).isEqualTo(resourceReference(R.string.prediction_filter_questions))
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(6, PolymarketCategoryFilter.Props)),
+        )
+    }
+
+    @Test
+    fun `GIVEN D2 off and sports filters WHEN loaded THEN no filters or filtered requests appear`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns sportsCategories().right()
+
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.filters).isEmpty()
+        assertThat(model.uiState.value.onSeeAllClick).isNull()
+        assertThat(model.uiState.value.categories.map { it.id }).containsExactly(6, 10, 2).inOrder()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 6)),
+        )
+    }
+
+    @Test
+    fun `GIVEN Questions selected WHEN switching category THEN first filter resets and old callbacks are ignored`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns sportsCategories().right()
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+        val questionsClick = model.uiState.value.filters.single { it.id == "props" }.onClick
+        questionsClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.categories.single { it.id == 10 }.onClick()
+        advanceUntilIdle()
+        questionsClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.filters.single { it.isSelected }.id).isEqualTo("games")
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(6, PolymarketCategoryFilter.Games)),
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(6, PolymarketCategoryFilter.Props)),
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(10, PolymarketCategoryFilter.Games)),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN visited Games and Questions WHEN switching back THEN pages and scroll remain independent`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns sportsCategories().right()
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+        statePerFeed[0].value = loadedState(eventId = "game-event")
+        model.onScrollIdle(index = 4, offset = 8)
+        model.uiState.value.filters.single { it.id == "props" }.onClick()
+        advanceUntilIdle()
+        statePerFeed[1].value = loadedState(eventId = "question-event")
+        advanceUntilIdle()
+        model.onScrollIdle(index = 7, offset = 24)
+        model.uiState.value.filters.single { it.id == "games" }.onClick()
+        advanceUntilIdle()
+        assertThat(shownEventIds(model)).containsExactly("game-event")
+        assertThat(model.uiState.value.pendingScrollPosition).isEqualTo(PolymarketFeedScrollPosition(4, 8))
+        dispatchedActions.clear()
+
+        // Act
+        model.uiState.value.filters.single { it.id == "props" }.onClick()
+        advanceUntilIdle()
+        model.uiState.value.filters.single { it.id == "props" }.onClick()
+        advanceUntilIdle()
+        (model.uiState.value.content as PolymarketFeedContentUM.Content).events.single().onClick()
+
+        // Assert
+        assertThat(shownEventIds(model)).containsExactly("question-event")
+        assertThat(model.uiState.value.pendingScrollPosition).isEqualTo(PolymarketFeedScrollPosition(7, 24))
+        assertThat(model.uiState.value.selection).isEqualTo(PolymarketEventsListConfig(6, PolymarketCategoryFilter.Props))
+        assertThat(dispatchedActions).isEmpty()
+        assertThat(statePerFeed).hasSize(2)
+        verify {
+            router.push(
+                PolymarketRoute.EventDetails(
+                    eventId = "question-event", userWalletId = USER_WALLET_ID, categoryLabel = "Sports",
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN Questions selected WHEN visiting unsupported category THEN filter is omitted and resets on return`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns sportsCategories().right()
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+        model.uiState.value.filters.single { it.id == "props" }.onClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.categories.single { it.id == 2 }.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.filters).isEmpty()
+        assertThat(model.uiState.value.onSeeAllClick).isNull()
+        assertThat(model.uiState.value.selection).isEqualTo(PolymarketEventsListConfig(category = 2))
+        assertThat(dispatchedActions.last()).isEqualTo(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 2)),
+        )
+        model.uiState.value.categories.single { it.id == 6 }.onClick()
+        advanceUntilIdle()
+        assertThat(model.uiState.value.filters.single { it.isSelected }.id).isEqualTo("games")
+        assertThat(statePerFeed).hasSize(3)
+    }
+
+    @Test
+    fun `GIVEN Questions selected WHEN See all tapped THEN parent category opens for the current wallet`() = runTest {
+        // Arrange
+        val categories = sportsCategories()
+        coEvery { getCategoriesUseCase(any()) } returns categories.right()
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+        model.uiState.value.filters.single { it.id == "props" }.onClick()
         advanceUntilIdle()
 
         // Act
         requireNotNull(model.uiState.value.onSeeAllClick).invoke()
 
         // Assert
-        verify { router.push(PolymarketRoute.Category(USER_WALLET_ID, category)) }
+        verify { router.push(PolymarketRoute.Category(USER_WALLET_ID, categories.first())) }
     }
 
     @Test
-    fun `GIVEN D2 disabled WHEN parent has children THEN See all stays hidden`() = runTest {
+    fun `GIVEN only one known filter WHEN loaded THEN hidden filters are not sent to the API`() = runTest {
         // Arrange
-        val category = PolymarketCategory(
-            id = 6, label = "Sports", icon = null,
-            subcategories = listOf(PolymarketCategory(id = 14, label = "Soccer", icon = null)),
+        val category = sportsCategories().first().copy(
+            filters = listOf(PolymarketCategoryFilter.Games, PolymarketCategoryFilter.Unknown("future")),
         )
         coEvery { getCategoriesUseCase(any()) } returns listOf(category).right()
 
         // Act
-        val model = createModel(this, isPhaseTwoEnabled = false)
+        val model = createModel(this, isPhaseTwoEnabled = true)
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.onSeeAllClick).isNull()
+        assertThat(model.uiState.value.filters).isEmpty()
+        assertThat(model.uiState.value.onSeeAllClick).isNotNull()
         assertThat(dispatchedActions).containsExactly(
             BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 6)),
         )
     }
+
+    private fun sportsCategories(): List<PolymarketCategory> = listOf(
+        PolymarketCategory(
+            id = 6,
+            label = "Sports",
+            icon = null,
+            filters = listOf(PolymarketCategoryFilter.Games, PolymarketCategoryFilter.Props),
+            subcategories = listOf(
+                PolymarketCategory(id = 16, label = "prediction_category_basketball", icon = null),
+                PolymarketCategory(id = 14, label = "prediction_category_soccer", icon = null),
+            ),
+        ),
+        PolymarketCategory(
+            id = 10,
+            label = "Esports",
+            icon = null,
+            filters = listOf(PolymarketCategoryFilter.Games, PolymarketCategoryFilter.Props),
+            subcategories = listOf(PolymarketCategory(id = 21, label = "prediction_category_cs2", icon = null)),
+        ),
+        PolymarketCategory(id = 2, label = "Politics", icon = null),
+    )
 
     private fun createModel(
         testScope: TestScope,
