@@ -2,6 +2,8 @@ package com.tangem.features.tangempay.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
@@ -15,30 +17,24 @@ import com.tangem.domain.tangempay.model.action
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @Suppress("LongParameterList")
-internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val scope: CoroutineScope,
-    @Assisted private val payload: Map<String, String>,
+internal class DefaultTangemPayMainDeepLinkHandler @Inject constructor(
     private val appRouter: AppRouter,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val paymentAccountSupplier: PaymentAccountStatusSupplier,
-) : TangemPayMainDeepLinkHandler {
+) : DeepLinkHandler, TangemPayMainDeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
-
-    private fun handleDeepLink() {
+    override fun handle(request: DeepLinkRequest) {
+        val scope = request.scope
+        val payload = request.queryParams
         val walletId = payload[CUSTOMER_WALLET_ID_KEY]
 
         scope.launch {
@@ -56,7 +52,7 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
                 return@launch
             }
 
-            val pushAction = buildPushAction()
+            val pushAction = buildPushAction(payload)
 
             appRouter.popTo(
                 route = AppRoute.Wallet,
@@ -64,10 +60,12 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
                     walletDeepLinkActionTrigger.selectWallet(userWalletId)
                     when (pushAction) {
                         is TangemPayPushAction.CardReady -> navigateToTangemPayDetails(
+                            scope = scope,
                             walletId = userWalletId,
                             initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
                         )
                         is TangemPayPushAction.TopUp -> navigateToTangemPayDetails(
+                            scope = scope,
                             walletId = userWalletId,
                             initialRoute = TangemPayDetailsInitialRoute.ADD_FUNDS,
                         )
@@ -90,7 +88,7 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
         }
     }
 
-    private fun buildPushAction(): TangemPayPushAction? {
+    private fun buildPushAction(payload: Map<String, String>): TangemPayPushAction? {
         val type = payload[TYPE_KEY]?.let(TangemPayPushNotificationType::fromValue) ?: return null
         val customerId = payload[CUSTOMER_ID_KEY].orEmpty()
 
@@ -108,7 +106,11 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
         }
     }
 
-    private fun navigateToTangemPayDetails(walletId: UserWalletId, initialRoute: TangemPayDetailsInitialRoute) {
+    private fun navigateToTangemPayDetails(
+        scope: CoroutineScope,
+        walletId: UserWalletId,
+        initialRoute: TangemPayDetailsInitialRoute,
+    ) {
         scope.launch {
             paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(walletId))
             val paymentAccountStatus = paymentAccountSupplier.invoke(userWalletId = walletId)
@@ -121,15 +123,5 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
                 ),
             )
         }
-    }
-
-    @AssistedFactory
-    interface Factory : TangemPayMainDeepLinkHandler.Factory {
-        override fun create(scope: CoroutineScope, payload: Map<String, String>): DefaultTangemPayMainDeepLinkHandler
-    }
-
-    companion object {
-        const val TANGEM_DEEPLINK_KEY = "tangem://pay-app-main"
-        const val HTTPS_DEEPLINK_KEY = "https://tangem.com/pay-app-main"
     }
 }
