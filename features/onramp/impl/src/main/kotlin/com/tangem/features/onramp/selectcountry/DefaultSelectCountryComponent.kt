@@ -34,6 +34,7 @@ internal class DefaultSelectCountryComponent @AssistedInject constructor(
     @Composable
     override fun BottomSheet() {
         val state by model.state.collectAsStateWithLifecycle()
+        val isNewDesignSystemEnabled = onrampFeatureToggles.isNewDesignSystemEnabled
         val bottomSheetConfig = remember(key1 = this) {
             TangemBottomSheetConfig(
                 isShown = true,
@@ -43,8 +44,9 @@ internal class DefaultSelectCountryComponent @AssistedInject constructor(
         }
         SelectCountryBottomSheet(
             config = bottomSheetConfig,
+            addBottomInsets = !isNewDesignSystemEnabled,
             content = {
-                if (onrampFeatureToggles.isNewDesignSystemEnabled) {
+                if (isNewDesignSystemEnabled) {
                     OnrampCountryListDs(state = state, onCloseClick = ::dismiss, modifier = Modifier.fillMaxSize())
                 } else {
                     OnrampCountryList(state = state, modifier = Modifier.fillMaxSize())

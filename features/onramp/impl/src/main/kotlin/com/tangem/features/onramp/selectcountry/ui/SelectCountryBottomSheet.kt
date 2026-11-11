@@ -34,9 +34,14 @@ import com.tangem.features.onramp.selectcountry.entity.CountryListUM
 import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
-internal fun SelectCountryBottomSheet(config: TangemBottomSheetConfig, content: @Composable () -> Unit) {
+internal fun SelectCountryBottomSheet(
+    config: TangemBottomSheetConfig,
+    addBottomInsets: Boolean = true,
+    content: @Composable () -> Unit,
+) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = config,
+        addBottomInsets = addBottomInsets,
         content = { content() },
     )
 }
