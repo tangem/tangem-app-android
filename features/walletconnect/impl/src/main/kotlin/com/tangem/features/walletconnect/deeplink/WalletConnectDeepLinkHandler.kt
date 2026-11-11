@@ -1,23 +1,23 @@
 package com.tangem.features.walletconnect.deeplink
 
-import android.net.Uri
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import java.net.URLDecoder
+import javax.inject.Inject
 
-internal class DefaultWalletConnectDeepLinkHandler @AssistedInject constructor(
-    @Assisted uri: Uri,
-    getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    wcPairService: WcPairService,
-) : WalletConnectDeepLinkHandler {
+internal class WalletConnectDeepLinkHandler @Inject constructor(
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val wcPairService: WcPairService,
+) : DeepLinkHandler {
 
-    init {
+    override val isOpenableFromPush: Boolean = false
+
+    override fun handle(request: DeepLinkRequest) {
+        val uri = request.uri
         val wcUri =
             // deeplink type "tangem://wc/?uri=wc:..."
             runCatching { uri.getQueryParameter("uri") }.getOrNull()
@@ -45,11 +45,6 @@ internal class DefaultWalletConnectDeepLinkHandler @AssistedInject constructor(
                 TangemLogger.e("Error", e)
             }
         }
-    }
-
-    @AssistedFactory
-    interface Factory : WalletConnectDeepLinkHandler.Factory {
-        override fun create(uri: Uri): DefaultWalletConnectDeepLinkHandler
     }
 
     companion object {
