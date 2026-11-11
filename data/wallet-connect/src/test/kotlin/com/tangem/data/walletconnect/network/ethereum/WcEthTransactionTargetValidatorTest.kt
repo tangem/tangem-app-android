@@ -144,7 +144,7 @@ internal class WcEthTransactionTargetValidatorTest {
         const val CALL_DATA = "0xa9059cbb"
         const val ETHEREUM_CHAIN_ID_HEX = "0x1"
         const val POLYGON_CHAIN_ID_HEX = "0x89"
-        const val POLYGON_CHAIN_ID = 137
+        const val POLYGON_CHAIN_ID = 137L
         val USER_WALLET_ID = UserWalletId("011")
         val ETHEREUM_NETWORK: Network = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum).network
     }

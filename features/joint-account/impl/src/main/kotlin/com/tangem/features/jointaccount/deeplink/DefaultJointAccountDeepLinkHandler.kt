@@ -2,7 +2,8 @@ package com.tangem.features.jointaccount.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.DeepLinkRoute
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.ENTRY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
@@ -23,21 +24,15 @@ import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeoutOrNull
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("LongParameterList")
-internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val scope: CoroutineScope,
-    @Assisted private val queryParams: Map<String, String>,
-    @Assisted private val isFromOnNewIntent: Boolean,
+internal class DefaultJointAccountDeepLinkHandler @Inject constructor(
     private val appRouter: AppRouter,
     private val resolveAndSelectUserWalletUseCase: ResolveAndSelectUserWalletUseCase,
     private val singleAccountSupplier: SingleAccountSupplier,
@@ -48,25 +43,25 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
     private val jointAccountCompromisedAlert: JointAccountCompromisedAlert,
-) : JointAccountDeepLinkHandler {
+) : DeepLinkHandler, JointAccountDeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
+    override val isEnabled: Boolean
+        get() = jointAccountFeatureToggles.isJointAccountEnabled
 
-    private fun handleDeepLink() {
+    override fun handle(request: DeepLinkRequest) {
         if (!jointAccountFeatureToggles.isJointAccountEnabled) {
             TangemLogger.e("Joint account feature is disabled, ignoring deeplink")
             appRouter.popTo(AppRoute.Wallet)
             return
         }
 
+        val queryParams = request.queryParams
         val walletId = queryParams[WALLET_ID_KEY]
         val accountId = queryParams[ACCOUNT_ID_KEY]
         val entry = queryParams[ENTRY_KEY]
         val type = NotificationType.getType(queryParams[TYPE_KEY])
 
-        scope.launch {
+        request.scope.launch {
             val userWalletId = walletId?.let(UserWalletId::fromHexOrNull)
             if (walletId != null && userWalletId == null) {
                 TangemLogger.e("Malformed $WALLET_ID_KEY in joint account deeplink")
@@ -75,7 +70,7 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
             }
             val userWallet = resolveAndSelectUserWalletUseCase(userWalletId) ?: return@launch
 
-            val account = findJointAccount(userWallet, accountId)
+            val account = findJointAccount(userWallet, accountId, request.isFromOnNewIntent)
             if (account == null) {
                 TangemLogger.e("Could not find joint account for $ACCOUNT_ID_KEY: $accountId")
                 appRouter.popTo(AppRoute.Wallet)
@@ -92,7 +87,7 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
             }
 
             when (entry) {
-                DeepLinkRoute.JointAccount.ENTRY_MEMBERS -> {
+                JointAccountDeepLinkHandler.ENTRY_MEMBERS -> {
                     analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationOpened(type.name))
                     appRouter.push(
                         route = AppRoute.JointAccountMembers(
@@ -102,7 +97,7 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
                         onComplete = { walletDeepLinkActionTrigger.selectWallet(userWallet.walletId) },
                     )
                 }
-                DeepLinkRoute.JointAccount.ENTRY_OVERVIEW -> {
+                JointAccountDeepLinkHandler.ENTRY_OVERVIEW -> {
                     analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationOpened(type.name))
                     appRouter.popTo(AppRoute.Wallet) { isSuccess ->
                         if (isSuccess) {
@@ -122,7 +117,11 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
      * On a warm tap ([isFromOnNewIntent]) force-refresh and, on a cache miss, wait for the refreshed list —
      * on cold start the regular auth flow already loads a fresh list, so no extra fetch is needed.
      */
-    private suspend fun findJointAccount(userWallet: UserWallet, accountId: String?): Account.Joint? {
+    private suspend fun findJointAccount(
+        userWallet: UserWallet,
+        accountId: String?,
+        isFromOnNewIntent: Boolean,
+    ): Account.Joint? {
         if (accountId == null) return null
         val id = AccountId.forJointAccount(userWalletId = userWallet.walletId, value = accountId).getOrNull()
             ?: return null
@@ -145,18 +144,7 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
         return withTimeoutOrNull(ACCOUNT_APPEARANCE_TIMEOUT_MILLIS.milliseconds) { accountFlow.firstOrNull() }
     }
 
-    @AssistedFactory
-    interface Factory : JointAccountDeepLinkHandler.Factory {
-        override fun create(
-            coroutineScope: CoroutineScope,
-            queryParams: Map<String, String>,
-            isFromOnNewIntent: Boolean,
-        ): DefaultJointAccountDeepLinkHandler
-    }
-
-    companion object {
-        const val DEEPLINK_KEY = "tangem://joint_account"
-
-        private const val ACCOUNT_APPEARANCE_TIMEOUT_MILLIS = 3_000L
+    private companion object {
+        const val ACCOUNT_APPEARANCE_TIMEOUT_MILLIS = 3_000L
     }
 }

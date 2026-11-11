@@ -9,7 +9,6 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.tangempay.TEST_CLABE
 import com.tangem.data.tangempay.speiBankAccountDetails
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
@@ -27,6 +26,7 @@ import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
 import com.tangem.domain.tangempay.model.bankofframp.OfframpFee
 import com.tangem.domain.tangempay.model.bankofframp.PostalAddress
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.models.request.BankOfframpPlaceOrderRequest
 import com.tangem.spend.datasource.tangempay.models.request.BankOfframpQuoteRequest
@@ -287,7 +287,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
                         depositAddress = DEPOSIT_ADDRESS,
                         fee = OfframpFee(
                             name = "ACH",
-                            calculationType = AccountFee.CalculationType.FIXED,
+                            calculationType = FeeCalculationType.FIXED,
                             amount = BigDecimal("1.50"),
                             currency = "USD",
                             description = "ACH offramp fee",
@@ -405,6 +405,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
             name = "ACH",
             calculationType = "FIXED",
             amount = BigDecimal("1.50"),
+            fixedAmount = null,
             currency = "USD",
             description = "ACH offramp fee",
         )
@@ -585,7 +586,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
             exchangeRate = BigDecimal("17.25"),
             fee = OfframpFee(
                 name = "SPEI",
-                calculationType = AccountFee.CalculationType.PERCENTAGE,
+                calculationType = FeeCalculationType.PERCENTAGE,
                 amount = BigDecimal("1"),
                 currency = "USD",
                 description = "SPEI offramp fee",
@@ -607,6 +608,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
                 name = "SPEI",
                 calculationType = "PERCENTAGE",
                 amount = BigDecimal("1"),
+                fixedAmount = null,
                 currency = "USD",
                 description = "SPEI offramp fee",
             ),
@@ -729,6 +731,14 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         ApiErrorModel(
             apiError = TangemPayApiError.NotFound,
             expected = BankOfframpError.Unavailable(errorCode = TangemPayApiError.NotFound.errorCode),
+        ),
+        ApiErrorModel(
+            apiError = TangemPayApiError.BankOfframpRegionUnsupported,
+            expected = BankOfframpError.SenderRegionUnsupported,
+        ),
+        ApiErrorModel(
+            apiError = TangemPayApiError.BankOfframpQuoteExpired,
+            expected = BankOfframpError.QuoteExpired,
         ),
         ApiErrorModel(
             apiError = TangemPayApiError.Unknown(errorCode = 104_130_100),

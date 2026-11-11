@@ -1,7 +1,7 @@
 package com.tangem.data.tangempay.repository
 
 import com.tangem.domain.models.tangempay.TangemPayProduct
-import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
@@ -17,7 +17,7 @@ internal val MOCK_SPEI_DESTINATION = OfframpDestination(
     currency = "MXN",
     fee = OfframpFee(
         name = "SPEI",
-        calculationType = AccountFee.CalculationType.PERCENTAGE,
+        calculationType = FeeCalculationType.PERCENTAGE,
         amount = BigDecimal("1"),
         currency = "USD",
         description = null,

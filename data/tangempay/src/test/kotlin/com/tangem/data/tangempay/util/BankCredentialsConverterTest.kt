@@ -1,8 +1,12 @@
 package com.tangem.data.tangempay.util
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.tangempay.model.AmountLimits
+import com.tangem.domain.tangempay.model.BankCredentials
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.spend.datasource.tangempay.models.response.AmountLimitsResponse
 import com.tangem.spend.datasource.tangempay.models.response.BankCredentialsResponse
-import com.tangem.domain.models.account.BankCredentials
+import com.tangem.spend.datasource.tangempay.models.response.FeesResponse
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -33,14 +37,15 @@ internal class BankCredentialsConverterTest {
             rail = "ACH",
             transferMessage = "REF-A1B2C3D4",
             depositFee = BankCredentials.DepositFee(
+                calculationType = FeeCalculationType.FIXED,
                 amount = BigDecimal("1.00"),
-                type = BankCredentials.DepositFee.Type.FLAT,
             ),
             depositLimit = BankCredentials.DepositLimit(
                 amount = BigDecimal("10000"),
                 period = BankCredentials.DepositLimit.Period.DAY,
             ),
             exchangeRate = BankCredentials.ExchangeRate(rate = BigDecimal("17.25"), base = "USD", quote = "MXN"),
+            amountLimits = AmountLimits(min = BigDecimal("2"), max = null, currency = "USD"),
         )
         assertThat(actual).isEqualTo(expected)
     }
@@ -59,7 +64,9 @@ internal class BankCredentialsConverterTest {
             rail = null,
             transferMessage = null,
             fee = null,
+            depositFee = null,
             depositLimit = null,
+            amountLimits = null,
             exchangeRate = null,
         )
 
@@ -87,7 +94,13 @@ internal class BankCredentialsConverterTest {
     @Test
     fun `GIVEN response without the extension WHEN convert THEN new fields are null`() {
         // Arrange
-        val response = result(transferMessage = null, fee = null, depositLimit = null, exchangeRate = null)
+        val response = result(
+            transferMessage = null,
+            fee = null,
+            depositLimit = null,
+            exchangeRate = null,
+            amountLimits = null,
+        )
 
         // Act
         val actual = BankCredentialsConverter.convert(response)
@@ -97,14 +110,15 @@ internal class BankCredentialsConverterTest {
         assertThat(actual.depositFee).isNull()
         assertThat(actual.depositLimit).isNull()
         assertThat(actual.exchangeRate).isNull()
+        assertThat(actual.amountLimits).isNull()
         assertThat(actual.accountNumber).isEqualTo("707613210122")
     }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN route fee WHEN convert THEN amount and type mapped`(model: FeeModel) {
+    fun `GIVEN deposit fee or legacy fee WHEN convert THEN the fee parts are mapped`(model: FeeModel) {
         // Act
-        val actual = BankCredentialsConverter.convert(result(fee = model.fee))
+        val actual = BankCredentialsConverter.convert(result(fee = model.fee, depositFee = model.depositFee))
 
         // Assert
         assertThat(actual.depositFee).isEqualTo(model.expected)
@@ -173,29 +187,76 @@ internal class BankCredentialsConverterTest {
     }
 
     private fun provideTestModels() = listOf(
+        FeeModel(fee = legacyFee(type = "flat", amount = "1.00"), expected = fixedFee("1.00")),
+        FeeModel(fee = legacyFee(type = "PERCENTAGE", amount = "1"), expected = percentageFee("1")),
+        FeeModel(fee = legacyFee(type = "variable", amount = "1.00"), expected = percentageFee("1.00")),
+        FeeModel(fee = legacyFee(type = "tiered", amount = "1.00"), expected = null),
+        FeeModel(fee = legacyFee(type = null, amount = "1.00"), expected = null),
+        FeeModel(fee = legacyFee(type = "flat", amount = null), expected = null),
+        FeeModel(fee = legacyFee(type = "flat", amount = "n/a"), expected = null),
+        FeeModel(fee = legacyFee(type = "ACH_ONRAMP", amount = "0.00"), expected = null),
         FeeModel(
-            fee = BankCredentialsResponse.Fee(type = "flat", amount = "1.00"),
-            expected = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.FLAT),
+            fee = legacyFee(type = "variable", amount = "1.00"),
+            depositFee = sharedFee(
+                type = "SPEI_ONRAMP",
+                calculationType = "PERCENTAGE",
+                amount = "1.00",
+                fixedAmount = "10",
+                currency = "MXN",
+            ),
+            expected = percentageFee("1.00", fixedAmount = "10", currency = "MXN"),
         ),
         FeeModel(
-            fee = BankCredentialsResponse.Fee(type = "PERCENTAGE", amount = "1"),
-            expected = BankCredentials.DepositFee(BigDecimal("1"), BankCredentials.DepositFee.Type.PERCENTAGE),
+            fee = legacyFee(type = "flat", amount = "1.00"),
+            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "TIERED", amount = "1.00", currency = "USD"),
+            expected = fixedFee("1.00"),
         ),
         FeeModel(
-            fee = BankCredentialsResponse.Fee(type = "variable", amount = "1.00"),
-            expected = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.PERCENTAGE),
+            fee = null,
+            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
+            expected = fixedFee("0", currency = "USD"),
         ),
         FeeModel(
-            fee = BankCredentialsResponse.Fee(type = "tiered", amount = "1.00"),
-            expected = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.UNKNOWN),
+            fee = legacyFee(type = "flat", amount = "n/a"),
+            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
+            expected = fixedFee("0", currency = "USD"),
         ),
-        FeeModel(
-            fee = BankCredentialsResponse.Fee(type = null, amount = "1.00"),
-            expected = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.UNKNOWN),
-        ),
-        FeeModel(fee = BankCredentialsResponse.Fee(type = "flat", amount = null), expected = null),
-        FeeModel(fee = BankCredentialsResponse.Fee(type = "flat", amount = "n/a"), expected = null),
     )
+
+    private fun legacyFee(type: String?, amount: String?) =
+        BankCredentialsResponse.LegacyFee(type = type, amount = amount)
+
+    private fun sharedFee(
+        type: String?,
+        calculationType: String?,
+        amount: String?,
+        currency: String?,
+        fixedAmount: String? = null,
+    ) = FeesResponse.Fee(
+        type = type,
+        group = null,
+        name = null,
+        paymentMethodId = null,
+        calculationType = calculationType,
+        amount = amount?.let(::BigDecimal),
+        fixedAmount = fixedAmount?.let(::BigDecimal),
+        currency = currency,
+        description = null,
+    )
+
+    private fun fixedFee(amount: String, currency: String? = null) = BankCredentials.DepositFee(
+        calculationType = FeeCalculationType.FIXED,
+        amount = BigDecimal(amount),
+        currency = currency,
+    )
+
+    private fun percentageFee(amount: String, fixedAmount: String? = null, currency: String? = null) =
+        BankCredentials.DepositFee(
+            calculationType = FeeCalculationType.PERCENTAGE,
+            amount = BigDecimal(amount),
+            fixedAmount = fixedAmount?.let(::BigDecimal),
+            currency = currency,
+        )
 
     private fun provideExchangeRateModels() = listOf(
         ExchangeRateModel(
@@ -232,7 +293,8 @@ internal class BankCredentialsConverterTest {
     private fun result(
         rail: String? = "ACH",
         transferMessage: String? = "REF-A1B2C3D4",
-        fee: BankCredentialsResponse.Fee? = BankCredentialsResponse.Fee(type = "flat", amount = "1.00"),
+        fee: BankCredentialsResponse.LegacyFee? = legacyFee(type = "flat", amount = "1.00"),
+        depositFee: FeesResponse.Fee? = null,
         depositLimit: BankCredentialsResponse.DepositLimit? = BankCredentialsResponse.DepositLimit(
             amount = "10000",
             period = "day",
@@ -242,6 +304,7 @@ internal class BankCredentialsConverterTest {
             base = "USD",
             quote = "MXN",
         ),
+        amountLimits: AmountLimitsResponse? = AmountLimitsResponse(min = BigDecimal("2"), max = null, currency = "USD"),
     ) = BankCredentialsResponse.Result(
         type = "fiat",
         beneficiaryName = "Ivan Ivanov",
@@ -253,11 +316,17 @@ internal class BankCredentialsConverterTest {
         rail = rail,
         transferMessage = transferMessage,
         fee = fee,
+        depositFee = depositFee,
         depositLimit = depositLimit,
+        amountLimits = amountLimits,
         exchangeRate = exchangeRate,
     )
 
-    data class FeeModel(val fee: BankCredentialsResponse.Fee, val expected: BankCredentials.DepositFee?)
+    data class FeeModel(
+        val fee: BankCredentialsResponse.LegacyFee?,
+        val depositFee: FeesResponse.Fee? = null,
+        val expected: BankCredentials.DepositFee?,
+    )
 
     data class ExchangeRateModel(
         val exchangeRate: BankCredentialsResponse.ExchangeRate?,

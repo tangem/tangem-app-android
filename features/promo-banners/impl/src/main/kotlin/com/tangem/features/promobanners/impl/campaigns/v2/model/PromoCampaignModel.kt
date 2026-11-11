@@ -3,6 +3,7 @@ package com.tangem.features.promobanners.impl.campaigns.v2.model
 import com.tangem.common.ui.account.AccountIconItemStateConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.common.ui.tokens.TokenRowStateConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
@@ -19,7 +20,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
-import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -49,6 +51,7 @@ import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignSt
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignUM
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoSelectedAccountUM
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -77,6 +80,9 @@ internal class PromoCampaignModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
+    private val walletFeatureToggles: WalletFeatureToggles,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<PromoCampaignBottomSheetComponent.Params>()
@@ -119,6 +125,14 @@ internal class PromoCampaignModel @Inject constructor(
 
         bridge.onClose.receiveAsFlow()
             .onEach { router.pop() }
+            .launchIn(modelScope)
+
+        getBalanceHidingSettingsUseCase.isBalanceHidden()
+            .onEach { isBalanceHidden ->
+                uiState.update { state ->
+                    state.copy(tokenSelector = state.tokenSelector?.copy(isBalanceHidden = isBalanceHidden))
+                }
+            }
             .launchIn(modelScope)
     }
 
@@ -317,6 +331,7 @@ internal class PromoCampaignModel @Inject constructor(
             token = PayoutToken(symbol = token.symbol, blockchain = token.network.name),
         )
         modelScope.launch {
+            val appCurrency = getSelectedAppCurrencyUseCase.invokeOrDefault().first()
             val selectedAccount = if (hasMultipleCryptoPortfolioAccounts()) {
                 (result.account.account as? Account.CryptoPortfolio)?.let { account ->
                     PromoSelectedAccountUM(
@@ -329,7 +344,7 @@ internal class PromoCampaignModel @Inject constructor(
             }
 
             val selectedToken = TokenItemStateConverter(
-                appCurrency = AppCurrency.Default,
+                appCurrency = appCurrency,
                 subtitleStateProvider = { status ->
                     TokenItemState.SubtitleState.TextContent(
                         value = resourceReference(
@@ -339,6 +354,12 @@ internal class PromoCampaignModel @Inject constructor(
                     )
                 },
             ).convert(result.currency)
+            // TODO [REDACTED_TASK_KEY] Show the network instead of the price once TangemTokenRow supports a network subtitle
+            val selectedTokenRow = if (walletFeatureToggles.isRedesignedTokenRowsEnabled) {
+                TokenRowStateConverter(appCurrency).convert(currencyStatus = result.currency, onClick = null)
+            } else {
+                null
+            }
 
             uiState.update { state ->
                 state.copy(
@@ -346,6 +367,7 @@ internal class PromoCampaignModel @Inject constructor(
                     tokenSelector = state.tokenSelector?.copy(
                         selectedToken = selectedToken,
                         selectedAccount = selectedAccount,
+                        selectedTokenRow = selectedTokenRow,
                     ),
                 )
             }

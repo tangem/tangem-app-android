@@ -46,13 +46,20 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.store.entity.CashbackSummaryDM
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.spend.datasource.tangempay.entity.PaymentAccountStatusValueDM
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.data.tangempay.store.DefaultOrdersStore
+import com.tangem.domain.tangempay.order.ActiveOrdersRegistry
+import com.tangem.domain.tangempay.usecase.order.GetActiveOrdersUseCase
+import com.tangem.domain.tangempay.order.OrderPoller
+import com.tangem.domain.tangempay.order.OrdersStore
+import com.tangem.domain.tangempay.usecase.order.RestoreOrdersUseCase
+import com.tangem.domain.tangempay.usecase.order.StartOrderUseCase
 import com.tangem.domain.tangempay.order.TangemPayOrderRepository
 import dagger.Binds
 import dagger.Module
@@ -282,6 +289,69 @@ internal interface TangemPayDataModule {
                 cardDetailsRepository = cardDetailsRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
                 appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        @Singleton
+        fun provideOrdersStore(
+            prefs: AppPreferencesStore,
+            spendPreferencesKeys: SpendPreferencesKeys,
+            @NetworkJson json: Json,
+        ): OrdersStore {
+            return DefaultOrdersStore(prefs = prefs, spendPreferencesKeys = spendPreferencesKeys, json = json)
+        }
+
+        @Provides
+        @Singleton
+        fun provideActiveOrdersRegistry(): ActiveOrdersRegistry = ActiveOrdersRegistry()
+
+        @Provides
+        fun provideGetActiveOrdersUseCase(activeOrdersRegistry: ActiveOrdersRegistry): GetActiveOrdersUseCase {
+            return GetActiveOrdersUseCase(activeOrdersRegistry = activeOrdersRegistry)
+        }
+
+        @Provides
+        @Singleton
+        fun provideOrderPoller(
+            orderRepository: TangemPayOrderRepository,
+            ordersStore: OrdersStore,
+            activeOrdersRegistry: ActiveOrdersRegistry,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            appCoroutineScope: AppCoroutineScope,
+        ): OrderPoller {
+            return OrderPoller(
+                orderRepository = orderRepository,
+                ordersStore = ordersStore,
+                activeOrdersRegistry = activeOrdersRegistry,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideRestoreOrdersUseCase(
+            orderRepository: TangemPayOrderRepository,
+            ordersStore: OrdersStore,
+            orderPoller: OrderPoller,
+            onboardingRepository: OnboardingRepository,
+        ): RestoreOrdersUseCase {
+            return RestoreOrdersUseCase(
+                orderRepository = orderRepository,
+                ordersStore = ordersStore,
+                orderPoller = orderPoller,
+                onboardingRepository = onboardingRepository,
+            )
+        }
+
+        @Provides
+        fun provideStartOrderUseCase(
+            orderRepository: TangemPayOrderRepository,
+            orderPoller: OrderPoller,
+        ): StartOrderUseCase {
+            return StartOrderUseCase(
+                orderRepository = orderRepository,
+                orderPoller = orderPoller,
             )
         }
 
