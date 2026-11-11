@@ -17,7 +17,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -35,7 +34,6 @@ class MoneyAccountWalletHistoryTest : BaseTestCase() {
     private val externalAddressStart = "0x4444"
 
     @AllureId("13369")
-    @Ignore("[REDACTED_JIRA]")
     @DisplayName("Wallet history: a transfer to the Money account is labelled 'USD account'")
     @Test
     fun transferToAccountIsLabelledUsdAccountTest() {
@@ -90,7 +88,6 @@ class MoneyAccountWalletHistoryTest : BaseTestCase() {
     }
 
     @AllureId("13726")
-    @Ignore("[REDACTED_JIRA]")
     @DisplayName("Wallet history: a swap into the Money account USDC is labelled 'USD account'")
     @Test
     fun swapToAccountIsLabelledUsdAccountTest() {
