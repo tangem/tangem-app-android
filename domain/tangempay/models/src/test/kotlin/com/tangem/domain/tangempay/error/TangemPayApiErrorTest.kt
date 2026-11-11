@@ -5,6 +5,7 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -17,6 +18,19 @@ internal class TangemPayApiErrorTest {
 
         // Assert
         assertThat(error).isEqualTo(TangemPayApiError.BankOfframpUnsupportedConfiguration)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideBankOfframpCodeModels")
+    fun `GIVEN bank off-ramp backend code WHEN fromBackendError THEN its own error with the universal code`(
+        model: BankOfframpCodeModel,
+    ) {
+        // Act
+        val error = TangemPayApiError.fromBackendError(backendErrorCode = model.backendCode)
+
+        // Assert
+        assertThat(error).isEqualTo(model.expected)
+        assertThat(error.errorCode).isEqualTo(model.universalCode)
     }
 
     @Test
@@ -101,10 +115,27 @@ internal class TangemPayApiErrorTest {
         Case(TangemPayApiError.CardReissuePlasticInvalidShippingAddress, isOutcomeUnknown = false),
         Case(TangemPayApiError.CardReissuePlasticInvalidEmbossName, isOutcomeUnknown = false),
         Case(TangemPayApiError.BankOfframpUnsupportedConfiguration, isOutcomeUnknown = false),
+        Case(TangemPayApiError.BankOfframpQuoteExpired, isOutcomeUnknown = false),
+        Case(TangemPayApiError.BankOfframpRegionUnsupported, isOutcomeUnknown = false),
+        Case(TangemPayApiError.BankOfframpVerificationIncomplete, isOutcomeUnknown = false),
+        Case(TangemPayApiError.BankOfframpConflict, isOutcomeUnknown = false),
+        Case(TangemPayApiError.BankOfframpAmountOutOfLimits, isOutcomeUnknown = false),
+        Case(TangemPayApiError.BankOfframpRejected, isOutcomeUnknown = false),
         Case(TangemPayApiError.WithdrawalDataError, isOutcomeUnknown = false),
         Case(TangemPayApiError.SignWithdrawError, isOutcomeUnknown = false),
         Case(TangemPayApiError.WithdrawError, isOutcomeUnknown = false),
         Case(TangemPayApiError.WaitlistInvalidEmail, isOutcomeUnknown = false),
         Case(TangemPayApiError.AccountIssueActiveOrderExists, isOutcomeUnknown = false),
     )
+
+    private fun provideBankOfframpCodeModels() = listOf(
+        BankOfframpCodeModel(140164, 104140164, TangemPayApiError.BankOfframpQuoteExpired),
+        BankOfframpCodeModel(140165, 104140165, TangemPayApiError.BankOfframpRegionUnsupported),
+        BankOfframpCodeModel(140166, 104140166, TangemPayApiError.BankOfframpVerificationIncomplete),
+        BankOfframpCodeModel(140167, 104140167, TangemPayApiError.BankOfframpConflict),
+        BankOfframpCodeModel(140168, 104140168, TangemPayApiError.BankOfframpAmountOutOfLimits),
+        BankOfframpCodeModel(140169, 104140169, TangemPayApiError.BankOfframpRejected),
+    )
+
+    data class BankOfframpCodeModel(val backendCode: Int, val universalCode: Int, val expected: TangemPayApiError)
 }

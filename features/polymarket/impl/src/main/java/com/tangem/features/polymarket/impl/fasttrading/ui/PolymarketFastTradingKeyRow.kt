@@ -93,15 +93,25 @@ internal fun PolymarketFastTradingUnknownSignerRow(
         modifier = modifier,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
-            TangemAvatar(
-                state = TangemAvatar.UiState.Icon(Icons.ic_warning_20, TangemAvatar.Appearance.Warning),
-                size = TangemAvatar.Size.X40,
-            )
+            if (state.isRevoking) {
+                KeyStatusAvatar(FastTradingKeyStatusUM.Revoking)
+            } else {
+                TangemAvatar(
+                    state = TangemAvatar.UiState.Icon(Icons.ic_warning_20, TangemAvatar.Appearance.Warning),
+                    size = TangemAvatar.Size.X40,
+                )
+            }
         },
         titleSlot = { TangemRowAddressText(address = state.address, role = TangemRowTextRole.Title) },
         subtitleSlot = {
             TangemRowText(
-                text = resourceReference(R.string.prediction_session_key_unknown_signer),
+                text = resourceReference(
+                    if (state.isRevoking) {
+                        R.string.prediction_session_key_status_revoking
+                    } else {
+                        R.string.prediction_session_key_unknown_signer
+                    },
+                ),
                 role = TangemRowTextRole.Subtitle,
             )
         },
@@ -236,6 +246,15 @@ private fun KeyRowsPreview(areActionsEnabled: Boolean) {
             actions = persistentListOf(
                 FastTradingKeyActionUM.Revoke(PREVIEW_SIGNER_ADDRESS, RevokeSubject.UnknownSigner),
             ),
+        ),
+        areActionsEnabled = areActionsEnabled,
+        onActionClick = {},
+    )
+    PolymarketFastTradingUnknownSignerRow(
+        state = FastTradingUnknownSignerUM(
+            address = PREVIEW_SIGNER_ADDRESS,
+            actions = persistentListOf(),
+            isRevoking = true,
         ),
         areActionsEnabled = areActionsEnabled,
         onActionClick = {},

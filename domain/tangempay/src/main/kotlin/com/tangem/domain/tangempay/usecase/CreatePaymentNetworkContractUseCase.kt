@@ -95,7 +95,7 @@ class CreatePaymentNetworkContractUseCase(
      */
     private suspend fun createOrderWithRetry(
         userWalletId: UserWalletId,
-        chainId: Int,
+        chainId: Long,
         idempotencyKey: String,
     ): Either<TangemPayApiError, Order> {
         var attempt = 0

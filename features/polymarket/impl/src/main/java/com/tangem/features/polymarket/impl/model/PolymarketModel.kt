@@ -42,7 +42,7 @@ internal class PolymarketModel @Inject constructor(
     /** Initial route of the feature stack — [PolymarketRoute.Entry] decides where the user actually lands. */
     val initialRoute: PolymarketRoute = PolymarketRoute.Entry
 
-    private val activeWalletId = MutableStateFlow<UserWalletId?>(null)
+    private val settledWalletId = MutableStateFlow<UserWalletId?>(null)
     private val isVisible = MutableStateFlow(false)
 
     init {
@@ -52,8 +52,8 @@ internal class PolymarketModel @Inject constructor(
         }
     }
 
-    fun onActiveWalletChanged(userWalletId: UserWalletId?) {
-        activeWalletId.value = userWalletId
+    fun onSettledWalletChanged(userWalletId: UserWalletId?) {
+        settledWalletId.value = userWalletId
     }
 
     fun onVisibilityChanged(isVisible: Boolean) {
@@ -78,7 +78,7 @@ internal class PolymarketModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun <T> observeVisibleWallet(observe: (UserWalletId) -> Flow<T>): Flow<T> =
-        combine(isVisible, activeWalletId) { isVisible, walletId -> walletId.takeIf { isVisible } }
+        combine(isVisible, settledWalletId) { isVisible, walletId -> walletId.takeIf { isVisible } }
             .flatMapLatest { walletId -> if (walletId == null) emptyFlow() else observe(walletId) }
 
     private fun PolymarketSessionKeyOperation.isSubmittedRevocation(): Boolean =

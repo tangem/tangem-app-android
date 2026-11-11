@@ -102,7 +102,7 @@ Ask the user **only for what is still missing**, grouped into as few questions a
   - **Nothing to test** → write the exact Russian text `Ничего тестировать не нужно`.
   - **Test within the story** → testing happens within the parent Story; write the Russian text
     `Тестируйте в рамках стори`. If the change is gated behind a feature toggle (detect a toggle name
-    from the local changes / context, e.g. a new entry in `feature_toggles_config.json` or an
+    from the local changes / context, e.g. a new entry in `<stream>/config-toggles/feature_toggles.json` or an
     `XxxFeatureToggles` usage), append it: `Тестируйте в рамках стори, закрыто тогглом "<название>"`.
     If no toggle is found, use the plain text without the toggle clause.
   - **Generate from changes** → generate QA Notes (in Russian) from the local changes, written for
@@ -110,7 +110,7 @@ Ask the user **only for what is still missing**, grouped into as few questions a
     code-level names** (no class / component / function / file names). You may include concrete
     **test cases** (step → expected result). If you know the feature toggle that gates this
     functionality (detect it from the local changes / context — e.g. a new entry in
-    `feature_toggles_config.json` or an `XxxFeatureToggles` usage), add `Закрыто тогглом "<название>"`.
+    `<stream>/config-toggles/feature_toggles.json` or an `XxxFeatureToggles` usage), add `Закрыто тогглом "<название>"`.
     Show the generated text in the Phase 3 preview for approval/editing.
   - **Enter manually** → let the user type custom QA Notes (in Russian).
   - **No QA Notes** → leave the field empty.

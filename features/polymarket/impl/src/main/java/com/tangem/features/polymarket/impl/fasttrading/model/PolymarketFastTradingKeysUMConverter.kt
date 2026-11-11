@@ -84,7 +84,13 @@ internal class PolymarketFastTradingKeysUMConverter(
                 .filter { it.address.lowercase() !in shownAddresses }
                 .map { signer ->
                     val revoke = revokeOf(signer.address, FastTradingKeyActionUM.RevokeSubject.UnknownSigner)
-                    FastTradingUnknownSignerUM(address = signer.address, actions = persistentListOf(revoke))
+                    val isRevoking = submittedOperation?.statusFor(signer.address, isOwn = false) ==
+                        FastTradingKeyStatusUM.Revoking
+                    FastTradingUnknownSignerUM(
+                        address = signer.address,
+                        actions = if (isRevoking) persistentListOf() else persistentListOf(revoke),
+                        isRevoking = isRevoking,
+                    )
                 }
                 .toImmutableList(),
             thisDevice = ownRow ?: submittedOperation?.pendingThisDeviceRow(),

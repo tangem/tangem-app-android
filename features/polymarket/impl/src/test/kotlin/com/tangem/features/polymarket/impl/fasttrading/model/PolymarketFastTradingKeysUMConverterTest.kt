@@ -521,6 +521,25 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         }
 
         @Test
+        fun `GIVEN a signer without key row being revoked WHEN convert THEN its row shows revoking without actions`() {
+            // Arrange
+            val overview = createOverview(sessionKeys = emptyList(), foreignSigners = listOf(signerOf(FOREIGN_ADDRESS)))
+            val operation = createOperation(
+                request = PolymarketSessionKeyOperationRequest.Revoke(FOREIGN_ADDRESS),
+                stage = PolymarketSessionKeyOperationStage.REVOKING,
+                targetAddress = FOREIGN_ADDRESS,
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.unknownSigners).containsExactly(
+                FastTradingUnknownSignerUM(address = FOREIGN_ADDRESS, actions = persistentListOf(), isRevoking = true),
+            )
+        }
+
+        @Test
         fun `GIVEN no foreign signers WHEN convert THEN warning is hidden`() {
             // Arrange
             val overview = createOverview(sessionKeys = listOf(createKey()))

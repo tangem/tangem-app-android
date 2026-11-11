@@ -12,6 +12,7 @@ internal data class TangemPayBankTransferOnrampDetailsScreenUM(
     val requisites: ImmutableList<RequisiteUM>,
     val referenceWarning: TextReference?,
     val fees: TangemPayOnrampFeesUM,
+    val minimumDeposit: TextReference?,
     val dailyDepositLimit: DailyDepositLimitUM?,
     val onShareClick: () -> Unit,
     val onCloseClick: () -> Unit,

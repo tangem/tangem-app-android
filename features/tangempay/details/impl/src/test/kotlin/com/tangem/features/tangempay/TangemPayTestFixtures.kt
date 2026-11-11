@@ -2,7 +2,6 @@ package com.tangem.features.tangempay
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.domain.models.tangempay.TangemPayImage
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
@@ -18,6 +17,8 @@ import com.tangem.domain.tangempay.model.OrderStatus
 import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.OrderType
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.BankCredentials
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -44,9 +45,10 @@ internal fun bankCredentials(
 internal fun onrampFee(
     type: String = "ACH_ONRAMP",
     name: String = "ACH",
-    calculationType: AccountFee.CalculationType = AccountFee.CalculationType.FIXED,
+    calculationType: FeeCalculationType = FeeCalculationType.FIXED,
     amount: BigDecimal = BigDecimal.ZERO,
     currency: String = "USD",
+    fixedAmount: BigDecimal? = null,
 ): AccountFee = AccountFee(
     type = type,
     name = name,
@@ -55,6 +57,7 @@ internal fun onrampFee(
     calculationType = calculationType,
     amount = amount,
     currency = currency,
+    fixedAmount = fixedAmount,
 )
 
 internal fun <T : Any> SlotNavigation<T>.trackSlot(): List<T?> {

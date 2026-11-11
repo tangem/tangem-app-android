@@ -40,6 +40,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.message.SnackbarMessage
@@ -382,10 +383,15 @@ private fun NonParticipateAccountAwardBlock(accountAward: AccountAward) {
             overflow = TextOverflow.Ellipsis,
         )
 
-        TokenItem(
-            state = accountAward.tokenState,
-            isBalanceHidden = accountAward.isBalanceHidden,
-        )
+        val tokenRow = accountAward.tokenRow
+        if (tokenRow != null) {
+            TangemTokenRow(state = tokenRow, isBalanceHidden = accountAward.isBalanceHidden)
+        } else {
+            TokenItem(
+                state = accountAward.tokenState,
+                isBalanceHidden = accountAward.isBalanceHidden,
+            )
+        }
 
         HorizontalDivider(
             thickness = 0.5.dp,
