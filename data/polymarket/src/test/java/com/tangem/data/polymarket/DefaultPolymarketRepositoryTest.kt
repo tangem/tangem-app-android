@@ -1,5 +1,8 @@
 package com.tangem.data.polymarket
 
+import com.tangem.data.polymarket.converter.SoccerFixtures
+import com.tangem.data.polymarket.converter.PolymarketSoccerEventConverter
+import com.tangem.grow.datasource.polymarket.models.PolymarketSoccerEventResponse
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
@@ -293,6 +296,78 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(PolymarketEventError.Network.left())
+    }
+
+    @Nested
+    inner class GetSoccerEvent {
+        @Test
+        fun `GIVEN child id WHEN soccer fetched THEN wallet header is forwarded and main match returned`() = runTest {
+            // Arrange
+            val dto = SoccerFixtures.event()
+            coEvery { api.getSoccerEvent(walletId = WALLET_ID, eventId = "child") } returns
+                ApiResponse.Success(PolymarketSoccerEventResponse(dto))
+
+            // Act
+            val result = repository.getSoccerEvent(userWalletId, "child")
+
+            // Assert
+            assertThat(result).isEqualTo(PolymarketSoccerEventConverter.convert(dto).right())
+            coVerify(exactly = 1) { api.getSoccerEvent(walletId = WALLET_ID, eventId = "child") }
+            coVerify(exactly = 0) { api.getEvent(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN NOT_A_MATCH WHEN soccer fetched THEN returns not found without generic fallback`() = runTest {
+            // Arrange
+            coEvery { api.getSoccerEvent(any(), any()) } returns httpError(Code.NOT_FOUND, "NOT_A_MATCH")
+
+            // Act
+            val result = repository.getSoccerEvent(userWalletId, "child")
+
+            // Assert
+            assertThat(result).isEqualTo(PolymarketEventError.NotFound.left())
+            coVerify(exactly = 0) { api.getEvent(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN timeout WHEN soccer fetched THEN network error is returned`() = runTest {
+            // Arrange
+            coEvery { api.getSoccerEvent(any(), any()) } returns timeoutError()
+
+            // Act
+            val result = repository.getSoccerEvent(userWalletId, "main")
+
+            // Assert
+            assertThat(result).isEqualTo(PolymarketEventError.Network.left())
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = ["startTime", "dataFetchedAt"])
+        fun `GIVEN malformed timestamp WHEN soccer converted THEN parsing failure stays in Either`(field: String) = runTest {
+            // Arrange
+            val dto = if (field == "startTime") SoccerFixtures.event().copy(startTime = "invalid")
+            else SoccerFixtures.event().copy(dataFetchedAt = "invalid")
+            coEvery { api.getSoccerEvent(any(), any()) } returns ApiResponse.Success(PolymarketSoccerEventResponse(dto))
+
+            // Act
+            val result = repository.getSoccerEvent(userWalletId, "main")
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PolymarketEventError.Unknown::class.java)
+        }
+
+        @Test
+        fun `GIVEN cancelled request WHEN soccer fetched THEN cancellation propagates`() = runTest {
+            // Arrange
+            val cancellation = CancellationException("screen closed")
+            coEvery { api.getSoccerEvent(any(), any()) } throws cancellation
+
+            // Act
+            val result = runCatching { repository.getSoccerEvent(userWalletId, "main") }
+
+            // Assert
+            assertThat(result.exceptionOrNull()).isSameInstanceAs(cancellation)
+        }
     }
 
     @ParameterizedTest
