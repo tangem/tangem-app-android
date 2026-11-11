@@ -341,6 +341,7 @@
   <string name="collectibles_main_search_empty">No results. Try to change your wording\nor explore from the list</string>
   <string name="collectibles_main_search_load_error">Failed to load cards list.</string>
   <string name="collectibles_main_title">Packs account</string>
+  <string name="collectibles_main_withdraw">Withdraw</string>
   <string name="collectibles_open_pack_buyback_unavailable">Buyback unavailable</string>
   <string name="collectibles_open_pack_failed_subtitle">Our partner has an issue. Please contact support for further guidance</string>
   <string name="collectibles_open_pack_failed_title">Failed to open pack</string>
@@ -1715,9 +1716,13 @@
   <string name="money_account_onboarding_transfers_card_subtitle">with a dedicated account with banking details</string>
   <string name="money_account_onboarding_transfers_card_title">Send and receive fiat payments</string>
   <string name="money_account_send_bank_transfer_unavailable">Unavailable</string>
+  <string name="money_account_send_conversion">Conversion</string>
+  <string name="money_account_send_fees_deducted">Fees are deducted before conversion</string>
   <string name="money_account_send_fees_footer">Fees include %s service\ncharge and estimated network fee</string>
   <string name="money_account_send_network_fee_note">Fees include an estimated %s network fee, which may vary with network activity</string>
   <string name="money_account_send_pay_button">Pay %s</string>
+  <string name="money_account_send_rate_lock">Rate lock for %s</string>
+  <string name="money_account_send_recipient_gets">Recipient gets</string>
   <string name="money_account_send_unavailable_description">Try again in 5 minutes</string>
   <string name="money_account_send_unavailable_title">Operation currently unavailable</string>
   <string name="money_account_yield_mode_average_apr">Average APR %s</string>
@@ -3443,6 +3448,7 @@
   <string name="tangempay_withdraw_bank_amount_error_min">The amount to withdraw must be at least %s</string>
   <string name="tangempay_withdraw_bank_amount_error_range">Please set amount from %1$s to %2$s</string>
   <string name="tangempay_withdraw_bank_amount_not_enough_funds">Not enough funds</string>
+  <string name="tangempay_withdraw_bank_choose_transfer_method">Choose transfer method</string>
   <string name="tangempay_withdraw_bank_confirm_title">Confirm transfer</string>
   <string name="tangempay_withdraw_bank_error_business">Transfers are not available for this type of business</string>
   <string name="tangempay_withdraw_bank_error_general_title">Unable to perform the operation</string>
@@ -3454,12 +3460,15 @@
     <item quantity="other">%d business days</item>
   </plurals>
   <string name="tangempay_withdraw_bank_eta_same_business_day">Same business day</string>
+  <string name="tangempay_withdraw_bank_eta_within_minutes">Within minutes</string>
   <string name="tangempay_withdraw_bank_field_account_number">Account number</string>
   <string name="tangempay_withdraw_bank_field_bank_address_line1">Bank address line 1</string>
   <string name="tangempay_withdraw_bank_field_bank_city">Bank city</string>
   <string name="tangempay_withdraw_bank_field_bank_name">Bank name</string>
   <string name="tangempay_withdraw_bank_field_bank_region">Bank region / state</string>
   <string name="tangempay_withdraw_bank_field_business_name">Business name</string>
+  <string name="tangempay_withdraw_bank_field_clabe_hint">18-digit account number of the recipient\'s bank in Mexico</string>
+  <string name="tangempay_withdraw_bank_field_error_clabe">The CLABE is incorrect</string>
   <string name="tangempay_withdraw_bank_field_error_invalid_format">Invalid text format</string>
   <string name="tangempay_withdraw_bank_field_error_routing_number">The routing number is incorrect</string>
   <string name="tangempay_withdraw_bank_field_routing_number">Routing number</string>

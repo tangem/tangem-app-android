@@ -119,8 +119,9 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
                 context = childContext,
                 params = CollectiblesPackOpeningComponent.Params(
                     userWalletId = params.userWalletId,
-                    externalId = route.externalId,
+                    externalId = route.machineId,
                     isTurboEnabled = route.isTurboEnabled,
+                    reopenTxId = route.reopenTxId,
                 ),
             )
             CollectiblesRoute.PackOpenFailed -> CollectiblesPackOpenFailedComponent(

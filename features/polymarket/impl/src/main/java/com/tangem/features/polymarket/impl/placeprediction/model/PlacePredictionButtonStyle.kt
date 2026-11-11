@@ -80,7 +80,6 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
         !featureToggles.isPolymarketSessionKeysEnabled && confirmedWith == PlaceButtonStyleUM.PLAIN -> null
         !featureToggles.isPolymarketSessionKeysEnabled -> PredictionOrderSigningPreference.OWNER_ONLY
         confirmedWith != PlaceButtonStyleUM.PLAIN -> PredictionOrderSigningPreference.AUTOMATIC
-        ownerStyle == PlaceButtonStyleUM.CARD -> PredictionOrderSigningPreference.AUTOMATIC
         else -> PredictionOrderSigningPreference.SESSION_KEY_ONLY
     }
 
