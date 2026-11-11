@@ -30,7 +30,12 @@ fun fakeEarnOverviews(): EarnOverviews = EarnOverviews(
                 badgeAccent = EarnBadgeAccent.Success,
                 route = null,
             ),
-            banner = EarnBannerOverview(rate = fakeRate(), activeCount = 0, totalPosition = null),
+            banner = EarnBannerOverview(
+                rate = fakeRate(),
+                bestProductId = FakeEarnProductPreset.Lending.spec.id,
+                activeCount = 0,
+                totalPosition = null,
+            ),
         ),
     ),
     source = StatusSource.ACTUAL,
