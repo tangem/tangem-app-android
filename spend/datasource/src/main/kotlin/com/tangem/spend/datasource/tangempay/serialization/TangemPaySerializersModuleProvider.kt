@@ -1,5 +1,6 @@
 package com.tangem.spend.datasource.tangempay.serialization
 
+import com.tangem.spend.datasource.tangempay.models.response.OrderDataResponse
 import com.tangem.spend.datasource.tangempay.models.response.TangemPayTxHistoryResponse
 import com.tangem.utils.serialization.SerializersModuleProvider
 import com.tangem.utils.serialization.polymorphicUnknownFallback
@@ -16,6 +17,9 @@ object TangemPaySerializersModuleProvider : SerializersModuleProvider {
                 type = type,
                 payload = payload,
             )
+        }
+        polymorphicUnknownFallback<OrderDataResponse> { type, payload ->
+            OrderDataResponse.Unknown(type = type, payload = payload)
         }
     }
 }

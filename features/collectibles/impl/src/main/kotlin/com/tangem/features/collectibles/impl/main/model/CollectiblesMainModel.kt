@@ -21,7 +21,6 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
-import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
@@ -63,7 +62,6 @@ internal class CollectiblesMainModel @Inject constructor(
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase,
     private val createOrReactivateCollectiblesAccountUseCase: CreateOrReactivateCollectiblesAccountUseCase,
     private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
     private val collectiblesAccountRepository: CollectiblesAccountRepository,
@@ -214,7 +212,6 @@ internal class CollectiblesMainModel @Inject constructor(
             CollectiblesMenuItem.HOW_IT_WORKS -> onHowItWorksClick()
             CollectiblesMenuItem.GET_ASSISTANCE -> onGetAssistanceClick()
             CollectiblesMenuItem.SESSION_KEY -> onSessionKeyClick()
-            CollectiblesMenuItem.CLOSE_ACCOUNT -> onCloseAccountClick()
         }
     }
 
@@ -327,20 +324,6 @@ internal class CollectiblesMainModel @Inject constructor(
         uiState.update { state ->
             val relink = state.relink as? CollectiblesMainUM.RelinkUM.Shown ?: return@update state
             state.copy(relink = relink.copy(isLoading = isLoading))
-        }
-    }
-
-    // TODO temporary, testing only: remove before release
-    private fun onCloseAccountClick() {
-        onMenuDismiss()
-
-        modelScope.launch {
-            val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId) ?: return@launch
-
-            closeCollectiblesVaultUseCase(userWallet).fold(
-                ifLeft = ::onVaultActionFailed,
-                ifRight = { router.pop() },
-            )
         }
     }
 

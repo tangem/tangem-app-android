@@ -9,7 +9,6 @@ import com.tangem.core.ui.res.generated.icons.ic_copy_20
 import com.tangem.core.ui.res.generated.icons.ic_globe_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.generated.icons.ic_mail_20
-import com.tangem.core.ui.res.generated.icons.ic_trash_bin_20
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.converter.Converter
@@ -21,7 +20,6 @@ internal enum class CollectiblesMenuItem(val id: String) {
     HOW_IT_WORKS("how_it_works"),
     GET_ASSISTANCE("get_assistance"),
     SESSION_KEY("session_key"),
-    CLOSE_ACCOUNT("close_account"),
 }
 
 /**
@@ -67,14 +65,6 @@ internal class CollectiblesMenuConverter(
                     hasDividerAbove = true,
                 )
             },
-
-            // TODO temporary, testing only: remove before release
-            item(
-                item = CollectiblesMenuItem.CLOSE_ACCOUNT,
-                icon = Icons.ic_trash_bin_20,
-                titleRef = stringReference("Close account"),
-                hasDividerAbove = value == null,
-            ),
         ).toPersistentList(),
         isShown = false,
         onMenuClick = onMenuClick,

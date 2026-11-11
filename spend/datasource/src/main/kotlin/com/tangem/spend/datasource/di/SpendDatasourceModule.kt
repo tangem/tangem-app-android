@@ -9,6 +9,7 @@ import com.tangem.core.remote.config.ApiConfig
 import com.tangem.spend.datasource.config.TangemPay
 import com.tangem.spend.datasource.config.TangemPayEnvironmentConfig
 import com.tangem.spend.datasource.tangempay.TangemPayApi
+import com.tangem.spend.datasource.tangempay.TangemPayOrderApi
 import com.tangem.spend.datasource.tangempay.TangemPayAuthApi
 import com.tangem.spend.datasource.tangempay.TangemPayProvisioningApi
 import com.tangem.spend.datasource.tangempay.serialization.TangemPaySerializersModuleProvider
@@ -52,6 +53,24 @@ internal object SpendDatasourceModule {
     @Provides
     @Singleton
     fun provideTangemPayApi(factory: RetrofitFactory): TangemPayApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemPay.Bff.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                ),
+                serialization = ApiSerialization.KOTLINX,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTangemPayOrderApi(factory: RetrofitFactory): TangemPayOrderApi {
         return factory.build(
             RetrofitApiSpec(
                 apiConfigId = TangemPay.Bff.ID,

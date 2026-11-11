@@ -110,6 +110,7 @@ internal fun PolymarketMainScreen(
     onSearchClick: () -> Unit,
     onHistoryClick: () -> Unit,
     onSupportChatClick: () -> Unit,
+    onFastTradingSettingsClick: () -> Unit,
     onLoadMore: () -> Unit,
     onVisibleEventsChange: (Set<String>) -> Unit,
     onScrollIdle: (index: Int, offset: Int) -> Unit,
@@ -164,6 +165,7 @@ internal fun PolymarketMainScreen(
                     onBackClick = onBackClick,
                     onHistoryClick = onHistoryClick,
                     onSupportChatClick = onSupportChatClick,
+                    onFastTradingSettingsClick = onFastTradingSettingsClick,
                 )
 
                 // Outside the scaffold: glass inside its own haze source has nothing to sample.
@@ -192,6 +194,7 @@ private fun PolymarketMainScaffold(
     onBackClick: () -> Unit,
     onHistoryClick: () -> Unit,
     onSupportChatClick: () -> Unit,
+    onFastTradingSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val hasFilters = state.filters.isNotEmpty() || state.onSeeAllClick != null
@@ -207,7 +210,13 @@ private fun PolymarketMainScaffold(
                 fadeEnabled = false,
                 onBack = onBackClick,
                 endButton = {
-                    PolymarketMainMenu(onHistoryClick = onHistoryClick, onSupportChatClick = onSupportChatClick)
+                    PolymarketMainMenu(
+                        onHistoryClick = onHistoryClick,
+                        onSupportChatClick = onSupportChatClick,
+                        onFastTradingSettingsClick = onFastTradingSettingsClick.takeIf {
+                            state.isFastTradingSettingsAvailable
+                        },
+                    )
                 },
             )
         },
@@ -444,6 +453,7 @@ private fun PolymarketMainScreenContentPreview() {
             onSearchClick = {},
             onHistoryClick = {},
             onSupportChatClick = {},
+            onFastTradingSettingsClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -480,6 +490,7 @@ private fun PolymarketMainScreenAwaitingFundsPreview() {
             onSearchClick = {},
             onHistoryClick = {},
             onSupportChatClick = {},
+            onFastTradingSettingsClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -512,6 +523,7 @@ private fun PolymarketMainScreenErrorPreview() {
             onSearchClick = {},
             onHistoryClick = {},
             onSupportChatClick = {},
+            onFastTradingSettingsClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -543,6 +555,7 @@ private fun PolymarketMainScreenEmptyPreview() {
             onSearchClick = {},
             onHistoryClick = {},
             onSupportChatClick = {},
+            onFastTradingSettingsClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -583,6 +596,7 @@ private fun PolymarketMainScreenLoadingPreview() {
             onSearchClick = {},
             onHistoryClick = {},
             onSupportChatClick = {},
+            onFastTradingSettingsClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },

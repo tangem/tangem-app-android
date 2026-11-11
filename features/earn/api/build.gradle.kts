@@ -12,6 +12,7 @@ dependencies {
     /** Core */
     api(projects.core.decompose)
     api(projects.core.ui)
+    implementation(projects.core.res)
 
     /** Domain */
     api(projects.domain.core)
@@ -19,6 +20,11 @@ dependencies {
 
     /** Kotlin */
     api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
+
+    /** Compose */
+    implementation(deps.compose.material3)
+    implementation(deps.compose.ui.tooling)
 
     /** Tests */
     testImplementation(projects.test.core)
