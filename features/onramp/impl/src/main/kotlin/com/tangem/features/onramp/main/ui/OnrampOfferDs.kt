@@ -19,6 +19,8 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_lightning_24
 import com.tangem.core.ui.test.OnrampOffersBlockTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.features.onramp.impl.R
@@ -58,7 +60,7 @@ internal fun OfferDs(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    OfferHeader(advantage = onrampOfferUM.advantages)
+                    OfferHeaderDs(advantage = onrampOfferUM.advantages)
                     RateBlock(
                         rate = onrampOfferUM.rate,
                         diff = onrampOfferUM.diff
@@ -143,5 +145,27 @@ private fun PaymentBlockInOfferDs(paymentMethod: OnrampPaymentMethod, providerNa
             },
             contentDescription = null,
         )
+    }
+}
+
+@Composable
+private fun OfferHeaderDs(advantage: OnrampOfferAdvantagesUM) {
+    if (advantage == OnrampOfferAdvantagesUM.Fastest) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.ic_lightning_24,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.accent.yellow,
+                modifier = Modifier.size(12.dp),
+            )
+            SpacerW(2.dp)
+            Text(
+                text = stringResourceSafe(R.string.onramp_offer_type_fastet),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors3.icon.accent.yellow,
+            )
+        }
+    } else {
+        OfferHeader(advantage = advantage)
     }
 }

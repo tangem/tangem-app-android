@@ -119,7 +119,13 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
         onValuePastedTriggerDismiss = amountField.onValuePastedTriggerDismiss,
         modifier = Modifier
             .focusRequester(requester)
-            .padding(horizontal = 12.dp)
+            .padding(
+                top = 8.dp,
+                bottom = 4.dp,
+                start = 12.dp,
+                end = 12.dp,
+            )
+            .requiredHeightIn(min = 32.dp)
             .testTag(BuyTokenDetailsScreenTestTags.FIAT_AMOUNT_TEXT_FIELD),
     )
 
