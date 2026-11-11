@@ -23,9 +23,9 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 /**
- * Model of the "Filter by network" sheet: the scope tabs and the list selection form a draft that
- * only reaches the tab (and the backend query) on Apply, so the Reset/Apply footer shows exactly
- * while the draft differs from the applied filter.
+ * Model of the "Filter by network" sheet: a tap on an option applies it and the tab closes the sheet,
+ * so "All" doubles as reset. Switching to the other scope tab is a choice of scope: it checks that tab's
+ * "All" and offers Apply; switching back to the tab the sheet opened on restores what it opened with.
  */
 @Stable
 @ModelScoped
@@ -37,43 +37,39 @@ internal class EarnNetworkFilterModel @Inject constructor(
 
     private val params = paramsContainer.require<EarnNetworkFilterComponent.Params>()
 
-    private val appliedSelection = Selection.from(filter = params.selectedFilter, networks = params.networks)
+    private val openedSelection = Selection.from(filter = params.selectedFilter, networks = params.networks)
 
-    // Round-tripped so the comparison ignores what the draft can't express: a specific network is
-    // reachable from either scope, so switching tabs alone must not count as a change.
-    private val appliedFilter = appliedSelection.toFilter(networks = params.networks)
-
-    private var draftSelection = appliedSelection
+    private var viewedSelection = openedSelection
 
     val state: StateFlow<EarnFilterByNetworkBottomSheetContentUM>
         field = MutableStateFlow(buildState())
 
     private fun onScopeClick(scope: EarnNetworkScope) {
-        val networkId = draftSelection.networkId?.takeIf { id -> networksOf(scope).any { it.networkId == id } }
-        draftSelection = Selection(scope = scope, networkId = networkId)
+        viewedSelection = if (scope == openedSelection.scope) {
+            openedSelection
+        } else {
+            Selection(scope = scope, networkId = null)
+        }
         state.update { buildState() }
     }
 
     private fun onOptionClick(networkId: String?) {
-        draftSelection = draftSelection.copy(networkId = networkId)
-        state.update { buildState() }
-    }
-
-    private fun onReset() {
-        draftSelection = DEFAULT_SELECTION
-        state.update { buildState() }
+        applyFilter(viewedSelection.copy(networkId = networkId).toFilter(networks = params.networks))
     }
 
     private fun onApply() {
-        val filter = draftSelection.toFilter(networks = params.networks)
-        val (networkId, filterType) = when (filter) {
+        applyFilter(viewedSelection.toFilter(networks = params.networks))
+    }
+
+    private fun applyFilter(filter: EarnFilterNetwork) {
+        val (analyticsNetworkId, filterType) = when (filter) {
             is EarnFilterNetwork.AllNetworks -> "" to FilterNetworkAnalytic.ALL_NETWORKS
             is EarnFilterNetwork.MyNetworks -> "" to FilterNetworkAnalytic.MY_NETWORKS
             is EarnFilterNetwork.Specific -> filter.id to FilterNetworkAnalytic.SPECIFIC
         }
         analyticsEventHandler.send(
             EarnAnalyticsEvent.BestOpportunitiesFilterNetworkApplied(
-                networkId = networkId,
+                networkId = analyticsNetworkId,
                 filterType = filterType,
             ),
         )
@@ -81,21 +77,21 @@ internal class EarnNetworkFilterModel @Inject constructor(
     }
 
     private fun buildState(): EarnFilterByNetworkBottomSheetContentUM {
-        val scope = draftSelection.scope
+        val scope = viewedSelection.scope
         val allOption = EarnFilterNetworkUM.All(
-            isSelected = draftSelection.networkId == null,
+            isSelected = viewedSelection.networkId == null,
             onClick = { onOptionClick(networkId = null) },
         )
         val networkOptions = EarnNetworkToFilterUMConverter(
-            selectedNetworkId = draftSelection.networkId,
+            selectedNetworkId = viewedSelection.networkId,
             onClick = { network -> onOptionClick(networkId = network.networkId) },
         ).convertList(networksOf(scope))
 
         return EarnFilterByNetworkBottomSheetContentUM(
             scopeTabs = buildScopeTabs(selected = scope),
             networks = (listOf(allOption) + networkOptions).toImmutableList(),
-            footer = EarnFilterFooterUM(onReset = ::onReset, onApply = ::onApply)
-                .takeIf { draftSelection.toFilter(networks = params.networks) != appliedFilter },
+            footer = EarnFilterFooterUM(onApply = ::onApply)
+                .takeIf { viewedSelection != openedSelection },
         )
     }
 
@@ -151,9 +147,5 @@ internal class EarnNetworkFilterModel @Inject constructor(
                 )
             }
         }
-    }
-
-    private companion object {
-        val DEFAULT_SELECTION = Selection(scope = EarnNetworkScope.AllNetworks, networkId = null)
     }
 }
