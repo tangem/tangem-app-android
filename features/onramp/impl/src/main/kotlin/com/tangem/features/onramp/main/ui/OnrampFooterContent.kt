@@ -67,7 +67,11 @@ private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
             is OnrampAmountButtonUMState.Loaded -> {
                 if (keyboard is Keyboard.Opened) {
                     LazyRow(
-                        modifier = Modifier.background(color = TangemTheme.colors3.bg.secondary),
+                        modifier = if (LocalOnrampDesignSystemEnabled.current) {
+                            Modifier
+                        } else {
+                            Modifier.background(color = TangemTheme.colors3.bg.secondary)
+                        },
                         contentPadding = PaddingValues(
                             vertical = 10.dp,
                             horizontal = 8.dp,
