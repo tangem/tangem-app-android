@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
@@ -16,7 +17,6 @@ import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.domain.tangempay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount

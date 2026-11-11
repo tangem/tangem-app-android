@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks

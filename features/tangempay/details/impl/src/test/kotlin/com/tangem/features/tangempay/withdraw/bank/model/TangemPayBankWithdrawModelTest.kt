@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.tangempay.TangemPayCountry
 import com.tangem.domain.models.tangempay.TangemPayRegion
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
@@ -18,7 +19,6 @@ import com.tangem.domain.tangempay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.tangempay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
