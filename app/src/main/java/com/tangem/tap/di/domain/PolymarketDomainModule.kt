@@ -56,12 +56,14 @@ import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOutcomeUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
+import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
 import com.tangem.domain.polymarket.usecase.AcknowledgePolymarketSessionKeyOutcomeUseCase
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
@@ -573,7 +575,19 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
+    fun provideObservePolymarketSessionKeyOperationUseCase(
+        runner: PolymarketSessionKeyOperationRunner,
+    ): ObservePolymarketSessionKeyOperationUseCase = ObservePolymarketSessionKeyOperationUseCase(runner = runner)
+
+    @Provides
+    @Singleton
     fun provideAcknowledgePolymarketSessionKeyOutcomeUseCase(
         runner: PolymarketSessionKeyOperationRunner,
     ): AcknowledgePolymarketSessionKeyOutcomeUseCase = AcknowledgePolymarketSessionKeyOutcomeUseCase(runner = runner)
+
+    @Provides
+    @Singleton
+    fun provideStartPolymarketSessionKeyOperationUseCase(
+        runner: PolymarketSessionKeyOperationRunner,
+    ): StartPolymarketSessionKeyOperationUseCase = StartPolymarketSessionKeyOperationUseCase(runner = runner)
 }
