@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,8 +28,6 @@ import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
-import com.tangem.core.ui.ds2.row.TangemRowText
-import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
@@ -41,6 +40,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_copy_20
 import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
@@ -93,7 +94,7 @@ private fun OnrampStatus.Status.toScreenVariant(): TangemStatusScreen.Variant = 
     OnrampStatus.Status.RefundInProgress,
     OnrampStatus.Status.Paused,
     -> TangemStatusScreen.Variant.Warning
-    else -> TangemStatusScreen.Variant.Neutral
+    else -> TangemStatusScreen.Variant.Info
 }
 
 @Composable
@@ -106,7 +107,7 @@ private fun StatusAsset(status: OnrampStatus.Status) {
             TangemStatusIcon(kind = TangemStatusIcon.Kind.HeartBroken, modifier = modifier)
         TangemStatusScreen.Variant.Warning ->
             TangemStatusIcon(kind = TangemStatusIcon.Kind.Warning, modifier = modifier)
-        else -> TangemLoader(size = TangemLoaderSize.X32, color = TangemTheme.colors3.icon.primary)
+        else -> TangemLoader(size = TangemLoaderSize.X32, color = TangemTheme.colors3.icon.accent.blue)
     }
 }
 
@@ -144,6 +145,15 @@ private fun Details(state: OnrampSuccessComponentUM.Content) {
 }
 
 @Composable
+private fun RowTitle(text: TextReference) {
+    Text(
+        text = text.resolveReference(),
+        style = TangemTheme.typography3.body.medium,
+        color = TangemTheme.colors3.text.secondary,
+    )
+}
+
+@Composable
 private fun DetailRow(
     title: TextReference,
     value: TextReference,
@@ -154,14 +164,27 @@ private fun DetailRow(
         divider = divider,
         onClick = onClick,
         contentLead = TangemRowContentLead.Start,
-        titleSlot = { TangemRowText(text = title, role = TangemRowTextRole.Title) },
+        titleSlot = { RowTitle(text = title) },
         valueSlot = {
-            Text(
-                text = value.resolveReference(),
-                style = TangemTheme.typography3.body.medium,
-                color = TangemTheme.colors3.text.primary,
-                textAlign = TextAlign.End,
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = value.resolveReference(),
+                    style = TangemTheme.typography3.body.medium,
+                    color = TangemTheme.colors3.text.primary,
+                    textAlign = TextAlign.End,
+                )
+                if (onClick != null) {
+                    Icon(
+                        imageVector = Icons.ic_copy_20,
+                        contentDescription = null,
+                        tint = TangemTheme.colors3.icon.secondary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
         },
     )
 }
@@ -171,12 +194,7 @@ private fun ProviderRow(name: TextReference, imageUrl: String) {
     TangemRow(
         divider = true,
         contentLead = TangemRowContentLead.Start,
-        titleSlot = {
-            TangemRowText(
-                text = resourceReference(CoreUiR.string.express_provider),
-                role = TangemRowTextRole.Title,
-            )
-        },
+        titleSlot = { RowTitle(text = resourceReference(CoreUiR.string.express_provider)) },
         valueSlot = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
