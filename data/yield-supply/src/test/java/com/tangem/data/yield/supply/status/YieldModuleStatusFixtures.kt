@@ -29,6 +29,7 @@ internal fun createStatus(
     isInitialized: Boolean = false,
     isAllowedToSpend: Boolean = false,
     effectiveProtocolBalance: BigDecimal? = null,
+    effectiveBalance: BigDecimal? = null,
     source: StatusSource = StatusSource.ACTUAL,
 ): YieldModuleStatus {
     val key = YieldModuleStatus.Key(token)
@@ -40,6 +41,7 @@ internal fun createStatus(
         isInitialized = isInitialized,
         isAllowedToSpend = isAllowedToSpend,
         effectiveProtocolBalance = effectiveProtocolBalance,
+        effectiveBalance = effectiveBalance,
         source = source,
     )
 }

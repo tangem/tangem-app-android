@@ -32,7 +32,12 @@ import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.token.TokenItem
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.row.header.TangemHeaderRow
+import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -40,6 +45,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.networkselection.entity.AccountGroupUM
 import com.tangem.features.send.networkselection.entity.NetworkSelectionUM
 import com.tangem.features.send.networkselection.entity.WalletGroupUM
+import com.tangem.utils.annotations.RemoveWithToggle
 
 private const val CHEVRON_EXPANDED_ROTATION = 180f
 private const val CHEVRON_COLLAPSED_ROTATION = 0f
@@ -113,6 +119,7 @@ private fun NetworkSelectionContent(state: NetworkSelectionUM) {
                     walletGroup = walletGroup,
                     accountGroup = accountGroup,
                     isBalanceHidden = state.isBalanceHidden,
+                    isRedesignedTokenRowsEnabled = state.isRedesignedTokenRowsEnabled,
                 )
             }
         }
@@ -123,6 +130,7 @@ private fun LazyListScope.accountGroupItems(
     walletGroup: WalletGroupUM,
     accountGroup: AccountGroupUM,
     isBalanceHidden: Boolean,
+    isRedesignedTokenRowsEnabled: Boolean,
 ) {
     val hasHiddenTokens = accountGroup.hiddenTokensCount > 0
     val lastIndex = accountGroup.tokens.lastIndex.inc() + if (hasHiddenTokens) 1 else 0
@@ -132,8 +140,10 @@ private fun LazyListScope.accountGroupItems(
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically(),
         ) {
-            AccountHeader(
+            NetworkSelectionAccountHeader(
+                walletGroup = walletGroup,
                 accountGroup = accountGroup,
+                isRedesignedTokenRowsEnabled = isRedesignedTokenRowsEnabled,
                 modifier = Modifier.roundedShapeItemDecoration(
                     currentIndex = 0,
                     lastIndex = lastIndex,
@@ -153,10 +163,10 @@ private fun LazyListScope.accountGroupItems(
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically(),
         ) {
-            TokenItem(
-                state = tokenState,
+            NetworkSelectionTokenRow(
+                tokenState = tokenState,
+                tokenRow = accountGroup.tokenRows.getOrNull(index),
                 isBalanceHidden = isBalanceHidden,
-                reorderableTokenListState = null,
                 modifier = Modifier.roundedShapeItemDecoration(
                     currentIndex = indexWithHeader,
                     lastIndex = lastIndex,
@@ -232,6 +242,47 @@ private fun WalletHeader(walletGroup: WalletGroupUM) {
     }
 }
 
+@Composable
+private fun NetworkSelectionAccountHeader(
+    walletGroup: WalletGroupUM,
+    accountGroup: AccountGroupUM,
+    isRedesignedTokenRowsEnabled: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    if (isRedesignedTokenRowsEnabled) {
+        TangemHeaderRow(
+            headerRowUM = TangemHeaderRowUM(
+                id = "account_${walletGroup.userWalletId}_${accountGroup.accountName}",
+                title = accountGroup.accountName,
+                startIconUM = accountGroup.iconState?.let(TangemIconUM::Currency),
+            ),
+            modifier = modifier,
+        )
+    } else {
+        AccountHeader(accountGroup = accountGroup, modifier = modifier)
+    }
+}
+
+@Composable
+private fun NetworkSelectionTokenRow(
+    tokenState: TokenItemState,
+    tokenRow: TangemTokenRow.State?,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    if (tokenRow != null) {
+        TangemTokenRow(state = tokenRow, isBalanceHidden = isBalanceHidden, modifier = modifier)
+    } else {
+        TokenItem(
+            state = tokenState,
+            isBalanceHidden = isBalanceHidden,
+            reorderableTokenListState = null,
+            modifier = modifier,
+        )
+    }
+}
+
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 @Composable
 private fun AccountHeader(accountGroup: AccountGroupUM, modifier: Modifier = Modifier) {
     Row(

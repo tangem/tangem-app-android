@@ -10,7 +10,6 @@ import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -37,11 +36,9 @@ internal class DefaultTangemPayReissueCardStoreTest {
     private val store = DefaultTangemPayReissueCardStore(feeStore = feeStore, prefs = prefs)
 
     @BeforeEach
-    fun resetStore() {
-        runBlocking {
-            dataStore.updateData { emptyPreferences() }
-            feeStore.clear()
-        }
+    fun resetStore() = runTest {
+        dataStore.updateData { emptyPreferences() }
+        feeStore.clear()
     }
 
     @Test

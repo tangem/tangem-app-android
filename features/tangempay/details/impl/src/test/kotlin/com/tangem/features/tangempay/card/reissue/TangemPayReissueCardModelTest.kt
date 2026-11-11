@@ -4,9 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.error.UniversalError
 import com.tangem.domain.models.tangempay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
@@ -15,6 +13,7 @@ import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.tangempay.usecase.ReissueTangemPayCardUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -28,7 +27,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class TangemPayReissueCardModelTest {
+internal class TangemPayReissueCardModelTest : TangemPayModelTestBase() {
 
     private val cardId = "test_card_id"
     private val userWalletId = UserWalletId("123")
@@ -37,8 +36,6 @@ internal class TangemPayReissueCardModelTest {
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val reissueCardRepository: TangemPayReissueCardRepository = mockk()
     private val reissueCardUseCase: ReissueTangemPayCardUseCase = mockk()
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val params = TangemPayReissueCardComponent.Params(
         listener = listener,

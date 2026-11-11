@@ -1,6 +1,7 @@
 package com.tangem.features.jointaccount.confirmaddress.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -11,13 +12,10 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
-import com.tangem.domain.feedback.SendFeedbackEmailUseCase
-import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
@@ -62,7 +60,6 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
     private val singleAccountSupplier: SingleAccountSupplier,
     private val confirmJointAccountUseCase: ConfirmJointAccountUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
-    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val pollingCoordinator: JointAccountPollingCoordinator,
 ) : Model() {
 
@@ -122,11 +119,16 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
     }
 
     private fun onMismatchClick() {
-        modelScope.launch {
-            val metaInfo = getWalletMetaInfoUseCase(params.userWalletId).getOrNull() ?: return@launch
+        if (uiState.value.isConfirming) return
 
-            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
-        }
+        modelScope.launch { openSupportChat() }
+    }
+
+    private suspend fun openSupportChat() {
+        val metaInfo = getWalletMetaInfoUseCase(params.userWalletId).getOrNull() ?: return
+        if (uiState.value.isConfirming) return
+
+        router.push(AppRoute.Usedesk(walletMetaInfo = metaInfo))
     }
 
     private fun onConfirmClick() {
@@ -170,15 +172,10 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
     /** Only the last signature activates the account; until then the members screen shows who is still due */
     private fun onConfirmed(account: JointAccount) {
         if (account.status == JointAccount.Status.ACTIVE) {
-            uiMessageSender.send(
-                SnackbarMessage(
-                    message = resourceReference(CoreUiR.string.joint_account_activated_snackbar),
-                    startIconId = CoreUiR.drawable.ic_success_20,
-                    isIconTinted = false,
-                ),
-            )
+            params.onActivated()
+        } else {
+            router.pop()
         }
-        router.pop()
     }
 
     private fun onConfirmError(error: JointAccountConfirmationError) {

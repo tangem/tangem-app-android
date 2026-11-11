@@ -42,5 +42,21 @@
     {
         "name": "public-masterpiece",
         "version": "6.5"
+    },
+    {
+        "name": "zeniq",
+        "version": "6.9"
+    },
+    {
+        "name": "katana",
+        "version": "6.9"
+    },
+    {
+        "name": "x-layer",
+        "version": "6.9"
+    },
+    {
+        "name": "ink",
+        "version": "6.9"
     }
 ]

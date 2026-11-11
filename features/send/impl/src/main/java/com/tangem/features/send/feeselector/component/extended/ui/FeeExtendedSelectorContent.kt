@@ -5,10 +5,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Amount
@@ -16,12 +19,20 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
+import com.tangem.common.ui.tokens.toTokenIconState
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowContentLead
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -54,13 +65,14 @@ fun FeeExtendedSelectorContent(state: FeeExtendedSelectorUM, modifier: Modifier 
             )
             .fillMaxWidth(),
     ) {
-        TokenItem(
-            modifier = Modifier
-                .clip(RoundedCornerShape(14.dp))
-                .background(color = TangemTheme.colors3.bg.secondary),
-            state = state.token,
-            isBalanceHidden = false,
-        )
+        val tokenModifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(color = TangemTheme.colors3.bg.secondary)
+        if (state.isRedesignedTokenRowsEnabled) {
+            SelectedFeeTokenRow(token = state.token, modifier = tokenModifier)
+        } else {
+            TokenItem(modifier = tokenModifier, state = state.token, isBalanceHidden = false)
+        }
 
         SpacerH8()
 
@@ -194,4 +206,42 @@ private fun Preview() {
             ),
         )
     }
+}
+
+@Composable
+private fun SelectedFeeTokenRow(token: TokenItemState, modifier: Modifier = Modifier) {
+    if (token !is TokenItemState.Content) {
+        TangemTokenRow(state = TangemTokenRow.State.Shimmer(id = token.id), modifier = modifier)
+        return
+    }
+    val selectIcon = token.fiatAmountState as? TokenItemState.FiatAmountState.Icon
+    TangemRow(
+        modifier = modifier,
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        onClick = token.onItemClick?.let { onItemClick -> { onItemClick(token) } },
+        startSlot = {
+            TangemTokenIcon(state = token.iconState.toTokenIconState(), size = TangemTokenIcon.Size.X40)
+        },
+        titleSlot = {
+            (token.titleState as? TokenItemState.TitleState.Content)?.let { title ->
+                TangemRowText(text = title.text, role = TangemRowTextRole.Title)
+            }
+        },
+        subtitleSlot = {
+            (token.subtitleState as? TokenItemState.SubtitleState.TextContent)?.let { subtitle ->
+                TangemRowText(text = subtitle.value, role = TangemRowTextRole.Subtitle)
+            }
+        },
+        endSlot = selectIcon?.let {
+            {
+                Icon(
+                    painter = painterResource(selectIcon.iconRes),
+                    tint = TangemTheme.colors3.icon.secondary,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        },
+    )
 }

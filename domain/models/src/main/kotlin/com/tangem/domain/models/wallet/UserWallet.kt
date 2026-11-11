@@ -114,7 +114,6 @@ val UserWallet.isLocked
     }
 
 inline val UserWallet.isHotWallet get() = this is UserWallet.Hot
-val UserWallet.isSocialLoginWallet: Boolean get() = this is UserWallet.Hot && isSocialBackupCompleted
 inline val UserWallet.isColdWallet get() = this is UserWallet.Cold
 
 val UserWallet.isTangemPayCompatible: Boolean

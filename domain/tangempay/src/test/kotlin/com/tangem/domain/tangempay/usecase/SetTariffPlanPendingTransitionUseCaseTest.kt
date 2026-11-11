@@ -25,29 +25,29 @@ internal class SetTariffPlanPendingTransitionUseCaseTest {
 
     @Test
     fun `GIVEN setPendingTransition fails WHEN invoke THEN returns Left and skips fetch`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery {
             repository.setPendingTransition(USER_WALLET_ID, PENDING_PLAN_ID)
         } returns TangemPayApiError.Unspecified.left()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, PENDING_PLAN_ID)
 
-        // THEN
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
         coVerify(exactly = 0) { paymentAccountStatusFetcher.invoke(any<UserWalletId>()) }
     }
 
     @Test
     fun `GIVEN setPendingTransition succeeds WHEN invoke THEN refreshes account status`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery { repository.setPendingTransition(USER_WALLET_ID, PENDING_PLAN_ID) } returns Unit.right()
         coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, PENDING_PLAN_ID)
 
-        // THEN
+        // Assert
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
     }

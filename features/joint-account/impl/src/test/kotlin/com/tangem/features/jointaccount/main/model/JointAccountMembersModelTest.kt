@@ -81,6 +81,7 @@ internal class JointAccountMembersModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val closeFlow: () -> Unit = mockk(relaxed = true)
+    private val onActivated: () -> Unit = mockk(relaxed = true)
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
@@ -101,6 +102,7 @@ internal class JointAccountMembersModelTest {
         clearMocks(
             router,
             closeFlow,
+            onActivated,
             clipboardManager,
             uiMessageSender,
             shareManager,
@@ -519,7 +521,7 @@ internal class JointAccountMembersModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.footer!!.button!!.onClick()
+        (model.uiState.value.footer as JointAccountMembersUM.FooterUM.Confirm).button.onClick()
 
         // Assert
         verify(exactly = 1) { router.push(JointAccountMembersRoute.ConfirmAddress(cryptoAccountId = ACCOUNT_ID)) }
@@ -696,6 +698,79 @@ internal class JointAccountMembersModelTest {
         assertThat(model.uiState.value.joined).isEmpty()
     }
 
+    @Test
+    fun `GIVEN confirming account on screen WHEN the next fetch reports it active THEN the flow is left as activated`() =
+        runTest {
+            // Arrange
+            val confirming = confirmingAccount()
+            val accounts = MutableStateFlow(listOf(confirming))
+            every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+            createModel()
+
+            // Act
+            accounts.value = listOf(confirming.copy(status = JointAccount.Status.ACTIVE))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { onActivated() }
+            verify(exactly = 0) { closeFlow() }
+        }
+
+    @Test
+    fun `GIVEN screen paused under confirm address WHEN the account turns active THEN the flow is left as activated`() =
+        runTest {
+            // Arrange
+            val confirming = confirmingAccount()
+            val accounts = MutableStateFlow(listOf(confirming))
+            every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+            val model = createModel()
+            model.onResume()
+            model.onPause()
+
+            // Act
+            accounts.value = listOf(confirming.copy(status = JointAccount.Status.ACTIVE))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { onActivated() }
+        }
+
+    @Test
+    fun `GIVEN account already active WHEN the screen opens and refreshes THEN it stays open`() = runTest {
+        // Arrange
+        val active = confirmingAccount().copy(status = JointAccount.Status.ACTIVE)
+        val accounts = MutableStateFlow(listOf(active))
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+        createModel()
+
+        // Act
+        accounts.value = listOf(active.copy(source = StatusSource.CACHE))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { onActivated() }
+    }
+
+    @Test
+    fun `GIVEN confirming account WHEN another member confirms but it is not active yet THEN the screen stays open`() =
+        runTest {
+            // Arrange
+            val confirming = confirmingAccount()
+            val accounts = MutableStateFlow(listOf(confirming))
+            every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+            createModel()
+
+            // Act
+            accounts.value = listOf(confirming.copy(members = listOf(creator, member.copy(signature = "0xsigned"))))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { onActivated() }
+        }
+
+    private fun confirmingAccount() = pendingAccount(members = listOf(creator, member))
+        .copy(status = JointAccount.Status.CONFIRMING, membersCount = 2, safeAddress = SAFE_ADDRESS)
+
     private fun stub(account: JointAccount) {
         every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns flowOf(listOf(account))
     }
@@ -717,6 +792,7 @@ internal class JointAccountMembersModelTest {
                     userWalletId = USER_WALLET_ID,
                     cryptoAccountId = cryptoAccountId,
                     onCloseFlow = closeFlow,
+                    onActivated = onActivated,
                 ),
             ),
             dispatchers = createTestingCoroutineDispatcherProvider(),

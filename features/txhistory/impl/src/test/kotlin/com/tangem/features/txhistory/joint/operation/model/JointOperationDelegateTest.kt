@@ -14,11 +14,13 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationSignerState
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.model.JointOperationTransfer
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeTx
@@ -419,6 +421,53 @@ internal class JointOperationDelegateTest {
         assertThat(values).containsExactly(JointOperationSnapshot.Unreadable)
         verify(exactly = 0) { jointAccountListSupplier(USER_WALLET_ID) }
         verify(exactly = 0) { historyRepository.observeOperation(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a sign state WHEN prepareSigning THEN the use case prepares the displayed intent`() = runTest {
+        // Arrange
+        val state = signState()
+        val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Warning)
+        coEvery {
+            signJointOperationUseCase.prepare(state.account, jointCurrency.network, OPERATION_ID, TRANSFER_INTENT)
+        } returns prepared.right()
+
+        // Act
+        val actual = createDelegate().prepareSigning(
+            state = state,
+            network = jointCurrency.network,
+            operationId = OPERATION_ID,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(prepared.right())
+        coVerify(exactly = 0) { signJointOperationUseCase.submit(any()) }
+    }
+
+    @Test
+    fun `GIVEN a prepared operation WHEN submitSigning THEN the use case result is returned`() = runTest {
+        // Arrange
+        val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe)
+        val signed: JointOperation = mockk()
+        coEvery { signJointOperationUseCase.submit(prepared) } returns signed.right()
+
+        // Act
+        val actual = createDelegate().submitSigning(prepared = prepared)
+
+        // Assert
+        assertThat(actual).isEqualTo(signed.right())
+    }
+
+    private fun signState(): JointOperationState {
+        val account: Account.Joint = mockk()
+        return mockk {
+            every { this@mockk.account } returns account
+            every { displayed } returns TRANSFER_INTENT
+        }
+    }
+
+    private fun prepared(verdict: JointOperationBlockaidGate.Verdict): PreparedJointOperation.Signing = mockk {
+        every { this@mockk.verdict } returns verdict
     }
 
     private fun createDelegate() = JointOperationDelegate(

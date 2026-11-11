@@ -15,6 +15,7 @@ dependencies {
     api(projects.features.referral.api)
     api(projects.features.commonFeatures.api)
     api(projects.features.referral.domain)
+    implementation(projects.features.wallet.api)
 
     /** Core modules */
     api(projects.core.analytics)
@@ -59,4 +60,11 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Tests */
+    testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
+    testImplementation(projects.common.test)
+    testImplementation(projects.domain.core)
+    testImplementation(tangemDeps.blockchain)
 }

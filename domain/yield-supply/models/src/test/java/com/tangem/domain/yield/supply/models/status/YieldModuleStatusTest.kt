@@ -78,6 +78,7 @@ internal class YieldModuleStatusTest {
         isInitialized = true,
         isAllowedToSpend = true,
         effectiveProtocolBalance = effectiveProtocolBalance,
+        effectiveBalance = null,
         source = StatusSource.ACTUAL,
     )
 

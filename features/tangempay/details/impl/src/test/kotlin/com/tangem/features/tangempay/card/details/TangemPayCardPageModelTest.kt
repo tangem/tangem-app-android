@@ -4,7 +4,6 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
@@ -18,6 +17,7 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController.Entry as GoogleWalletEntry
@@ -41,14 +41,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
-internal class TangemPayCardPageModelTest {
+internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("123")
     private val firstCard = tangemPayCard(id = "card_a")
     private val secondCard = tangemPayCard(id = "card_b")
 
     private val eventListener = DefaultCardDetailsEventListener()
-    private val router: Router = mockk(relaxed = true)
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
     private val supplier: PaymentAccountStatusSupplier = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)

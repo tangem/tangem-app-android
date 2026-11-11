@@ -57,7 +57,6 @@ internal class WalletLoadingStateFactory(
                 name = userWallet.name,
                 deviceIcon = getWalletIconUseCase.invoke(userWallet = userWallet)
                     .let { WalletIconUMConverter().convert(it) },
-                additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = userWallet),
             ),
             buttons = createWalletActions(userWallet),
             notifications = persistentListOf(),

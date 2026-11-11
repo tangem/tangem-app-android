@@ -1,9 +1,9 @@
 package com.tangem.features.marketing.impl.model
 
-import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.routing.deeplink.OnrampDeeplinkTarget
 import com.tangem.common.routing.deeplink.resolveOnrampDeeplinkTarget
+import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.utils.extensions.uriValidate
 import java.net.URI
 import java.net.URLDecoder
@@ -42,14 +42,17 @@ internal fun resolveCtaBannerLink(link: String?): CtaBannerLink {
 private fun URI.resolveHttpsLink(): CtaBannerLink =
     if (userInfo == null && !host.isNullOrBlank()) CtaBannerLink.PARTNER_PAGE else CtaBannerLink.UNSUPPORTED
 
-private fun URI.resolveTangemLink(): CtaBannerLink =
+private fun URI.resolveTangemLink(): CtaBannerLink {
     // A host with an underscore, e.g. token_chart, is not a valid URI host and is only in the authority
-    when (val routeHost = host ?: rawAuthority) {
-        null -> CtaBannerLink.UNSUPPORTED
-        DeepLinkRoute.Onramp.host ->
+    val routeHost = host ?: rawAuthority
+
+    return when {
+        routeHost.isNullOrBlank() -> CtaBannerLink.UNSUPPORTED
+        OnrampDeepLinkHandler.canHandle(this) ->
             if (isConciergeWaitlist()) CtaBannerLink.CONCIERGE_WAITLIST else CtaBannerLink.APP_LINK
-        else -> if (routeHost.isBlank()) CtaBannerLink.UNSUPPORTED else CtaBannerLink.APP_LINK
+        else -> CtaBannerLink.APP_LINK
     }
+}
 
 private fun URI.isConciergeWaitlist(): Boolean =
     resolveOnrampDeeplinkTarget(queryParams()) == OnrampDeeplinkTarget.ConciergeWaitlist

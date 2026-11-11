@@ -29,12 +29,14 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_24
 import com.tangem.core.ui.res.generated.icons.ic_dots_vertical_20
+import com.tangem.core.ui.res.generated.icons.ic_gear_24
 import com.tangem.core.ui.res.generated.icons.ic_headphones_support_24
 
 @Composable
 internal fun PolymarketMainMenu(
     onHistoryClick: () -> Unit,
     onSupportChatClick: () -> Unit,
+    onFastTradingSettingsClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -62,6 +64,12 @@ internal fun PolymarketMainMenu(
                 isExpanded = false
                 onSupportChatClick()
             })
+            if (onFastTradingSettingsClick != null) {
+                FastTradingSettingsMenuItem(onClick = {
+                    isExpanded = false
+                    onFastTradingSettingsClick()
+                })
+            }
         }
     }
 }
@@ -84,6 +92,15 @@ private fun SupportChatMenuItem(onClick: () -> Unit) {
     )
 }
 
+@Composable
+private fun FastTradingSettingsMenuItem(onClick: () -> Unit) {
+    TangemContextMenuItem(
+        title = resourceReference(R.string.prediction_session_key_settings_title),
+        icon = Icons.ic_gear_24,
+        onClick = onClick,
+    )
+}
+
 @Preview(name = "History menu", widthDp = 240)
 @Preview(name = "History menu dark", widthDp = 240, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(name = "History menu large text", widthDp = 240, fontScale = 1.5f)
@@ -94,6 +111,7 @@ private fun PolymarketMainMenuPreview() {
             Column {
                 HistoryMenuItem(onClick = {})
                 SupportChatMenuItem(onClick = {})
+                FastTradingSettingsMenuItem(onClick = {})
             }
         }
     }

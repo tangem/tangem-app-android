@@ -53,7 +53,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * The screen never applies anything on its own: taps move a draft, only Apply hands it to the tab.
+ * A tap applies the category and closes the screen; Reset clears an applied filter the same way.
  * Featured is a shortcut rail over the same categories, not a second filter.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -148,7 +148,7 @@ internal class MarketCategorySelectorModelTest {
     }
 
     @Test
-    fun `GIVEN a row tapped WHEN apply not pressed THEN the tab is never told`() = runTest {
+    fun `GIVEN a row WHEN tapped THEN the selection reaches the tab and the screen pops`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -157,23 +157,6 @@ internal class MarketCategorySelectorModelTest {
 
         // Act
         model.rowFor(ai.id).onItemClick()
-
-        // Assert
-        assertThat(filterController.selection.value).isEqualTo(MarketCategorySelection())
-        verify(exactly = 0) { router.pop() }
-    }
-
-    @Test
-    fun `GIVEN a row tapped WHEN apply pressed THEN the selection reaches the tab and the screen pops`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-        batchFlow.emitFirstPage(ai)
-        advanceUntilIdle()
-
-        // Act
-        model.rowFor(ai.id).onItemClick()
-        model.footer().onApply()
 
         // Assert
         assertThat(filterController.selection.value).isEqualTo(selectionOf(ai))
@@ -181,7 +164,7 @@ internal class MarketCategorySelectorModelTest {
     }
 
     @Test
-    fun `GIVEN a badge tapped WHEN apply pressed THEN it selects the same category as its row`() = runTest {
+    fun `GIVEN a badge WHEN tapped THEN it applies the same category as its row`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -189,12 +172,11 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
 
         // Act
-        model.content().featured!!.items.single { it.id == meme.id }.onItemClick()
-        model.footer().onApply()
+        model.badgeFor(meme.id).onItemClick()
 
         // Assert
         assertThat(filterController.selection.value).isEqualTo(selectionOf(meme))
-        assertThat(model.rowFor(meme.id).isSelected).isTrue()
+        verify(exactly = 1) { router.pop() }
     }
 
     @Test
@@ -212,49 +194,39 @@ internal class MarketCategorySelectorModelTest {
     }
 
     @Test
-    fun `GIVEN a filter applied WHEN the draft still matches it THEN it is not edited`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this, selection = selectionOf(ai))
-
+    fun `GIVEN no filter WHEN model created THEN reset is hidden`() = runTest {
         // Act
-        advanceUntilIdle()
-        batchFlow.emitFirstPage(ai, defi)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.isEdited()).isFalse()
+        assertThat(model.isResetVisible()).isFalse()
     }
 
     @Test
-    fun `GIVEN a filter applied WHEN another category tapped THEN it is edited`() = runTest {
-        // Arrange
+    fun `GIVEN a filter applied WHEN model created THEN reset is visible`() = runTest {
+        // Act
         val model = createModel(testScope = this, selection = selectionOf(ai))
         advanceUntilIdle()
-        batchFlow.emitFirstPage(ai, defi)
-        advanceUntilIdle()
-
-        // Act
-        model.rowFor(defi.id).onItemClick()
 
         // Assert
-        assertThat(model.isEdited()).isTrue()
+        assertThat(model.isResetVisible()).isTrue()
     }
 
     @Test
-    fun `GIVEN an edited draft WHEN reset pressed THEN the applied selection is restored`() = runTest {
+    fun `GIVEN a filter applied WHEN reset pressed THEN the filter is cleared and the screen pops`() = runTest {
         // Arrange
         val model = createModel(testScope = this, selection = selectionOf(ai))
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai, defi)
         advanceUntilIdle()
-        model.rowFor(defi.id).onItemClick()
 
         // Act
         model.footer().onReset()
 
         // Assert
-        assertThat(model.isEdited()).isFalse()
-        assertThat(model.rows().filter { it.isSelected }.map { it.id }).containsExactly(ai.id)
+        assertThat(filterController.selection.value).isEqualTo(MarketCategorySelection())
+        verify(exactly = 1) { router.pop() }
     }
 
     @Test
@@ -349,11 +321,10 @@ internal class MarketCategorySelectorModelTest {
 
         // Assert
         assertThat(model.rows().none { it.isSelected }).isTrue()
-        assertThat(model.isEdited()).isFalse()
     }
 
     @Test
-    fun `GIVEN the checked row WHEN tapped again THEN the draft keeps it`() = runTest {
+    fun `GIVEN the checked row WHEN tapped again THEN the filter stays and the screen pops`() = runTest {
         // Arrange — clearing is the tab chip's job, so the row itself never deselects
         val model = createModel(testScope = this, selection = selectionOf(ai))
         advanceUntilIdle()
@@ -365,13 +336,13 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.rowFor(ai.id).isSelected).isTrue()
-        assertThat(model.isEdited()).isFalse()
+        assertThat(filterController.selection.value).isEqualTo(selectionOf(ai))
+        verify(exactly = 1) { router.pop() }
     }
 
     @Test
-    fun `GIVEN the checked badge WHEN tapped again THEN the draft is cleared`() = runTest {
-        // Arrange — the badge toggles off, and nothing is checked once the draft is empty
+    fun `GIVEN the checked badge WHEN tapped again THEN the filter is cleared and the screen pops`() = runTest {
+        // Arrange — the badge toggles off
         val model = createModel(testScope = this, selection = selectionOf(meme))
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai, meme)
@@ -382,8 +353,8 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.rows().none { it.isSelected }).isTrue()
-        assertThat(model.isEdited()).isTrue()
+        assertThat(filterController.selection.value).isEqualTo(MarketCategorySelection())
+        verify(exactly = 1) { router.pop() }
     }
 
     @Test
@@ -546,7 +517,6 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai, defi)
         advanceUntilIdle()
-        model.rowFor(defi.id).onItemClick()
         model.type(query = "meme")
         advanceUntilIdle()
 
@@ -557,7 +527,7 @@ internal class MarketCategorySelectorModelTest {
         // Assert
         assertThat(model.uiState.value.content).isEqualTo(MarketCategorySelectorUM.ContentUM.Loading)
         assertThat(model.uiState.value.search.query).isEqualTo("meme")
-        assertThat(model.isEdited()).isTrue()
+        assertThat(model.isResetVisible()).isTrue()
     }
 
     @Test
@@ -636,22 +606,6 @@ internal class MarketCategorySelectorModelTest {
         assertThat(model.content().categories.isLoadingMore).isFalse()
     }
 
-    @Test
-    fun `GIVEN an untouched draft WHEN apply pressed THEN the tab is still told and the screen pops`() = runTest {
-        // Arrange — the footer is hidden while unedited, but the model must not depend on that
-        val model = createModel(testScope = this, selection = selectionOf(ai))
-        advanceUntilIdle()
-        batchFlow.emitFirstPage(ai, defi)
-        advanceUntilIdle()
-
-        // Act
-        model.footer().onApply()
-
-        // Assert
-        assertThat(filterController.selection.value).isEqualTo(selectionOf(ai))
-        verify(exactly = 1) { router.pop() }
-    }
-
     /**
      * `actionsFlow` is a rendezvous `SharedFlow` and drops what it emits with no subscriber, so the
      * collector is attached as the batch flow is handed over — before `init` can reload. Call this
@@ -707,7 +661,7 @@ internal class MarketCategorySelectorModelTest {
 
     private fun MarketCategorySelectorModel.footer() = uiState.value.footer
 
-    private fun MarketCategorySelectorModel.isEdited() = uiState.value.isEdited
+    private fun MarketCategorySelectorModel.isResetVisible() = uiState.value.isResetVisible
 
     private fun MarketCategorySelectorModel.type(query: String) = uiState.value.search.onQueryChange(query)
 

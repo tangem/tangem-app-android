@@ -21,6 +21,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
@@ -244,6 +245,8 @@ sealed class AppRoute(val path: String) : Route {
          * a wallet key but submitted as a signed batch through our backend.
          * PredictionTopUp anchors the prediction account as the concrete TO — its deposit token at the bridge
          * address — and is the only way the app funds that account through the swap screen.
+         * CollectiblesWithdraw anchors the Collectibles vault's USDC as the concrete FROM; the vault is a program
+         * account, so the debit is signed by the account's owner key, not by the token's own derivation.
          * MoneyTopUp anchors the Money account's USDC as the concrete TO at its deposit address.
          * MoneyWithdraw anchors the Money account's USDC as the concrete FROM, spent with the wallet's key at the
          * account's derivation path.
@@ -259,6 +262,8 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable data object PredictionTopUp : AccountFlow
 
             @Serializable data object CollectiblesTopUp : AccountFlow
+
+            @Serializable data object CollectiblesWithdraw : AccountFlow
 
             @Serializable data object MoneyTopUp : AccountFlow
 
@@ -460,6 +465,7 @@ sealed class AppRoute(val path: String) : Route {
     data class AddExistingWallet(
         val mode: Mode = Mode.RecoveryPhrase,
         val shouldSendOnboardingStarted: Boolean = false,
+        val analyticsSource: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.ImportWallet,
     ) : AppRoute(path = "/add_existing_wallet") {
 
         @Serializable
@@ -569,6 +575,9 @@ sealed class AppRoute(val path: String) : Route {
     data object TangemPayHotWalletOnboarding : AppRoute(path = "/tangem_pay_hot_wallet_onboarding")
 
     @Serializable
+    data object AllServices : AppRoute(path = "/all_services")
+
+    @Serializable
     data class TangemPayCampaign(
         val campaignKey: String,
     ) : AppRoute(path = "/tangem_pay_campaign")
@@ -637,6 +646,31 @@ sealed class AppRoute(val path: String) : Route {
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
     ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+
+    @Serializable
+    data class EarnEntry(
+        val userWalletId: UserWalletId,
+        val cryptoCurrency: CryptoCurrency,
+        val source: Source,
+        val start: Start = Start.Auto,
+    ) : AppRoute(path = "/earn_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}") {
+
+        @Serializable
+        enum class Source { TokenPage, Markets, Deeplink, EarnBanner, YieldSheet, ForYou }
+
+        @Serializable
+        sealed interface Start {
+
+            @Serializable
+            data object Auto : Start
+
+            @Serializable
+            data class Picker(val preselected: EarnProductId? = null) : Start
+
+            @Serializable
+            data class Info(val productId: EarnProductId) : Start
+        }
+    }
 
     @Serializable
     data class Polymarket(

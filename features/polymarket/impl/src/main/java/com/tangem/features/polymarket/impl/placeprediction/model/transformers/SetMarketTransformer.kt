@@ -2,13 +2,13 @@ package com.tangem.features.polymarket.impl.placeprediction.model.transformers
 
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
+import com.tangem.features.polymarket.impl.common.endInstantOrNull
 import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.polymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
-import java.time.Instant
 
 /**
  * Fills the header the user reads before paying.
@@ -32,10 +32,8 @@ internal class SetMarketTransformer(
                 outcome = outcome.title,
             ),
             outcomePrice = outcome.probability?.formatPolymarketPrice(),
-            resolutionDateMillis = market.endDate?.toEpochMillisOrNull(),
+            resolutionDateMillis = market.endInstantOrNull()?.toEpochMilli(),
         ),
         isMarketAcceptingOrders = market.isAcceptingOrders,
     ).recomputeGate()
-
-    private fun String.toEpochMillisOrNull(): Long? = runCatching { Instant.parse(this).toEpochMilli() }.getOrNull()
 }

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.HoldToConfirm
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalHazeState
@@ -150,27 +151,44 @@ private fun ComponentPreview(state: TangemButtonStory) {
                 Density(density = baseDensity.density, fontScale = state.textScale)
             }
             CompositionLocalProvider(LocalDensity provides scaledDensity) {
-                TangemButton(
-                    variant = state.variant,
-                    size = state.size,
-                    isLoading = state.isLoading,
-                    isEnabled = state.isEnabled,
-                    iconStart = if (state.hasIconStart) {
-                        TangemIconUM.Icon(iconRes = R.drawable.ic_information_24)
-                    } else {
-                        null
-                    },
-                    iconEnd = if (state.hasIconEnd) {
-                        TangemIconUM.Icon(iconRes = R.drawable.ic_information_24)
-                    } else {
-                        null
-                    },
-                    text = if (state.hasText) stringReference("Button") else null,
-                    loadingText = if (state.hasLoadingText) stringReference("Loading") else null,
-                    onClick = {},
-                )
+                PreviewButton(state = state)
             }
         }
+    }
+}
+
+@Composable
+private fun PreviewButton(state: TangemButtonStory) {
+    val iconStart = if (state.hasIconStart) TangemIconUM.Icon(iconRes = R.drawable.ic_information_24) else null
+    val iconEnd = if (state.hasIconEnd) TangemIconUM.Icon(iconRes = R.drawable.ic_information_24) else null
+    val text = if (state.hasText) stringReference("Button") else null
+    val loadingText = if (state.hasLoadingText) stringReference("Loading") else null
+    val holdVariant = TangemButton.HoldVariant.entries.firstOrNull { it.name == state.variant.name }
+
+    if (state.isHoldToConfirm && holdVariant != null) {
+        TangemButton.HoldToConfirm(
+            variant = holdVariant,
+            size = state.size,
+            isLoading = state.isLoading,
+            isEnabled = state.isEnabled,
+            iconStart = iconStart,
+            iconEnd = iconEnd,
+            text = text,
+            loadingText = loadingText,
+            onConfirm = state.onHoldConfirm,
+        )
+    } else {
+        TangemButton(
+            variant = state.variant,
+            size = state.size,
+            isLoading = state.isLoading,
+            isEnabled = state.isEnabled,
+            iconStart = iconStart,
+            iconEnd = iconEnd,
+            text = text,
+            loadingText = loadingText,
+            onClick = {},
+        )
     }
 }
 
@@ -244,6 +262,11 @@ private fun Toggles(state: TangemButtonStory) {
             ToggleRow(label = "isLoading", checked = state.isLoading, onToggle = state.onLoadingToggle)
             ToggleRow(label = "loadingText", checked = state.hasLoadingText, onToggle = state.onLoadingTextToggle)
             ToggleRow(label = "isEnabled", checked = state.isEnabled, onToggle = state.onEnabledToggle)
+            ToggleRow(
+                label = "holdToConfirm (Brand / Primary)",
+                checked = state.isHoldToConfirm,
+                onToggle = state.onHoldToConfirmToggle,
+            )
             ToggleRow(label = "iconStart", checked = state.hasIconStart, onToggle = state.onIconStartToggle)
             ToggleRow(label = "iconEnd", checked = state.hasIconEnd, onToggle = state.onIconEndToggle)
             ToggleRow(label = "text", checked = state.hasText, onToggle = state.onTextToggle)

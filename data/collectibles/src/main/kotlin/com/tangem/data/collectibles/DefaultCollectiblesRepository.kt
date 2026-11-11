@@ -120,7 +120,7 @@ internal class DefaultCollectiblesRepository @Inject constructor(
             body = PurchaseTxSentRequestBody(txId = txId, txHash = txHash),
         ).getOrThrow()
 
-        CollectibleTxStatusConverter.convert(response.status)
+        CollectibleTxStatusConverter.convert(response)
     }
 
     override suspend fun getTxState(

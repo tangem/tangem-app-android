@@ -1,13 +1,9 @@
 package com.tangem.tests.swap
 
-import com.tangem.grow.datasource.config.Express
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.annotations.ApiEnv
-import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.openMainScreen
@@ -22,9 +18,6 @@ import org.junit.Test
 @HiltAndroidTest
 class SwapChooseTokenScreenTest : BaseTestCase() {
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
     @AllureId("8505")
     @DisplayName("Swap: check available to swap tokens list")
     @Test
@@ -82,9 +75,6 @@ class SwapChooseTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
     @AllureId("8506")
     @DisplayName("Swap: check search on choose swap token screen")
     @Test

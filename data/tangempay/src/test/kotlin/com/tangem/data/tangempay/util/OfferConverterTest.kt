@@ -7,10 +7,10 @@ import com.tangem.domain.tangempay.model.OrderType
 import com.tangem.domain.tangempay.model.plasticOffer
 import com.tangem.domain.tangempay.model.plasticReissueOffer
 import com.tangem.domain.tangempay.model.virtualOffer
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -18,7 +18,7 @@ import java.util.Currency
 internal class OfferConverterTest {
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun convert(model: ConvertModel) {
         // Act
         val actual = OfferConverter.convert(model.response)

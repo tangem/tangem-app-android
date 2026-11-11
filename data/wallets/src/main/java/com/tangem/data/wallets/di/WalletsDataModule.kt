@@ -20,6 +20,8 @@ import com.tangem.data.wallets.signing.InSessionKeyDeriver
 import com.tangem.data.wallets.signing.MockDeriveAndSignSession
 import com.tangem.data.wallets.store.PendingWalletCardsBackup
 import com.tangem.data.wallets.store.PendingWalletCardsBackupStore
+import com.tangem.data.wallets.store.RegisteredWalletCard
+import com.tangem.data.wallets.store.WalletCardsRegistryStore
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
@@ -41,6 +43,7 @@ import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.domain.wallets.signing.DeriveAndSignSession
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
 import dagger.Module
@@ -50,6 +53,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Provider
 import javax.inject.Singleton
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -85,6 +90,7 @@ internal object WalletsDataModule {
         tangemTechApi: TangemTechApi,
         dataStoreFactory: AppDataStoreFactory,
         appPreferencesStore: AppPreferencesStore,
+        onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
         deliveryScheduler: WalletCardsBackupDeliveryScheduler,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletCardsBackupRepository {
@@ -97,7 +103,15 @@ internal object WalletsDataModule {
                     fileName = "pending_wallet_cards_backups",
                 ),
             ),
+            registryStore = WalletCardsRegistryStore(
+                dataStore = dataStoreFactory.create(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(String.serializer(), RegisteredWalletCard.serializer()),
+                    fileName = "wallet_cards_registry",
+                ),
+            ),
             appPreferencesStore = appPreferencesStore,
+            onboardingV2FeatureToggles = onboardingV2FeatureToggles,
             deliveryScheduler = deliveryScheduler,
             dispatchers = dispatchers,
         )

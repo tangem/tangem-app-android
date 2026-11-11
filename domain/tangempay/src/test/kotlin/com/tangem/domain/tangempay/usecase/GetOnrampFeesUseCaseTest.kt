@@ -6,6 +6,7 @@ import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.model.AccountFeeGroupType
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -38,7 +39,7 @@ internal class GetOnrampFeesUseCaseTest {
                 name = "ACH",
                 paymentMethodId = "ACH",
                 group = AccountFeeGroupType.ONRAMP,
-                calculationType = AccountFee.CalculationType.FIXED,
+                calculationType = FeeCalculationType.FIXED,
                 amount = BigDecimal.ONE,
                 currency = "USD",
             ),

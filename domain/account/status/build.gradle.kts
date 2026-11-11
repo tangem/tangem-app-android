@@ -58,6 +58,7 @@ dependencies {
     testImplementation(projects.test.mock)
     testImplementation(projects.domain.wallets.models)
     testImplementation(projects.domain.staking.models)
+    testImplementation(projects.domain.yieldSupply)
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(deps.kotlin.datetime)

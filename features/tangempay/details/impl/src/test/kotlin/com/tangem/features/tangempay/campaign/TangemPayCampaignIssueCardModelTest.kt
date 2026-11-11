@@ -5,8 +5,6 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.extensions.TextReference
@@ -28,12 +26,13 @@ import com.tangem.domain.tangempay.model.IssueAdditionalCardResult
 import com.tangem.domain.tangempay.usecase.IssueAdditionalCardUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.components.TangemPayCampaignIssueCardComponent
 import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.payOrder
 import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.tariffPlanState
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.CapturingSlot
 import io.mockk.clearMocks
@@ -48,7 +47,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -62,10 +60,8 @@ import java.math.BigDecimal
 import java.util.Currency
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class TangemPayCampaignIssueCardModelTest {
+internal class TangemPayCampaignIssueCardModelTest : TangemPayModelTestBase() {
 
-    private val router: Router = mockk(relaxed = true)
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val issueAdditionalCardUseCase: IssueAdditionalCardUseCase = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
@@ -322,7 +318,7 @@ internal class TangemPayCampaignIssueCardModelTest {
     inner class Close {
 
         @Test
-        fun `WHEN close THEN status refetched AND Payment account opened`() = runTest {
+        fun `GIVEN the campaign screen WHEN close THEN status refetched AND Payment account opened`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
 
@@ -378,7 +374,6 @@ internal class TangemPayCampaignIssueCardModelTest {
     }
 
     private fun createModel(testScope: TestScope): TangemPayCampaignIssueCardModel {
-        val testDispatcher = StandardTestDispatcher(testScope.testScheduler)
         return TangemPayCampaignIssueCardModel(
             paramsContainer = MutableParamsContainer(
                 TangemPayCampaignIssueCardComponent.Params(
@@ -389,13 +384,7 @@ internal class TangemPayCampaignIssueCardModelTest {
                     feeCurrency = Currency.getInstance("USD"),
                 ),
             ),
-            dispatchers = TestingCoroutineDispatcherProvider(
-                main = testDispatcher,
-                mainImmediate = testDispatcher,
-                io = testDispatcher,
-                default = testDispatcher,
-                single = testDispatcher,
-            ),
+            dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             router = router,
             uiMessageSender = uiMessageSender,
             issueAdditionalCardUseCase = issueAdditionalCardUseCase,

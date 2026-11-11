@@ -164,12 +164,27 @@ internal class DefaultOnrampRepository(
         statusConverter.convert(response)
     }
 
+    override suspend fun saveSelectedCurrency(currency: OnrampCurrency) = withContext(dispatchers.io) {
+        appPreferencesStore.storeObject(key = growPreferencesKeys.onrampSelectedCurrencyKey, value = currency)
+        saveDefaultCurrency(currency)
+    }
+
     override suspend fun saveDefaultCurrency(currency: OnrampCurrency) = withContext(dispatchers.io) {
         val country = getDefaultCountrySync() ?: return@withContext
         appPreferencesStore.storeObject<OnrampCountryDTO>(
             key = growPreferencesKeys.onrampDefaultCountryKey,
             value = countryConverter.convertBack(country.copy(defaultCurrency = currency)),
         )
+    }
+
+    override suspend fun getSelectedCurrencySync(): OnrampCurrency? = withContext(dispatchers.io) {
+        appPreferencesStore.getObjectSyncOrNull<OnrampCurrency>(growPreferencesKeys.onrampSelectedCurrencyKey)
+    }
+
+    override suspend fun clearDefaultCountry() {
+        withContext(NonCancellable + dispatchers.io) {
+            appPreferencesStore.editData { it.remove(growPreferencesKeys.onrampDefaultCountryKey) }
+        }
     }
 
     override suspend fun getDefaultCurrencySync(): OnrampCurrency? = withContext(dispatchers.io) {

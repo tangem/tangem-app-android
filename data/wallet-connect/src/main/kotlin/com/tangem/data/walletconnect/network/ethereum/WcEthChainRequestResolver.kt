@@ -88,10 +88,10 @@ internal class WcEthChainRequestResolver @Inject constructor(
     }
 
     /** Both EIP-3085 and EIP-3326 take exactly one entry carrying a `0x`-prefixed chain ID. */
-    private fun parseChainId(rawParams: String): Int? {
+    private fun parseChainId(rawParams: String): Long? {
         val entries = moshi.fromJson<List<WcEthAddChain>>(rawParams).getOrNull() ?: return null
         val entry = entries.singleOrNull() ?: return null
-        return entry.chainId.removePrefix(HEX_PREFIX).toIntOrNull(radix = HEX_RADIX)
+        return entry.chainId.removePrefix(HEX_PREFIX).toLongOrNull(radix = HEX_RADIX)
     }
 
     sealed interface Resolution {

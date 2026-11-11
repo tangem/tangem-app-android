@@ -5,6 +5,8 @@ import com.tangem.domain.models.currency.balance.ContributionResolver
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
+import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
@@ -20,11 +22,23 @@ import javax.inject.Inject
  * The contribution adds **zero** to any total; it exists so that freshness and the partition data travel through
  * the same generic channel as every other extra balance.
  *
- * [REDACTED_TODO_COMMENT]
+ * Silent under [TokensFeatureToggles.isYieldContributionEnabled]: the Yield Module positions provider in
+ * `domain/yield-supply` contributes instead.
  */
-internal class YieldSupplyContributionProvider @Inject constructor() : BalanceContributionProvider {
+@RemoveWithToggle("TWI_1948_YIELD_CONTRIBUTION_ENABLED")
+internal class YieldSupplyContributionProvider @Inject constructor(
+    private val tokensFeatureToggles: TokensFeatureToggles,
+) : BalanceContributionProvider {
 
-    override fun contributions(userWallet: UserWallet): Flow<ContributionResolver> = flowOf(RESOLVER)
+    override fun contributions(userWallet: UserWallet): Flow<ContributionResolver> {
+        val resolver = if (tokensFeatureToggles.isYieldContributionEnabled) {
+            ContributionResolver.Empty
+        } else {
+            RESOLVER
+        }
+
+        return flowOf(resolver)
+    }
 
     private companion object {
 

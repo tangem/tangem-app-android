@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -31,7 +32,9 @@ import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
 import com.tangem.domain.cloudbackup.restore.CloudRestoreResultHolder
 import com.tangem.features.hotwallet.restorecloudbackup.RestoreCloudBackupComponent
 import com.tangem.features.hotwallet.restorecloudbackup.entity.RestoreCloudBackupUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -46,6 +49,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class RestoreCloudBackupModelTest {
@@ -704,6 +709,73 @@ internal class RestoreCloudBackupModelTest {
             assertThat(list.items.map { it.isAlreadyAdded }).containsExactly(false, false)
             model.onDestroy()
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AnalyticsSource {
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(hotWalletImporter, restoreCloudBackupUseCase, mnemonicRepository, callbacks)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN params with a source WHEN restore clicked THEN the import reports that source`(
+            model: SourceModel,
+        ) = runTest {
+            // Arrange
+            every { paramsContainer.require<RestoreCloudBackupComponent.Params>() } returns model.params(callbacks)
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
+                restoredBackup(mnemonic = "word1 word2").right()
+            every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
+            coEvery {
+                hotWalletImporter.import(any(), any(), any(), any(), any(), any(), any())
+            } returns walletId.right()
+            val restoreModel = createModel(this, holderOf(backupInfo))
+            advanceUntilIdle()
+
+            // Act
+            (restoreModel.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+            (restoreModel.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                hotWalletImporter.import(
+                    scope = any(),
+                    mnemonic = mnemonic,
+                    passphrase = null,
+                    name = "My Wallet",
+                    isSeedPhraseBackedUp = false,
+                    creationType = any(),
+                    analyticsSource = model.expectedSource,
+                )
+            }
+            restoreModel.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            SourceModel(
+                name = "default source",
+                params = { RestoreCloudBackupComponent.Params(it) },
+                expectedSource = AnalyticsParam.ScreensSources.ImportWallet,
+            ),
+            SourceModel(
+                name = "add new wallet source",
+                params = { RestoreCloudBackupComponent.Params(it, AnalyticsParam.ScreensSources.AddNewWallet) },
+                expectedSource = AnalyticsParam.ScreensSources.AddNewWallet,
+            ),
+        )
+    }
+
+    internal data class SourceModel(
+        val name: String,
+        val params: (RestoreCloudBackupComponent.ModelCallbacks) -> RestoreCloudBackupComponent.Params,
+        val expectedSource: AnalyticsParam.ScreensSources,
+    ) {
+        override fun toString(): String = name
     }
 
     private fun restoredBackup(

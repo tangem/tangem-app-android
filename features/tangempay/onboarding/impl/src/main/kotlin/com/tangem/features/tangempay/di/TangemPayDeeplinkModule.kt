@@ -2,12 +2,11 @@ package com.tangem.features.tangempay.di
 
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkKey
-import com.tangem.features.tangempay.deeplink.DefaultTangemPayOnboardDeepLinkHandler
-import com.tangem.features.tangempay.deeplink.DefaultTangemPayAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.DefaultTangemPayMainDeepLinkHandler
-import com.tangem.features.tangempay.deeplink.TangemPayOnboardDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.DefaultTangemPayOnboardDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayOnboardDeepLinkHandler
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -33,10 +32,9 @@ internal interface TangemPayDeeplinkModule {
     ): TangemPayMainDeepLinkHandler.Factory
 
     @Binds
-    @Singleton
-    fun bindTangemPayAccountDeepLinkHandlerFactory(
-        impl: DefaultTangemPayAccountDeepLinkHandler.Factory,
-    ): TangemPayAccountDeepLinkHandler.Factory
+    @IntoMap
+    @DeepLinkKey(TangemPayAccountDeepLinkHandler.DEEPLINK_KEY)
+    fun bindTangemPayAccountDeepLinkHandler(impl: TangemPayAccountDeepLinkHandler): DeepLinkHandler
 
     companion object {
 
@@ -72,14 +70,6 @@ internal interface TangemPayDeeplinkModule {
         @DeepLinkKey(DefaultTangemPayMainDeepLinkHandler.HTTPS_DEEPLINK_KEY)
         fun provideTangemPayMainHttpsDeepLinkHandler(factory: TangemPayMainDeepLinkHandler.Factory): DeepLinkHandler =
             tangemPayMainDeepLinkHandler(factory)
-
-        // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
-        // bound here as a DeepLinkHandler instead of a lambda over its factory.
-        @Provides
-        @IntoMap
-        @DeepLinkKey(DefaultTangemPayAccountDeepLinkHandler.DEEPLINK_KEY)
-        fun provideTangemPayAccountDeepLinkHandler(factory: TangemPayAccountDeepLinkHandler.Factory): DeepLinkHandler =
-            DeepLinkHandler { request -> factory.create(scope = request.scope, queryParams = request.queryParams) }
 
         private fun tangemPayOnboardDeepLinkHandler(factory: TangemPayOnboardDeepLinkHandler.Factory): DeepLinkHandler =
             DeepLinkHandler { request -> factory.create(uri = request.uri) }

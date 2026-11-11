@@ -13,7 +13,9 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.JointAccount
@@ -84,12 +86,13 @@ internal class JointSendDelegateTest {
             recipient = FIXTURE_RECIPIENT,
             amountWei = BigInteger("1000000000000000000"),
         )
+        val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe)
         coEvery {
-            createJointOperationUseCase(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
-        } returns Unit.right()
+            createJointOperationUseCase.prepare(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
+        } returns prepared.right()
 
         // Act
-        val actual = delegate.createOperation(
+        val actual = delegate.prepareOperation(
             account = account,
             currency = fixtureCoin,
             amount = BigDecimal.ONE,
@@ -98,17 +101,32 @@ internal class JointSendDelegateTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(actual).isEqualTo(prepared.right())
         coVerify(exactly = 1) {
-            createJointOperationUseCase(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
+            createJointOperationUseCase.prepare(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
         }
+        coVerify(exactly = 0) { createJointOperationUseCase.submit(any()) }
+    }
+
+    @Test
+    fun `GIVEN a prepared operation WHEN it is submitted THEN the use case submits exactly it`() = runTest {
+        // Arrange
+        val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Warning)
+        coEvery { createJointOperationUseCase.submit(prepared) } returns JointOperationCreateError.Malicious.left()
+
+        // Act
+        val actual = delegate.submitOperation(prepared = prepared)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationCreateError.Malicious.left())
+        coVerify(exactly = 1) { createJointOperationUseCase.submit(prepared) }
     }
 
     @Test
     fun `GIVEN an incomplete form WHEN the operation is created THEN the payload is rejected without a use case call`() =
         runTest {
             // Act
-            val actual = delegate.createOperation(
+            val actual = delegate.prepareOperation(
                 account = mockk(),
                 currency = fixtureCoin,
                 amount = BigDecimal.ONE,
@@ -118,7 +136,7 @@ internal class JointSendDelegateTest {
 
             // Assert
             assertThat(actual).isEqualTo(JointOperationCreateError.InvalidPayload.left())
-            coVerify(exactly = 0) { createJointOperationUseCase(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { createJointOperationUseCase.prepare(any(), any(), any(), any()) }
         }
 
     @Test
@@ -400,10 +418,12 @@ internal class JointSendDelegateTest {
         coEvery {
             gasTokenResolver.resolve(fixtureUsdc.network, fixtureUsdc.contractAddress, fixtureUsdc.id.rawCurrencyId)
         } returns gasToken.right()
-        coEvery { createJointOperationUseCase(account, fixtureUsdc.network, any(), gasToken) } returns Unit.right()
+        val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe)
+        coEvery { createJointOperationUseCase.prepare(account, fixtureUsdc.network, any(), gasToken) } returns
+            prepared.right()
 
         // Act
-        val actual = delegate.createOperation(
+        val actual = delegate.prepareOperation(
             account = account,
             currency = fixtureUsdc,
             amount = BigDecimal.ONE,
@@ -412,8 +432,8 @@ internal class JointSendDelegateTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) { createJointOperationUseCase(account, fixtureUsdc.network, any(), gasToken) }
+        assertThat(actual).isEqualTo(prepared.right())
+        coVerify(exactly = 1) { createJointOperationUseCase.prepare(account, fixtureUsdc.network, any(), gasToken) }
     }
 
     @Test
@@ -432,6 +452,10 @@ internal class JointSendDelegateTest {
 
         // Assert
         assertThat(actual).isSameInstanceAs(stored)
+    }
+
+    private fun prepared(verdict: JointOperationBlockaidGate.Verdict): PreparedJointOperation.Creation = mockk {
+        every { this@mockk.verdict } returns verdict
     }
 
     private companion object {

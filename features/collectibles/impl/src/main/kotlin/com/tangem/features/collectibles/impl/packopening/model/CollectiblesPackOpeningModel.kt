@@ -137,6 +137,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     init {
         loadMachine()
         recheckLinkage()
+        params.reopenTxId?.let { txId -> runOpenPack(OpenPackRequest.Reopen(txId)) }
     }
 
     private fun recheckLinkage() {
@@ -336,10 +337,16 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         }
     }
 
-    private fun showAutoBuyback(step: OpenPackStep.AutoBuybacked) {
+    private suspend fun showAutoBuyback(step: OpenPackStep.AutoBuybacked) {
+        step.pack?.imageFrontUrl?.let { url ->
+            withTimeoutOrNull(PackOpeningConst.CARD_IMAGES_TIMEOUT_MS.milliseconds) {
+                imagePreloader.preload(url).job.await()
+            }
+        }
+
         bottomSheetNavigation.activate(
             CollectiblesAutoBuybackConverter.convert(
-                CollectiblesAutoBuybackConverter.Input(amount = step.amount, price = machine?.total),
+                CollectiblesAutoBuybackConverter.Input(amount = step.amount, price = machine?.total, pack = step.pack),
             ),
         )
     }
@@ -360,7 +367,12 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
 
     fun onOpenAgain() {
         bottomSheetNavigation.dismiss()
-        router.pop()
+
+        if (params.reopenTxId == null) {
+            router.pop()
+        } else {
+            router.replaceCurrent(CollectiblesRoute.MachineDetails(externalId = params.externalId))
+        }
     }
 
     fun onExplorePacks() {

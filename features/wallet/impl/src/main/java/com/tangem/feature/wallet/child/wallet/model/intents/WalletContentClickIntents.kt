@@ -51,6 +51,8 @@ internal interface WalletContentClickIntents {
 
     fun onDetailsClick()
 
+    fun onAllServicesClick()
+
     fun onOrganizeTokensClick()
 
     fun onDismissMarketsTooltip()
@@ -133,6 +135,10 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onDetailsClick() {
         router.openDetailsScreen(stateHolder.getSelectedWalletId())
+    }
+
+    override fun onAllServicesClick() {
+        router.openAllServicesScreen()
     }
 
     override fun onOrganizeTokensClick() {

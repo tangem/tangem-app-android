@@ -226,6 +226,26 @@ internal class SwapNotificationsFactoryTest {
     }
 
     @Test
+    fun `GIVEN DEX fee paid in the swapped token WHEN insufficient fee THEN insufficient funds error shown`() {
+        // Arrange
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
+        val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.DEX)
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = quoteModel.fromTokenInfo.swapCurrencyStatus.status,
+            swapFee = buildSwapFee(),
+            feeError = null,
+            isFeeCurrencyInStack = false,
+        )
+
+        // Assert
+        assertThat(notifications).contains(SwapNotificationUM.Error.InsufficientFunds)
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.UnableToCoverFeeWarning>()).isEmpty()
+    }
+
+    @Test
     fun `GIVEN DEX with SEND txType and gasless support WHEN insufficient fee THEN warning suppressed like CEX`() {
         // Arrange
         every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true

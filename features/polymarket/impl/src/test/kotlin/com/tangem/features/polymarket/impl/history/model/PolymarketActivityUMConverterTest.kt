@@ -8,16 +8,20 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.polymarket.model.PolymarketActivity
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityRowUM
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivitySubtitleUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.StringsSigns.MINUS
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.Locale
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PolymarketActivityUMConverterTest {
 
     private val previousLocale = Locale.getDefault()
@@ -119,6 +123,58 @@ internal class PolymarketActivityUMConverterTest {
         assertThat(rows.first().onClick).isNotNull()
         assertThat(rows.last().onClick).isNotNull()
     }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN an activity amount WHEN converted THEN the row shows whole cents or a dash when they round to zero`(
+        case: RowAmountCase,
+    ) {
+        // Arrange
+        val activity = createHistoryActivity(type = case.type)
+            .copy(amount = BigDecimal(case.amount), redeemResult = case.redeemResult)
+
+        // Act
+        val actual = PolymarketActivityUMConverter(clock).convert(listOf(activity)).single().activities.single()
+
+        // Assert
+        assertThat(actual.amount).isEqualTo(stringReference(case.expected))
+    }
+
+    private fun provideTestModels() = listOf(
+        RowAmountCase(PolymarketActivity.Type.WITHDRAW, amount = "0.004", expected = MINUS),
+        RowAmountCase(PolymarketActivity.Type.DEPOSIT, amount = "0.006", expected = "+ $0.01"),
+        RowAmountCase(PolymarketActivity.Type.WITHDRAW, amount = "0.006", expected = "- $0.01"),
+        RowAmountCase(PolymarketActivity.Type.BUY, amount = "0.005", expected = "- $0.01"),
+        RowAmountCase(PolymarketActivity.Type.SELL, amount = "0.004999999", expected = MINUS),
+        RowAmountCase(PolymarketActivity.Type.DEPOSIT, amount = "0", expected = MINUS),
+        RowAmountCase(PolymarketActivity.Type.WITHDRAW, amount = "-0.004", expected = MINUS),
+        RowAmountCase(PolymarketActivity.Type.WITHDRAW, amount = "-10", expected = "- $10.00"),
+        RowAmountCase(
+            PolymarketActivity.Type.REDEEM,
+            PolymarketActivity.RedeemResult.WON,
+            amount = "9.995",
+            expected = "+ $10.00",
+        ),
+        RowAmountCase(
+            PolymarketActivity.Type.REDEEM,
+            PolymarketActivity.RedeemResult.SPLIT,
+            amount = "0.004",
+            expected = MINUS,
+        ),
+        RowAmountCase(
+            PolymarketActivity.Type.REDEEM,
+            PolymarketActivity.RedeemResult.LOST,
+            amount = "5",
+            expected = MINUS,
+        ),
+    )
+
+    data class RowAmountCase(
+        val type: PolymarketActivity.Type,
+        val redeemResult: PolymarketActivity.RedeemResult? = null,
+        val amount: String,
+        val expected: String,
+    )
 }
 
 internal fun createHistoryActivity(

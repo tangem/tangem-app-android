@@ -4,52 +4,45 @@ import com.tangem.domain.models.tangempay.TangemPayImage
 import com.google.common.truth.Truth.assertThat
 import com.tangem.spend.datasource.tangempay.models.response.CustomerMeResponse
 import com.tangem.domain.models.account.TangemPayTariffPlan
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayTariffPlanConverterTest {
 
-    @Test
-    fun `GIVEN null value WHEN convert THEN returns null`() {
-        assertThat(TangemPayTariffPlanConverter.convert(null)).isNull()
-    }
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN null plan or plan missing a required field WHEN convert THEN returns null`(model: InvalidPlanModel) {
+        // Act
+        val result = TangemPayTariffPlanConverter.convert(model.plan)
 
-    @Test
-    fun `GIVEN missing id WHEN convert THEN returns null`() {
-        val value = tariffPlan(id = null)
-
-        assertThat(TangemPayTariffPlanConverter.convert(value)).isNull()
-    }
-
-    @Test
-    fun `GIVEN missing name WHEN convert THEN returns null`() {
-        val value = tariffPlan(name = null)
-
-        assertThat(TangemPayTariffPlanConverter.convert(value)).isNull()
-    }
-
-    @Test
-    fun `GIVEN missing type WHEN convert THEN returns null`() {
-        val value = tariffPlan(type = null)
-
-        assertThat(TangemPayTariffPlanConverter.convert(value)).isNull()
-    }
-
-    @Test
-    fun `GIVEN missing programName WHEN convert THEN returns null`() {
-        val value = tariffPlan(programName = null)
-
-        assertThat(TangemPayTariffPlanConverter.convert(value)).isNull()
+        // Assert
+        assertThat(result).isNull()
     }
 
     @Test
     fun `GIVEN basic tier in mixed case WHEN convert THEN isBasicTier is true`() {
+        // Arrange
         val value = tariffPlan(type = "Basic")
 
+        // Act
         val result = TangemPayTariffPlanConverter.convert(value)
 
-        assertThat(result?.tierId).isEqualTo("Basic")
-        assertThat(result?.isBasicTier).isTrue()
+        // Assert
+        val expected = TangemPayTariffPlan(
+            id = PLAN_ID,
+            tierId = "Basic",
+            isBasicTier = true,
+            name = PLAN_NAME,
+            programName = PROGRAM_NAME,
+            descriptionItems = emptyList(),
+            images = emptyList(),
+            fees = emptyList(),
+        )
+        assertThat(result).isEqualTo(expected)
     }
 
     @Test
@@ -200,10 +193,28 @@ internal class TangemPayTariffPlanConverterTest {
         val result = TangemPayTariffPlanConverter.convert(value)
 
         // Assert
-        assertThat(result?.descriptionItems).isEmpty()
-        assertThat(result?.images).isEmpty()
-        assertThat(result?.fees).isEmpty()
+        val expected = TangemPayTariffPlan(
+            id = PLAN_ID,
+            tierId = "BASIC",
+            isBasicTier = true,
+            name = PLAN_NAME,
+            programName = PROGRAM_NAME,
+            descriptionItems = emptyList(),
+            images = emptyList(),
+            fees = emptyList(),
+        )
+        assertThat(result).isEqualTo(expected)
     }
+
+    private fun provideTestModels() = listOf(
+        InvalidPlanModel(plan = null),
+        InvalidPlanModel(plan = tariffPlan(id = null)),
+        InvalidPlanModel(plan = tariffPlan(name = null)),
+        InvalidPlanModel(plan = tariffPlan(type = null)),
+        InvalidPlanModel(plan = tariffPlan(programName = null)),
+    )
+
+    internal data class InvalidPlanModel(val plan: CustomerMeResponse.TariffPlan?)
 
     private fun tariffPlan(
         id: String? = PLAN_ID,

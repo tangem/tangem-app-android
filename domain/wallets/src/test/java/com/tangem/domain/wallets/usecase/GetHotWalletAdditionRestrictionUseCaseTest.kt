@@ -10,9 +10,11 @@ import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
@@ -45,6 +47,19 @@ internal class GetHotWalletAdditionRestrictionUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN multiple hot wallets disabled WHEN invoke THEN the wallets list is not read`() = runTest {
+        // Arrange
+        isMultipleHotWalletsEnabled = false
+
+        // Act
+        val actual = useCase()
+
+        // Assert
+        assertThat(actual).isNull()
+        coVerify(exactly = 0) { userWalletsListRepository.userWalletsSync() }
     }
 
     private fun provideTestModels() = listOf(

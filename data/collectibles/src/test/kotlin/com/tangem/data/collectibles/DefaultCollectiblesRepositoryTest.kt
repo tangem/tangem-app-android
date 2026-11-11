@@ -338,13 +338,13 @@ internal class DefaultCollectiblesRepositoryTest {
             runTest {
                 // Arrange
                 coEvery { collectiblesApi.purchaseTxSent(any(), any()) } returns
-                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PURCHASE_TX_HASH))
+                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PURCHASE_TX_SENT))
 
                 // Act
                 val actual = repository.reportPurchaseTxSent(userWalletId, txId = "tx-id", txHash = "hash")
 
                 // Assert
-                assertThat(actual).isEqualTo(CollectibleTxStatus.PURCHASE_TX_HASH)
+                assertThat(actual).isEqualTo(CollectibleTxStatus.PURCHASE_TX_SENT)
                 coVerify(exactly = 1) {
                     collectiblesApi.purchaseTxSent(
                         userWalletId = userWalletId.stringValue,

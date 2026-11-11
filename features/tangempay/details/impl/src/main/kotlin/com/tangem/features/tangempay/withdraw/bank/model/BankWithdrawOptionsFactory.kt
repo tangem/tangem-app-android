@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
-import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import kotlinx.collections.immutable.toImmutableList
@@ -57,7 +57,7 @@ internal object BankWithdrawOptionsFactory {
     }
 
     private fun isFixedFeeRouteRail(destination: OfframpDestination): Boolean =
-        destination.rail in ROUTE_RAILS && destination.fee.calculationType == AccountFee.CalculationType.FIXED
+        destination.rail in ROUTE_RAILS && destination.fee.calculationType == FeeCalculationType.FIXED
 
     private fun currencyOrNull(code: String?): Currency? =
         code?.let { runCatching { Currency.getInstance(it) }.getOrNull() }

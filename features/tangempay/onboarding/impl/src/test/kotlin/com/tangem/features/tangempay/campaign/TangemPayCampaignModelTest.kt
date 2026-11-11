@@ -29,7 +29,7 @@ import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -39,7 +39,6 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -706,18 +705,11 @@ internal class TangemPayCampaignModelTest {
     }
 
     private fun createModel(testScope: TestScope): TangemPayCampaignModel {
-        val testDispatcher = StandardTestDispatcher(testScope.testScheduler)
         return TangemPayCampaignModel(
             paramsContainer = MutableParamsContainer(
                 TangemPayCampaignComponent.Params(campaignKey = CAMPAIGN_KEY),
             ),
-            dispatchers = TestingCoroutineDispatcherProvider(
-                main = testDispatcher,
-                mainImmediate = testDispatcher,
-                io = testDispatcher,
-                default = testDispatcher,
-                single = testDispatcher,
-            ),
+            dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             router = router,
             uiMessageSender = uiMessageSender,
             userWalletsListRepository = userWalletsListRepository,

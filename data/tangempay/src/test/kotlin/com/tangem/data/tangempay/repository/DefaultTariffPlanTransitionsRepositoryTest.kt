@@ -47,33 +47,33 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
 
     @Test
     fun `GIVEN backend error WHEN getTransitions THEN returns error`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery { tangemPayApi.getTariffPlanTransitions(any()) } returns
             ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<TariffPlanTransitionsResponse>
 
-        // WHEN
+        // Act
         val result = repository.getTransitions(USER_WALLET_ID)
 
-        // THEN
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
     }
 
     @Test
     fun `GIVEN null result WHEN getTransitions THEN returns empty list`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery { tangemPayApi.getTariffPlanTransitions(any()) } returns
             ApiResponse.Success(TariffPlanTransitionsResponse(result = null))
 
-        // WHEN
+        // Act
         val result = repository.getTransitions(USER_WALLET_ID)
 
-        // THEN
+        // Assert
         assertThat(result.getOrNull()).isEqualTo(emptyList<TangemPayTariffPlanTransition>())
     }
 
     @Test
     fun `GIVEN valid transitions WHEN getTransitions THEN maps them to domain`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery { tangemPayApi.getTariffPlanTransitions(any()) } returns ApiResponse.Success(
             TariffPlanTransitionsResponse(
                 result = listOf(
@@ -82,23 +82,14 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
             ),
         )
 
-        // WHEN
+        // Act
         val result = repository.getTransitions(USER_WALLET_ID)
 
-        // THEN
+        // Assert
         val expected = listOf(
             TangemPayTariffPlanTransition(
                 type = TangemPayTariffPlanTransition.Type.UPGRADE,
-                plan = TangemPayTariffPlan(
-                    id = PLAN_ID,
-                    tierId = "PLUS",
-                    isBasicTier = false,
-                    name = PLAN_NAME,
-                    programName = PROGRAM_NAME,
-                    descriptionItems = emptyList(),
-                    images = emptyList(),
-                    fees = emptyList(),
-                ),
+                plan = domainPlan(),
             ),
         )
         assertThat(result.getOrNull()).isEqualTo(expected)
@@ -106,7 +97,7 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
 
     @Test
     fun `GIVEN a transition with unconvertible plan WHEN getTransitions THEN it is filtered out`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery { tangemPayApi.getTariffPlanTransitions(any()) } returns ApiResponse.Success(
             TariffPlanTransitionsResponse(
                 result = listOf(
@@ -117,73 +108,88 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
             ),
         )
 
-        // WHEN
+        // Act
         val result = repository.getTransitions(USER_WALLET_ID)
 
-        // THEN
-        val transitions = result.getOrNull().orEmpty()
-        assertThat(transitions.map { it.type })
-            .containsExactly(TangemPayTariffPlanTransition.Type.ACTIVATION)
+        // Assert
+        assertThat(result.getOrNull()).containsExactly(
+            TangemPayTariffPlanTransition(
+                type = TangemPayTariffPlanTransition.Type.ACTIVATION,
+                plan = domainPlan(),
+            ),
+        )
     }
 
     @Test
     fun `GIVEN success WHEN setPendingTransition THEN sends pending plan id and returns Unit`() = runTest {
-        // GIVEN
+        // Arrange
         val bodySlot = slot<SetPendingTariffPlanTransitionRequest>()
         coEvery {
             tangemPayApi.setPendingTariffPlanTransition(any(), capture(bodySlot))
         } returns ApiResponse.Success(Unit)
 
-        // WHEN
+        // Act
         val result = repository.setPendingTransition(USER_WALLET_ID, PENDING_PLAN_ID)
 
-        // THEN
-        assertThat(result.isRight()).isTrue()
-        assertThat(bodySlot.captured.pendingTariffPlanId).isEqualTo(PENDING_PLAN_ID)
+        // Assert
+        assertThat(result).isEqualTo(Unit.right())
+        assertThat(bodySlot.captured)
+            .isEqualTo(SetPendingTariffPlanTransitionRequest(pendingTariffPlanId = PENDING_PLAN_ID))
     }
 
     @Test
     fun `GIVEN backend error WHEN setPendingTransition THEN returns error`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery {
             tangemPayApi.setPendingTariffPlanTransition(any(), any())
         } returns ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Unit>
 
-        // WHEN
+        // Act
         val result = repository.setPendingTransition(USER_WALLET_ID, PENDING_PLAN_ID)
 
-        // THEN
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
     }
 
     @Test
     fun `GIVEN success WHEN cancelPendingTransition THEN returns Unit`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery {
             tangemPayApi.cancelPendingTariffPlanTransition(any())
         } returns ApiResponse.Success(Unit)
 
-        // WHEN
+        // Act
         val result = repository.cancelPendingTransition(USER_WALLET_ID)
 
-        // THEN
-        assertThat(result.isRight()).isTrue()
+        // Assert
+        assertThat(result).isEqualTo(Unit.right())
         coVerify(exactly = 1) { tangemPayApi.cancelPendingTariffPlanTransition(AUTH_HEADER) }
     }
 
     @Test
     fun `GIVEN backend error WHEN cancelPendingTransition THEN returns error`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery {
             tangemPayApi.cancelPendingTariffPlanTransition(any())
         } returns ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Unit>
 
-        // WHEN
+        // Act
         val result = repository.cancelPendingTransition(USER_WALLET_ID)
 
-        // THEN
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
     }
+
+    private fun domainPlan() = TangemPayTariffPlan(
+        id = PLAN_ID,
+        tierId = "PLUS",
+        isBasicTier = false,
+        name = PLAN_NAME,
+        programName = PROGRAM_NAME,
+        descriptionItems = emptyList(),
+        images = emptyList(),
+        fees = emptyList(),
+    )
 
     private fun tariffPlan(id: String? = PLAN_ID) = CustomerMeResponse.TariffPlan(
         id = id,

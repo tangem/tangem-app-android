@@ -55,6 +55,7 @@ data class EarnHeadline(
     val rate: EarnProductRate,
     val isActive: Boolean,
     val badge: TextReference,
+    val badgeAccent: EarnBadgeAccent,
     val route: Route?,
 )
 
@@ -62,3 +63,9 @@ data class EarnHeadline(
 data class EarnProductRate(val fraction: BigDecimal, val type: EarnRateType)
 
 enum class EarnRateType { APY, APR }
+
+/**
+ * How a host paints the badge of an active product. Names no product: a host must not know which one it shows. Every
+ * product and rate source declares its own, the winner's reaches the host in [EarnHeadline.badgeAccent].
+ */
+enum class EarnBadgeAccent { Info, Success }

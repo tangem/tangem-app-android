@@ -5,17 +5,17 @@ import com.tangem.domain.tangempay.model.CashbackDisplayMode
 import com.tangem.domain.tangempay.model.CashbackSummary
 import com.tangem.domain.tangempay.model.TangemPayCashback
 import com.tangem.spend.datasource.tangempay.models.response.CashbackSummaryResponse
+import com.tangem.test.core.ProvideTestModels
 import org.joda.time.DateTime
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CashbackSummaryConverterTest {
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun convert(model: ConvertModel) {
         // Act
         val actual = CashbackSummaryConverter.convert(model.response)

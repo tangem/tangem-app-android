@@ -4,7 +4,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TANGEM_SCHEME
 import java.net.URLEncoder
 
 /** Builder class for constructing deep links with a fluent interface */
-internal class DeepLinkBuilder {
+class DeepLinkBuilder {
 
     private var scheme: String = TANGEM_SCHEME
     private var action: String = ""

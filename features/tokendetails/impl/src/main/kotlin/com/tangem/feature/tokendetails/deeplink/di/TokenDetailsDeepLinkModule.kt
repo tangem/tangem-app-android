@@ -9,7 +9,6 @@ import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
@@ -20,10 +19,9 @@ import javax.inject.Singleton
 internal interface TokenDetailsDeepLinkModule {
 
     @Binds
-    @Singleton
-    fun bindWalletDeepLinkHandlerFactory(
-        impl: DefaultTokenDetailsDeepLinkHandler.Factory,
-    ): TokenDetailsDeepLinkHandler.Factory
+    @IntoMap
+    @DeepLinkKey(TokenDetailsDeepLinkHandler.DEEPLINK_KEY)
+    fun bindTokenDetailsDeepLinkHandler(impl: DefaultTokenDetailsDeepLinkHandler): DeepLinkHandler
 
     @Binds
     @Singleton
@@ -32,21 +30,4 @@ internal interface TokenDetailsDeepLinkModule {
     @Binds
     @Singleton
     fun bindTokenDetailsDeepLinkActionListener(impl: DefaultExpressDeepLinkTrigger): ExpressDeepLinkListener
-
-    companion object {
-
-        // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
-        // bound here as a DeepLinkHandler instead of a lambda over its factory.
-        @Provides
-        @IntoMap
-        @DeepLinkKey(DefaultTokenDetailsDeepLinkHandler.DEEPLINK_KEY)
-        fun provideTokenDetailsDeepLinkHandler(factory: TokenDetailsDeepLinkHandler.Factory): DeepLinkHandler =
-            DeepLinkHandler { request ->
-                factory.create(
-                    coroutineScope = request.scope,
-                    queryParams = request.queryParams,
-                    isFromOnNewIntent = request.isFromOnNewIntent,
-                )
-            }
-    }
 }

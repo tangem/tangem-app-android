@@ -12,6 +12,8 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
 internal class SubmitTariffTransitionUseCaseTest {
 
@@ -23,69 +25,49 @@ internal class SubmitTariffTransitionUseCaseTest {
         setPendingTransition = setPendingTransition,
     )
 
-    @Test
-    fun `GIVEN activation transition WHEN invoke THEN creates transition order`() = runTest {
-        // GIVEN
-        val transition = transition(TangemPayTariffPlanTransition.Type.ACTIVATION)
-        coEvery {
-            createTransitionOrder(USER_WALLET_ID, PLAN_ID, TangemPayTariffPlanTransition.Type.ACTIVATION)
-        } returns Unit.right()
+    @ParameterizedTest
+    @EnumSource(TangemPayTariffPlanTransition.Type::class, names = ["ACTIVATION", "UPGRADE"])
+    fun `GIVEN activation or upgrade transition WHEN invoke THEN creates transition order`(
+        type: TangemPayTariffPlanTransition.Type,
+    ) = runTest {
+        // Arrange
+        val transition = transition(type)
+        coEvery { createTransitionOrder(USER_WALLET_ID, PLAN_ID, type) } returns Unit.right()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, transition)
 
-        // THEN
+        // Assert
         assertThat(result.isRight()).isTrue()
-        coVerify(exactly = 1) {
-            createTransitionOrder(USER_WALLET_ID, PLAN_ID, TangemPayTariffPlanTransition.Type.ACTIVATION)
-        }
-        coVerify(exactly = 0) { setPendingTransition(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN upgrade transition WHEN invoke THEN creates transition order`() = runTest {
-        // GIVEN
-        val transition = transition(TangemPayTariffPlanTransition.Type.UPGRADE)
-        coEvery {
-            createTransitionOrder(USER_WALLET_ID, PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
-        } returns Unit.right()
-
-        // WHEN
-        val result = useCase(USER_WALLET_ID, transition)
-
-        // THEN
-        assertThat(result.isRight()).isTrue()
-        coVerify(exactly = 1) {
-            createTransitionOrder(USER_WALLET_ID, PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
-        }
+        coVerify(exactly = 1) { createTransitionOrder(USER_WALLET_ID, PLAN_ID, type) }
         coVerify(exactly = 0) { setPendingTransition(any(), any()) }
     }
 
     @Test
     fun `GIVEN createTransitionOrder fails WHEN invoke THEN returns Left`() = runTest {
-        // GIVEN
+        // Arrange
         val transition = transition(TangemPayTariffPlanTransition.Type.UPGRADE)
         coEvery {
             createTransitionOrder(USER_WALLET_ID, PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
         } returns TangemPayApiError.Unspecified.left()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, transition)
 
-        // THEN
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
     }
 
     @Test
     fun `GIVEN downgrade transition WHEN invoke THEN sets pending transition`() = runTest {
-        // GIVEN
+        // Arrange
         val transition = transition(TangemPayTariffPlanTransition.Type.DOWNGRADE)
         coEvery { setPendingTransition(USER_WALLET_ID, PLAN_ID) } returns Unit.right()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, transition)
 
-        // THEN
+        // Assert
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 1) { setPendingTransition(USER_WALLET_ID, PLAN_ID) }
         coVerify(exactly = 0) { createTransitionOrder(any(), any(), any()) }
@@ -93,40 +75,29 @@ internal class SubmitTariffTransitionUseCaseTest {
 
     @Test
     fun `GIVEN setPendingTransition fails WHEN invoke THEN returns Left`() = runTest {
-        // GIVEN
+        // Arrange
         val transition = transition(TangemPayTariffPlanTransition.Type.DOWNGRADE)
         coEvery { setPendingTransition(USER_WALLET_ID, PLAN_ID) } returns TangemPayApiError.Unspecified.left()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, transition)
 
-        // THEN
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
     }
 
-    @Test
-    fun `GIVEN system downgrade transition WHEN invoke THEN returns Left without side effects`() = runTest {
-        // GIVEN
-        val transition = transition(TangemPayTariffPlanTransition.Type.SYSTEM_DOWNGRADE)
+    @ParameterizedTest
+    @EnumSource(TangemPayTariffPlanTransition.Type::class, names = ["SYSTEM_DOWNGRADE", "UNKNOWN"])
+    fun `GIVEN system downgrade or unknown transition WHEN invoke THEN returns Left without side effects`(
+        type: TangemPayTariffPlanTransition.Type,
+    ) = runTest {
+        // Arrange
+        val transition = transition(type)
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, transition)
 
-        // THEN
-        assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
-        coVerify(exactly = 0) { createTransitionOrder(any(), any(), any()) }
-        coVerify(exactly = 0) { setPendingTransition(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN unknown transition WHEN invoke THEN returns Left without side effects`() = runTest {
-        // GIVEN
-        val transition = transition(TangemPayTariffPlanTransition.Type.UNKNOWN)
-
-        // WHEN
-        val result = useCase(USER_WALLET_ID, transition)
-
-        // THEN
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
         coVerify(exactly = 0) { createTransitionOrder(any(), any(), any()) }
         coVerify(exactly = 0) { setPendingTransition(any(), any()) }

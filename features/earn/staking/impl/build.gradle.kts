@@ -43,4 +43,5 @@ dependencies {
     testImplementation(projects.test.mock)
     testImplementation(projects.common.test)
     testImplementation(tangemDeps.blockchain)
+    testImplementation(deps.kotlin.datetime)
 }

@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import arrow.core.Either
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.childSlot
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.footers.SendingText
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
@@ -27,6 +29,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.common.ui.blockaid.BlockaidBottomSheetComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.amount.SendAmountComponentParams
@@ -94,6 +97,14 @@ internal class SendConfirmComponent(
 
     private val isJointAccount = params.accountFlow.value is Account.Joint
 
+    private val jointBlockaidSlot = childSlot(
+        source = model.jointBlockaidNavigation,
+        serializer = null,
+        handleBackButton = false,
+        key = "sendConfirmJointBlockaid",
+        childFactory = { kind, _ -> BlockaidBottomSheetComponent(state = model.jointBlockaidSheetUM(kind)) },
+    )
+
     private val feeSelectorBlockComponent = feeSelectorComponentFactory.create(
         context = appComponentContext,
         params = FeeSelectorParams.FeeSelectorBlockParams(
@@ -139,6 +150,7 @@ internal class SendConfirmComponent(
             val confirmUM = state.confirmUM as? ConfirmUM.Content
             blockClickEnableFlow.value = confirmUM?.isSending == false
         }.launchIn(componentScope)
+        model.restoreJointBlockaidSheet()
     }
 
     fun updateEditedState(state: SendUM) {
@@ -165,6 +177,7 @@ internal class SendConfirmComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val notificationState by notificationsComponent.state.collectAsStateWithLifecycle()
+        val jointBlockaid by jointBlockaidSlot.subscribeAsState()
 
         SendConfirmContent(
             sendUM = state,
@@ -174,6 +187,7 @@ internal class SendConfirmComponent(
             notificationsComponent = notificationsComponent,
             notificationsUM = notificationState,
         )
+        jointBlockaid.child?.instance?.BottomSheet()
     }
 
     @Composable
