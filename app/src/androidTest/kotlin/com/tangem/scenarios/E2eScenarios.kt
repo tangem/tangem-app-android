@@ -26,6 +26,7 @@ import com.tangem.screens.onPortfolioSelectorSheet
 import com.tangem.screens.onSendAddressScreen
 import com.tangem.screens.onSendConfirmScreen
 import com.tangem.screens.onSendScreen
+import com.tangem.screens.onSendSelectNetworkFeeBottomSheet
 import com.tangem.screens.onSendSuccessScreen
 import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.screens.onTransferBottomSheet
@@ -33,6 +34,7 @@ import com.tangem.utils.StringsSigns.DASH_SIGN
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
 import java.math.BigDecimal
+import java.math.RoundingMode
 import com.tangem.core.ui.R as CoreUiR
 
 fun BaseTestCase.waitForMainScreenLoaded() {
@@ -102,10 +104,27 @@ private fun BaseTestCase.selectAddToPortfolioNetwork(network: E2eCatalog.E2eNetw
 
 fun BaseTestCase.addNetworkToMainViaManageTokens(network: E2eCatalog.E2eNetwork) {
     openManageTokensForE2e()
-    enableNetworkInManageTokensAndReturn(network)
+    enableInManageTokensAndReturn(network.searchQuery, network.tokenName, network.manageTokensNetworkLabel)
 }
 
 fun BaseTestCase.addNetworkToSecondAccountViaManageTokens(network: E2eCatalog.E2eNetwork) {
+    openManageTokensForSecondAccount()
+    enableInManageTokensAndReturn(network.searchQuery, network.tokenName, network.manageTokensNetworkLabel)
+}
+
+// Token variants (for the token Send E2E test): enable the ERC-20 token on the same network. The add-token
+// flow is identical to the native coin — only the search query / row title / network label come from the token.
+fun BaseTestCase.addTokenToMainViaManageTokens(token: E2eCatalog.E2eToken) {
+    openManageTokensForE2e()
+    enableInManageTokensAndReturn(token.searchQuery, token.tokenName, token.manageTokensNetworkLabel)
+}
+
+fun BaseTestCase.addTokenToSecondAccountViaManageTokens(token: E2eCatalog.E2eToken) {
+    openManageTokensForSecondAccount()
+    enableInManageTokensAndReturn(token.searchQuery, token.tokenName, token.manageTokensNetworkLabel)
+}
+
+private fun BaseTestCase.openManageTokensForSecondAccount() {
     val secondAccountName = secondAccountName()
     step("Open 'Manage Tokens' for the '$secondAccountName' account via its 'Add tokens' button") {
         onMainScreen { collapseOnScreenPageHeader() }
@@ -120,7 +139,6 @@ fun BaseTestCase.addNetworkToSecondAccountViaManageTokens(network: E2eCatalog.E2
         onMainScreen { emptyAccountAddTokensButton.performClick() }
         awaitSuccess { onManageTokensScreen { searchField.assertIsDisplayed() } }
     }
-    enableNetworkInManageTokensAndReturn(network)
 }
 
 private fun BaseTestCase.secondAccountName(): String {
@@ -156,29 +174,29 @@ private fun BaseTestCase.revealAccountTokenOnMain(accountName: String, tokenName
     }
 }
 
-private fun BaseTestCase.enableNetworkInManageTokensAndReturn(network: E2eCatalog.E2eNetwork) {
-    step("Search for '${network.searchQuery}' in Manage Tokens") {
+private fun BaseTestCase.enableInManageTokensAndReturn(searchQuery: String, tokenName: String, networkLabel: String) {
+    step("Search for '$searchQuery' in Manage Tokens") {
         onManageTokensScreen {
             searchField.performClick()
-            searchField.performTextInput(network.searchQuery)
+            searchField.performTextInput(searchQuery)
         }
         // Dismiss the IME specifically — pressBack() would navigate out of Manage Tokens if the keyboard never opened.
         Espresso.closeSoftKeyboard()
         waitForIdle()
     }
-    step("Expand '${network.tokenName}'") {
-        awaitSuccess { onManageTokensScreen { tokenItem(network.tokenName).assertIsDisplayed() } }
-        onManageTokensScreen { tokenItem(network.tokenName).performClick() }
+    step("Expand '$tokenName'") {
+        awaitSuccess { onManageTokensScreen { tokenItem(tokenName).assertIsDisplayed() } }
+        onManageTokensScreen { tokenItem(tokenName).performClick() }
         waitForIdle()
     }
-    step("Ensure the '${network.manageTokensNetworkLabel}' network is enabled") {
-        awaitSuccess { onManageTokensScreen { networkSwitch(network.manageTokensNetworkLabel).assertIsDisplayed() } }
+    step("Ensure the '$networkLabel' network is enabled") {
+        awaitSuccess { onManageTokensScreen { networkSwitch(networkLabel).assertIsDisplayed() } }
         // Toggle only when OFF — never disable an already-enabled network.
         val alreadyEnabled = runCatching {
-            onManageTokensScreen { networkSwitch(network.manageTokensNetworkLabel).assertIsOn() }
+            onManageTokensScreen { networkSwitch(networkLabel).assertIsOn() }
         }.isSuccess
         if (!alreadyEnabled) {
-            onManageTokensScreen { networkSwitch(network.manageTokensNetworkLabel).performClick() }
+            onManageTokensScreen { networkSwitch(networkLabel).performClick() }
             awaitSuccess { onManageTokensScreen { saveButton.assertIsDisplayed() } }
             onManageTokensScreen { saveButton.performClick() }
             waitForIdle()
@@ -291,7 +309,50 @@ private val FEE_RESERVE = BigDecimal("0.01")
 
 // Mirrors the iOS SendBetweenAccountsE2ETests flow: always a real on-chain broadcast.
 fun BaseTestCase.sendFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, amount: String) {
-    val token = network.mainScreenToken
+    performSendFromRicherAccount(
+        tokenTitle = network.mainScreenToken,
+        symbol = network.searchQuery,
+        amount = amount,
+        feeReserve = FEE_RESERVE,
+        accountAddresses = network.accountAddresses,
+        networkName = network.networkName,
+    )
+}
+
+// Gas is paid in the native coin, so the token balance only needs to cover the amount (no native fee reserve).
+fun BaseTestCase.sendTokenFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, token: E2eCatalog.E2eToken) {
+    performSendFromRicherAccount(
+        tokenTitle = token.mainScreenToken,
+        symbol = token.searchQuery,
+        amount = token.sendAmount,
+        feeReserve = BigDecimal.ZERO,
+        accountAddresses = network.accountAddresses,
+        networkName = network.networkName,
+    )
+}
+
+fun BaseTestCase.sendWithCustomFeeFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, percentAboveMarket: Int) {
+    performSendFromRicherAccount(
+        tokenTitle = network.mainScreenToken,
+        symbol = network.searchQuery,
+        amount = network.sendAmount,
+        feeReserve = FEE_RESERVE,
+        accountAddresses = network.accountAddresses,
+        networkName = network.networkName,
+        beforeBroadcast = { setCustomFeeAboveMarket(percentAboveMarket) },
+    )
+}
+
+private fun BaseTestCase.performSendFromRicherAccount(
+    tokenTitle: String,
+    symbol: String,
+    amount: String,
+    feeReserve: BigDecimal,
+    accountAddresses: List<String>,
+    networkName: String,
+    beforeBroadcast: BaseTestCase.() -> Unit = {},
+) {
+    val token = tokenTitle
     var accountNames = emptyList<String>()
     step("Read the account list") {
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
@@ -320,18 +381,18 @@ fun BaseTestCase.sendFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, am
     // Fail here with a clear top-up message when the wallet runs dry, rather than timing out later on a disabled
     // Next button (the app blocks it on insufficient funds) — on a scheduled run that is the expected dry-wallet
     // failure, and a bare "Next not enabled" would read like an app bug.
-    val required = amount.toBigDecimal() + FEE_RESERVE
+    val required = amount.toBigDecimal() + feeReserve
     require(balances[senderIndex] >= required) {
-        "E2E wallet is out of funds on ${network.networkName}: richer account '$senderName' holds " +
-            "${balances[senderIndex]} ${network.searchQuery}, needs >= $required (amount $amount + fee reserve). " +
-            "Top up ${network.accountAddresses.joinToString()}"
+        "E2E wallet is out of funds on $networkName: richer account '$senderName' holds " +
+            "${balances[senderIndex]} $symbol, needs >= $required (amount $amount + fee reserve). " +
+            "Top up ${accountAddresses.joinToString()}"
     }
     // The on-screen account order is reorderable (ApplyAccountListSortingUseCase), so map the recipient by account
     // identity, not display position: the catalog addresses are ordered by account index (0 = main, 1 = second).
     // This keeps the recipient the *other* account and rules out a self-transfer that would pass trivially.
     val mainName = getResourceString(CoreUiR.string.account_main_account_title)
     val recipientAddress =
-        if (senderName == mainName) network.accountAddresses[1] else network.accountAddresses[0]
+        if (senderName == mainName) accountAddresses[1] else accountAddresses[0]
     TangemLogger.i(
         "E2E-SEND accounts=$accountNames balances=$balances senderIndex=$senderIndex " +
             "sender=$senderName recipient=$recipientAddress",
@@ -357,6 +418,7 @@ fun BaseTestCase.sendFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, am
         onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
     }
     openSendConfirmScreenViaNextButton()
+    beforeBroadcast()
     // The confirm 'Send' button is hold-to-confirm (a tap does nothing) — broadcast via the shared long-click
     // helper, which holds and asserts the success screen.
     openSendSuccessScreenViaLongClickOnSendButton()
@@ -376,3 +438,41 @@ fun BaseTestCase.sendFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, am
         step("Sent transaction: $txUrl")
     }
 }
+
+// Opens the fee selector on the confirm screen, switches to Custom and raises the EVM max fee per gas to
+// [percent]% above the prefilled market value. maxFeePerGas is the fee cap — the on-chain charge still follows
+// EIP-1559; the increase is asserted on the field value (the confirm-screen fiat fee rounds to "<$0.01" on cheap
+// networks and would not show the change). Market/custom values are reported as step names for the Allure report.
+private fun BaseTestCase.setCustomFeeAboveMarket(percent: Int) {
+    val maxFeeTitle = getResourceString(CoreUiR.string.send_custom_evm_max_fee)
+    step("Open the fee selector and select Custom") {
+        onSendConfirmScreen { feeSelectorIcon.performClick() }
+        awaitSuccess { onSendSelectNetworkFeeBottomSheet { customSelectorItem.assertIsDisplayed() } }
+        onSendSelectNetworkFeeBottomSheet { customSelectorItem.performClick() }
+    }
+    step("Set the custom max fee $percent% above market") {
+        awaitSuccess { onSendSelectNetworkFeeBottomSheet { inputTextFieldValue(maxFeeTitle).assertIsDisplayed() } }
+        var marketRaw = ""
+        onSendSelectNetworkFeeBottomSheet { marketRaw = inputTextFieldValue(maxFeeTitle).extractText() }
+        val market = numericPart(marketRaw)
+        require(market > BigDecimal.ZERO) { "Prefilled market max fee is not a positive number: '$marketRaw'" }
+        val bumped = market.multiply(BigDecimal(100 + percent)).divide(BigDecimal(100))
+            .setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+        onSendSelectNetworkFeeBottomSheet {
+            inputTextFieldValue(maxFeeTitle).performClick()
+            inputTextFieldValue(maxFeeTitle).performTextReplacement(bumped)
+        }
+        var appliedRaw = ""
+        onSendSelectNetworkFeeBottomSheet { appliedRaw = inputTextFieldValue(maxFeeTitle).extractText() }
+        require(numericPart(appliedRaw) > market) {
+            "Custom max fee did not increase above market: market='$marketRaw' applied='$appliedRaw'"
+        }
+        step("Market max fee: $marketRaw; custom (+$percent%): $bumped")
+    }
+    step("Apply the custom fee") {
+        onSendSelectNetworkFeeBottomSheet { doneButton.performClick() }
+    }
+}
+
+private fun numericPart(raw: String): BigDecimal =
+    Regex("[0-9]+([.,][0-9]+)?").find(raw)?.value?.replace(",", ".")?.toBigDecimal() ?: BigDecimal.ZERO

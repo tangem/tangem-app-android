@@ -26,6 +26,15 @@ object E2eCatalog {
             "0x3A0078b8407bC5d7C72FAd47F03eb9D315CA252e",
             "0x6c9578665c02Cc3FF16639A7C636f756B085Ce49",
         ),
+        token = E2eToken(
+            coinId = "usd-coin",
+            searchQuery = "USDC",
+            tokenName = "USDC",
+            mainScreenToken = "USDC",
+            manageTokensNetworkLabel = "POLYGON",
+            contractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+            sendAmount = "0.01",
+        ),
     )
 
     data class E2eNetwork(
@@ -40,5 +49,19 @@ object E2eCatalog {
         // The wallet's per-account receive addresses for this network, ordered by account index
         // (sender/recipient for the Send E2E test). Mirrors the iOS E2ENetwork.accountAddresses.
         val accountAddresses: List<String>,
+        // The token enabled on this network for the token Send E2E test; null when the network has no token test.
+        val token: E2eToken? = null,
+    )
+
+    // A token (not the native coin) enabled on the network. Gas is paid in the native coin, so the sender
+    // account must also hold a native-coin balance. Mirrors the iOS E2EToken.
+    data class E2eToken(
+        val coinId: String,
+        val searchQuery: String,
+        val tokenName: String,
+        val mainScreenToken: String,
+        val manageTokensNetworkLabel: String,
+        val contractAddress: String,
+        val sendAmount: String,
     )
 }
