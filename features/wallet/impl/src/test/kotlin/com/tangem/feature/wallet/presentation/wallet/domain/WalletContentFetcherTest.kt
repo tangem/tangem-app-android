@@ -215,6 +215,44 @@ internal class WalletContentFetcherTest {
             coVerify(exactly = 1) { walletBalanceFetcher(params) }
         }
 
+        @Test
+        fun `GIVEN accounts fetching in progress WHEN wallet deleted THEN fetching is cancelled`() = runTest {
+            // Arrange
+            val fetcher = createFetcher()
+            setWallet(isLocked = true)
+            coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns None
+            coEvery { singleAccountListFetcher(accountListParams) } coAnswers { awaitCancellation() }
+
+            val fetchingJob = launch { fetcher(userWalletId = userWalletId) }
+            runCurrent()
+
+            // Act
+            fetcher.clear(userWalletIds = listOf(userWalletId))
+            runCurrent()
+
+            // Assert
+            assertThat(fetchingJob.isCompleted).isTrue()
+        }
+
+        @Test
+        fun `GIVEN accounts fetching in progress WHEN invoke again THEN accounts are fetched once`() = runTest {
+            // Arrange
+            val fetcher = createFetcher()
+            setWallet(isLocked = true)
+            coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns None
+            coEvery { singleAccountListFetcher(accountListParams) } coAnswers { awaitCancellation() }
+
+            val fetchingJob = launch { fetcher(userWalletId = userWalletId) }
+            runCurrent()
+
+            // Act
+            fetcher(userWalletId = userWalletId)
+
+            // Assert
+            coVerify(exactly = 1) { singleAccountListFetcher(accountListParams) }
+            fetchingJob.cancel()
+        }
+
         private fun setWallet(isLocked: Boolean, isMultiCurrency: Boolean = true) {
             val userWallet = mockk<UserWallet.Cold> {
                 every { this@mockk.walletId } returns userWalletId
