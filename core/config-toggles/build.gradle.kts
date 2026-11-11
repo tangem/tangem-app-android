@@ -49,7 +49,7 @@ android {
  * Each stream keeps its feature toggles in `<stream>/config-toggles/feature_toggles.json`, so CODEOWNERS routes
  * a new toggle to the stream team instead of core. All of them are merged into one `FeatureToggles` enum.
  */
-val featureTogglesStreams = listOf("core", "store", "grow", "spend")
+val featureTogglesStreams = listOf("store", "grow", "spend")
 
 /** Config file to generated enum class name mapping; files with the same enum name are merged in this order */
 val toggles = featureTogglesStreams.associate { stream ->
