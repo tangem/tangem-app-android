@@ -170,6 +170,7 @@ private fun DetailRow(
 private fun ProviderRow(name: TextReference, imageUrl: String) {
     TangemRow(
         divider = true,
+        contentLead = TangemRowContentLead.Start,
         titleSlot = {
             TangemRowText(
                 text = resourceReference(CoreUiR.string.express_provider),
@@ -185,7 +186,7 @@ private fun ProviderRow(name: TextReference, imageUrl: String) {
                     text = name.resolveReference(),
                     style = TangemTheme.typography3.body.medium,
                     color = TangemTheme.colors3.text.primary,
-                    maxLines = 1,
+                    textAlign = TextAlign.End,
                 )
                 SubcomposeAsyncImage(
                     modifier = Modifier
