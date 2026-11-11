@@ -106,6 +106,7 @@ internal class BankOfframpRouteSerializationTest {
                             name = "ACH",
                             calculationType = "FIXED",
                             amount = BigDecimal("1.50"),
+                            fixedAmount = null,
                             currency = "USD",
                             description = "ACH offramp fee",
                         ),

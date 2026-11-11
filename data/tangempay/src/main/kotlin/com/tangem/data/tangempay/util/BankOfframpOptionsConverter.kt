@@ -53,6 +53,7 @@ internal object BankOfframpOptionsConverter :
             currency = value.currency?.takeIf(String::isNotBlank),
             fee = value.fee?.let(::convertFee) ?: return null,
             eta = value.eta?.let(::convertEta) ?: return null,
+            amountLimits = value.amountLimits?.let(AmountLimitsConverter::convert),
         )
     }
 
@@ -63,6 +64,7 @@ internal object BankOfframpOptionsConverter :
             amount = value.amount ?: return null,
             currency = value.currency?.takeIf(String::isNotBlank) ?: return null,
             description = value.description?.takeIf(String::isNotBlank),
+            fixedAmount = value.fixedAmount,
         )
     }
 
