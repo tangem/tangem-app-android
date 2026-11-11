@@ -8,14 +8,6 @@ sealed class DeepLinkRoute {
         override val host: String = "onramp"
     }
 
-    data object SellRedirect : DeepLinkRoute() {
-        override val host: String = "redirect_sell"
-    }
-
-    data object BuyRedirect : DeepLinkRoute() {
-        override val host: String = "redirect"
-    }
-
     data object Buy : DeepLinkRoute() {
         override val host: String = "buy"
     }
@@ -30,10 +22,6 @@ sealed class DeepLinkRoute {
 
     data object Swap : DeepLinkRoute() {
         override val host: String = "swap"
-    }
-
-    data object WalletConnect : DeepLinkRoute() {
-        override val host: String = "wc"
     }
 
     data object TangemPayOnboard : DeepLinkRoute() {

@@ -55,11 +55,5 @@ internal interface OnrampDeeplinkModule {
         @DeepLinkKey(DefaultBuyDeepLinkHandler.DEEPLINK_KEY)
         fun provideBuyDeepLinkHandler(factory: BuyDeepLinkHandler.Factory): DeepLinkHandler =
             DeepLinkHandler { factory.create() }
-
-        /** Claimed on purpose so the provider's return link counts as handled; there is nothing to open. */
-        @Provides
-        @IntoMap
-        @DeepLinkKey(DefaultBuyDeepLinkHandler.REDIRECT_DEEPLINK_KEY)
-        fun provideBuyRedirectDeepLinkHandler(): DeepLinkHandler = DeepLinkHandler {}
     }
 }
