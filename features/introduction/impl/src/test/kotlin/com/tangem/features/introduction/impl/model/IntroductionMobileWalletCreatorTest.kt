@@ -133,7 +133,7 @@ internal class IntroductionMobileWalletCreatorTest {
 
             // Assert
             assertThat(message.captured.message).isEqualTo(Dialogs.hotWalletsLimitReachedDialog().message)
-            assertThat(message.captured.title).isNull()
+            assertThat(message.captured.title).isEqualTo(Dialogs.hotWalletsLimitReachedDialog().title)
             assertThat(sentEvents).containsExactly(
                 OnboardingAnalyticsEvent.Onboarding.Started(source = SOURCE),
                 OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened(source = SOURCE),
