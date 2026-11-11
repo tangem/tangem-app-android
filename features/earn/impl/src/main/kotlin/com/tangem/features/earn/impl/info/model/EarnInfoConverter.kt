@@ -1,6 +1,5 @@
 package com.tangem.features.earn.impl.info.model
 
-import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.extensions.stringReference
@@ -25,7 +24,6 @@ import com.tangem.features.earn.product.api.product.EarnRewards
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnAction
-import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -61,7 +59,7 @@ internal class EarnInfoConverter @Inject constructor(
         return EarnInfoUM(
             title = product.title,
             subtitle = stringReference(status.currency.network.name),
-            balanceFiat = getFiatReference(position.cryptoAmount, rate, appCurrency) ?: stringReference(DASH_SIGN),
+            balanceFiat = stringReference(getFiatString(position.cryptoAmount, rate, appCurrency)),
             balanceCrypto = stringReference(position.cryptoAmount.format { crypto(status.currency) }),
             earned = position.earned?.let { earned ->
                 EarnInfoTexts.earnedChip(getFiatString(earned, rate, appCurrency))
