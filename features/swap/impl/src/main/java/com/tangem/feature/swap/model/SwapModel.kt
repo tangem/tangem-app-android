@@ -18,7 +18,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
-import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.backup.BackupErrorWarningSender
@@ -568,11 +567,9 @@ internal class SwapModel @Inject constructor(
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val fromCurrency = dataState.fromSwapCurrencyStatus?.currency ?: return false
         val marketing = resolveMarketingDeeplink(deeplink)
-        if (marketing == MarketingDeeplink.SWAP) return false
         val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = fromCurrency,
-            screenSource = ScreensSources.Swap,
         ) ?: return false
         router.push(route)
         return true

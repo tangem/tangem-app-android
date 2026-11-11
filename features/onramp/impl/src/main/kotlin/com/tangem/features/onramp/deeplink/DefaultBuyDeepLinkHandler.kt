@@ -2,17 +2,18 @@ package com.tangem.features.onramp.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
 
-internal class DefaultBuyDeepLinkHandler @AssistedInject constructor(
-    router: AppRouter,
-    getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-) : BuyDeepLinkHandler {
+internal class DefaultBuyDeepLinkHandler @Inject constructor(
+    private val router: AppRouter,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+) : DeepLinkHandler, BuyDeepLinkHandler {
 
-    init {
+    override fun handle(request: DeepLinkRequest) {
         // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         getSelectedWalletSyncUseCase().fold(
             ifLeft = {
@@ -22,14 +23,5 @@ internal class DefaultBuyDeepLinkHandler @AssistedInject constructor(
                 router.push(AppRoute.BuyCrypto(userWallet.walletId))
             },
         )
-    }
-
-    @AssistedFactory
-    interface Factory : BuyDeepLinkHandler.Factory {
-        override fun create(): DefaultBuyDeepLinkHandler
-    }
-
-    companion object {
-        const val DEEPLINK_KEY = "tangem://buy"
     }
 }
