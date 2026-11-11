@@ -6,7 +6,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.layout.IntrinsicMeasurable
@@ -21,6 +24,10 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -34,10 +41,17 @@ import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.modal.reportMeasuredHeight
+import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_left_24
+import com.tangem.core.ui.res.generated.icons.ic_cross_24
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodStatus
 import com.tangem.domain.onramp.model.PaymentMethodType
@@ -204,10 +218,14 @@ private object IntrinsicFreeMeasurePolicyDs : MeasurePolicy {
 @Composable
 private fun ProviderTitleDs(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
     TangemModal.TopNavigation(
-        title = TextReference.Res(R.string.onramp_all_offers_button_title),
-        subtitle = TextReference.Res(R.string.express_choose_providers_title),
-        onBack = onBackClick,
-        onClose = onCloseClick,
+        startButton = { NavigationDiscButtonDs(icon = Icons.ic_chevron_left_24, onClick = onBackClick) },
+        endButton = { NavigationDiscButtonDs(icon = Icons.ic_cross_24, onClick = onCloseClick) },
+        contentColumn = {
+            TitleSubtitleDs(
+                title = TextReference.Res(R.string.onramp_all_offers_button_title),
+                subtitle = TextReference.Res(R.string.express_choose_providers_title),
+            )
+        },
     )
 }
 
@@ -215,10 +233,45 @@ private fun ProviderTitleDs(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
 @Composable
 private fun PaymentMethodTitleDs(onCloseClick: () -> Unit) {
     TangemModal.TopNavigation(
-        title = TextReference.Res(R.string.onramp_all_offers_button_title),
-        subtitle = TextReference.Res(R.string.onramp_payment_method_subtitle),
-        onClose = onCloseClick,
+        endButton = { NavigationDiscButtonDs(icon = Icons.ic_cross_24, onClick = onCloseClick) },
+        contentColumn = {
+            TitleSubtitleDs(
+                title = TextReference.Res(R.string.onramp_all_offers_button_title),
+                subtitle = TextReference.Res(R.string.onramp_payment_method_subtitle),
+            )
+        },
     )
+}
+
+@Composable
+private fun ColumnScope.TitleSubtitleDs(title: TextReference, subtitle: TextReference?) {
+    TangemNavigationText(text = title.resolveReference(), role = TangemNavigationText.Role.Title)
+    subtitle?.let { subtitleReference ->
+        Spacer(Modifier.height(4.dp))
+        TangemNavigationText(text = subtitleReference.resolveReference(), role = TangemNavigationText.Role.Subtitle)
+    }
+}
+
+@Composable
+private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit) {
+    TangemSurface(
+        modifier = Modifier.size(44.dp).semantics { role = Role.Button },
+        isMaterial = true,
+        shape = CircleShape,
+        onClick = onClick,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                imageVector = icon,
+                tint = TangemTheme.colors3.icon.primary,
+                contentDescription = null,
+            )
+        }
+    }
 }
 
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
