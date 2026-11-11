@@ -84,7 +84,11 @@ internal fun TangemButtonContainer(
     val disabledAlpha = if (hasEnabledAppearance) 1f else colorTokens.disabledAlpha
     val backgroundColor =
         if (hasEnabledAppearance) colorTokens.backgroundColor else colorTokens.disabledBackgroundColor
-    val accessibilityLabel = contentDescription ?: resolveLoadingLabel(shouldShowLoader, loadingText, text)
+    val accessibilityLabel = resolveAccessibilityLabel(
+        description = contentDescription,
+        isLoaderOverlay = shouldShowLoader && !isLoaderInline,
+        text = text,
+    )
     val loadingStateDescription = if (isLoading) stringResourceSafe(R.string.common_in_progress) else null
 
     TangemSurface(
@@ -165,9 +169,15 @@ private fun Modifier.buttonSemantics(
     }
 }
 
+/**
+ * While the centered loader covers the content, the label is drawn fully transparent and Compose drops
+ * it from the accessibility tree, so it is restored as the content description. An inline loading
+ * message stays visible and is read on its own — labelling it again would make TalkBack say it twice.
+ */
 @Composable
-private fun resolveLoadingLabel(isLoading: Boolean, loadingText: TextReference?, text: TextReference?): String? {
-    return if (isLoading) (loadingText ?: text)?.resolveReference() else null
+private fun resolveAccessibilityLabel(description: String?, isLoaderOverlay: Boolean, text: TextReference?): String? {
+    if (description != null) return description
+    return if (isLoaderOverlay) text?.resolveReference() else null
 }
 
 /**
@@ -328,15 +338,19 @@ private fun ContentRow(
 
 /**
  * Hold hint ↔ label swap from the Figma "Hold and release" animation: the outgoing text fades over
- * [HINT_FADE_MS], the incoming one starts [HINT_FADE_IN_DELAY_MS] later, and the hugging width follows
- * the fade-out — ease in towards the hint, ease out back to the label.
+ * [HINT_FADE_MS] and the incoming one starts [HINT_FADE_IN_DELAY_MS] later. The hugging width moves
+ * with the label: it grows as the label fades out (ease in) and shrinks back as the label fades in
+ * (ease out), so the wider hint is never cut by a pill that is already narrowing.
  */
 private fun labelHintCrossfade(isToHint: Boolean): ContentTransform {
     val easing = if (isToHint) EaseIn else EaseOut
+    val sizeDelay = if (isToHint) 0 else HINT_FADE_IN_DELAY_MS
     return ContentTransform(
         targetContentEnter = fadeIn(tween(HINT_FADE_MS, delayMillis = HINT_FADE_IN_DELAY_MS, easing = easing)),
         initialContentExit = fadeOut(tween(HINT_FADE_MS, easing = easing)),
-        sizeTransform = SizeTransform(clip = false) { _, _ -> tween(HINT_FADE_MS, easing = easing) },
+        sizeTransform = SizeTransform(clip = false) { _, _ ->
+            tween(HINT_FADE_MS, delayMillis = sizeDelay, easing = easing)
+        },
     )
 }
 

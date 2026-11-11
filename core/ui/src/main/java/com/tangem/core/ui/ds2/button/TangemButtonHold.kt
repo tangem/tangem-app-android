@@ -129,12 +129,17 @@ internal class HoldToConfirmState(initialFill: Float = 0f) {
         isHintVisible = false
     }
 
-    suspend fun reset() {
+    /**
+     * Cancels a hold in progress. A completed hold is left alone: its caller typically switches the
+     * button to loading in `onConfirm`, which disables holding, and the completion fade must still play.
+     */
+    suspend fun cancelHold() {
         hideHint()
-        fill.stop()
-        fill.snapTo(0f)
-        fillAlpha.snapTo(1f)
         pulse.snapTo(0f)
+        if (fill.isRunning) {
+            fill.stop()
+            fill.snapTo(0f)
+        }
     }
 }
 
@@ -158,7 +163,7 @@ internal fun rememberHoldToConfirmGesture(
     val currentOnConfirm by rememberUpdatedState(onConfirm)
 
     LaunchedEffect(isEnabled) {
-        if (!isEnabled) state.reset()
+        if (!isEnabled) state.cancelHold()
     }
 
     return Modifier.pointerInput(isEnabled) {
