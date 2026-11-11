@@ -3,13 +3,13 @@ package com.tangem.domain.moneyaccount.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.CustomerInfo
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.tangempay.MockBankCredentials
 import io.mockk.clearMocks

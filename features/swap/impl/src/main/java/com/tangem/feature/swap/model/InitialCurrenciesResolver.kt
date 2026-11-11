@@ -83,7 +83,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
      *  underlying currencies ([AccountUnderlyingCurrencies]), if it has a balance — this turns the operation
      *  into a same-wallet transfer; (b) otherwise the regular most-funded wallet token; (c) otherwise `null`
      *  (falls through to "Choose token"). For [AccountFlow.Withdraw]: the account's most-funded token. For
-     *  [AccountFlow.PredictionWithdraw] and [AccountFlow.MoneyWithdraw]: the token of the account withdrawn from,
+     *  [AccountFlow.PredictionWithdraw], [AccountFlow.CollectiblesWithdraw] and [AccountFlow.MoneyWithdraw]: the token of the account withdrawn from,
      *  always as FROM and never replaced by a portfolio token. For [AccountFlow.PredictionTopUp]:
      *  the most-funded wallet token the account accepts as a deposit as is, otherwise the portfolio auto-fill.
      *  For [AccountFlow.CollectiblesTopUp] and [AccountFlow.MoneyTopUp]: the most-funded wallet holding of the
@@ -232,7 +232,11 @@ internal class InitialCurrenciesResolver @Inject constructor(
             cryptoPortfolioAccounts = cryptoPortfolioAccounts,
             cryptoCurrencyList = cryptoPortfolioAccounts.values.flatten(),
         )
-        is AccountFlow.Withdraw, is AccountFlow.PredictionWithdraw, is AccountFlow.MoneyWithdraw ->
+        is AccountFlow.Withdraw,
+        is AccountFlow.PredictionWithdraw,
+        is AccountFlow.CollectiblesWithdraw,
+        is AccountFlow.MoneyWithdraw,
+        ->
             mostFundedAccountCurrency(accountFlowAccounts) ?: from
         is AccountFlow.PredictionTopUp -> resolvePredictionTopUpFromPriority(
             userWalletId = userWalletId,
@@ -485,6 +489,7 @@ internal val AccountFlow?.withdrawnAccount: KClass<out Account>?
     get() = when (this) {
         is AccountFlow.PredictionWithdraw -> Account.Prediction::class
         is AccountFlow.MoneyWithdraw -> Account.Money::class
+        is AccountFlow.CollectiblesWithdraw -> Account.Collectibles::class
         is AccountFlow.TopUp,
         is AccountFlow.Withdraw,
         is AccountFlow.PredictionTopUp,

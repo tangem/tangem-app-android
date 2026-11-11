@@ -140,7 +140,7 @@ internal class P2PEthPoolTransactionSender @AssistedInject constructor(
             data = unsignedTx.data,
             value = unsignedTx.value.toBigInteger().toHexString(),
             nonce = unsignedTx.nonce,
-            chainId = unsignedTx.chainId,
+            chainId = unsignedTx.chainId.toLong(),
             gasLimit = unsignedTx.gasLimit.toBigInteger().toHexString(),
             gasPrice = null, // EIP-1559: gasPrice is null
             maxFeePerGas = unsignedTx.maxFeePerGas.toBigInteger().toHexString(),

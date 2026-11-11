@@ -2,7 +2,7 @@ package com.tangem.features.moneyaccount.di
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.features.moneyaccount.DefaultMoneyAccountFeatureToggles
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

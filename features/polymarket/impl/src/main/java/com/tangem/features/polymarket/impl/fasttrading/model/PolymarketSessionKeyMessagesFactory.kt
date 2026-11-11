@@ -29,6 +29,9 @@ internal object PolymarketSessionKeyMessagesFactory {
         is PolymarketSessionKeyOperationStart.Started -> null
     }
 
+    fun revokingToast(): SnackbarMessage =
+        SnackbarMessage(message = resourceReference(R.string.prediction_session_key_toast_revoking))
+
     private fun successToast(request: PolymarketSessionKeyOperationRequest): SnackbarMessage? = when (request) {
         is PolymarketSessionKeyOperationRequest.Revoke -> SnackbarMessage(
             message = resourceReference(R.string.prediction_session_key_toast_revoked),
