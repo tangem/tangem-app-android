@@ -605,7 +605,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
-        fun `GIVEN a plain card button WHEN the router picks the owner key THEN the card signs at once`() =
+        fun `GIVEN a plain card button WHEN the router picks the owner key THEN nothing is signed and the card is asked`() =
             runOrderTest {
                 // Arrange
                 coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
@@ -618,10 +618,31 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                verify(exactly = 1) { messageSender.send(any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN the session key of a card could not sign WHEN the card button is tapped THEN the card signs`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
                 coVerify(exactly = 1) {
                     signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
                 }
-                verify(exactly = 0) { messageSender.send(any()) }
             }
 
         @Test
@@ -670,7 +691,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
-        fun `GIVEN a plain card button WHEN the exchange refuses the session key THEN the card signs`() =
+        fun `GIVEN a plain card button WHEN the exchange refuses the session key THEN the card is asked for the next tap`() =
             runOrderTest {
                 // Arrange
                 coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
@@ -685,11 +706,13 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                coVerifyOrder {
-                    signOrderInteractor(request = match { it.route == SESSION_ROUTE })
+                coVerify(exactly = 1) { signOrderInteractor(request = match { it.route == SESSION_ROUTE }) }
+                coVerify(exactly = 0) {
                     signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
                 }
-                verify(exactly = 0) { messageSender.send(any()) }
+                verify(exactly = 1) { messageSender.send(any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
             }
 
         @Test
