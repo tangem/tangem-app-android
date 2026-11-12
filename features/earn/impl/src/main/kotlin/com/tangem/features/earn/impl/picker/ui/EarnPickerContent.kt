@@ -72,6 +72,7 @@ import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM.ContentUM
 import com.tangem.features.earn.impl.ui.EarnDetailRow
+import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnTextBlock
@@ -367,7 +368,7 @@ private fun Description(description: TextReference, incentive: TangemBadgeUM?) {
 
 @Composable
 private fun CalculatorSection(calculator: @Composable () -> Unit) {
-    Section(title = EarnPickerTexts.calculatorSection) {
+    Section(title = EarnCalculatorTexts.title) {
         Box(
             modifier = Modifier
                 .padding(horizontal = PAGE_MARGIN)

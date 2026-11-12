@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.resolveReference
@@ -38,7 +37,7 @@ internal fun EarnBenefitRow(benefit: EarnBenefitUM, modifier: Modifier = Modifie
         }
         Text(
             text = buildAnnotatedString {
-                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = titleColor)) { append(title) }
+                withStyle(SpanStyle(color = titleColor)) { append(title) }
                 withStyle(SpanStyle(color = descriptionColor)) { append(" $description") }
             },
             style = TangemTheme.typography3.subheading.medium,

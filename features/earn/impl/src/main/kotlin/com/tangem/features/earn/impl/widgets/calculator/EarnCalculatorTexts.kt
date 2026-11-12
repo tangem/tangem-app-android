@@ -8,6 +8,8 @@ import com.tangem.features.earn.product.api.product.EarnHorizon
 // Temporary plain text: replace with localized string resources.
 internal object EarnCalculatorTexts {
 
+    val title: TextReference = stringReference("Calculate your earnings")
+
     val initialBalance: TextReference = stringReference("Initial balance")
 
     val monthlyTopUp: TextReference = stringReference("Monthly top-up")
