@@ -82,9 +82,11 @@ internal class RwaBatchFlowManager(
         dispatchers = dispatchers,
     )
 
+    /** Same limit/offset paging as the Crypto list: a token can come back in two batches, the list keys rows by id. */
     val uiItems: StateFlow<ImmutableList<RwaListItemUM>> = stateManager.state
         .map { state ->
             state.uiBatches.asSequence().flatMap { it.data }
+                .distinctBy(RwaListItemUM::id)
                 .toImmutableList()
         }
         .distinctUntilChanged()
