@@ -71,7 +71,7 @@ private fun PaymentMethodDs(methodUM: AllOffersPaymentMethodUM, modifier: Modifi
             .fillMaxWidth()
             .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD),
         color = TangemTheme.colors3.bg.transparent.primary,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(24.dp),
         onClick = methodUM.methodConfig.onClick,
     ) {
         PaymentMethodBodyDs(
@@ -81,7 +81,7 @@ private fun PaymentMethodDs(methodUM: AllOffersPaymentMethodUM, modifier: Modifi
     }
 }
 
-private val PaymentMethodContentPaddingDs = PaddingValues(start = 12.dp, end = 12.dp, top = 14.dp, bottom = 12.dp)
+private val PaymentMethodContentPaddingDs = PaddingValues(all = 16.dp)
 
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 @Composable
