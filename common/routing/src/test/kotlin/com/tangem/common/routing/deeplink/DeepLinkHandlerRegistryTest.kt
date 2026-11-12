@@ -82,7 +82,7 @@ internal class DeepLinkHandlerRegistryTest {
         fun `GIVEN disabled nested handler WHEN find THEN parent path handler is used`() {
             // Arrange
             var isDetailsEnabled = false
-            val toggledDetailsHandler = DeepLinkHandler(isEnabled = { isDetailsEnabled }, handle = {})
+            val toggledDetailsHandler = createHandler(isEnabled = { isDetailsEnabled })
             val toggledRegistry = DeepLinkHandlerRegistry(
                 handlers = mapOf(
                     "https://tangem.com/news" to newsHandler,
@@ -106,7 +106,7 @@ internal class DeepLinkHandlerRegistryTest {
             // Arrange
             val disabledRegistry = DeepLinkHandlerRegistry(
                 handlers = mapOf(
-                    "tangem://staking" to DeepLinkHandler(isEnabled = { false }, handle = {}),
+                    "tangem://staking" to createHandler(isEnabled = { false }),
                 ).asProviders(),
             )
 
@@ -180,7 +180,7 @@ internal class DeepLinkHandlerRegistryTest {
 
                     override fun handle(request: DeepLinkRequest) = Unit
                 },
-                "tangem://markets" to DeepLinkHandler(isEnabled = { false }, handle = {}),
+                "tangem://markets" to createHandler(isEnabled = { false }),
             ).asProviders(),
         )
 
@@ -463,6 +463,13 @@ internal class DeepLinkHandlerRegistryTest {
         val maxPathSegments: Int = Int.MAX_VALUE,
         val expected: List<String>,
     )
+}
+
+private fun createHandler(isEnabled: () -> Boolean): DeepLinkHandler = object : DeepLinkHandler {
+    override val isEnabled: Boolean
+        get() = isEnabled()
+
+    override fun handle(request: DeepLinkRequest) = Unit
 }
 
 private fun Map<String, DeepLinkHandler>.asProviders(): Map<String, Provider<DeepLinkHandler>> {

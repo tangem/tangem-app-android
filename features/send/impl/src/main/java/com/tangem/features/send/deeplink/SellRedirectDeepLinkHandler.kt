@@ -5,6 +5,8 @@ import arrow.core.getOrElse
 import arrow.core.raise.option
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
@@ -13,25 +15,22 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
 
-@Suppress("ComplexCondition", "LongParameterList")
-internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
-    @Assisted scope: CoroutineScope,
-    @Assisted queryParams: Map<String, String>,
-    appRouter: AppRouter,
-    getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+internal class SellRedirectDeepLinkHandler @Inject constructor(
+    private val appRouter: AppRouter,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val offrampRepository: OfframpRepository,
-) : SellRedirectDeepLinkHandler {
+) : DeepLinkHandler {
 
-    init {
+    override val isOpenableFromPush: Boolean = false
+
+    @Suppress("ComplexCondition")
+    override fun handle(request: DeepLinkRequest) {
+        val queryParams = request.queryParams
         val currencyId = queryParams[CURRENCY_ID_KEY]
         val transactionId = queryParams[TRANSACTION_ID_KEY]
         // Universal parser accounts for regional separators
@@ -56,7 +55,7 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
                         return@fold
                     }
 
-                    scope.launch {
+                    request.scope.launch {
                         // Only trust the redirect if it carries a request_id we issued for a sell this
                         // app actually started (bound to the wallet + currency, valid until it expires). Otherwise an
                         // external deeplink could inject a locked attacker recipient/amount into the Send confirm
@@ -99,14 +98,6 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
 
             return accountStatusList.getCryptoCurrency(currencyIdValue = currencyId)
         }
-
-    @AssistedFactory
-    interface Factory : SellRedirectDeepLinkHandler.Factory {
-        override fun create(
-            coroutineScope: CoroutineScope,
-            queryParams: Map<String, String>,
-        ): DefaultSellRedirectDeepLinkHandler
-    }
 
     companion object {
         const val DEEPLINK_KEY = "tangem://redirect_sell"

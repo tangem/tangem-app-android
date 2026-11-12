@@ -1,7 +1,9 @@
 package com.tangem.features.send.deeplink
 
+import android.net.Uri
 import arrow.core.right
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -24,7 +26,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class DefaultSellRedirectDeepLinkHandlerTest {
+internal class SellRedirectDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
@@ -49,7 +51,7 @@ internal class DefaultSellRedirectDeepLinkHandlerTest {
     fun `GIVEN matching pending offramp WHEN deeplink handled THEN request passes the gate`() = runTest {
         coEvery { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) } returns pendingOfframp()
 
-        createHandler(validParams())
+        handle(validParams())
         advanceUntilIdle()
 
         coVerify(exactly = 1) { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) }
@@ -62,9 +64,9 @@ internal class DefaultSellRedirectDeepLinkHandlerTest {
         // pass the gate again. Guards against reintroducing single-use behavior in the handler.
         coEvery { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) } returns pendingOfframp()
 
-        createHandler(validParams())
+        handle(validParams())
         advanceUntilIdle()
-        createHandler(validParams())
+        handle(validParams())
         advanceUntilIdle()
 
         coVerify(exactly = 2) { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) }
@@ -73,7 +75,7 @@ internal class DefaultSellRedirectDeepLinkHandlerTest {
 
     @Test
     fun `GIVEN no request_id WHEN deeplink handled THEN rejected without touching the store`() = runTest {
-        createHandler(validParams() - REQUEST_ID_KEY)
+        handle(validParams() - REQUEST_ID_KEY)
         advanceUntilIdle()
 
         coVerify(exactly = 0) { offrampRepository.resolvePendingOfframp(any(), any(), any()) }
@@ -85,7 +87,7 @@ internal class DefaultSellRedirectDeepLinkHandlerTest {
     fun `GIVEN no matching pending offramp WHEN deeplink handled THEN rejected`() = runTest {
         coEvery { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) } returns null
 
-        createHandler(validParams())
+        handle(validParams())
         advanceUntilIdle()
 
         coVerify(exactly = 0) { singleAccountListSupplier.getSyncOrNull(any<UserWalletId>()) }
@@ -99,7 +101,7 @@ internal class DefaultSellRedirectDeepLinkHandlerTest {
         coEvery { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) } returns pendingOfframp()
 
         // Act
-        createHandler(validParams() + ("baseCurrencyAmount" to amount))
+        handle(validParams() + ("baseCurrencyAmount" to amount))
         advanceUntilIdle()
 
         // Assert
@@ -109,14 +111,18 @@ internal class DefaultSellRedirectDeepLinkHandlerTest {
 
     private fun provideTestModels() = listOf("-10", "0", "abc")
 
-    private fun TestScope.createHandler(queryParams: Map<String, String>) = DefaultSellRedirectDeepLinkHandler(
-        scope = this,
-        queryParams = queryParams,
+    private val handler = SellRedirectDeepLinkHandler(
         appRouter = appRouter,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         singleAccountListSupplier = singleAccountListSupplier,
         offrampRepository = offrampRepository,
     )
+
+    private fun TestScope.handle(queryParams: Map<String, String>) {
+        handler.handle(
+            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = this, isFromOnNewIntent = false),
+        )
+    }
 
     private fun pendingOfframp() = PendingOfframp(
         requestId = requestId,
