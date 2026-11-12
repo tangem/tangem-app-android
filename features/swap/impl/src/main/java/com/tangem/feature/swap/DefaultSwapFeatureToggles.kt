@@ -33,4 +33,9 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_18247_SOLANA_GASLESS_ENABLED,
         )
+
+    override val isSolanaGaslessRentEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_19141_SOLANA_GASLESS_RENT_ENABLED,
+        )
 }

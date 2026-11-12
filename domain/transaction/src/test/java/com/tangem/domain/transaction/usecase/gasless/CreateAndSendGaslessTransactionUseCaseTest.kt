@@ -110,7 +110,11 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
                 normal = Fee.Common(amount = Amount(blockchain = Blockchain.Solana, value = BigDecimal.ZERO)),
             ),
             feeTokenId = solCurrency.id,
-            gaslessProtocolData = GaslessProtocolData.Solana(feePayer = "FeePayer", network = mockk()),
+            gaslessProtocolData = GaslessProtocolData.Solana(
+                feePayer = "FeePayer",
+                network = mockk(),
+                isRentSponsored = false,
+            ),
         )
         coEvery { solanaUseCase(userWallet, transactionData, fee) } returns TX_HASH.right()
 
