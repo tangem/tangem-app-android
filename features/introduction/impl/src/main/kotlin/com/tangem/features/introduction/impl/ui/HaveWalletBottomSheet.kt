@@ -16,11 +16,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,6 +48,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
 import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
+import kotlinx.coroutines.delay
 import com.tangem.core.ui.R as CoreUiR
 
 /**
@@ -81,10 +84,19 @@ internal fun WalletOptionsBottomSheet(
     forceDarkTheme: Boolean,
     isMaterialEnabled: Boolean,
     containerColor: Color?,
+    optionTestTags: WalletOptionTestTags? = null,
+    onCollapseEnd: (() -> Unit)? = null,
 ) {
     val sheet = config.content as? HaveWalletUM
     val step = sheet?.step
     val isBusy = sheet?.isBusy == true
+
+    if (onCollapseEnd != null && !config.isShown) {
+        LaunchedEffect(config.isShown) {
+            delay(COLLAPSE_ANIMATION_MS)
+            onCollapseEnd()
+        }
+    }
 
     TangemModal<HaveWalletUM>(
         config = config,
@@ -122,7 +134,7 @@ internal fun WalletOptionsBottomSheet(
                 label = "HaveWalletStep",
             ) { step ->
                 when (step) {
-                    is HaveWalletUM.Step.Options -> OptionsStep(step = step)
+                    is HaveWalletUM.Step.Options -> OptionsStep(step = step, testTags = optionTestTags)
                     is HaveWalletUM.Step.Import -> ImportStep(step = step)
                     is HaveWalletUM.Step.Error -> ErrorStep(step = step)
                 }
@@ -164,18 +176,25 @@ private fun ColumnScope.StepTitle(step: HaveWalletUM.Step, optionsTitle: TextRef
 }
 
 @Composable
-private fun OptionsStep(step: HaveWalletUM.Step.Options) {
+internal fun OptionsStep(step: HaveWalletUM.Step.Options, testTags: WalletOptionTestTags? = null) {
     // The rows bring their own 16 dp of padding, which is the inset the design asks for; the 4 dp on top of it
     // is what the design leaves between them.
     Column(
         modifier = Modifier.padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        WalletOptionCard(option = step.cardOrRing)
-        step.socialLogin?.let { WalletOptionCard(option = it) }
-        WalletOptionCard(option = step.importWallet)
+        WalletOptionCard(option = step.cardOrRing, modifier = Modifier.optionTestTag(testTags?.cardOrRing))
+        step.socialLogin?.let {
+            WalletOptionCard(option = it, modifier = Modifier.optionTestTag(testTags?.socialLogin))
+        }
+        step.seedPhrase?.let {
+            WalletOptionCard(option = it, modifier = Modifier.optionTestTag(testTags?.seedPhrase))
+        }
+        WalletOptionCard(option = step.importWallet, modifier = Modifier.optionTestTag(testTags?.importWallet))
     }
 }
+
+private fun Modifier.optionTestTag(tag: String?): Modifier = if (tag != null) testTag(tag) else this
 
 @Composable
 private fun ImportStep(step: HaveWalletUM.Step.Import) {
