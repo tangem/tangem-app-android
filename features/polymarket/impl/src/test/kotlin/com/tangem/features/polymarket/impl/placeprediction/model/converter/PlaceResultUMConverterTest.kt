@@ -47,11 +47,72 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = spent,
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES.half(),
-                    total = QUOTED_TOTAL,
+                    total = BigDecimal("14.07"),
                 ),
             ),
         )
     }
+
+    @ParameterizedTest
+    @MethodSource("providePartialSellModels")
+    fun `GIVEN a partial sell WHEN converted THEN the total is the fill net of its share of the fee`(
+        model: PartialSellModel,
+    ) {
+        // Act
+        val actual = convert(
+            result = result(side = PredictionOrderSide.SELL, shares = model.shares, collateral = model.received),
+            side = PredictionOrderSide.SELL,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = model.received,
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = model.shares,
+                    total = model.expectedTotal,
+                ),
+            ),
+        )
+    }
+
+    internal data class PartialSellModel(
+        val name: String,
+        val shares: BigDecimal,
+        val received: BigDecimal,
+        val expectedTotal: BigDecimal,
+    ) {
+        override fun toString(): String = name
+    }
+
+    private fun providePartialSellModels() = listOf(
+        PartialSellModel(
+            name = "half the shares bear half the fee",
+            shares = QUOTED_SHARES.half(),
+            received = BigDecimal("36.000000"),
+            expectedTotal = BigDecimal("35.30"),
+        ),
+        PartialSellModel(
+            name = "a quarter of the shares bear a quarter of the fee",
+            shares = BigDecimal("24.489796"),
+            received = BigDecimal("18.000000"),
+            expectedTotal = BigDecimal("17.65"),
+        ),
+        PartialSellModel(
+            name = "the proceeds round down to cents",
+            shares = BigDecimal("32.653061"),
+            received = BigDecimal("24.002000"),
+            expectedTotal = BigDecimal("23.53"),
+        ),
+        PartialSellModel(
+            name = "a fee above the proceeds leaves nothing",
+            shares = BigDecimal("0.979592"),
+            received = BigDecimal("0.010000"),
+            expectedTotal = BigDecimal("0.00"),
+        ),
+    )
 
     @Test
     fun `GIVEN the collateral leg is short WHEN the shares are whole THEN the fill is full`() {
@@ -142,7 +203,7 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("71.999999"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES - BigDecimal("0.000001"),
-                    total = QUOTED_TOTAL,
+                    total = BigDecimal("73.40"),
                 ),
             ),
         ),
@@ -204,7 +265,7 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("36.000000"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES.half(),
-                    total = QUOTED_TOTAL,
+                    total = BigDecimal("35.30"),
                 ),
             ),
         ),
@@ -236,7 +297,7 @@ internal class PlaceResultUMConverterTest {
         // Act
         val actual = PlaceResultUMConverter.convert(
             order = model.order,
-            quote = QUOTE,
+            quote = model.quote,
             placedAt = PLACED_AT,
         )
 
@@ -244,7 +305,12 @@ internal class PlaceResultUMConverterTest {
         assertThat(actual).isEqualTo(model.expected)
     }
 
-    internal data class ReadBackModel(val name: String, val order: PredictionOrderState, val expected: PlaceOutcome) {
+    internal data class ReadBackModel(
+        val name: String,
+        val order: PredictionOrderState,
+        val expected: PlaceOutcome,
+        val quote: PredictionOrderQuote = QUOTE,
+    ) {
         override fun toString(): String = name
     }
 
@@ -282,7 +348,35 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("24.50"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = BigDecimal("33.333333"),
-                    total = QUOTED_TOTAL,
+                    total = BigDecimal("24.98"),
+                ),
+            ),
+        ),
+        ReadBackModel(
+            name = "a partial sell nets its share of the fee from the proceeds",
+            order = readBack(sizeMatched = QUOTED_SHARES.half()),
+            quote = SELL_QUOTE,
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = BigDecimal("36.00"),
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = QUOTED_SHARES.half(),
+                    total = BigDecimal("35.30"),
+                ),
+            ),
+        ),
+        ReadBackModel(
+            name = "without quoted shares the fee is shared by the collateral filled",
+            order = readBack(sizeMatched = QUOTED_SHARES.half()),
+            quote = SELL_QUOTE.copy(shares = BigDecimal.ZERO),
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = BigDecimal("36.00"),
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = QUOTED_SHARES.half(),
+                    total = BigDecimal("35.30"),
                 ),
             ),
         ),
@@ -342,6 +436,7 @@ internal class PlaceResultUMConverterTest {
             exchange = null,
             signingDomainVersion = null,
         )
+        val SELL_QUOTE = QUOTE.copy(side = PredictionOrderSide.SELL)
         const val PLACED_AT = 1_787_300_000_000L
         const val ZERO_SHARES_REASON = "The exchange matched the order and filled no shares"
         const val UNREADABLE_FILL_REASON = "The exchange matched the order, but its fill cannot be read"

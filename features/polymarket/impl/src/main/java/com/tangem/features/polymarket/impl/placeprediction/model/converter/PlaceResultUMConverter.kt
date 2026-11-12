@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import java.math.BigDecimal
+import java.math.MathContext
 import java.math.RoundingMode
 
 internal sealed interface PlaceOutcome {
@@ -74,7 +75,12 @@ internal object PlaceResultUMConverter {
                             filledCollateral = spent,
                             requestedCollateral = quote.notional,
                             shares = filledShares,
-                            total = quote.total,
+                            total = partialTotal(
+                                side = side,
+                                filledCollateral = spent,
+                                filledShares = filledShares,
+                                quote = quote,
+                            ),
                         ),
                     )
                 }
@@ -118,10 +124,38 @@ internal object PlaceResultUMConverter {
                 filledCollateral = executedAmount,
                 requestedCollateral = quote.notional,
                 shares = filledShares,
-                total = quote.total,
+                total = partialTotal(
+                    side = quote.side,
+                    filledCollateral = executedAmount,
+                    filledShares = filledShares,
+                    quote = quote,
+                ),
             )
         }
         return PlaceOutcome.Reportable(result = result)
+    }
+
+    private fun partialTotal(
+        side: PredictionOrderSide,
+        filledCollateral: BigDecimal,
+        filledShares: BigDecimal,
+        quote: PredictionOrderQuote,
+    ): BigDecimal? {
+        val filledRatio = fillRatio(filledCollateral = filledCollateral, filledShares = filledShares, quote = quote)
+            ?: return null
+        val filledFee = quote.fees.total.multiply(filledRatio, MathContext.DECIMAL64)
+        return when (side) {
+            PredictionOrderSide.BUY -> (filledCollateral + filledFee).setScale(FIAT_SCALE, RoundingMode.UP)
+            PredictionOrderSide.SELL -> (filledCollateral - filledFee)
+                .setScale(FIAT_SCALE, RoundingMode.DOWN)
+                .coerceAtLeast(BigDecimal.ZERO.setScale(FIAT_SCALE))
+        }
+    }
+
+    private fun fillRatio(filledCollateral: BigDecimal, filledShares: BigDecimal, quote: PredictionOrderQuote) = when {
+        quote.shares.signum() > 0 -> filledShares.divide(quote.shares, MathContext.DECIMAL64)
+        quote.notional.signum() > 0 -> filledCollateral.divide(quote.notional, MathContext.DECIMAL64)
+        else -> null
     }
 
     private fun submitted(placedAt: Long) = PlaceOutcome.Reportable(result = PlaceResultUM.Submitted(placedAt))

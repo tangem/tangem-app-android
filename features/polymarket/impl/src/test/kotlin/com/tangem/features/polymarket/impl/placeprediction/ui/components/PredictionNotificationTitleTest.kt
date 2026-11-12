@@ -14,7 +14,7 @@ internal class PredictionNotificationTitleTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun title(model: TitleModel) {
+    fun `GIVEN a notification and side WHEN title THEN side specific string`(model: TitleModel) {
         // Act
         val actual = model.notification.title(side = model.side)
 

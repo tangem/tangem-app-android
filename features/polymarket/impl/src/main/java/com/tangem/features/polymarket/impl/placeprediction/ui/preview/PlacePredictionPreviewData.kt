@@ -104,7 +104,7 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
                 filledCollateral = BigDecimal("2000"),
                 requestedCollateral = BigDecimal("4000"),
                 shares = BigDecimal("250"),
-                total = BigDecimal("1.4"),
+                total = BigDecimal("1999.30"),
             ),
             PlaceResultUM.NotFilled(placedAt = PLACED_AT),
             PlaceResultUM.Submitted(placedAt = PLACED_AT),
