@@ -33,7 +33,6 @@ import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.usecase.order.hasCardFrozenStateOrderFor
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

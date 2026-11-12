@@ -3,7 +3,6 @@ package com.tangem.features.tangempay.card.details
 import arrow.core.left
 import kotlinx.coroutines.CompletableDeferred
 import com.tangem.domain.tangempay.usecase.ChangeCardFrozenStateUseCase
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
@@ -63,7 +62,6 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk()
     private val controllerFactory: TangemPayCardDetailsController.Factory = mockk()
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val sentMessages = mutableListOf<UiMessage>()
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase = mockk()
     private val cardControllers = mutableMapOf<String, TangemPayCardDetailsController>()
