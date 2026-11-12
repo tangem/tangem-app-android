@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.main.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,6 +43,7 @@ internal fun CountryButtonDs(state: OnrampCountryButtonUM, modifier: Modifier = 
             .testTag(TopAppBarTestTags.MORE_BUTTON),
         isMaterial = true,
         shape = CircleShape,
+        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         enabled = state.isEnabled,
         onClick = state.onClick,
     ) {
