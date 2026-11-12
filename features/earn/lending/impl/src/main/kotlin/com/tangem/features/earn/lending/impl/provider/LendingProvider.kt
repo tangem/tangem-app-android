@@ -35,6 +35,9 @@ internal interface LendingProvider {
 
     suspend fun refresh(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit>
 
+    /** Re-reads only the user's position, cheap enough to run with every balance update */
+    suspend fun refreshPosition(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit>
+
     suspend fun minDeposit(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, BigDecimal>
 
     /** An empty history means "no data"; a backend or network failure goes to `Left` */

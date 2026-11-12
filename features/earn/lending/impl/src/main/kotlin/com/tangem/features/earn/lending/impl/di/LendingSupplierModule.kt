@@ -1,6 +1,8 @@
 package com.tangem.features.earn.lending.impl.di
 
+import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
 import com.tangem.features.earn.lending.impl.supplier.DefaultLendingFetcher
+import com.tangem.features.earn.lending.impl.supplier.LendingBalanceFetcher
 import com.tangem.features.earn.lending.impl.supplier.DefaultLendingProducer
 import com.tangem.features.earn.lending.impl.supplier.LendingFetcher
 import com.tangem.features.earn.lending.impl.supplier.LendingProducer
@@ -10,6 +12,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -21,6 +24,10 @@ internal interface LendingSupplierBindsModule {
 
     @Binds
     fun bindFetcher(impl: DefaultLendingFetcher): LendingFetcher
+
+    @Binds
+    @IntoSet
+    fun bindBalanceFetcher(impl: LendingBalanceFetcher): BalanceContributionFetcher
 }
 
 @Module
