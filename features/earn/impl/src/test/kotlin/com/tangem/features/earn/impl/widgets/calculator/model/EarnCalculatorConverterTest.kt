@@ -276,6 +276,27 @@ internal class EarnCalculatorConverterTest {
         }
 
         @Test
+        fun `GIVEN a high rate WHEN convert THEN the blue layer of every bar is its income share of the tallest bar`() {
+            // Arrange
+            val input = CalculatorInput.Default.copy(horizon = EarnHorizon.Year10)
+            val result = projectionOf("0.0553").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+            val last = result.points.last()
+
+            // Act
+            val actual = convert(input = input, result = result).bars
+
+            // Assert
+            val checked = actual.withIndex().filter { (index, _) ->
+                result.points[5 * (index + 1) - 1].income.share(of = last.capital) > ABOVE_MINIMUM_SHARE
+            }
+            assertThat(checked.size).isAtLeast(6)
+            checked.forEach { (index, bar) ->
+                val point = result.points[5 * (index + 1) - 1]
+                assertThat(bar.earned).isWithin(TOLERANCE).of(point.income.share(of = last.capital))
+            }
+        }
+
+        @Test
         fun `GIVEN a small earned amount WHEN convert THEN every blue layer stays visible`() {
             // Arrange
             val input = CalculatorInput.Default
@@ -539,5 +560,6 @@ internal class EarnCalculatorConverterTest {
     private companion object {
         const val TOLERANCE = 1e-5f
         const val MIN_VISIBLE_SHARE = 0.04f
+        const val ABOVE_MINIMUM_SHARE = 0.06f
     }
 }
