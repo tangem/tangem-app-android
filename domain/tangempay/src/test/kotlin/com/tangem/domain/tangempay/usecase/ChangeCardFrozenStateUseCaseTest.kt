@@ -135,68 +135,88 @@ internal class ChangeCardFrozenStateUseCaseTest {
         coVerify(exactly = 0) { cardDetailsRepository.setCardFrozenState(any(), any()) }
     }
 
-    @Test
-    fun `GIVEN order framework disabled and freezeCard fails WHEN invoke THEN sets Pending then Unfrozen`() =
-        runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
-            val useCase = createUseCase()
-            coEvery {
-                cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID)
-            } returns TangemPayApiError.Unspecified.left()
+    @ParameterizedTest
+    @MethodSource("provideLegacyRequestFailedModels")
+    fun `GIVEN order framework disabled and request fails WHEN invoke THEN sets Pending then rolls back`(
+        model: LegacyFrozenStateModel,
+    ) = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
+        val useCase = createUseCase()
+        coEvery {
+            cardDetailsRepository.freezeOrUnfreeze(model.isFreezing)
+        } returns TangemPayApiError.Unspecified.left()
 
-            // Act
-            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+        // Act
+        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = model.isFreezing)
 
-            // Assert
-            assertThat(result.isLeft()).isTrue()
-            coVerifyOrder {
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Unfrozen)
-            }
+        // Assert
+        assertThat(result.isLeft()).isTrue()
+        coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any()) }
+        coVerifyOrder {
+            cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
+            cardDetailsRepository.setCardFrozenState(CARD_ID, model.expectedState)
         }
+    }
 
-    @Test
-    fun `GIVEN order framework disabled and order completes WHEN invoke THEN legacy polling used and sets Frozen`() =
-        runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
-            val useCase = createUseCase()
-            coEvery { cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID) } returns ORDER_INFO.right()
-            coEvery { startTangemPayOrderPollingUseCase(ORDER_INFO, USER_WALLET_ID) } returns true
+    @ParameterizedTest
+    @MethodSource("provideLegacyCompletedModels")
+    fun `GIVEN order framework disabled and order completes WHEN invoke THEN sets Pending then target state`(
+        model: LegacyFrozenStateModel,
+    ) = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
+        val useCase = createUseCase()
+        coEvery { cardDetailsRepository.freezeOrUnfreeze(model.isFreezing) } returns ORDER_INFO.right()
+        coEvery { startTangemPayOrderPollingUseCase(ORDER_INFO, USER_WALLET_ID) } returns true
 
-            // Act
-            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+        // Act
+        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = model.isFreezing)
 
-            // Assert
-            assertThat(result.isRight()).isTrue()
-            coVerify(exactly = 0) { startOrderUseCase(any(), any()) }
-            coVerifyOrder {
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Frozen)
-            }
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 0) { startOrderUseCase(any(), any()) }
+        coVerifyOrder {
+            cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
+            cardDetailsRepository.setCardFrozenState(CARD_ID, model.expectedState)
         }
+    }
 
-    @Test
-    fun `GIVEN order framework disabled and order fails WHEN invoke THEN legacy polling used and sets Unfrozen`() =
-        runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
-            val useCase = createUseCase()
-            coEvery { cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID) } returns ORDER_INFO.right()
-            coEvery { startTangemPayOrderPollingUseCase(ORDER_INFO, USER_WALLET_ID) } returns false
+    @ParameterizedTest
+    @MethodSource("provideLegacyRequestFailedModels")
+    fun `GIVEN order framework disabled and order fails WHEN invoke THEN sets Pending then rolls back`(
+        model: LegacyFrozenStateModel,
+    ) = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
+        val useCase = createUseCase()
+        coEvery { cardDetailsRepository.freezeOrUnfreeze(model.isFreezing) } returns ORDER_INFO.right()
+        coEvery { startTangemPayOrderPollingUseCase(ORDER_INFO, USER_WALLET_ID) } returns false
 
-            // Act
-            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+        // Act
+        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = model.isFreezing)
 
-            // Assert
-            assertThat(result.isLeft()).isTrue()
-            coVerify(exactly = 0) { startOrderUseCase(any(), any()) }
-            coVerifyOrder {
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Unfrozen)
-            }
+        // Assert
+        assertThat(result.isLeft()).isTrue()
+        coVerify(exactly = 0) { startOrderUseCase(any(), any()) }
+        coVerifyOrder {
+            cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
+            cardDetailsRepository.setCardFrozenState(CARD_ID, model.expectedState)
         }
+    }
+
+    private fun provideLegacyRequestFailedModels() = listOf(
+        LegacyFrozenStateModel(isFreezing = true, expectedState = TangemPayCardFrozenState.Unfrozen),
+        LegacyFrozenStateModel(isFreezing = false, expectedState = TangemPayCardFrozenState.Frozen),
+    )
+
+    private fun provideLegacyCompletedModels() = listOf(
+        LegacyFrozenStateModel(isFreezing = true, expectedState = TangemPayCardFrozenState.Frozen),
+        LegacyFrozenStateModel(isFreezing = false, expectedState = TangemPayCardFrozenState.Unfrozen),
+    )
+
+    private suspend fun TangemPayCardDetailsRepository.freezeOrUnfreeze(isFreezing: Boolean) =
+        if (isFreezing) freezeCard(USER_WALLET_ID, CARD_ID) else unfreezeCard(USER_WALLET_ID, CARD_ID)
 
     private fun provideNotCompletedFinalStates() = listOf(
         OrderPollingState.Loaded(order(TangemPayOrder.Status.CANCELED)),
@@ -222,6 +242,11 @@ internal class ChangeCardFrozenStateUseCaseTest {
         status = status,
         step = OrderStep.UNKNOWN,
         details = OrderDetails.CardFreeze(productInstanceId = "pi-1"),
+    )
+
+    internal data class LegacyFrozenStateModel(
+        val isFreezing: Boolean,
+        val expectedState: TangemPayCardFrozenState,
     )
 
     private companion object {
