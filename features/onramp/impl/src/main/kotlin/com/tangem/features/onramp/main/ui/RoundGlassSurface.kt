@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.res.TangemTheme
 
+private const val MATERIAL_MID_STOP_START = 0.4f
+private const val MATERIAL_MID_STOP_END = 0.6f
+
 private val GlassFillBrush = Brush.verticalGradient(
     listOf(Color.White.copy(alpha = 0.040f), Color.White.copy(alpha = 0.062f)),
 )
@@ -35,8 +38,8 @@ internal fun RoundGlassSurface(
             width = 1.dp,
             brush = Brush.linearGradient(
                 0f to materialBorder.start,
-                0.4f to materialBorder.mid,
-                0.6f to materialBorder.mid,
+                MATERIAL_MID_STOP_START to materialBorder.mid,
+                MATERIAL_MID_STOP_END to materialBorder.mid,
                 1f to materialBorder.end,
             ),
         ),
