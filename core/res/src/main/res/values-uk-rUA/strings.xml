@@ -2404,10 +2404,11 @@
   <string name="tangempay_card_activation_error_not_ready">Картка ще не готова до активації. Спробуйте ще раз після її отримання.</string>
   <string name="tangempay_card_activation_in_progress">Активуємо вашу картку</string>
   <string name="tangempay_card_close">Закрити</string>
-  <string name="tangempay_card_close_error_message">Спробуйте пізніше або зверніться до підтримки. Ми допоможемо закрити картку.</string>
+  <string name="tangempay_card_close_error_message">Спробуйте пізніше або зверніться в підтримку</string>
   <string name="tangempay_card_close_error_title">Не вдалося закрити картку</string>
   <string name="tangempay_card_close_last_card_disabled">Не можна закрити останню картку</string>
-  <string name="tangempay_card_closed_toast">Картку закрито</string>
+  <string name="tangempay_card_closed_toast">Картку ••%s закрито</string>
+  <string name="tangempay_card_closed_toast_named">Картку %s закрито</string>
   <string name="tangempay_card_default_name">Картка Tangem Pay 1</string>
   <string name="tangempay_card_delivery_activate_after_delivery_toast">Ви зможете активувати картку після доставки</string>
   <string name="tangempay_card_delivery_banner_description">Активуйте її після отримання</string>
@@ -2544,7 +2545,7 @@
   <string name="tangempay_choose_network_row_loading">Підготовка адреси…</string>
   <string name="tangempay_close_card_sheet_confirm">Закрити картку</string>
   <string name="tangempay_close_card_sheet_description">Картку буде закрито, і вона перестане працювати</string>
-  <string name="tangempay_close_card_sheet_description_with_freeze_hint">Картку буде закрито, і вона перестане працювати. Бажаєте призупинити її дію? Заморозьте картку.</string>
+  <string name="tangempay_close_card_sheet_description_with_freeze_hint">Картку буде закрито, і вона перестане працювати. Бажаєте призупинити її дію? Заморозьте картку.</string>
   <string name="tangempay_close_card_sheet_freeze_instead">Заморозити</string>
   <string name="tangempay_close_card_sheet_keep">Залишити картку</string>
   <string name="tangempay_close_card_sheet_title">Закрити %s?</string>
@@ -3240,9 +3241,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакція %1$s %2$s не була завершена. Ви можете спробувати відправити її ще раз.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">У вас є незавершена транзакція</string>
   <string name="warning_last_balance_updated_time">Останнє оновлення було %s</string>
-  <string name="warning_link_wallet_cold_message">Відскануйте картку, щоб прив’язати гаманець до цього пристрою.</string>
-  <string name="warning_link_wallet_hot_message">Підтвердьте прив’язку гаманця до цього пристрою.</string>
-  <string name="warning_link_wallet_title">Прив’яжіть гаманець до цього пристрою</string>
+  <string name="warning_link_wallet_cold_message">Синхронізуйте гаманець із сервісами Tangem для додаткового захисту.</string>
+  <string name="warning_link_wallet_hot_message">Синхронізуйте гаманець із сервісами Tangem для додаткового захисту.</string>
+  <string name="warning_link_wallet_title">Захистіть своє з\'єднання</string>
   <string name="warning_low_signatures_message">На цій картці залишається лише %s підписів. Ви повинні вивести всі свої кошти.</string>
   <string name="warning_low_signatures_title">Низька кількість підписів</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токени в різних мережах можуть мати різні адреси. Переконайтеся, що ваша адреса відповідає мережі, коли переказуєте кошти.</string>
