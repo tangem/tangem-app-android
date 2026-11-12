@@ -70,7 +70,7 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   `REVOKED` while the revocation is in flight; iOS does not resend).
 - A key the BFF stops listing while `REVOKING` counts as revoked only once Polymarket no longer lists the signer;
   otherwise the outcome is unsettled and the next refresh shows the truth.
-- The outcome stays in the runner until the host acknowledges it; no Activate banner while an operation runs.
+- The outcome stays in the runner until the host acknowledges it; nothing offers Activate while an operation runs.
 
 ## Claims
 

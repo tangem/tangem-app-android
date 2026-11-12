@@ -136,6 +136,7 @@ internal class ObservePolymarketFastTradingUseCaseTest {
                 sessionKeys = listOf(KEY),
             ),
             localKeyAddress = KEY.address,
+            deviceId = "this-device",
             assessment = PolymarketSessionKeyAssessment(
                 deviceState = deviceState,
                 reconciliation = PolymarketSessionKeyReconciliation.Unavailable,
