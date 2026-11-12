@@ -172,7 +172,7 @@ internal class PolymarketMainComponentTest {
         receiveSheetFactory = mockk(),
         polymarketFeatureToggles = mockk {
             every { isPolymarketPhaseTwoEnabled } returns false
-            every { isPolymarketSessionKeysEnabled } returns false
+            every { isPolymarketFastOrdersEnabled } returns false
         },
     )
 }

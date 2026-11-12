@@ -41,7 +41,7 @@ Rules of "Predictions" that the code does not make evident. Read the domain inva
 
 ## Order flow
 
-- Two flows, chosen once per opening by `isPolymarketPhaseTwoEnabled`: single-step Order, or legacy
+- Two flows, chosen once per opening by `isPolymarketFastOrdersEnabled` (`TWI_1881_POLYMARKET_FAST_ORDERS_ENABLED`, also gates session keys): single-step Order, or legacy
   Amount → Summary. The quote engine, the submitter and the result screen are shared, so a change there reaches
   both flows.
 - Signing uses the `PreparedPrediction` frozen at the tap, never the live screen: nothing may requote or reload
