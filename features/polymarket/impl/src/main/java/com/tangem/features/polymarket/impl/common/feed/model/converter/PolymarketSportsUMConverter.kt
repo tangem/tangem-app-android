@@ -24,14 +24,7 @@ internal class PolymarketSportsUMConverter(
     private val onOutcomeClick: (eventId: String, marketId: String, assetId: String) -> Unit,
 ) {
 
-    fun convert(game: PolymarketSportsState.Game): PolymarketSportsUM = PolymarketSportsUM(
-        home = game.home?.value?.toTeam(),
-        away = game.away?.value?.toTeam(),
-        homeScore = game.score?.home?.toString(),
-        awayScore = game.score?.away?.toString(),
-        period = game.period?.takeIf(String::isNotBlank),
-        isLive = game.isLive && !game.isEnded && game.period?.uppercase(Locale.ROOT) !in NO_LIVE_PERIODS,
-    )
+    fun convert(game: PolymarketSportsState.Game): PolymarketSportsUM = game.toSportsUM()
 
     fun outcomes(
         event: PolymarketEvent,
@@ -111,12 +104,20 @@ internal class PolymarketSportsUMConverter(
         }
     }
 
-    private fun PolymarketTeam.toTeam() = PolymarketSportsUM.Team(stringReference(name), logoUrl)
-
     private companion object {
         const val GROUPED_MARKETS_COUNT = 3
-        val NO_LIVE_PERIODS = setOf("CAN", "POST", "INT", "AB")
     }
 
     private data class Choice(val marketId: String, val assetId: String, val label: String, val price: BigDecimal?)
 }
+
+internal fun PolymarketSportsState.Game.toSportsUM(): PolymarketSportsUM = PolymarketSportsUM(
+    home = home?.value?.let { PolymarketSportsUM.Team(stringReference(it.name), it.logoUrl) },
+    away = away?.value?.let { PolymarketSportsUM.Team(stringReference(it.name), it.logoUrl) },
+    homeScore = score?.home?.toString(),
+    awayScore = score?.away?.toString(),
+    period = period?.takeIf(String::isNotBlank),
+    isLive = isLive && !isEnded && period?.uppercase(Locale.ROOT) !in NO_LIVE_PERIODS,
+)
+
+private val NO_LIVE_PERIODS = setOf("CAN", "POST", "INT", "AB")
