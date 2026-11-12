@@ -9,20 +9,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.surface.TangemSurface
-
-private val GlassRingBorder = BorderStroke(
-    width = 1.dp,
-    brush = Brush.linearGradient(
-        colors = listOf(Color.White.copy(alpha = 0.12f), Color.White.copy(alpha = 0.09f)),
-        start = Offset.Zero,
-        end = Offset(120f, 120f),
-    ),
-)
+import com.tangem.core.ui.res.TangemTheme
 
 private val GlassFillBrush = Brush.verticalGradient(
     listOf(Color.White.copy(alpha = 0.040f), Color.White.copy(alpha = 0.062f)),
@@ -35,11 +26,20 @@ internal fun RoundGlassSurface(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
+    val materialBorder = TangemTheme.colors3.material.border
     TangemSurface(
         modifier = modifier,
         color = Color.Transparent,
         shape = CircleShape,
-        border = GlassRingBorder,
+        border = BorderStroke(
+            width = 1.dp,
+            brush = Brush.linearGradient(
+                0f to materialBorder.start,
+                0.4f to materialBorder.mid,
+                0.6f to materialBorder.mid,
+                1f to materialBorder.end,
+            ),
+        ),
         enabled = enabled,
         onClick = onClick,
     ) {
