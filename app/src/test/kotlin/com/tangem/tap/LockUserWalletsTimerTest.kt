@@ -9,7 +9,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.LockWalletsError
 import com.tangem.domain.models.wallet.UserWallet
@@ -46,7 +46,7 @@ internal class LockUserWalletsTimerTest {
     private val clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase =
         mockk(relaxed = true)
     private val passwordRequester: HotWalletPasswordRequester = mockk(relaxUnitFun = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val rootRouter: Router = mockk(relaxed = true)
     private val workManager: WorkManager = mockk(relaxed = true)
     private val owner: LifecycleOwner = mockk()
 
@@ -57,7 +57,7 @@ internal class LockUserWalletsTimerTest {
             userWalletsListRepository,
             clearAllHotWalletContextualUnlockUseCase,
             passwordRequester,
-            appRouter,
+            rootRouter,
             workManager,
         )
         mockkStatic(WorkManager::class)
@@ -88,7 +88,7 @@ internal class LockUserWalletsTimerTest {
             verify(exactly = 1) { workManager.cancelAllWorkByTag(LockTimerWorker.TAG) }
             coVerify(exactly = 1) { passwordRequester.dismiss() }
             verify(exactly = 1) { clearAllHotWalletContextualUnlockUseCase.invoke() }
-            verify(exactly = 1) { appRouter.replaceAll(AppRoute.Welcome(), onComplete = any()) }
+            verify(exactly = 1) { rootRouter.replaceAll(AppRoute.Welcome(), onComplete = any()) }
             coVerify(exactly = 1) { settingsRepository.setShouldOpenWelcomeScreenOnResume(value = false) }
         }
 
@@ -104,7 +104,7 @@ internal class LockUserWalletsTimerTest {
 
             // Assert
             verify(exactly = 1) { workManager.cancelAllWorkByTag(LockTimerWorker.TAG) }
-            verify(exactly = 0) { appRouter.replaceAll(*anyVararg(), onComplete = any()) }
+            verify(exactly = 0) { rootRouter.replaceAll(*anyVararg(), onComplete = any()) }
             coVerify(exactly = 0) { settingsRepository.setShouldOpenWelcomeScreenOnResume(any()) }
         }
     }
@@ -123,7 +123,7 @@ internal class LockUserWalletsTimerTest {
 
             // Assert
             coVerify(exactly = 1) { userWalletsListRepository.lockAllWallets() }
-            verify(exactly = 1) { appRouter.replaceAll(AppRoute.Welcome(), onComplete = any()) }
+            verify(exactly = 1) { rootRouter.replaceAll(AppRoute.Welcome(), onComplete = any()) }
         }
 
         @Test
@@ -151,7 +151,7 @@ internal class LockUserWalletsTimerTest {
 
             // Assert
             coVerify(exactly = 0) { userWalletsListRepository.lockAllWallets() }
-            verify(exactly = 0) { appRouter.replaceAll(*anyVararg(), onComplete = any()) }
+            verify(exactly = 0) { rootRouter.replaceAll(*anyVararg(), onComplete = any()) }
         }
 
         @Test
@@ -166,7 +166,26 @@ internal class LockUserWalletsTimerTest {
 
             // Assert
             coVerify(exactly = 2) { userWalletsListRepository.lockAllWallets() }
-            verify(exactly = 0) { appRouter.replaceAll(*anyVararg(), onComplete = any()) }
+            verify(exactly = 0) { rootRouter.replaceAll(*anyVararg(), onComplete = any()) }
+        }
+    }
+
+    @Nested
+    inner class Observe {
+
+        @Test
+        fun `GIVEN lock without an observing root WHEN root observes THEN resets it to welcome once`() = runTest {
+            // Arrange
+            val timer = createUnobservedTimer()
+            timer.onResume(owner)
+            advanceTimeBy(DURATION + 1.seconds)
+
+            // Act
+            timer.observe(scope = backgroundScope, router = rootRouter)
+            runCurrent()
+
+            // Assert
+            verify(exactly = 1) { rootRouter.replaceAll(AppRoute.Welcome(), onComplete = any()) }
         }
     }
 
@@ -286,13 +305,16 @@ internal class LockUserWalletsTimerTest {
             }
     }
 
-    private fun TestScope.createTimer(): LockUserWalletsTimer = LockUserWalletsTimer(
+    private fun TestScope.createTimer(): LockUserWalletsTimer = createUnobservedTimer().apply {
+        observe(scope = backgroundScope, router = rootRouter)
+    }
+
+    private fun TestScope.createUnobservedTimer(): LockUserWalletsTimer = LockUserWalletsTimer(
         context = context,
         settingsRepository = settingsRepository,
         userWalletsListRepository = userWalletsListRepository,
         clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
         passwordRequester = passwordRequester,
-        appRouter = appRouter,
         appScope = TestAppCoroutineScope(backgroundScope.coroutineContext),
         dispatchers = createTestingCoroutineDispatcherProvider(),
     )
