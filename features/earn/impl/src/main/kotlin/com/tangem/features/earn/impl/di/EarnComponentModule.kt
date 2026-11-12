@@ -1,12 +1,14 @@
 package com.tangem.features.earn.impl.di
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.features.earn.api.EarnBannerComponent
 import com.tangem.features.earn.api.EarnEntryComponent
 import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.earn.api.overview.EarnOverviewFetcher
 import com.tangem.features.earn.api.overview.EarnOverviewSupplier
 import com.tangem.features.earn.impl.DefaultEarnEntryComponent
 import com.tangem.features.earn.impl.DefaultEarnFeatureToggles
+import com.tangem.features.earn.impl.banner.DefaultEarnBannerComponent
 import com.tangem.features.earn.impl.overview.DefaultEarnOverviewFetcher
 import com.tangem.features.earn.impl.overview.DefaultEarnOverviewSupplier
 import com.tangem.features.earn.impl.overview.DefaultEarnProductSummaryProducer
@@ -25,6 +27,9 @@ internal interface EarnComponentModule {
     @Binds
     @Singleton
     fun bindEntryComponentFactory(impl: DefaultEarnEntryComponent.Factory): EarnEntryComponent.Factory
+
+    @Binds
+    fun bindBannerComponentFactory(impl: DefaultEarnBannerComponent.Factory): EarnBannerComponent.Factory
 
     @Binds
     fun bindSummaryProducerFactory(impl: DefaultEarnProductSummaryProducer.Factory): EarnProductSummaryProducer.Factory

@@ -68,9 +68,11 @@ internal class DefaultEarnOverviewSupplier @Inject constructor(
 
         val positions = counted.mapNotNull { it.position }
         val amounts = positions.mapNotNull { it.cryptoAmount }
+        val best = selector.winnerOf(counted)
 
         return EarnBannerOverview(
-            rate = selector.select(counted)?.rate,
+            rate = best?.rate,
+            bestProductId = best?.productId,
             activeCount = positions.size,
             totalPosition = amounts.takeIf { it.isNotEmpty() }?.reduce(BigDecimal::add),
         )
