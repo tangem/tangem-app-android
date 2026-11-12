@@ -73,6 +73,8 @@ data class PolymarketMarketDto(
     @Json(name = "orderIndex") val orderIndex: Int,
     @Json(name = "outcomes") val outcomes: List<PolymarketOutcomeDto>,
     @Json(name = "version") val version: String? = null,
+    @Json(name = "sportsMarketType") val sportsMarketType: String? = null,
+    @Json(name = "line") val line: Double? = null,
 )
 
 /** BFF `OutcomeSummary`. */

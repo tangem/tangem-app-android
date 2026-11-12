@@ -23,6 +23,7 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchReques
 import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketRevokeSessionKeyRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketSessionKeyDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketSoccerEventResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketSetSessionKeyEnabledRequest
 import com.tangem.lib.auth.api.RequiresSessionAuth
 import retrofit2.http.Body
@@ -158,6 +159,13 @@ interface PolymarketApi {
         @Header("wallet-id") walletId: String,
         @Path("eventId") eventId: String,
     ): ApiResponse<PolymarketEventResponse>
+
+    @RequiresSessionAuth
+    @GET("api/predictions/v1/sports/soccer/events/{eventId}")
+    suspend fun getSoccerEvent(
+        @Header("wallet-id") walletId: String,
+        @Path("eventId") eventId: String,
+    ): ApiResponse<PolymarketSoccerEventResponse>
 
     /**
      * Onboarding status of the owner's deposit wallet — the endpoint the client polls to observe
