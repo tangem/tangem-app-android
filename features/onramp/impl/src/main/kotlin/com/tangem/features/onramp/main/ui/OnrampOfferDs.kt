@@ -16,6 +16,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -49,38 +50,47 @@ internal fun OfferDs(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier
     }
     val isBuyEnabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
         onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted
-    TangemSurface(
-        modifier = modifier.fillMaxWidth(),
-        color = TangemTheme.colors3.bg.secondary,
-        shape = shape,
-    ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    OfferHeaderDs(advantage = onrampOfferUM.advantages)
-                    RateBlock(
-                        rate = onrampOfferUM.rate,
-                        diff = onrampOfferUM.diff
-                            .takeIf { onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted },
-                        isOfferUnavailable = onrampOfferUM.advantages is OnrampOfferAdvantagesUM.Unavailable,
+    Box(modifier = modifier.fillMaxWidth()) {
+        TangemSurface(
+            modifier = Modifier.fillMaxWidth(),
+            color = TangemTheme.colors3.bg.secondary,
+            shape = shape,
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        OfferHeaderDs(advantage = onrampOfferUM.advantages)
+                        RateBlock(
+                            rate = onrampOfferUM.rate,
+                            diff = onrampOfferUM.diff
+                                .takeIf { onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted },
+                            isOfferUnavailable = onrampOfferUM.advantages is OnrampOfferAdvantagesUM.Unavailable,
+                        )
+                    }
+                    SpacerWMax()
+                    TangemButton(
+                        variant = TangemButton.Variant.Primary,
+                        size = TangemButton.Size.X10,
+                        text = resourceReference(R.string.common_buy),
+                        onClick = onrampOfferUM.onBuyClicked,
+                        isEnabled = isBuyEnabled,
                     )
                 }
-                SpacerWMax()
-                TangemButton(
-                    variant = TangemButton.Variant.Primary,
-                    size = TangemButton.Size.X10,
-                    text = resourceReference(R.string.common_buy),
-                    onClick = onrampOfferUM.onBuyClicked,
-                    isEnabled = isBuyEnabled,
+                SpacerH(28.dp)
+                PaymentBlockInOfferDs(
+                    paymentMethod = onrampOfferUM.paymentMethod,
+                    providerName = onrampOfferUM.providerName,
                 )
             }
-            SpacerH(28.dp)
-            PaymentBlockInOfferDs(
-                paymentMethod = onrampOfferUM.paymentMethod,
-                providerName = onrampOfferUM.providerName,
+        }
+        if (onrampOfferUM.advantages == OnrampOfferAdvantagesUM.Fastest) {
+            TangemGlowRing(
+                modifier = Modifier.matchParentSize(),
+                variant = TangemGlowRing.Variant.Magic,
+                cornerRadius = 24.dp,
             )
         }
     }
