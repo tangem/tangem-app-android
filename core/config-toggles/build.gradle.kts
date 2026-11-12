@@ -18,6 +18,10 @@ abstract class GenerateTogglesTask : DefaultTask() {
     @get:Input
     abstract val fileNames: ListProperty<String>
 
+    /** Generated enum class name to the owning stream of each of its config files, in [configFiles] order */
+    @get:Input
+    abstract val streams: MapProperty<String, List<String>>
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -35,7 +39,7 @@ abstract class GenerateTogglesTask : DefaultTask() {
             .forEach { (fileName, inputFiles) ->
                 inputFiles.forEach { require(it.exists()) { "Config file not found: ${it.absolutePath}" } }
                 logger.lifecycle("Generating $fileName from ${inputFiles.joinToString { it.path }}")
-                TogglesGenerator.generate(inputFiles, outputDir.get().asFile, fileName)
+                TogglesGenerator.generate(inputFiles, outputDir.get().asFile, fileName, streams.get()[fileName])
             }
     }
 }
@@ -61,6 +65,7 @@ val toggles = featureTogglesStreams.associate { stream ->
 val generateToggles = tasks.register<GenerateTogglesTask>("generateToggles") {
     configFiles.from(toggles.keys)
     fileNames.set(toggles.values.toList())
+    streams.put("FeatureToggles", featureTogglesStreams)
     outputDir.set(layout.buildDirectory.dir("generated/source/toggles"))
 }
 
