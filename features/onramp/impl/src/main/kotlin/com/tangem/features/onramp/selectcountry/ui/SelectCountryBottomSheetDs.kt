@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.selectcountry.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -102,12 +104,17 @@ internal fun OnrampCountryListDs(state: CountryListUM, onCloseClick: () -> Unit,
 
 @Composable
 private fun CountryCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val closeDescription = stringResourceSafe(R.string.common_close)
     TangemSurface(
         modifier = modifier
             .size(CLOSE_BUTTON_SIZE)
-            .semantics { role = Role.Button },
+            .semantics {
+                role = Role.Button
+                contentDescription = closeDescription
+            },
         isMaterial = true,
         shape = CircleShape,
+        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         onClick = onClick,
     ) {
         Box(
@@ -120,7 +127,7 @@ private fun CountryCloseButton(onClick: () -> Unit, modifier: Modifier = Modifie
                 modifier = Modifier.size(CLOSE_ICON_SIZE),
                 imageVector = Icons.ic_cross_24,
                 tint = TangemTheme.colors3.icon.primary,
-                contentDescription = stringResourceSafe(R.string.common_close),
+                contentDescription = null,
             )
         }
     }
