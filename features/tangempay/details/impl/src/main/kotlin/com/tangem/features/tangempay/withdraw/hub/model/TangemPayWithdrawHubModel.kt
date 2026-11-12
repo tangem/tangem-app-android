@@ -29,6 +29,7 @@ import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSpeiAvailability
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSourcesObserver
 import com.tangem.features.tangempay.withdraw.buildWithdrawSwapRoute
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
@@ -68,6 +69,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase,
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase,
     private val bankWithdrawSourcesObserver: BankWithdrawSourcesObserver,
+    private val speiAvailability: BankWithdrawSpeiAvailability,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
@@ -152,7 +154,10 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private fun loadRecents() {
         state.update { it.copy(recents = RecentsState.Loading) }
         modelScope.launch {
-            val recents = getRecentBankAccountsUseCase(params.userWalletId).fold(
+            val recents = getRecentBankAccountsUseCase(
+                userWalletId = params.userWalletId,
+                includeSpeiRecipients = speiAvailability.isOffered(params.sourceAccount),
+            ).fold(
                 ifLeft = { RecentsState.Failed },
                 ifRight = { RecentsState.Loaded(accounts = it.recents, hasMoreAccounts = it.hasMoreAccounts) },
             )

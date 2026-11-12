@@ -54,6 +54,7 @@ internal class BankWithdrawOptionsFactoryTest {
             sources = sources,
             balanceCurrencyCode = "USD",
             isLimitedPerRail = false,
+            isSpeiOffered = false,
         )
 
         // Assert
@@ -74,6 +75,7 @@ internal class BankWithdrawOptionsFactoryTest {
             sources = sources,
             balanceCurrencyCode = "USD",
             isLimitedPerRail = isLimitedPerRail,
+            isSpeiOffered = false,
         )
 
         // Assert
@@ -83,7 +85,7 @@ internal class BankWithdrawOptionsFactoryTest {
     }
 
     @Test
-    fun `GIVEN SPEI and percentage-fee rails WHEN create THEN only fixed-fee ACH and wire rails offered`() {
+    fun `GIVEN SPEI not offered WHEN create THEN only fixed-fee ACH and wire rails offered`() {
         // Arrange
         val ach = offrampDestination(rail = BankRail.ACH)
         val wire = offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"))
@@ -101,10 +103,43 @@ internal class BankWithdrawOptionsFactoryTest {
             sources = sources,
             balanceCurrencyCode = "USD",
             isLimitedPerRail = false,
+            isSpeiOffered = false,
         )
 
         // Assert
         assertThat(actual).isEqualTo(bankWithdrawOptions(sources = sources, destinations = listOf(ach, wire)))
+    }
+
+    @Test
+    fun `GIVEN SPEI offered WHEN create THEN SPEI kept with its percentage fee and percentage routes still dropped`() {
+        // Arrange
+        val ach = offrampDestination(rail = BankRail.ACH)
+        val spei = offrampDestination(
+            rail = BankRail.SPEI,
+            fee = BigDecimal("1"),
+            calculationType = FeeCalculationType.PERCENTAGE,
+            fixedFeeAmount = BigDecimal("0.50"),
+        )
+        val rails = listOf(
+            ach,
+            offrampDestination(rail = BankRail.WIRE, calculationType = FeeCalculationType.PERCENTAGE),
+            spei,
+        )
+        val sources = listOf(bankWithdrawSource(token = usdcPolygon))
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(
+            destinations = rails,
+            sources = sources,
+            balanceCurrencyCode = "USD",
+            isLimitedPerRail = true,
+            isSpeiOffered = true,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            bankWithdrawOptions(sources = sources, destinations = listOf(ach, spei), isLimitedPerRail = true),
+        )
     }
 
     @Test
@@ -120,6 +155,7 @@ internal class BankWithdrawOptionsFactoryTest {
             sources = sources,
             balanceCurrencyCode = null,
             isLimitedPerRail = false,
+            isSpeiOffered = false,
         )
 
         // Assert
@@ -137,6 +173,7 @@ internal class BankWithdrawOptionsFactoryTest {
             sources = model.sources,
             balanceCurrencyCode = "USD",
             isLimitedPerRail = false,
+            isSpeiOffered = false,
         )
 
         // Assert
@@ -152,6 +189,7 @@ internal class BankWithdrawOptionsFactoryTest {
             sources = model.sources,
             balanceCurrencyCode = "USD",
             isLimitedPerRail = false,
+            isSpeiOffered = false,
         )
 
         // Assert
@@ -174,6 +212,7 @@ internal class BankWithdrawOptionsFactoryTest {
             sources = sources,
             balanceCurrencyCode = balanceCurrencyCode,
             isLimitedPerRail = false,
+            isSpeiOffered = false,
         )
 
         // Assert
