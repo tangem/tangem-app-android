@@ -36,9 +36,9 @@ import com.tangem.features.polymarket.impl.regionrestrictions.ui.RegionRestricti
 @Composable
 internal fun PolymarketOnboardingScreen(
     state: PolymarketOnboardingUM,
-    heroVideo: VideoSurfaceState?,
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
+    heroVideo: VideoSurfaceState? = null,
 ) {
     when (state) {
         PolymarketOnboardingUM.Resolving -> ResolvingScreen(onCloseClick = onCloseClick, modifier = modifier)
@@ -174,7 +174,7 @@ private fun ReconnectScreen(
 @Composable
 private fun PolymarketOnboardingScreenResolvingPreview() {
     TangemThemePreviewRedesign {
-        PolymarketOnboardingScreen(state = PolymarketOnboardingUM.Resolving, heroVideo = null, onCloseClick = {})
+        PolymarketOnboardingScreen(state = PolymarketOnboardingUM.Resolving, onCloseClick = {})
     }
 }
 
@@ -183,7 +183,7 @@ private fun PolymarketOnboardingScreenResolvingPreview() {
 @Composable
 private fun PolymarketOnboardingScreenWelcomePreview() {
     TangemThemePreviewRedesign {
-        PolymarketOnboardingScreen(state = previewState(isInProgress = false), heroVideo = null, onCloseClick = {})
+        PolymarketOnboardingScreen(state = previewState(isInProgress = false), onCloseClick = {})
     }
 }
 
@@ -192,7 +192,7 @@ private fun PolymarketOnboardingScreenWelcomePreview() {
 @Composable
 private fun PolymarketOnboardingScreenStartingPreview() {
     TangemThemePreviewRedesign {
-        PolymarketOnboardingScreen(state = previewState(isInProgress = true), heroVideo = null, onCloseClick = {})
+        PolymarketOnboardingScreen(state = previewState(isInProgress = true), onCloseClick = {})
     }
 }
 
@@ -201,7 +201,7 @@ private fun PolymarketOnboardingScreenStartingPreview() {
 @Composable
 private fun PolymarketOnboardingScreenReconnectPreview() {
     TangemThemePreviewRedesign {
-        PolymarketOnboardingScreen(state = previewReconnectState(), heroVideo = null, onCloseClick = {})
+        PolymarketOnboardingScreen(state = previewReconnectState(), onCloseClick = {})
     }
 }
 
