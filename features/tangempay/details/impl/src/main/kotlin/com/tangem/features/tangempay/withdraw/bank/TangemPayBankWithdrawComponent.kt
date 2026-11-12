@@ -128,7 +128,6 @@ internal class TangemPayBankWithdrawComponent(
                 onOrderCreated = model::onOrderCreated,
                 onDestinationChanged = model::onDestinationChanged,
                 onNetworkFeeChanged = model::onNetworkFeeChanged,
-                onQuoteChanged = model::onQuoteChanged,
                 onCompleted = ::onOrderSigned,
                 onTransferOutcomeUnknown = params.onWithdrawSent,
                 onCloseFlow = params.onCloseFlow,
