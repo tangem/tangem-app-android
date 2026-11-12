@@ -37,7 +37,13 @@ internal class NewsWebDeepLinkHandlerTest {
         val uri = mockk<Uri> { every { path } returns model.path }
         val queryParams = mapOf("category_id" to "5")
 
-        val request = DeepLinkRequest(uri = uri, queryParams = queryParams, scope = scope, isFromOnNewIntent = false)
+        val request = DeepLinkRequest(
+            uri = uri,
+            queryParams = queryParams,
+            scope = scope,
+            isFromOnNewIntent = false,
+            router = mockk(),
+        )
 
         // Act
         handler.handle(request)

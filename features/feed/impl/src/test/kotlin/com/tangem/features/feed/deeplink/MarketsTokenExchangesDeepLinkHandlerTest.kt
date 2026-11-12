@@ -131,7 +131,13 @@ internal class MarketsTokenExchangesDeepLinkHandlerTest {
 
     private fun TestScope.handle(queryParams: Map<String, String>) {
         handler.handle(
-            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = this, isFromOnNewIntent = false),
+            DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = this,
+                isFromOnNewIntent = false,
+                router = mockk(),
+            ),
         )
         advanceUntilIdle()
     }

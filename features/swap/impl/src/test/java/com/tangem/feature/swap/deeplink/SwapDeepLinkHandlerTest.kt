@@ -211,7 +211,13 @@ internal class SwapDeepLinkHandlerTest {
 
     private fun handle(scope: TestScope, queryParams: Map<String, String>) {
         handler.handle(
-            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = scope, isFromOnNewIntent = false),
+            DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = scope,
+                isFromOnNewIntent = false,
+                router = mockk(),
+            ),
         )
     }
 

@@ -149,6 +149,7 @@ internal class DiscoverDeepLinkHandlerTest {
             queryParams = queryParams,
             scope = mockk<CoroutineScope>(),
             isFromOnNewIntent = false,
+            router = mockk(),
         ),
     )
 }

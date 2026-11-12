@@ -62,5 +62,6 @@ internal class SellDeepLinkHandlerTest {
         queryParams = emptyMap(),
         scope = mockk<CoroutineScope>(),
         isFromOnNewIntent = false,
+        router = mockk(),
     )
 }

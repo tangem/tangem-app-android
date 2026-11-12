@@ -190,7 +190,13 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
         ).handle(
-            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = scope, isFromOnNewIntent = false),
+            DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = scope,
+                isFromOnNewIntent = false,
+                router = mockk(),
+            ),
         )
 
     private fun unlockedWallet(id: UserWalletId = USER_WALLET_ID): UserWallet = mockk<UserWallet.Hot>(relaxed = true) {
