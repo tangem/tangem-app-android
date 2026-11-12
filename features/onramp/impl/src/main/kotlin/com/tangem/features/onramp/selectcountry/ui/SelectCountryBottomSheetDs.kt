@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -110,15 +111,18 @@ private fun CountryCloseButton(onClick: () -> Unit, modifier: Modifier = Modifie
                 role = Role.Button
                 contentDescription = closeDescription
             },
-        isMaterial = true,
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = CircleShape,
-        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
+        border = BorderStroke(
+            width = 1.dp,
+            brush = Brush.linearGradient(
+                colors = listOf(TangemTheme.colors3.material.border.start, TangemTheme.colors3.material.border.end),
+            ),
+        ),
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(TangemTheme.colors3.bg.transparent.primary),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
