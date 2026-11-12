@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -58,7 +59,7 @@ import kotlinx.coroutines.launch
  * @param onSelectionChange Called once for a newly settled user selection, never during scrolling.
  * @param previousContentDescription Localized accessibility label for the previous-value arrow.
  * @param nextContentDescription Localized accessibility label for the next-value arrow.
- * @param modifier Layout modifier. The counter uses the available width, including 16dp side padding.
+ * @param contentPadding Insets around the counter; use zero when the containing card already provides them.
  */
 @Composable
 fun PolymarketCounter(
@@ -68,6 +69,7 @@ fun PolymarketCounter(
     previousContentDescription: String,
     nextContentDescription: String,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
 ) {
     val ids = remember(items) { items.map { it.id } }
     // Pager's count and key provider must belong to the same list, including during recomposition.
@@ -78,7 +80,7 @@ fun PolymarketCounter(
             onSelectionChange = onSelectionChange,
             previousContentDescription = previousContentDescription,
             nextContentDescription = nextContentDescription,
-            modifier = modifier,
+            modifier = modifier.padding(contentPadding),
         )
     }
 }
@@ -128,7 +130,7 @@ private fun CounterContent(
         }
     }
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TangemButton(
