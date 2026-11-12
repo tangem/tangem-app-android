@@ -322,6 +322,12 @@ private fun CountrySearchFooter(state: TangemSearch.State, modifier: Modifier = 
             .windowInsetsPadding(WindowInsets.ime),
         contentAlignment = Alignment.BottomCenter,
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(FADE_HEIGHT + navigationBarInset)
+                .background(TangemTheme.colors3.bg.primary),
+        )
         TangemFade(
             position = TangemFade.Position.Bottom,
             variant = TangemFade.Variant.Hard,
