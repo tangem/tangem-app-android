@@ -194,6 +194,35 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
         }
 
     @Test
+    fun `GIVEN card pending from restored order WHEN freeze row clicked THEN row disabled and no order started`() =
+        runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns true
+            val pendingStatus: AccountStatus.Payment = mockk(relaxed = true) {
+                every { account } returns Account.Payment(userWalletId)
+                every { value } returns mockk<PaymentAccountStatusValue.Loaded>(relaxed = true) {
+                    every { source } returns StatusSource.ACTUAL
+                    every { cards } returns listOf(
+                        firstCard.copy(frozenState = TangemPayCardFrozenState.Pending),
+                        secondCard,
+                    )
+                }
+            }
+            val model = createModel()
+            statusFlow.emit(pendingStatus)
+            runCurrent()
+
+            // Act
+            model.freezeRow().onClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.freezeRow().isEnabled).isFalse()
+            assertThat(sentMessages.filterIsInstance<BottomSheetMessage>()).isEmpty()
+            coVerify(exactly = 0) { changeCardFrozenStateUseCase(any(), any(), any()) }
+        }
+
+    @Test
     fun `GIVEN freeze confirmed WHEN operation is in progress THEN freeze row is loading until it ends`() = runTest {
         // Arrange
         val result = CompletableDeferred<Either<UniversalError, Unit>>()

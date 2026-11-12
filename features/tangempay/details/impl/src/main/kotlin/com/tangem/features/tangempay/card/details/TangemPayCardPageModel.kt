@@ -444,6 +444,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 iconRes = CoreUiR.drawable.ic_freeze_24,
                 testTag = TangemPayTestTags.FREEZE_CARD_ROW,
                 isLoading = frozenState == TangemPayCardFrozenState.Pending,
+                isEnabled = frozenState != TangemPayCardFrozenState.Pending,
             ),
             TangemPayCardPageSetting(
                 id = TangemPayCardPageSetting.Id.ChangePin,
@@ -544,6 +545,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onClickFreezeOrUnfreezeCard(cardId: String, isFrozen: Boolean) {
         if (cardId in frozenStateChangingCardIds.value) return
+        if (selectedCard()?.frozenState == TangemPayCardFrozenState.Pending) return
 
         val message = if (isFrozen) {
             TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = { unfreezeCard(cardId) })
