@@ -336,6 +336,7 @@
   <string name="collectibles_main_search_empty">Nenhum resultado. Tente alterar os termos da busca\nou explore a partir da lista</string>
   <string name="collectibles_main_search_load_error">Não foi possível carregar a lista de cartões.</string>
   <string name="collectibles_main_title">Conta de pacotes</string>
+  <string name="collectibles_main_withdraw">Sacar</string>
   <string name="collectibles_open_pack_buyback_unavailable">Recompra indisponível</string>
   <string name="collectibles_open_pack_failed_subtitle">Nosso parceiro está enfrentando um problema. Entre em contato com o suporte para receber orientações adicionais, por favor</string>
   <string name="collectibles_open_pack_failed_title">Falha ao abrir o pacote</string>
@@ -1658,6 +1659,7 @@
   <string name="money_account_add_funds_swap_description">Use criptoativos da sua carteira para adicionar fundos à sua conta em USD</string>
   <string name="money_account_balance_unavailable_description">Estamos com dificuldades para carregar seu saldo. Tente novamente mais tarde.</string>
   <string name="money_account_balance_unavailable_title">Saldo indisponível</string>
+  <string name="money_account_banner_proceed">Continuar</string>
   <string name="money_account_close_account">Encerrar conta</string>
   <string name="money_account_main_name">Conta em USD</string>
   <string name="money_account_main_status_action_required">Ação necessária</string>
@@ -1700,6 +1702,9 @@
   <string name="money_account_send_conversion">Conversão</string>
   <string name="money_account_send_fees_deducted">As taxas são descontadas antes da conversão</string>
   <string name="money_account_send_fees_footer">As taxas incluem a tarifa de serviço de %s e a taxa de rede estimada</string>
+  <string name="money_account_send_fees_network">Rede %s</string>
+  <string name="money_account_send_fees_title">Taxas</string>
+  <string name="money_account_send_fees_total">Total</string>
   <string name="money_account_send_network_fee_note">As taxas incluem uma taxa de rede estimada de %s, que pode variar conforme a atividade da rede</string>
   <string name="money_account_send_pay_button">Pagar %s</string>
   <string name="money_account_send_rate_lock">Taxa de câmbio fixada por %s</string>
@@ -1949,6 +1954,9 @@
   <string name="onramp_recommended_title">Recomendado</string>
   <string name="onramp_redirecting_to_provider_subtitle">Você poderá concluir sua transação por meio do provedor terceirizado. %s</string>
   <string name="onramp_redirecting_to_provider_title">Redirecionando para %s...</string>
+  <string name="onramp_region_restriction_description">As operações de compra e swap não estão disponíveis na sua região %1$s, de acordo com seu endereço IP</string>
+  <string name="onramp_region_restriction_description_v2">A compra não está disponível na sua região %1$s, de acordo com seu endereço IP</string>
+  <string name="onramp_region_restriction_title">Aplicam-se restrições regionais</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Nossos serviços não estão disponíveis neste país.</string>
   <string name="onramp_residency_bottomsheet_title">Sua residência foi identificada como</string>
   <string name="onramp_settings_residence">Residência</string>
@@ -2070,6 +2078,13 @@
   <string name="prediction_main_title">Previsões</string>
   <string name="prediction_main_total_balance">Saldo Total</string>
   <string name="prediction_main_withdraw">Sacar</string>
+  <string name="prediction_match_card_exact_score">Placar exato</string>
+  <string name="prediction_match_card_team_totals">Totais de %s</string>
+  <string name="prediction_match_next_line">Próxima opção</string>
+  <string name="prediction_match_over_short">O</string>
+  <string name="prediction_match_previous_line">Opção anterior</string>
+  <string name="prediction_match_rules">Regras</string>
+  <string name="prediction_match_under_short">U</string>
   <string name="prediction_onboarding_benefit_custody_subtitle">Somente seu cartão pode movimentar os fundos</string>
   <string name="prediction_onboarding_benefit_custody_title">Suas chaves, seus fundos</string>
   <string name="prediction_onboarding_benefit_fund_subtitle">USDC ou faça swap de qualquer moeda</string>
@@ -2078,6 +2093,16 @@
   <string name="prediction_onboarding_benefit_history_title">Histórico avançado</string>
   <string name="prediction_onboarding_benefit_payout_subtitle">Ganhe e será seu instantaneamente</string>
   <string name="prediction_onboarding_benefit_payout_title">Os pagamentos são enviados para sua carteira</string>
+  <string name="prediction_onboarding_error_address_mismatch">A conta de previsões retornada não pertence a esta carteira.</string>
+  <string name="prediction_onboarding_error_approvals_failed">Sua conta de previsões foi criada, mas não foi possível habilitar o trading.</string>
+  <string name="prediction_onboarding_error_card_failed">O cartão não respondeu. Aproxime-o novamente do celular.</string>
+  <string name="prediction_onboarding_error_credentials">Não foi possível entrar na Polymarket.</string>
+  <string name="prediction_onboarding_error_deployment_failed">Não foi possível criar sua conta de previsões.</string>
+  <string name="prediction_onboarding_error_polymarket_unavailable">A Polymarket não está respondendo no momento.</string>
+  <string name="prediction_onboarding_error_region_unknown">Não foi possível verificar se o recurso Predictions está disponível na sua região.</string>
+  <string name="prediction_onboarding_error_request_declined">A Polymarket recusou a solicitação.</string>
+  <string name="prediction_onboarding_error_transaction_rejected">A transação que cria sua conta de previsões foi rejeitada.</string>
+  <string name="prediction_onboarding_error_wallet_unsupported">Esta carteira não pode ser usada para fazer previsões.</string>
   <string name="prediction_onboarding_faq_availability_answer">A disponibilidade varia de acordo com a região e alguns países têm restrições. Você é responsável por cumprir as leis aplicáveis na sua jurisdição.</string>
   <string name="prediction_onboarding_faq_availability_question">Está disponível onde eu moro?</string>
   <string name="prediction_onboarding_faq_risks_answer">Os mercados de previsão envolvem riscos. Você pode perder seu dinheiro se os preços se moverem contra você. Os resultados liquidados são finais. Isso não constitui aconselhamento financeiro.</string>
@@ -2215,6 +2240,7 @@
   <string name="prediction_session_key_unknown_signer">Signatário desconhecido</string>
   <string name="prediction_session_key_unknown_signers_text">Outra pessoa pode negociar usando seu saldo de previsões. Se você não autorizou isso, revogue estes signatários agora.</string>
   <string name="prediction_session_key_unknown_signers_title">Signatários desconhecidos podem negociar</string>
+  <string name="prediction_sports_neither">Nenhuma</string>
   <string name="prediction_withdraw_balance_unavailable">Não foi possível carregar o saldo da sua conta de previsões. Atualize ou reabra esta tela.</string>
   <string name="prediction_withdraw_confirm_fee_footer">Nenhuma taxa de rede é cobrada por este saque. O valor que você receber poderá apresentar uma pequena diferença devido à conversão realizada pela bridge.</string>
   <string name="prediction_withdraw_confirm_title">Confirmar saque</string>
@@ -3393,6 +3419,7 @@
   <string name="tangempay_withdraw_bank_field_bank_name">Nome do banco</string>
   <string name="tangempay_withdraw_bank_field_bank_region">Estado / região do banco</string>
   <string name="tangempay_withdraw_bank_field_business_name">Nome da empresa</string>
+  <string name="tangempay_withdraw_bank_field_clabe_hint">Número de conta bancária de 18 dígitos do destinatário no México</string>
   <string name="tangempay_withdraw_bank_field_error_clabe">A CLABE está incorreta</string>
   <string name="tangempay_withdraw_bank_field_error_invalid_format">Formato de texto inválido</string>
   <string name="tangempay_withdraw_bank_field_error_routing_number">O número de roteamento está incorreto</string>
@@ -3872,9 +3899,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Sua transação com um valor de %1$s %2$s não foi concluída. Você pode tentar novamente para concluí-la.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Você tem uma transação pendente.</string>
   <string name="warning_last_balance_updated_time">A última atualização foi %s</string>
-  <string name="warning_link_wallet_cold_message">Sincronize a sua carteira com os serviços Tangem para adicionar uma camada extra de segurança.</string>
-  <string name="warning_link_wallet_hot_message">Sincronize a sua carteira com os serviços Tangem para uma proteção adicional.</string>
-  <string name="warning_link_wallet_title">Proteja a sua ligação</string>
+  <string name="warning_link_wallet_cold_message">Sincronize sua carteira com os serviços da Tangem para adicionar uma camada extra de segurança.</string>
+  <string name="warning_link_wallet_hot_message">Sincronize sua carteira com os serviços da Tangem para adicionar uma camada extra de segurança.</string>
+  <string name="warning_link_wallet_title">Proteja sua conexão</string>
   <string name="warning_low_signatures_message">Restam apenas %s assinaturas neste cartão. Você deve sacar todos os seus fundos.</string>
   <string name="warning_low_signatures_title">Baixa contagem de assinaturas</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens em redes diferentes podem ter endereços diferentes. Verifique se o seu endereço corresponde à rede ao transferir fundos.</string>

@@ -2104,6 +2104,23 @@
   <string name="prediction_main_title">Predictions</string>
   <string name="prediction_main_total_balance">Total Balance</string>
   <string name="prediction_main_withdraw">Withdraw</string>
+  <string name="prediction_match_card_both_teams_to_score">Both teams to score</string>
+  <string name="prediction_match_card_exact_score">Exact score</string>
+  <string name="prediction_match_card_first_to_score">First team to score</string>
+  <string name="prediction_match_card_moneyline">Moneyline</string>
+  <string name="prediction_match_card_result">Result</string>
+  <string name="prediction_match_card_spreads">Spreads</string>
+  <string name="prediction_match_card_team_totals">%s totals</string>
+  <string name="prediction_match_card_totals">Totals</string>
+  <string name="prediction_match_next_line">Next line</string>
+  <string name="prediction_match_over_short">O</string>
+  <string name="prediction_match_previous_line">Previous line</string>
+  <string name="prediction_match_rules">Rules</string>
+  <string name="prediction_match_tab_exact_score">Exact score</string>
+  <string name="prediction_match_tab_first_half">First half</string>
+  <string name="prediction_match_tab_game_lines">Game lines</string>
+  <string name="prediction_match_tab_second_half">Second half</string>
+  <string name="prediction_match_under_short">U</string>
   <string name="prediction_onboarding_benefit_custody_subtitle">Only your card can move money</string>
   <string name="prediction_onboarding_benefit_custody_title">Your keys, your funds</string>
   <string name="prediction_onboarding_benefit_fund_subtitle">USDC or swap any coin</string>
@@ -2291,6 +2308,7 @@
   <string name="prediction_session_key_toast_extension_failed">Extension failed. Please retry</string>
   <string name="prediction_session_key_toast_extension_failed_revoked">Extension failed. Please create key manually</string>
   <string name="prediction_session_key_toast_extension_in_progress">Extension in progress</string>
+  <string name="prediction_session_key_toast_order_fallback">Fast trading is unavailable for this order. Confirm it the usual way.</string>
   <string name="prediction_session_key_toast_pausing_failed">Pausing failed. Please retry</string>
   <string name="prediction_session_key_toast_reactivation_failed">Reactivation failed. Please retry</string>
   <string name="prediction_session_key_toast_reactivation_failed_revoked">Key was revoked but creation of New Key failed. Please activate manually</string>
@@ -2305,6 +2323,7 @@
   <string name="prediction_session_key_until">Until %s</string>
   <string name="prediction_session_key_what_is">What is fast trading?</string>
   <string name="prediction_sports_draw">Draw</string>
+  <string name="prediction_sports_neither">Neither</string>
   <string name="prediction_withdraw_balance_unavailable">Couldn\'t load your prediction account balance. Refresh or reopen this screen.</string>
   <string name="prediction_withdraw_confirm_fee_footer">No network fee is charged for this withdrawal. The amount you receive may differ slightly due to bridge conversion.</string>
   <string name="prediction_withdraw_confirm_title">Confirm withdrawal</string>
@@ -3468,6 +3487,7 @@
   <string name="tangempay_withdraw_bank_amount_not_enough_funds">Not enough funds</string>
   <string name="tangempay_withdraw_bank_choose_transfer_method">Choose transfer method</string>
   <string name="tangempay_withdraw_bank_confirm_title">Confirm transfer</string>
+  <string name="tangempay_withdraw_bank_data_unreachable">Couldn\'t load transfer details. Check your internet connection or tap to refresh</string>
   <string name="tangempay_withdraw_bank_error_business">Transfers are not available for this type of business</string>
   <string name="tangempay_withdraw_bank_error_general_title">Unable to perform the operation</string>
   <string name="tangempay_withdraw_bank_error_recipient_region">Transfers to recipient\'s region currently unavailable</string>

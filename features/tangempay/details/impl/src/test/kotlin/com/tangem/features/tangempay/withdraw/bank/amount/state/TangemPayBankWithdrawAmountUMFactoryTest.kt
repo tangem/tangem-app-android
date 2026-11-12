@@ -6,6 +6,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
@@ -21,6 +23,7 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -157,6 +160,41 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
     )
 
     @ParameterizedTest
+    @MethodSource("provideSpeiRouteModels")
+    fun `GIVEN SPEI picked WHEN amount entered THEN the rail row shows one fee and the sheet keeps the formula`(
+        model: SpeiRouteModel,
+    ) {
+        // Arrange
+        val factory = createFactory(moneyAccount)
+        val networkFee = NetworkFeeState.Loaded(BigDecimal("0.03"))
+        val options = bankWithdrawOptions(destinations = listOf(offrampDestination(), SPEI_DESTINATION))
+        val state = AmountState(value = model.value, selectedRail = BankRail.SPEI, networkFee = networkFee)
+
+        // Act
+        val actual = factory.create(
+            draft = draft,
+            selection = state.resolve(draft = draft, options = options, isEditing = false),
+            sheet = AmountSheet.ROUTES,
+            networkFee = networkFee,
+            isBalanceHidden = false,
+        ) as Content
+
+        // Assert
+        val speiItem = (actual.sheet as SheetUM.Routes).items.single { it.rail == BankRail.SPEI }
+        assertThat(actual.route.eta).isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_eta_within_minutes))
+        assertThat(actual.route.fee).isEqualTo(model.expectedRouteFee)
+        assertThat(speiItem.fee).isEqualTo("$0.53 + 1%")
+    }
+
+    private fun provideSpeiRouteModels() = listOf(
+        SpeiRouteModel(value = "", expectedRouteFee = "$0.53 + 1%"),
+        SpeiRouteModel(value = "0", expectedRouteFee = "$0.53 + 1%"),
+        SpeiRouteModel(value = "500", expectedRouteFee = "$5.53"),
+    )
+
+    internal data class SpeiRouteModel(val value: String, val expectedRouteFee: String)
+
+    @ParameterizedTest
     @MethodSource("provideNetworkFeeModels")
     fun `GIVEN network fee not loaded WHEN create THEN placeholder screen instead of the form`(model: NetworkFeeModel) {
         // Arrange
@@ -210,4 +248,15 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
         networkFee = networkFee,
         isBalanceHidden = false,
     )
+
+    private companion object {
+        val SPEI_DESTINATION = offrampDestination(
+            rail = BankRail.SPEI,
+            fee = BigDecimal("1"),
+            calculationType = FeeCalculationType.PERCENTAGE,
+            fixedFeeAmount = BigDecimal("0.50"),
+            minDays = 0,
+            maxDays = 0,
+        )
+    }
 }

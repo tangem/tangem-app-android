@@ -147,8 +147,8 @@ internal class TangemPayBankWithdrawAmountUMFactory(
     private fun createRouteRow(selection: AmountSelection, isRailLocked: Boolean): RouteRowUM = RouteRowUM(
         rail = selection.destination.rail,
         title = selection.destination.toTitleReference(),
-        eta = selection.destination.eta.toTextReference(),
-        fee = selection.destination.totalFeeText(selection.networkFee),
+        eta = selection.destination.toEtaReference(),
+        fee = selection.destination.feeText(amount = selection.amount, networkFee = selection.networkFee),
         onClick = callbacks.onRouteClick.takeIf { selection.destinations.size > 1 && !isRailLocked },
     )
 
@@ -178,7 +178,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                     RouteItemUM(
                         rail = destination.rail,
                         title = destination.toTitleReference(),
-                        eta = destination.eta.toTextReference(),
+                        eta = destination.toEtaReference(),
                         fee = destination.totalFeeText(selection.networkFee),
                         isSelected = destination.rail == selection.destination.rail,
                         onClick = { callbacks.onRouteSelected(destination.rail) },
