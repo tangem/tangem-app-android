@@ -3,9 +3,7 @@ package com.tangem.data.collectibles.vault
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.network.NetworkFactory
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.collectibles.account.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.vault.GachaVaultError
@@ -47,13 +45,3 @@ internal class CollectiblesOwnerNetworkProvider @Inject constructor(
         return network.right()
     }
 }
-
-/**
- * The chain the gacha vault is addressed on. A hot wallet has no card behind it, so it is never a test one.
- */
-private val UserWallet.collectiblesVaultBlockchain: Blockchain
-    get() = if (this is UserWallet.Cold && cardTypesResolver.isTestCard()) {
-        Blockchain.SolanaTestnet
-    } else {
-        Blockchain.Solana
-    }

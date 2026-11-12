@@ -23,6 +23,9 @@ sealed interface CollectiblesAccountError {
     /** The backend did not take the account record, so the account is not created on this device either. */
     data class RegistrationFailed(val cause: Throwable) : CollectiblesAccountError
 
+    /** UNCERTAIN / timeout — never resend. */
+    data class MaybeSent(val txHash: String?) : CollectiblesAccountError
+
     /** Ours or the chain's, not shown to the user yet. */
     data class Vault(val error: UniversalError) : CollectiblesAccountError
 }

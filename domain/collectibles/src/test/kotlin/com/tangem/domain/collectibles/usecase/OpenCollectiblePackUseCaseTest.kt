@@ -391,6 +391,38 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
+    fun `GIVEN the payment outcome is unknown with a hash WHEN invoked THEN the hash is reported and the pack opens`() =
+        runTest {
+            // Arrange
+            coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
+                CollectiblesAccountError.MaybeSent(txHash = TX_HASH).left()
+
+            // Act
+            val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(OpenPackStep.Opened(PACK))
+            coVerify(exactly = 1) { collectiblesRepository.reportPurchaseTxSent(WALLET_ID, TX_ID, TX_HASH) }
+            coVerify(exactly = 1) { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN the payment outcome is unknown without a hash WHEN invoked THEN the payment is awaited unreported`() =
+        runTest {
+            // Arrange
+            coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
+                CollectiblesAccountError.MaybeSent(txHash = null).left()
+
+            // Act
+            val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(OpenPackStep.Opened(PACK))
+            coVerify(exactly = 0) { collectiblesRepository.reportPurchaseTxSent(any(), any(), any()) }
+            coVerify(exactly = 1) { gachaVaultRepository.getVaultSessionKey(userWallet) }
+        }
+
+    @Test
     fun `GIVEN reporting the hash fails WHEN invoked THEN the payment is still awaited and the pack opens`() = runTest {
         // Arrange
         coEvery { collectiblesRepository.reportPurchaseTxSent(any(), any(), any()) } throws IllegalStateException()
