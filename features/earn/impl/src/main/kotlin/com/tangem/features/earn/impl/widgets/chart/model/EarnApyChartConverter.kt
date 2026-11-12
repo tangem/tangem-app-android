@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.formatEarnRate
@@ -39,6 +40,7 @@ internal class EarnApyChartConverter @Inject constructor() {
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
         locale: Locale = Locale.getDefault(),
     ): EarnApyChartUM {
+        val current = params.currentRate.value
         val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
         val pointsOldestFirst = history.points.sortedBy(EarnApyPoint::at)
         val dates = pointsOldestFirst.map { it.at.toLocalDateTime(timeZone).date }
@@ -51,6 +53,7 @@ internal class EarnApyChartConverter @Inject constructor() {
 
         val header = header(
             params = params,
+            rate = current,
             period = period,
             onPeriodClick = onPeriodClick,
             onBarSelected = onBarSelected,
@@ -60,10 +63,20 @@ internal class EarnApyChartConverter @Inject constructor() {
         return header.copy(
             bars = bars.toImmutableList(),
             scale = EarnApyChartAxis.scaleOf(tallestColumn = bars.maxOfOrNull(EarnApyBarUM::value) ?: 0.0),
-            average = history.average?.let { average(fraction = it, type = params.currentRate.type, locale = locale) },
+            average = history.average?.let { average(fraction = it, type = current.type, locale = locale) },
             xLabels = EarnApyChartAxis.monthLabels(columnStarts = dates, locale = locale).toImmutableList(),
         )
     }
+
+    fun updateRate(
+        state: EarnApyChartUM,
+        rate: EarnProductRate,
+        locale: Locale = Locale.getDefault(),
+    ): EarnApyChartUM = state.copy(
+        rateTitle = rateTitle(rate.type),
+        currentRate = currentRate(rate, locale),
+        average = state.average?.copy(title = averageTitle(rate.type)),
+    )
 
     fun loading(
         params: EarnApyChartComponent.Params,
@@ -73,6 +86,7 @@ internal class EarnApyChartConverter @Inject constructor() {
         locale: Locale = Locale.getDefault(),
     ): EarnApyChartUM = header(
         params = params,
+        rate = params.currentRate.value,
         period = period,
         onPeriodClick = onPeriodClick,
         onBarSelected = onBarSelected,
@@ -87,14 +101,17 @@ internal class EarnApyChartConverter @Inject constructor() {
         locale: Locale = Locale.getDefault(),
     ): EarnApyChartUM = header(
         params = params,
+        rate = params.currentRate.value,
         period = period,
         onPeriodClick = onPeriodClick,
         onBarSelected = onBarSelected,
         locale = locale,
     )
 
+    @Suppress("LongParameterList")
     private fun header(
         params: EarnApyChartComponent.Params,
+        rate: EarnProductRate,
         period: EarnPeriod,
         onPeriodClick: (EarnPeriod) -> Unit,
         onBarSelected: (Int?) -> Unit,
@@ -110,8 +127,8 @@ internal class EarnApyChartConverter @Inject constructor() {
                 )
             }
             .toImmutableList(),
-        rateTitle = rateTitle(params.currentRate.type),
-        currentRate = stringReference("${params.currentRate.fraction.formatEarnRate(locale)}%"),
+        rateTitle = rateTitle(rate.type),
+        currentRate = currentRate(rate, locale),
         bars = persistentListOf(),
         scale = EarnApyChartAxis.scaleOf(tallestColumn = 0.0),
         average = null,
@@ -121,6 +138,9 @@ internal class EarnApyChartConverter @Inject constructor() {
         onBarSelected = onBarSelected,
         onCalculatorClick = params.callback?.let { callback -> { callback.onCalculatorClick() } },
     )
+
+    private fun currentRate(rate: EarnProductRate, locale: Locale): TextReference =
+        stringReference("${rate.fraction.formatEarnRate(locale)}%")
 
     private fun rateTitle(type: EarnRateType): TextReference = when (type) {
         EarnRateType.APY -> EarnApyChartTexts.currentApy

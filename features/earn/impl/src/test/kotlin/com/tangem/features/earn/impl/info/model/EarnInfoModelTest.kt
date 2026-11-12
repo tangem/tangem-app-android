@@ -25,6 +25,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
@@ -551,10 +552,42 @@ internal class EarnInfoModelTest {
                 // Assert
                 assertThat(params.periods).isEqualTo(ready.apyPeriods)
                 assertThat(params.defaultPeriod).isEqualTo(ready.apyPeriods.last())
-                assertThat(params.currentRate).isEqualTo(ready.rate)
+                assertThat(params.currentRate.value).isEqualTo(ready.rate)
                 assertThat(params.callback).isSameInstanceAs(model)
                 model.onDestroy()
             }
+
+        @Test
+        fun `GIVEN chartParams WHEN the product rate changes THEN the chart rate follows it`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+            val params = model.chartParams()
+            val changed = EarnProductRate(fraction = BigDecimal("0.0612"), type = product.readyState().rate.type)
+
+            // Act
+            product.stateFlow.value = product.readyState().copy(rate = changed)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(params.currentRate.value).isEqualTo(changed)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN chartParams called twice WHEN created THEN both share one rate flow`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            val first = model.chartParams()
+            val second = model.chartParams()
+
+            // Assert
+            assertThat(first.currentRate).isSameInstanceAs(second.currentRate)
+            model.onDestroy()
+        }
 
         @Test
         fun `GIVEN Ready without projection WHEN chartParams THEN there is no callback and the chart hides the calculator button`() =
