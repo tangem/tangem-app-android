@@ -11,8 +11,10 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.recipients.model.TangemPayBankWithdrawRecipientsModel
 import com.tangem.features.tangempay.withdraw.bank.recipients.ui.TangemPayBankWithdrawRecipientsScreen
+import kotlinx.coroutines.flow.StateFlow
 
 internal class TangemPayBankWithdrawRecipientsComponent(
     appComponentContext: AppComponentContext,
@@ -30,6 +32,7 @@ internal class TangemPayBankWithdrawRecipientsComponent(
 
     data class Params(
         val sourceAccount: BankWithdrawSourceAccount,
+        val options: StateFlow<BankWithdrawOptions>,
         val onRecipientSelected: (BankAccount) -> Unit,
         val onCloseFlow: () -> Unit,
     ) {
