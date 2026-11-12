@@ -56,7 +56,7 @@ fun rememberTangemExitUntilCollapsedScrollBehavior(
         isTopOverscrollEnabled = isTopOverscrollEnabled,
     )
 
-    SnapThresholdHapticEffect(state = topBarState)
+    if (snapAnimationSpec != null) SnapThresholdHapticEffect(state = topBarState)
 
     return exitUntilCollapsedScrollBehavior(
         state = topBarState,
