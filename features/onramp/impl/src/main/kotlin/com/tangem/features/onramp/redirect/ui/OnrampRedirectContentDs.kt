@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.redirect.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -28,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
@@ -103,13 +106,18 @@ private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
 
 @Composable
 private fun RedirectCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val closeDescription = stringResourceSafe(CoreUiR.string.common_close)
     TangemSurface(
         modifier = modifier
             .size(44.dp)
-            .semantics { role = Role.Button }
+            .semantics {
+                role = Role.Button
+                contentDescription = closeDescription
+            }
             .testTag(TopAppBarTestTags.CLOSE_BUTTON),
         isMaterial = true,
         shape = CircleShape,
+        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         onClick = onClick,
     ) {
         Box(
@@ -120,7 +128,7 @@ private fun RedirectCloseButton(onClick: () -> Unit, modifier: Modifier = Modifi
                 modifier = Modifier.size(24.dp),
                 imageVector = Icons.ic_cross_24,
                 tint = TangemTheme.colors3.icon.primary,
-                contentDescription = stringResourceSafe(R.string.common_close),
+                contentDescription = null,
             )
         }
     }
