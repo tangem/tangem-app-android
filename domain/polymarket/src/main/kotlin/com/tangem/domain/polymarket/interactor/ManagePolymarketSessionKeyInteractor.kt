@@ -294,14 +294,14 @@ class ManagePolymarketSessionKeyInteractor(
             .bind()
         val credentials = getApiCredentials(userWalletId)
             ?: raise(PolymarketSessionKeyLifecycleError.OwnerCredentialsUnavailable(active))
-        val validUntil = active.validUntil ?: raise(PolymarketSessionKeyLifecycleError.NotListedOnExchange(active))
-        val isListed = relay.awaitListing(
+        val validUntil = active.validUntil
+        val isListed = validUntil != null && relay.awaitListing(
             owner = PolymarketClobIdentity.Owner(address = ownerAddress, credentials = credentials),
             sessionKey = active,
         )
-        ensure(isListed) {
-            TangemLogger.e("Polymarket does not list the active session key ${active.address}")
-            PolymarketSessionKeyLifecycleError.NotListedOnExchange(active)
+        if (validUntil == null || !isListed) {
+            TangemLogger.i("Polymarket does not list the active session key ${active.address} yet, left to reconcile")
+            return
         }
         tradingStore.markReadyOnExchange(userWalletId, active.address, validUntil)
     }
