@@ -62,5 +62,9 @@
     {
         "name": "TWI_1720_ALL_SERVICES_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_19355_DISCOVER_DEEPLINK_FILTERS_ENABLED",
+        "version": "undefined"
     }
 ]
