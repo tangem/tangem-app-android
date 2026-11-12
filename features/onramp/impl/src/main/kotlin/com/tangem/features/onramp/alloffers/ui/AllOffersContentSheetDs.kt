@@ -55,7 +55,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
+import com.tangem.core.ui.res.generated.icons.ic_chevron_left_24
 import com.tangem.core.ui.res.generated.icons.ic_cross_24
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
@@ -224,7 +224,7 @@ private object IntrinsicFreeMeasurePolicyDs : MeasurePolicy {
 @Composable
 private fun ProviderTitleDs(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
     TangemModal.TopNavigation(
-        startButton = { NavigationDiscButtonDs(icon = Icons.ic_chevron_left_20, onClick = onBackClick) },
+        startButton = { NavigationDiscButtonDs(icon = Icons.ic_chevron_left_24, onClick = onBackClick) },
         endButton = {
             CloseDiscButtonDs(onClick = onCloseClick)
         },
@@ -274,17 +274,17 @@ private fun ColumnScope.TitleSubtitleDs(title: TextReference, subtitle: TextRefe
 private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(
         modifier = modifier.size(44.dp).semantics { role = Role.Button },
-        color = TangemTheme.colors3.bg.transparent.primary,
-        border = BorderStroke(1.dp, TangemTheme.colors3.bg.transparent.secondary),
+        isMaterial = true,
+        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         shape = CircleShape,
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(24.dp),
                 imageVector = icon,
                 tint = TangemTheme.colors3.icon.primary,
                 contentDescription = null,
