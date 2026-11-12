@@ -172,6 +172,7 @@ private fun DetailRow(
             ) {
                 Text(
                     text = value.resolveReference(),
+                    modifier = Modifier.weight(1f, fill = false),
                     style = TangemTheme.typography3.body.medium,
                     color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.End,
