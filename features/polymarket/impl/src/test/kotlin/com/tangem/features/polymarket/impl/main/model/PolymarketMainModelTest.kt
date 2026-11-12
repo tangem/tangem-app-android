@@ -30,6 +30,7 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
+import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
 import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
@@ -126,6 +127,7 @@ internal class PolymarketMainModelTest {
         every { this@mockk.invoke(USER_WALLET_ID) } returns hasCredentials
     }
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
+    private val walletLinkGate: PolymarketWalletLinkGate = mockk()
     private val liveQuotes = MutableStateFlow(emptyMap<String, PolymarketLiveQuote>())
     private val quotesRepository: PolymarketLiveQuotesRepository = mockk {
         every { observeLiveQuotes(any()) } returns liveQuotes
@@ -165,6 +167,8 @@ internal class PolymarketMainModelTest {
         clearMocks(fundingWindow)
         isFundingOpen.value = false
         every { fundingWindow.isOpen(USER_WALLET_ID) } returns isFundingOpen
+        clearMocks(walletLinkGate)
+        coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } returns true
     }
 
     init {
@@ -2106,6 +2110,7 @@ internal class PolymarketMainModelTest {
                 collateralCurrencyFactory = mockk(relaxed = true),
             ),
             polymarketFeatureToggles = featureToggles,
+            walletLinkGate = walletLinkGate,
         ).also { model = it }
     }
 
@@ -2149,6 +2154,34 @@ internal class PolymarketMainModelTest {
 
         // Assert
         verify(exactly = 1) { router.replaceAll(PolymarketRoute.Onboarding(userWalletId = USER_WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN the wallet is not linked WHEN the screen opens THEN the stack is unwound to Main and the feature closes`() = runTest {
+        // Arrange
+        coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } returns false
+        every { router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), any()) } answers { secondArg<(Boolean) -> Unit>()(true) }
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verifyOrder {
+            router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), any())
+            router.pop(any())
+        }
+    }
+
+    @Test
+    fun `GIVEN the wallet is linked WHEN the screen opens THEN the feature stays`() = runTest {
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { walletLinkGate.ensureLinked(USER_WALLET_ID) }
+        verify(exactly = 0) { router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), any()) }
     }
 
     @Test
