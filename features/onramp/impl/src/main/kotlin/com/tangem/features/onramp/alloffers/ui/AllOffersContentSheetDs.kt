@@ -25,7 +25,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -273,14 +272,8 @@ private fun ColumnScope.TitleSubtitleDs(title: TextReference, subtitle: TextRefe
     }
 }
 
-private val HeaderDiscShineBorder = BorderStroke(
-    width = 1.dp,
-    brush = Brush.linearGradient(
-        colors = listOf(Color.White.copy(alpha = 0.12f), Color.White.copy(alpha = 0.09f)),
-        start = Offset.Zero,
-        end = Offset(120f, 120f),
-    ),
-)
+private const val MATERIAL_BORDER_MID_START_STOP = 0.4f
+private const val MATERIAL_BORDER_MID_END_STOP = 0.6f
 
 private val HeaderDiscShineFill = Brush.verticalGradient(
     listOf(Color.White.copy(alpha = 0.040f), Color.White.copy(alpha = 0.062f)),
@@ -288,11 +281,20 @@ private val HeaderDiscShineFill = Brush.verticalGradient(
 
 @Composable
 private fun HeaderDiscDs(icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val materialBorder = TangemTheme.colors3.material.border
     TangemSurface(
         modifier = modifier,
         color = Color.Transparent,
         shape = CircleShape,
-        border = HeaderDiscShineBorder,
+        border = BorderStroke(
+            width = 1.dp,
+            brush = Brush.linearGradient(
+                0f to materialBorder.start,
+                MATERIAL_BORDER_MID_START_STOP to materialBorder.mid,
+                MATERIAL_BORDER_MID_END_STOP to materialBorder.mid,
+                1f to materialBorder.end,
+            ),
+        ),
         onClick = onClick,
     ) {
         Box(
