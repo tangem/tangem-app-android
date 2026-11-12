@@ -136,7 +136,7 @@ internal class PolymarketMainModel @Inject constructor(
                 categories = persistentListOf(),
                 content = PolymarketFeedContentUM.Loading,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
-                isFastTradingSettingsAvailable = polymarketFeatureToggles.isPolymarketSessionKeysEnabled,
+                isFastTradingSettingsAvailable = polymarketFeatureToggles.isPolymarketFastOrdersEnabled,
             ),
         )
 

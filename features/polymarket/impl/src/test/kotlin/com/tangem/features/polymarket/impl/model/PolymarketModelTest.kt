@@ -57,7 +57,7 @@ internal class PolymarketModelTest {
     @BeforeEach
     fun setup() {
         clearMocks(featureToggles, observeOutcome, acknowledgeOutcome, observeOperation, messageSender)
-        every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+        every { featureToggles.isPolymarketFastOrdersEnabled } returns true
         outcomes.forEach { (walletId, finished) ->
             finished.value = null
             every { observeOutcome(walletId) } returns finished
@@ -210,7 +210,7 @@ internal class PolymarketModelTest {
     @Test
     fun `GIVEN toggle off WHEN outcome arrives THEN nothing is observed sent or acknowledged`() = runTest {
         // Arrange
-        every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+        every { featureToggles.isPolymarketFastOrdersEnabled } returns false
         createVisibleModel(USER_WALLET_ID)
 
         // Act
