@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.details.model.transformer
 
+import com.tangem.features.polymarket.impl.common.PolymarketEventFormatting
 import com.google.common.truth.Truth
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
@@ -255,7 +256,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
         @ProvideTestModels
         fun computeChange24hRatio(model: Change24hModel) {
             // Act
-            val actual = PolymarketEventDetailsContentTransformer.computeChange24hRatio(
+            val actual = PolymarketEventFormatting.computeChange24hRatio(
                 volume = model.volume,
                 volume24h = model.volume24h,
             )

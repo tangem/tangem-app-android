@@ -109,7 +109,7 @@ internal fun PolymarketEventDetailsScreen(
         },
     ) { contentPadding ->
         when (state) {
-            PolymarketEventDetailsUM.Loading -> LoadingState(modifier = Modifier.fillMaxSize())
+            PolymarketEventDetailsUM.Loading -> EventDetailsLoadingState(modifier = Modifier.fillMaxSize())
             is PolymarketEventDetailsUM.Content -> ContentState(
                 modifier = Modifier.fillMaxSize(),
                 state = state,
@@ -118,7 +118,7 @@ internal fun PolymarketEventDetailsScreen(
                 statusBarPadding = statusBarPadding,
                 chart = chart,
             )
-            is PolymarketEventDetailsUM.Error -> ErrorState(
+            is PolymarketEventDetailsUM.Error -> EventDetailsErrorState(
                 modifier = Modifier.fillMaxSize(),
                 onRetryClick = state.onRetryClick,
             )
@@ -273,7 +273,7 @@ private fun ContentState(
 }
 
 @Composable
-private fun LoadingState(modifier: Modifier = Modifier) {
+internal fun EventDetailsLoadingState(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
@@ -286,7 +286,7 @@ private fun LoadingState(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ErrorState(onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun EventDetailsErrorState(onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

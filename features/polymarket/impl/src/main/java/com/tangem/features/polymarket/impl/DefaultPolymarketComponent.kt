@@ -21,13 +21,13 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
 import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
+import com.tangem.features.polymarket.impl.navigation.createEventDetailsComponent
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.navigation.settledUserWalletId
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
@@ -125,17 +125,9 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             params = PolymarketHistoryComponent.Params(userWalletId = configuration.userWalletId),
         )
         is PolymarketRoute.FastTradingSettings -> createFastTradingSettings(configuration, factoryContext)
-        is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
-            appComponentContext = factoryContext,
-            params = PolymarketEventDetailsComponent.Params(
-                eventId = configuration.eventId,
-                // The route carries the wallet the feed was opened for; the feature's own params
-                // hold none until the entry gate picks one.
-                userWalletId = configuration.userWalletId,
-                marketId = configuration.marketId,
-                assetId = configuration.assetId,
-                categoryLabel = configuration.categoryLabel,
-            ),
+        is PolymarketRoute.EventDetails -> configuration.createEventDetailsComponent(
+            context = factoryContext,
+            isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
         )
         is PolymarketRoute.PlacePrediction -> PlacePredictionComponent(
             appComponentContext = factoryContext,

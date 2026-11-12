@@ -23,6 +23,7 @@ import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsCompone
 import com.tangem.features.polymarket.impl.details.model.chart.PolymarketEventChartController
 import com.tangem.features.polymarket.impl.details.model.transformer.PolymarketEventDetailsContentTransformer
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
+import com.tangem.features.polymarket.impl.navigation.SOCCER_EVENT_TYPE
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -95,6 +96,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
 
     fun onResume() {
         isResumed = true
+        if (redirectToSoccer()) return
         chartController.onResume()
         if (uiState.value is PolymarketEventDetailsUM.Content) startPolling(refreshNow = true)
     }
@@ -114,7 +116,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
                 ifLeft = { uiState.value = PolymarketEventDetailsUM.Error(onRetryClick = ::load) },
                 ifRight = { loaded ->
                     showEvent(loaded)
-                    if (isResumed) startPolling(refreshNow = false)
+                    if (isResumed && !isSoccerEvent()) startPolling(refreshNow = false)
                 },
             )
         }.saveIn(loadJob)
@@ -161,8 +163,32 @@ internal class PolymarketEventDetailsModel @Inject constructor(
 
     private fun showEvent(loaded: PolymarketEvent) {
         event = loaded
+        if (isSoccerEvent()) {
+            pollJob.cancel()
+            chartController.onPause()
+            redirectToSoccer()
+            return
+        }
         chartController.update(loaded)
         refreshContent()
+    }
+
+    private fun isSoccerEvent(): Boolean =
+        polymarketFeatureToggles.isPolymarketPhaseTwoEnabled && event?.eventType == SOCCER_EVENT_TYPE
+
+    private fun redirectToSoccer(): Boolean {
+        if (!isSoccerEvent()) return false
+        if (isResumed) {
+            router.navigate(transformer = { stack ->
+                val current = stack.lastOrNull() as? PolymarketRoute.EventDetails
+                if (current?.eventId == params.eventId && current.userWalletId == params.userWalletId) {
+                    stack.dropLast(1) + current.copy(eventType = SOCCER_EVENT_TYPE)
+                } else {
+                    stack
+                }
+            })
+        }
+        return true
     }
 
     private fun contentTransformer(event: PolymarketEvent): PolymarketEventDetailsContentTransformer {

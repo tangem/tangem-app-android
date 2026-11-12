@@ -37,7 +37,11 @@ import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketSports
 
 /** Item_versus content; the event card supplies its 16dp outer padding. */
 @Composable
-internal fun PolymarketSportsHeader(state: PolymarketSportsUM, modifier: Modifier = Modifier) {
+internal fun PolymarketSportsHeader(
+    state: PolymarketSportsUM,
+    modifier: Modifier = Modifier,
+    showTeamNames: Boolean = true,
+) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -60,18 +64,20 @@ internal fun PolymarketSportsHeader(state: PolymarketSportsUM, modifier: Modifie
                 }
             },
         )
-        // TangemRow's extraBottomSlot has a fixed 12dp gap; Item_versus requires 8dp.
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TangemRowText(
-                text = state.home?.name?.resolveReference().orEmpty(),
-                role = TangemRowTextRole.Title,
-                modifier = Modifier.weight(1f),
-            )
-            TangemRowText(
-                text = state.away?.name?.resolveReference().orEmpty(),
-                role = TangemRowTextRole.Value,
-                modifier = Modifier.weight(1f),
-            )
+        if (showTeamNames) {
+            // TangemRow's extraBottomSlot has a fixed 12dp gap; Item_versus requires 8dp.
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TangemRowText(
+                    text = state.home?.name?.resolveReference().orEmpty(),
+                    role = TangemRowTextRole.Title,
+                    modifier = Modifier.weight(1f),
+                )
+                TangemRowText(
+                    text = state.away?.name?.resolveReference().orEmpty(),
+                    role = TangemRowTextRole.Value,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }
