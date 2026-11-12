@@ -898,7 +898,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `WHEN pulled to refresh THEN fast trading banner source is refreshed for the wallet`() = runTest {
+    fun `GIVEN model observing banner WHEN pulled to refresh THEN fast trading banner source is refreshed for the wallet`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -910,6 +910,86 @@ internal class PolymarketMainModelTest {
         // Assert
         coVerify(exactly = 1) { fastTradingBannerSource.refresh(USER_WALLET_ID) }
         model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model observing banner WHEN resumed THEN fast trading banner source is refreshed for the wallet`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { fastTradingBannerSource.refresh(USER_WALLET_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the wallet link check pending WHEN resumed THEN fast trading banner source is neither observed nor refreshed`() = runTest {
+        // Arrange
+        val linkCheck = CompletableDeferred<Boolean>()
+        coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } coAnswers { linkCheck.await() }
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any()) }
+        coVerify(exactly = 0) { fastTradingBannerSource.refresh(any()) }
+        linkCheck.complete(true)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the wallet link check pending WHEN pulled to refresh THEN fast trading banner source is not refreshed`() = runTest {
+        // Arrange
+        val linkCheck = CompletableDeferred<Boolean>()
+        coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } coAnswers { linkCheck.await() }
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 0) { fastTradingBannerSource.refresh(any()) }
+        linkCheck.complete(true)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the wallet is linked WHEN the screen opens THEN the fast trading banner is observed after the check`() = runTest {
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        coVerifyOrder {
+            walletLinkGate.ensureLinked(USER_WALLET_ID)
+            fastTradingBannerSource.observe(USER_WALLET_ID, any())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the wallet is not linked WHEN the screen opens THEN the fast trading banner is not observed`() = runTest {
+        // Arrange
+        coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } returns false
+        every { router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), any()) } answers { secondArg<(Boolean) -> Unit>()(true) }
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any()) }
     }
 
     @Test
