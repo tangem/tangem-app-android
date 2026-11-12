@@ -1,7 +1,7 @@
 package com.tangem.features.marketing.impl.di
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkKey
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkKey
 import com.tangem.features.marketing.api.promopage.PromoPageDeepLinkHandler
 import com.tangem.features.marketing.impl.promopage.DefaultPromoPageDeepLinkHandler
 import dagger.Binds

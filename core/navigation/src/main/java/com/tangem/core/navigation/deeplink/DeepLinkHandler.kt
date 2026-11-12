@@ -1,4 +1,4 @@
-package com.tangem.common.routing.deeplink
+package com.tangem.core.navigation.deeplink
 
 /**
  * Handles deep links of one feature. Bound into the map by [DeepLinkKey]:

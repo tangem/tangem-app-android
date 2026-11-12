@@ -1,9 +1,9 @@
 package com.tangem.features.promobanners.impl.campaigns.di
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkKey
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkKey
 import com.tangem.features.promobanners.api.swapcashback.CampaignsComponent
 import com.tangem.features.promobanners.impl.campaigns.component.DefaultCampaignsComponent
 import com.tangem.features.promobanners.impl.campaigns.deeplink.CampaignsDeepLinkHandler

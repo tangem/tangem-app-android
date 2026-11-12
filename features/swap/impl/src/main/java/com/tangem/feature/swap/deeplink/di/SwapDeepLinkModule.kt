@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.deeplink.di
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkKey
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkKey
 import com.tangem.feature.swap.deeplink.SwapDeepLinkHandler
 import dagger.Binds
 import dagger.Module

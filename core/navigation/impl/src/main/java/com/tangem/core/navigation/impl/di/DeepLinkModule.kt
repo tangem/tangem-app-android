@@ -1,7 +1,7 @@
-package com.tangem.tap.di.routing
+package com.tangem.core.navigation.impl.di
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.impl.deeplink.DeepLinkHandlerRegistry
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
