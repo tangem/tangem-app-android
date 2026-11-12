@@ -76,6 +76,14 @@ internal fun PolymarketFastTradingKeyActionsMenu(
 @Composable
 private fun KeyActionMenuItem(action: FastTradingKeyActionUM, onClick: () -> Unit) {
     when (action) {
+        FastTradingKeyActionUM.Extend -> TangemContextMenuItem(
+            title = resourceReference(R.string.prediction_session_key_extend),
+            onClick = onClick,
+        )
+        FastTradingKeyActionUM.Reactivate -> TangemContextMenuItem(
+            title = resourceReference(R.string.prediction_session_key_reactivate),
+            onClick = onClick,
+        )
         is FastTradingKeyActionUM.Revoke -> TangemContextMenuItem(
             title = resourceReference(R.string.prediction_session_key_revoke),
             isDestructive = true,

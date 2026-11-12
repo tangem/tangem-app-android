@@ -58,6 +58,10 @@ internal data class FastTradingKeyRowUM(
 @Immutable
 internal sealed interface FastTradingKeyActionUM {
 
+    data object Extend : FastTradingKeyActionUM
+
+    data object Reactivate : FastTradingKeyActionUM
+
     data class Revoke(val address: String, val subject: RevokeSubject) : FastTradingKeyActionUM
 
     sealed interface RevokeSubject {

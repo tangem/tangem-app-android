@@ -59,6 +59,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.Duration
 import java.time.Instant
 
@@ -368,6 +369,75 @@ internal class PolymarketFastTradingSettingsModelTest {
         assertThat(toast.message).isEqualTo(resourceReference(R.string.prediction_session_key_toast_busy))
     }
 
+    @ParameterizedTest
+    @MethodSource("provideThisDeviceActionModels")
+    fun `GIVEN this device action offered WHEN clicked THEN its operation starts without a toast`(
+        model: ThisDeviceActionModel,
+    ) = runTest {
+        // Arrange
+        every { startOperation(USER_WALLET_ID, model.request) } returns
+            PolymarketSessionKeyOperationStart.Started(OPERATION_ID)
+        val settingsModel = createModel()
+        states.emit(createState(model.overview.right()))
+        advanceUntilIdle()
+
+        // Act
+        content(settingsModel).onActionClick(model.action)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { startOperation(USER_WALLET_ID, model.request) }
+        assertThat(sentMessages).isEmpty()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideThisDeviceActionModels")
+    fun `GIVEN this device action not offered WHEN clicked THEN nothing starts`(model: ThisDeviceActionModel) =
+        runTest {
+            // Arrange
+            val settingsModel = createContentModel()
+
+            // Act
+            content(settingsModel).onActionClick(model.action)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { startOperation(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN extend offered and an operation running WHEN extend clicked THEN nothing starts`() = runTest {
+        // Arrange
+        val settingsModel = createModel()
+        states.emit(createState(EXPIRING_OVERVIEW.right(), runningOperation(REVOKE)))
+        advanceUntilIdle()
+
+        // Act
+        content(settingsModel).onActionClick(FastTradingKeyActionUM.Extend)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { startOperation(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN another operation started meanwhile WHEN extend clicked THEN busy toast is shown`() = runTest {
+        // Arrange
+        every { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Extend) } returns
+            PolymarketSessionKeyOperationStart.Busy
+        val settingsModel = createModel()
+        states.emit(createState(EXPIRING_OVERVIEW.right()))
+        advanceUntilIdle()
+
+        // Act
+        content(settingsModel).onActionClick(FastTradingKeyActionUM.Extend)
+        advanceUntilIdle()
+
+        // Assert
+        val toast = sentMessages.single() as SnackbarMessage
+        assertThat(toast.message).isEqualTo(resourceReference(R.string.prediction_session_key_toast_busy))
+    }
+
     private suspend fun TestScope.createContentModel(): PolymarketFastTradingSettingsModel {
         val model = createModel()
         states.emit(createState(OVERVIEW.right()))
@@ -391,9 +461,16 @@ internal class PolymarketFastTradingSettingsModelTest {
         deviceIdProvider = deviceIdProvider,
     ).also { model = it }
 
+    data class ThisDeviceActionModel(
+        val overview: PolymarketSessionKeyOverview,
+        val action: FastTradingKeyActionUM,
+        val request: PolymarketSessionKeyOperationRequest,
+    )
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
         const val KEY_ADDRESS = "0x5e55000000000000000000000000000000000002"
+        const val OWN_ADDRESS = "0x5e55000000000000000000000000000000000001"
         const val OPERATION_ID = 5L
         val REVOKE = PolymarketSessionKeyOperationRequest.Revoke(KEY_ADDRESS)
         val DEVICE_NAME = stringReference("Galaxy S24")
@@ -428,6 +505,44 @@ internal class PolymarketFastTradingSettingsModelTest {
                 nextChangeAt = null,
             ),
             isTradable = false,
+        )
+
+        val OWN_KEY = OVERVIEW.wallet.sessionKeys.single().copy(
+            address = OWN_ADDRESS,
+            deviceId = "this-device",
+            deviceName = "Pixel 9",
+            validUntil = Instant.now().plus(Duration.ofDays(10)),
+        )
+        val EXPIRING_OVERVIEW = OVERVIEW.copy(
+            wallet = OVERVIEW.wallet.copy(sessionKeys = listOf(OWN_KEY)),
+            localKeyAddress = OWN_ADDRESS,
+            assessment = OVERVIEW.assessment.copy(
+                deviceState = PolymarketSessionKeyDeviceState.Active(OWN_KEY, isRenewDue = true),
+            ),
+        )
+        val EXPIRED_OWN_KEY = OWN_KEY.copy(
+            status = PolymarketSessionKeyStatus.EXPIRED,
+            validUntil = Instant.now().minus(Duration.ofDays(1)),
+        )
+        val EXPIRED_OVERVIEW = EXPIRING_OVERVIEW.copy(
+            wallet = OVERVIEW.wallet.copy(sessionKeys = listOf(EXPIRED_OWN_KEY)),
+            assessment = OVERVIEW.assessment.copy(
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(EXPIRED_OWN_KEY),
+            ),
+        )
+
+        @JvmStatic
+        fun provideThisDeviceActionModels() = listOf(
+            ThisDeviceActionModel(
+                overview = EXPIRING_OVERVIEW,
+                action = FastTradingKeyActionUM.Extend,
+                request = PolymarketSessionKeyOperationRequest.Extend,
+            ),
+            ThisDeviceActionModel(
+                overview = EXPIRED_OVERVIEW,
+                action = FastTradingKeyActionUM.Reactivate,
+                request = PolymarketSessionKeyOperationRequest.Reactivate,
+            ),
         )
 
         @JvmStatic

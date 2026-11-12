@@ -79,7 +79,7 @@ internal object PolymarketSessionKeyMessagesFactory {
             PolymarketSessionKeyOperationRequest.Reactivate -> if (isAfterRevocation) {
                 R.string.prediction_session_key_toast_reactivation_failed_revoked
             } else {
-                R.string.prediction_session_key_toast_reactivation_failed
+                R.string.prediction_session_key_toast_activation_failed
             }
             PolymarketSessionKeyOperationRequest.Extend -> if (isAfterRevocation) {
                 R.string.prediction_session_key_toast_extension_failed_revoked

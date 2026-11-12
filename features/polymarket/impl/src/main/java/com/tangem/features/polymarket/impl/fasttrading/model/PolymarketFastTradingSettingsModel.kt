@@ -77,8 +77,18 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
 
     private fun onActionClick(action: FastTradingKeyActionUM) {
         when (action) {
+            FastTradingKeyActionUM.Extend -> startOnThisDevice(action, PolymarketSessionKeyOperationRequest.Extend)
+            FastTradingKeyActionUM.Reactivate -> {
+                startOnThisDevice(action, PolymarketSessionKeyOperationRequest.Reactivate)
+            }
             is FastTradingKeyActionUM.Revoke -> confirmRevocation(action)
         }
+    }
+
+    private fun startOnThisDevice(action: FastTradingKeyActionUM, request: PolymarketSessionKeyOperationRequest) {
+        val keys = (uiState.value as? PolymarketFastTradingSettingsUM.Content)?.keys ?: return
+        val isOffered = keys.areActionsEnabled && keys.thisDevice.any { action in it.actions }
+        if (isOffered) start(request)
     }
 
     private fun onActivateClick() {
