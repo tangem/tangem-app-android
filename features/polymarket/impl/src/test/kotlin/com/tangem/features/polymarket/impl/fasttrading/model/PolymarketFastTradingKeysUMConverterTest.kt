@@ -477,10 +477,11 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         }
 
         @Test
-        fun `GIVEN this device failed key the exchange lists WHEN convert THEN only the banner is shown`() {
+        fun `GIVEN this device failed key the exchange lists WHEN convert THEN its row offers revoke`() {
             // Arrange
             val overview = createOverview(
                 sessionKeys = listOf(OWN_FAILED_KEY),
+                foreignSigners = foreignSignersOf(listOf(OWN_FAILED_KEY), listedSigners = setOf(OWN_ADDRESS)),
                 listedSigners = setOf(OWN_ADDRESS),
                 deviceState = PolymarketSessionKeyDeviceState.RepairByRenewal(OWN_FAILED_KEY),
             )
@@ -490,8 +491,48 @@ internal class PolymarketFastTradingKeysUMConverterTest {
 
             // Assert
             assertThat(actual.activateBanner).isEqualTo(IDLE_BANNER)
+            assertThat(actual.isUnknownSignersWarningShown).isFalse()
+            assertThat(actual.thisDevice.single().status).isEqualTo(FastTradingKeyStatusUM.ActivationFailed)
+            assertThat(actual.thisDevice.single().actions).containsExactly(OWN_REVOKE)
+            assertThat(actual.otherDevices).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN this device failed key the exchange does not list WHEN convert THEN only the banner is shown`() {
+            // Arrange
+            val overview = createOverview(
+                sessionKeys = listOf(OWN_FAILED_KEY),
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(OWN_FAILED_KEY),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.activateBanner).isEqualTo(IDLE_BANNER)
             assertThat(actual.thisDevice).isEmpty()
             assertThat(actual.otherDevices).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN this device revoked key the exchange still lists WHEN convert THEN it is an unknown signer`() {
+            // Arrange
+            val ownKey = ownKey(status = PolymarketSessionKeyStatus.REVOKED, validUntil = DEFAULT_VALID_UNTIL)
+            val overview = createOverview(
+                sessionKeys = listOf(ownKey),
+                foreignSigners = foreignSignersOf(listOf(ownKey), listedSigners = setOf(OWN_ADDRESS)),
+                listedSigners = setOf(OWN_ADDRESS),
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(ownKey),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.isUnknownSignersWarningShown).isTrue()
+            assertThat(actual.unknownSigners.map { it.address to it.actions })
+                .containsExactly(OWN_ADDRESS to signerRevokeOf(OWN_ADDRESS))
+            assertThat(actual.thisDevice).isEmpty()
         }
 
         @Test
@@ -586,7 +627,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                 deviceState = PolymarketSessionKeyDeviceState.RepairByRenewal(OWN_FAILED_KEY),
                 operation = activation(PolymarketSessionKeyOperationStage.AUTHORIZING, target = OWN_ADDRESS),
                 expectedBanner = null,
-                expectedThisDevice = listOf(PENDING_ROW_ID to FastTradingKeyStatusUM.Activating),
+                expectedThisDevice = listOf(OWN_ADDRESS to FastTradingKeyStatusUM.Activating),
             ),
             ScenarioModel(
                 sessionKeys = listOf(OWN_PENDING_KEY, createKey()),

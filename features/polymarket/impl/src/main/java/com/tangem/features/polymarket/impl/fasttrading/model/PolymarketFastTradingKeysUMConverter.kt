@@ -43,13 +43,18 @@ internal class PolymarketFastTradingKeysUMConverter(
     fun convert(overview: PolymarketSessionKeyOverview, operation: PolymarketSessionKeyOperation?): FastTradingKeysUM {
         val reconciliation = overview.assessment.reconciliation as? PolymarketSessionKeyReconciliation.Checked
         val localKeyAddress = overview.localKeyAddress?.lowercase()
+        val now = clock.instant()
+        val isOwnSignerShownInRow = overview.wallet.sessionKeys
+            .newestPerAddress()
+            .firstOrNull { it.address.lowercase() == localKeyAddress }
+            ?.isLapsedAt(now) == true
         val foreignSigners = reconciliation?.foreignSigners.orEmpty()
-            .filterNot { it.address.lowercase() == localKeyAddress }
+            .filterNot { isOwnSignerShownInRow && it.address.lowercase() == localKeyAddress }
         val deviceState = overview.assessment.deviceState
         val submittedOperation = operation?.takeIf { it.stage != PolymarketSessionKeyOperationStage.SIGNING }
         val rowOperation = operation?.takeIf { it.request.isStartedFromRow } ?: submittedOperation
         val context = RowContext(
-            now = clock.instant(),
+            now = now,
             submittedOperation = submittedOperation,
             rowOperation = rowOperation,
             operationTarget = rowOperation?.targetAddress?.lowercase(),
@@ -229,7 +234,7 @@ internal class PolymarketFastTradingKeysUMConverter(
 
     private fun FastTradingKeyStatusUM.isShownOnThisDevice(actions: List<FastTradingKeyActionUM>): Boolean =
         when (this) {
-            FastTradingKeyStatusUM.ActivationFailed -> false
+            FastTradingKeyStatusUM.ActivationFailed,
             is FastTradingKeyStatusUM.Expired,
             FastTradingKeyStatusUM.ReconnectNeeded,
             FastTradingKeyStatusUM.Unknown,
@@ -263,6 +268,18 @@ internal class PolymarketFastTradingKeysUMConverter(
             !isEnabled -> FastTradingKeyStatusUM.Paused(activeUntil = dateFormatter.format(until))
             else -> FastTradingKeyStatusUM.Active(until = dateFormatter.format(until))
         }
+    }
+
+    private fun PolymarketSessionKey.isLapsedAt(now: Instant): Boolean = when (status) {
+        PolymarketSessionKeyStatus.EXPIRED,
+        PolymarketSessionKeyStatus.UNKNOWN,
+        -> true
+        PolymarketSessionKeyStatus.ACTIVE -> validUntil?.isAfter(now) != true
+        PolymarketSessionKeyStatus.PENDING,
+        PolymarketSessionKeyStatus.REVOKING,
+        PolymarketSessionKeyStatus.REVOKED,
+        PolymarketSessionKeyStatus.FAILED,
+        -> false
     }
 
     private fun PolymarketSessionKey.isExpiringSoon(now: Instant): Boolean {
