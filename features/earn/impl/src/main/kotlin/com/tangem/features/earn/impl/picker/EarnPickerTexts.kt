@@ -12,8 +12,6 @@ internal object EarnPickerTexts {
 
     val subtitle: TextReference = stringReference("Choose type of product for gaining your balance")
 
-    val calculatorSection: TextReference = stringReference("Calculate your earnings")
-
     val benefitsSection: TextReference = stringReference("Benefits")
 
     val detailsSection: TextReference = stringReference("More details")
