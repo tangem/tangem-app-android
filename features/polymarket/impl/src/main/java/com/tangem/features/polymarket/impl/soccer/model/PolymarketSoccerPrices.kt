@@ -38,19 +38,21 @@ internal class PolymarketSoccerPrices(
     private var batch = emptyMap<String, BigDecimal?>()
     private var quotes = emptyMap<String, PolymarketLiveQuote>()
     private var finalPrices: Map<String, BigDecimal?>? = null
+    private var isAwaitingFinalSnapshot = false
     private var isResumed = false
     private var isStaleReported = false
     private val pollJob = JobHolder()
     private val quoteJob = JobHolder()
 
-    fun update(event: PolymarketSoccerEvent) {
+    fun update(event: PolymarketSoccerEvent, hasReopened: Boolean = false) {
         if (!isEnabled) return
+        val wasAwaitingFinalSnapshot = isAwaitingFinalSnapshot
+        if (hasReopened) isAwaitingFinalSnapshot = false
         val previous = plan
-        val next = if (previous?.eventId == event.id && finalPrices != null) {
-            previous
-        } else {
-            PolymarketSoccerPricePlan.create(event)
-        }
+        if (previous?.eventId != event.id) isAwaitingFinalSnapshot = false
+        if (isAwaitingFinalSnapshot && event.isEnded != true) return
+        isAwaitingFinalSnapshot = false
+        val next = planFor(event)
         rest = event.buttonPrices()
         if (previous?.eventId != next.eventId || !isResumed) {
             batch = emptyMap()
@@ -59,15 +61,19 @@ internal class PolymarketSoccerPrices(
         if (previous?.eventId != next.eventId) finalPrices = null
         batch = batch.filterKeys { it in next.polled }
         quotes = quotes.filterKeys { it in next.streamed }
-        if (next.isEnded) {
-            // The first successful ended BFF response is the final price snapshot, including empty prices.
-            if (finalPrices == null) finalPrices = rest
-        } else {
-            finalPrices = null
-        }
+        if (next.isEnded && finalPrices == null) finalPrices = rest
         plan = next
         publish()
-        if (isResumed && previous != next) restart()
+        if (isResumed && (previous != next || wasAwaitingFinalSnapshot)) restart()
+    }
+
+    private fun planFor(event: PolymarketSoccerEvent): PolymarketSoccerPricePlan {
+        val previous = plan
+        return if (previous?.eventId == event.id && finalPrices != null) {
+            previous
+        } else {
+            PolymarketSoccerPricePlan.create(event)
+        }
     }
 
     /** Resume only after a fresh structural response has established the current match phase. */
@@ -83,11 +89,17 @@ internal class PolymarketSoccerPrices(
         quoteJob.cancel()
     }
 
+    fun awaitFinalSnapshot() {
+        isAwaitingFinalSnapshot = true
+        pollJob.cancel()
+        quoteJob.cancel()
+    }
+
     private fun restart() {
         pollJob.cancel()
         quoteJob.cancel()
         val current = plan ?: return
-        if (current.isEnded) return
+        if (current.isEnded || isAwaitingFinalSnapshot) return
         if (current.polled.isNotEmpty()) startPolling(current)
         if (current.streamed.isNotEmpty()) startQuotes(current)
     }

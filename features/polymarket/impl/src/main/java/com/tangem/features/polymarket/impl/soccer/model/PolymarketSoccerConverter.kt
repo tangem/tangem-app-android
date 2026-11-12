@@ -7,7 +7,6 @@ import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PolymarketSoccerTab
 import com.tangem.features.polymarket.impl.R
 import com.tangem.features.polymarket.impl.common.PolymarketEventFormatting
-import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketSportsUM
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.common.toResolutionSourceUM
 import com.tangem.features.polymarket.impl.soccer.ui.state.PolymarketSoccerUM
@@ -17,8 +16,6 @@ internal class PolymarketSoccerConverter(private val onTabClick: (PolymarketSocc
     private val cards = PolymarketSoccerCardConverter
 
     fun convert(event: PolymarketSoccerEvent, selection: PolymarketSoccerSelection): PolymarketSoccerUM.Content {
-        val score = event.displayScore
-        val teams = event.teams.map { PolymarketSportsUM.Team(stringReference(it.name), it.logoUrl) }
         return PolymarketSoccerUM.Content(
             title = stringReference(event.title),
             league = stringReference(event.league.name),
@@ -27,14 +24,7 @@ internal class PolymarketSoccerConverter(private val onTabClick: (PolymarketSocc
             },
             volume = stringReference(event.volume.formatPolymarketVolume()),
             change24h = PolymarketEventFormatting.transformChange24h(event.volume, event.volume24h),
-            sports = PolymarketSportsUM(
-                home = teams.getOrNull(0),
-                away = teams.getOrNull(1),
-                homeScore = score?.left?.toString(),
-                awayScore = score?.right?.toString(),
-                period = event.period,
-                isLive = event.isLive,
-            ),
+            sports = event.sportsUM(game = null),
             tabs = event.tabs.map { tab ->
                 TangemTabItemUM.Content(
                     id = tab.key.value,
