@@ -103,6 +103,7 @@ import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import org.junit.jupiter.api.BeforeEach
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -2171,16 +2172,20 @@ internal class PolymarketMainModelTest {
             router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), any())
             router.pop(any())
         }
+        coVerify(exactly = 0) { getCategoriesUseCase(any()) }
     }
 
     @Test
-    fun `GIVEN the wallet is linked WHEN the screen opens THEN the feature stays`() = runTest {
+    fun `GIVEN the wallet is linked WHEN the screen opens THEN categories load after the check AND the feature stays`() = runTest {
         // Act
         createModel(testScope = this)
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { walletLinkGate.ensureLinked(USER_WALLET_ID) }
+        coVerifyOrder {
+            walletLinkGate.ensureLinked(USER_WALLET_ID)
+            getCategoriesUseCase(USER_WALLET_ID)
+        }
         verify(exactly = 0) { router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), any()) }
     }
 

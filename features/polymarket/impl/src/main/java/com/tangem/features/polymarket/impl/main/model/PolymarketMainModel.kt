@@ -222,9 +222,8 @@ internal class PolymarketMainModel @Inject constructor(
 
     init {
         feedController.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
-        loadCategories()
         modelScope.launch { regionAccess.refresh() }
-        closeIfWalletUnlinked()
+        loadCategoriesOnceLinked()
     }
 
     fun onBackClick() {
@@ -276,9 +275,12 @@ internal class PolymarketMainModel @Inject constructor(
             .saveIn(balancePollJobHolder)
     }
 
-    private fun closeIfWalletUnlinked() {
+    private fun loadCategoriesOnceLinked() {
+        uiState.update { it.copy(isCategoriesLoading = true) }
         modelScope.launch {
-            if (!walletLinkGate.ensureLinked(params.userWalletId)) {
+            if (walletLinkGate.ensureLinked(params.userWalletId)) {
+                loadCategories()
+            } else {
                 TangemLogger.i("Main: wallet ${params.userWalletId} not linked; closing the feature")
                 router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId)) { router.pop() }
             }
