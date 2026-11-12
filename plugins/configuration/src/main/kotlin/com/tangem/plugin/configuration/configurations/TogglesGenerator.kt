@@ -34,9 +34,14 @@ object TogglesGenerator {
     /**
      * Generates one Kotlin enum class from several JSON toggles config files, entries in the order of [inputFiles].
      * Fails if a toggle maps to the same enum entry in more than one place.
+     *
+     * @param streams owning stream of each file in [inputFiles]; when set, every entry gets a `stream` property
      */
-    fun generate(inputFiles: List<File>, outputDir: File, fileName: String) {
-        val entries = inputFiles.flatMap(::parseEntries)
+    fun generate(inputFiles: List<File>, outputDir: File, fileName: String, streams: List<String>? = null) {
+        require(streams == null || streams.size == inputFiles.size) {
+            "inputFiles (${inputFiles.size}) and streams (${streams?.size}) must have the same size"
+        }
+        val entries = inputFiles.flatMapIndexed { index, file -> parseEntries(file, streams?.get(index)) }
         requireNoDuplicates(entries, fileName)
 
         val sources = inputFiles.joinToString(separator = "\n") { it.relativeName() }
@@ -46,6 +51,7 @@ object TogglesGenerator {
                 FunSpec.constructorBuilder()
                     .addParameter(ParameterSpec.builder("rawName", String::class).build())
                     .addParameter(ParameterSpec.builder("version", String::class).build())
+                    .apply { if (streams != null) addParameter(ParameterSpec.builder("stream", String::class).build()) }
                     .build(),
             )
             .addProperty(
@@ -59,12 +65,18 @@ object TogglesGenerator {
                     .build(),
             )
             .apply {
+                if (streams != null) {
+                    addProperty(PropertySpec.builder("stream", String::class).initializer("stream").build())
+                }
+            }
+            .apply {
                 entries.forEach { entry ->
                     addEnumConstant(
                         entry.enumName,
                         TypeSpec.anonymousClassBuilder()
                             .addSuperclassConstructorParameter("%S", entry.name)
                             .addSuperclassConstructorParameter("%S", entry.version)
+                            .apply { entry.stream?.let { addSuperclassConstructorParameter("%S", it) } }
                             .build(),
                     )
                 }
@@ -90,14 +102,20 @@ object TogglesGenerator {
         }
     }
 
-    private fun parseEntries(inputFile: File): List<ToggleEntry> {
+    private fun parseEntries(inputFile: File, stream: String?): List<ToggleEntry> {
         val jsonArray = Json.parseToJsonElement(inputFile.readText()).jsonArray
 
         return jsonArray.map { element ->
             val obj = element.jsonObject
             val name = obj.getValue("name").jsonPrimitive.content
             val version = obj.getValue("version").jsonPrimitive.content
-            ToggleEntry(name = name, enumName = name.toEnumEntryName(), version = version, source = inputFile)
+            ToggleEntry(
+                name = name,
+                enumName = name.toEnumEntryName(),
+                version = version,
+                source = inputFile,
+                stream = stream,
+            )
         }
     }
 
@@ -129,5 +147,11 @@ object TogglesGenerator {
         return replace(Regex("[/\\-. ]"), "_").uppercase(Locale.ROOT)
     }
 
-    private data class ToggleEntry(val name: String, val enumName: String, val version: String, val source: File)
+    private data class ToggleEntry(
+        val name: String,
+        val enumName: String,
+        val version: String,
+        val source: File,
+        val stream: String?,
+    )
 }

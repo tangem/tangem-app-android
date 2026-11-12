@@ -286,6 +286,48 @@ class TogglesGeneratorTest {
     }
 
     @Test
+    fun `GIVEN streams WHEN generate THEN every entry holds its stream`() {
+        // Arrange
+        val storeFile = writeStreamConfig("store", """[{ "name": "FEATURE_A", "version": "1.0" }]""")
+        val growFile = writeStreamConfig("grow", """[{ "name": "FEATURE_B", "version": "undefined" }]""")
+
+        // Act
+        TogglesGenerator.generate(listOf(storeFile, growFile), outputDir, "FeatureToggles", listOf("store", "grow"))
+
+        // Assert
+        val code = File(outputDir, "com/tangem/core/configtoggle/FeatureToggles.kt").readText()
+        assertThat(code).contains("val stream: String")
+        assertThat(code).contains("""FEATURE_A("FEATURE_A", "1.0", "store")""")
+        assertThat(code).contains("""FEATURE_B("FEATURE_B", "undefined", "grow")""")
+    }
+
+    @Test
+    fun `GIVEN no streams WHEN generate THEN enum has no stream property`() {
+        // Arrange
+        val json = """[{ "name": "FEATURE_A", "version": "1.0" }]"""
+
+        // Act
+        val code = generateAndReadOutput(json, "TestToggles")
+
+        // Assert
+        assertThat(code).doesNotContain("stream")
+    }
+
+    @Test
+    fun `GIVEN streams of another size WHEN generate THEN fails`() {
+        // Arrange
+        val storeFile = writeStreamConfig("store", """[{ "name": "FEATURE_A", "version": "1.0" }]""")
+
+        // Act
+        val error = runCatching {
+            TogglesGenerator.generate(listOf(storeFile), outputDir, "FeatureToggles", listOf("store", "grow"))
+        }.exceptionOrNull()
+
+        // Assert
+        assertThat(error).isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
     fun `GIVEN same toggle in two config files WHEN generate THEN fails naming both files`() {
         // Arrange
         val coreFile = writeStreamConfig("core", """[{ "name": "FEATURE_A", "version": "1.0" }]""")
