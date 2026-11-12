@@ -328,6 +328,40 @@ internal class PolymarketFastTradingActivationModelTest {
     }
 
     @Test
+    fun `GIVEN host acknowledged before the screen saw running WHEN operation failed THEN state is idle`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onActivateClick()
+            operationState.value = state(lastOutcome = outcome(OPERATION_ID, CANCELLED.left()))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.pop() }
+            assertThat(model.uiState.value.isActivating).isFalse()
+        }
+
+    @Test
+    fun `GIVEN host acknowledged before the screen saw running WHEN operation succeeded THEN screen closes`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onActivateClick()
+            operationState.value = state(lastOutcome = outcome(OPERATION_ID, SESSION_KEY.right()))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.pop() }
+            assertThat(model.uiState.value.isActivating).isFalse()
+        }
+
+    @Test
     fun `GIVEN activation started WHEN a foreign operation succeeds THEN its outcome is ignored`() = runTest {
         // Arrange
         val model = createModel()
@@ -389,7 +423,8 @@ internal class PolymarketFastTradingActivationModelTest {
     private fun state(
         running: PolymarketSessionKeyOperation? = null,
         finished: PolymarketSessionKeyOperationOutcome? = null,
-    ) = PolymarketSessionKeyOperationState(running = running, finished = finished)
+        lastOutcome: PolymarketSessionKeyOperationOutcome? = null,
+    ) = PolymarketSessionKeyOperationState(running = running, finished = finished, lastOutcome = lastOutcome)
 
     private fun operation(stage: PolymarketSessionKeyOperationStage, id: Long = OPERATION_ID) =
         PolymarketSessionKeyOperation(id = id, request = ACTIVATE, targetAddress = null, stage = stage)

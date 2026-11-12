@@ -72,13 +72,13 @@ internal class PolymarketFastTradingActivationModel @Inject constructor(
     private fun track(activationId: Long?, state: PolymarketSessionKeyOperationState) {
         activationId ?: return
         val running = state.running
-        val finished = state.finished
+        val outcome = listOfNotNull(state.finished, state.lastOutcome).firstOrNull { it.id == activationId }
         when {
             running?.id == activationId -> {
                 isActivationRunningSeen = true
                 if (running.stage != PolymarketSessionKeyOperationStage.SIGNING) close()
             }
-            finished?.id == activationId -> if (finished.result.isRight()) close() else resetActivation()
+            outcome != null -> if (outcome.result.isRight()) close() else resetActivation()
             isActivationRunningSeen -> resetActivation()
         }
     }

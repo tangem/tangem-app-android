@@ -223,15 +223,13 @@ internal class PolymarketSessionKeyOperationRunnerTest {
             advanceUntilIdle()
 
             // Assert
+            val outcome = PolymarketSessionKeyOperationOutcome(
+                id = 1,
+                request = PolymarketSessionKeyOperationRequest.Revoke(FOREIGN),
+                result = key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right(),
+            )
             assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(
-                PolymarketSessionKeyOperationState(
-                    running = null,
-                    finished = PolymarketSessionKeyOperationOutcome(
-                        id = 1,
-                        request = PolymarketSessionKeyOperationRequest.Revoke(FOREIGN),
-                        result = key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right(),
-                    ),
-                ),
+                PolymarketSessionKeyOperationState(running = null, finished = outcome, lastOutcome = outcome),
             )
         }
 
@@ -634,16 +632,27 @@ internal class PolymarketSessionKeyOperationRunnerTest {
     inner class Acknowledge {
 
         @Test
-        fun `GIVEN a finished outcome WHEN acknowledged with its id THEN finished is cleared`() = runTest {
-            // Arrange
-            val runner = runnerWithFinishedRevocation()
+        fun `GIVEN a finished outcome WHEN acknowledged with its id THEN finished is cleared and last outcome kept`() =
+            runTest {
+                // Arrange
+                val runner = runnerWithFinishedRevocation()
 
-            // Act
-            runner.acknowledge(USER_WALLET_ID, operationId = 1)
+                // Act
+                runner.acknowledge(USER_WALLET_ID, operationId = 1)
 
-            // Assert
-            assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(PolymarketSessionKeyOperationState.IDLE)
-        }
+                // Assert
+                assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(
+                    PolymarketSessionKeyOperationState(
+                        running = null,
+                        finished = null,
+                        lastOutcome = PolymarketSessionKeyOperationOutcome(
+                            id = 1,
+                            request = PolymarketSessionKeyOperationRequest.Revoke(FOREIGN),
+                            result = key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right(),
+                        ),
+                    ),
+                )
+            }
 
         @Test
         fun `GIVEN a finished outcome WHEN acknowledged with another id THEN finished is kept`() = runTest {
@@ -668,6 +677,20 @@ internal class PolymarketSessionKeyOperationRunnerTest {
 
             // Assert
             assertThat(runner.observe(USER_WALLET_ID).value.finished).isNull()
+        }
+
+        @Test
+        fun `GIVEN an acknowledged outcome WHEN a new operation starts THEN last outcome is cleared`() = runTest {
+            // Arrange
+            val runner = runnerWithFinishedRevocation()
+            runner.acknowledge(USER_WALLET_ID, operationId = 1)
+            every { manage.enable(USER_WALLET_ID) } returns flow { awaitCancellation() }
+
+            // Act
+            runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate)
+
+            // Assert
+            assertThat(runner.observe(USER_WALLET_ID).value.lastOutcome).isNull()
         }
 
         private fun TestScope.runnerWithFinishedRevocation(): PolymarketSessionKeyOperationRunner {
