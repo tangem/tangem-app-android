@@ -2,6 +2,7 @@ package com.tangem.features.earn.impl.sheet.model
 
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.badge.TangemBadgeUM
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -23,11 +24,13 @@ internal class EarnYieldSheetConverter @Inject constructor(
     private val registry: EarnProductsRegistry,
 ) {
 
+    @Suppress("LongParameterList")
     fun convert(
         summaries: List<EarnProductSummary>,
         currency: CryptoCurrency,
         fiatRate: BigDecimal?,
         appCurrency: AppCurrency,
+        isBalanceHidden: Boolean,
         intents: EarnYieldSheetClickIntents,
     ): EarnYieldSheetUM {
         val (active, inactive) = summaries.partition { it.position != null }
@@ -37,6 +40,7 @@ internal class EarnYieldSheetConverter @Inject constructor(
                 currency = currency,
                 fiatRate = fiatRate,
                 appCurrency = appCurrency,
+                isBalanceHidden = isBalanceHidden,
                 intents = intents,
             )
         }
@@ -58,11 +62,13 @@ internal class EarnYieldSheetConverter @Inject constructor(
         onDismiss = intents::onDismissClick,
     )
 
+    @Suppress("LongParameterList")
     private fun row(
         summary: EarnProductSummary,
         currency: CryptoCurrency,
         fiatRate: BigDecimal?,
         appCurrency: AppCurrency,
+        isBalanceHidden: Boolean,
         intents: EarnYieldSheetClickIntents,
     ): EarnYieldRowUM? {
         val product = registry.find(summary.productId) ?: return null
@@ -75,9 +81,12 @@ internal class EarnYieldSheetConverter @Inject constructor(
             icon = product.provider.icon,
             rate = summary.rateText,
             isActive = position != null,
-            amount = amount?.let { stringReference(it.format { crypto(currency) }) },
+            amount = amount?.let {
+                stringReference(it.format { crypto(currency) }).orMaskWithStars(isBalanceHidden)
+            },
             amountFiat = if (amount != null && fiatRate != null) {
                 stringReference((amount * fiatRate).format { fiat(appCurrency.code, appCurrency.symbol) })
+                    .orMaskWithStars(isBalanceHidden)
             } else {
                 null
             },

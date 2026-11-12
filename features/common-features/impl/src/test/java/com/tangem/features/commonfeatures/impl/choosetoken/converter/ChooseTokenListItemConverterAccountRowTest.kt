@@ -56,7 +56,10 @@ internal class ChooseTokenListItemConverterAccountRowTest {
         )
         assertThat(state.onClick).isNotNull()
         assertThat(row.tokens.map { it.id }).containsExactly(token.id.value)
-        assertThat(row.tokens.single()).isInstanceOf(TangemTokenRow.State.Content::class.java)
+        val tokenRow = row.tokens.single() as TangemTokenRow.State.Network
+        assertThat(tokenRow.network).isEqualTo(
+            resourceReference(R.string.wallet_network_group_title, wrappedList(token.network.name)),
+        )
     }
 
     @Test

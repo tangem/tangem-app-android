@@ -11,6 +11,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.earn.api.ui.EarnHowItWorksModal
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.impl.model.EarnFlowModel
 import com.tangem.features.earn.flow.impl.model.EarnFlowStep
@@ -78,7 +79,13 @@ internal class DefaultEarnFlowComponent @AssistedInject constructor(
             EarnFlowStep.Amount -> {
                 val amountUM by model.amount.collectAsStateWithLifecycle()
                 amountUM?.let { um ->
-                    EarnAmountContent(state = um, feeBlock = feeBlock, onClose = model::onClose, modifier = modifier)
+                    EarnAmountContent(
+                        state = um,
+                        feeBlock = feeBlock,
+                        onBack = model::onBack,
+                        onClose = model::onClose,
+                        modifier = modifier,
+                    )
                 } ?: EarnFlowLoadingContent(modifier)
             }
             EarnFlowStep.Confirm -> {
@@ -86,9 +93,10 @@ internal class DefaultEarnFlowComponent @AssistedInject constructor(
                 confirmUM?.let { um ->
                     EarnConfirmContent(
                         state = um,
-                        title = params.flowProduct.title,
+                        title = model.action.confirmTitle(params.flowProduct.title),
                         feeBlock = feeBlock,
                         onBack = model::onBack,
+                        onClose = model::onClose,
                         modifier = modifier,
                     )
                 } ?: EarnFlowLoadingContent(modifier)
@@ -99,6 +107,9 @@ internal class DefaultEarnFlowComponent @AssistedInject constructor(
                     ?: EarnFlowLoadingContent(modifier)
             }
         }
+
+        val howItWorks by model.howItWorks.collectAsStateWithLifecycle()
+        howItWorks?.let { um -> EarnHowItWorksModal(state = um, onDismiss = model::onHowItWorksDismiss) }
     }
 
     private fun createFeeSelectorBlock(
@@ -115,6 +126,7 @@ internal class DefaultEarnFlowComponent @AssistedInject constructor(
             feeCryptoCurrencyStatus = feeStatus,
             feeStateConfiguration = FeeSelectorParams.FeeStateConfiguration.None,
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
+            blockAppearance = FeeSelectorParams.BlockAppearance.Row,
             analyticsCategoryName = params.flowProduct.analytics.category,
             analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Earning,
         ),

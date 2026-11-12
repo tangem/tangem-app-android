@@ -42,9 +42,15 @@ internal class MockAwareCustomerSummaryRepository @Inject constructor(
 
     private suspend fun deriveMoneyAccountKeyIfMissing(userWalletId: UserWalletId) {
         val userWallet = userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
-        if (userWallet !is UserWallet.Hot) return
-        val isAccessCodeDerivationAllowed = System.getProperty(UITEST_DERIVE_WITH_ACCESS_CODE_KEY) == "1"
-        if (userWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword && !isAccessCodeDerivationAllowed) return
+        when (userWallet) {
+            is UserWallet.Hot -> {
+                val isAccessCodeDerivationAllowed = System.getProperty(UITEST_DERIVE_WITH_ACCESS_CODE_KEY) == "1"
+                val hasAccessCode = userWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
+                if (hasAccessCode && !isAccessCodeDerivationAllowed) return
+            }
+            is UserWallet.Cold -> if (System.getProperty(UITEST_DERIVE_FOR_COLD_WALLETS_KEY) != "1") return
+            null -> return
+        }
 
         runSuspendCatching {
             val currency = moneyAccountCurrencyFactory.create(userWalletId)
@@ -57,5 +63,6 @@ internal class MockAwareCustomerSummaryRepository @Inject constructor(
 
     companion object {
         const val UITEST_DERIVE_WITH_ACCESS_CODE_KEY = "uitest.moneyaccount.derive_with_access_code"
+        const val UITEST_DERIVE_FOR_COLD_WALLETS_KEY = "uitest.moneyaccount.derive_for_cold_wallets"
     }
 }

@@ -48,6 +48,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.screens.*
+import com.tangem.screens.moneyaccount.onMoneyAccountScreen
 import com.tangem.screens.tangempay.*
 import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
 import io.github.kakaocup.kakao.common.utilities.getResourceString
@@ -56,6 +57,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Assert
+import java.math.BigDecimal
 import kotlin.reflect.KClass
 
 /** A fiat balance rendered with a currency symbol and two decimals, e.g. `$1,234.00`. */
@@ -905,8 +907,12 @@ fun BaseTestCase.chooseWithdrawSourceToken(tokenName: String, networkName: Strin
     }
 }
 
-fun BaseTestCase.awaitTangemPayWithdrawOrderPolls(orderEndpoint: String, expectedCount: Int) {
-    awaitAssert {
+fun BaseTestCase.awaitTangemPayWithdrawOrderPolls(
+    orderEndpoint: String,
+    expectedCount: Int,
+    timeoutMillis: Long = WAIT_UNTIL_TIMEOUT,
+) {
+    awaitAssert(timeoutMillis) {
         val actualCount = getWireMockRequestCount("GET", orderEndpoint)
         if (actualCount < expectedCount) {
             throw AssertionError("Expected at least $expectedCount requests to $orderEndpoint, got $actualCount")
@@ -1559,13 +1565,13 @@ fun BaseTestCase.awaitTangemPayStatusOfSelectedWallet(
     }
 }
 
-fun BaseTestCase.awaitMainTotalBalanceIncludingTangemPay(): String {
+fun BaseTestCase.awaitMainTotalBalanceIncludingTangemPay(moneyAccountBalance: String? = null): String {
     revealAccountTokensOnMain(getResourceString(CoreUiR.string.account_main_account_title))
     var totalBalance = ""
     var lastMismatch: Throwable? = null
     val isMatched = runCatching {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            runCatching { totalBalance = readMainTotalBalanceIncludingTangemPay() }
+            runCatching { totalBalance = readMainTotalBalanceIncludingTangemPay(moneyAccountBalance) }
                 .onFailure { lastMismatch = it }
                 .isSuccess
         }
@@ -1574,7 +1580,7 @@ fun BaseTestCase.awaitMainTotalBalanceIncludingTangemPay(): String {
     return totalBalance
 }
 
-private fun BaseTestCase.readMainTotalBalanceIncludingTangemPay(): String {
+private fun BaseTestCase.readMainTotalBalanceIncludingTangemPay(moneyAccountBalance: String?): String {
     var total = ""
     var paymentAccountBalance = ""
     var tokenBalances: List<Pair<String, String>> = emptyList()
@@ -1584,11 +1590,20 @@ private fun BaseTestCase.readMainTotalBalanceIncludingTangemPay(): String {
     if (tokenBalances.none { (_, fiatAmount) -> fiatAmount.parseNumericBalance().signum() > 0 }) {
         throw AssertionError("No token with a positive balance among $tokenBalances")
     }
+    if (moneyAccountBalance != null) {
+        var isMoneyAccountBalanceShown = false
+        onMoneyAccountScreen { isMoneyAccountBalanceShown = isMainRowWithTextShown(moneyAccountBalance) }
+        if (!isMoneyAccountBalanceShown) {
+            throw AssertionError("Money account row with '$moneyAccountBalance' is not shown")
+        }
+    }
     val expectedTotal = tokenBalances.sumOf { (_, fiatAmount) -> fiatAmount.parseNumericBalance() } +
-        paymentAccountBalance.parseNumericBalance()
+        paymentAccountBalance.parseNumericBalance() +
+        (moneyAccountBalance?.parseNumericBalance() ?: BigDecimal.ZERO)
     if (total.parseNumericBalance().compareTo(expectedTotal) != 0) {
         throw AssertionError(
-            "Total '$total' should equal tokens $tokenBalances plus Payment account '$paymentAccountBalance'",
+            "Total '$total' should equal tokens $tokenBalances plus Payment account '$paymentAccountBalance'" +
+                " plus Money account '${moneyAccountBalance.orEmpty()}'",
         )
     }
     return total

@@ -24,12 +24,16 @@
         "version": "undefined"
     },
     {
-        "name": "AND_18650_POLYMARKET_SESSION_KEYS_ENABLED",
+        "name": "TWI_1881_POLYMARKET_FAST_ORDERS_ENABLED",
         "version": "undefined"
     },
     {
         "name": "AND_18247_SOLANA_GASLESS_ENABLED",
-        "version": "6.8"
+        "version": "undefined"
+    },
+    {
+        "name": "AND_19141_SOLANA_GASLESS_RENT_ENABLED",
+        "version": "undefined"
     },
     {
         "name": "TWI_1906_EXPRESS_V2_ENABLED",
@@ -49,6 +53,10 @@
     },
     {
         "name": "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_18953_EARN_UPDATE_ASSET_SELECTION",
         "version": "undefined"
     }
 ]

@@ -17,16 +17,18 @@ import java.math.BigDecimal
 /** A provider for product-layer tests: assets and market data are set by the test, nothing is read from a network */
 internal class FakeLendingProvider(
     private val assets: Map<CryptoCurrency.ID, LendingAsset> = emptyMap(),
+    override val isAvailable: Boolean = true,
 ) : LendingProvider {
 
     val marketFlow = MutableStateFlow(loadingMarket())
     var refreshResult: Either<Throwable, Unit> = Unit.right()
     val refreshCalls = mutableListOf<Pair<UserWalletId, LendingAsset>>()
+    var refreshPositionResult: Either<Throwable, Unit> = Unit.right()
+    val refreshPositionCalls = mutableListOf<Pair<UserWalletId, LendingAsset>>()
 
     override val info = EarnProvider(title = stringReference("Fake"), icon = ImageReference.Res(0))
     override val apyPeriods: List<EarnPeriod> = emptyList()
     override val performanceFee: BigDecimal = BigDecimal.ZERO
-    override val isAvailable: Boolean = true
 
     override fun resolveAsset(currency: CryptoCurrency): LendingAsset? = assets[currency.id]
 
@@ -35,6 +37,11 @@ internal class FakeLendingProvider(
     override suspend fun refresh(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit> {
         refreshCalls += userWalletId to asset
         return refreshResult
+    }
+
+    override suspend fun refreshPosition(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit> {
+        refreshPositionCalls += userWalletId to asset
+        return refreshPositionResult
     }
 
     override suspend fun minDeposit(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, BigDecimal> =

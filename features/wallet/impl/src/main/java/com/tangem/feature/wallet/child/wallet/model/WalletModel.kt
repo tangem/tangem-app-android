@@ -714,11 +714,9 @@ internal class WalletModel @Inject constructor(
 
         val otherWallets = action.wallets.minus(action.selectedWallet)
 
-        otherWallets
-            .filterNot(UserWallet::isLocked)
-            .onEach { userWallet ->
-                modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
-            }
+        otherWallets.forEach { userWallet ->
+            modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+        }
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
             val direction = if (action.selectedWalletIndex == action.wallets.lastIndex) {
@@ -897,8 +895,6 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun fetchWalletContent(userWallet: UserWallet, forceUpdate: Boolean = false) {
-        if (userWallet.isLocked) return
-
         /*
          * Updating the balance of the current wallet is an essential part of InitializationWallets,
          * so the coroutine is launched in the current context

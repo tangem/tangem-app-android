@@ -30,6 +30,7 @@ internal fun TangemTokenRow.State.asSponsoredFee(symbol: String): TangemTokenRow
     val sponsoredTitle = stringReference("$SPONSORED_FEE_TITLE $symbol")
     return when (this) {
         is TangemTokenRow.State.Content -> copy(id = sponsoredId, title = sponsoredTitle)
+        is TangemTokenRow.State.Network -> copy(id = sponsoredId, title = sponsoredTitle)
         is TangemTokenRow.State.Unreachable -> copy(id = sponsoredId, title = sponsoredTitle)
         is TangemTokenRow.State.NoAddress -> copy(id = sponsoredId, title = sponsoredTitle)
         is TangemTokenRow.State.Organize -> copy(id = sponsoredId, title = sponsoredTitle)

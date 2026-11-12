@@ -19,6 +19,7 @@ internal enum class CollectiblesMenuItem(val id: String) {
     DELIVERIES("deliveries"),
     HOW_IT_WORKS("how_it_works"),
     GET_ASSISTANCE("get_assistance"),
+    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
     SESSION_KEY("session_key"),
 }
 
@@ -56,7 +57,7 @@ internal class CollectiblesMenuConverter(
                 titleRef = TextReference.Res(R.string.collectibles_main_menu_get_assistance),
             ),
 
-            // TODO testing only, remove once Gasless pays the spin fee: until then the session key is topped up by hand
+            // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
             value?.let {
                 item(
                     item = CollectiblesMenuItem.SESSION_KEY,

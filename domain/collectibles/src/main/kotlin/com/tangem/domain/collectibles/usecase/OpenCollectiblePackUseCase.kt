@@ -3,6 +3,7 @@ package com.tangem.domain.collectibles.usecase
 import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
+import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
@@ -130,8 +131,16 @@ class OpenCollectiblePackUseCase @Inject constructor(
             feeAmount = purchase.feeAmount,
             memo = purchase.memo,
         ).getOrElse { error ->
-            ensureSessionKeyLinked(userWallet)
-            fail(OpenPackStep.Failed.PurchaseFailed, cause = error)
+            when (error) {
+                is CollectiblesAccountError.MaybeSent -> {
+                    TangemLogger.e("open pack: payment maybe sent, txHash=${error.txHash}")
+                    return SentPurchase(txId = purchase.txId, txHash = error.txHash)
+                }
+                else -> {
+                    ensureSessionKeyLinked(userWallet)
+                    fail(OpenPackStep.Failed.PurchaseFailed, cause = error)
+                }
+            }
         }
 
         return SentPurchase(txId = purchase.txId, txHash = txHash)
@@ -169,11 +178,13 @@ class OpenCollectiblePackUseCase @Inject constructor(
 
     /** Not fatal: the gacha finds the payment by its memo, so the wait for it goes on either way. */
     private suspend fun reportTxHash(userWallet: UserWallet, sent: SentPurchase) {
+        val txHash = sent.txHash ?: return
+
         runSuspendCatching {
             collectiblesRepository.reportPurchaseTxSent(
                 userWalletId = userWallet.walletId,
                 txId = sent.txId,
-                txHash = sent.txHash,
+                txHash = txHash,
             )
         }.onFailure { TangemLogger.e("open pack: reporting the tx hash failed", it) }
     }
@@ -270,7 +281,7 @@ class OpenCollectiblePackUseCase @Inject constructor(
         raise(failure)
     }
 
-    private data class SentPurchase(val txId: String, val txHash: String)
+    private data class SentPurchase(val txId: String, val txHash: String?)
 
     private companion object {
 

@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.features.feed.api)
     implementation(projects.features.promoBanners.api)
     implementation(projects.features.commonFeatures.api)
+    implementation(projects.features.earn.api)
 
     /* Project - Domain */
     implementation(projects.domain.appCurrency)
@@ -25,8 +26,11 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.search)
+    implementation(projects.domain.staking)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.yieldSupply)
+    implementation(projects.domain.yieldSupply.models)
 
     /* Project - Core */
     implementation(projects.core.analytics)

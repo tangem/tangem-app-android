@@ -182,6 +182,41 @@ internal class EarnYieldSheetConverterTest {
         }
 
         @Test
+        fun `GIVEN position and fiat rate and hidden balance WHEN convert THEN amount and fiat are masked`() {
+            // Arrange
+            val position = EarnPositionSummary(BigDecimal("0.5031"))
+
+            // Act
+            val actual = convert(
+                summaries = listOf(lendingSummary.copy(position = position)),
+                fiatRate = BigDecimal("4000"),
+                isBalanceHidden = true,
+            ).active.single()
+
+            // Assert
+            assertThat(actual.isActive).isTrue()
+            assertThat(actual.amount).isEqualTo(stringReference("***"))
+            assertThat(actual.amountFiat).isEqualTo(stringReference("***"))
+        }
+
+        @Test
+        fun `GIVEN position with unknown amount and hidden balance WHEN convert THEN amount and fiat stay null`() {
+            // Arrange
+            val position = EarnPositionSummary(cryptoAmount = null)
+
+            // Act
+            val actual = convert(
+                summaries = listOf(lendingSummary.copy(position = position)),
+                fiatRate = BigDecimal("4000"),
+                isBalanceHidden = true,
+            ).active.single()
+
+            // Assert
+            assertThat(actual.amount).isNull()
+            assertThat(actual.amountFiat).isNull()
+        }
+
+        @Test
         fun `GIVEN no position WHEN convert THEN row is inactive with the start earning caption and null amounts`() {
             // Act
             val actual = convert(
@@ -263,11 +298,16 @@ internal class EarnYieldSheetConverterTest {
         }
     }
 
-    private fun convert(summaries: List<EarnProductSummary>, fiatRate: BigDecimal? = null) = converter.convert(
+    private fun convert(
+        summaries: List<EarnProductSummary>,
+        fiatRate: BigDecimal? = null,
+        isBalanceHidden: Boolean = false,
+    ) = converter.convert(
         summaries = summaries,
         currency = currency,
         fiatRate = fiatRate,
         appCurrency = appCurrency,
+        isBalanceHidden = isBalanceHidden,
         intents = intents,
     )
 

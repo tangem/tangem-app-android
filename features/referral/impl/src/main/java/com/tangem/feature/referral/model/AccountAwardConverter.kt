@@ -89,15 +89,19 @@ internal class AccountAwardConverter(
         )
     }
 
-    // TODO [REDACTED_TASK_KEY] Show the ticker instead of the price once TangemTokenRow supports a text subtitle
     private fun tokenRow(): TangemTokenRow.State {
         if (accountAwardToken != null) {
-            return TokenRowStateConverter(appCurrency).convert(currencyStatus = accountAwardToken, onClick = null)
+            return TokenRowStateConverter(appCurrency).convert(
+                currencyStatus = accountAwardToken,
+                onClick = null,
+                subtitle = stringReference(accountAwardToken.currency.symbol),
+            )
         }
-        return TangemTokenRow.State.Content(
+        return TangemTokenRow.State.Network(
             id = awardCryptoCurrency.id.value,
             icon = CryptoCurrencyToIconStateConverter().convert(awardCryptoCurrency).toTokenIconState(),
             title = stringReference(awardCryptoCurrency.name),
+            network = stringReference(awardCryptoCurrency.symbol),
         )
     }
 }
