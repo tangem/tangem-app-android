@@ -28,6 +28,7 @@ import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
+import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProjection
@@ -167,9 +168,18 @@ internal class EarnInfoModel @Inject constructor(
         when (val state = frame.state) {
             EarnProductState.Loading -> Unit
             EarnProductState.Unavailable -> redirectToPicker()
-            is EarnProductState.Ready -> frame.status?.let { status ->
-                showPosition(product = product, ready = state, status = status, appCurrency = frame.appCurrency)
-            }
+            is EarnProductState.Ready -> onReady(product, state, frame)
+        }
+    }
+
+    private fun onReady(product: EarnProduct, ready: EarnProductState.Ready, frame: Frame) {
+        if (ready.position !is EarnPositionState.Known) {
+            redirectToPicker()
+            return
+        }
+
+        frame.status?.let { status ->
+            showPosition(product = product, ready = ready, status = status, appCurrency = frame.appCurrency)
         }
     }
 
