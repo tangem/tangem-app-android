@@ -30,9 +30,9 @@ private val GlassFillBrush = Brush.verticalGradient(
 
 @Composable
 internal fun RoundGlassSurface(
-    modifier: Modifier,
     enabled: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
     TangemSurface(
