@@ -13,6 +13,7 @@ object MockCollectibles {
     const val USDC_DECIMALS = 6
 
     const val USDC_ATA_ADDRESS = "7xKXtg2CW3S3WWzQ2i8ZbT9zGx1oSBMxa1jYGvJ4Uacd"
+    const val VAULT_ADDRESS = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
 
     private const val NETWORK_ID = "solana/test"
 
@@ -50,10 +51,12 @@ object MockCollectibles {
         amount: BigDecimal,
         fiatRate: BigDecimal? = null,
         currency: CryptoCurrency.Token = usdc,
+        vaultAddress: String = VAULT_ADDRESS,
         ataAddress: String = USDC_ATA_ADDRESS,
     ): CollectiblesVaultBalance = CollectiblesVaultBalance(
         usdcToken = currency,
         usdcAmount = amount,
+        vaultAddress = vaultAddress,
         ataAddress = ataAddress,
         usdcFiatRate = fiatRate,
     )
