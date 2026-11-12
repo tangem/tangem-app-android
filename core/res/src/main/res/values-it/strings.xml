@@ -2459,10 +2459,11 @@
   <string name="tangempay_card_activation_error_not_ready">Questa carta non è ancora pronta per l\'attivazione. Riprova dopo averla ricevuta.</string>
   <string name="tangempay_card_activation_in_progress">Attivazione della carta in corso</string>
   <string name="tangempay_card_close">Chiudere</string>
-  <string name="tangempay_card_close_error_message">Riprovi più tardi o contatti l’assistenza. La aiuteremo a chiudere la carta.</string>
+  <string name="tangempay_card_close_error_message">Riprova più tardi o contatta l’assistenza</string>
   <string name="tangempay_card_close_error_title">Impossibile chiudere la carta</string>
   <string name="tangempay_card_close_last_card_disabled">Non è possibile chiudere l’ultima carta</string>
-  <string name="tangempay_card_closed_toast">Carta chiusa</string>
+  <string name="tangempay_card_closed_toast">Carta ••%s chiusa</string>
+  <string name="tangempay_card_closed_toast_named">Carta %s chiusa</string>
   <string name="tangempay_card_default_name">Carta Tangem Pay 1</string>
   <string name="tangempay_card_delivery_activate_after_delivery_toast">Potrà attivare la carta dopo la consegna</string>
   <string name="tangempay_card_delivery_banner_description">Attivala quando arriva</string>
