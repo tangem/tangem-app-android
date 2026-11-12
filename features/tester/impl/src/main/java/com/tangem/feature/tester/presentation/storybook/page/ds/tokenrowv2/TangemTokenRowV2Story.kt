@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.ds2.tokenrow.Network
 import com.tangem.core.ui.ds2.tokenrow.NoAddress
 import com.tangem.core.ui.ds2.tokenrow.Organize
 import com.tangem.core.ui.ds2.tokenrow.Shimmer
@@ -79,6 +80,19 @@ private fun ComponentPreview(state: TangemTokenRowV2Story) {
                 state = state,
                 icon = icon,
                 priceChange = priceChange,
+            )
+            TangemTokenRowV2Story.Variant.Network -> TangemTokenRow.Network(
+                icon = icon,
+                title = stringReference("Bitcoin"),
+                network = stringReference("Bitcoin network"),
+                hasPending = state.hasPending,
+                fiatBalance = stringReference("$583.00"),
+                cryptoBalance = if (state.hasCryptoBalance) stringReference("0,000015 BTC") else null,
+                showContractWarning = state.hasContractWarning,
+                showUpdateWarning = state.hasUpdateWarning,
+                isBalanceHidden = state.isBalanceHidden,
+                isBalanceFlickering = state.isBalanceFlickering,
+                onClick = {},
             )
             TangemTokenRowV2Story.Variant.Organize -> TangemTokenRow.Organize(
                 icon = icon,
