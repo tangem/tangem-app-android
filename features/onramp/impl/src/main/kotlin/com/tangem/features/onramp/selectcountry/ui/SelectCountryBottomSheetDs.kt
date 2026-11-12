@@ -3,7 +3,6 @@ package com.tangem.features.onramp.selectcountry.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -329,11 +327,8 @@ private fun CountrySearchFooter(state: TangemSearch.State, modifier: Modifier = 
         TangemSearch(
             state = state,
             modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp + navigationBarInset)
-                .clip(SEARCH_SHAPE)
-                .background(color = TangemTheme.colors3.bg.secondary, shape = SEARCH_SHAPE)
-                .border(width = 1.dp, color = TangemTheme.colors3.border.secondary, shape = SEARCH_SHAPE),
+                .padding(horizontal = 32.dp)
+                .padding(bottom = 16.dp + navigationBarInset),
         )
     }
 }
@@ -351,7 +346,6 @@ private val FLAG_SIZE = 40.dp
 private val SELECTED_MARK_SIZE = 20.dp
 private val CLOSE_BUTTON_SIZE = 44.dp
 private val CLOSE_ICON_SIZE = 24.dp
-private val SEARCH_SHAPE = RoundedCornerShape(percent = 50)
 private val FOOTER_INSET = 88.dp
 private val FADE_HEIGHT = 112.dp
 private const val UNAVAILABLE_ALPHA = 0.4f
