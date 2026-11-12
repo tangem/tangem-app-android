@@ -48,8 +48,8 @@ internal class MarketCategorySelectorModel @Inject constructor(
 
     private var appliedQuery: String? = null
 
-    /** A tap applies and closes the screen, so the filter it opened on is the only one it ever renders. */
-    private val appliedSelection: MarketCategorySelection = filterController.selection.value
+    /** A tap applies and closes the screen; only a discover deeplink changes the filter while it stays open. */
+    private val appliedSelection: MarketCategorySelection get() = filterController.selection.value
 
     private val listManager = MarketCategoryListManager(
         getMarketCategoryListFlowUseCase = getMarketCategoryListFlowUseCase,
@@ -65,6 +65,13 @@ internal class MarketCategorySelectorModel @Inject constructor(
             .onEach { (loaded, status) ->
                 categories = loaded
                 listStatus = status
+                render()
+            }
+            .launchIn(modelScope)
+
+        filterController.selection.drop(count = 1)
+            .onEach { selection ->
+                uiState.update { it.copy(isResetVisible = selection.category != null) }
                 render()
             }
             .launchIn(modelScope)

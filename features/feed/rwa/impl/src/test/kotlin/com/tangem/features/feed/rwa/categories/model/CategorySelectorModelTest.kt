@@ -21,6 +21,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -333,11 +334,35 @@ internal class CategorySelectorModelTest {
             ).inOrder()
         }
 
+    @Test
+    fun `GIVEN an open selector WHEN the tab applies another category THEN it is ticked without applying`() =
+        runTest {
+            // Arrange
+            stubCategories(umbrella, stocks, bonds)
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, selection = bondsSelection, callback = callback)
+            advanceUntilIdle()
+
+            // Act
+            callback.appliedSelection.value = stocksWithTechnology
+            advanceUntilIdle()
+
+            // Assert - the deeplink already filtered the list, so nothing is applied back
+            assertThat(model.selectedCategoryId()).isEqualTo(stocks.id)
+            assertThat(requireNotNull(model.sectors()).sectors.single { it.isSelected }.id).isEqualTo("technology")
+            assertThat(model.content().isApplyVisible).isFalse()
+            assertThat(callback.selection).isNull()
+            verify(exactly = 0) { router.pop(any()) }
+        }
+
     private fun createModel(
         testScope: TestScope,
         selection: CategorySelection = CategorySelection(),
-        callback: ModelCallback = RecordingCallback(),
+        callback: RecordingCallback = RecordingCallback(),
     ): CategorySelectorModel {
+        // the tab pushes the selector with the selection its list is filtered by
+        callback.appliedSelection.value = selection
+
         return CategorySelectorModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             paramsContainer = MutableParamsContainer(
@@ -360,6 +385,8 @@ internal class CategorySelectorModelTest {
     private fun CategorySelectorModel.tapSector(id: String) =
         requireNotNull(sectors()).sectors.single { it.id == id }.onItemClick()
 
+    private fun CategorySelectorModel.selectedCategoryId() = items().items.single { it.isSelected }.id
+
     private fun CategorySelectorModel.items() = content().sections
         .filterIsInstance<CategorySelectorSectionUM.Items>()
         .single()
@@ -369,6 +396,8 @@ internal class CategorySelectorModelTest {
         .singleOrNull()
 
     private class RecordingCallback : ModelCallback {
+
+        override val appliedSelection = MutableStateFlow(CategorySelection())
 
         var selection: CategorySelection? = null
             private set

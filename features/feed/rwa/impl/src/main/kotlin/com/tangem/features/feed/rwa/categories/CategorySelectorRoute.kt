@@ -1,7 +1,9 @@
 package com.tangem.features.feed.rwa.categories
 
-import com.tangem.features.feed.nav.FeedRoute
+import com.tangem.features.feed.nav.FeedFilterSheetRoute
+import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.rwa.categories.components.CategorySelectorComponent.ModelCallback
+import com.tangem.features.feed.v2.FeedFilterSheet
 import kotlinx.serialization.Serializable
 
 /**
@@ -14,4 +16,12 @@ import kotlinx.serialization.Serializable
 internal class CategorySelectorRoute(
     val categorySelection: CategorySelection,
     val callback: ModelCallback,
-) : FeedRoute
+) : FeedFilterSheetRoute {
+
+    override val tabId: FeedTabId get() = FeedTabId.RealAssets
+
+    override val sheet: FeedFilterSheet get() = FeedFilterSheet.Category
+
+    /** One selector per tab: a second push lands on the open one, which follows [ModelCallback.appliedSelection]. */
+    override val screenIdentity: Any get() = CategorySelectorRoute::class
+}

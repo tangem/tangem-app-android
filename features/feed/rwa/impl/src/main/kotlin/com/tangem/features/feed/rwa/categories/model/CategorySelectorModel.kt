@@ -16,6 +16,9 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -41,12 +44,23 @@ internal class CategorySelectorModel @Inject constructor(
     private val params = paramsContainer.require<CategorySelectorRoute>()
 
     private var categories: List<CoinCategory> = emptyList()
-    private var draftSelection = params.categorySelection
+    private var appliedSelection = params.categorySelection
+    private var draftSelection = appliedSelection
 
     val uiState: StateFlow<CategorySelectorUM>
         field = MutableStateFlow<CategorySelectorUM>(CategorySelectorUM.Loading)
 
     init {
+        // a discover deeplink re-filters the tab while this screen stays open: show what the list now uses
+        params.callback.appliedSelection
+            .filter { it != appliedSelection }
+            .onEach { selection ->
+                appliedSelection = selection
+                draftSelection = selection
+                if (categories.isNotEmpty()) updateState()
+            }
+            .launchIn(modelScope)
+
         loadCategories()
     }
 
@@ -94,7 +108,7 @@ internal class CategorySelectorModel @Inject constructor(
 
     /** An unchanged filter is not a pick: the tab would reload for nothing and report a `Select Category`. */
     private fun applyAndClose(selection: CategorySelection) {
-        if (selection != params.categorySelection) params.callback.onCategorySelect(selection)
+        if (selection != appliedSelection) params.callback.onCategorySelect(selection)
         router.pop()
     }
 
@@ -103,7 +117,7 @@ internal class CategorySelectorModel @Inject constructor(
             transformer = CategorySelectorTransformer(
                 categoryList = categories,
                 categorySelection = draftSelection,
-                isApplyVisible = draftSelection != params.categorySelection,
+                isApplyVisible = draftSelection != appliedSelection,
                 onApply = ::onApply,
                 onSelectionChange = ::onSelectionChange,
             ),
