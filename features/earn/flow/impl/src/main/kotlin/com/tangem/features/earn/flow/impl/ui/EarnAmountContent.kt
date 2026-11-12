@@ -3,6 +3,7 @@ package com.tangem.features.earn.flow.impl.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,11 +36,12 @@ internal fun EarnAmountContent(
             EarnFlowButton(button = state.primary, modifier = Modifier.fillMaxWidth())
         },
         modifier = modifier,
-    ) {
+    ) { contentPadding ->
         LazyColumn(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxSize()
                 .padding(horizontal = 16.dp),
+            contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item(key = "amount") {

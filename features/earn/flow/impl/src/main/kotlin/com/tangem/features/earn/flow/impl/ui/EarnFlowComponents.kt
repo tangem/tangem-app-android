@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,10 +21,17 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -39,6 +49,7 @@ import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -68,17 +79,41 @@ internal fun EarnFlowScaffold(
     topBar: @Composable () -> Unit,
     bottomExtraTop: (@Composable () -> Unit)? = null,
     bottom: @Composable ColumnScope.() -> Unit,
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable (contentPadding: PaddingValues) -> Unit,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors3.bg.primary)
-            .imePadding(),
-    ) {
-        topBar()
-        content()
-        TangemFooter(extraTop = bottomExtraTop, fadeEnabled = false, content = bottom)
+    var footerHeightPx by remember { mutableIntStateOf(0) }
+
+    TangemTopBarScaffold(
+        modifier = modifier,
+        topBar = topBar,
+        overlay = {
+            TangemFooter(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .imePadding()
+                    .onSizeChanged { size -> footerHeightPx = size.height },
+                extraTop = bottomExtraTop,
+                content = bottom,
+            )
+        },
+    ) { scaffoldPadding ->
+        val footerHeight = with(LocalDensity.current) { footerHeightPx.toDp() }
+        val layoutDirection = LocalLayoutDirection.current
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding(),
+        ) {
+            content(
+                PaddingValues(
+                    start = scaffoldPadding.calculateStartPadding(layoutDirection),
+                    top = scaffoldPadding.calculateTopPadding(),
+                    end = scaffoldPadding.calculateEndPadding(layoutDirection),
+                    bottom = maxOf(scaffoldPadding.calculateBottomPadding(), footerHeight),
+                ),
+            )
+        }
     }
 }
 
