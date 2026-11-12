@@ -40,6 +40,7 @@ import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.ForYouComponent
@@ -91,6 +92,7 @@ internal class ForYouModel @Inject constructor(
     private val earnErrorResolver: EarnErrorResolver,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val portfolioFetcherFactory: PortfolioFetcher.Factory,
+    private val portfolioSelectorBridgeFactory: PortfolioSelectorBridge.Factory,
     val portfolioSelectorController: PortfolioSelectorController,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletHeaderConverter: ForYouWalletHeaderConverter,
@@ -509,8 +511,13 @@ internal class ForYouModel @Inject constructor(
             analyticsParams = AddToPortfolioManager.AnalyticsParams(
                 source = AnalyticsParam.ScreensSources.Markets.value,
             ),
+            portfolioSelectorBridge = portfolioSelectorBridgeFactory.create(
+                mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
+                scope = managerScope,
+                isJointAccountsIncluded = false,
+            ),
         ).apply {
-            updateLaunchMode(AddToPortfolioManager.LaunchMode.ViaUserPortfolio)
+            updateLaunchMode(AddToPortfolioManager.LaunchMode.ViaUserPortfolio())
         }
 
         manager.onDismiss.receiveAsFlow()
