@@ -536,6 +536,22 @@ internal class EarnInfoModelTest {
 
             // Assert
             assertThat(sheet).containsExactly(EarnCalculatorSheetConfig)
+
+        @Test
+        fun `GIVEN Ready without projection WHEN chartParams THEN there is no callback and the chart hides the calculator button`() =
+            runTest {
+                // Arrange
+                product.stateFlow.value = knownState().copy(projection = null)
+                val model = createModel()
+                advanceUntilIdle()
+
+                // Act
+                val params = model.chartParams()
+
+                // Assert
+                assertThat(params.callback).isNull()
+                model.onDestroy()
+            }
             model.onDestroy()
         }
 
