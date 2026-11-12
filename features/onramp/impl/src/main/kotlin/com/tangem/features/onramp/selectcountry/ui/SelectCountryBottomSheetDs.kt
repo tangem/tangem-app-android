@@ -58,7 +58,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_control_checkmark_20
+import com.tangem.core.ui.res.generated.icons.ic_control_checkmark_24
 import com.tangem.core.ui.res.generated.icons.ic_cross_24
 import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
 import com.tangem.features.onramp.impl.R
@@ -201,9 +201,9 @@ private fun CountryRow(item: CountryItemState.WithContent) {
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            imageVector = Icons.ic_control_checkmark_20,
+                            imageVector = Icons.ic_control_checkmark_24,
                             contentDescription = null,
-                            tint = TangemTheme.colors3.bg.primary,
+                            tint = TangemTheme.colors3.icon.inverse,
                         )
                     }
                 }
@@ -343,7 +343,7 @@ private fun SearchBarUM.toSearchState() = TangemSearch.State(
 )
 
 private val FLAG_SIZE = 40.dp
-private val SELECTED_MARK_SIZE = 20.dp
+private val SELECTED_MARK_SIZE = 24.dp
 private val CLOSE_BUTTON_SIZE = 44.dp
 private val CLOSE_ICON_SIZE = 24.dp
 private val FOOTER_INSET = 88.dp
