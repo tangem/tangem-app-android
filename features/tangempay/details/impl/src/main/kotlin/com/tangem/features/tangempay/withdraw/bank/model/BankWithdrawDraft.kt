@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.withdraw.bank.model
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import java.math.BigDecimal
@@ -19,6 +20,7 @@ internal data class BankWithdrawDraft(
     val destination: OfframpDestination? = null,
     val networkFee: BigDecimal = BigDecimal.ZERO,
     val order: BankOfframpOrderResult? = null,
+    val quote: BankOfframpQuote? = null,
 )
 
 /** Who receives the money: the saved recipient, or the recipient being added once every form step is filled. */

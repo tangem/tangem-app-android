@@ -1,6 +1,7 @@
 package com.tangem.data.tangempay.repository
 
 import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.tangempay.model.AmountLimits
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
@@ -21,8 +22,10 @@ internal val MOCK_SPEI_DESTINATION = OfframpDestination(
         amount = BigDecimal("1"),
         currency = "USD",
         description = null,
+        fixedAmount = BigDecimal("0.50"),
     ),
     eta = OfframpEta(minDays = 0, maxDays = 0),
+    amountLimits = AmountLimits(min = BigDecimal("10"), max = null, currency = "USD"),
 )
 
 internal val MOCK_SPEI_RECIPIENT = BankAccount(
