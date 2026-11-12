@@ -7,6 +7,8 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.VideoFrameSize
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.coil.ImagePreloader
@@ -27,6 +29,7 @@ import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContent
 import com.tangem.domain.stories.models.StoryContentIds
+import com.tangem.features.polymarket.impl.R as PolymarketR
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.test.core.ProvideTestModels
@@ -52,6 +55,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 internal class PolymarketOnboardingModelTest {
 
@@ -64,6 +68,8 @@ internal class PolymarketOnboardingModelTest {
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
+    private val welcomeVideo: LoopingVideoController = mockk(relaxed = true)
+    private val videoFactory: LoopingVideoController.Factory = mockk()
 
     private val userWalletId = UserWalletId("011")
     private val params = PolymarketOnboardingParams(userWalletId = userWalletId)
@@ -80,7 +86,10 @@ internal class PolymarketOnboardingModelTest {
             router,
             urlOpener,
             messageSender,
+            welcomeVideo,
+            videoFactory,
         )
+        every { videoFactory.create(any(), any(), any(), any(), any()) } returns welcomeVideo
         allowsNewAccount(PolymarketNewAccountAllowance.ALLOWED)
         storyWasSeen()
         coEvery { getStoryContentUseCase.invokeSync(id = any(), refresh = any()) } returns null.right()
@@ -1030,6 +1039,59 @@ internal class PolymarketOnboardingModelTest {
         coEvery { shouldShowStoriesInteractor.invokeSync(STORY_ID) } returns false
     }
 
+    @Nested
+    inner class WelcomeVideo {
+
+        @Test
+        fun `GIVEN the gate WHEN model created THEN the welcome clip is declared at its own size`() = runTest {
+            // Arrange
+            gateResolves(PolymarketEntry.Undetermined)
+
+            // Act
+            createModel(testScope = this)
+
+            // Assert
+            verify(exactly = 1) {
+                videoFactory.create(
+                    scope = any(),
+                    videoRes = PolymarketR.raw.polymarket_welcome_background,
+                    frameSize = VideoFrameSize(width = 1080, height = 1632),
+                    diagnosticsSubject = "Polymarket welcome video",
+                    onFailed = any(),
+                )
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN the gate WHEN the screen running state changes THEN the clip follows it`(isRunning: Boolean) =
+            runTest {
+                // Arrange
+                gateResolves(PolymarketEntry.Undetermined)
+                val model = createModel(testScope = this)
+
+                // Act
+                model.setWelcomeVideoRunning(isRunning = isRunning)
+
+                // Assert
+                verify(exactly = 1) { welcomeVideo.setRunning(isRunning = isRunning) }
+            }
+
+        @Test
+        fun `GIVEN an onboarded wallet WHEN model destroyed THEN the clip is released`() = runTest {
+            // Arrange
+            gateResolves(PolymarketEntry.Onboarded)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onDestroy()
+
+            // Assert
+            verify(exactly = 1) { welcomeVideo.release() }
+        }
+    }
+
     private fun allowsNewAccount(allowance: PolymarketNewAccountAllowance) {
         coEvery { checkNewAccountAllowed(userWalletId) } returns allowance
     }
@@ -1049,6 +1111,7 @@ internal class PolymarketOnboardingModelTest {
         shouldShowStoriesInteractor = shouldShowStoriesInteractor,
         getStoryContentUseCase = getStoryContentUseCase,
         imagePreloader = imagePreloader,
+        videoFactory = videoFactory,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
     )
 

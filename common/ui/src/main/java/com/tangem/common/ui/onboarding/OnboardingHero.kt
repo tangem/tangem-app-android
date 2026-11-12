@@ -3,6 +3,7 @@ package com.tangem.common.ui.onboarding
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -46,10 +47,36 @@ fun OnboardingHero(
     @DrawableRes foregroundImageResId: Int? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    OnboardingHero(
+        media = {
+            Image(
+                modifier = Modifier.matchParentSize(),
+                painter = painterResource(imageResId),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+            )
+        },
+        modifier = modifier,
+        tintStartY = tintStartY,
+        tintEndY = tintEndY,
+        foregroundImageResId = foregroundImageResId,
+        content = content,
+    )
+}
+
+@Composable
+fun OnboardingHero(
+    modifier: Modifier = Modifier,
+    tintStartY: Float = DEFAULT_TINT_START_Y,
+    tintEndY: Float = DEFAULT_TINT_END_Y,
+    @DrawableRes foregroundImageResId: Int? = null,
+    media: @Composable BoxScope.() -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     val tintColor = TangemTheme.colors3.bg.primary
 
     Box(modifier = modifier) {
-        Image(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(FRAME_WIDTH / IMAGE_HEIGHT)
@@ -66,9 +93,7 @@ fun OnboardingHero(
                         drawRect(tint)
                     }
                 },
-            painter = painterResource(imageResId),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
+            content = media,
         )
 
         if (foregroundImageResId != null) {

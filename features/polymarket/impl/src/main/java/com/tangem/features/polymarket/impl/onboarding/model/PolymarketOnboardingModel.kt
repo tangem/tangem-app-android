@@ -7,6 +7,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.LoopingVideoState
+import com.tangem.core.media.VideoFrameSize
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.coil.ImagePreloader
@@ -24,6 +27,7 @@ import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContentIds
+import com.tangem.features.polymarket.impl.R as PolymarketR
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
@@ -63,6 +67,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val imagePreloader: ImagePreloader,
+    videoFactory: LoopingVideoController.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -80,12 +85,31 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private var storyContentPrefetch: Deferred<Boolean>? = null
 
+    private val welcomeVideo = videoFactory.create(
+        scope = modelScope,
+        videoRes = PolymarketR.raw.polymarket_welcome_background,
+        frameSize = WELCOME_VIDEO_SIZE,
+        diagnosticsSubject = "Polymarket welcome video",
+    )
+
+    val welcomeVideoState: StateFlow<LoopingVideoState>
+        get() = welcomeVideo.state
+
     init {
         resolveEntry()
     }
 
     fun onCloseClick() {
         router.pop()
+    }
+
+    fun setWelcomeVideoRunning(isRunning: Boolean) {
+        welcomeVideo.setRunning(isRunning = isRunning)
+    }
+
+    override fun onDestroy() {
+        welcomeVideo.release()
+        super.onDestroy()
     }
 
     private fun resolveEntry() {
@@ -264,5 +288,6 @@ internal class PolymarketOnboardingModel @Inject constructor(
         val STORY_ID = StoryContentIds.STORY_POLYMARKET_ONBOARDING.id
         val STORY_SOURCE = AnalyticsParam.ScreensSources.Onboarding.value
         val STORY_AVAILABILITY_TIMEOUT = 1.seconds
+        val WELCOME_VIDEO_SIZE = VideoFrameSize(width = 1080, height = 1632)
     }
 }
