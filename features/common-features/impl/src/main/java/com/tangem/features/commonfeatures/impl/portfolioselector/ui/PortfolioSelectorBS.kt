@@ -171,8 +171,8 @@ private fun PreviewV2(@PreviewParameter(PortfolioSelectorPreviewStateProvider::c
     }
 }
 
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, widthDp = 360, heightDp = 600)
+@Preview(showBackground = true, widthDp = 360, heightDp = 600, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun PreviewModal(@PreviewParameter(PortfolioSelectorPreviewStateProvider::class) params: PortfolioSelectorUM) {
     TangemThemePreviewRedesign {

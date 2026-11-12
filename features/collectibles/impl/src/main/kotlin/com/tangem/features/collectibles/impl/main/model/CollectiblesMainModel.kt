@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -21,7 +22,6 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
-import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
@@ -41,6 +41,13 @@ import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMe
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesRelinkConverter
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.domain.collectibles.models.CollectiblePendingPack
+import com.tangem.domain.collectibles.usecase.DismissCollectiblePendingPackUseCase
+import com.tangem.domain.collectibles.usecase.GetCollectiblePendingPacksUseCase
+import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesPendingPacksConverter
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
+import kotlinx.collections.immutable.persistentListOf
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -63,7 +70,6 @@ internal class CollectiblesMainModel @Inject constructor(
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase,
     private val createOrReactivateCollectiblesAccountUseCase: CreateOrReactivateCollectiblesAccountUseCase,
     private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
     private val collectiblesAccountRepository: CollectiblesAccountRepository,
@@ -72,6 +78,8 @@ internal class CollectiblesMainModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val sessionKey: CollectiblesSessionKey,
     private val clipboardManager: ClipboardManager,
+    private val getCollectiblePendingPacksUseCase: GetCollectiblePendingPacksUseCase,
+    private val dismissCollectiblePendingPackUseCase: DismissCollectiblePendingPackUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -88,6 +96,13 @@ internal class CollectiblesMainModel @Inject constructor(
         onItemClick = ::onMenuItemClick,
     )
     private val relinkConverter = CollectiblesRelinkConverter(onRelinkClick = ::onRelinkClick)
+    private val pendingPacksConverter = CollectiblesPendingPacksConverter(
+        onOpenPackClick = { pack ->
+            reopenPack(txId = pack.txId, machineId = pack.machineId, isTurboEnabled = pack.isTurboModeEnabled)
+        },
+        onGetAssistanceClick = ::onGetAssistanceClick,
+        onCloseClick = ::onPendingPackCloseClick,
+    )
 
     val bottomSheetNavigation = SlotNavigation<CollectiblesMainBottomSheetConfig>()
 
@@ -98,18 +113,68 @@ internal class CollectiblesMainModel @Inject constructor(
 
     private var sessionKeyAddress: String? = null
 
+    private var pendingPacks: List<CollectiblePendingPack> = emptyList()
+    private val pendingPacksJobHolder = JobHolder()
+
     init {
         observeBalance()
         observeCollectiblesStatus()
         loadSessionKey()
     }
 
-    /** Every return to the screen re-reads the vault, so a vault re-pointed by another phone shows the relink banner */
     fun onScreenResumed() {
         modelScope.launch {
             collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
                 .onLeft { error -> TangemLogger.e("Unable to refresh the collectibles account", error) }
         }
+        observePendingPacks()
+    }
+
+    fun onScreenPaused() {
+        pendingPacksJobHolder.cancel()
+    }
+
+    fun onPackClick(externalId: String) {
+        val readyToOpen = pendingPacks.firstNotNullOfOrNull { it as? CollectiblePendingPack.ReadyToOpen }
+
+        when {
+            readyToOpen != null -> bottomSheetNavigation.activate(
+                CollectiblesMainBottomSheetConfig.PackUnopened(
+                    txId = readyToOpen.txId,
+                    machineId = readyToOpen.machineId,
+                    isTurboModeEnabled = readyToOpen.isTurboModeEnabled,
+                ),
+            )
+            pendingPacks.any { it is CollectiblePendingPack.PaymentInProgress } -> bottomSheetNavigation.activate(
+                CollectiblesMainBottomSheetConfig.PaymentInProgress,
+            )
+            else -> router.push(CollectiblesRoute.MachineDetails(externalId = externalId))
+        }
+    }
+
+    fun onOpenUnopenedPack(config: CollectiblesMainBottomSheetConfig.PackUnopened) {
+        bottomSheetNavigation.dismiss()
+        reopenPack(txId = config.txId, machineId = config.machineId, isTurboEnabled = config.isTurboModeEnabled)
+    }
+
+    private fun observePendingPacks() {
+        getCollectiblePendingPacksUseCase(params.userWalletId)
+            .onEach { packs ->
+                pendingPacks = packs
+                uiState.update { state -> state.copy(pendingPacks = pendingPacksConverter.convert(packs)) }
+            }
+            .launchIn(modelScope)
+            .saveIn(pendingPacksJobHolder)
+    }
+
+    private fun reopenPack(txId: String, machineId: String, isTurboEnabled: Boolean) {
+        router.push(
+            CollectiblesRoute.ConfirmOrder(machineId = machineId, isTurboEnabled = isTurboEnabled, reopenTxId = txId),
+        )
+    }
+
+    private fun onPendingPackCloseClick(txId: String) {
+        modelScope.launch { dismissCollectiblePendingPackUseCase(txId) }
     }
 
     // TODO testing only, remove once Gasless pays the spin fee
@@ -182,6 +247,7 @@ internal class CollectiblesMainModel @Inject constructor(
                 onClick = ::onCollectionClick,
             ),
             relink = CollectiblesMainUM.RelinkUM.Hidden,
+            pendingPacks = persistentListOf(),
             menu = menuConverter.convert(null),
             isBalanceRefreshing = false,
             onBackClick = ::onBackClick,
@@ -189,6 +255,7 @@ internal class CollectiblesMainModel @Inject constructor(
     }
 
     fun onRefresh() {
+        observePendingPacks()
         modelScope.launch {
             uiState.update { state -> state.copy(isBalanceRefreshing = true) }
 
@@ -214,7 +281,6 @@ internal class CollectiblesMainModel @Inject constructor(
             CollectiblesMenuItem.HOW_IT_WORKS -> onHowItWorksClick()
             CollectiblesMenuItem.GET_ASSISTANCE -> onGetAssistanceClick()
             CollectiblesMenuItem.SESSION_KEY -> onSessionKeyClick()
-            CollectiblesMenuItem.CLOSE_ACCOUNT -> onCloseAccountClick()
         }
     }
 
@@ -244,8 +310,7 @@ internal class CollectiblesMainModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 fromCryptoCurrency = vault.usdcToken,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
-                // TODO AnalyticsParam.ScreensSources.Collectibles.value ?
-                screenSource = "Collectibles",
+                screenSource = AnalyticsParam.ScreensSources.Collectibles.value,
                 accountFlow = AppRoute.Swap.AccountFlow.CollectiblesTopUp,
             ),
         )
@@ -268,9 +333,18 @@ internal class CollectiblesMainModel @Inject constructor(
         )
     }
 
-    @Suppress("EmptyFunctionBlock")
     private fun onWithdrawalClick() {
-        // TODO([REDACTED_TASK_KEY]): withdrawal flow is not built yet.
+        val vault = vaultStatus ?: return sendUnknownErrorMessage()
+
+        router.push(
+            AppRoute.Swap(
+                userWalletId = params.userWalletId,
+                fromCryptoCurrency = vault.usdcToken,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
+                screenSource = AnalyticsParam.ScreensSources.Collectibles.value,
+                accountFlow = AppRoute.Swap.AccountFlow.CollectiblesWithdraw,
+            ),
+        )
     }
 
     @Suppress("EmptyFunctionBlock")
@@ -327,20 +401,6 @@ internal class CollectiblesMainModel @Inject constructor(
         uiState.update { state ->
             val relink = state.relink as? CollectiblesMainUM.RelinkUM.Shown ?: return@update state
             state.copy(relink = relink.copy(isLoading = isLoading))
-        }
-    }
-
-    // TODO temporary, testing only: remove before release
-    private fun onCloseAccountClick() {
-        onMenuDismiss()
-
-        modelScope.launch {
-            val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId) ?: return@launch
-
-            closeCollectiblesVaultUseCase(userWallet).fold(
-                ifLeft = ::onVaultActionFailed,
-                ifRight = { router.pop() },
-            )
         }
     }
 

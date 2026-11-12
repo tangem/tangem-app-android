@@ -11,7 +11,7 @@ import com.tangem.domain.polymarket.isPredictionAccountSupported
  * A locked wallet is excluded because onboarding derives its owner address, which a locked wallet cannot
  * provide without an unlock the chooser has no way to ask for.
  *
- * A single-currency wallet is excluded because Note, Twins, Start2Coin and Visa cards have no business in
+ * A single-currency wallet is excluded because Note, Twins and Start2Coin cards have no business in
  * Predictions — each for reasons of its own, none of them about the deposit chain, which the hardened owner
  * path does not need in the portfolio.
  *

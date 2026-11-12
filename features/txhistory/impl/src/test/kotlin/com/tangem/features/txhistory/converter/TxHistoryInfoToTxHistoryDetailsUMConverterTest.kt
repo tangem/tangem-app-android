@@ -283,8 +283,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         val refundConverter = refundConverter(onLearnMore = { learnMoreClicked = true })
 
         // Act
-        val result = refundConverter.convert(expressSwap(status = ExpressExchangeStatus.Refunded))
-            as TxHistoryDetailsUM.TwoAssets
+        val result = refundConverter.convert(refundedSwap()) as TxHistoryDetailsUM.TwoAssets
 
         // Assert — the subtitle's trailing "Learn more" is a styled reference carrying a lambda, so the subtitle is
         // nulled out for the whole-object comparison and its parts are checked apart.
@@ -320,8 +319,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         val refundConverter = refundConverter(onGoToToken = goToTokenClicks::add)
 
         // Act
-        val result = refundConverter.convert(expressSwap(status = ExpressExchangeStatus.Refunded))
-            as TxHistoryDetailsUM.TwoAssets
+        val result = refundConverter.convert(refundedSwap()) as TxHistoryDetailsUM.TwoAssets
 
         // Assert
         val button = result.providerButton
@@ -351,7 +349,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
     @Test
     fun `GIVEN finished express swap with resolved refund token WHEN convert THEN refund banner not applied`() {
         // Act — a stale refund resolution must not leak into non-refunded terminals.
-        val result = refundConverter().convert(expressSwap(status = ExpressExchangeStatus.Finished))
+        val result = refundConverter().convert(refundedSwap(status = ExpressExchangeStatus.Finished))
             as TxHistoryDetailsUM.TwoAssets
 
         // Assert
@@ -386,7 +384,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         (action as TxHistoryDetailsUM.MenuItemUM.Action.Direct).onClick()
     }
 
-    /** Converter with a resolved refund token (bitcoin) and the refund callbacks wired. */
+    /** Converter with the refund callbacks wired. */
     private fun refundConverter(
         onLearnMore: () -> Unit = {},
         onGoToToken: (CryptoCurrency) -> Unit = {},
@@ -395,8 +393,13 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         onCopyAddress = copiedAddresses::add,
         onGoToProvider = openedUrls::add,
         isBalanceHidden = false,
-        refundCurrency = bitcoin,
         onLearnMoreAboutRefundsClick = onLearnMore,
         onGoToRefundedTokenClick = onGoToToken,
+    )
+
+    /** A swap carrying a resolved refund token — the shape that surfaces the "Refunded in {token}" terminal. */
+    private fun refundedSwap(status: ExpressExchangeStatus = ExpressExchangeStatus.Refunded) = expressSwap(
+        status = status,
+        refundCurrency = bitcoin,
     )
 }

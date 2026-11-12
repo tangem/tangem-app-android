@@ -4,42 +4,54 @@ import androidx.compose.ui.text.input.TextFieldValue
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.account.CardDisplayName
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.usecase.UpdateTangemPayCardNameUseCase
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.card.details.CardDetailsEventListener
 import com.tangem.features.tangempay.card.details.TangemPayCardDetailsController
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.emptyFlow
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
-internal class TangemPayEditDisplayNameModelTest {
+internal class TangemPayEditDisplayNameModelTest : TangemPayModelTestBase() {
 
     private val cardId = "card_1"
     private val userWalletId = UserWalletId("123")
 
-    private val router: Router = mockk(relaxed = true)
     private val updateCardNameUseCase: UpdateTangemPayCardNameUseCase = mockk()
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val cardDetailsEventListener: CardDetailsEventListener = mockk(relaxed = true)
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory = mockk(relaxed = true)
 
-    init {
+    @BeforeEach
+    fun setUp() {
+        clearMocks(
+            updateCardNameUseCase,
+            paymentAccountStatusSupplier,
+            cardDetailsEventListener,
+            cardDetailsControllerFactory,
+            analytics,
+            router,
+            uiMessageSender,
+        )
         every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns emptyFlow()
     }
 
@@ -60,56 +72,46 @@ internal class TangemPayEditDisplayNameModelTest {
     )
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class OnValueChanged {
 
-        // [REDACTED_TASK_KEY]: invalid-but-present input must NOT disable the button, otherwise the
-        // user can never press Done to see the "Invalid characters" alert.
-        @Test
-        fun `GIVEN emoji input WHEN onValueChanged THEN button stays enabled`() {
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN input WHEN onValueChanged THEN done button enabled unless the input is blank`(
+            case: DoneButtonModel,
+        ) {
+            // Arrange
             val model = createModel()
 
-            model.uiState.value.onValueChanged(TextFieldValue("Card 😀"))
+            // Act
+            model.uiState.value.onValueChanged(TextFieldValue(case.input))
 
-            assertThat(model.uiState.value.isDoneEnabled).isTrue()
-        }
-
-        @Test
-        fun `GIVEN special characters input WHEN onValueChanged THEN button stays enabled`() {
-            val model = createModel()
-
-            model.uiState.value.onValueChanged(TextFieldValue("Card #1!"))
-
-            assertThat(model.uiState.value.isDoneEnabled).isTrue()
-        }
-
-        @Test
-        fun `GIVEN valid input WHEN onValueChanged THEN button enabled`() {
-            val model = createModel()
-
-            model.uiState.value.onValueChanged(TextFieldValue("My Card"))
-
-            assertThat(model.uiState.value.isDoneEnabled).isTrue()
-        }
-
-        @Test
-        fun `GIVEN blank input WHEN onValueChanged THEN button disabled`() {
-            val model = createModel()
-
-            model.uiState.value.onValueChanged(TextFieldValue("   "))
-
-            assertThat(model.uiState.value.isDoneEnabled).isFalse()
+            // Assert
+            assertThat(model.uiState.value.isDoneEnabled).isEqualTo(case.isDoneEnabled)
         }
 
         @Test
         fun `GIVEN input longer than max length WHEN onValueChanged THEN change is ignored`() {
+            // Arrange
             val model = createModel()
             val maxLengthText = "a".repeat(CardDisplayName.MAX_LENGTH)
             model.uiState.value.onValueChanged(TextFieldValue(maxLengthText))
 
+            // Act
             model.uiState.value.onValueChanged(TextFieldValue(maxLengthText + "b"))
 
+            // Assert
             assertThat(model.uiState.value.editingValue.text).isEqualTo(maxLengthText)
         }
+
+        private fun provideTestModels() = listOf(
+            // [REDACTED_TASK_KEY]: invalid-but-present input must NOT disable the button, otherwise the
+            // user can never press Done to see the "Invalid characters" alert.
+            DoneButtonModel(input = "Card 😀", isDoneEnabled = true),
+            DoneButtonModel(input = "Card #1!", isDoneEnabled = true),
+            DoneButtonModel(input = "My Card", isDoneEnabled = true),
+            DoneButtonModel(input = "   ", isDoneEnabled = false),
+        )
     }
 
     @Nested
@@ -119,23 +121,29 @@ internal class TangemPayEditDisplayNameModelTest {
         // and does not persist the name.
         @Test
         fun `GIVEN invalid name WHEN onDoneClick THEN error dialog shown and name not updated`() {
+            // Arrange
             val model = createModel()
             model.uiState.value.onValueChanged(TextFieldValue("Card 😀"))
 
+            // Act
             model.uiState.value.onDoneClick()
 
+            // Assert
             verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
             coVerify(exactly = 0) { updateCardNameUseCase(any(), any(), any()) }
         }
 
         @Test
         fun `GIVEN valid changed name WHEN onDoneClick THEN name updated`() {
+            // Arrange
             coEvery { updateCardNameUseCase(any(), any(), any()) } returns Unit.right()
             val model = createModel()
             model.uiState.value.onValueChanged(TextFieldValue("New Name"))
 
+            // Act
             model.uiState.value.onDoneClick()
 
+            // Assert
             coVerify(exactly = 1) {
                 updateCardNameUseCase(cardId, userWalletId, CardDisplayName("New Name").getOrNull()!!)
             }
@@ -144,10 +152,13 @@ internal class TangemPayEditDisplayNameModelTest {
 
         @Test
         fun `GIVEN unchanged name WHEN onDoneClick THEN screen closed without update`() {
+            // Arrange
             val model = createModel(displayName = CardDisplayName("My Card").getOrNull())
 
+            // Act
             model.uiState.value.onDoneClick()
 
+            // Assert
             verify(exactly = 1) { router.pop() }
             coVerify(exactly = 0) { updateCardNameUseCase(any(), any(), any()) }
         }
@@ -167,4 +178,6 @@ internal class TangemPayEditDisplayNameModelTest {
         embossName = null,
         cardType = TangemPayCardType.VIRTUAL,
     )
+
+    internal data class DoneButtonModel(val input: String, val isDoneEnabled: Boolean)
 }

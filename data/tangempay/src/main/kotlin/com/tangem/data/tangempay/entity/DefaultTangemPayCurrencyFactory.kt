@@ -1,0 +1,184 @@
+package com.tangem.data.tangempay.entity
+
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.currency.CryptoCurrencyFactory
+import com.tangem.data.common.network.NetworkFactory
+import com.tangem.domain.card.common.tangempay.TangemPayUtilities
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
+import com.tangem.domain.models.account.PaymentNetworkStatus
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
+import java.math.BigDecimal
+import java.util.Locale
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+internal class DefaultTangemPayCurrencyFactory @Inject constructor(
+    excludedBlockchains: ExcludedBlockchains,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val networkFactory: NetworkFactory,
+) : TangemPayCurrencyFactory {
+    private val cryptoCurrencyFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
+        CryptoCurrencyFactory(excludedBlockchains)
+    }
+
+    override fun create(userWalletId: UserWalletId): CryptoCurrency.Token {
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+        val network = networkFactory.create(
+            blockchain = TangemPayUtilities.blockchain,
+            userWallet = userWallet,
+            extraDerivationPath = null,
+        )
+        return cryptoCurrencyFactory.createToken(
+            network = requireNotNull(network),
+            rawId = TangemPayCurrencyFactory.TOKEN_ID,
+            name = TangemPayCurrencyFactory.TOKEN_NAME,
+            symbol = TangemPayCurrencyFactory.TOKEN_NAME,
+            contractAddress = TangemPayCurrencyFactory.TOKEN_CONTRACT_ADDRESS,
+            decimals = TangemPayCurrencyFactory.TOKEN_DECIMALS,
+        )
+    }
+
+    override fun createNetworkStatuses(
+        userWalletId: UserWalletId,
+        networks: List<CustomerInfo.NetworkInfo>,
+        fiatRate: BigDecimal?,
+    ): List<PaymentNetworkStatus> {
+        if (networks.isEmpty()) return emptyList()
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+        return networks.mapNotNull { networkInfo ->
+            val blockchain = PaymentNetworkBlockchainResolver.blockchainFor(
+                name = networkInfo.name,
+                chainId = networkInfo.chainId,
+                isTestnet = networkInfo.isTestnet,
+            ) ?: return@mapNotNull null
+            val network = networkFactory.create(
+                blockchain = blockchain,
+                extraDerivationPath = null,
+                userWallet = userWallet,
+            ) ?: return@mapNotNull null
+            networkInfo.toPaymentNetworkStatus(network, blockchain, fiatRate)
+        }
+    }
+
+    private fun CustomerInfo.NetworkInfo.toPaymentNetworkStatus(
+        network: Network,
+        blockchain: Blockchain,
+        fiatRate: BigDecimal?,
+    ): PaymentNetworkStatus? {
+        val tokensWithCurrency = tokens.mapNotNull { token ->
+            val currency = createToken(network, blockchain, token) ?: return@mapNotNull null
+            token to currency
+        }
+        val currencies = tokensWithCurrency.map { (_, currency) -> currency }
+        return when (status) {
+            // The backend may report a network ENABLED before its deposit address is provisioned.
+            CustomerInfo.NetworkInfo.Status.ENABLED -> {
+                val address = depositAddress
+                if (address.isNullOrEmpty()) {
+                    TangemLogger.e("Payment network ${network.rawId} is enabled without a deposit address")
+                    return null
+                }
+                PaymentNetworkStatus.Available(
+                    network = network,
+                    chainId = chainId,
+                    depositAddress = address,
+                    cryptoCurrencyStatuses = tokensWithCurrency.map { (token, currency) ->
+                        buildStatus(
+                            currency = currency,
+                            amount = token.availableForWithdrawal.orZero(),
+                            fiatRate = fiatRate,
+                            depositAddress = address,
+                        )
+                    },
+                )
+            }
+            CustomerInfo.NetworkInfo.Status.NOT_ISSUED -> PaymentNetworkStatus.NotIssued(
+                network = network,
+                chainId = chainId,
+            )
+            CustomerInfo.NetworkInfo.Status.DISABLED -> PaymentNetworkStatus.Disabled(
+                network = network,
+                chainId = chainId,
+                cryptoCurrencies = currencies,
+            )
+        }
+    }
+
+    /**
+     * `null` when the backend entry cannot describe a currency: [CryptoCurrency.Token] rejects a blank symbol or
+     * contract address, and the contract address is absent for a network that has not issued one yet. Dropping
+     * just that token keeps its network in the list instead of throwing and losing the whole mapping.
+     */
+    private fun createToken(
+        network: Network,
+        blockchain: Blockchain,
+        token: CustomerInfo.NetworkInfo.Token,
+    ): CryptoCurrency.Token? {
+        val symbol = token.symbol.takeIf(String::isNotBlank) ?: return null
+        // The backend returns EIP-55 checksummed addresses; Express and the account's own legacy currency both
+        // carry plain lowercase ones, and swap pairs are matched by exact string comparison.
+        val contractAddress = token.contractAddress?.takeIf(String::isNotBlank)?.lowercase(Locale.US) ?: return null
+        return cryptoCurrencyFactory.createToken(
+            network = network,
+            rawId = rawIdFor(symbol),
+            name = symbol,
+            symbol = symbol,
+            contractAddress = contractAddress,
+            decimals = PaymentTokenDecimalsResolver.decimalsFor(blockchain),
+        )
+    }
+
+    private fun buildStatus(
+        currency: CryptoCurrency.Token,
+        amount: BigDecimal,
+        fiatRate: BigDecimal?,
+        depositAddress: String,
+    ): CryptoCurrencyStatus {
+        val networkAddress = NetworkAddress.Single(
+            defaultAddress = NetworkAddress.Address(
+                type = NetworkAddress.Address.Type.Primary,
+                value = depositAddress,
+            ),
+        )
+        val value = if (fiatRate != null) {
+            CryptoCurrencyStatus.Loaded(
+                amount = amount,
+                fiatAmount = amount.multiply(fiatRate),
+                fiatRate = fiatRate,
+                priceChange = BigDecimal.ZERO,
+                networkAddress = networkAddress,
+                sources = CryptoCurrencyStatus.Sources(),
+                pendingTransactions = emptySet(),
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+            )
+        } else {
+            CryptoCurrencyStatus.NoQuote(
+                amount = amount,
+                networkAddress = networkAddress,
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+                pendingTransactions = emptySet(),
+                sources = CryptoCurrencyStatus.Sources(),
+            )
+        }
+        return CryptoCurrencyStatus(currency = currency, value = value)
+    }
+
+    private fun rawIdFor(symbol: String): CryptoCurrency.RawID? = when (symbol.uppercase(Locale.US)) {
+        "USDC" -> CryptoCurrency.RawID("usd-coin")
+        "USDT" -> CryptoCurrency.RawID("tether")
+        else -> null
+    }
+}

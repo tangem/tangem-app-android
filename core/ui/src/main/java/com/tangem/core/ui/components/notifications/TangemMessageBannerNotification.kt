@@ -70,27 +70,26 @@ private fun NotificationConfig.IconTint.toColor() = when (this) {
 }
 
 /** Maps the legacy button configuration onto the banner's (secondary = start, primary = end) pair. */
-private fun ButtonsState?.toBannerButtons(): Pair<TangemMessageBanner.Button?, TangemMessageBanner.Button?> =
-    when (this) {
-        is ButtonsState.PrimaryButtonConfig -> null to TangemMessageBanner.Button(
-            text = text,
-            onClick = onClick,
-            iconEnd = iconResId?.let { TangemIconUM.Icon(iconRes = it) },
-            isLoading = shouldShowProgress,
-        )
-        is ButtonsState.SecondaryButtonConfig -> TangemMessageBanner.Button(
-            text = text,
-            onClick = onClick,
-            iconEnd = iconResId?.let { TangemIconUM.Icon(iconRes = it) },
-            isLoading = shouldShowProgress,
-        ) to null
-        is ButtonsState.PairButtonsConfig -> TangemMessageBanner.Button(
-            text = secondaryText,
-            onClick = onSecondaryClick,
-        ) to TangemMessageBanner.Button(text = primaryText, onClick = onPrimaryClick)
-        is ButtonsState.SecondaryPairButtonsConfig -> TangemMessageBanner.Button(
-            text = leftText,
-            onClick = onLeftClick,
-        ) to TangemMessageBanner.Button(text = rightText, onClick = onRightClick)
-        null -> null to null
-    }
+fun ButtonsState?.toBannerButtons(): Pair<TangemMessageBanner.Button?, TangemMessageBanner.Button?> = when (this) {
+    is ButtonsState.PrimaryButtonConfig -> null to TangemMessageBanner.Button(
+        text = text,
+        onClick = onClick,
+        iconEnd = iconResId?.let { TangemIconUM.Icon(iconRes = it) },
+        isLoading = shouldShowProgress,
+    )
+    is ButtonsState.SecondaryButtonConfig -> TangemMessageBanner.Button(
+        text = text,
+        onClick = onClick,
+        iconEnd = iconResId?.let { TangemIconUM.Icon(iconRes = it) },
+        isLoading = shouldShowProgress,
+    ) to null
+    is ButtonsState.PairButtonsConfig -> TangemMessageBanner.Button(
+        text = secondaryText,
+        onClick = onSecondaryClick,
+    ) to TangemMessageBanner.Button(text = primaryText, onClick = onPrimaryClick)
+    is ButtonsState.SecondaryPairButtonsConfig -> TangemMessageBanner.Button(
+        text = leftText,
+        onClick = onLeftClick,
+    ) to TangemMessageBanner.Button(text = rightText, onClick = onRightClick)
+    null -> null to null
+}

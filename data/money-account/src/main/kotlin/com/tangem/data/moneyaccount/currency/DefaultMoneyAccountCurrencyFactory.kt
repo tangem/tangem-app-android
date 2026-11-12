@@ -11,7 +11,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.derivation.MONEY_ACCOUNT_DERIVATION_PATH
-import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
 import javax.inject.Inject
 import javax.inject.Singleton
 

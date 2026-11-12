@@ -34,6 +34,7 @@ import com.tangem.domain.search.model.UserAssetSearchItem
 import com.tangem.domain.search.usecase.GetSearchResultsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.feed.earn.components.EarnFeedSearchTabComponent
 import com.tangem.features.feed.earn.createEarnCurrency
 import com.tangem.features.feed.earn.createEarnHttpError
@@ -91,6 +92,7 @@ internal class EarnFeedSearchTabModelTest {
         every { onSuccessAdded } returns Channel()
         every { onAddedTokenClick } returns Channel()
     }
+    private val earnFeatureToggles: EarnFeatureToggles = mockk(relaxed = true)
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk {
         every { create(any(), any(), any(), any()) } returns addToPortfolioManager
     }
@@ -427,6 +429,10 @@ internal class EarnFeedSearchTabModelTest {
             analyticsEventHandler = analyticsEventHandler,
             router = router,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
+            portfolioSelectorBridgeFactory = mockk(relaxed = true),
+            earnFeatureToggles = earnFeatureToggles,
+            getStakingAvailabilityUseCase = mockk(),
+            yieldSupplyGetAvailabilityUseCase = mockk(),
         ).also { model = it }
     }
 

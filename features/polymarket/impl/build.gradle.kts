@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.features.polymarket.api)
     api(projects.features.commonFeatures.api)
     implementation(projects.features.tokenRecieve.api)
+    implementation(projects.features.wallet.api)
 
     /** Common */
     implementation(projects.common.ui)

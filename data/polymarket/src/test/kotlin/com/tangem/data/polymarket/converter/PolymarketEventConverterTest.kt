@@ -150,7 +150,7 @@ internal class PolymarketEventConverterTest {
         }
 
         @Test
-        fun `GIVEN the flag is absent WHEN convert THEN the market stays open`() {
+        fun `GIVEN the flag is absent WHEN convert THEN the market is closed`() {
             // Arrange
             val dto = createEventDto(markets = listOf(createMarketDto(isAcceptingOrders = null)))
 
@@ -158,7 +158,7 @@ internal class PolymarketEventConverterTest {
             val actual = converter.convert(value = dto)
 
             // Assert
-            Truth.assertThat(actual.markets.first().isAcceptingOrders).isTrue()
+            Truth.assertThat(actual.markets.first().isAcceptingOrders).isFalse()
         }
     }
 

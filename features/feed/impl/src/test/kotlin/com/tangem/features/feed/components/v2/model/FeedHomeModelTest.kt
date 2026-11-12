@@ -90,6 +90,7 @@ internal class FeedHomeModelTest {
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         tabSet = tabSet,
         analyticsEventHandler = analyticsEventHandler,
+        allServicesFeatureToggles = mockk(relaxed = true),
     )
 
     private fun contributor(id: FeedTabId, title: String): FeedTabContributor = mockk {

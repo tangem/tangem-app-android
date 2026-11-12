@@ -1,7 +1,9 @@
 package com.tangem.features.onramp.deeplink
 
+import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.features.onramp.success.OnrampSuccessScreenTrigger
 import io.mockk.clearMocks
 import io.mockk.coVerify
@@ -29,7 +31,7 @@ internal class DefaultOnrampDeepLinkHandlerTest {
     @Test
     fun `GIVEN concierge waitlist type WHEN handled THEN waitlist triggered`() = runTest {
         // Act
-        createHandler(queryParams = mapOf("type" to "concierge_waitlist"))
+        handle(queryParams = mapOf("type" to "concierge_waitlist"))
         runCurrent()
 
         // Assert
@@ -41,7 +43,7 @@ internal class DefaultOnrampDeepLinkHandlerTest {
     @Test
     fun `GIVEN unknown type WHEN handled THEN nothing happens`() = runTest {
         // Act
-        createHandler(queryParams = mapOf("type" to "concierge_unknown"))
+        handle(queryParams = mapOf("type" to "concierge_unknown"))
         runCurrent()
 
         // Assert
@@ -53,7 +55,7 @@ internal class DefaultOnrampDeepLinkHandlerTest {
     @Test
     fun `GIVEN tx id and waitlist type WHEN handled THEN success screen opened instead of waitlist`() = runTest {
         // Act
-        createHandler(queryParams = mapOf("tx_id" to "tx", "type" to "concierge_waitlist"))
+        handle(queryParams = mapOf("tx_id" to "tx", "type" to "concierge_waitlist"))
         runCurrent()
 
         // Assert
@@ -64,7 +66,7 @@ internal class DefaultOnrampDeepLinkHandlerTest {
     @Test
     fun `GIVEN result and waitlist type WHEN handled THEN result reported instead of waitlist`() = runTest {
         // Act
-        createHandler(queryParams = mapOf("result" to "success", "type" to "concierge_waitlist"))
+        handle(queryParams = mapOf("result" to "success", "type" to "concierge_waitlist"))
         runCurrent()
 
         // Assert
@@ -72,12 +74,20 @@ internal class DefaultOnrampDeepLinkHandlerTest {
         coVerify(exactly = 0) { conciergeWaitlistTrigger.triggerOpenWaitlist() }
     }
 
-    private fun TestScope.createHandler(queryParams: Map<String, String>) =
-        DefaultOnrampDeepLinkHandler(
-            scope = backgroundScope,
-            queryParams = queryParams,
-            appRouter = appRouter,
-            onrampSuccessScreenTrigger = onrampSuccessScreenTrigger,
-            conciergeWaitlistTrigger = conciergeWaitlistTrigger,
+    private val handler = DefaultOnrampDeepLinkHandler(
+        appRouter = appRouter,
+        onrampSuccessScreenTrigger = onrampSuccessScreenTrigger,
+        conciergeWaitlistTrigger = conciergeWaitlistTrigger,
+    )
+
+    private fun TestScope.handle(queryParams: Map<String, String>) {
+        handler.handle(
+            request = DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = backgroundScope,
+                isFromOnNewIntent = false,
+            ),
         )
+    }
 }

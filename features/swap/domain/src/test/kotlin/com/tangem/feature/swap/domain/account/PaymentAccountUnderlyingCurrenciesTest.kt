@@ -3,7 +3,7 @@ package com.tangem.feature.swap.domain.account
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.tangempay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk

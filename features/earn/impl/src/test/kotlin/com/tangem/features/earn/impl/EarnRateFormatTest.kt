@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -33,6 +34,15 @@ internal class EarnRateFormatTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN German locale WHEN formatEarnRate THEN decimal comma instead of the default locale point`() {
+        // Act
+        val actual = BigDecimal("0.055").formatEarnRate(locale = Locale.GERMANY)
+
+        // Assert
+        assertThat(actual).isEqualTo("5,50")
     }
 
     private fun provideTestModels() = listOf(

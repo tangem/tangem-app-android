@@ -71,12 +71,7 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
 
         receiveTrigger()
             .onEach { trigger ->
-                val walletId = when (trigger) {
-                    is TxHistoryFetchTrigger.WalletSelected -> trigger.walletId
-                    is TxHistoryFetchTrigger.TokenDetailsOpen -> trigger.walletId
-                    is TxHistoryFetchTrigger.TokenDetailsPTR -> trigger.walletId
-                    is TxHistoryFetchTrigger.JointHistoryPoll -> trigger.walletId
-                }
+                val walletId = trigger.walletId
                 if (walletsFlow.value[walletId]?.isMultiCurrency == true) {
                     getOrPutFetcher(walletId).invoke(trigger)
                 }

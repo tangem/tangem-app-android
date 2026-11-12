@@ -50,9 +50,8 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN hiding enabled and provider rejected WHEN swap clicked THEN provider removed from pair`() = runTest {
+    fun `GIVEN provider rejected WHEN swap clicked THEN provider removed from pair`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isHideRejectedCexProviderEnabled } returns true
         val model = createModelFailingWith(
             selectedProvider = changeHero,
             error = rejectedError,
@@ -77,29 +76,9 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN hiding disabled and provider rejected WHEN swap clicked THEN pair providers unchanged`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isHideRejectedCexProviderEnabled } returns false
-        val model = createModelFailingWith(
-            selectedProvider = changeHero,
-            error = rejectedError,
-            pairProviders = listOf(changeHero, changelly),
-        )
-
-        // Act
-        model.uiState.swapButton.onClick()
-        runCurrent()
-
-        // Assert
-        assertThat(model.dataState.selectedPairProviders).containsExactly(changeHero, changelly)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN hiding enabled and Changelly fails with user-fixable error WHEN swap clicked THEN pair providers unchanged`() =
+    fun `GIVEN Changelly fails with user-fixable error WHEN swap clicked THEN pair providers unchanged`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isHideRejectedCexProviderEnabled } returns true
             val model = createModelFailingWith(
                 selectedProvider = changelly,
                 error = tooSmallAmountError,
@@ -116,9 +95,8 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN hiding enabled and last provider rejected WHEN swap clicked THEN pair is unsupported`() = runTest {
+    fun `GIVEN last provider rejected WHEN swap clicked THEN pair is unsupported`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isHideRejectedCexProviderEnabled } returns true
         val model = createModelFailingWith(
             selectedProvider = changeHero,
             error = rejectedError,

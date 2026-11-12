@@ -14,6 +14,7 @@ import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionCredentials
 import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionKeyStore
 import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
+import com.tangem.data.polymarket.store.DefaultPolymarketFastTradingBannerStore
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
 import com.tangem.data.polymarket.store.DefaultPredictionWithdrawalStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
@@ -28,6 +29,7 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
@@ -114,6 +116,31 @@ internal object PolymarketStorageModule {
                     serializer = SetSerializer(String.serializer()),
                 ),
                 produceFile = { context.dataStoreFile(fileName = "polymarket_onboarded_wallets") },
+                scope = scope,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketFastTradingBannerStore(
+        @ApplicationContext context: Context,
+        scope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
+    ): PolymarketFastTradingBannerStore {
+        return DefaultPolymarketFastTradingBannerStore(
+            dataStore = dataStoreFactory.create(
+                serializer = KotlinxDataStoreSerializer(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(
+                        keySerializer = String.serializer(),
+                        valueSerializer = MapSerializer(
+                            keySerializer = String.serializer(),
+                            valueSerializer = Long.serializer(),
+                        ),
+                    ),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "polymarket_fast_trading_banner_dismissals") },
                 scope = scope,
             ),
         )

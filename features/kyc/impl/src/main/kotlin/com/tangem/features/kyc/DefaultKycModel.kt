@@ -5,9 +5,9 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.pay.KycStartInfo
-import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.repository.KycRepository
+import com.tangem.domain.tangempay.KycStartInfo
+import com.tangem.domain.tangempay.TangemPayEligibilityManager
+import com.tangem.domain.tangempay.repository.KycRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow

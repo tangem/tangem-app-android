@@ -23,7 +23,6 @@ import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.*
@@ -74,7 +73,7 @@ private fun SectionsContent(state: CategorySelectorUM.Content, modifier: Modifie
 
         Footer(
             state = state.footer,
-            isEnabled = state.isEdited,
+            isVisible = state.isApplyVisible,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
@@ -160,10 +159,11 @@ private fun FooterSpacer() {
     )
 }
 
+/** No Reset: the "All" row clears the filter in one tap, like every other category without a sector choice. */
 @Composable
-private fun Footer(state: CategorySelectorFooterUM, isEnabled: Boolean, modifier: Modifier = Modifier) {
+private fun Footer(state: CategorySelectorFooterUM, isVisible: Boolean, modifier: Modifier = Modifier) {
     AnimatedVisibility(
-        visible = isEnabled,
+        visible = isVisible,
         // the default size transitions clip for good, cutting off the part of the footer fade drawn above it
         enter = fadeIn() + expandIn(clip = false),
         exit = shrinkOut(clip = false) + fadeOut(),
@@ -174,20 +174,13 @@ private fun Footer(state: CategorySelectorFooterUM, isEnabled: Boolean, modifier
             // inside the feed modal the blur samples the screen behind the sheet, not the list under the footer
             blurBackground = false,
         ) {
-            TangemButtonGroup {
-                TangemButton(
-                    variant = TangemButton.Variant.Secondary,
-                    size = TangemButton.Size.X12,
-                    text = resourceReference(R.string.common_reset),
-                    onClick = state.onReset,
-                )
-                TangemButton(
-                    variant = TangemButton.Variant.Primary,
-                    size = TangemButton.Size.X12,
-                    text = resourceReference(R.string.common_apply),
-                    onClick = state.onApply,
-                )
-            }
+            TangemButton(
+                variant = TangemButton.Variant.Primary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_apply),
+                onClick = state.onApply,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -273,8 +266,8 @@ private fun CategorySelectorContent_Preview(
 private class CategorySelectorContentPreviewProvider : PreviewParameterProvider<CategorySelectorUM> {
     override val values: Sequence<CategorySelectorUM>
         get() = sequenceOf(
-            previewBody(isTypeOnly = false, withFooter = false),
-            previewBody(isTypeOnly = true, withFooter = true),
+            previewBody(isTypeOnly = false, withFooter = true),
+            previewBody(isTypeOnly = true, withFooter = false),
             CategorySelectorUM.Loading,
             CategorySelectorUM.Error(onRetry = {}),
         )
@@ -316,8 +309,8 @@ private fun previewBody(isTypeOnly: Boolean, withFooter: Boolean): CategorySelec
                 )
             }
         }.toImmutableList(),
-        isEdited = withFooter,
-        footer = CategorySelectorFooterUM(onReset = {}, onApply = {}),
+        isApplyVisible = withFooter,
+        footer = CategorySelectorFooterUM(onApply = {}),
     )
 }
 // endregion

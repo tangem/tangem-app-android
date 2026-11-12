@@ -7,6 +7,7 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -16,7 +17,7 @@ import javax.inject.Inject
 /**
  * Removes the Polymarket CLOB credentials, the cached prediction account status and positions value, the
  * onboarding confirmation record, the funding requisites, the in-flight withdrawal record, the session key and its
- * readiness and refusals of deleted wallets.
+ * readiness and refusals, and the fast trading banner dismissals of deleted wallets.
  *
  * [UserWalletId] is derived from the wallet key, so re-adding the same wallet reproduces the storage key.
  * Without this, the credentials of a deleted wallet are handed back to it: the onboarding run returns any
@@ -42,6 +43,7 @@ internal class PolymarketUserWalletDataCleaner @Inject constructor(
     private val withdrawalStore: PredictionWithdrawalStore,
     private val sessionKeyStore: PolymarketSessionKeyStore,
     private val sessionKeyTradingStore: PolymarketSessionKeyTradingStore,
+    private val fastTradingBannerStore: PolymarketFastTradingBannerStore,
 ) : UserWalletDataCleaner {
 
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
@@ -65,6 +67,8 @@ internal class PolymarketUserWalletDataCleaner @Inject constructor(
 
             sessionKeyStore.delete(userWalletId)
                 .onLeft { TangemLogger.e("Failed to delete the session key of $userWalletId: $it") }
+
+            fastTradingBannerStore.clear(userWalletId)
         }
     }
 }

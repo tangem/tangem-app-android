@@ -1,13 +1,13 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
-import com.tangem.domain.pay.model.bankofframp.BankAccountType
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
-import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
-import com.tangem.domain.pay.model.bankofframp.PostalAddress
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderRequest
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.PostalAddress
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.POLYGON_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.USDC_POLYGON

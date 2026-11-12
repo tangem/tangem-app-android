@@ -4,9 +4,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Collectible Transaction params, the common answer of /api/v1/collectible/status, /purchase-tx-sent and /open-pack.
- * Only the fields the app reads are declared.
+ * Collectible Transaction params, the common answer of /api/v1/collectible/status, /purchase-tx-sent, /open-pack and
+ * /active-txs. Only the fields the app reads are declared.
  *
+ * @property machine present when `includeMachine` is set
+ * @property packOpeningErrorCode why the pack ended in `pack-opening-error`; not in the swagger yet
  * @property nftWon present once the pack is opened
  * @property autoBuyback present when Turbo mode sold the card back right on opening and `includeAutoBuyback` is set
  */
@@ -16,11 +18,27 @@ data class CollectibleTxResponse(
     val txId: String,
     @SerialName("status")
     val status: CollectibleTxStatusDTO = CollectibleTxStatusDTO.UNKNOWN,
+    @SerialName("machine")
+    val machine: MachineSummaryDTO? = null,
+    @SerialName("turboModeEnabled")
+    val isTurboModeEnabled: Boolean = false,
+    @SerialName("packOpeningErrorCode")
+    val packOpeningErrorCode: String? = null,
     @SerialName("nftWon")
     val nftWon: NftWonDTO? = null,
     @SerialName("autoBuyback")
     val autoBuyback: AutoBuybackDTO? = null,
 ) {
+
+    @Serializable
+    data class MachineSummaryDTO(
+        @SerialName("externalId")
+        val externalId: String,
+        @SerialName("name")
+        val name: String,
+        @SerialName("shortName")
+        val shortName: String? = null,
+    )
 
     /**
      * @property toNetwork `solana` or `solana-dev`, by environment
@@ -64,8 +82,8 @@ data class CollectibleTxResponse(
         @SerialName("waiting-tx-hash")
         WAITING_TX_HASH,
 
-        @SerialName("purchase-tx-hash")
-        PURCHASE_TX_HASH,
+        @SerialName("purchase-tx-sent")
+        PURCHASE_TX_SENT,
 
         @SerialName("waiting-for-payment")
         WAITING_FOR_PAYMENT,

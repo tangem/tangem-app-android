@@ -13,9 +13,12 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.polymarket.api.PolymarketComponent
+import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryBottomSheetConfig
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -32,12 +35,15 @@ internal class PolymarketEntryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
     private val getEligibleWalletsUseCase: GetPolymarketEligibleWalletsUseCase,
+    private val walletLinkGate: PolymarketWalletLinkGate,
     val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketComponent.Params>()
+
+    private val settleJob = JobHolder()
 
     val bottomSheetNavigation = SlotNavigation<PolymarketEntryBottomSheetConfig>()
 
@@ -107,14 +113,16 @@ internal class PolymarketEntryModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    /**
-     * Still on a coroutine although it no longer awaits anything: `settle` is reached from `init`, and
-     * navigating there would run before the bottom-sheet slot is constructed.
-     */
     private fun settle(walletId: UserWalletId) {
         modelScope.launch(dispatchers.mainImmediate) {
+            if (!walletLinkGate.ensureLinked(walletId)) {
+                TangemLogger.i("Entry: wallet $walletId not linked; popping")
+                router.pop()
+                return@launch
+            }
+
             TangemLogger.i("Entry: handing over wallet $walletId to onboarding")
             router.replaceAll(PolymarketRoute.Onboarding(userWalletId = walletId))
-        }
+        }.saveIn(settleJob)
     }
 }

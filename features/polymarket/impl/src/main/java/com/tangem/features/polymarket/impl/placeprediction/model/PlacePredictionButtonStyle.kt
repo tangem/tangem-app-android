@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.polymarket.model.PredictionOrderSigningPreference
 import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
@@ -48,7 +49,7 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
         val ownerStyle = ownerStyle ?: return
         sessionKeyCheck?.cancel()
 
-        if (!featureToggles.isPolymarketSessionKeysEnabled) {
+        if (!featureToggles.isPolymarketFastOrdersEnabled) {
             sessionKeyStyle = ownerStyle
             applyIfIdle()
             return
@@ -73,6 +74,13 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
 
         sessionKeyStyle = null
         checkSessionKey()
+    }
+
+    fun signingPreference(confirmedWith: PlaceButtonStyleUM): PredictionOrderSigningPreference? = when {
+        !featureToggles.isPolymarketFastOrdersEnabled && confirmedWith == PlaceButtonStyleUM.PLAIN -> null
+        !featureToggles.isPolymarketFastOrdersEnabled -> PredictionOrderSigningPreference.OWNER_ONLY
+        confirmedWith != PlaceButtonStyleUM.PLAIN -> PredictionOrderSigningPreference.AUTOMATIC
+        else -> PredictionOrderSigningPreference.SESSION_KEY_ONLY
     }
 
     fun applyIfIdle() {

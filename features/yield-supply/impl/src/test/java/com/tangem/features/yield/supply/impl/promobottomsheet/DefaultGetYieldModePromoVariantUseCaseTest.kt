@@ -2,7 +2,6 @@ package com.tangem.features.yield.supply.impl.promobottomsheet
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.abtests.manager.ABTestsManager
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoVariant
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -10,7 +9,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -20,18 +18,15 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultGetYieldModePromoVariantUseCaseTest {
 
-    private val featureToggles: YieldSupplyFeatureToggles = mockk()
     private val abTestsManager: ABTestsManager = mockk()
 
     private val useCase = DefaultGetYieldModePromoVariantUseCase(
-        featureToggles = featureToggles,
         abTestsManager = abTestsManager,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(featureToggles, abTestsManager)
-        every { featureToggles.isYieldModePromoEnabled } returns true
+        clearMocks(abTestsManager)
     }
 
     @ParameterizedTest
@@ -47,20 +42,6 @@ internal class DefaultGetYieldModePromoVariantUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(model.expected)
         coVerify(exactly = 1) { abTestsManager.getValue(KEY, "control") }
-    }
-
-    @Test
-    fun `GIVEN the release gate is closed WHEN invoke THEN control without reading the experiment`() = runTest {
-        // Arrange
-        every { featureToggles.isYieldModePromoEnabled } returns false
-
-        // Act
-        val actual = useCase()
-
-        // Assert
-        assertThat(actual).isEqualTo(YieldModePromoVariant.CONTROL)
-        verify(exactly = 0) { abTestsManager.peekValue(any()) }
-        coVerify(exactly = 0) { abTestsManager.getValue(any(), any()) }
     }
 
     @Test

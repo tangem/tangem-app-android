@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.txhistory
 
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.pagination.Batch
 import com.tangem.pagination.PaginationStatus
 import kotlinx.collections.immutable.ImmutableList

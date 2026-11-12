@@ -4,11 +4,11 @@ import androidx.datastore.core.DataStore
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.moneyaccount.converter.MoneyAccountStatusValueDMConverter
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.Job

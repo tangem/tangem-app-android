@@ -15,7 +15,7 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.tangempay.TangemPayEligibilityManager
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.analytics.Settings
@@ -193,7 +193,7 @@ internal class DetailsModel @Inject constructor(
     }
 
     private fun onTangemPayItemClicked() {
-        analyticsEventHandler.send(TangemPayAnalyticsEvents.DetailsVisaPermanentButtonClicked())
+        analyticsEventHandler.send(TangemPayAnalyticsEvents.PermanentButtonClicked())
         router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
     }
 

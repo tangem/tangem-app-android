@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.model
 
-import com.tangem.domain.pay.model.bankofframp.BankOfframpError
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.features.tangempay.withdraw.bank.preview.completion.CompletionState
 
 internal data class PreviewState(
@@ -35,6 +35,11 @@ internal fun BankOfframpError.toFailure(): PreviewFailure = when (this) {
     BankOfframpError.Validation,
     BankOfframpError.PollingTimeout,
     BankOfframpError.WithdrawalInProgress,
+    BankOfframpError.QuoteExpired,
+    BankOfframpError.VerificationIncomplete,
+    BankOfframpError.Conflict,
+    BankOfframpError.AmountOutOfLimits,
+    BankOfframpError.Rejected,
     is BankOfframpError.Unknown,
     -> PreviewFailure.General
 }

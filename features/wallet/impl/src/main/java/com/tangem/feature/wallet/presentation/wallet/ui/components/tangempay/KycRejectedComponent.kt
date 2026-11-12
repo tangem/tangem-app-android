@@ -1,0 +1,41 @@
+package com.tangem.feature.wallet.presentation.wallet.ui.components.tangempay
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.domain.models.wallet.UserWalletId
+
+internal class KycRejectedComponent(
+    appComponentContext: AppComponentContext,
+    params: Params,
+) : ComposableBottomSheetComponent, AppComponentContext by appComponentContext {
+
+    private val model: KycRejectedModel = getOrCreateModel(params = params)
+
+    override fun dismiss() {
+        model.onDismiss()
+    }
+
+    @Composable
+    override fun BottomSheet() {
+        val state by model.uiState.collectAsStateWithLifecycle()
+        MessageBottomSheet(state = state, onDismissRequest = ::dismiss)
+    }
+
+    data class Params(
+        val callbacks: KycRejectedCallbacks,
+        val walletId: UserWalletId,
+        val customerId: String,
+        val onDismiss: () -> Unit,
+    )
+}
+
+internal interface KycRejectedCallbacks {
+    fun onClickYourProfile(userWalletId: UserWalletId)
+    fun onClickGoToSupport(customerId: String)
+    fun onClickHideKyc(userWalletId: UserWalletId)
+}

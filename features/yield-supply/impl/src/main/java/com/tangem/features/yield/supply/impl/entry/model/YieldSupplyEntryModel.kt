@@ -10,6 +10,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
@@ -78,7 +79,7 @@ internal class YieldSupplyEntryModel @Inject constructor(
             userWalletId = userWalletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
         ).getOrNull()
-        val isActiveYield = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+        val isActiveYield = cryptoCurrencyStatus.value.yieldSupply?.isActive == true
 
         if (tokenEnterStatus != null) {
             router.replaceCurrent(

@@ -1,9 +1,9 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.BSC_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.USDC_BASE
@@ -63,7 +63,7 @@ internal class BankWithdrawOptionsFactoryTest {
         val rails = listOf(
             offrampDestination(rail = BankRail.SPEI),
             ach,
-            offrampDestination(rail = BankRail.WIRE, calculationType = AccountFee.CalculationType.PERCENTAGE),
+            offrampDestination(rail = BankRail.WIRE, calculationType = FeeCalculationType.PERCENTAGE),
             wire,
         )
         val sources = listOf(bankWithdrawSource(token = usdcPolygon))
@@ -191,7 +191,7 @@ internal class BankWithdrawOptionsFactoryTest {
             description = "only a SPEI rail and a percentage-fee rail",
             destinations = listOf(
                 offrampDestination(rail = BankRail.SPEI),
-                offrampDestination(calculationType = AccountFee.CalculationType.PERCENTAGE),
+                offrampDestination(calculationType = FeeCalculationType.PERCENTAGE),
             ),
             sources = listOf(bankWithdrawSource(token = usdcPolygon)),
         ),

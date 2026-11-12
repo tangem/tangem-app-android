@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.withdraw
 
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 
 /** The recipient as a confirmation names them: an individual by both names, a business by its registered name. */
 internal fun Beneficiary.toFullName(): String = when (this) {
