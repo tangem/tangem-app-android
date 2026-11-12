@@ -13,6 +13,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.PredefinedTokenToAdd
 import com.tangem.features.commonfeatures.impl.choosetoken.AddToPortfolioRoute
 import com.tangem.features.commonfeatures.impl.choosetoken.predefined.state.PredefinedTokenItemUM
 import com.tangem.features.commonfeatures.impl.choosetoken.predefined.state.PredefinedTokensUM
+import com.tangem.features.wallet.WalletFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,6 +35,7 @@ internal class PredefinedTokensBlockDelegate @AssistedInject constructor(
     @Assisted private val modelScope: CoroutineScope,
     @Assisted private val tokenFilter: MutableStateFlow<(AccountStatus, CryptoCurrencyStatus) -> Boolean>,
     @Assisted private val portfolioTokenKeys: Flow<Set<Pair<String, String>>>,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) {
 
     init {
@@ -55,7 +57,10 @@ internal class PredefinedTokensBlockDelegate @AssistedInject constructor(
         if (filtered.isEmpty()) {
             null
         } else {
-            PredefinedTokensUM(items = filtered.map { it.toItemUM() }.toImmutableList())
+            PredefinedTokensUM(
+                items = filtered.map { it.toItemUM() }.toImmutableList(),
+                isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
+            )
         }
     }
 
