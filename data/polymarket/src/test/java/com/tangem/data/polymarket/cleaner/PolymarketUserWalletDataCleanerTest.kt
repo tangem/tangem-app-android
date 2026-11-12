@@ -18,6 +18,7 @@ import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
+import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -50,6 +51,7 @@ internal class PolymarketUserWalletDataCleanerTest {
     private val withdrawalStore: PredictionWithdrawalStore = mockk(relaxUnitFun = true)
     private val sessionKeyStore: PolymarketSessionKeyStore = mockk()
     private val sessionKeyTradingStore: PolymarketSessionKeyTradingStore = mockk(relaxUnitFun = true)
+    private val fastTradingBannerStore: PolymarketFastTradingBannerStore = mockk(relaxUnitFun = true)
 
     private val cleaner = PolymarketUserWalletDataCleaner(
         credentialsStore = credentialsStore,
@@ -59,6 +61,7 @@ internal class PolymarketUserWalletDataCleanerTest {
         withdrawalStore = withdrawalStore,
         sessionKeyStore = sessionKeyStore,
         sessionKeyTradingStore = sessionKeyTradingStore,
+        fastTradingBannerStore = fastTradingBannerStore,
     )
 
     @BeforeEach
@@ -71,6 +74,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             withdrawalStore,
             sessionKeyStore,
             sessionKeyTradingStore,
+            fastTradingBannerStore,
         )
         coEvery { sessionKeyStore.delete(any()) } returns Unit.right()
     }
@@ -166,6 +170,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             withdrawalStore = withdrawalStore,
             sessionKeyStore = sessionKeyStore,
             sessionKeyTradingStore = sessionKeyTradingStore,
+            fastTradingBannerStore = fastTradingBannerStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -187,6 +192,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             withdrawalStore = withdrawalStore,
             sessionKeyStore = sessionKeyStore,
             sessionKeyTradingStore = sessionKeyTradingStore,
+            fastTradingBannerStore = fastTradingBannerStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -242,6 +248,7 @@ internal class PolymarketUserWalletDataCleanerTest {
                 withdrawalStore = store,
                 sessionKeyStore = sessionKeyStore,
                 sessionKeyTradingStore = sessionKeyTradingStore,
+                fastTradingBannerStore = fastTradingBannerStore,
             ).clear(listOf(WALLET_A))
 
             // Assert
@@ -261,6 +268,16 @@ internal class PolymarketUserWalletDataCleanerTest {
     }
 
     @Test
+    fun `GIVEN wallets deleted WHEN cleared THEN their fast trading banner dismissals are cleared`() = runTest {
+        // Act
+        cleaner.clear(listOf(WALLET_A, WALLET_B))
+
+        // Assert
+        coVerify(exactly = 1) { fastTradingBannerStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { fastTradingBannerStore.clear(WALLET_B) }
+    }
+
+    @Test
     fun `GIVEN wallets deleted WHEN cleared THEN their session keys are deleted`() = runTest {
         // Act
         cleaner.clear(listOf(WALLET_A, WALLET_B))
@@ -268,6 +285,19 @@ internal class PolymarketUserWalletDataCleanerTest {
         // Assert
         coVerify(exactly = 1) { sessionKeyStore.delete(WALLET_A) }
         coVerify(exactly = 1) { sessionKeyStore.delete(WALLET_B) }
+    }
+
+    @Test
+    fun `GIVEN a session key fails to delete WHEN clear THEN its banner dismissals are still cleared`() = runTest {
+        // Arrange
+        coEvery { sessionKeyStore.delete(WALLET_A) } returns
+            PolymarketSessionKeyError.Failure(IllegalStateException("keystore unavailable")).left()
+
+        // Act
+        cleaner.clear(listOf(WALLET_A))
+
+        // Assert
+        coVerify(exactly = 1) { fastTradingBannerStore.clear(WALLET_A) }
     }
 
     @Test
@@ -307,6 +337,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             withdrawalStore = withdrawalStore,
             sessionKeyStore = keyStore,
             sessionKeyTradingStore = sessionKeyTradingStore,
+            fastTradingBannerStore = fastTradingBannerStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
