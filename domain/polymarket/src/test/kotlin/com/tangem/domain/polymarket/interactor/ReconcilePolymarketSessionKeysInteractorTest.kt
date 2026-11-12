@@ -184,6 +184,44 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
         }
 
     @Test
+    fun `GIVEN a stored readiness and the own key listed on other terms WHEN reconcile THEN it is forgotten`() =
+        runTest {
+            // Arrange
+            var isReady = true
+            givenWallet(listOf(key()))
+            coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                listOf(signer(KEY).copy(scopes = listOf("ALL"))).right()
+            every { tradingStore.setReconciliation(any(), any()) } returns Unit
+            every { tradingStore.isMissingOnExchange(any(), any()) } returns false
+            coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) } answers { isReady }
+            coEvery { tradingStore.forgetReadyOnExchange(USER_WALLET_ID, KEY) } answers { isReady = false }
+
+            // Act
+            val actual = interactor(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual.getOrNull()?.isTradable).isFalse()
+            coVerify(exactly = 1) { tradingStore.forgetReadyOnExchange(USER_WALLET_ID, KEY) }
+            coVerify(exactly = 0) { tradingStore.restoreReadyOnExchange(any(), any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN a stored readiness and the own key listed on its terms WHEN reconcile THEN it is kept`() = runTest {
+        // Arrange
+        givenWallet(listOf(key()))
+        coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+            listOf(signer(KEY, validUntil = VALID_UNTIL.plusSeconds(60)), signer(KEY)).right()
+        coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) } returns true
+
+        // Act
+        val actual = interactor(USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual.getOrNull()?.isTradable).isTrue()
+        coVerify(exactly = 0) { tradingStore.forgetReadyOnExchange(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN the own key is listed expiring within ten minutes WHEN reconcile THEN it is not marked ready`() =
         runTest {
             // Arrange

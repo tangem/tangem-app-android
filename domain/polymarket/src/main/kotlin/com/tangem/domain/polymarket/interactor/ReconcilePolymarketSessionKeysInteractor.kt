@@ -20,6 +20,7 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeySnapshot
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradability
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
+import com.tangem.domain.polymarket.sessionkey.carriesTermsOf
 import com.tangem.domain.polymarket.sessionkey.lists
 import com.tangem.domain.polymarket.sessionkey.tradability
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -58,7 +59,7 @@ class ReconcilePolymarketSessionKeysInteractor(
         )
         guarded {
             tradingStore.setReconciliation(userWalletId, assessment.reconciliation)
-            markListedKeyReady(
+            syncOwnKeyReadiness(
                 userWalletId = userWalletId,
                 wallet = wallet,
                 localKeyAddress = localKeyAddress,
@@ -95,13 +96,19 @@ class ReconcilePolymarketSessionKeysInteractor(
         return tradability is PolymarketSessionKeyTradability.Tradable
     }
 
-    private suspend fun markListedKeyReady(
+    private suspend fun syncOwnKeyReadiness(
         userWalletId: UserWalletId,
         wallet: PolymarketWalletState,
         localKeyAddress: String?,
         signers: List<PolymarketSessionSigner>?,
     ) {
         val own = localKeyAddress?.let(wallet.sessionKeys::newestFor) ?: return
+        val listings = signers.orEmpty().filter { it.address.equals(own.address, ignoreCase = true) }
+        if (listings.isNotEmpty() && listings.none { it.carriesTermsOf(own) }) {
+            TangemLogger.i("Polymarket lists the session key ${own.address} on other terms, dropping its readiness")
+            tradingStore.forgetReadyOnExchange(userWalletId, own.address)
+            return
+        }
         val validUntil = own.validUntil ?: return
         val isListed = signers.orEmpty().any { it.lists(own, now = clock.instant()) }
         if (own.status != PolymarketSessionKeyStatus.ACTIVE || !isListed) return
