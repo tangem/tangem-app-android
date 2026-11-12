@@ -33,6 +33,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.side
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
@@ -164,6 +165,7 @@ private fun OrderBody(
             )
             PredictionNotificationsBlock(
                 notifications = state.notifications,
+                side = state.order.side,
                 onRetryClick = intents::onQuoteRetryClick.takeIf { isIdle },
             )
         }
