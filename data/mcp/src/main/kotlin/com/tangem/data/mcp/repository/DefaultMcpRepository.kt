@@ -14,6 +14,7 @@ import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
+import com.tangem.domain.mcp.models.McpIntentHistoryPage
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.mcp.repository.McpSessionsLce
 import com.tangem.domain.models.wallet.UserWalletId
@@ -129,6 +130,16 @@ internal class DefaultMcpRepository @Inject constructor(
         }
 
         loadSessions(force = true)
+    }
+
+    override suspend fun getIntentHistory(
+        walletId: UserWalletId,
+        offset: Int,
+        limit: Int,
+    ): Either<Throwable, McpIntentHistoryPage> {
+        val response = mcpApi.getIntentHistory(walletId = walletId.toAuthWalletId(), offset = offset, limit = limit)
+
+        return response.toEither().map { it.toDomain() }
     }
 
     /**
