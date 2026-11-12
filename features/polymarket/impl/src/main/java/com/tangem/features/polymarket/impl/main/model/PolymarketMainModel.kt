@@ -203,11 +203,6 @@ internal class PolymarketMainModel @Inject constructor(
             .onEach { fundingRequisites.prefetchOnce() }
             .launchIn(modelScope)
 
-        fastTradingBannerSource.observe(userWalletId = params.userWalletId, rechecks = fastTradingBannerRechecks)
-            .onEach { banner -> uiState.update { it.copy(fastTradingBanner = banner?.toUM()) } }
-            .flowOn(dispatchers.default)
-            .launchIn(modelScope)
-
         observePolymarketCredentialsPresenceUseCase(userWalletId = params.userWalletId)
             .filter { hasCredentials -> !hasCredentials }
             .take(count = 1)
@@ -233,6 +228,8 @@ internal class PolymarketMainModel @Inject constructor(
     private val categoriesJob = JobHolder()
 
     private val balancePollJobHolder = JobHolder()
+
+    private val fastTradingBannerJobHolder = JobHolder()
 
     init {
         feedController.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
@@ -283,6 +280,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onResume() {
         fastTradingBannerRechecks.tryEmit(Unit)
+        modelScope.launch { refreshFastTradingBannerIfObserved() }
         feedController.resume()
         fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
@@ -294,12 +292,25 @@ internal class PolymarketMainModel @Inject constructor(
         uiState.update { it.copy(isCategoriesLoading = true) }
         modelScope.launch {
             if (walletLinkGate.ensureLinked(params.userWalletId)) {
+                observeFastTradingBanner()
                 loadCategories()
             } else {
                 TangemLogger.i("Main: wallet ${params.userWalletId} not linked; closing the feature")
                 router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId)) { router.pop() }
             }
         }
+    }
+
+    private fun observeFastTradingBanner() {
+        fastTradingBannerSource.observe(userWalletId = params.userWalletId, rechecks = fastTradingBannerRechecks)
+            .onEach { banner -> uiState.update { it.copy(fastTradingBanner = banner?.toUM()) } }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+            .saveIn(fastTradingBannerJobHolder)
+    }
+
+    private suspend fun refreshFastTradingBannerIfObserved() {
+        if (fastTradingBannerJobHolder.isActive) fastTradingBannerSource.refresh(params.userWalletId)
     }
 
     private fun PolymarketFastTradingBanner.toUM(): PolymarketFastTradingBannerUM = when (this) {
@@ -431,7 +442,7 @@ internal class PolymarketMainModel @Inject constructor(
                     listOf(
                         async { regionAccess.refresh() },
                         async { blocksRefresh.refreshAll() },
-                        async { fastTradingBannerSource.refresh(params.userWalletId) },
+                        async { refreshFastTradingBannerIfObserved() },
                         async {
                             predictionAccountStatusFetcher(
                                 PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
