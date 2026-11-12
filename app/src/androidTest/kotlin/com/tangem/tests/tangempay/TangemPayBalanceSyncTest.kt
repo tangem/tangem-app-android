@@ -155,14 +155,21 @@ class TangemPayBalanceSyncTest : BaseTestCase() {
     }
 
     @AllureId("9689")
-    @DisplayName("Tangem Pay: Main total balance includes the Payment account balance")
+    @DisplayName("Tangem Pay: Main total balance includes the Payment account and Money account balances")
     @Test
-    fun mainTotalBalanceIncludesPaymentAccountBalanceTest() {
+    fun mainTotalBalanceIncludesPaymentAndMoneyAccountBalancesTest() {
+        val moneyAccountScenario = "tangem_pay_money_account"
+        val moneyAccountActiveState = "AccountActive"
+        val moneyAccountBalance = "\$25.00"
+
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
             }
         ).run {
+            step("Set WireMock scenario '$moneyAccountScenario' to '$moneyAccountActiveState'") {
+                setWireMockScenarioState(moneyAccountScenario, moneyAccountActiveState)
+            }
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Assert Main tile balance contains '$initialBalance'") {
                 onTangemPayMainScreen {
@@ -171,8 +178,8 @@ class TangemPayBalanceSyncTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert total balance equals the token balances plus the Payment account balance") {
-                awaitMainTotalBalanceIncludingTangemPay()
+            step("Assert total balance equals the token balances plus the Payment account and Money account balances") {
+                awaitMainTotalBalanceIncludingTangemPay(moneyAccountBalance)
             }
         }
     }
