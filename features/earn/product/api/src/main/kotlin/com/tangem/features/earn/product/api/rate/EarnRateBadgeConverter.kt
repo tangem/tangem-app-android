@@ -1,4 +1,4 @@
-package com.tangem.features.earn.impl.overview
+package com.tangem.features.earn.product.api.rate
 
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
@@ -6,11 +6,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
-import com.tangem.features.earn.impl.formatEarnRate
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 
-internal class EarnRateBadgeConverter @Inject constructor() : Converter<EarnProductRate, TextReference> {
+class EarnRateBadgeConverter @Inject constructor() : Converter<EarnProductRate, TextReference> {
 
     override fun convert(value: EarnProductRate): TextReference {
         val badgeRes = when (value.type) {

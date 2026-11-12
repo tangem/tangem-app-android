@@ -1,4 +1,4 @@
-package com.tangem.features.earn.impl.overview
+package com.tangem.features.earn.product.api.rate
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.res.R
