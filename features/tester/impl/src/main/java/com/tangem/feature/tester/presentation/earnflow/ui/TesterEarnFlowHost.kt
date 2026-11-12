@@ -21,14 +21,15 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.essenty.lifecycle.pause
 import com.arkivanov.essenty.lifecycle.resume
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.navigation.AppNavigationProvider
 import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.DefaultUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.EventMessageEffect
+import com.tangem.core.ui.message.EventMessageHandler
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -43,8 +44,8 @@ import kotlinx.coroutines.cancel
 /**
  * Runs the real Earn flow component inside the tester, outside the app's component tree.
  *
- * The flow's dialogs go to the global message handler, which only the main activity listens to, so the host shows
- * them itself. System back goes to the flow first; when the flow does not handle it, the host closes.
+ * The flow's messages go to a handler of its own: the global one is consumed by the main activity, which may be alive
+ * next to the tester. System back goes to the flow first; when the flow does not handle it, the host closes.
  */
 @Composable
 internal fun TesterEarnFlowHost(params: EarnFlowComponent.Params, onClose: () -> Unit, modifier: Modifier = Modifier) {
@@ -55,6 +56,7 @@ internal fun TesterEarnFlowHost(params: EarnFlowComponent.Params, onClose: () ->
 
     val componentLifecycle = remember(params) { LifecycleRegistry() }
     val backDispatcher = remember(params) { BackDispatcher() }
+    val messageHandler = remember(params) { EventMessageHandler() }
     val hostLifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(hostLifecycleOwner, params) {
@@ -81,7 +83,7 @@ internal fun TesterEarnFlowHost(params: EarnFlowComponent.Params, onClose: () ->
             componentContext = DefaultComponentContext(lifecycle = componentLifecycle, backHandler = backDispatcher),
             dispatchers = entryPoint.dispatchers(),
             hiltComponentBuilder = entryPoint.modelComponentBuilder(),
-            messageSender = entryPoint.uiMessageSender(),
+            messageSender = DefaultUiMessageSender(messageHandler),
         )
         entryPoint.earnFlowComponentFactory().create(context = context, params = params)
     }
@@ -92,7 +94,7 @@ internal fun TesterEarnFlowHost(params: EarnFlowComponent.Params, onClose: () ->
 
     TangemThemeRedesign {
         component.Content(modifier)
-        EventMessageEffect()
+        EventMessageEffect(messageHandler = messageHandler)
     }
 }
 
@@ -105,9 +107,6 @@ internal interface TesterEarnFlowEntryPoint {
     fun modelComponentBuilder(): ModelComponent.Builder
 
     fun dispatchers(): CoroutineDispatcherProvider
-
-    @GlobalUiMessageSender
-    fun uiMessageSender(): UiMessageSender
 }
 
 /** Routing is a no-op and there is no [AppCompatActivity]: the tester runs on a plain ComponentActivity. */

@@ -240,6 +240,30 @@ internal class FakeEarnSessionTest {
             }
 
         @Test
+        fun `GIVEN fee grown on verify WHEN fee reloaded and plan prepared again THEN grown fee is kept and verified`() =
+            runTest {
+                // Arrange
+                val session = createFakeEarnSession(
+                    preset = FakeEarnSessionPreset.Lending,
+                    behavior = FakeEarnSessionBehavior(isFeeGrowingOnVerify = true),
+                )
+                session.verify(session.prepareOrFail(Deposit(), amount))
+
+                // Act
+                val reloadedFee = session.loadFee(Deposit(), amount)
+                val replanned = session.prepareOrFail(
+                    action = Deposit(),
+                    amount = amount,
+                    selection = EarnFeeSelection(fee = grownFee, extended = null),
+                )
+                val actual = session.verify(replanned)
+
+                // Assert
+                assertThat(reloadedFee).isEqualTo(Either.Right(TransactionFee.Single(normal = grownFee)))
+                assertThat(actual).isInstanceOf(EarnVerification.Verified::class.java)
+            }
+
+        @Test
         fun `GIVEN plan not made by the session WHEN verify THEN rejected with failed error`() = runTest {
             // Act
             val actual = lending.verify(ForeignPlan(fee))
@@ -515,8 +539,11 @@ internal class FakeEarnSessionTest {
         }
     }
 
-    private suspend fun EarnSession.prepareOrFail(action: EarnFlowAction, amount: EarnAmount?): EarnPlan =
-        prepare(action, amount, feeSelection).getOrElse { error("Expected a plan but prepare failed with $it") }
+    private suspend fun EarnSession.prepareOrFail(
+        action: EarnFlowAction,
+        amount: EarnAmount?,
+        selection: EarnFeeSelection = feeSelection,
+    ): EarnPlan = prepare(action, amount, selection).getOrElse { error("Expected a plan but prepare failed with $it") }
 
     private suspend fun EarnSession.verifyOrFail(plan: EarnPlan): VerifiedPlan {
         val verification = verify(plan)
