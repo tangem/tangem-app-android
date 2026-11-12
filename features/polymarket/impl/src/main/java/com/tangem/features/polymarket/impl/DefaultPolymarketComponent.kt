@@ -1,6 +1,8 @@
 package com.tangem.features.polymarket.impl
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
+import com.tangem.features.polymarket.impl.common.ui.LocalPolymarketPriceAnimationEnabled
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -93,12 +95,16 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val childStackValue by childStack.subscribeAsState()
 
-        Children(
-            stack = childStackValue,
-            modifier = modifier,
-            animation = stackAnimation { fade() },
-        ) { child ->
-            child.instance.Content(Modifier.fillMaxSize())
+        CompositionLocalProvider(
+            LocalPolymarketPriceAnimationEnabled provides polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
+        ) {
+            Children(
+                stack = childStackValue,
+                modifier = modifier,
+                animation = stackAnimation { fade() },
+            ) { child ->
+                child.instance.Content(Modifier.fillMaxSize())
+            }
         }
     }
 
