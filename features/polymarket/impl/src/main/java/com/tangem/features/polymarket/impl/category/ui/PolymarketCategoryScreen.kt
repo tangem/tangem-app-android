@@ -84,18 +84,17 @@ internal fun PolymarketCategoryScreen(
                             modifier = Modifier.fillMaxSize(),
                             state = listState,
                             contentPadding = PaddingValues(
-                                top = padding.calculateTopPadding() + 12.dp,
+                                top = padding.calculateTopPadding(),
                                 bottom = padding.calculateBottomPadding() + 16.dp,
                             ),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            state.fastTradingBanner?.let { banner ->
-                                item(key = KEY_FAST_TRADING_BANNER) {
+                            item(key = KEY_FAST_TRADING_BANNER) {
+                                state.fastTradingBanner?.let { banner ->
                                     PolymarketFastTradingBanner(
                                         state = banner,
                                         modifier = Modifier
-                                            .animateItem()
-                                            .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 12.dp),
+                                            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 12.dp),
                                     )
                                 }
                             }
