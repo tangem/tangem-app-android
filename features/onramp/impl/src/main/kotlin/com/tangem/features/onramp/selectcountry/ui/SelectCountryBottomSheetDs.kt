@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.haze.ProvideHaze
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.modal.TangemModal
@@ -75,27 +77,37 @@ import kotlinx.collections.immutable.persistentListOf
     description = "Rename over the old file",
 )
 internal fun OnrampCountryListDs(state: CountryListUM, onCloseClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.fillMaxSize()) {
-        TangemModal.TopNavigation(
-            contentColumn = {
-                TangemNavigationText(
-                    text = resourceReference(R.string.tangempay_order_data_country),
-                    role = TangemNavigationText.Role.Title,
-                )
-            },
-            endButton = { CountryCloseButton(onClick = onCloseClick) },
-        )
-        Box(modifier = Modifier.weight(1f)) {
-            when (state) {
-                is CountryListUM.Content -> CountryListContent(state = state)
-                is CountryListUM.Error -> CountryListError(state = state)
-                is CountryListUM.Loading -> CountryListLoading(state = state)
-            }
-            if (state is CountryListUM.Content) {
-                CountrySearchFooter(
-                    state = state.searchBarUM.toSearchState(),
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                )
+    // The sheet is its own window, so the root haze state cannot sample the list; a local provider lets the search pill blur the rows under it.
+    ProvideHaze {
+        Column(modifier = modifier.fillMaxSize()) {
+            TangemModal.TopNavigation(
+                contentColumn = {
+                    TangemNavigationText(
+                        text = resourceReference(R.string.tangempay_order_data_country),
+                        role = TangemNavigationText.Role.Title,
+                    )
+                },
+                endButton = { CountryCloseButton(onClick = onCloseClick) },
+            )
+            Box(modifier = Modifier.weight(1f)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .hazeSourceTangem()
+                        .background(TangemTheme.colors3.bg.primary),
+                ) {
+                    when (state) {
+                        is CountryListUM.Content -> CountryListContent(state = state)
+                        is CountryListUM.Error -> CountryListError(state = state)
+                        is CountryListUM.Loading -> CountryListLoading(state = state)
+                    }
+                }
+                if (state is CountryListUM.Content) {
+                    CountrySearchFooter(
+                        state = state.searchBarUM.toSearchState(),
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                    )
+                }
             }
         }
     }
@@ -335,12 +347,6 @@ private fun CountrySearchFooter(state: TangemSearch.State, modifier: Modifier = 
             .windowInsetsPadding(WindowInsets.ime),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(FADE_HEIGHT + navigationBarInset)
-                .background(TangemTheme.colors3.bg.primary),
-        )
         TangemFade(
             position = TangemFade.Position.Bottom,
             variant = TangemFade.Variant.Hard,
