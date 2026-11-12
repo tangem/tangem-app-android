@@ -26,6 +26,8 @@ internal object PlaceResultUMConverter {
 
     private const val ZERO_SHARES_REASON = "The exchange matched the order and filled no shares"
 
+    private const val UNREADABLE_FILL_REASON = "The exchange matched the order, but its fill cannot be read"
+
     /**
      * @param side the side the order was signed for — it decides which leg of the response is the shares one
      * @param quotedShares the shares leg of the signed quote — the worst case the order was signed for, so a
@@ -90,19 +92,18 @@ internal object PlaceResultUMConverter {
 
     /**
      * The fill of an order the book matched after its delay: the matched shares against the order's size, spent
-     * at the order's price and rounded half up to cents. Null when a size or the price cannot be read, since
-     * then there is no fill to report.
+     * at the order's price and rounded half up to cents. Anomalous when nothing filled or a size or the price
+     * cannot be read, since then there is no fill to report.
      */
-    fun convert(order: PredictionOrderState, quotedAmount: BigDecimal, placedAt: Long): PlaceResultUM? {
-        val filledShares = order.sizeMatched ?: return null
-        val orderedShares = order.originalSize ?: return null
-        val price = order.price ?: return null
-
-        if (filledShares.signum() <= 0) return PlaceResultUM.NotFilled(placedAt = placedAt)
+    fun convert(order: PredictionOrderState, quotedAmount: BigDecimal, placedAt: Long): PlaceOutcome {
+        val filledShares = order.sizeMatched?.takeIf { it.signum() > 0 }
+            ?: return PlaceOutcome.Anomalous(reason = ZERO_SHARES_REASON)
+        val orderedShares = order.originalSize ?: return PlaceOutcome.Anomalous(reason = UNREADABLE_FILL_REASON)
+        val price = order.price ?: return PlaceOutcome.Anomalous(reason = UNREADABLE_FILL_REASON)
 
         val executedAmount = (filledShares * price).setScale(FIAT_SCALE, RoundingMode.HALF_UP)
 
-        return if (filledShares >= orderedShares) {
+        val result = if (filledShares >= orderedShares) {
             PlaceResultUM.Filled(placedAt = placedAt, collateralAmount = executedAmount, shares = filledShares)
         } else {
             PlaceResultUM.PartiallyFilled(
@@ -112,6 +113,7 @@ internal object PlaceResultUMConverter {
                 shares = filledShares,
             )
         }
+        return PlaceOutcome.Reportable(result = result)
     }
 
     private fun submitted(placedAt: Long) = PlaceOutcome.Reportable(result = PlaceResultUM.Submitted(placedAt))

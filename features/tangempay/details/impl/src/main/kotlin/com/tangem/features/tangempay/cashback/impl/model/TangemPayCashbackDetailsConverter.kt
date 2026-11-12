@@ -8,7 +8,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.pay.model.CashbackPromotions
+import com.tangem.domain.tangempay.model.CashbackPromotions
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackDetailsUM
 import kotlinx.collections.immutable.toImmutableList
 

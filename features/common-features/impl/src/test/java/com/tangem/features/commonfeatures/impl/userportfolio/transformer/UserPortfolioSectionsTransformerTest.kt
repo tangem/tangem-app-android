@@ -72,6 +72,7 @@ internal class UserPortfolioSectionsTransformerTest {
             ),
         ),
         rawCurrencyId = requireNotNull(token.id.rawCurrencyId),
+        networkIds = null,
         appCurrency = AppCurrency.Default,
         isBalanceHidden = false,
         isAccountsModeEnabled = true,

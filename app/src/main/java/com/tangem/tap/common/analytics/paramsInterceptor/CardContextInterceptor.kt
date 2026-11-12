@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.TrackingContextExcludedEvent
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.models.event.SignIn
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
@@ -13,7 +14,6 @@ import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.tap.features.demo.DemoHelper
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -41,6 +41,7 @@ class CardContextInterceptor @AssistedInject constructor(
             is Basic.CardWasScanned,
             -> false
             is SignIn.ErrorBiometricUpdated -> !event.isFromUnlockAll
+            is OnboardingAnalyticsEvent.Backup.ImportWalletRequest -> !event.isSelectedWalletUnrelated
             else -> true
         }
     }
@@ -70,19 +71,6 @@ class CardContextInterceptor @AssistedInject constructor(
             ProductType.Wallet2 -> AnalyticsParam.ProductType.Wallet2.value
             ProductType.Ring -> AnalyticsParam.ProductType.Ring.value
             ProductType.Start2Coin -> AnalyticsParam.ProductType.Start2Coin.value
-            else -> if (DemoHelper.isDemoCard(scanResponse)) getDemoCardProductType() else "Other"
-        }
-    }
-
-    private fun getDemoCardProductType(): String {
-        return if (DemoHelper.isTestDemoCard(scanResponse)) {
-            "Demo Test"
-        } else {
-            when (scanResponse.card.cardId.substring(0..1)) {
-                "AC" -> "Demo Wallet"
-                "AB" -> "Demo Note"
-                else -> "Demo Other"
-            }
         }
     }
 

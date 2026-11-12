@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.choice.ui
 
-import com.tangem.domain.pay.model.bankofframp.BankAccountType
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.choice.model.BankWithdrawChoiceConfig
 import com.tangem.features.tangempay.withdraw.bank.choice.model.BankWithdrawChoices

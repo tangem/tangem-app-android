@@ -17,6 +17,7 @@ import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSigningError
 import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
@@ -34,12 +35,12 @@ import com.tangem.utils.extensions.addHexPrefix
 
 /**
  * Co-signs the operation of a joint account in [Network]: the operation is taken from the store by the id the
- * caller showed, the [JointOperationVerifier] pipeline and the Blockaid gate both stand between it and the card,
- * and only then the signature is collected and sent. An operation the slot no longer holds under that id — it
+ * caller showed, and [prepare] runs the [JointOperationVerifier] pipeline and the Blockaid gate on it. Only
+ * [submit] collects the signature and sends it. An operation the slot no longer holds under that id — it
  * finished, was cancelled, or was replaced by another one — is [JointOperationSignError.OperationNotFound].
  *
- * Returns the operation as the backend reports it right after counting the signature, `null` when that answer could
- * not be read.
+ * [submit] returns the operation as the backend reports it right after counting the signature, `null` when that
+ * answer could not be read.
  */
 @Suppress("LongParameterList")
 class SignJointOperationUseCase(
@@ -57,12 +58,12 @@ class SignJointOperationUseCase(
     private val compositionVerifier: JointAccountCompositionVerifier,
 ) {
 
-    suspend operator fun invoke(
+    suspend fun prepare(
         account: Account.Joint,
         network: Network,
         operationId: String,
         displayed: JointTransferIntent,
-    ): Either<JointOperationSignError, JointOperation?> = either {
+    ): Either<JointOperationSignError, PreparedJointOperation.Signing> = either {
         val userWalletId = account.accountId.userWalletId
 
         val jointAccount = ensureNotNull(supplier.find(accountId = account.accountId)) {
@@ -108,40 +109,60 @@ class SignJointOperationUseCase(
             jointAccount = jointAccount,
         )
 
-        checkBlockaid(
+        val verdict = blockaidGate.verify(
             network = network,
-            operation = operation,
+            safeTx = operation.safeTx,
             chainId = chainId,
             safeAddress = safeAddress,
             ownerAddress = ownerAddress,
             deployment = deployment,
         )
 
-        val signature = signer
-            .signOperation(
-                userWalletId = userWalletId,
-                ownerKeyIndex = account.ownerKeyIndex,
-                safeTx = operation.safeTx,
-                chainId = chainId,
-                safeAddress = safeAddress,
-            )
-            .mapLeft(::toSignError)
-            .bind()
+        PreparedJointOperation.Signing(
+            account = account,
+            network = network,
+            safeTx = operation.safeTx,
+            verdict = verdict,
+            operationId = operation.operationId,
+            chainId = chainId,
+            safeAddress = safeAddress,
+        )
+    }
 
-        val signedOperation = repository
-            .signOperation(
-                userWalletId = userWalletId,
-                operationId = operation.operationId,
-                safeTx = operation.safeTx,
-                signature = signature,
-            )
-            .bind()
+    suspend fun submit(prepared: PreparedJointOperation.Signing): Either<JointOperationSignError, JointOperation?> {
+        val userWalletId = prepared.account.accountId.userWalletId
 
-        // The signature is already accepted by the backend, so a failed refresh must not fail the signing —
-        // the list catches up on the next fetch
-        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse {}
+        return either {
+            ensure(prepared.verdict != JointOperationBlockaidGate.Verdict.Malicious) {
+                JointOperationSignError.Malicious
+            }
 
-        signedOperation
+            val signature = signer
+                .signOperation(
+                    userWalletId = userWalletId,
+                    ownerKeyIndex = prepared.account.ownerKeyIndex,
+                    safeTx = prepared.safeTx,
+                    chainId = prepared.chainId,
+                    safeAddress = prepared.safeAddress,
+                )
+                .mapLeft(::toSignError)
+                .bind()
+
+            val signedOperation = repository
+                .signOperation(
+                    userWalletId = userWalletId,
+                    operationId = prepared.operationId,
+                    safeTx = prepared.safeTx,
+                    signature = signature,
+                )
+                .bind()
+
+            // The signature is already accepted by the backend, so a failed refresh must not fail the signing —
+            // the list catches up on the next fetch
+            fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse {}
+
+            signedOperation
+        }
     }
 
     /**
@@ -205,38 +226,6 @@ class SignJointOperationUseCase(
             )
             .mapLeft(::toSignError)
             .bind()
-    }
-
-    private suspend fun Raise<JointOperationSignError>.checkBlockaid(
-        network: Network,
-        operation: JointOperation,
-        chainId: Long,
-        safeAddress: String,
-        ownerAddress: String,
-        deployment: SafeDeployment,
-    ) {
-        val verdict = blockaidGate.verify(
-            network = network,
-            safeTx = operation.safeTx,
-            chainId = chainId,
-            safeAddress = safeAddress,
-            ownerAddress = ownerAddress,
-            deployment = deployment,
-        )
-
-        when (verdict) {
-            JointOperationBlockaidGate.Verdict.SAFE,
-            JointOperationBlockaidGate.Verdict.WARNING,
-            -> Unit
-            JointOperationBlockaidGate.Verdict.MALICIOUS -> raise(JointOperationSignError.Malicious)
-            // No answer is not a pass: a co-signer cannot read the payload, so an unverified one is not signed
-            JointOperationBlockaidGate.Verdict.UNAVAILABLE -> raise(
-                JointOperationSignError.Failed(cause = IllegalStateException("Blockaid is unavailable")),
-            )
-            JointOperationBlockaidGate.Verdict.UNKNOWN -> raise(
-                JointOperationSignError.Failed(cause = IllegalStateException("Blockaid returned no verdict")),
-            )
-        }
     }
 
     private suspend fun Raise<JointOperationSignError>.refundBounds(

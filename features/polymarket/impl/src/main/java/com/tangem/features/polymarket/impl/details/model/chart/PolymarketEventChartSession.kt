@@ -81,7 +81,7 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
         publish(nowMillis, hasFailure = content.outcomes.any { it.key !in history.points })
     }
 
-    fun refresh(updated: PolymarketChartContent, nowMillis: Long) {
+    fun refresh(updated: PolymarketChartContent, nowMillis: Long, quoteTimestampMillis: Long? = nowMillis) {
         val wasClosed = content.isClosed
         val isSameSelection = content.eventId == updated.eventId &&
             content.outcomes.map { it.key } == updated.outcomes.map { it.key } &&
@@ -109,6 +109,18 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
             return
         }
         if (content.isClosed) livePoints = emptyMap()
+        refreshLivePoints(nowMillis, quoteTimestampMillis)
+        publish(nowMillis)
+    }
+
+    /** Called on pause/destroy by the owner alongside cancelling its load job. Cached content is retained. */
+    fun cancelLoading(nowMillis: Long) {
+        request = null
+        selectedPeriod = displayed?.period ?: selectedPeriod
+        publish(nowMillis)
+    }
+
+    private fun refreshLivePoints(nowMillis: Long, quoteTimestampMillis: Long?) {
         val loaded = displayed
         if (request == null && loaded != null && !content.isClosed) {
             val previousUpdate = if (streamsLive()) lastLiveUpdate ?: loaded.loadedAt else loaded.loadedAt
@@ -118,16 +130,11 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
                 reload(nowMillis)
                 return
             }
-            recordLivePoints(nowMillis)
+            quoteTimestampMillis?.takeIf { timestamp ->
+                timestamp <= nowMillis && nowMillis - timestamp <= loaded.fidelityMillis * STALE_BUCKETS &&
+                    timestamp > lastLiveUpdate ?: Long.MIN_VALUE
+            }?.let(::recordLivePoints)
         }
-        publish(nowMillis)
-    }
-
-    /** Called on pause/destroy by the owner alongside cancelling its load job. Cached content is retained. */
-    fun cancelLoading(nowMillis: Long) {
-        request = null
-        selectedPeriod = displayed?.period ?: selectedPeriod
-        publish(nowMillis)
     }
 
     private fun recordLivePoints(nowMillis: Long) {

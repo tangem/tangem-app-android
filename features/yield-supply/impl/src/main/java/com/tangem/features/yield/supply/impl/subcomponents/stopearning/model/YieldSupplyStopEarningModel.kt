@@ -45,7 +45,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
@@ -97,7 +96,6 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val appsFlyerRepository: AppsFlyerRepository,
     private val yieldSupplyWithdrawalClaimPreparer: YieldSupplyWithdrawalClaimPreparer,
     private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val estimateFeeForGaslessBatchUseCase: EstimateFeeForGaslessBatchUseCase,
     private val yieldSupplySmartGas: YieldSupplySmartGas,
     isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
@@ -126,8 +124,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private var pickedFeeCurrencyStatus: CryptoCurrencyStatus? = null
     private var feeCurrencyChoice: YieldSupplyFeeCurrencyChoice? = null
     private var nativeFeeCurrencyStatus: CryptoCurrencyStatus = feeCryptoCurrencyStatusFlow.value
-    private val isSmartGasNetwork = yieldSupplyFeatureToggles.isSmartGasEnabled &&
-        isEvmGaslessFeeSupportedForNetwork(cryptoCurrency.network)
+    private val isSmartGasNetwork = isEvmGaslessFeeSupportedForNetwork(cryptoCurrency.network)
 
     val uiState: StateFlow<YieldSupplyActionUM>
         field: MutableStateFlow<YieldSupplyActionUM> = MutableStateFlow(
@@ -406,13 +403,9 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     ) {
         nativeFeeCurrencyStatus = nativeFeeStatus
         updateFeeCurrencySelectable()
-        val smartGasFee = if (yieldSupplyFeatureToggles.isSmartGasEnabled) {
-            resolveSmartGasFee(transactions).getOrElse { error ->
-                showPickedFeeCurrencyError(transactions, error)
-                return
-            }
-        } else {
-            null
+        val smartGasFee = resolveSmartGasFee(transactions).getOrElse { error ->
+            showPickedFeeCurrencyError(transactions, error)
+            return
         }
         val feeCryptoValue = smartGasFee?.feeAmount ?: transactions.sumOf { it.fee?.amount?.value.orZero() }
         val feeStatus = smartGasFee?.feeTokenStatus ?: nativeFeeStatus

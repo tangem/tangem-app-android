@@ -5,6 +5,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
 import com.tangem.domain.polymarket.interactor.ReconcilePolymarketSessionKeysInteractor
 import com.tangem.domain.polymarket.model.PolymarketWalletError
+import com.tangem.domain.polymarket.model.newestPerAddress
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -19,7 +20,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
@@ -28,6 +31,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Clock
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -59,17 +63,36 @@ class PolymarketSessionKeyStateService(
         }
     }
 
+    suspend fun refreshAndAwait(userWalletId: UserWalletId, timeout: Duration = REFRESH_AWAIT_TIMEOUT) {
+        val wallet = wallets[userWalletId]
+        if (wallet == null || wallet.refreshes.subscriptionCount.value == 0) {
+            refresh(userWalletId)
+            return
+        }
+        val requestedCycle = wallet.startedCycles.get() + 1
+        wallet.refreshes.tryEmit(Unit)
+        val refreshed = withTimeoutOrNull(timeout) { wallet.cycles.first { it.number >= requestedCycle } }
+        if (refreshed == null) TangemLogger.i("Polymarket session keys not refreshed within $timeout, moving on")
+    }
+
     private inner class WalletState(userWalletId: UserWalletId) {
 
         val refreshes = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-        val overview: SharedFlow<SessionKeyOverviewResult> = channelFlow {
+        val startedCycles = AtomicLong()
+
+        val cycles: SharedFlow<ReconciledCycle> = channelFlow {
             val cycle = ReconcileCycle()
             val requested = Channel<Unit>(Channel.CONFLATED)
             launch(start = CoroutineStart.UNDISPATCHED) {
                 refreshes.collect { requested.send(Unit) }
             }
-            reconcileLoop(userWalletId, requested, cycle)
+            reconcileLoop(
+                userWalletId = userWalletId,
+                requested = requested,
+                cycle = cycle,
+                startedCycles = startedCycles,
+            )
                 .retryWhen { cause, _ ->
                     if (cause is CancellationException && !currentCoroutineContext().isActive) throw cause
                     val restart = cycle.takeRestart()
@@ -79,7 +102,6 @@ class PolymarketSessionKeyStateService(
                 }
                 .collect { send(it) }
         }
-            .distinctUntilChanged()
             .shareIn(
                 scope = scope,
                 started = SharingStarted.WhileSubscribed(
@@ -88,16 +110,22 @@ class PolymarketSessionKeyStateService(
                 ),
                 replay = 1,
             )
+
+        val overview: Flow<SessionKeyOverviewResult> = cycles.map { it.overview }.distinctUntilChanged()
     }
 
     private fun reconcileLoop(
         userWalletId: UserWalletId,
         requested: Channel<Unit>,
         cycle: ReconcileCycle,
-    ): Flow<SessionKeyOverviewResult> = flow {
+        startedCycles: AtomicLong,
+    ): Flow<ReconciledCycle> = flow {
+        var published: SessionKeyOverviewResult? = null
         while (true) {
+            val number = startedCycles.incrementAndGet()
             val overview = reconcile(userWalletId)
-            if (cycle.accept(overview, now = clock.instant())) emit(overview)
+            if (cycle.accept(overview, now = clock.instant())) published = overview
+            published?.let { emit(ReconciledCycle(number, it)) }
             val isPolling = cycle.startWait()
             val isRefreshed = awaitRefresh(requested, timeout = idleTimeout(cycle, isPolling))
             cycle.endWait(isRefreshed = isRefreshed)
@@ -129,6 +157,8 @@ class PolymarketSessionKeyStateService(
         return (PolymarketSessionKeyRelay.POLL_INTERVAL * (1 shl doublings)).coerceAtMost(MAX_BACKOFF)
     }
 
+    private data class ReconciledCycle(val number: Long, val overview: SessionKeyOverviewResult)
+
     private class ReconcileCycle {
 
         var nextChangeAt: Instant? = null
@@ -158,7 +188,7 @@ class PolymarketSessionKeyStateService(
                 isFailureLogged = false
                 elapsedChangeRetries = 0
                 restarts = 0
-                isSettling = loaded.wallet.sessionKeys.any { key -> key.status.isSettling() }
+                isSettling = loaded.wallet.sessionKeys.newestPerAddress().any { key -> key.status.isSettling() }
                 nextChangeAt = loaded.assessment.nextChangeAt
                 true
             },
@@ -187,6 +217,7 @@ class PolymarketSessionKeyStateService(
 
     private companion object {
         val STOP_TIMEOUT: Duration = 5.seconds
+        val REFRESH_AWAIT_TIMEOUT: Duration = 5.seconds
         const val SETTLE_REFRESHES = 100
         val MAX_BACKOFF: Duration = 1.minutes
         const val MAX_DOUBLINGS = 5

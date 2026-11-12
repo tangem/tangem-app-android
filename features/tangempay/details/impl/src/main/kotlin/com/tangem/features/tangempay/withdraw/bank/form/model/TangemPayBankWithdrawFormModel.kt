@@ -6,8 +6,8 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.models.pay.TangemPayCountry
-import com.tangem.domain.models.pay.TangemPayRegion
+import com.tangem.domain.models.tangempay.TangemPayCountry
+import com.tangem.domain.models.tangempay.TangemPayRegion
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.form.TangemPayBankWithdrawFormComponent
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM

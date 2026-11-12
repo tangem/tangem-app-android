@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.recipients.model
 
-import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 
 /** Saved recipients once loaded (null while loading) plus the search field input. */
 internal data class RecipientsState(

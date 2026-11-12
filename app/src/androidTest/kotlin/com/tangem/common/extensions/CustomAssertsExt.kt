@@ -105,6 +105,20 @@ fun KNode.extractText(): String {
 }
 
 /**
+ * Extracts the current value of an editable text field (its `EditableText` semantics), falling back to the
+ * static `Text`. Needed to read an input field's value — [extractText] only reads `Text` and throws on fields.
+ */
+fun KNode.extractEditableText(): String {
+    val node = delegate.interaction.semanticsNodeInteraction.fetchSemanticsNode(
+        "Failed to extract editable text from KNode",
+    )
+    if (SemanticsProperties.EditableText in node.config) {
+        return node.config[SemanticsProperties.EditableText].text
+    }
+    return extractText(node) ?: error("Node contains neither SemanticsProperties.EditableText nor Text")
+}
+
+/**
  * Extracts the text value from a semantic node's config.
  */
 private fun extractText(node: SemanticsNode): String? {

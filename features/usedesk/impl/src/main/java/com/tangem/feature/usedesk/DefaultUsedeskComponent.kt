@@ -21,7 +21,6 @@ import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.usedesk.model.UsedeskModel
 import com.tangem.feature.usedesk.visibility.DefaultSupportChatVisibility
@@ -35,7 +34,6 @@ internal class DefaultUsedeskComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: UsedeskComponent.Params,
     supportChatVisibility: DefaultSupportChatVisibility,
-    private val useDeskFeatureToggles: UseDeskFeatureToggles,
 ) : UsedeskComponent, AppComponentContext by appComponentContext {
 
     private val model: UsedeskModel = getOrCreateModel(params)
@@ -77,7 +75,7 @@ internal class DefaultUsedeskComponent @AssistedInject constructor(
 
                     val fragment = UsedeskChatScreen.newInstance(
                         usedeskChatConfiguration = configuration,
-                        agentName = AGENT_NAME.takeIf { useDeskFeatureToggles.isSupportChatDeepLinkEnabled },
+                        agentName = AGENT_NAME,
                         allowedFileExtensions = ALLOWED_FILE_EXTENSIONS,
                         cameraEnabled = false,
                     ).apply {

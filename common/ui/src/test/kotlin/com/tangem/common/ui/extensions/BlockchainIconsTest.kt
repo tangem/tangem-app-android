@@ -81,6 +81,7 @@ internal class BlockchainIconsTest {
                 Blockchain.InternetComputer -> R.drawable.img_icp_22
                 Blockchain.Joystream -> R.drawable.img_joystream_22
                 Blockchain.Kaspa, Blockchain.KaspaTestnet -> R.drawable.img_kaspa_22
+                Blockchain.Katana, Blockchain.KatanaTestnet -> R.drawable.img_katana_22
                 Blockchain.Kava, Blockchain.KavaTestnet -> R.drawable.img_kava_22
                 Blockchain.Koinos, Blockchain.KoinosTestnet -> R.drawable.img_koinos_22
                 Blockchain.Kusama -> R.drawable.img_kusama_22
@@ -109,10 +110,12 @@ internal class BlockchainIconsTest {
                 Blockchain.Ravencoin, Blockchain.RavencoinTestnet -> R.drawable.img_ravencoin_22
                 Blockchain.Robinhood, Blockchain.RobinhoodTestnet -> R.drawable.img_robinhood_22
                 Blockchain.Igra, Blockchain.IgraTestnet -> R.drawable.img_igra_22
+                Blockchain.Ink, Blockchain.InkTestnet -> R.drawable.img_ink_22
                 Blockchain.Electroneum, Blockchain.ElectroneumTestnet -> R.drawable.img_electroneum_22
                 Blockchain.Arc, Blockchain.ArcTestnet -> R.drawable.img_arc_22
                 Blockchain.Onyx, Blockchain.OnyxTestnet -> R.drawable.img_onyx_22
                 Blockchain.PublicMasterpiece -> R.drawable.img_public_masterpiece_22
+                Blockchain.XLayer, Blockchain.XLayerTestnet -> R.drawable.img_xlayer_22
                 Blockchain.Scroll, Blockchain.ScrollTestnet -> R.drawable.img_scroll_22
                 Blockchain.Sei, Blockchain.SeiTestnet,
                 Blockchain.SeiEvm, Blockchain.SeiEvmTestnet,
@@ -136,6 +139,7 @@ internal class BlockchainIconsTest {
                 Blockchain.Xodex -> R.drawable.img_xodex_22
                 Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> R.drawable.img_zklink_22
                 Blockchain.ZkSyncEra, Blockchain.ZkSyncEraTestnet -> R.drawable.img_zksync_22
+                Blockchain.Zeniq -> R.drawable.img_zeniq_22
                 Blockchain.Nexa, Blockchain.NexaTestnet, Blockchain.Unknown -> R.drawable.ic_alert_24
             }
             TestModel(blockchain, expected)
@@ -211,6 +215,7 @@ internal class BlockchainIconsTest {
                 Blockchain.InternetComputer -> R.drawable.ic_icp_22
                 Blockchain.Joystream -> R.drawable.ic_joystream_22
                 Blockchain.Kaspa, Blockchain.KaspaTestnet -> R.drawable.ic_kaspa_22
+                Blockchain.Katana, Blockchain.KatanaTestnet -> R.drawable.ic_katana_22
                 Blockchain.Kava, Blockchain.KavaTestnet -> R.drawable.ic_kava_22
                 Blockchain.Koinos, Blockchain.KoinosTestnet -> R.drawable.ic_koinos_22
                 Blockchain.Kusama -> R.drawable.ic_kusama_16
@@ -239,10 +244,12 @@ internal class BlockchainIconsTest {
                 Blockchain.Ravencoin, Blockchain.RavencoinTestnet -> R.drawable.ic_ravencoin_22
                 Blockchain.Robinhood, Blockchain.RobinhoodTestnet -> R.drawable.ic_robinhood_22
                 Blockchain.Igra, Blockchain.IgraTestnet -> R.drawable.ic_igra_22
+                Blockchain.Ink, Blockchain.InkTestnet -> R.drawable.ic_ink_22
                 Blockchain.Electroneum, Blockchain.ElectroneumTestnet -> R.drawable.ic_electroneum_22
                 Blockchain.Arc, Blockchain.ArcTestnet -> R.drawable.ic_arc_22
                 Blockchain.Onyx, Blockchain.OnyxTestnet -> R.drawable.ic_onyx_22
                 Blockchain.PublicMasterpiece -> R.drawable.ic_public_masterpiece_22
+                Blockchain.XLayer, Blockchain.XLayerTestnet -> R.drawable.ic_xlayer_22
                 Blockchain.Scroll, Blockchain.ScrollTestnet -> R.drawable.ic_scroll_22
                 Blockchain.Sei, Blockchain.SeiTestnet,
                 Blockchain.SeiEvm, Blockchain.SeiEvmTestnet,
@@ -266,6 +273,7 @@ internal class BlockchainIconsTest {
                 Blockchain.Xodex -> R.drawable.ic_xodex_22
                 Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> R.drawable.ic_zklink_22
                 Blockchain.ZkSyncEra, Blockchain.ZkSyncEraTestnet -> R.drawable.ic_zksync_22
+                Blockchain.Zeniq -> R.drawable.ic_zeniq_22
                 Blockchain.Nexa, Blockchain.NexaTestnet, Blockchain.Unknown -> R.drawable.ic_alert_24
             }
             TestModel(blockchain, expected)

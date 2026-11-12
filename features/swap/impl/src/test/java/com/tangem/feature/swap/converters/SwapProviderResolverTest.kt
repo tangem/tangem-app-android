@@ -20,8 +20,7 @@ import java.math.BigDecimal
  * row-badge resolution ([SwapProviderResolver.resolveBadge]).
  *
  * Ranking metric: best provider == lowest `from/to` fiat ratio == highest `to` fiat output for the
- * same `from` input. With the overall-best-price toggle off, [SwapProviderResolver.findBest] prefers the
- * best-rated DEX/DEX_BRIDGE provider when any DEX is present; with it on, the overall best wins.
+ * same `from` input. [SwapProviderResolver.findBest] picks the overall best regardless of provider type.
  */
 internal class SwapProviderResolverTest {
 
@@ -42,42 +41,18 @@ internal class SwapProviderResolverTest {
     // region findBest
 
     @Test
-    fun `GIVEN best dex rate on AND a DEX present WHEN findBest THEN best DEX is selected`() {
-        // CEX has the best overall rate (highest output), but a DEX is present.
-        val states = mapOf(
-            cex1 to quote(fromFiat = "100", toFiat = "120"), // best overall
-            dex1 to quote(fromFiat = "100", toFiat = "110"), // best among DEX
-            dexBridge to quote(fromFiat = "100", toFiat = "105"),
-        )
-
-        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
-
-        assertThat(best).isEqualTo(dex1)
-    }
-
-    @Test
-    fun `GIVEN best dex rate on AND no DEX present WHEN findBest THEN best CEX fallback`() {
+    fun `GIVEN only CEX providers WHEN findBest THEN best CEX is selected`() {
+        // Arrange
         val states = mapOf(
             cex1 to quote(fromFiat = "100", toFiat = "110"),
             cex2 to quote(fromFiat = "100", toFiat = "120"), // best CEX
         )
 
-        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
+        // Act
+        val best = SwapProviderResolver.findBest(states)
 
+        // Assert
         assertThat(best).isEqualTo(cex2)
-    }
-
-    @Test
-    fun `GIVEN DEX_BRIDGE is the best DEX WHEN findBest with best dex rate on THEN DEX_BRIDGE selected`() {
-        val states = mapOf(
-            cex1 to quote(fromFiat = "100", toFiat = "130"),
-            dex1 to quote(fromFiat = "100", toFiat = "108"),
-            dexBridge to quote(fromFiat = "100", toFiat = "115"), // best among DEX-based
-        )
-
-        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
-
-        assertThat(best).isEqualTo(dexBridge)
     }
 
     @Test
@@ -89,26 +64,10 @@ internal class SwapProviderResolverTest {
         )
 
         // Act
-        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
+        val best = SwapProviderResolver.findBest(states)
 
         // Assert
         assertThat(best).isEqualTo(cex2)
-    }
-
-    @Test
-    fun `GIVEN best DEX is region restricted WHEN findBest THEN best available DEX`() {
-        // Arrange
-        val states = mapOf(
-            cex1 to quote(fromFiat = "100", toFiat = "130"),
-            dex1 to quote(fromFiat = "100", toFiat = "115", restricted = true), // best DEX
-            dexBridge to quote(fromFiat = "100", toFiat = "108"),
-        )
-
-        // Act
-        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
-
-        // Assert
-        assertThat(best).isEqualTo(dexBridge)
     }
 
     @Test
@@ -120,14 +79,14 @@ internal class SwapProviderResolverTest {
         )
 
         // Act
-        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
+        val best = SwapProviderResolver.findBest(states)
 
         // Assert
         assertThat(best).isEqualTo(cex1)
     }
 
     @Test
-    fun `GIVEN overall best price on AND CEX is overall best WHEN findBest THEN best CEX is selected`() {
+    fun `GIVEN CEX is overall best AND DEX present WHEN findBest THEN best CEX is selected`() {
         // Arrange
         val states = mapOf(
             cex1 to quote(fromFiat = "100", toFiat = "120"),
@@ -136,14 +95,14 @@ internal class SwapProviderResolverTest {
         )
 
         // Act
-        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = true)
+        val best = SwapProviderResolver.findBest(states)
 
         // Assert
         assertThat(best).isEqualTo(cex1)
     }
 
     @Test
-    fun `GIVEN overall best price on AND DEX is overall best WHEN findBest THEN best DEX is selected`() {
+    fun `GIVEN DEX is overall best WHEN findBest THEN best DEX is selected`() {
         // Arrange
         val states = mapOf(
             cex1 to quote(fromFiat = "100", toFiat = "105"),
@@ -151,14 +110,14 @@ internal class SwapProviderResolverTest {
         )
 
         // Act
-        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = true)
+        val best = SwapProviderResolver.findBest(states)
 
         // Assert
         assertThat(best).isEqualTo(dex1)
     }
 
     @Test
-    fun `GIVEN overall best price on AND overall best is region restricted WHEN findBest THEN best available provider`() {
+    fun `GIVEN overall best is region restricted WHEN findBest THEN best available provider`() {
         // Arrange
         val states = mapOf(
             cex1 to quote(fromFiat = "100", toFiat = "130", restricted = true),
@@ -167,7 +126,7 @@ internal class SwapProviderResolverTest {
         )
 
         // Act
-        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = true)
+        val best = SwapProviderResolver.findBest(states)
 
         // Assert
         assertThat(best).isEqualTo(cex2)

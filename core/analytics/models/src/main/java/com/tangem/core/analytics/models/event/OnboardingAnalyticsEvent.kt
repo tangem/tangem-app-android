@@ -129,9 +129,15 @@ sealed class OnboardingAnalyticsEvent(
             params = mapOf(AnalyticsParam.BACKUP_TYPE to backupType.value),
         )
 
-        /** The "Import existing wallet" chooser was shown (recovery phrase / cloud backup) */
+        /**
+         * The "Import existing wallet" chooser was shown (recovery phrase / cloud backup).
+         *
+         * @param isSelectedWalletUnrelated the chooser is about a new wallet, so the card and mobile wallet context
+         * interceptors must not add the selected wallet's params
+         */
         class ImportWalletRequest(
             cloudBackup: AnalyticsParam.CloudBackupAvailability,
+            val isSelectedWalletUnrelated: Boolean = false,
         ) : Backup(
             event = "Import Wallet Request",
             params = mapOf(AnalyticsParam.CLOUD_BACKUP to cloudBackup.value),

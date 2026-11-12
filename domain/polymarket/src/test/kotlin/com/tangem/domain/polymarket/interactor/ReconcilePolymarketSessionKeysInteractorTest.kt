@@ -101,6 +101,7 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
             PolymarketSessionKeyOverview(
                 wallet = wallet(listOf(key())),
                 localKeyAddress = KEY,
+                deviceId = DEVICE_ID,
                 assessment = expectedAssessment,
                 isTradable = false,
             ).right(),

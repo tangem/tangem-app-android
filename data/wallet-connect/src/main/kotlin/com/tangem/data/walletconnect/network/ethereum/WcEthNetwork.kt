@@ -201,7 +201,7 @@ internal class WcEthNetwork(
 
         override fun toBlockchain(chainId: CAIP2): Blockchain? {
             if (chainId.namespace != namespaceKey.key) return null
-            val ethChainId = chainId.reference.toIntOrNull() ?: return null
+            val ethChainId = chainId.reference.toLongOrNull() ?: return null
             return Blockchain.fromChainId(ethChainId)
         }
 

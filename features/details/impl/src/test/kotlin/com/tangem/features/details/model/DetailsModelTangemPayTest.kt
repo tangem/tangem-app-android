@@ -97,7 +97,7 @@ internal class DetailsModelTangemPayTest : DetailsModelTestBase() {
         advanceUntilIdle()
 
         // Assert
-        verify { analyticsEventHandler.send(any<TangemPayAnalyticsEvents.DetailsVisaPermanentButtonClicked>()) }
+        verify { analyticsEventHandler.send(any<TangemPayAnalyticsEvents.PermanentButtonClicked>()) }
         verify {
             router.push(
                 route = AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings),

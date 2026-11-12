@@ -76,34 +76,10 @@ internal class YieldSupplyStopEarningModelSmartGasTest : YieldSupplyStopEarningM
 
     @BeforeEach
     fun setUp() {
-        every { yieldSupplyFeatureToggles.isSmartGasEnabled } returns true
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns nativeFeeStatus.right()
         coEvery { createAndSendEvmGaslessTransactionUseCase(any(), any<List<TransactionData>>(), any()) } returns
             GASLESS_HASH.right()
         stubFeeTokenLookup(usdc.id, usdcStatus.some())
-    }
-
-    @Test
-    fun `GIVEN toggle off WHEN fee loaded THEN Smart Gas fee is not estimated and native fee kept`() = runTest {
-        // Arrange
-        every { yieldSupplyFeatureToggles.isSmartGasEnabled } returns false
-
-        // Act
-        val model = createModel()
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 0) {
-            estimateFeeForGaslessBatchUseCase(
-                userWallet = any(),
-                operationTokenStatus = any(),
-                calls = any(),
-                sameTokenRule = any(),
-            )
-        }
-        assertNativeFeeKept(model)
-
-        model.onDestroy()
     }
 
     @Test

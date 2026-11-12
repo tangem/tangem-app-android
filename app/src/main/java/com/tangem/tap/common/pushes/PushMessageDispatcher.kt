@@ -6,7 +6,6 @@ import com.google.firebase.messaging.RemoteMessage
 import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.feature.usedesk.api.SupportChatVisibilityProvider
-import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.customer.messagingpush.CustomerIOFirebaseMessagingService
@@ -19,7 +18,6 @@ internal class PushMessageDispatcher @Inject constructor(
     private val pushMessageHandler: PushMessageHandler,
     private val pushNotificationDelegate: PushNotificationDelegate,
     private val supportChatVisibilityProvider: SupportChatVisibilityProvider,
-    private val useDeskFeatureToggles: UseDeskFeatureToggles,
 ) {
 
     fun dispatch(message: RemoteMessage) {
@@ -54,8 +52,7 @@ internal class PushMessageDispatcher @Inject constructor(
 
     private fun shouldBeMuted(message: RemoteMessage): Boolean {
         val type = NotificationType.getType(message.data[DeeplinkConst.TYPE_KEY])
-        return useDeskFeatureToggles.isSupportChatDeepLinkEnabled &&
-            type == NotificationType.SupportMessage && supportChatVisibilityProvider.isChatVisible
+        return type == NotificationType.SupportMessage && supportChatVisibilityProvider.isChatVisible
     }
 
     /**

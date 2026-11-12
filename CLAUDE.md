@@ -95,7 +95,7 @@ The project is a heavily modularized Android app (~290 modules) organized in lay
 - **`features/`** — UI features using **API/Impl split pattern**: `features:foo:api` defines the public contract, `features:foo:impl` contains the implementation. This enforces clean dependency boundaries
 - **`core/`** — Cross-cutting concerns: `ui`, `analytics`, `datasource`, `decompose`, `navigation`, `res`, `utils`, `security`, `pagination`, `media` (looping video; `media:ui` — its Compose surface)
 - **`common/`** — Shared models, routing, UI components, test utilities
-- **`libs/`** — SDK wrappers: `blockchain-sdk`, `tangem-sdk-api`, `crypto`, `auth`, `visa`
+- **`libs/`** — SDK wrappers: `blockchain-sdk`, `tangem-sdk-api`, `crypto`, `auth`
 
 ### Component Architecture (Decompose)
 

@@ -10,4 +10,7 @@ internal class DefaultEarnFeatureToggles(
 
     override val isEarnEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1676_EARN_ENABLED)
+
+    override val isUserPortfolioEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18953_EARN_UPDATE_ASSET_SELECTION)
 }

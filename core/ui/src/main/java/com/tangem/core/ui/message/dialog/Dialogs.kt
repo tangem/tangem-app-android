@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.domain.common.wallets.MAX_HOT_WALLETS_COUNT
 
 /**
 [REDACTED_AUTHOR]
@@ -79,10 +80,13 @@ object Dialogs {
         )
     }
 
-    // Placeholder copy until the multiple mobile wallets strings are added; callers keep using this function
     fun hotWalletsLimitReachedDialog(onDismiss: () -> Unit = {}): DialogMessage {
         return DialogMessage(
-            message = resourceReference(R.string.user_wallet_coming_soon_dialog_description),
+            title = resourceReference(R.string.hw_wallets_limit_alert_title),
+            message = resourceReference(
+                id = R.string.hw_wallets_limit_alert_message,
+                formatArgs = wrappedList(MAX_HOT_WALLETS_COUNT.toString()),
+            ),
             firstAction = EventMessageAction(
                 title = resourceReference(R.string.common_got_it),
                 onClick = {},

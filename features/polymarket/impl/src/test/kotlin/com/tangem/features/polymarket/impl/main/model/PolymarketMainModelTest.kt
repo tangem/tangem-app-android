@@ -19,6 +19,7 @@ import com.tangem.core.ui.message.ModalMessage
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketCategoryFilter
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
@@ -29,6 +30,7 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
+import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
 import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
@@ -46,9 +48,8 @@ import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -86,6 +87,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import java.math.BigDecimal
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -100,10 +103,12 @@ import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import org.junit.jupiter.api.BeforeEach
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketMainModelTest {
@@ -123,6 +128,7 @@ internal class PolymarketMainModelTest {
         every { this@mockk.invoke(USER_WALLET_ID) } returns hasCredentials
     }
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
+    private val walletLinkGate: PolymarketWalletLinkGate = mockk()
     private val liveQuotes = MutableStateFlow(emptyMap<String, PolymarketLiveQuote>())
     private val quotesRepository: PolymarketLiveQuotesRepository = mockk {
         every { observeLiveQuotes(any()) } returns liveQuotes
@@ -162,6 +168,8 @@ internal class PolymarketMainModelTest {
         clearMocks(fundingWindow)
         isFundingOpen.value = false
         every { fundingWindow.isOpen(USER_WALLET_ID) } returns isFundingOpen
+        clearMocks(walletLinkGate)
+        coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } returns true
     }
 
     init {
@@ -194,13 +202,13 @@ internal class PolymarketMainModelTest {
         // Assert
         assertThat(model.uiState.value.isCategoriesLoading).isTrue()
         assertThat(model.uiState.value.categories).isEmpty()
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketFeedContentUM.Loading)
 
         categoriesReady.complete(Unit)
         advanceUntilIdle()
         assertThat(model.uiState.value.isCategoriesLoading).isFalse()
         assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketFeedContentUM.Loading)
     }
 
     @Test
@@ -233,7 +241,7 @@ internal class PolymarketMainModelTest {
         // Assert
         assertThat(model.uiState.value.categories).isEmpty()
         assertThat(model.uiState.value.isCategoriesLoading).isFalse()
-        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketFeedContentUM.Error::class.java)
         assertThat(dispatchedActions).isEmpty()
         verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any(), any()) }
     }
@@ -250,7 +258,7 @@ internal class PolymarketMainModelTest {
 
             // Assert
             assertThat(model.uiState.value.categories).isEmpty()
-            assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+            assertThat(model.uiState.value.content).isInstanceOf(PolymarketFeedContentUM.Error::class.java)
             assertThat(dispatchedActions).isEmpty()
             verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any(), any()) }
         }
@@ -267,7 +275,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Empty)
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketFeedContentUM.Empty)
     }
 
     @Test
@@ -288,7 +296,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
+        val content = model.uiState.value.content as PolymarketFeedContentUM.Content
         assertThat(content.events.map { it.id }).containsExactly("event-1", "event-2").inOrder()
         assertThat(content.footer).isEqualTo(PolymarketFeedFooterUM.None)
     }
@@ -308,7 +316,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
+        val content = model.uiState.value.content as PolymarketFeedContentUM.Content
         assertThat(content.footer).isEqualTo(PolymarketFeedFooterUM.Loading)
     }
 
@@ -326,7 +334,7 @@ internal class PolymarketMainModelTest {
         dispatchedActions.clear()
 
         // Act
-        val footer = (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).footer
+        val footer = (model.uiState.value.content as PolymarketFeedContentUM.Content).footer
         (footer as PolymarketFeedFooterUM.Error).onRetryClick()
         advanceUntilIdle()
 
@@ -349,7 +357,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketFeedContentUM.Error::class.java)
     }
 
     @Test
@@ -367,7 +375,7 @@ internal class PolymarketMainModelTest {
         val loadedCategories = model.uiState.value.categories
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        (model.uiState.value.content as PolymarketFeedContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
@@ -389,7 +397,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        (model.uiState.value.content as PolymarketFeedContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
@@ -415,13 +423,13 @@ internal class PolymarketMainModelTest {
         dispatchedActions.clear()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        (model.uiState.value.content as PolymarketFeedContentUM.Error).onReloadClick()
 
         // Assert
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketFeedContentUM.Loading)
         assertThat(model.uiState.value.isCategoriesLoading).isTrue()
         runCurrent()
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketFeedContentUM.Loading)
         assertThat(dispatchedActions).isEmpty()
 
         categoriesReady.complete(Unit)
@@ -520,11 +528,11 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        (model.uiState.value.content as PolymarketFeedContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketFeedContentUM.Error::class.java)
         assertThat(dispatchedActions).isEmpty()
         coVerify(exactly = 2) { getCategoriesUseCase(any()) }
     }
@@ -638,7 +646,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).events.single().onClick()
+        (model.uiState.value.content as PolymarketFeedContentUM.Content).events.single().onClick()
 
         // Assert
         verify {
@@ -666,7 +674,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content)
+        (model.uiState.value.content as PolymarketFeedContentUM.Content)
             .events.single()
             .rows.single()
             .outcomes.single()
@@ -735,6 +743,40 @@ internal class PolymarketMainModelTest {
 
         // Assert
         verify(exactly = 0) { router.push(any<AppRoute.Usedesk>(), any()) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN the session keys toggle WHEN the screen opens THEN fast trading settings follow it`(
+        isFastOrdersEnabled: Boolean,
+    ) = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
+
+        // Act
+        val model = createModel(testScope = this, isFastOrdersEnabled = isFastOrdersEnabled)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isFastTradingSettingsAvailable).isEqualTo(isFastOrdersEnabled)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `WHEN fast trading settings clicked THEN its screen opens for the wallet`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns categories().right()
+        val model = createModel(testScope = this, isFastOrdersEnabled = true)
+        advanceUntilIdle()
+
+        // Act
+        model.onFastTradingSettingsClick()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(PolymarketRoute.FastTradingSettings(userWalletId = USER_WALLET_ID), any())
+        }
         model.onDestroy()
     }
 
@@ -1196,7 +1238,7 @@ internal class PolymarketMainModelTest {
         every { messageSender.send(capture(message)) } returns Unit
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content)
+        (model.uiState.value.content as PolymarketFeedContentUM.Content)
             .events.single()
             .rows.single()
             .outcomes.single()
@@ -1777,7 +1819,7 @@ internal class PolymarketMainModelTest {
         ))
         advanceTimeBy(300)
         runCurrent()
-        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
+        val content = model.uiState.value.content as PolymarketFeedContentUM.Content
         model.onPause()
         runCurrent()
 
@@ -1802,9 +1844,203 @@ internal class PolymarketMainModelTest {
         positions = positions,
     )
 
-    private fun createModel(testScope: TestScope, isPhaseTwoEnabled: Boolean = false): PolymarketMainModel {
+    @Test
+    fun `GIVEN D2 and advertised filters WHEN loaded THEN first server filter is selected and requested`() = runTest {
+        // Arrange
+        val categories = sportsCategories().map {
+            if (it.id == 6) it.copy(filters = listOf(PolymarketCategoryFilter.Props, PolymarketCategoryFilter.Games)) else it
+        }
+        coEvery { getCategoriesUseCase(any()) } returns categories.right()
+
+        // Act
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.filters.map { it.id }).containsExactly("props", "games").inOrder()
+        assertThat(model.uiState.value.filters.map { it.isSelected }).containsExactly(true, false).inOrder()
+        assertThat(model.uiState.value.filters.first().label).isEqualTo(resourceReference(R.string.prediction_filter_questions))
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(6, PolymarketCategoryFilter.Props)),
+        )
+    }
+
+    @Test
+    fun `GIVEN D2 off and sports filters WHEN loaded THEN no filters or filtered requests appear`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns sportsCategories().right()
+
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.filters).isEmpty()
+        assertThat(model.uiState.value.onSeeAllClick).isNull()
+        assertThat(model.uiState.value.categories.map { it.id }).containsExactly(6, 10, 2).inOrder()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 6)),
+        )
+    }
+
+    @Test
+    fun `GIVEN Questions selected WHEN switching category THEN first filter resets and old callbacks are ignored`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns sportsCategories().right()
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+        val questionsClick = model.uiState.value.filters.single { it.id == "props" }.onClick
+        questionsClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.categories.single { it.id == 10 }.onClick()
+        advanceUntilIdle()
+        questionsClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.filters.single { it.isSelected }.id).isEqualTo("games")
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(6, PolymarketCategoryFilter.Games)),
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(6, PolymarketCategoryFilter.Props)),
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(10, PolymarketCategoryFilter.Games)),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN visited Games and Questions WHEN switching back THEN pages and scroll remain independent`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns sportsCategories().right()
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+        statePerFeed[0].value = loadedState(eventId = "game-event")
+        model.onScrollIdle(index = 4, offset = 8)
+        model.uiState.value.filters.single { it.id == "props" }.onClick()
+        advanceUntilIdle()
+        statePerFeed[1].value = loadedState(eventId = "question-event")
+        advanceUntilIdle()
+        model.onScrollIdle(index = 7, offset = 24)
+        model.uiState.value.filters.single { it.id == "games" }.onClick()
+        advanceUntilIdle()
+        assertThat(shownEventIds(model)).containsExactly("game-event")
+        assertThat(model.uiState.value.pendingScrollPosition).isEqualTo(PolymarketFeedScrollPosition(4, 8))
+        dispatchedActions.clear()
+
+        // Act
+        model.uiState.value.filters.single { it.id == "props" }.onClick()
+        advanceUntilIdle()
+        model.uiState.value.filters.single { it.id == "props" }.onClick()
+        advanceUntilIdle()
+        (model.uiState.value.content as PolymarketFeedContentUM.Content).events.single().onClick()
+
+        // Assert
+        assertThat(shownEventIds(model)).containsExactly("question-event")
+        assertThat(model.uiState.value.pendingScrollPosition).isEqualTo(PolymarketFeedScrollPosition(7, 24))
+        assertThat(model.uiState.value.selection).isEqualTo(PolymarketEventsListConfig(6, PolymarketCategoryFilter.Props))
+        assertThat(dispatchedActions).isEmpty()
+        assertThat(statePerFeed).hasSize(2)
+        verify {
+            router.push(
+                PolymarketRoute.EventDetails(
+                    eventId = "question-event", userWalletId = USER_WALLET_ID, categoryLabel = "Sports",
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN Questions selected WHEN visiting unsupported category THEN filter is omitted and resets on return`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase(any()) } returns sportsCategories().right()
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+        model.uiState.value.filters.single { it.id == "props" }.onClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.categories.single { it.id == 2 }.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.filters).isEmpty()
+        assertThat(model.uiState.value.onSeeAllClick).isNull()
+        assertThat(model.uiState.value.selection).isEqualTo(PolymarketEventsListConfig(category = 2))
+        assertThat(dispatchedActions.last()).isEqualTo(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 2)),
+        )
+        model.uiState.value.categories.single { it.id == 6 }.onClick()
+        advanceUntilIdle()
+        assertThat(model.uiState.value.filters.single { it.isSelected }.id).isEqualTo("games")
+        assertThat(statePerFeed).hasSize(3)
+    }
+
+    @Test
+    fun `GIVEN Questions selected WHEN See all tapped THEN parent category opens for the current wallet`() = runTest {
+        // Arrange
+        val categories = sportsCategories()
+        coEvery { getCategoriesUseCase(any()) } returns categories.right()
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+        model.uiState.value.filters.single { it.id == "props" }.onClick()
+        advanceUntilIdle()
+
+        // Act
+        requireNotNull(model.uiState.value.onSeeAllClick).invoke()
+
+        // Assert
+        verify { router.push(PolymarketRoute.Category(USER_WALLET_ID, categories.first())) }
+    }
+
+    @Test
+    fun `GIVEN only one known filter WHEN loaded THEN hidden filters are not sent to the API`() = runTest {
+        // Arrange
+        val category = sportsCategories().first().copy(
+            filters = listOf(PolymarketCategoryFilter.Games, PolymarketCategoryFilter.Unknown("future")),
+        )
+        coEvery { getCategoriesUseCase(any()) } returns listOf(category).right()
+
+        // Act
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.filters).isEmpty()
+        assertThat(model.uiState.value.onSeeAllClick).isNotNull()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 6)),
+        )
+    }
+
+    private fun sportsCategories(): List<PolymarketCategory> = listOf(
+        PolymarketCategory(
+            id = 6,
+            label = "Sports",
+            icon = null,
+            filters = listOf(PolymarketCategoryFilter.Games, PolymarketCategoryFilter.Props),
+            subcategories = listOf(
+                PolymarketCategory(id = 16, label = "prediction_category_basketball", icon = null),
+                PolymarketCategory(id = 14, label = "prediction_category_soccer", icon = null),
+            ),
+        ),
+        PolymarketCategory(
+            id = 10,
+            label = "Esports",
+            icon = null,
+            filters = listOf(PolymarketCategoryFilter.Games, PolymarketCategoryFilter.Props),
+            subcategories = listOf(PolymarketCategory(id = 21, label = "prediction_category_cs2", icon = null)),
+        ),
+        PolymarketCategory(id = 2, label = "Politics", icon = null),
+    )
+
+    private fun createModel(
+        testScope: TestScope,
+        isPhaseTwoEnabled: Boolean = false,
+        isFastOrdersEnabled: Boolean = false,
+    ): PolymarketMainModel {
         val featureToggles = mockk<PolymarketFeatureToggles> {
             every { isPolymarketPhaseTwoEnabled } returns isPhaseTwoEnabled
+            every { isPolymarketFastOrdersEnabled } returns isFastOrdersEnabled
         }
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns statusFlow
 
@@ -1875,6 +2111,7 @@ internal class PolymarketMainModelTest {
                 collateralCurrencyFactory = mockk(relaxed = true),
             ),
             polymarketFeatureToggles = featureToggles,
+            walletLinkGate = walletLinkGate,
         ).also { model = it }
     }
 
@@ -1884,7 +2121,7 @@ internal class PolymarketMainModelTest {
     )
 
     private fun shownEventIds(model: PolymarketMainModel): List<String> =
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).events.map { it.id }
+        (model.uiState.value.content as PolymarketFeedContentUM.Content).events.map { it.id }
 
     private fun batchOf(vararg events: PolymarketEvent) = PolymarketEventsBatch(
         events = events.toList(),
@@ -1918,6 +2155,38 @@ internal class PolymarketMainModelTest {
 
         // Assert
         verify(exactly = 1) { router.replaceAll(PolymarketRoute.Onboarding(userWalletId = USER_WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN the wallet is not linked WHEN the screen opens THEN the stack is unwound to Main and the feature closes`() = runTest {
+        // Arrange
+        coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } returns false
+        every { router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), any()) } answers { secondArg<(Boolean) -> Unit>()(true) }
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verifyOrder {
+            router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), any())
+            router.pop(any())
+        }
+        coVerify(exactly = 0) { getCategoriesUseCase(any()) }
+    }
+
+    @Test
+    fun `GIVEN the wallet is linked WHEN the screen opens THEN categories load after the check AND the feature stays`() = runTest {
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        coVerifyOrder {
+            walletLinkGate.ensureLinked(USER_WALLET_ID)
+            getCategoriesUseCase(USER_WALLET_ID)
+        }
+        verify(exactly = 0) { router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), any()) }
     }
 
     @Test

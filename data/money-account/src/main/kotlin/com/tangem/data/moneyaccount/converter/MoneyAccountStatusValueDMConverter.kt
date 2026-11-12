@@ -5,8 +5,8 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.account.MoneyAccountStatusValue.Onboarding.Activating.Step as ActivatingStep
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
-import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
-import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM.Activating.StepDM as ActivatingStepDM
+import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
+import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM.Activating.StepDM as ActivatingStepDM
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 import javax.inject.Singleton

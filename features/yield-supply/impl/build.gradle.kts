@@ -20,7 +20,6 @@ dependencies {
 
     /** Core */
     implementation(projects.core.abTests)
-    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.res)
     implementation(projects.core.ui)

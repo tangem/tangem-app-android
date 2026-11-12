@@ -2,14 +2,12 @@ package com.tangem.features.tangempay.card.pin
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.model.SetPinResult
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.model.SetPinResult
+import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.card.details.TangemPayCardDetailsInnerRoute
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -24,14 +22,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class TangemPayChangePinModelTest {
+internal class TangemPayChangePinModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("123")
     private val card = tangemPayCard(id = "card_1")
 
-    private val router: Router = mockk(relaxed = true)
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val fetcher: PaymentAccountStatusFetcher = mockk()
 

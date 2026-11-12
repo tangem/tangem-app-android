@@ -23,6 +23,7 @@ dependencies {
     api(projects.features.forYou.api)
     api(projects.features.promoBanners.api)
     implementation(projects.features.commonFeatures.api)
+    implementation(projects.features.wallet.api)
 
     /** Project - Core */
     implementation(projects.core.analytics)

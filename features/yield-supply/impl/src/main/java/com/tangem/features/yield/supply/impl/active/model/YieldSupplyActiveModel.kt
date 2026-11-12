@@ -27,12 +27,11 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.yield.supply.models.YieldBoostStatus
@@ -184,11 +183,9 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val marketing = resolveMarketingDeeplink(deeplink)
-        if (marketing == MarketingDeeplink.SWAP) return false
         val route = marketing.toContextualRoute(
             userWalletId = userWalletId,
             currency = cryptoCurrency,
-            screenSource = AnalyticsParam.ScreensSources.Token,
         ) ?: return false
         router.push(route)
         return true
@@ -362,7 +359,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                                     cryptoCurrencyStatusFlow.update { cryptoCurrencyStatus }
 
                                     val protocolBalance =
-                                        cryptoCurrencyStatus.value.yieldSupplyStatus?.effectiveProtocolBalance
+                                        cryptoCurrencyStatus.value.yieldSupply?.effectiveProtocolBalance
                                             ?: yieldSupplyGetProtocolBalanceUseCase(
                                                 userWalletId = userWalletId,
                                                 cryptoCurrency = cryptoCurrency,

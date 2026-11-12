@@ -6,6 +6,7 @@ import com.tangem.grow.datasource.collectibles.models.request.CollectibleTxReque
 import com.tangem.grow.datasource.collectibles.models.request.GenerateBuybackDataRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.GeneratePurchaseTxRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequestBody
+import com.tangem.grow.datasource.collectibles.models.response.ActiveTxsResponse
 import com.tangem.grow.datasource.collectibles.models.response.BuybackAvailabilityResponse
 import com.tangem.grow.datasource.collectibles.models.response.BuybackStatusResponse
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
@@ -90,6 +91,13 @@ interface CollectiblesApi {
         @Query("includeNftWon") includeNftWon: Boolean,
         @Query("includeAutoBuyback") includeAutoBuyback: Boolean,
     ): ApiResponse<CollectibleTxResponse>
+
+    @RequiresSessionAuth
+    @GET("api/v1/collectible/active-txs")
+    suspend fun getActiveTxs(
+        @Header("user-id") userWalletId: String,
+        @Query("includeMachine") includeMachine: Boolean,
+    ): ApiResponse<ActiveTxsResponse>
 
     @RequiresSessionAuth
     @GET("api/v1/buyback/available")

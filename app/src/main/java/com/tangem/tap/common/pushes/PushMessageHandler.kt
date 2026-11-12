@@ -2,18 +2,18 @@ package com.tangem.tap.common.pushes
 
 import android.net.Uri
 import androidx.core.net.toUri
-import com.tangem.common.routing.DeepLinkRoute
-import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
-import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
+import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
+import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
+import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.utils.extensions.uriValidate
 import javax.inject.Inject
 
 /**
  * Routes pushes received while the app is running to the matching in-app handler.
  *
- * Converts the push payload to a deeplink (via [PayloadToDeeplinkConverter]) and routes by its
- * [host][Uri.getHost] — the same routing key [DeepLinkFactory][com.tangem.tap.routing.utils.DeepLinkFactory] uses
- * for tapped deeplinks. Handlers receive the deeplink query params (not the raw payload), so flat-key,
+ * Converts the push payload to a deeplink (via [PayloadToDeeplinkConverter]) and routes it by the deep link handler
+ * that can handle it — the same handlers [DeepLinkFactory][com.tangem.tap.routing.utils.DeepLinkFactory] dispatches
+ * tapped deeplinks to. Handlers receive the deeplink query params (not the raw payload), so flat-key,
  * `deeplink`- and `link`-style payloads are handled uniformly. Each handler owns its own reaction; add a `when`
  * branch per push type as new in-app reactions appear.
  *
@@ -21,16 +21,19 @@ import javax.inject.Inject
  * background push must not open a browser — and is opened on tap instead.
  */
 internal class PushMessageHandler @Inject constructor(
+    private val deepLinkHandlerRegistry: DeepLinkHandlerRegistry,
     private val tokenDetailsPushHandler: TokenDetailsPushHandler,
+    private val jointAccountPushHandler: JointAccountPushHandler,
 ) {
 
     fun onMessageReceived(data: Map<String, String>) {
         val deeplink = PayloadToDeeplinkConverter.convert(data)?.toUri()
-            ?.takeIf { PushDeeplinkPolicy.isOpenableFromPush(scheme = it.scheme, host = it.host) }
+            ?.takeIf(deepLinkHandlerRegistry::isOpenableFromPush)
             ?: return
         val queryParams = deeplink.getQueryParams()
-        when (deeplink.host) {
-            DeepLinkRoute.TokenDetails.host -> tokenDetailsPushHandler.handle(queryParams)
+        when {
+            TokenDetailsDeepLinkHandler.canHandle(deeplink) -> tokenDetailsPushHandler.handle(queryParams)
+            JointAccountDeepLinkHandler.canHandle(deeplink) -> jointAccountPushHandler.handle(queryParams)
             else -> Unit
         }
     }

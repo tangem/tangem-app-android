@@ -1,10 +1,11 @@
 package com.tangem.features.jointaccount.deeplink
 
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
+import android.net.Uri
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.DeepLinkRoute
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.ENTRY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
@@ -81,7 +82,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             queryParams = mapOf(
                 WALLET_ID_KEY to "011",
                 ACCOUNT_ID_KEY to jointAccount.accountId.value,
-                ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_MEMBERS,
+                ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_MEMBERS,
             ),
         )
         advanceUntilIdle()
@@ -115,7 +116,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             queryParams = mapOf(
                 WALLET_ID_KEY to "011",
                 ACCOUNT_ID_KEY to jointAccount.accountId.value,
-                ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_MEMBERS,
+                ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_MEMBERS,
             ),
         )
         advanceUntilIdle()
@@ -142,7 +143,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             queryParams = mapOf(
                 WALLET_ID_KEY to "011",
                 ACCOUNT_ID_KEY to jointAccount.accountId.value,
-                ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+                ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_OVERVIEW,
             ),
         )
         advanceUntilIdle()
@@ -167,7 +168,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             queryParams = mapOf(
                 WALLET_ID_KEY to "011",
                 ACCOUNT_ID_KEY to jointAccount.accountId.value,
-                ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+                ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_OVERVIEW,
             ),
         )
         advanceUntilIdle()
@@ -187,7 +188,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             queryParams = mapOf(
                 WALLET_ID_KEY to "011",
                 ACCOUNT_ID_KEY to notFoundAccountId,
-                ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+                ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_OVERVIEW,
             ),
         )
         advanceUntilIdle()
@@ -237,7 +238,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
                 queryParams = mapOf(
                     WALLET_ID_KEY to "011",
                     ACCOUNT_ID_KEY to notFoundAccountId,
-                    ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+                    ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_OVERVIEW,
                 ),
                 isFromOnNewIntent = false,
             )
@@ -274,7 +275,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             queryParams = mapOf(
                 WALLET_ID_KEY to "011",
                 ACCOUNT_ID_KEY to jointAccount.accountId.value,
-                ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+                ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_OVERVIEW,
             ),
             isFromOnNewIntent = true,
         )
@@ -311,7 +312,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
                 queryParams = mapOf(
                     WALLET_ID_KEY to "011",
                     ACCOUNT_ID_KEY to jointAccount.accountId.value,
-                    ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+                    ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_OVERVIEW,
                 ),
                 isFromOnNewIntent = true,
             )
@@ -340,7 +341,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             queryParams = mapOf(
                 WALLET_ID_KEY to "011",
                 ACCOUNT_ID_KEY to notFoundAccountId,
-                ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+                ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_OVERVIEW,
             ),
             isFromOnNewIntent = true,
         )
@@ -363,7 +364,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
                 queryParams = mapOf(
                     WALLET_ID_KEY to "011",
                     ACCOUNT_ID_KEY to "account123",
-                    ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+                    ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_OVERVIEW,
                 ),
             )
             advanceUntilIdle()
@@ -384,7 +385,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             queryParams = mapOf(
                 WALLET_ID_KEY to "not-a-hex-id",
                 ACCOUNT_ID_KEY to notFoundAccountId,
-                ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+                ENTRY_KEY to JointAccountDeepLinkHandler.ENTRY_OVERVIEW,
             ),
         )
         advanceUntilIdle()
@@ -405,9 +406,6 @@ class DefaultJointAccountDeepLinkHandlerTest {
         isFromOnNewIntent: Boolean = false,
     ) {
         DefaultJointAccountDeepLinkHandler(
-            scope = scope,
-            queryParams = queryParams,
-            isFromOnNewIntent = isFromOnNewIntent,
             appRouter = appRouter,
             resolveAndSelectUserWalletUseCase = resolveAndSelectUserWalletUseCase,
             singleAccountSupplier = singleAccountSupplier,
@@ -418,6 +416,13 @@ class DefaultJointAccountDeepLinkHandlerTest {
             walletDeepLinkActionTrigger = walletDeepLinkActionTrigger,
             jointAccountFeatureToggles = jointAccountFeatureToggles,
             jointAccountCompromisedAlert = jointAccountCompromisedAlert,
+        ).handle(
+            request = DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = scope,
+                isFromOnNewIntent = isFromOnNewIntent,
+            ),
         )
     }
 }

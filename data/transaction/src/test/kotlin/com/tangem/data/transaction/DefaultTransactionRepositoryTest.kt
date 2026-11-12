@@ -78,10 +78,10 @@ internal class DefaultTransactionRepositoryTest {
         }
 
         @Test
-        fun `GIVEN yield send and toggle on WHEN createTransferTransaction THEN sends the call wrapped by the facade`() =
+        fun `GIVEN yield send WHEN createTransferTransaction THEN sends the call wrapped by the facade`() =
             runTest {
                 // Arrange
-                val repository = createRepository(isToggleEnabled = true)
+                val repository = createRepository()
 
                 // Act
                 val actual = repository.createTransfer(amount = yieldSupplyAmount)
@@ -94,23 +94,9 @@ internal class DefaultTransactionRepositoryTest {
             }
 
         @Test
-        fun `GIVEN yield send and toggle off WHEN createTransferTransaction THEN bare send without upgrade decision`() =
-            runTest {
-                // Arrange
-                val repository = createRepository(isToggleEnabled = false)
-
-                // Act
-                val actual = repository.createTransfer(amount = yieldSupplyAmount)
-
-                // Assert
-                assertThat(actual.callData()).isInstanceOf(EthereumYieldSupplySendCallData::class.java)
-                coVerify(exactly = 0) { walletManagersFacade.wrapYieldSendWithModuleUpgrade(any(), any(), any()) }
-            }
-
-        @Test
-        fun `GIVEN token transfer and toggle on WHEN createTransferTransaction THEN not wrapped`() = runTest {
+        fun `GIVEN token transfer WHEN createTransferTransaction THEN not wrapped`() = runTest {
             // Arrange
-            val repository = createRepository(isToggleEnabled = true)
+            val repository = createRepository()
 
             // Act
             val actual = repository.createTransfer(amount = Amount(token = token, value = BigDecimal.ONE))
@@ -165,7 +151,7 @@ internal class DefaultTransactionRepositoryTest {
             } returns model.sendResult
 
             // Act
-            createRepository(isToggleEnabled = true).sendMultipleTransactions(
+            createRepository().sendMultipleTransactions(
                 txsData = listOf(transaction),
                 signer = signer,
                 userWalletId = userWalletId,
@@ -196,11 +182,10 @@ internal class DefaultTransactionRepositoryTest {
         val isDecisionReset: Boolean,
     )
 
-    private fun createRepository(isToggleEnabled: Boolean) = DefaultTransactionRepository(
+    private fun createRepository() = DefaultTransactionRepository(
         tangemTechApi = mockk(),
         walletManagersFacade = walletManagersFacade,
         dispatchers = TestingCoroutineDispatcherProvider(),
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns isToggleEnabled },
     )
 
     private suspend fun DefaultTransactionRepository.createTransfer(amount: Amount): TransactionData.Uncompiled =

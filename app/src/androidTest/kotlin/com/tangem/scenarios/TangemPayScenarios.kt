@@ -45,8 +45,8 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
 import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent

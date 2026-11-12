@@ -41,7 +41,6 @@ import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
@@ -93,7 +92,6 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val appsFlyerRepository: AppsFlyerRepository,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val estimateFeeForGaslessBatchUseCase: EstimateFeeForGaslessBatchUseCase,
     private val yieldSupplyApplyEnterAmountUseCase: YieldSupplyApplyEnterAmountUseCase,
     private val yieldSupplySmartGas: YieldSupplySmartGas,
@@ -152,8 +150,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private var pickedFeeCurrencyStatus: CryptoCurrencyStatus? = null
     private var feeCurrencyChoice: YieldSupplyFeeCurrencyChoice? = null
     private var enteringYieldTokenId: CryptoCurrency.ID? = null
-    private val isSmartGasNetwork = yieldSupplyFeatureToggles.isSmartGasEnabled &&
-        isEvmGaslessFeeSupportedForNetwork(cryptoCurrency.network)
+    private val isSmartGasNetwork = isEvmGaslessFeeSupportedForNetwork(cryptoCurrency.network)
 
     init {
         analytics.send(
@@ -233,13 +230,9 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             pickedFeeCurrencyStatus = null
         }
         updateFeeCurrencySelectable()
-        val smartGasFee = if (yieldSupplyFeatureToggles.isSmartGasEnabled) {
-            resolveSmartGasFee(updatedTransactionList).getOrElse { error ->
-                showPickedFeeCurrencyError(updatedTransactionList, error)
-                return
-            }
-        } else {
-            null
+        val smartGasFee = resolveSmartGasFee(updatedTransactionList).getOrElse { error ->
+            showPickedFeeCurrencyError(updatedTransactionList, error)
+            return
         }
         val feeSum = smartGasFee?.feeAmount ?: updatedTransactionList.sumOf {
             it.fee?.amount?.value.orZero()

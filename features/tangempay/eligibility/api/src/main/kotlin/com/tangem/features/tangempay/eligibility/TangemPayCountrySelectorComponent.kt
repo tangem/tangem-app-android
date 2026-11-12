@@ -2,8 +2,8 @@ package com.tangem.features.tangempay.eligibility
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.pay.TangemPayCountry
-import com.tangem.domain.models.pay.TangemPayRegion
+import com.tangem.domain.models.tangempay.TangemPayCountry
+import com.tangem.domain.models.tangempay.TangemPayRegion
 
 interface TangemPayCountrySelectorComponent : ComposableContentComponent {
 

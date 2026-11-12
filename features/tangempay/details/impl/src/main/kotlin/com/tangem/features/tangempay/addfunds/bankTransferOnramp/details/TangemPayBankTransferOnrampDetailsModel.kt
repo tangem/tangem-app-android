@@ -10,11 +10,12 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.models.pay.TangemPayProduct
-import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
+import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesLoader
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayRouteFeeUMConverter
+import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.formatFiatAmount
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.FeeSource
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.RequisiteField
@@ -53,6 +54,7 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
                 requisites = persistentListOf(),
                 referenceWarning = null,
                 fees = TangemPayOnrampFeesUM.Loading,
+                minimumDeposit = null,
                 dailyDepositLimit = null,
                 onShareClick = ::onShareClick,
                 onCloseClick = ::onCloseClick,
@@ -90,17 +92,23 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
         index: Int,
     ): TangemPayBankTransferOnrampDetailsScreenUM {
         val credentials = params.bankCredentials[index]
-        return copy(
+        val selected = copy(
             tabs = createTabs(selectedIndex = index),
             requisites = requisitesConverter.convert(credentials),
             referenceWarning = resourceReference(R.string.tangempay_bank_transfer_details_reference_warning)
                 .takeIf { credentials.isSpei && !credentials.transferMessage.isNullOrBlank() },
-            fees = when (params.feeSource) {
-                is FeeSource.Catalogue -> fees
-                FeeSource.Route -> TangemPayRouteFeeUMConverter.convert(credentials)
-            },
-            dailyDepositLimit = dailyDepositLimitConverter.convert(credentials),
         )
+        return when (params.feeSource) {
+            is FeeSource.Catalogue -> selected.copy(
+                dailyDepositLimit = dailyDepositLimitConverter.convert(credentials),
+            )
+            FeeSource.Route -> selected.copy(
+                fees = TangemPayRouteFeeUMConverter.convert(credentials),
+                minimumDeposit = credentials.amountLimits?.let { limits ->
+                    stringReference(limits.min.formatFiatAmount(currencyCode = limits.currency))
+                },
+            )
+        }
     }
 
     private fun createTabs(selectedIndex: Int): ImmutableList<TangemTabItemUM> {

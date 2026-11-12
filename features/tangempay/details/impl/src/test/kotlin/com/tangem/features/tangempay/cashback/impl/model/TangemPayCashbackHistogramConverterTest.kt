@@ -6,7 +6,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.pay.model.CashbackHistory
+import com.tangem.domain.tangempay.model.CashbackHistory
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM.Style
 import io.mockk.every

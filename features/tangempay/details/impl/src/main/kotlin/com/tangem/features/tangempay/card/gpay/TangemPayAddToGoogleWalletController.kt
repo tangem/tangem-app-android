@@ -6,13 +6,13 @@ import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.error.UniversalError
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.details.impl.R
@@ -294,7 +294,7 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
         displayName?.value ?: context.getString(R.string.tangempay_title)
 
     private fun UniversalError.isRetryable(): Boolean =
-        this == VisaApiError.UnknownWithoutCode || this == VisaApiError.ServerUnavailable
+        this == TangemPayApiError.UnknownWithoutCode || this == TangemPayApiError.ServerUnavailable
 
     sealed interface Entry {
         data object Hidden : Entry

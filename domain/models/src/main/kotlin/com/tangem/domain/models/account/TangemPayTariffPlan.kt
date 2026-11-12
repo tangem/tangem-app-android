@@ -1,8 +1,8 @@
 package com.tangem.domain.models.account
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import com.tangem.domain.models.pay.TangemPayImage
-import com.tangem.domain.models.pay.urlOfType
+import com.tangem.domain.models.tangempay.TangemPayImage
+import com.tangem.domain.models.tangempay.urlOfType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.Locale

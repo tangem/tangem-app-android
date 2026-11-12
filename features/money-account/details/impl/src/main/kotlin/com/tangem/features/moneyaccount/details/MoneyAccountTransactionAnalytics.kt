@@ -6,7 +6,7 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 
 internal fun TxHistoryInfo.toTransactionInListClicked() = TangemPayAnalyticsEvents.TransactionInListClicked(
     product = TangemPayAnalyticsEvents.Product.ACCOUNT,

@@ -32,8 +32,8 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.*
+import com.tangem.domain.tangempay.WithdrawalSignatureResult
+import com.tangem.domain.tangempay.model.*
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.hot.sdk.android.PassphraseValidator
 import com.tangem.operations.ScanTask
@@ -49,7 +49,7 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.analytics.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.tasks.product.*
-import com.tangem.tap.domain.tasks.visa.*
+import com.tangem.tap.domain.tasks.tangempay.*
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
@@ -450,9 +450,9 @@ internal class DefaultTangemSdkManager(
      * same NFC tap — after [runnable] succeeds, or mid-scan before the card attestation (see
      * [ColdWalletRegistrationHost]). Applied only when the call site opts in via
      * `registerColdWallet = true` — currently scan / wallet creation / key derivation; signing opts in separately in `TangemSigner`, and the primary
-     * card's backup finalization calls this directly. Twin / Visa /
-     * walletless cards are skipped inside [WalletRegistrationLauncher]. The registration is launched
-     * on the card session's own scope (see [RegisterColdWalletRunnable]), so it can't outlive the tap.
+     * card's backup finalization calls this directly. Twin and walletless cards are skipped inside
+     * [WalletRegistrationLauncher]. The registration is launched on the card session's own scope
+     * (see [RegisterColdWalletRunnable]), so it can't outlive the tap.
      */
     override fun <T> withColdWalletRegistration(
         runnable: CardSessionRunnable<T>,
@@ -579,7 +579,7 @@ internal class DefaultTangemSdkManager(
 
     // endregion
 
-    // region Visa-specific
+    // region Tangem Pay
 
     override suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,
@@ -589,7 +589,7 @@ internal class DefaultTangemSdkManager(
             cardId = null,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
             preflightReadFilter = preflightReadFilter,
-            registerColdWallet = false, // Visa — not a cold wallet registration target
+            registerColdWallet = false, // Tangem Pay — not a cold wallet registration target
         )
 
         return when (result) {
@@ -606,7 +606,7 @@ internal class DefaultTangemSdkManager(
             cardId = null,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
             preflightReadFilter = preflightReadFilter,
-            registerColdWallet = false, // Visa — not a cold wallet registration target
+            registerColdWallet = false, // Tangem Pay — not a cold wallet registration target
         )
 
         return when (result) {
@@ -625,7 +625,7 @@ internal class DefaultTangemSdkManager(
                 cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
                 preflightReadFilter = preflightReadFilter,
-                registerColdWallet = false, // Visa — not a cold wallet registration target
+                registerColdWallet = false, // Tangem Pay — not a cold wallet registration target
             )
 
             return@coroutineScope when (result) {

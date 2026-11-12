@@ -13,6 +13,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.notSuppliedCryptoAmountOrNull
 import com.tangem.domain.models.currency.shouldShowNotSuppliedNotification
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
@@ -70,7 +71,7 @@ internal class YieldSupplyActiveMinAmountTransformer(
     }
 
     private fun getNotifications(): ImmutableList<NotificationUM> {
-        val approvalNotification = if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isAllowedToSpend != true) {
+        val approvalNotification = if (cryptoCurrencyStatus.value.yieldSupply?.isAllowedToSpend != true) {
             NotificationUM.Error(
                 title = resourceReference(R.string.yield_module_approve_needed_notification_title),
                 subtitle = resourceReference(R.string.yield_module_approve_needed_notification_description),

@@ -3,6 +3,7 @@ package com.tangem.utils
 object StringsSigns {
 
     const val DOT = "•"
+    const val MIDDLE_DOT = "·"
     const val PLUS = "+"
     const val MINUS = "-"
 

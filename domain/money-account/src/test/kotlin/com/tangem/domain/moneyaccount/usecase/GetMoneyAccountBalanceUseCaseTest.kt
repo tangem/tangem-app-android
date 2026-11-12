@@ -12,7 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier

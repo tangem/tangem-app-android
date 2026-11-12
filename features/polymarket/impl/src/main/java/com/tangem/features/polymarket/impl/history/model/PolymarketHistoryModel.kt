@@ -26,6 +26,7 @@ import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -79,9 +80,10 @@ internal class PolymarketHistoryModel @Inject constructor(
             session.state.collectLatest { state ->
                 val content = content(state)
                 uiState.update { currentState ->
+                    val isHistoryEmpty = isAllHistoryEmpty(content, previous = currentState.content)
                     currentState.copy(
                         content = content,
-                        tabs = tabs(state.filter),
+                        tabs = if (isHistoryEmpty) persistentListOf() else tabs(state.filter),
                         filterKey = state.filter.toString(),
                         pullToRefreshConfig = PullToRefreshConfig(state.isRefreshing) { session.refresh() },
                     )
@@ -102,6 +104,11 @@ internal class PolymarketHistoryModel @Inject constructor(
             onDownloadCsvClick = ::exportCsv,
             nextPage = nextPage(state),
         )
+    }
+
+    private fun isAllHistoryEmpty(content: Content, previous: Content): Boolean {
+        val isReloadingEmptyHistory = content == Content.Loading && previous is Content.Empty
+        return content is Content.Empty || isReloadingEmptyHistory
     }
 
     private fun emptyContent(state: PolymarketActivityState): Content = when (val status = state.status) {
