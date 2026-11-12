@@ -236,6 +236,22 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
         }
 
         @Test
+        fun `GIVEN CLABE pasted with spaces WHEN field loses focus THEN only digits kept and accepted`() {
+            // Arrange
+            val model = createModel(formFields = persistentListOf(BankWithdrawFormField.Clabe))
+            fill(model, BankWithdrawFormField.Clabe, "002 010 07777777777 1")
+
+            // Act
+            textField(model, BankWithdrawFormField.Clabe).onFocusChange(false)
+
+            // Assert
+            val clabe = textField(model, BankWithdrawFormField.Clabe)
+            assertThat(clabe.value).isEqualTo("002010077777777771")
+            assertThat(clabe.error).isNull()
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN field with error WHEN value changes THEN error cleared`() {
             // Arrange
             val model = createModel()
