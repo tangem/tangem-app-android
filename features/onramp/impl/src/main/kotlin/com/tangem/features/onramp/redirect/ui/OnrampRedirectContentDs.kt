@@ -18,6 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -115,13 +117,22 @@ private fun RedirectCloseButton(onClick: () -> Unit, modifier: Modifier = Modifi
                 contentDescription = closeDescription
             }
             .testTag(TopAppBarTestTags.CLOSE_BUTTON),
-        color = TangemTheme.colors3.bg.transparent.primary,
+        color = Color.Transparent,
         shape = CircleShape,
-        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
+        border = BorderStroke(width = 1.dp, brush = redirectCloseBorderBrush()),
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = CLOSE_BUTTON_FILL_TOP_ALPHA),
+                            Color.White.copy(alpha = CLOSE_BUTTON_FILL_BOTTOM_ALPHA),
+                        ),
+                    ),
+                ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -132,6 +143,17 @@ private fun RedirectCloseButton(onClick: () -> Unit, modifier: Modifier = Modifi
             )
         }
     }
+}
+
+@Composable
+private fun redirectCloseBorderBrush(): Brush {
+    val materialBorder = TangemTheme.colors3.material.border
+    return Brush.linearGradient(
+        0f to materialBorder.start,
+        MATERIAL_BORDER_MID_START_STOP to materialBorder.mid,
+        MATERIAL_BORDER_MID_END_STOP to materialBorder.mid,
+        1f to materialBorder.end,
+    )
 }
 
 @Composable
@@ -179,6 +201,10 @@ private fun LogoBlock(providerImageUrl: String, modifier: Modifier = Modifier) {
 }
 
 private val LOGO_SIZE = 72.dp
+private const val CLOSE_BUTTON_FILL_TOP_ALPHA = 0.040f
+private const val CLOSE_BUTTON_FILL_BOTTOM_ALPHA = 0.062f
+private const val MATERIAL_BORDER_MID_START_STOP = 0.4f
+private const val MATERIAL_BORDER_MID_END_STOP = 0.6f
 
 @Preview(widthDp = 360, heightDp = 640, showBackground = true)
 @Preview(widthDp = 360, heightDp = 640, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
