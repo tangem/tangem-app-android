@@ -38,7 +38,13 @@ internal class EarnCalculatorComponent @AssistedInject constructor(
     data class Params(
         val projection: Flow<EarnProjection?>,
         val incentiveRate: Flow<EarnProductRate?> = flowOf(null),
+        val callback: ModelCallback,
     )
+
+    interface ModelCallback {
+
+        fun onIncentiveClick()
+    }
 
     @AssistedFactory
     interface Factory {

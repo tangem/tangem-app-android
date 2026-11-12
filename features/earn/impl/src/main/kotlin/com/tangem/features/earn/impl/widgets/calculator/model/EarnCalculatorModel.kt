@@ -73,6 +73,7 @@ internal class EarnCalculatorModel @Inject constructor(
         input = current,
         appCurrency = currency,
         incentiveRate = incentiveRate,
+        onIncentiveClick = params.callback::onIncentiveClick,
         onInitialStep = ::onInitialStep,
         onTopUpStep = ::onTopUpStep,
         onHorizonSelect = ::onHorizonSelect,

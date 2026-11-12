@@ -45,8 +45,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButtonUM
-import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
@@ -72,6 +70,8 @@ import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM.ContentUM
 import com.tangem.features.earn.impl.ui.EarnDetailRow
+import com.tangem.features.earn.impl.ui.EarnIncentiveBadge
+import com.tangem.features.earn.impl.ui.EarnIncentiveUM
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
@@ -342,22 +342,14 @@ private fun LazyListState.activeSection(
 }
 
 @Composable
-private fun Description(description: TextReference, incentive: TangemBadgeUM?) {
+private fun Description(description: TextReference, incentive: EarnIncentiveUM?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = PAGE_MARGIN, end = PAGE_MARGIN, top = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        incentive?.let { badge ->
-            TangemBadge(
-                text = badge.text,
-                variant = badge.variant,
-                status = badge.status,
-                size = badge.size,
-                iconEnd = badge.iconEnd,
-            )
-        }
+        incentive?.let { EarnIncentiveBadge(incentive = it) }
         Text(
             text = description.resolveReference(),
             style = TangemTheme.typography3.subheading.medium,
@@ -564,6 +556,7 @@ private object PreviewData {
         override fun onAddFundsClick() = Unit
         override fun onRetryClick(product: EarnProduct) = Unit
         override fun onOverviewRetryClick() = Unit
+        override fun onIncentiveClick() = Unit
         override fun onInfoClick(block: EarnTextBlock) = Unit
         override fun onLinkClick(url: String) = Unit
         override fun onCloseClick() = Unit

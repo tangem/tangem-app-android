@@ -78,6 +78,10 @@ internal class EarnPickerConverterTest {
             calls += Call.OverviewRetry
         }
 
+        override fun onIncentiveClick() {
+            calls += Call.Incentive
+        }
+
         override fun onInfoClick(block: EarnTextBlock) {
             calls += Call.Info(block)
         }
@@ -228,7 +232,20 @@ internal class EarnPickerConverterTest {
 
             // Assert
             assertThat(actual != null).isEqualTo(model.hasBadge)
-            actual?.let { assertThat(it.iconEnd).isNotNull() }
+            actual?.let { assertThat(it.badge.iconEnd).isNotNull() }
+        }
+
+        @Test
+        fun `GIVEN Ready with incentive rate WHEN the badge is clicked THEN intents get onIncentiveClick`() {
+            // Arrange
+            val incentive = convert(state = ready).readyContent().incentive
+
+            // Act
+            incentive?.onClick?.invoke()
+
+            // Assert
+            assertThat(incentive).isNotNull()
+            assertThat(calls).containsExactly(Call.Incentive)
         }
 
         private fun provideTestModels() = listOf(
@@ -414,6 +431,7 @@ internal class EarnPickerConverterTest {
         data object AddFunds : Call
         data class Retry(val product: EarnProduct) : Call
         data object OverviewRetry : Call
+        data object Incentive : Call
         data class Info(val block: EarnTextBlock) : Call
         data class Link(val url: String) : Call
         data object Close : Call
