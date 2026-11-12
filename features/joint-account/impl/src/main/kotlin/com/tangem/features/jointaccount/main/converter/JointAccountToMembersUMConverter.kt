@@ -135,7 +135,7 @@ internal class JointAccountToMembersUMConverter(
 
         return when (phase.stage) {
             MembersScreenPhase.Stage.Completed -> null
-            MembersScreenPhase.Stage.Collecting -> JointAccountMembersUM.FooterUM(
+            MembersScreenPhase.Stage.Collecting -> JointAccountMembersUM.FooterUM.Confirm(
                 hint = collectingHint(
                     phase = phase,
                     freeSlots = freeSlots,
@@ -145,16 +145,15 @@ internal class JointAccountToMembersUMConverter(
             )
             MembersScreenPhase.Stage.Confirming -> if (phase.isOwnVerified) {
                 val notConfirmed = account.members.count { member -> !member.isVerified }
-                JointAccountMembersUM.FooterUM(
-                    hint = pluralReference(
+                JointAccountMembersUM.FooterUM.AwaitingOthers(
+                    text = pluralReference(
                         id = CoreUiR.plurals.joint_account_members_still_need_to_confirm,
                         count = notConfirmed,
                         formatArgs = wrappedList(notConfirmed),
                     ),
-                    button = null,
                 )
             } else {
-                JointAccountMembersUM.FooterUM(hint = null, button = button)
+                JointAccountMembersUM.FooterUM.Confirm(hint = null, button = button)
             }
         }
     }

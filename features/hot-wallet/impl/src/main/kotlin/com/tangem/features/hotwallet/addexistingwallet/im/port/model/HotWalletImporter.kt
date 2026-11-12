@@ -90,6 +90,7 @@ internal class HotWalletImporter @Inject constructor(
         name: String? = null,
         isSeedPhraseBackedUp: Boolean,
         creationType: AnalyticsParam.WalletCreationType = AnalyticsParam.WalletCreationType.SeedImport,
+        analyticsSource: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.ImportWallet,
     ): Either<HotWalletImportError, UserWalletId> = either {
         val userWallet = materialize(mnemonic, passphrase, name).bind()
         val saveResult = onCancel(
@@ -99,7 +100,12 @@ internal class HotWalletImporter @Inject constructor(
         // The save is not cancellable, so a caller that left meanwhile must not get a result to act on
         currentCoroutineContext().ensureActive()
         saveResult.bind()
-        sendWalletCreatedEvents(mnemonic, passphrase, creationType)
+        sendWalletCreatedEvents(
+            mnemonic = mnemonic,
+            passphrase = passphrase,
+            creationType = creationType,
+            analyticsSource = analyticsSource,
+        )
 
         userWallet.walletId
     }
@@ -205,15 +211,14 @@ internal class HotWalletImporter @Inject constructor(
         mnemonic: Mnemonic,
         passphrase: CharArray?,
         creationType: AnalyticsParam.WalletCreationType,
+        analyticsSource: AnalyticsParam.ScreensSources,
     ) {
         analyticsEventHandler.send(
-            event = OnboardingAnalyticsEvent.Onboarding.Finished(
-                source = AnalyticsParam.ScreensSources.ImportWallet,
-            ),
+            event = OnboardingAnalyticsEvent.Onboarding.Finished(source = analyticsSource),
         )
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
-                source = AnalyticsParam.ScreensSources.ImportWallet,
+                source = analyticsSource,
                 creationType = creationType,
                 seedPhraseLength = mnemonic.mnemonicComponents.size,
                 passPhraseState = if (passphrase?.any { char -> !char.isWhitespace() } == true) {

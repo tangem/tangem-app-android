@@ -38,8 +38,7 @@ internal class CollectiblesActionsConverter(
                     tintReference = { TangemTheme.colors3.icon.primary },
                 ),
                 type = TangemButtonType.Secondary,
-                // TODO([REDACTED_TASK_KEY]): withdrawal flow is not built yet
-                isEnabled = false,
+                isEnabled = value.cryptoCurrencyStatus != null,
                 onClick = onWithdrawalClick,
             ),
         )

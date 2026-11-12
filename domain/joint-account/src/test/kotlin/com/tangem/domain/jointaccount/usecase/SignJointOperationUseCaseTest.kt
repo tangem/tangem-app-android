@@ -1,5 +1,7 @@
 package com.tangem.domain.jointaccount.usecase
 
+import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -11,6 +13,7 @@ import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
@@ -24,8 +27,10 @@ import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -37,6 +42,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -106,15 +112,15 @@ internal class SignJointOperationUseCaseTest {
             SafeDeployment.DEPLOYED.right()
         coEvery { ownerAddressResolver.resolve(any(), any()) } returns ALICE.right()
         coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
-            JointOperationBlockaidGate.Verdict.SAFE
+            JointOperationBlockaidGate.Verdict.Safe
         coEvery { signer.signOperation(any(), any(), any(), any(), any()) } returns SIGNATURE.right()
         coEvery { repository.signOperation(any(), any(), any(), any()) } returns signedOperation.right()
     }
 
     @Test
-    fun `GIVEN the slot holds another operation WHEN invoke THEN nothing is signed`() = runTest {
+    fun `GIVEN the slot holds another operation WHEN sign THEN nothing is signed`() = runTest {
         // Act
-        val actual = useCase(
+        val actual = sign(
             account = account,
             network = network,
             operationId = "another-operation",
@@ -127,9 +133,9 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
-    fun `GIVEN awaiting operation WHEN invoke THEN verify gate sign send fetch in order`() = runTest {
+    fun `GIVEN awaiting operation WHEN sign THEN verify gate sign send fetch in order`() = runTest {
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(signedOperation.right())
@@ -171,14 +177,14 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
-    fun `GIVEN gas token outside smart gas WHEN invoke THEN refund mismatch before the verifier runs`() = runTest {
+    fun `GIVEN gas token outside smart gas WHEN sign THEN refund mismatch before the verifier runs`() = runTest {
         // Arrange
         coEvery {
             gasTokenResolver.resolve(network = network, address = NATIVE, rawCurrencyId = null)
         } returns null.right()
 
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         val expected = JointOperationSignError.VerificationFailed(
@@ -190,7 +196,7 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
-    fun `GIVEN token refund WHEN invoke THEN quote id of this network token found by unprefixed address`() =
+    fun `GIVEN token refund WHEN sign THEN quote id of this network token found by unprefixed address`() =
         runTest {
             // Arrange
             val otherNetwork: Network = mockk()
@@ -207,7 +213,7 @@ internal class SignJointOperationUseCaseTest {
                 SafeGasToken.Coin.right()
 
             // Act
-            useCase(account = tokenAccount, network = network, operationId = OPERATION_ID, displayed = displayed)
+            sign(account = tokenAccount, network = network, operationId = OPERATION_ID, displayed = displayed)
 
             // Assert
             coVerify(exactly = 1) {
@@ -220,7 +226,7 @@ internal class SignJointOperationUseCaseTest {
         }
 
     @Test
-    fun `GIVEN verifier blocks WHEN invoke THEN the signer is never reached`() = runTest {
+    fun `GIVEN verifier blocks WHEN sign THEN the signer is never reached`() = runTest {
         // Arrange
         val reason = JointOperationSignError.VerificationFailed(
             reason = JointOperationSignError.VerificationFailed.Reason.PAYLOAD_MISMATCH,
@@ -228,7 +234,7 @@ internal class SignJointOperationUseCaseTest {
         coEvery { verifier.verify(any(), any(), any(), any(), any()) } returns reason.left()
 
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(reason.left())
@@ -237,12 +243,12 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the composition does not verify WHEN invoke THEN nothing is verified or signed`() = runTest {
+    fun `GIVEN the composition does not verify WHEN sign THEN nothing is verified or signed`() = runTest {
         // Arrange
         coEvery { compositionVerifier.isVerified(account = any(), jointAccount = any()) } returns false
 
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -254,29 +260,65 @@ internal class SignJointOperationUseCaseTest {
         coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
     }
 
-    @Test
-    fun `GIVEN blockaid says malicious WHEN invoke THEN the signer is never reached`() = runTest {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a blockaid verdict WHEN prepare THEN it is handed back with the operation and nothing is signed`(
+        verdict: JointOperationBlockaidGate.Verdict,
+    ) = runTest {
         // Arrange
-        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
-            JointOperationBlockaidGate.Verdict.MALICIOUS
+        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns verdict
 
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = useCase.prepare(account, network, OPERATION_ID, displayed)
+
+        // Assert
+        assertThat(actual).isEqualTo(prepared(verdict = verdict).right())
+        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
+    }
+
+    private fun provideTestModels() = listOf(
+        JointOperationBlockaidGate.Verdict.Safe,
+        JointOperationBlockaidGate.Verdict.Warning,
+        JointOperationBlockaidGate.Verdict.Malicious,
+        JointOperationBlockaidGate.Verdict.NoVerdict(JointOperationBlockaidGate.Verdict.NoVerdict.Reason.ERROR),
+        JointOperationBlockaidGate.Verdict.NoVerdict(JointOperationBlockaidGate.Verdict.NoVerdict.Reason.TIMEOUT),
+        JointOperationBlockaidGate.Verdict.NoVerdict(
+            JointOperationBlockaidGate.Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK,
+        ),
+    )
+
+    @Test
+    fun `GIVEN a prepared operation WHEN submit THEN it is signed and sent without another check`() = runTest {
+        // Act
+        val actual = useCase.submit(prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Warning))
+
+        // Assert
+        assertThat(actual).isEqualTo(signedOperation.right())
+        coVerify(exactly = 0) { blockaidGate.verify(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { verifier.verify(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { signer.signOperation(any(), any(), safeTx = operation().safeTx, any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a malicious prepared operation WHEN submit THEN Malicious and nothing is signed`() = runTest {
+        // Act
+        val actual = useCase.submit(prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Malicious))
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationSignError.Malicious.left())
         coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { repository.signOperation(any(), any(), any(), any()) }
     }
 
     /** The local checks pass on the composition the app knows; the deployed Safe is the second opinion */
     @Test
-    fun `GIVEN the deployed safe answers another composition WHEN invoke THEN nothing is signed`() = runTest {
+    fun `GIVEN the deployed safe answers another composition WHEN sign THEN nothing is signed`() = runTest {
         // Arrange
         coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
             JointOperationCreateError.CompositionMismatch.left()
 
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -288,10 +330,10 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the composition is checked WHEN invoke THEN it is checked against the account the app knows`() =
+    fun `GIVEN the composition is checked WHEN sign THEN it is checked against the account the app knows`() =
         runTest {
             // Act
-            useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+            sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
             // Assert
             coVerify(exactly = 1) {
@@ -306,29 +348,13 @@ internal class SignJointOperationUseCaseTest {
         }
 
     @Test
-    fun `GIVEN no verdict for a safe not deployed yet WHEN invoke THEN nothing is signed`() = runTest {
-        // Arrange
-        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
-            SafeDeployment.NOT_DEPLOYED.right()
-        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
-            JointOperationBlockaidGate.Verdict.UNKNOWN
-
-        // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
-
-        // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(JointOperationSignError.Failed::class.java)
-        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN a safe not deployed yet WHEN invoke THEN blockaid is asked about the first operation`() = runTest {
+    fun `GIVEN a safe not deployed yet WHEN prepare THEN blockaid is asked about the first operation`() = runTest {
         // Arrange
         coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
             SafeDeployment.NOT_DEPLOYED.right()
 
         // Act
-        useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         coVerify(exactly = 1) {
@@ -337,43 +363,13 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
-    fun `GIVEN blockaid unavailable for a safe not deployed yet WHEN invoke THEN nothing is signed`() = runTest {
-        // Arrange
-        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
-            SafeDeployment.NOT_DEPLOYED.right()
-        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
-            JointOperationBlockaidGate.Verdict.UNAVAILABLE
-
-        // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
-
-        // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(JointOperationSignError.Failed::class.java)
-        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN no verdict for a deployed safe WHEN invoke THEN nothing is signed`() = runTest {
-        // Arrange
-        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
-            JointOperationBlockaidGate.Verdict.UNKNOWN
-
-        // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
-
-        // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(JointOperationSignError.Failed::class.java)
-        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN no safe address WHEN invoke THEN the safe address check fails before anything is signed`() = runTest {
+    fun `GIVEN no safe address WHEN sign THEN the safe address check fails before anything is signed`() = runTest {
         // Arrange
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(listOf(jointAccount(safeAddress = null)))
 
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         val expected = JointOperationSignError.VerificationFailed(
@@ -384,12 +380,12 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
-    fun `GIVEN owner key not derived WHEN invoke THEN verification fails before the verifier runs`() = runTest {
+    fun `GIVEN owner key not derived WHEN sign THEN verification fails before the verifier runs`() = runTest {
         // Arrange
         coEvery { ownerAddressResolver.resolve(any(), any()) } returns null.right()
 
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         val expected = JointOperationSignError.VerificationFailed(
@@ -401,14 +397,14 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
-    fun `GIVEN owner address resolver fails WHEN invoke THEN Failed with the cause instead of a key error`() =
+    fun `GIVEN owner address resolver fails WHEN sign THEN Failed with the cause instead of a key error`() =
         runTest {
             // Arrange
             val cause = IllegalStateException("derived keys storage unavailable")
             coEvery { ownerAddressResolver.resolve(any(), any()) } returns cause.left()
 
             // Act
-            val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+            val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
             // Assert
             assertThat(actual).isEqualTo(JointOperationSignError.Failed(cause = cause).left())
@@ -416,13 +412,13 @@ internal class SignJointOperationUseCaseTest {
         }
 
     @Test
-    fun `GIVEN no in-flight operation WHEN invoke THEN OperationNotFound`() = runTest {
+    fun `GIVEN no in-flight operation WHEN sign THEN OperationNotFound`() = runTest {
         // Arrange
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(listOf(jointAccount(inFlightOperations = emptyMap())))
 
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationSignError.OperationNotFound.left())
@@ -430,7 +426,7 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
-    fun `GIVEN operation status unknown WHEN invoke THEN Failed and nothing is signed`() = runTest {
+    fun `GIVEN operation status unknown WHEN sign THEN Failed and nothing is signed`() = runTest {
         // Arrange
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(
@@ -444,7 +440,7 @@ internal class SignJointOperationUseCaseTest {
             )
 
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(JointOperationSignError.Failed::class.java)
@@ -452,7 +448,7 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
-    fun `GIVEN operation already pending WHEN invoke THEN ThresholdReached`() = runTest {
+    fun `GIVEN operation already pending WHEN sign THEN ThresholdReached`() = runTest {
         // Arrange
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(
@@ -466,12 +462,31 @@ internal class SignJointOperationUseCaseTest {
             )
 
         // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+        val actual = sign(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationSignError.ThresholdReached.left())
         coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
     }
+
+    private suspend fun sign(
+        account: Account.Joint,
+        network: Network,
+        operationId: String,
+        displayed: JointTransferIntent,
+    ): Either<JointOperationSignError, JointOperation?> = useCase
+        .prepare(account = account, network = network, operationId = operationId, displayed = displayed)
+        .flatMap { prepared -> useCase.submit(prepared = prepared) }
+
+    private fun prepared(verdict: JointOperationBlockaidGate.Verdict) = PreparedJointOperation.Signing(
+        account = account,
+        network = network,
+        safeTx = operation().safeTx,
+        verdict = verdict,
+        operationId = OPERATION_ID,
+        chainId = CHAIN_ID,
+        safeAddress = SAFE_ADDRESS,
+    )
 
     private fun jointAccount(
         inFlightOperations: Map<Long, JointOperation> = mapOf(CHAIN_ID to operation(gasToken = NATIVE)),

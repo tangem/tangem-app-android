@@ -3,6 +3,7 @@ package com.tangem.domain.yield.supply.usecase
 import arrow.core.Either
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 
@@ -24,7 +25,7 @@ class YieldSupplyEnterStatusUseCase(
                 .toSet()
             val hasPendingTx = status?.txIds?.any { it in pendingTxHashes } == true
 
-            val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+            val isActive = cryptoCurrencyStatus.value.yieldSupply?.isActive == true
             val isExpired = status != null &&
                 System.currentTimeMillis() - status.createdAt > STATUS_EXPIRATION_MS
             val shouldClearStatus = when {

@@ -44,8 +44,8 @@ dependencies {
     api(projects.domain.tokens.models)
     api(projects.domain.transaction)
     api(projects.domain.transaction.models)
-    api(projects.domain.visa)
-    api(projects.domain.visa.models)
+    api(projects.domain.tangempay)
+    api(projects.domain.tangempay.models)
     api(projects.domain.walletManager)
     api(projects.domain.yieldSupply)
 

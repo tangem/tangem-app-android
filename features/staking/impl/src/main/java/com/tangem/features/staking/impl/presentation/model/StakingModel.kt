@@ -9,7 +9,6 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.getValidatorsCount
-import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
@@ -338,11 +337,9 @@ internal class StakingModel @Inject constructor(
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val marketing = resolveMarketingDeeplink(deeplink)
-        if (marketing == MarketingDeeplink.SWAP) return false
         val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = params.cryptoCurrency,
-            screenSource = AnalyticsParam.ScreensSources.Staking,
         ) ?: return false
         router.push(route)
         return true

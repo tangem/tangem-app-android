@@ -14,7 +14,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_error_20
-import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.txhistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUM

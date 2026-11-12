@@ -17,9 +17,9 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.TangemPayInitialData
-import com.tangem.domain.visa.model.MoneyAccountActivationData
+import com.tangem.domain.tangempay.WithdrawalSignatureResult
+import com.tangem.domain.tangempay.model.TangemPayInitialData
+import com.tangem.domain.tangempay.model.MoneyAccountActivationData
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
@@ -164,7 +164,7 @@ interface TangemSdkManager {
 
     // endregion
 
-    // region Visa-specific
+    // region Tangem Pay
 
     suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,

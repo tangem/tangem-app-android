@@ -1,0 +1,163 @@
+package com.tangem.data.tangempay.repository
+
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.left
+import arrow.core.raise.catch
+import arrow.core.right
+import com.squareup.wire.Instant
+import com.tangem.data.tangempay.util.TangemPayErrorConverter
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.spend.datasource.tangempay.TangemPayAuthApi
+import com.tangem.spend.datasource.tangempay.models.request.RefreshCustomerWalletAccessTokenRequest
+import com.tangem.spend.datasource.tangempay.models.response.TangemPayGetTokensResponse
+import com.tangem.data.tangempay.store.TangemPayStorage
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.TangemPayAuthTokens
+import com.tangem.domain.tangempay.model.getAuthHeader
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import javax.inject.Inject
+import javax.inject.Singleton
+
+private const val TAG = "TangemPayRequestPerformer"
+
+@Singleton
+internal class TangemPayRequestPerformer @Inject constructor(
+    private val errorConverter: TangemPayErrorConverter,
+    private val dispatchers: CoroutineDispatcherProvider,
+    private val tangemPayAuthApi: TangemPayAuthApi,
+    private val tangemPayStorage: TangemPayStorage,
+) {
+
+    private val customerWalletAddresses = ConcurrentHashMap<UserWalletId, String>()
+    private val tokensMutex = Mutex()
+
+    /**
+     * Static token added in headers [com.tangem.spend.datasource.config.TangemPay]
+     */
+    suspend fun <T : Any> performWithStaticToken(
+        requestBlock: suspend () -> ApiResponse<T>,
+    ): Either<TangemPayApiError, T> = withContext(dispatchers.io) {
+        catch(
+            block = {
+                when (val apiResponse = requestBlock()) {
+                    is ApiResponse.Error -> errorConverter.convert(apiResponse.cause).left()
+                    is ApiResponse.Success<T> -> apiResponse.data.right()
+                }
+            },
+            catch = { errorConverter.convert(it).left() },
+        )
+    }
+
+    suspend fun <T : Any> performRequest(
+        userWalletId: UserWalletId,
+        requestBlock: suspend (header: String) -> ApiResponse<T>,
+    ): Either<TangemPayApiError, T> = withContext(dispatchers.io) {
+        catch(
+            block = {
+                val tokens = getAccessTokens(userWalletId).getOrElse { return@catch it.left() }
+
+                when (val apiResponse: ApiResponse<T> = requestBlock(tokens.getAuthHeader())) {
+                    is ApiResponse.Error -> errorConverter.convert(apiResponse.cause).left()
+                    is ApiResponse.Success<T> -> apiResponse.data.right()
+                }
+            },
+            catch = { errorConverter.convert(it).left() },
+        ).onLeft { error -> TangemLogger.withTag(TAG).e(error.toString()) }
+    }
+
+    suspend fun <T : Any> performWithOptionalToken(
+        userWalletId: UserWalletId?,
+        requestBlock: suspend (header: String?) -> ApiResponse<T>,
+    ): Either<TangemPayApiError, T> {
+        return if (userWalletId != null && hasAuthTokens(userWalletId)) {
+            performRequest(userWalletId, requestBlock)
+        } else {
+            performWithStaticToken { requestBlock(null) }
+        }
+    }
+
+    suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String {
+        val existingAddress = customerWalletAddresses[userWalletId]
+        if (existingAddress != null) {
+            return existingAddress
+        }
+        val storedAddress = tangemPayStorage.getCustomerWalletAddress(
+            userWalletId = userWalletId,
+        ) ?: error("Can not find customer address")
+
+        customerWalletAddresses[userWalletId] = storedAddress
+        return storedAddress
+    }
+
+    /**
+     * Drops the cached wallet → address mapping. Must be called when a wallet is removed, otherwise the
+     * stale address outlives the stored one and keys requests for a wallet that no longer exists.
+     */
+    fun removeCachedCustomerWalletAddresses(userWalletIds: List<UserWalletId>) {
+        userWalletIds.forEach(customerWalletAddresses::remove)
+    }
+
+    private suspend fun hasAuthTokens(userWalletId: UserWalletId): Boolean {
+        val customerWalletAddress = tangemPayStorage.getCustomerWalletAddress(userWalletId) ?: return false
+        return tangemPayStorage.getAuthTokens(customerWalletAddress) != null
+    }
+
+    private suspend fun getAccessTokens(userWalletId: UserWalletId): Either<TangemPayApiError, TangemPayAuthTokens> {
+        return tokensMutex.withLock {
+            val walletAddress = getCustomerWalletAddress(userWalletId)
+            val tokens = tangemPayStorage.getAuthTokens(walletAddress) ?: error("Auth tokens are not stored")
+            val now = Instant.now()
+            val accessExpiresAt = Instant.ofEpochSecond(tokens.expiresAt)
+            val refreshExpiresAt = Instant.ofEpochSecond(tokens.refreshExpiresAt)
+
+            if (accessExpiresAt.isAfter(now)) {
+                tokens.right()
+            } else if (accessExpiresAt.isBefore(now) && refreshExpiresAt.isAfter(now)) {
+                refreshAuthTokens(userWalletId = userWalletId, authTokens = tokens)
+            } else {
+                TangemPayApiError.RefreshTokenExpired.left()
+            }
+        }
+    }
+
+    private suspend fun refreshAuthTokens(
+        userWalletId: UserWalletId,
+        authTokens: TangemPayAuthTokens,
+    ): Either<TangemPayApiError, TangemPayAuthTokens> {
+        val customerWalletAddress = getCustomerWalletAddress(userWalletId)
+        val idempotencyKey = requireNotNull(authTokens.idempotencyKey) { "Idempotency key is null" }
+        val apiResponse = tangemPayAuthApi.refreshCustomerWalletAccessToken(
+            idempotencyKey = idempotencyKey,
+            request = RefreshCustomerWalletAccessTokenRequest(
+                authType = "customer_wallet",
+                refreshToken = authTokens.refreshToken,
+            ),
+        )
+        val responseEither = when (apiResponse) {
+            is ApiResponse.Error -> errorConverter.convert(apiResponse.cause).left()
+            is ApiResponse.Success<TangemPayGetTokensResponse> -> apiResponse.data.right()
+        }
+        return responseEither.map { response ->
+            TangemPayAuthTokens(
+                accessToken = response.accessToken,
+                expiresAt = response.expiresAt,
+                refreshToken = response.refreshToken,
+                refreshExpiresAt = response.refreshExpiresAt,
+                idempotencyKey = UUID.randomUUID().toString(),
+            )
+        }.mapLeft { error ->
+            TangemLogger.withTag(TAG).e("Can not refresh auth tokens: $error")
+            if (error is TangemPayApiError.ServerUnavailable) error else TangemPayApiError.RefreshTokenExpired
+        }.onRight { tokens ->
+            tangemPayStorage.storeAuthTokens(customerWalletAddress = customerWalletAddress, tokens = tokens)
+        }
+    }
+}

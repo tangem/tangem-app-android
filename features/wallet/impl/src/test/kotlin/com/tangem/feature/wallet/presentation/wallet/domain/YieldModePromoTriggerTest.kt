@@ -14,7 +14,6 @@ import com.tangem.domain.models.earn.EarnYieldOffers
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics.PromoScreenSkipped
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics.SkipReason
 import com.tangem.features.yield.supply.api.promobottomsheet.GetYieldModePromoVariantUseCase
@@ -48,7 +47,6 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class YieldModePromoTriggerTest {
 
-    private val featureToggles: YieldSupplyFeatureToggles = mockk()
     private val yieldSupplyRepository: YieldSupplyRepository = mockk()
     private val earnRepository: EarnRepository = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
@@ -77,7 +75,6 @@ internal class YieldModePromoTriggerTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(
-            featureToggles,
             yieldSupplyRepository,
             earnRepository,
             singleAccountStatusListSupplier,
@@ -93,7 +90,6 @@ internal class YieldModePromoTriggerTest {
         isBusyOutsideSlot = false
         busyOutsideSlotChecks = 0
 
-        every { featureToggles.isYieldModePromoEnabled } returns true
         every { walletDeepLinkActionListener.isOpenedByLinkOrPush } returns isOpenedByLinkOrPush
         coEvery { yieldSupplyRepository.isYieldModePromoBottomSheetShown() } returns false
         coEvery { earnRepository.getYieldOffers() } returns earnOffers.right()
@@ -264,7 +260,6 @@ internal class YieldModePromoTriggerTest {
         }
 
     private fun provideTestModels() = listOf(
-        SilentGateModel(close = { every { featureToggles.isYieldModePromoEnabled } returns false }),
         SilentGateModel(close = { isOpenedByLinkOrPush.value = true }),
         SilentGateModel(close = { coEvery { yieldSupplyRepository.isYieldModePromoBottomSheetShown() } returns true }),
     )
@@ -350,7 +345,6 @@ internal class YieldModePromoTriggerTest {
     )
 
     private fun createTrigger() = YieldModePromoTrigger(
-        yieldSupplyFeatureToggles = featureToggles,
         yieldSupplyRepository = yieldSupplyRepository,
         earnRepository = earnRepository,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,

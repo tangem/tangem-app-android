@@ -4,17 +4,17 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.model.CachePolicy
-import com.tangem.domain.pay.model.CustomerSummary
-import com.tangem.domain.pay.model.CustomerSummary.CustomerStatus
-import com.tangem.domain.pay.model.CustomerSummary.KycStatus
-import com.tangem.domain.pay.model.CustomerSummary.MoneyAccount
-import com.tangem.domain.pay.model.CustomerSummary.PaymentAccount
-import com.tangem.domain.pay.model.CustomerSummary.MoneyAccount.Activation.Status as MoneyStatus
-import com.tangem.domain.pay.model.CustomerSummary.PaymentAccount.Activation.Status as PaymentStatus
-import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
-import com.tangem.domain.pay.utils.TangemPayCustomerStateConverter
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.model.CachePolicy
+import com.tangem.domain.tangempay.model.CustomerSummary
+import com.tangem.domain.tangempay.model.CustomerSummary.CustomerStatus
+import com.tangem.domain.tangempay.model.CustomerSummary.KycStatus
+import com.tangem.domain.tangempay.model.CustomerSummary.MoneyAccount
+import com.tangem.domain.tangempay.model.CustomerSummary.PaymentAccount
+import com.tangem.domain.tangempay.model.CustomerSummary.MoneyAccount.Activation.Status as MoneyStatus
+import com.tangem.domain.tangempay.model.CustomerSummary.PaymentAccount.Activation.Status as PaymentStatus
+import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery

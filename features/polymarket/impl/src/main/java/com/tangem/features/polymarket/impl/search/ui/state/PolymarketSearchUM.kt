@@ -1,8 +1,8 @@
 package com.tangem.features.polymarket.impl.search.ui.state
 
 import androidx.compose.runtime.Immutable
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketEventUM
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import kotlinx.collections.immutable.ImmutableList
 
 /**

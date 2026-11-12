@@ -27,7 +27,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_down_20
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 
 /** Rail pill: rail icon, name, ETA badge and fee; a non-null [onClick] makes the row tappable and adds a chevron. */
 @Composable

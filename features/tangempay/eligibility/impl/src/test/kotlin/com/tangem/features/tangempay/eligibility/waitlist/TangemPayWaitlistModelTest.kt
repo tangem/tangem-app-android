@@ -13,12 +13,12 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.TangemPayWaitlistEntry
-import com.tangem.domain.pay.usecase.JoinTangemPayWaitlistUseCase
+import com.tangem.domain.tangempay.model.TangemPayWaitlistEntry
+import com.tangem.domain.tangempay.usecase.JoinTangemPayWaitlistUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.eligibility.TangemPayWaitlistComponent
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -251,7 +251,7 @@ internal class TangemPayWaitlistModelTest {
     @Test
     fun `GIVEN join fails with invalid email WHEN save clicked THEN format error shown and save unlocked`() = runTest {
         // Arrange
-        coEvery { joinWaitlistUseCase(any(), any(), any(), any()) } returns VisaApiError.WaitlistInvalidEmail.left()
+        coEvery { joinWaitlistUseCase(any(), any(), any(), any()) } returns TangemPayApiError.WaitlistInvalidEmail.left()
         val model = createModel(testScope = this)
         model.uiState.value.onEmailChange(VALID_EMAIL)
 
@@ -273,7 +273,7 @@ internal class TangemPayWaitlistModelTest {
     @Test
     fun `GIVEN join fails with other error WHEN save clicked THEN error dialog shown and save unlocked`() = runTest {
         // Arrange
-        coEvery { joinWaitlistUseCase(any(), any(), any(), any()) } returns VisaApiError.Unspecified.left()
+        coEvery { joinWaitlistUseCase(any(), any(), any(), any()) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(testScope = this)
         model.uiState.value.onEmailChange(VALID_EMAIL)
         val message = slot<DialogMessage>()
@@ -300,7 +300,7 @@ internal class TangemPayWaitlistModelTest {
         // Arrange
         val keys = mutableListOf<String>()
         coEvery { joinWaitlistUseCase(any(), any(), any(), capture(keys)) } returnsMany listOf(
-            VisaApiError.Unspecified.left(),
+            TangemPayApiError.Unspecified.left(),
             Unit.right(),
         )
         val model = createModel(testScope = this)

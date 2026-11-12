@@ -532,6 +532,8 @@ internal class PolymarketEventDetailsModelTest {
             regionAccess = regionAccess,
             urlOpener = urlOpener,
             polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
+            getPriceHistoryUseCase = mockk(),
+            currentTimeProvider = { testScope.testScheduler.currentTime },
         ).also { model = it }
     }
 

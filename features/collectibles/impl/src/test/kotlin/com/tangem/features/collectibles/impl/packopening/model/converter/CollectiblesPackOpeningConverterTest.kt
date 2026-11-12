@@ -145,7 +145,7 @@ internal class CollectiblesPackOpeningConverterTest {
         ButtonModel(usdcBalance = BigDecimal.ZERO, step = OpenPackStep.Opening, expected = OPENING),
         ButtonModel(
             usdcBalance = BigDecimal("100"),
-            step = OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5")),
+            step = OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = null),
             expected = OPENING,
         ),
         ButtonModel(usdcBalance = BigDecimal("100"), step = FAILED_BEFORE_PAYMENT, expected = APPROVE),
@@ -177,7 +177,7 @@ internal class CollectiblesPackOpeningConverterTest {
     )
 
     private fun usdc(amount: String) =
-        BigDecimal(amount).format { crypto(cryptoCurrency = MockCollectibles.usdc).anyDecimals(minDecimals = 0) }
+        BigDecimal(amount).format { crypto(cryptoCurrency = MockCollectibles.usdc, ignoreSymbolPosition = true).anyDecimals(minDecimals = 0) }
 
     private companion object {
 

@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.domain.models.ui
 
-import com.tangem.domain.pay.TangemPayWithdrawExchangeState
+import com.tangem.domain.tangempay.TangemPayWithdrawExchangeState
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.feature.swap.domain.models.ExpressDataError

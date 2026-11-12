@@ -55,7 +55,7 @@ class DefaultGaslessTransactionRepository(
                 val networkBlockchain = network.toBlockchain()
                 val supportedTokens = supportedTokensData.result.tokens
                     .filter {
-                        it.chainId == networkBlockchain.getChainId()
+                        it.chainId.toLong() == networkBlockchain.getChainId()
                     }
                     .map { token ->
                         responseCryptoCurrenciesFactory.createToken(
@@ -112,7 +112,7 @@ class DefaultGaslessTransactionRepository(
             gaslessTransaction = gaslessTransactionData,
             signature = signature,
             userAddress = userAddress,
-            chainId = blockchain.getChainId() ?: error("ChainId is null for blockchain: $blockchain"),
+            chainId = Math.toIntExact(blockchain.getChainId() ?: error("ChainId is null for blockchain: $blockchain")),
             eip7702Auth = eip7702Auth,
         )
 
@@ -138,7 +138,7 @@ class DefaultGaslessTransactionRepository(
             gaslessBatchTransaction = gaslessBatchTransactionData,
             signature = signature,
             userAddress = userAddress,
-            chainId = blockchain.getChainId() ?: error("ChainId is null for blockchain: $blockchain"),
+            chainId = Math.toIntExact(blockchain.getChainId() ?: error("ChainId is null for blockchain: $blockchain")),
             eip7702Auth = eip7702Auth,
         )
 
@@ -162,7 +162,9 @@ class DefaultGaslessTransactionRepository(
 
     override fun getChainIdForNetwork(network: Network): Int {
         val networkBlockchain = network.toBlockchain()
-        return networkBlockchain.getChainId() ?: error("ChainId not found for blockchain ${networkBlockchain.name}")
+        val chainId = networkBlockchain.getChainId()
+            ?: error("ChainId not found for blockchain ${networkBlockchain.name}")
+        return Math.toIntExact(chainId)
     }
 
     override suspend fun getGaslessFeeAddresses(): Set<String> {

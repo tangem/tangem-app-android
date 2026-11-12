@@ -80,7 +80,7 @@ private fun previewSettings(isFrozen: Boolean): ImmutableList<TangemPayCardPageS
         id = TangemPayCardPageSetting.Id.Details,
         title = resourceReference(R.string.details_title),
         onClick = {},
-        iconRes = CoreUiR.drawable.ic_visa_card_details_24,
+        iconRes = CoreUiR.drawable.ic_tangem_pay_card_details_24,
     ),
     TangemPayCardPageSetting(
         id = TangemPayCardPageSetting.Id.Freeze,

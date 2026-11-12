@@ -199,6 +199,7 @@ object MockYieldSupply {
         currency: CryptoCurrency = token(),
         amount: BigDecimal = BigDecimal.ONE,
         fiatAmount: BigDecimal = BigDecimal.ONE,
+        fiatRate: BigDecimal = BigDecimal.ONE,
         yieldSupplyStatus: YieldSupplyStatus? = null,
         networkSource: StatusSource = StatusSource.ACTUAL,
         quoteSource: StatusSource = StatusSource.ACTUAL,
@@ -207,7 +208,7 @@ object MockYieldSupply {
         value = CryptoCurrencyStatus.Loaded(
             amount = amount,
             fiatAmount = fiatAmount,
-            fiatRate = BigDecimal.ONE,
+            fiatRate = fiatRate,
             priceChange = BigDecimal.ZERO,
             yieldSupplyStatus = yieldSupplyStatus,
             hasCurrentNetworkTransactions = false,

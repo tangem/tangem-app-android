@@ -5,7 +5,7 @@ import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import kotlinx.serialization.Serializable
 
 @Serializable

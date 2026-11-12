@@ -39,7 +39,7 @@ dependencies {
 
     // region Domain models
     api(projects.domain.models)
-    api(projects.domain.visa.models)
+    api(projects.domain.tangempay.models)
     // endregion
 
     // region Tests

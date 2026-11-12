@@ -44,8 +44,6 @@ object DemoConfig {
     fun isDemoCardId(cardId: String): Boolean = demoCardIds.contains(cardId) ||
         cardId.startsWith(DEMO_NOTE_AS_MILTIWALLET_BATCH)
 
-    fun isTestDemoCardId(cardId: String): Boolean = testDemoCardIds.contains(cardId)
-
     fun getBalance(blockchain: Blockchain): Amount = walletBalances[blockchain]?.copy()
         ?: Amount(BigDecimal.ZERO, blockchain).copy()
 

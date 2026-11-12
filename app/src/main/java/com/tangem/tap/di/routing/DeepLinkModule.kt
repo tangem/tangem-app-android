@@ -1,14 +1,13 @@
 package com.tangem.tap.di.routing
 
 import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
-import com.tangem.tap.routing.utils.DefaultDeepLinkFeatureToggles
+import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.Multibinds
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -23,7 +22,10 @@ internal interface DeepLinkModule {
 
         @Provides
         @Singleton
-        fun provideDeepLinkFeatureToggles(featureTogglesManager: FeatureTogglesManager): DeepLinkFeatureToggles =
-            DefaultDeepLinkFeatureToggles(featureTogglesManager)
+        fun provideDeepLinkHandlerRegistry(
+            deepLinkHandlers: Map<String, @JvmSuppressWildcards Provider<DeepLinkHandler>>,
+        ): DeepLinkHandlerRegistry {
+            return DeepLinkHandlerRegistry(deepLinkHandlers)
+        }
     }
 }

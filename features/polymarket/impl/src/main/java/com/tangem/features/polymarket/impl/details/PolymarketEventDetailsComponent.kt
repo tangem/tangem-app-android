@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
+import com.tangem.features.polymarket.impl.details.ui.PolymarketEventDetailsChart
 import com.tangem.features.polymarket.impl.details.ui.PolymarketEventDetailsScreen
 
 /**
@@ -38,11 +39,15 @@ internal class PolymarketEventDetailsComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val chartState by model.chartState.collectAsStateWithLifecycle()
 
         PolymarketEventDetailsScreen(
             state = state,
             onBackClick = model::onBackClick,
             modifier = modifier,
+            chart = chartState?.let { snapshot ->
+                { PolymarketEventDetailsChart(snapshot, onPeriodChange = model::onChartPeriodChange) }
+            },
         )
     }
 

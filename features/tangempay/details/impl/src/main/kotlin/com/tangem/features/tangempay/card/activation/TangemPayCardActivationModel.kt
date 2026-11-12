@@ -9,13 +9,13 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.models.pay.activationImageUrl
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
-import com.tangem.domain.pay.model.CardActivationOrder
-import com.tangem.domain.pay.usecase.ActivatePlasticCardUseCase
+import com.tangem.domain.models.tangempay.activationImageUrl
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
+import com.tangem.domain.tangempay.model.CardActivationOrder
+import com.tangem.domain.tangempay.usecase.ActivatePlasticCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.details.impl.R
@@ -125,28 +125,28 @@ internal class TangemPayCardActivationModel @Inject constructor(
         }.saveIn(submitJobHolder)
     }
 
-    private suspend fun onSubmitFailed(error: VisaApiError) {
+    private suspend fun onSubmitFailed(error: TangemPayApiError) {
         if (!error.isOutcomeUnknown()) submitIdempotencyKey = null
         when (error) {
-            VisaApiError.CardActivationInvalidCardData -> showInlineError(
+            TangemPayApiError.CardActivationInvalidCardData -> showInlineError(
                 message = resourceReference(R.string.tangempay_card_activation_error),
             )
-            VisaApiError.CardActivationCardNotPhysical -> showRejectionSheet(
+            TangemPayApiError.CardActivationCardNotPhysical -> showRejectionSheet(
                 title = resourceReference(R.string.tangempay_card_activation_error_not_physical),
                 onClose = { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) },
             )
-            VisaApiError.CardActivationCardAlreadyActive -> {
+            TangemPayApiError.CardActivationCardAlreadyActive -> {
                 paymentAccountStatusFetcher.invoke(params.userWalletId)
                 showRejectionSheet(
                     title = resourceReference(R.string.tangempay_card_activation_error_already_active),
                     onClose = { router.pop() },
                 )
             }
-            VisaApiError.CardActivationCardNotReadyForActivation -> showRejectionSheet(
+            TangemPayApiError.CardActivationCardNotReadyForActivation -> showRejectionSheet(
                 title = resourceReference(R.string.tangempay_card_activation_error_not_ready),
                 onClose = { router.pop() },
             )
-            VisaApiError.CardActivationActiveOrderExists -> {
+            TangemPayApiError.CardActivationActiveOrderExists -> {
                 paymentAccountStatusFetcher.invoke(params.userWalletId)
                 showRejectionSheet(
                     title = resourceReference(R.string.tangempay_card_activation_error_in_progress),

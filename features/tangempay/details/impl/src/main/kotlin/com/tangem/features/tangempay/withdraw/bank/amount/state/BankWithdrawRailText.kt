@@ -8,10 +8,13 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
-import com.tangem.domain.pay.model.bankofframp.OfframpEta
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
+import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.formatPercentageFee
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -37,8 +40,14 @@ internal fun OfframpEta.toTextReference(): TextReference = when {
 
 internal fun OfframpDestination.totalFee(networkFee: BigDecimal): BigDecimal = fee.amount + networkFee
 
-internal fun OfframpDestination.totalFeeText(networkFee: BigDecimal): String =
-    totalFee(networkFee).formatFiat(Currency.getInstance(fee.currency))
+internal fun OfframpDestination.totalFeeText(networkFee: BigDecimal): String = when (fee.calculationType) {
+    FeeCalculationType.FIXED -> totalFee(networkFee).formatFiat(Currency.getInstance(fee.currency))
+    FeeCalculationType.PERCENTAGE -> formatPercentageFee(
+        percentage = fee.amount,
+        fixedAmount = fee.fixedAmount.orZero() + networkFee,
+        currencyCode = fee.currency,
+    )
+}
 
 internal fun BigDecimal.formatFiat(currency: Currency): String = format {
     fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol).optionalDecimals()

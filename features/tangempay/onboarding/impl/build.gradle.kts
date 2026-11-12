@@ -32,14 +32,13 @@ dependencies {
     implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.tangempay.eligibility.api)
-    implementation(projects.features.moneyAccount.details.api)
 
     /** Domain */
     api(projects.domain.common)
     api(projects.domain.hotWallet)
     implementation(projects.domain.appsflyer)
-    api(projects.domain.visa)
-    api(projects.domain.visa.models)
+    api(projects.domain.tangempay)
+    api(projects.domain.tangempay.models)
     api(projects.domain.wallets)
     implementation(projects.domain.models)
     implementation(projects.domain.moneyAccount)
@@ -48,7 +47,7 @@ dependencies {
     implementation(tangemDeps.hot.core)
 
     /** Data **/
-    runtimeOnly(projects.data.visa)
+    runtimeOnly(projects.data.tangempay)
 
     /** Compose */
     api(deps.compose.foundation)

@@ -34,7 +34,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 
 @Composable
 internal fun TangemPayVerifiedScreen(state: TangemPayVerifiedUM, animated: Boolean, modifier: Modifier = Modifier) {
@@ -78,7 +78,7 @@ private fun StatusContent(state: TangemPayVerifiedUM.Content, animated: Boolean)
         },
         details = {
             ProductRow(product = state.moneyAccount, divider = true)
-            ProductRow(product = state.visaCard, divider = false)
+            ProductRow(product = state.paymentAccount, divider = false)
         },
         footer = {
             TangemButtonGroup(

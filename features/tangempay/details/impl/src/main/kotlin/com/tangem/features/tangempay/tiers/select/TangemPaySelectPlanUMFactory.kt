@@ -11,7 +11,7 @@ import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.account.mainImageUrl
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.features.tangempay.components.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull

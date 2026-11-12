@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.card.details
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardState
 import com.tangem.features.tangempay.card.gpay.AddToGoogleWalletButtonState
 import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM

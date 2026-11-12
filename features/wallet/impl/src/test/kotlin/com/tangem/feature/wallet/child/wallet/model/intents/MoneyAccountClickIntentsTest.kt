@@ -71,7 +71,7 @@ internal class MoneyAccountClickIntentsTest {
             // Assert
             coVerify(exactly = 1) {
                 sendFeedbackEmailUseCase(
-                    type = FeedbackEmailType.Visa.MoneyAccountRequest(
+                    type = FeedbackEmailType.TangemPay.MoneyAccountRequest(
                         walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                         customerId = "id",
                     ),

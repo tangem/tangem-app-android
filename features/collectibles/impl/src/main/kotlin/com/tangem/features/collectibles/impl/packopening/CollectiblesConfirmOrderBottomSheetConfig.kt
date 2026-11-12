@@ -11,7 +11,18 @@ internal sealed interface CollectiblesConfirmOrderBottomSheetConfig {
     @Serializable
     data object LowInventory : CollectiblesConfirmOrderBottomSheetConfig
 
-    /** @property amount the payout and [price] one more spin, both formatted with their token */
     @Serializable
-    data class AutoBuyback(val amount: String, val price: String) : CollectiblesConfirmOrderBottomSheetConfig
+    data object RefundOnTheWay : CollectiblesConfirmOrderBottomSheetConfig
+
+    /**
+     * @property amount the payout and [price] one more spin, both formatted with their token
+     * @property cardTitle the sold card's `year set #serial`, null when the card is unknown
+     */
+    @Serializable
+    data class AutoBuyback(
+        val amount: String,
+        val price: String,
+        val cardImageUrl: String?,
+        val cardTitle: String?,
+    ) : CollectiblesConfirmOrderBottomSheetConfig
 }

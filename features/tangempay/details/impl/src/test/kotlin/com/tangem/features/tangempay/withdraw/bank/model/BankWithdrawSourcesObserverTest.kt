@@ -9,8 +9,8 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.POLYGON_CHAIN_ID

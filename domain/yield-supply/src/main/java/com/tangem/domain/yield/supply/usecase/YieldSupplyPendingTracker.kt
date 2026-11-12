@@ -3,9 +3,11 @@ package com.tangem.domain.yield.supply.usecase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
+import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker.Companion.CHECK_INTERVAL_MS
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -24,7 +26,8 @@ import java.util.concurrent.ConcurrentHashMap
  * - Call [addPending] right after sending a transaction to start tracking its hashes.
  * - The checker runs every [CHECK_INTERVAL_MS] and queries repository for the current pending tx hashes.
  * - If none of the stored hashes are pending anymore for a tracked entry, it triggers a single-network status refresh
- *   via [singleNetworkStatusFetcher] and removes the entry from tracking.
+ *   via [singleNetworkStatusFetcher] (plus the token's Yield Module position via [yieldModuleStatusFetcher]
+ *   under [TokensFeatureToggles.isYieldContributionEnabled]) and removes the entry from tracking.
  * - The periodic job stops automatically when there is nothing left to track.
  *
  * When an entry carries a [DepositContext], the tracker also enrols the module in auto top-up by telling the
@@ -36,6 +39,8 @@ class YieldSupplyPendingTracker(
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+    private val yieldModuleStatusFetcher: YieldModuleStatusFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     private val coroutineScope: AppCoroutineScope,
 ) {
 
@@ -144,6 +149,7 @@ class YieldSupplyPendingTracker(
         }
 
         val networksToFetch = mutableSetOf<SingleNetworkStatusFetcher.Params>()
+        val tokensToFetch = mutableMapOf<UserWalletId, MutableSet<CryptoCurrency.Token>>()
 
         for (key in keysSnapshot) {
             val entry = trackedEntries[key] ?: continue
@@ -171,13 +177,31 @@ class YieldSupplyPendingTracker(
                     network = entry.cryptoCurrency.network,
                 ),
             )
+            (entry.cryptoCurrency as? CryptoCurrency.Token)?.let { token ->
+                tokensToFetch.getOrPut(key.userWalletId, ::mutableSetOf).add(token)
+            }
         }
 
+        refresh(networksToFetch = networksToFetch, tokensToFetch = tokensToFetch)
+
+        stopAutomaticCheckingIfEmpty()
+    }
+
+    private suspend fun refresh(
+        networksToFetch: Set<SingleNetworkStatusFetcher.Params>,
+        tokensToFetch: Map<UserWalletId, Set<CryptoCurrency.Token>>,
+    ) {
         for (params in networksToFetch) {
             singleNetworkStatusFetcher(params)
         }
 
-        stopAutomaticCheckingIfEmpty()
+        if (!tokensFeatureToggles.isYieldContributionEnabled) return
+
+        for ((userWalletId, tokens) in tokensToFetch) {
+            yieldModuleStatusFetcher(
+                params = YieldModuleStatusFetcher.Params(userWalletId = userWalletId, tokens = tokens),
+            )
+        }
     }
 
     private suspend fun isNoLongerPending(key: TrackedKey, entry: TrackedEntry): Boolean {

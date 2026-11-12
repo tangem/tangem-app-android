@@ -35,6 +35,7 @@ dependencies {
     api(projects.domain.quotes)
     api(projects.domain.transaction)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.tokens)
     // endregion
 
     // region Domain models
@@ -46,7 +47,6 @@ dependencies {
     // endregion
 
     // region Tests
-    testRuntimeOnly(projects.domain.tokens)
     testImplementation(deps.kotlin.datetime)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)

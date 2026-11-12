@@ -9,17 +9,17 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
-import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.tangempay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
-import com.tangem.domain.pay.model.CachePolicy
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
-import com.tangem.domain.pay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.CachePolicy
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.tangempay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -119,13 +119,13 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
         }
     }
 
-    private suspend fun VisaApiError.toCachedStatusOrEmpty(userWalletId: UserWalletId): MoneyAccountStatusValue {
+    private suspend fun TangemPayApiError.toCachedStatusOrEmpty(userWalletId: UserWalletId): MoneyAccountStatusValue {
         return getCachedAccountOrNull(userWalletId = userWalletId, error = toAccountError())
             ?: MoneyAccountStatusValue.Empty
     }
 
-    private fun VisaApiError.toAccountError(): MoneyAccountStatusValue.Error {
-        val isSessionExpired = this is VisaApiError.RefreshTokenExpired && networkConnectionManager.isOnlineSync
+    private fun TangemPayApiError.toAccountError(): MoneyAccountStatusValue.Error {
+        val isSessionExpired = this is TangemPayApiError.RefreshTokenExpired && networkConnectionManager.isOnlineSync
         return if (isSessionExpired) {
             MoneyAccountStatusValue.Error.NotSynced
         } else {

@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.components
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 
 interface TangemPayTransactionBottomSheetComponent : ComposableBottomSheetComponent {
 

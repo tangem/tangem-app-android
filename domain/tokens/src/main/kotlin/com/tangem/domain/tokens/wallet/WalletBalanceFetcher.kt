@@ -16,8 +16,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
-import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
@@ -33,7 +33,7 @@ import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger

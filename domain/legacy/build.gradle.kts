@@ -37,5 +37,6 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.libs.blockchainSdk)
+    testImplementation(projects.test.core)
     // endregion
 }

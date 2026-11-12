@@ -3,7 +3,11 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
@@ -51,6 +55,48 @@ internal class BuyAmountCalculatorTest {
         assertThat(actual).isEqualTo(model.expected?.let(::BigDecimal))
     }
 
+    @ParameterizedTest
+    @MethodSource("provideQuoteUMFeeRateModels")
+    fun `GIVEN the current quote WHEN feeRate THEN fees over notional of a priced quote only, else none`(
+        model: QuoteUMFeeRateModel,
+    ) {
+        // Act
+        val actual = BuyAmountCalculator.feeRate(quote = model.quote)
+
+        // Assert
+        assertThat(actual).isEqualTo(BigDecimal(model.expected))
+    }
+
+    private fun provideQuoteUMFeeRateModels(): List<QuoteUMFeeRateModel> = listOf(
+        QuoteUMFeeRateModel(quote = pricedQuote(fees = "0.4", notional = "10"), expected = "0.04"),
+        QuoteUMFeeRateModel(quote = pricedQuote(fees = "0", notional = "0"), expected = "0"),
+        QuoteUMFeeRateModel(quote = QuoteUM.Empty, expected = "0"),
+        QuoteUMFeeRateModel(quote = QuoteUM.Loading, expected = "0"),
+        QuoteUMFeeRateModel(quote = QuoteUM.Error(reason = QuoteErrorUM.Network), expected = "0"),
+        QuoteUMFeeRateModel(
+            quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),
+            expected = "0",
+        ),
+    )
+
+    private fun pricedQuote(fees: String, notional: String): QuoteUM.Content {
+        val quote = mockk<PredictionOrderQuote> {
+            every { this@mockk.notional } returns BigDecimal(notional)
+            every { this@mockk.fees } returns PredictionOrderFees(
+                market = BigDecimal(fees),
+                builder = BigDecimal.ZERO,
+                total = BigDecimal(fees),
+            )
+        }
+        return QuoteUM.Content(
+            status = PredictionQuoteStatus.FULL,
+            expected = BigDecimal.ONE,
+            feeTotal = BigDecimal(fees),
+            total = BigDecimal.ONE,
+            signable = SignableQuoteUM(quote = quote, receivedAtMillis = 0L, assetId = "asset"),
+        )
+    }
+
     private fun provideFeeRateModels(): List<FeeRateModel> = listOf(
         FeeRateModel(fees = "0.4", notional = "10", expected = "0.04"),
         FeeRateModel(fees = "0", notional = "0", expected = null),
@@ -74,6 +120,8 @@ internal class BuyAmountCalculatorTest {
         val expected: String,
         val feeRate: String = "0",
     )
+
+    data class QuoteUMFeeRateModel(val quote: QuoteUM, val expected: String)
 
     data class FeeRateModel(val fees: String, val notional: String, val expected: String?)
 }

@@ -5,8 +5,8 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardType
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayDetailsUM(

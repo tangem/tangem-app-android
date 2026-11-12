@@ -13,6 +13,7 @@ import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import com.tangem.features.onramp.tokenlist.entity.utils.OnrampTokenItemStateConverterFactory
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
@@ -25,6 +26,8 @@ internal class UpdateAccountTokenListTransformer(
     private val unavailableErrorText: TextReference,
     private val warning: NotificationUM? = null,
     private val isAccountsMode: Boolean,
+    @RemoveWithToggle(toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED", description = "Inline true")
+    private val isRedesignedTokenRowsEnabled: Boolean = false,
 ) : TokenListUMTransformer {
 
     private val accountListItemConverter = UpdateAccountTokenItemConverter(
@@ -77,6 +80,13 @@ internal class UpdateAccountTokenListTransformer(
             },
             isBalanceHidden = isBalanceHidden,
             warning = warning,
+            groups = if (isRedesignedTokenRowsEnabled) {
+                OnrampTokenGroupConverter(appCurrency, unavailableErrorText, onItemClick)
+                    .convert(accountList = accountList, isAccountsMode = isAccountsMode)
+                    .toPersistentList()
+            } else {
+                persistentListOf()
+            },
         )
     }
 }

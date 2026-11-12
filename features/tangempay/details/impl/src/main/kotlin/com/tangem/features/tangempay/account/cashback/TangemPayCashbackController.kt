@@ -5,10 +5,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.pay.usecase.GetCashbackDeactivationDismissedUseCase
-import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
-import com.tangem.domain.pay.usecase.ObserveCashbackSummaryUseCase
-import com.tangem.domain.pay.usecase.SetCashbackDeactivationDismissedUseCase
+import com.tangem.domain.tangempay.usecase.GetCashbackDeactivationDismissedUseCase
+import com.tangem.domain.tangempay.usecase.GetCashbackSummaryUseCase
+import com.tangem.domain.tangempay.usecase.ObserveCashbackSummaryUseCase
+import com.tangem.domain.tangempay.usecase.SetCashbackDeactivationDismissedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter

@@ -98,6 +98,48 @@ sealed class JointAccountAnalyticsEvent(
         )
     }
 
+    class BlockaidCheck(
+        source: BlockaidSource,
+        result: BlockaidResult,
+        blockchain: String,
+    ) : JointAccountAnalyticsEvent(
+        event = "Blockaid Check",
+        params = mapOf(
+            AnalyticsParam.SOURCE to source.value,
+            RESULT to result.value,
+            AnalyticsParam.BLOCKCHAIN to blockchain,
+        ),
+    )
+
+    class NoticeRiskyAddress(source: BlockaidSource, blockchain: String) : JointAccountAnalyticsEvent(
+        event = "Notice - Risky Address",
+        params = mapOf(AnalyticsParam.SOURCE to source.value, AnalyticsParam.BLOCKCHAIN to blockchain),
+    )
+
+    class ButtonSignAnyway(source: BlockaidSource, blockchain: String) : JointAccountAnalyticsEvent(
+        event = "Button - Sign Anyway",
+        params = mapOf(AnalyticsParam.SOURCE to source.value, AnalyticsParam.BLOCKCHAIN to blockchain),
+    )
+
+    class NoticeMaliciousTransaction(source: BlockaidSource, blockchain: String) : JointAccountAnalyticsEvent(
+        event = "Notice - Malicious Transaction",
+        params = mapOf(AnalyticsParam.SOURCE to source.value, AnalyticsParam.BLOCKCHAIN to blockchain),
+    )
+
+    enum class BlockaidSource(val value: String) {
+        CreateOperation("Create Operation"),
+        Sign("Sign"),
+    }
+
+    enum class BlockaidResult(val value: String) {
+        Benign("Benign"),
+        Warning("Warning"),
+        Malicious("Malicious"),
+        Error("Error"),
+        Timeout("Timeout"),
+        UnsupportedNetwork("Unsupported Network"),
+    }
+
     enum class LimitSource(val value: String) {
         Create("Create"),
         Join("Join"),
@@ -118,6 +160,7 @@ sealed class JointAccountAnalyticsEvent(
         const val THRESHOLD = "Threshold"
         const val SIGNATURES_COLLECTED = "Signatures Collected"
         const val THRESHOLD_REACHED = "Threshold Reached"
+        const val RESULT = "Result"
     }
 }
 

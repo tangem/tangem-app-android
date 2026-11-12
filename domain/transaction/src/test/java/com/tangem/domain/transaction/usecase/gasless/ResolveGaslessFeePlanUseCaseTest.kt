@@ -923,6 +923,7 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         every { status.currency } returns token
         every { status.value.amount } returns plainBalance
         every { status.value.yieldSupplyStatus } returns yieldSupplyStatus
+        every { status.value.contributions } returns emptyList()
 
         return status
     }

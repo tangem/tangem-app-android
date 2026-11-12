@@ -13,4 +13,13 @@ interface TokensFeatureToggles {
      * [com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner] sets instead of hard-wired calls.
      */
     val isPluggableBalanceSourcesEnabled: Boolean
+
+    /**
+     * Yield supply status comes from the Yield Module status contribution instead of the network status snapshot.
+     *
+     * Implies [isPluggableBalanceSourcesEnabled]: the statuses are fetched only through the registered
+     * [com.tangem.domain.models.currency.balance.BalanceContributionFetcher] set, so without it every yield token
+     * would read as inactive.
+     */
+    val isYieldContributionEnabled: Boolean
 }

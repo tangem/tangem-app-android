@@ -3,6 +3,7 @@ package com.tangem.common.routing.deeplink
 import android.net.Uri
 import com.tangem.utils.logging.TangemLogger
 import java.net.URI
+import javax.inject.Provider
 
 /**
  * Finds the [DeepLinkHandler] for a deep link among the handlers contributed by features, keyed by [DeepLinkKey].
@@ -17,10 +18,13 @@ import java.net.URI
  *
  * Registered keys are validated and normalized the same way as the candidates, so a trailing or doubled slash in a
  * [DeepLinkKey] does not matter. A malformed key, or two keys that normalize to the same one, fail the construction.
- */
-class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
+ *
 
-    private val handlers: Map<String, DeepLinkHandler> = normalizeKeys(handlers)
+ * registry would build every feature's dependencies on app start.
+ */
+class DeepLinkHandlerRegistry(handlers: Map<String, Provider<DeepLinkHandler>>) {
+
+    private val handlers: Map<String, Provider<DeepLinkHandler>> = normalizeKeys(handlers)
 
     /** Deeper path prefixes can't match any key, so candidates are bounded by the deepest registered key. */
     private val maxPathSegments: Int = this.handlers.keys.maxOfOrNull(::pathSegmentsCount) ?: 0
@@ -33,9 +37,12 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             maxPathSegments = maxPathSegments,
         )
         val registeredKeys = candidateKeys.filter(handlers::containsKey)
-        val key = registeredKeys.firstOrNull { handlers.getValue(it).isEnabled }
+        val found = registeredKeys
+            .asSequence()
+            .map { key -> key to handlers.getValue(key).get() }
+            .firstOrNull { (_, handler) -> handler.isEnabled }
 
-        if (key == null) {
+        if (found == null) {
             TangemLogger.i(
                 """
                     No enabled deep link handler registered
@@ -47,6 +54,7 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             return null
         }
 
+        val (key, handler) = found
         TangemLogger.i(
             """
                 Found deep link handler
@@ -56,8 +64,11 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             """.trimIndent(),
         )
 
-        return handlers.getValue(key)
+        return handler
     }
+
+    /** Whether [uri] may be opened from an untrusted source such as a push payload: a link no handler claims may not. */
+    fun isOpenableFromPush(uri: Uri): Boolean = find(uri)?.isOpenableFromPush == true
 
     internal companion object {
 
@@ -88,7 +99,7 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             return decoded
         }
 
-        private fun normalizeKeys(handlers: Map<String, DeepLinkHandler>): Map<String, DeepLinkHandler> {
+        private fun <T> normalizeKeys(handlers: Map<String, T>): Map<String, T> {
             val keysByNormalized = handlers.keys.groupBy(::normalizeKey)
             val collisions = keysByNormalized.filterValues { it.size > 1 }
             require(collisions.isEmpty()) {

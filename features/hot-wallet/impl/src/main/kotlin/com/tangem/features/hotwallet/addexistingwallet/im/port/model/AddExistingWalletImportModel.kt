@@ -86,6 +86,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
                 mnemonic = mnemonic,
                 passphrase = passphrase?.toCharArray(),
                 isSeedPhraseBackedUp = true,
+                analyticsSource = params.analyticsSource,
             )
             setImportProgress(false)
             result.fold(

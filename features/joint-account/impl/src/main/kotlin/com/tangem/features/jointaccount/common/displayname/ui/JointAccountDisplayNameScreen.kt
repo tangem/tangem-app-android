@@ -91,7 +91,7 @@ internal fun JointAccountDisplayNameScreen(
             Text(
                 modifier = Modifier.padding(start = 8.dp, bottom = 16.dp),
                 text = stringResourceSafe(R.string.joint_account_name_subtitle),
-                style = TangemTheme.typography3.body.medium,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
 

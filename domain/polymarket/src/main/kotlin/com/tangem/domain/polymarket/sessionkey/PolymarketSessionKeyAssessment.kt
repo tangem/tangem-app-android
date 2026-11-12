@@ -70,5 +70,6 @@ sealed interface PolymarketSessionKeyReconciliation {
     data class Checked(
         val foreignSigners: List<PolymarketSessionSigner>,
         val missingOnExchange: Set<String>,
+        val listedSigners: Set<String>,
     ) : PolymarketSessionKeyReconciliation
 }

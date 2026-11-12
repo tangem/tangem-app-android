@@ -5,7 +5,7 @@ package com.tangem.common.routing.deeplink
  *
  * ```kotlin
  * @Binds @IntoMap @DeepLinkKey("tangem://staking")
- * fun bindStakingDeepLinkHandler(impl: DefaultStakingDeepLinkHandler): DeepLinkHandler
+ * fun bindStakingDeepLinkHandler(impl: StakingDeepLinkHandler): DeepLinkHandler
  * ```
  */
 fun interface DeepLinkHandler {
@@ -19,17 +19,4 @@ fun interface DeepLinkHandler {
         get() = true
 
     fun handle(request: DeepLinkRequest)
-}
-
-/** Creates a [DeepLinkHandler] that is enabled while [isEnabled] returns `true`, e.g. behind a feature toggle. */
-fun DeepLinkHandler(isEnabled: () -> Boolean, handle: (DeepLinkRequest) -> Unit): DeepLinkHandler {
-    val isEnabledProvider = isEnabled
-    val handleRequest = handle
-
-    return object : DeepLinkHandler {
-        override val isEnabled: Boolean
-            get() = isEnabledProvider()
-
-        override fun handle(request: DeepLinkRequest) = handleRequest(request)
-    }
 }

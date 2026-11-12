@@ -1,0 +1,267 @@
+package com.tangem.store.features.cardsettings.impl.main.model
+
+import androidx.compose.runtime.Stable
+import arrow.core.getOrElse
+import com.tangem.common.CompletionResult
+import com.tangem.common.core.CardIdDisplayFormat
+import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.message.dialog.Dialogs
+import com.tangem.domain.card.CardTypesResolver
+import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.common.util.getBackupCardsCount
+import com.tangem.domain.card.models.ScanConfig
+import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.store.features.cardsettings.api.CardSettingsComponent
+import com.tangem.store.features.cardsettings.impl.CardSettingsRoute
+import com.tangem.store.features.cardsettings.impl.common.CardSettingsAnalyticsEvent
+import com.tangem.store.features.cardsettings.impl.common.utils.getResetToFactoryDescription
+import com.tangem.store.features.cardsettings.impl.domain.CardSettingsInteractor
+import com.tangem.store.features.cardsettings.impl.main.ui.state.CardInfoUM
+import com.tangem.store.features.cardsettings.impl.main.ui.state.CardSettingsUM
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.addIf
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
+
+@Suppress("LongParameterList")
+@Stable
+@ModelScoped
+internal class CardSettingsModel @Inject constructor(
+    paramsContainer: ParamsContainer,
+    override val dispatchers: CoroutineDispatcherProvider,
+    private val scanCardProcessor: ScanCardProcessor,
+    private val tangemSdkManager: TangemSdkManager,
+    private val cardSettingsInteractor: CardSettingsInteractor,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val cardSdkConfigRepository: CardSdkConfigRepository,
+    private val settingsRepository: SettingsRepository,
+    private val onboardingRepository: OnboardingRepository,
+    private val uiMessageSender: UiMessageSender,
+    private val router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+) : Model() {
+
+    private val params = paramsContainer.require<CardSettingsComponent.Params>()
+
+    private var isBiometricsRequestPolicyPrevious: Boolean = false
+
+    private var cardIdDisplayFormatPrevious: CardIdDisplayFormat? = null
+
+    private val userWalletId = params.userWalletId
+
+    val uiState: StateFlow<CardSettingsUM>
+        field = MutableStateFlow(getInitialState())
+
+    init {
+        overrideSdkConfig()
+
+        cardSettingsInteractor.scannedScanResponse
+            .filterNotNull()
+            .onEach(::updateCardDetails)
+            .launchIn(modelScope)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Reset card scanned data
+        cardSettingsInteractor.clear()
+        // Restore the previous values of SDK config overridden by this screen
+        cardSdkConfigRepository.restoreAccessCodeRequestPolicy(isBiometricsRequestPolicyPrevious)
+        cardIdDisplayFormatPrevious?.let(cardSdkConfigRepository::restoreCardIdDisplayFormat)
+    }
+
+    private fun overrideSdkConfig() {
+        runBlocking {
+            // !!!IMPORTANT!!!: Do not forget to restore the previous values in onDestroy() method
+            isBiometricsRequestPolicyPrevious = cardSdkConfigRepository.isBiometricsRequestPolicy
+            cardIdDisplayFormatPrevious = cardSdkConfigRepository.cardIdDisplayFormat
+
+            val userWallet = getUserWalletUseCase(userWalletId)
+                .getOrElse { error("User wallet $userWalletId not found") }
+                .requireColdWallet()
+
+            cardSdkConfigRepository.isBiometricsRequestPolicy = userWallet.scanResponse.card.isAccessCodeSet &&
+                settingsRepository.shouldSaveAccessCodes()
+
+            // The card of this wallet isn't necessarily the selected one, whose format is set globally
+            tangemSdkManager.changeDisplayedCardIdNumbersCount(userWallet.scanResponse)
+        }
+    }
+
+    private fun getInitialState() = CardSettingsUM(
+        cardDetails = null,
+        onElementClick = ::handleClickingItem,
+        onScanCardClick = ::scanCard,
+        onBackClick = ::onBackClick,
+    )
+
+    private fun scanCard() = modelScope.launch {
+        scanCardProcessor.scan(
+            config = ScanConfig(
+                analyticsSource = AnalyticsParam.ScreensSources.CardSettings,
+                shouldConfirmWalletOwnership = false,
+                canRequestAccessCodeFromRepository = true,
+                shouldUpdateCardIdDisplayFormat = false,
+                shouldTrackScanFails = false,
+                shouldLaunchOnboarding = false,
+                callback = object : ScanConfig.Callback {
+                    override suspend fun onSuccess(scanResponse: ScanResponse) {
+                        val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+                        if (userWalletId == scannedUserWalletId || scannedUserWalletId == null) {
+                            cardSettingsInteractor.initialize(scanResponse)
+                        } else {
+                            uiMessageSender.send(Dialogs.wrongWalletTapped())
+                        }
+                    }
+                },
+            ),
+        )
+    }
+
+    private fun updateCardDetails(scanResponse: ScanResponse) {
+        val card = scanResponse.card
+        val cardTypesResolver = scanResponse.cardTypesResolver
+        val cardId = cardTypesResolver.getCardId()
+
+        val currentSecurityOption = cardSettingsInteractor.getSecurityOption(card)
+        val allowedSecurityOptions = cardSettingsInteractor.getAllowedSecurityOptions(scanResponse)
+        val isResetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver)
+
+        val cardDetails: List<CardInfoUM> = buildList {
+            add(CardInfoUM.CardId(cardId))
+            add(CardInfoUM.Issuer(card.issuer.name))
+
+            addIf(
+                condition = !cardTypesResolver.isTangemTwins(),
+                element = CardInfoUM.SignedHashes(card.signedHashesCount().toString()),
+            )
+
+            add(
+                CardInfoUM.SecurityMode(
+                    securityOption = currentSecurityOption,
+                    clickable = allowedSecurityOptions.size > 1,
+                ),
+            )
+
+            addIf(
+                condition = card.backupStatus?.isActive == true && card.isAccessCodeSet,
+                element = CardInfoUM.ChangeAccessCode,
+            )
+
+            addIf(
+                condition = cardSettingsInteractor.isAccessCodeRecoveryAllowed(scanResponse),
+                element = CardInfoUM.AccessCodeRecovery(
+                    isEnabled = cardSettingsInteractor.isAccessCodeRecoveryEnabled(scanResponse),
+                ),
+            )
+
+            addIf(isResetCardAllowed) {
+                CardInfoUM.ResetToFactorySettings(
+                    description = getResetToFactoryDescription(
+                        isActiveBackupStatus = card.backupStatus?.isActive == true,
+                        typesResolver = cardTypesResolver,
+                    ),
+                )
+            }
+        }
+
+        uiState.update { state ->
+            state.copy(cardDetails = cardDetails.toImmutableList())
+        }
+    }
+
+    private fun CardDTO.signedHashesCount(): Int = wallets.sumOf { it.totalSignedHashes ?: 0 }
+
+    private fun handleClickingItem(item: CardInfoUM) {
+        when (item) {
+            is CardInfoUM.ChangeAccessCode -> {
+                analyticsEventHandler.send(
+                    CardSettingsAnalyticsEvent.ButtonChangeUserCode(AnalyticsParam.UserCode.AccessCode),
+                )
+                changeAccessCode()
+            }
+            is CardInfoUM.ResetToFactorySettings -> {
+                analyticsEventHandler.send(CardSettingsAnalyticsEvent.ButtonFactoryReset())
+                resetWalletToFactorySettings()
+            }
+            is CardInfoUM.SecurityMode -> {
+                analyticsEventHandler.send(CardSettingsAnalyticsEvent.ButtonChangeSecurityMode())
+                router.push(route = CardSettingsRoute.SecurityMode(userWalletId))
+            }
+            is CardInfoUM.AccessCodeRecovery -> {
+                router.push(CardSettingsRoute.AccessCodeRecovery)
+            }
+            else -> {}
+        }
+    }
+
+    private fun resetWalletToFactorySettings() {
+        val scanResponse = cardSettingsInteractor.requireScanResponse()
+
+        if (scanResponse.cardTypesResolver.isTangemTwins()) {
+            router.push(
+                AppRoute.Onboarding(
+                    scanResponse = scanResponse,
+                    mode = AppRoute.Onboarding.Mode.RecreateWalletTwin,
+                ),
+            )
+        } else {
+            val card = scanResponse.card
+
+            modelScope.launch {
+                val hasTangemPay = onboardingRepository.hasTangemPayInWallet(userWalletId).getOrNull() == true
+                router.push(
+                    route = CardSettingsRoute.ResetCard(
+                        userWalletId = userWalletId,
+                        cardId = card.cardId,
+                        isActiveBackupStatus = card.backupStatus?.isActive == true,
+                        backupCardsCount = scanResponse.getBackupCardsCount() ?: 0,
+                        hasTangemPay = hasTangemPay,
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun changeAccessCode() = modelScope.launch {
+        val scanResponse = cardSettingsInteractor.requireScanResponse()
+
+        when (val result = tangemSdkManager.setAccessCode(scanResponse.card.cardId)) {
+            is CompletionResult.Success -> analyticsEventHandler.send(CardSettingsAnalyticsEvent.UserCodeChanged())
+            is CompletionResult.Failure -> {
+                TangemLogger.e("Failed to change access code: ${result.error}")
+            }
+        }
+    }
+
+    private fun isResetToFactoryAllowedByCard(card: CardDTO, cardTypesResolver: CardTypesResolver): Boolean {
+        val hasPermanentWallet = card.wallets.any { it.settings.isPermanent }
+        val isNotAllowed = hasPermanentWallet || cardTypesResolver.isStart2Coin()
+        return !isNotAllowed
+    }
+
+    private fun onBackClick() {
+        cardSettingsInteractor.clear()
+        router.pop()
+    }
+}
