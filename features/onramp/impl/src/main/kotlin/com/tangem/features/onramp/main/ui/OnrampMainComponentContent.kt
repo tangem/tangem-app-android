@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.notifications.Notification
@@ -28,6 +29,8 @@ import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -68,28 +71,36 @@ internal fun OnrampMainScreen(
 }
 
 @Composable
+private fun OnrampTopNavigationDs(config: OnrampMainTopBarUM, countryButton: OnrampCountryButtonUM, modifier: Modifier) {
+    TangemTopNavigation(
+        modifier = modifier,
+        contentAlign = TangemTopNavigation.ContentAlign.Center,
+        blurBackground = false,
+        startButton = { CountryButtonDs(state = countryButton) },
+        endButton = { CloseButtonDs(state = config.startButtonUM) },
+        contentColumn = {
+            TangemNavigationText(text = config.title, role = TangemNavigationText.Role.Title)
+            SpacerH(4.dp)
+            TangemNavigationText(text = config.subtitle, role = TangemNavigationText.Role.Subtitle)
+        },
+    )
+}
+
+@Composable
 private fun OnrampTopBar(config: OnrampMainTopBarUM, modifier: Modifier = Modifier) {
     val countryButton = config.countryButtonUM
     if (countryButton != null) {
-        TangemTopBar(
-            modifier = modifier,
-            title = config.title,
-            subtitle = config.subtitle,
-            startContent = {
-                if (LocalOnrampDesignSystemEnabled.current) {
-                    CountryButtonDs(state = countryButton)
-                } else {
-                    CountryButton(state = countryButton)
-                }
-            },
-            endContent = {
-                if (LocalOnrampDesignSystemEnabled.current) {
-                    CloseButtonDs(state = config.startButtonUM)
-                } else {
-                    CloseButton(state = config.startButtonUM)
-                }
-            },
-        )
+        if (LocalOnrampDesignSystemEnabled.current) {
+            OnrampTopNavigationDs(config = config, countryButton = countryButton, modifier = modifier)
+        } else {
+            TangemTopBar(
+                modifier = modifier,
+                title = config.title,
+                subtitle = config.subtitle,
+                startContent = { CountryButton(state = countryButton) },
+                endContent = { CloseButton(state = config.startButtonUM) },
+            )
+        }
     } else {
         TangemTopAppBar(
             modifier = modifier,
