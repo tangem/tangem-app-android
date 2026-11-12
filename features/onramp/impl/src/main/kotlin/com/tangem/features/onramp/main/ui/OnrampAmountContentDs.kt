@@ -82,7 +82,7 @@ private fun OnrampHeaderTitle() {
     Text(
         text = stringResourceSafe(R.string.onramp_you_will_pay_title),
         style = TangemTheme.typography3.subheading.medium,
-        color = TangemTheme.colors3.text.primary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }
 

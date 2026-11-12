@@ -252,7 +252,7 @@ private fun Content(
                 start = 16.dp,
                 end = 16.dp,
             ),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(if (LocalOnrampDesignSystemEnabled.current) 8.dp else 12.dp),
     ) {
         if (LocalOnrampDesignSystemEnabled.current) {
             OnrampAmountContentDs(state = state)
