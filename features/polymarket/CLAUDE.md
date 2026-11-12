@@ -22,7 +22,9 @@ Rules of "Predictions" that the code does not make evident. Read the domain inva
 
 ## Entry gate
 
-- Opening the gate prompts for nothing — no NFC, no biometrics (domain invariant 1).
+- Opening the gate prompts for nothing — no NFC, no biometrics (domain invariant 1) — except the device-link sheet
+  for a wallet known to be unlinked; a scan or unlock happens only on a tap there, and dismissing it closes the feature.
+- Main repeats the link check on open and closes the feature on refusal; actions inside the feature don't ask.
 - `Undetermined` is not "no account": a wallet onboarded on another device lands on Welcome too, and Start finds
   its account. Don't add copy that says "create".
 - `READ_ONLY` means a region restriction; such users still reach Main, browse and withdraw. Reuse it for another
