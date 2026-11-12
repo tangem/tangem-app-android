@@ -34,6 +34,7 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -110,7 +111,7 @@ private fun RedirectCloseButton(onClick: () -> Unit, modifier: Modifier = Modifi
                 modifier = Modifier.size(18.dp),
                 imageVector = Icons.ic_cross_20,
                 tint = TangemTheme.colors3.icon.primary,
-                contentDescription = null,
+                contentDescription = stringResourceSafe(R.string.common_close),
             )
         }
     }
