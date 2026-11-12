@@ -194,6 +194,39 @@ internal class MarketCategorySelectorModelTest {
     }
 
     @Test
+    fun `GIVEN an open selector WHEN the filter changes from outside THEN the tick moves and it stays open`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this, selection = selectionOf(ai))
+            advanceUntilIdle()
+            batchFlow.emitFirstPage(ai, meme)
+            advanceUntilIdle()
+
+            // Act - a discover deeplink applies its category while the selector is on screen
+            filterController.onSelectionApplied(selectionOf(meme))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.rows().filter { it.isSelected }.map { it.id }).containsExactly(meme.id)
+            assertThat(model.isResetVisible()).isTrue()
+            verify(exactly = 0) { router.pop() }
+        }
+
+    @Test
+    fun `GIVEN an open selector WHEN the filter is cleared from outside THEN reset hides`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, selection = selectionOf(ai))
+        advanceUntilIdle()
+
+        // Act
+        filterController.onSelectionApplied(MarketCategorySelection())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.isResetVisible()).isFalse()
+    }
+
+    @Test
     fun `GIVEN no filter WHEN model created THEN reset is hidden`() = runTest {
         // Act
         val model = createModel(testScope = this)

@@ -21,6 +21,7 @@ import com.tangem.features.feed.analytics.FeedSortPeriod
 import com.tangem.features.feed.analytics.FeedSortType
 import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.rwa.categories.CategorySelection
+import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.model.list.RwaInterval
 import com.tangem.features.feed.rwa.model.list.RwaSort
@@ -29,6 +30,7 @@ import com.tangem.features.feed.rwa.ui.state.RwaListUM
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryFilter
 import com.tangem.features.feed.v2.FeedEntryRequest
+import com.tangem.features.feed.v2.FeedFilterSheet
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
@@ -41,6 +43,8 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -102,7 +106,7 @@ internal class RwaFeedTabModelTest {
         listActions.clear()
         featuredActions.clear()
         sentEvents.clear()
-        pendingFilter.value = null
+        feedEntryController.reset()
         every { analyticsEventHandler.send(capture(sentEvents)) } just Runs
 
         coEvery { userCountryResolver.resolve() } returns "DE"
@@ -560,6 +564,85 @@ internal class RwaFeedTabModelTest {
             assertThat(pendingFilter.value).isNotNull()
         }
 
+    @Test
+    fun `GIVEN a category sheet deeplink WHEN the host handled the entry THEN the selector opens on it`() = runTest {
+        // Arrange
+        coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(
+            listOf(umbrellaCategory(), category(id = STOCKS_ID, code = STOCKS_CODE)),
+        )
+        feedEntryController.pendingEntry.value = FeedEntryRequest()
+        pendingFilter.value = FeedEntryFilter(
+            tabId = FeedTabId.RealAssets,
+            categoryId = STOCKS_CODE,
+            sheet = FeedFilterSheet.Category,
+        )
+        val underTest = createModel(testScope = this)
+        advanceUntilIdle()
+        verify(exactly = 0) { router.push(any()) }
+
+        // Act
+        feedEntryController.consumeEntry()
+        advanceUntilIdle()
+
+        // Assert
+        val route = slot<CategorySelectorRoute>()
+        verify(exactly = 1) { router.push(capture(route)) }
+        assertThat(route.captured.categorySelection).isEqualTo(underTest.uiState.value.appliedSelection)
+        assertThat(route.captured.categorySelection.category?.id).isEqualTo(STOCKS_ID)
+    }
+
+    @Test
+    fun `GIVEN loaded categories WHEN a category sheet deeplink lands THEN the selector opens`() = runTest {
+        // Arrange
+        coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(listOf(umbrellaCategory()))
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.RealAssets, sheet = FeedFilterSheet.Category)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(any<CategorySelectorRoute>()) }
+    }
+
+    @Test
+    fun `GIVEN categories fail to load WHEN a category sheet deeplink lands THEN the selector stays closed`() =
+        runTest {
+            // Arrange
+            coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Left(IllegalStateException("boom"))
+            pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.RealAssets, sheet = FeedFilterSheet.Category)
+
+            // Act
+            createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.push(any()) }
+            assertThat(pendingFilter.value).isNull()
+        }
+
+    @Test
+    fun `GIVEN a category sheet deeplink still loading WHEN a newer request lands THEN the selector stays closed`() =
+        runTest {
+            // Arrange
+            val categories = CompletableDeferred<List<CoinCategory>>()
+            coEvery { getCoinCategoriesUseCase(country = "DE") } coAnswers { Either.Right(categories.await()) }
+            feedEntryController.pendingEntry.value = FeedEntryRequest()
+            pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.RealAssets, sheet = FeedFilterSheet.Category)
+            createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            feedEntryController.request(FeedEntryRequest(isForYou = true))
+            feedEntryController.consumeEntry()
+            categories.complete(listOf(umbrellaCategory()))
+            advanceUntilIdle()
+
+            // Assert - the newer request's screen is on top; the older picker would cover it
+            verify(exactly = 0) { router.push(any<CategorySelectorRoute>()) }
+        }
+
     private fun sectionEvents() = sentEvents.filterIsInstance<FeedSectionAnalyticsEvent>()
 
     /** The tab carries its own `onClick`, so the enum's id is the only bridge from a sort to its tab. */
@@ -609,7 +692,13 @@ internal class RwaFeedTabModelTest {
 
         override val pendingEntry = MutableStateFlow<FeedEntryRequest?>(null)
 
-        override fun request(request: FeedEntryRequest) = Unit
+        /** Every filter published before a later [request] is superseded by it. */
+        private var isSuperseded = false
+
+        override fun request(request: FeedEntryRequest) {
+            isSuperseded = true
+            pendingEntry.value = request
+        }
 
         override fun consumeEntry() {
             pendingEntry.value = null
@@ -617,6 +706,15 @@ internal class RwaFeedTabModelTest {
 
         override fun consumeFilter() {
             pendingFilter.value = null
+        }
+
+        override fun isLatest(filter: FeedEntryFilter): Boolean = !isSuperseded
+
+        /** The suite is PER_CLASS, so this fake outlives each test. */
+        fun reset() {
+            pendingEntry.value = null
+            pendingFilter.value = null
+            isSuperseded = false
         }
     }
 
