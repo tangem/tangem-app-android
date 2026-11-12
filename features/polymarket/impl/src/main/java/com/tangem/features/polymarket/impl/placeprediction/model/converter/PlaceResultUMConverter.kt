@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.placeprediction.model.converter
 
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
@@ -30,15 +31,14 @@ internal object PlaceResultUMConverter {
 
     /**
      * @param side the side the order was signed for — it decides which leg of the response is the shares one
-     * @param quotedShares the shares leg of the signed quote — the worst case the order was signed for, so a
-     *  fill reaching it is a full one and only a fill short of it is partial
-     * @param quotedAmount the collateral leg, shown to the user but never used to decide the fill
+     * @param quote the signed quote — its shares leg is the worst case the order was signed for, so a fill
+     *  reaching it is a full one and only a fill short of it is partial; its collateral leg, fee and total are
+     *  shown to the user but never used to decide the fill
      */
     fun convert(
         result: PredictionPlaceOrderResult,
         side: PredictionOrderSide,
-        quotedShares: BigDecimal,
-        quotedAmount: BigDecimal,
+        quote: PredictionOrderQuote,
         placedAt: Long,
     ): PlaceOutcome {
         val status = result.status?.trim()
@@ -54,13 +54,14 @@ internal object PlaceResultUMConverter {
 
         return when {
             filledShares.signum() <= 0 -> PlaceOutcome.Anomalous(reason = ZERO_SHARES_REASON)
-            filledShares >= quotedShares -> result.collateralLeg(side = side)
+            filledShares >= quote.shares -> result.collateralLeg(side = side)
                 ?.let { amount ->
                     PlaceOutcome.Reportable(
                         result = PlaceResultUM.Filled(
                             placedAt = placedAt,
                             collateralAmount = amount,
                             shares = filledShares,
+                            fee = quote.fees.total,
                         ),
                     )
                 }
@@ -71,8 +72,9 @@ internal object PlaceResultUMConverter {
                         result = PlaceResultUM.PartiallyFilled(
                             placedAt = placedAt,
                             filledCollateral = spent,
-                            requestedCollateral = quotedAmount,
+                            requestedCollateral = quote.notional,
                             shares = filledShares,
+                            total = quote.total,
                         ),
                     )
                 }
@@ -95,7 +97,7 @@ internal object PlaceResultUMConverter {
      * at the order's price and rounded half up to cents. Anomalous when nothing filled or a size or the price
      * cannot be read, since then there is no fill to report.
      */
-    fun convert(order: PredictionOrderState, quotedAmount: BigDecimal, placedAt: Long): PlaceOutcome {
+    fun convert(order: PredictionOrderState, quote: PredictionOrderQuote, placedAt: Long): PlaceOutcome {
         val filledShares = order.sizeMatched?.takeIf { it.signum() > 0 }
             ?: return PlaceOutcome.Anomalous(reason = ZERO_SHARES_REASON)
         val orderedShares = order.originalSize ?: return PlaceOutcome.Anomalous(reason = UNREADABLE_FILL_REASON)
@@ -104,13 +106,19 @@ internal object PlaceResultUMConverter {
         val executedAmount = (filledShares * price).setScale(FIAT_SCALE, RoundingMode.HALF_UP)
 
         val result = if (filledShares >= orderedShares) {
-            PlaceResultUM.Filled(placedAt = placedAt, collateralAmount = executedAmount, shares = filledShares)
+            PlaceResultUM.Filled(
+                placedAt = placedAt,
+                collateralAmount = executedAmount,
+                shares = filledShares,
+                fee = quote.fees.total,
+            )
         } else {
             PlaceResultUM.PartiallyFilled(
                 placedAt = placedAt,
                 filledCollateral = executedAmount,
-                requestedCollateral = quotedAmount,
+                requestedCollateral = quote.notional,
                 shares = filledShares,
+                total = quote.total,
             )
         }
         return PlaceOutcome.Reportable(result = result)

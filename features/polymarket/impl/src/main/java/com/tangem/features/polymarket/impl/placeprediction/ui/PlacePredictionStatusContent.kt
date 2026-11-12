@@ -34,6 +34,7 @@ import com.tangem.core.ui.res.generated.icons.ic_warning_20
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
+import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
@@ -41,6 +42,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionUsdValueRow
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlaceResultPreviewProvider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import org.joda.time.DateTime
@@ -72,12 +74,18 @@ internal fun PlacePredictionStatusContent(
                 ResultRows(result = result, market = market, side = side)
             }
         },
-        footer = { ResultFooter(viewPosition = viewPosition, intents = intents) },
+        footer = {
+            ResultFooter(
+                isUnsoldSale = result is PlaceResultUM.NotFilled && side == PredictionOrderSide.SELL,
+                viewPosition = viewPosition,
+                intents = intents,
+            )
+        },
     )
 }
 
 @Composable
-private fun ResultFooter(viewPosition: ViewPositionUM, intents: PlacePredictionStatusIntents) {
+private fun ResultFooter(isUnsoldSale: Boolean, viewPosition: ViewPositionUM, intents: PlacePredictionStatusIntents) {
     val modifier = Modifier
         .fillMaxWidth()
         .padding(all = 16.dp)
@@ -86,7 +94,9 @@ private fun ResultFooter(viewPosition: ViewPositionUM, intents: PlacePredictionS
         ViewPositionUM.Hidden -> TangemButton(
             modifier = modifier,
             size = TangemButton.Size.X12,
-            text = resourceReference(R.string.common_got_it),
+            text = resourceReference(
+                if (isUnsoldSale) R.string.common_close else R.string.common_got_it,
+            ),
             onClick = intents::onCloseClick,
         )
         ViewPositionUM.Awaiting,
@@ -180,7 +190,23 @@ private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM, side: Pred
                 value = resolutionDateMillis.formatResolutionDate(),
             )
         }
+        if (side == PredictionOrderSide.SELL) SaleCostRow(result = result)
     }
+}
+
+@Composable
+private fun SaleCostRow(result: PlaceResultUM) {
+    val (titleRes, amount) = when (result) {
+        is PlaceResultUM.Filled -> R.string.prediction_place_fee to result.fee
+        is PlaceResultUM.PartiallyFilled -> R.string.prediction_fee_sheet_total to result.total
+        is PlaceResultUM.NotFilled,
+        is PlaceResultUM.Submitted,
+        is PlaceResultUM.StillProcessing,
+        -> return
+    }
+    amount ?: return
+
+    PredictionUsdValueRow(value = amount.formatPolymarketMoney(), isLoading = false, titleRes = titleRes)
 }
 
 @Composable
@@ -277,7 +303,7 @@ private fun PlacePredictionStatusContentPreview(
                 is PlaceResultUM.StillProcessing,
                 -> ViewPositionUM.Hidden
             },
-            side = PredictionOrderSide.BUY,
+            side = PredictionOrderSide.SELL,
             market = MarketHeaderUM(
                 title = "Will Uzbekistan win the 2026 FIFA World Cup?",
                 imageUrl = null,

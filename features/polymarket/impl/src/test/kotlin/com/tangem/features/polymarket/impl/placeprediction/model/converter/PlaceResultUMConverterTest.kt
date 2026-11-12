@@ -1,10 +1,14 @@
 package com.tangem.features.polymarket.impl.placeprediction.model.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
+import com.tangem.domain.polymarket.model.PredictionOrderFees
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionOrderStatus
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
+import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
@@ -43,6 +47,7 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = spent,
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES.half(),
+                    total = QUOTED_TOTAL,
                 ),
             ),
         )
@@ -137,6 +142,7 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("71.999999"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES - BigDecimal("0.000001"),
+                    total = QUOTED_TOTAL,
                 ),
             ),
         ),
@@ -198,6 +204,7 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("36.000000"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES.half(),
+                    total = QUOTED_TOTAL,
                 ),
             ),
         ),
@@ -229,7 +236,7 @@ internal class PlaceResultUMConverterTest {
         // Act
         val actual = PlaceResultUMConverter.convert(
             order = model.order,
-            quotedAmount = QUOTED_AMOUNT,
+            quote = QUOTE,
             placedAt = PLACED_AT,
         )
 
@@ -250,6 +257,7 @@ internal class PlaceResultUMConverterTest {
                     placedAt = PLACED_AT,
                     collateralAmount = BigDecimal("73.50"),
                     shares = ORDERED_SHARES,
+                    fee = QUOTED_FEE,
                 ),
             ),
         ),
@@ -261,6 +269,7 @@ internal class PlaceResultUMConverterTest {
                     placedAt = PLACED_AT,
                     collateralAmount = BigDecimal("74.24"),
                     shares = ORDERED_SHARES + BigDecimal.ONE,
+                    fee = QUOTED_FEE,
                 ),
             ),
         ),
@@ -273,6 +282,7 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("24.50"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = BigDecimal("33.333333"),
+                    total = QUOTED_TOTAL,
                 ),
             ),
         ),
@@ -304,14 +314,34 @@ internal class PlaceResultUMConverterTest {
     ) = PlaceResultUMConverter.convert(
         result = result,
         side = side,
-        quotedShares = QUOTED_SHARES,
-        quotedAmount = QUOTED_AMOUNT,
+        quote = QUOTE,
         placedAt = PLACED_AT,
     )
 
     private companion object {
         val QUOTED_AMOUNT: BigDecimal = BigDecimal("72.000000")
         val QUOTED_SHARES: BigDecimal = BigDecimal("97.959184")
+        val QUOTED_FEE: BigDecimal = BigDecimal("1.40")
+        val QUOTED_TOTAL: BigDecimal = BigDecimal("73.40")
+        val QUOTE = PredictionOrderQuote(
+            status = PredictionQuoteStatus.FULL,
+            side = PredictionOrderSide.BUY,
+            shares = QUOTED_SHARES,
+            notional = QUOTED_AMOUNT,
+            expectedExecutionAmount = QUOTED_SHARES,
+            averagePrice = BigDecimal("0.735"),
+            worstCasePrice = BigDecimal("0.74"),
+            fees = PredictionOrderFees(market = BigDecimal("1.00"), builder = BigDecimal("0.40"), total = QUOTED_FEE),
+            total = QUOTED_TOTAL,
+            builderCode = "0xbuilder",
+            minOrderSize = BigDecimal("5"),
+            minOrderAmount = BigDecimal.ONE,
+            tickSize = BigDecimal("0.001"),
+            isLive = false,
+            version = PolymarketMarketVersion.V1,
+            exchange = null,
+            signingDomainVersion = null,
+        )
         const val PLACED_AT = 1_787_300_000_000L
         const val ZERO_SHARES_REASON = "The exchange matched the order and filled no shares"
         const val UNREADABLE_FILL_REASON = "The exchange matched the order, but its fill cannot be read"
@@ -322,6 +352,7 @@ internal class PlaceResultUMConverterTest {
             placedAt = PLACED_AT,
             collateralAmount = QUOTED_AMOUNT,
             shares = shares,
+            fee = QUOTED_FEE,
         )
 
         const val ORDER_ID = "0x6b2e"
