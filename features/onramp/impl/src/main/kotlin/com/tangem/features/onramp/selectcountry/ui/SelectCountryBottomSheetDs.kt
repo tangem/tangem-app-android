@@ -150,7 +150,10 @@ private fun CountryListContent(state: CountryListUM.Content, modifier: Modifier 
         }
         if (otherItems.isNotEmpty()) {
             item(key = "others_header") {
-                SectionHeader(title = stringResourceSafe(R.string.tangempay_residency_all_country))
+                SectionHeader(
+                    title = stringResourceSafe(R.string.tangempay_residency_all_country),
+                    modifier = Modifier.padding(top = 16.dp),
+                )
             }
             items(items = otherItems, key = { it.id }, contentType = { it::class.java }) { item ->
                 CountryRow(item = item)
