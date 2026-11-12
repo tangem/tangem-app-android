@@ -3,7 +3,10 @@ package com.tangem.domain.tangempay.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.tangempay.TangemPayCard
 import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.OrderDetails
@@ -57,7 +60,7 @@ internal class ChangeCardFrozenStateUseCaseTest {
         } returns TangemPayApiError.Unspecified.left()
 
         // Act
-        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+        val result = useCase(USER_WALLET_ID, CARD, isFreezing = true)
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
@@ -71,16 +74,16 @@ internal class ChangeCardFrozenStateUseCaseTest {
             // Arrange
             val useCase = createUseCase()
             coEvery { cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID) } returns ORDER_INFO.right()
-            coEvery { startOrderUseCase(USER_WALLET_ID, LAUNCH) } returns runningOrder(
+            coEvery { startOrderUseCase(USER_WALLET_ID, FREEZE_LAUNCH) } returns runningOrder(
                 finalState = OrderPollingState.Loaded(order(TangemPayOrder.Status.COMPLETED)),
             ).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+            val result = useCase(USER_WALLET_ID, CARD, isFreezing = true)
 
             // Assert
             assertThat(result.isRight()).isTrue()
-            coVerify(exactly = 1) { startOrderUseCase(USER_WALLET_ID, LAUNCH) }
+            coVerify(exactly = 1) { startOrderUseCase(USER_WALLET_ID, FREEZE_LAUNCH) }
             coVerify(exactly = 0) { cardDetailsRepository.setCardFrozenState(any(), any()) }
         }
 
@@ -90,16 +93,16 @@ internal class ChangeCardFrozenStateUseCaseTest {
             // Arrange
             val useCase = createUseCase()
             coEvery { cardDetailsRepository.unfreezeCard(USER_WALLET_ID, CARD_ID) } returns ORDER_INFO.right()
-            coEvery { startOrderUseCase(USER_WALLET_ID, LAUNCH) } returns runningOrder(
+            coEvery { startOrderUseCase(USER_WALLET_ID, UNFREEZE_LAUNCH) } returns runningOrder(
                 finalState = OrderPollingState.Loaded(order(TangemPayOrder.Status.COMPLETED)),
             ).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = false)
+            val result = useCase(USER_WALLET_ID, CARD, isFreezing = false)
 
             // Assert
             assertThat(result.isRight()).isTrue()
-            coVerify(exactly = 1) { startOrderUseCase(USER_WALLET_ID, LAUNCH) }
+            coVerify(exactly = 1) { startOrderUseCase(USER_WALLET_ID, UNFREEZE_LAUNCH) }
             coVerify(exactly = 0) { cardDetailsRepository.setCardFrozenState(any(), any()) }
         }
 
@@ -110,10 +113,10 @@ internal class ChangeCardFrozenStateUseCaseTest {
             // Arrange
             val useCase = createUseCase()
             coEvery { cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID) } returns ORDER_INFO.right()
-            coEvery { startOrderUseCase(USER_WALLET_ID, LAUNCH) } returns runningOrder(finalState).right()
+            coEvery { startOrderUseCase(USER_WALLET_ID, FREEZE_LAUNCH) } returns runningOrder(finalState).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+            val result = useCase(USER_WALLET_ID, CARD, isFreezing = true)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
@@ -125,10 +128,10 @@ internal class ChangeCardFrozenStateUseCaseTest {
         // Arrange
         val useCase = createUseCase()
         coEvery { cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID) } returns ORDER_INFO.right()
-        coEvery { startOrderUseCase(USER_WALLET_ID, LAUNCH) } returns TangemPayApiError.OrderNotFound.left()
+        coEvery { startOrderUseCase(USER_WALLET_ID, FREEZE_LAUNCH) } returns TangemPayApiError.OrderNotFound.left()
 
         // Act
-        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+        val result = useCase(USER_WALLET_ID, CARD, isFreezing = true)
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.OrderNotFound)
@@ -148,7 +151,7 @@ internal class ChangeCardFrozenStateUseCaseTest {
         } returns TangemPayApiError.Unspecified.left()
 
         // Act
-        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = model.isFreezing)
+        val result = useCase(USER_WALLET_ID, CARD, isFreezing = model.isFreezing)
 
         // Assert
         assertThat(result.isLeft()).isTrue()
@@ -171,7 +174,7 @@ internal class ChangeCardFrozenStateUseCaseTest {
         coEvery { startTangemPayOrderPollingUseCase(ORDER_INFO, USER_WALLET_ID) } returns true
 
         // Act
-        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = model.isFreezing)
+        val result = useCase(USER_WALLET_ID, CARD, isFreezing = model.isFreezing)
 
         // Assert
         assertThat(result.isRight()).isTrue()
@@ -194,7 +197,7 @@ internal class ChangeCardFrozenStateUseCaseTest {
         coEvery { startTangemPayOrderPollingUseCase(ORDER_INFO, USER_WALLET_ID) } returns false
 
         // Act
-        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = model.isFreezing)
+        val result = useCase(USER_WALLET_ID, CARD, isFreezing = model.isFreezing)
 
         // Assert
         assertThat(result.isLeft()).isTrue()
@@ -254,6 +257,28 @@ internal class ChangeCardFrozenStateUseCaseTest {
         const val CARD_ID = "card-test-id"
         const val ORDER_ID = "order-test-1"
         val ORDER_INFO = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
-        val LAUNCH = OrderLaunch.Id(orderId = ORDER_ID)
+        const val PRODUCT_INSTANCE_ID = "pi-1"
+        val CARD = TangemPayCard(
+            id = CARD_ID,
+            productInstanceId = PRODUCT_INSTANCE_ID,
+            cardStatus = TangemPayCard.Status.ACTIVE,
+            hasPinCode = true,
+            displayName = null,
+            limit = null,
+            frozenState = TangemPayCardFrozenState.Unfrozen,
+            lastDigits = "1234",
+            images = emptyList(),
+            state = TangemPayCardState.Active,
+            embossName = null,
+            cardType = TangemPayCardType.VIRTUAL,
+        )
+        val FREEZE_LAUNCH = OrderLaunch.Track(
+            orderId = ORDER_ID,
+            details = OrderDetails.CardFreeze(productInstanceId = PRODUCT_INSTANCE_ID),
+        )
+        val UNFREEZE_LAUNCH = OrderLaunch.Track(
+            orderId = ORDER_ID,
+            details = OrderDetails.CardUnfreeze(productInstanceId = PRODUCT_INSTANCE_ID),
+        )
     }
 }

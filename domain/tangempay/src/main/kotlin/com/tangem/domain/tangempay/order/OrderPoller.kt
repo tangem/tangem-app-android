@@ -4,6 +4,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.model.OrderStep
+import com.tangem.domain.tangempay.model.TangemPayOrder
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -24,15 +25,15 @@ class OrderPoller(
     private val lock = Any()
     private val pollings = mutableMapOf<OrderRef, Polling>()
 
-    fun startPolling(orderRef: OrderRef): Flow<OrderPollingState> {
-        return getOrStartPolling(orderRef).state.transformWhile { state ->
+    fun startPolling(orderRef: OrderRef, initialSnapshot: TangemPayOrder?): Flow<OrderPollingState> {
+        return getOrStartPolling(orderRef = orderRef, initialSnapshot = initialSnapshot).state.transformWhile { state ->
             emit(state)
             !state.isTerminal
         }
     }
 
     fun launchPolling(orderRef: OrderRef) {
-        getOrStartPolling(orderRef)
+        getOrStartPolling(orderRef = orderRef, initialSnapshot = null)
     }
 
     fun stopPolling(userWalletIds: Collection<UserWalletId>) {
@@ -47,9 +48,13 @@ class OrderPoller(
         }
     }
 
-    private fun getOrStartPolling(orderRef: OrderRef): Polling {
+    private fun getOrStartPolling(orderRef: OrderRef, initialSnapshot: TangemPayOrder?): Polling {
         val polling = synchronized(lock) {
             pollings[orderRef]?.let { return it }
+
+            if (initialSnapshot != null && !initialSnapshot.status.isTerminal) {
+                activeOrdersRegistry.put(orderRef = orderRef, snapshot = initialSnapshot)
+            }
 
             val state = MutableStateFlow<OrderPollingState>(OrderPollingState.Pending)
             val job = appCoroutineScope.launch(start = CoroutineStart.LAZY) {
@@ -59,7 +64,10 @@ class OrderPoller(
         }
         polling.job.invokeOnCompletion {
             synchronized(lock) {
-                if (pollings[orderRef] === polling) pollings.remove(orderRef)
+                if (pollings[orderRef] === polling) {
+                    pollings.remove(orderRef)
+                    activeOrdersRegistry.remove(orderRef)
+                }
             }
         }
         polling.job.start()
