@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.addfunds.bankTransferOnramp.details
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsScreenUM.DailyDepositLimitUM
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.BANK_CREDENTIALS_CURRENCY_CODE
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.formatFiatAmount

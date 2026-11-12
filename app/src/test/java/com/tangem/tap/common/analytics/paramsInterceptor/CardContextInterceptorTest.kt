@@ -2,6 +2,8 @@ package com.tangem.tap.common.analytics.paramsInterceptor
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.card.MockScanResponseFactory
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CardContextInterceptorTest {
@@ -50,6 +53,25 @@ internal class CardContextInterceptorTest {
 
         // Assert
         assertThat(params["Product Type"]).isEqualTo("Ring")
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN import wallet request WHEN canBeAppliedTo THEN applied only when the selected wallet is related`(
+        isSelectedWalletUnrelated: Boolean,
+    ) {
+        // Arrange
+        val interceptor = CardContextInterceptor(createScanResponse(ProductType.Wallet2), walletsRepository)
+        val event = OnboardingAnalyticsEvent.Backup.ImportWalletRequest(
+            cloudBackup = AnalyticsParam.CloudBackupAvailability.Available,
+            isSelectedWalletUnrelated = isSelectedWalletUnrelated,
+        )
+
+        // Act
+        val actual = interceptor.canBeAppliedTo(event)
+
+        // Assert
+        assertThat(actual).isEqualTo(!isSelectedWalletUnrelated)
     }
 
     private fun createScanResponse(productType: ProductType): ScanResponse {

@@ -8,7 +8,6 @@ import com.tangem.core.error.UniversalError
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.data.tangempay.store.TangemPayStorage
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.tangempay.TangemPayEligibilityType
 import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.tangempay.TangemPayProduct
@@ -19,6 +18,7 @@ import com.tangem.domain.tangempay.model.CustomerInfo
 import com.tangem.domain.tangempay.model.CustomerOrderRequest
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.model.TangemPayInitialCredentials
 import com.tangem.test.mock.tangempay.MockBankCredentials
 import java.util.concurrent.ConcurrentHashMap

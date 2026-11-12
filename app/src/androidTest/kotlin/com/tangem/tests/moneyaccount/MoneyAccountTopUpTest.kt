@@ -46,7 +46,6 @@ class MoneyAccountTopUpTest : BaseTestCase() {
 
     private val bankCredentialsScenario = "tangem_pay_money_account_bank_credentials"
     private val bankCredentialsSuccessState = "Started"
-    private val bankCredentialsNoDepositLimitState = "NoDepositLimit"
     private val bankCredentialsEmptyBankAddressState = "EmptyBankAddress"
     private val bankCredentialsDelayedState = "Delayed"
     private val bankCredentialsErrorState = "Error"
@@ -76,11 +75,10 @@ class MoneyAccountTopUpTest : BaseTestCase() {
     private val expectedBankAddress = "8700 Perry Highway, Pittsburgh, PA 15237"
     private val expectedAccountNumber = "707600496086"
     private val expectedRoutingNumber = "043087080"
-    private val dailyDepositLimit = "$2,500"
-    private val hardcodedDepositLimit = "$10,000"
 
     private val routeRail = "ACH"
     private val routeFeeValue = "$1"
+    private val expectedMinimumDeposit = "$2"
 
     @AllureId("13148")
     @DisplayName("Money account: the Add funds sheet offers three top-up methods in order")
@@ -590,14 +588,9 @@ class MoneyAccountTopUpTest : BaseTestCase() {
     }
 
     @AllureId("13157")
-    @DisplayName("Money account: the daily deposit limit comes from the bank-credentials response")
+    @DisplayName("Money account: the account details show the minimum deposit and no daily deposit limit")
     @Test
-    fun bankTransferDepositLimitFromBackendTest() {
-        val expectedDepositLimitHint = getResourceString(
-            CoreResR.string.tangempay_bank_transfer_details_daily_deposits_hint,
-            dailyDepositLimit,
-        )
-
+    fun bankTransferDepositLimitHiddenTest() {
         setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -610,23 +603,16 @@ class MoneyAccountTopUpTest : BaseTestCase() {
             }
             step("Open 'Money account' screen") { openMoneyAccount() }
             step("Open 'Account details' screen") { openMoneyAccountBankDetails() }
-            step("Assert the daily deposit limit is '$dailyDepositLimit', not '$hardcodedDepositLimit'") {
-                onVirtualAccountRequisitesBottomSheet {
-                    depositLimitSubtitle.performScrollTo()
-                    depositLimitSubtitle.assertTextEquals(expectedDepositLimitHint)
-                }
-            }
-            step("Click on system 'Back' button") { device.uiDevice.pressBack() }
-            step("Assert 'Money account' screen is displayed") {
-                awaitSuccess { onMoneyAccountScreen { addFundsButton.assertIsDisplayed() } }
-            }
-            step("Switch WireMock scenario '$bankCredentialsScenario' to '$bankCredentialsNoDepositLimitState'") {
-                setWireMockScenarioState(bankCredentialsScenario, bankCredentialsNoDepositLimitState)
-            }
-            step("Open 'Account details' screen again") { openMoneyAccountBankDetails() }
-            step("Assert the daily deposit limit block is not displayed") {
+            step("Assert the minimum deposit '$expectedMinimumDeposit' is displayed") {
                 onVirtualAccountRequisitesBottomSheet {
                     accountNumber.assertTextEquals(expectedAccountNumber)
+                    minimumDepositTitle.performScrollTo()
+                    minimumDepositTitle.assertIsDisplayed()
+                    minimumDepositValue.assertTextEquals(expectedMinimumDeposit)
+                }
+            }
+            step("Assert the daily deposit limit block is not displayed") {
+                onVirtualAccountRequisitesBottomSheet {
                     depositLimitTitle.assertDoesNotExist()
                     depositLimitSubtitle.assertDoesNotExist()
                 }

@@ -41,6 +41,7 @@ import com.tangem.feature.referral.models.ReferralStateHolder.*
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -68,6 +69,7 @@ internal class ReferralModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getAccountCurrencyByAddressUseCase: GetAccountCurrencyByAddressUseCase,
     private val router: Router,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<ReferralComponent.Params>()
@@ -140,6 +142,7 @@ internal class ReferralModel @Inject constructor(
             appCurrency = appCurrency,
             isSingleAccount = portfolios.isSingleChoice,
             onAccountClick = { bottomSheetNavigation.activate(Unit) },
+            isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
         ).convert(Unit)
     }
 

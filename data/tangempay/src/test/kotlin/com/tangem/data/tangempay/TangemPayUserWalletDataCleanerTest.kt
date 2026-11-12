@@ -9,6 +9,8 @@ import com.tangem.data.tangempay.store.TangemPayCustomerSummaryStore
 import com.tangem.data.tangempay.store.TangemPayStorage
 import com.tangem.spend.datasource.tangempay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.order.OrderPoller
+import com.tangem.domain.tangempay.order.OrdersStore
 import com.tangem.domain.tangempay.model.CustomerInfo
 import io.mockk.Runs
 import io.mockk.clearMocks
@@ -18,6 +20,7 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,6 +37,8 @@ internal class TangemPayUserWalletDataCleanerTest {
     private val customerInfoStore = TangemPayCustomerInfoStore()
     private val customerSummaryStore = TangemPayCustomerSummaryStore()
     private val requestPerformer: TangemPayRequestPerformer = mockk()
+    private val orderPoller: OrderPoller = mockk()
+    private val ordersStore: OrdersStore = mockk()
 
     private val cleaner = TangemPayUserWalletDataCleaner(
         paymentAccountStatusesStore = paymentAccountStatusesStore,
@@ -43,6 +48,8 @@ internal class TangemPayUserWalletDataCleanerTest {
         customerInfoStore = customerInfoStore,
         customerSummaryStore = customerSummaryStore,
         requestPerformer = requestPerformer,
+        orderPoller = orderPoller,
+        ordersStore = ordersStore,
     )
 
     @BeforeEach
@@ -53,6 +60,8 @@ internal class TangemPayUserWalletDataCleanerTest {
             cashbackSummaryStore,
             tangemPayStorage,
             requestPerformer,
+            orderPoller,
+            ordersStore,
         )
         customerInfoStore.clear()
         customerSummaryStore.clear()
@@ -63,6 +72,19 @@ internal class TangemPayUserWalletDataCleanerTest {
         coEvery { tangemPayStorage.clearAll(any(), any()) } just Runs
         coEvery { tangemPayStorage.clearIsTangemPayDeactivated(any()) } just Runs
         every { requestPerformer.removeCachedCustomerWalletAddresses(any()) } just Runs
+        every { orderPoller.stopPolling(any()) } just Runs
+        coEvery { ordersStore.clear(any()) } just Runs
+    }
+
+    @Test
+    fun `GIVEN wallets WHEN clear THEN order polling stopped and stored orders cleared for each wallet`() = runTest {
+        // Act
+        cleaner.clear(listOf(WALLET_A, WALLET_B))
+
+        // Assert
+        verify(exactly = 1) { orderPoller.stopPolling(listOf(WALLET_A, WALLET_B)) }
+        coVerify(exactly = 1) { ordersStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { ordersStore.clear(WALLET_B) }
     }
 
     @Test

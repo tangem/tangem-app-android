@@ -113,6 +113,14 @@ internal class WcEthChainRequestResolverTest {
             ),
             ResolveModel(
                 methodName = WcEthMethodName.SwitchEthereumChain,
+                params = """[{"chainId": "0x59454e4951"}]""",
+                isInSession = true,
+                expected = WcEthChainRequestResolver.Resolution.Switched(
+                    CAIP2(namespace = "eip155", reference = "383414847825"),
+                ),
+            ),
+            ResolveModel(
+                methodName = WcEthMethodName.SwitchEthereumChain,
                 params = """[{"chainId": "0x1"}, {"chainId": "0x89"}]""",
                 expected = WcEthChainRequestResolver.Resolution.InvalidParams,
             ),

@@ -7,7 +7,6 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.offramp.model.PendingOfframp
@@ -90,7 +89,7 @@ internal class SellRedirectGeneratorViewModel @Inject constructor(
      */
     private fun buildDeepLink(offramp: PendingOfframp): String = Uri.Builder()
         .scheme(DeepLinkScheme.Tangem.scheme)
-        .authority(DeepLinkRoute.SellRedirect.host)
+        .authority(SELL_REDIRECT_HOST)
         .appendQueryParameter(CURRENCY_ID_KEY, offramp.currencyId)
         .appendQueryParameter(REQUEST_ID_KEY, offramp.requestId)
         .appendQueryParameter(TRANSACTION_ID_KEY, "test-tx-${offramp.requestId.take(TX_ID_LENGTH)}")
@@ -130,7 +129,8 @@ internal class SellRedirectGeneratorViewModel @Inject constructor(
         const val DEFAULT_AMOUNT = "1"
         const val DEFAULT_ADDRESS = "test-deposit-address"
 
-        // Query keys expected by DefaultSellRedirectDeepLinkHandler; kept in sync with it.
+        // Host and query keys expected by DefaultSellRedirectDeepLinkHandler; kept in sync with it.
+        const val SELL_REDIRECT_HOST = "redirect_sell"
         const val TRANSACTION_ID_KEY = "transactionId"
         const val CURRENCY_ID_KEY = "currency_id"
         const val AMOUNT_KEY = "baseCurrencyAmount"
