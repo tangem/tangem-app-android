@@ -34,6 +34,7 @@ import com.tangem.features.polymarket.impl.common.funding.RequisitesState
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
+import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
@@ -93,6 +94,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val receiveSheetFactory: PolymarketReceiveSheetFactory,
+    private val walletLinkGate: PolymarketWalletLinkGate,
     observePolymarketSportsStateUseCase: ObservePolymarketSportsStateUseCase,
     observePolymarketLiveQuotesUseCase: ObservePolymarketLiveQuotesUseCase,
     polymarketFeatureToggles: PolymarketFeatureToggles,
@@ -220,8 +222,8 @@ internal class PolymarketMainModel @Inject constructor(
 
     init {
         feedController.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
-        loadCategories()
         modelScope.launch { regionAccess.refresh() }
+        loadCategoriesOnceLinked()
     }
 
     fun onBackClick() {
@@ -271,6 +273,18 @@ internal class PolymarketMainModel @Inject constructor(
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
             .launchIn(modelScope)
             .saveIn(balancePollJobHolder)
+    }
+
+    private fun loadCategoriesOnceLinked() {
+        uiState.update { it.copy(isCategoriesLoading = true) }
+        modelScope.launch {
+            if (walletLinkGate.ensureLinked(params.userWalletId)) {
+                loadCategories()
+            } else {
+                TangemLogger.i("Main: wallet ${params.userWalletId} not linked; closing the feature")
+                router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId)) { router.pop() }
+            }
+        }
     }
 
     private fun returnToGate() {
