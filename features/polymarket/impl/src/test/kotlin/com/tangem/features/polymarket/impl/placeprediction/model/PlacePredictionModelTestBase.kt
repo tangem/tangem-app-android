@@ -49,7 +49,7 @@ import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
-import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionOrderSessionKeyWindowUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
@@ -82,6 +82,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import java.time.Duration
 import java.time.Instant
 
 internal abstract class PlacePredictionModelTestBase {
@@ -165,7 +166,7 @@ internal abstract class PlacePredictionModelTestBase {
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
         every { featureToggles.isPolymarketFastOrdersEnabled } returns false
         every { featureToggles.isPolymarketPhaseTwoEnabled } returns false
-        coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+        coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns null
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
             createPosition().right()
     }
@@ -332,7 +333,7 @@ internal abstract class PlacePredictionModelTestBase {
                 scope = scope,
                 getUserWalletUseCase = getUserWalletUseCase,
                 featureToggles = featureToggles,
-                canSignPredictionOrderWithSessionKeyUseCase = CanSignPredictionOrderWithSessionKeyUseCase(
+                getPredictionOrderSessionKeyWindowUseCase = GetPredictionOrderSessionKeyWindowUseCase(
                     router = signingRouter,
                 ),
                 dispatchers = dispatchers,
@@ -470,6 +471,7 @@ internal abstract class PlacePredictionModelTestBase {
         const val ASSET_ID = "asset-1"
         const val NETWORK_RAW_ID = "polygon-ecosystem-token"
         val USER_WALLET_ID = UserWalletId("011")
+        val SIGNING_WINDOW: Duration = Duration.ofHours(1)
         const val CONDITION_ID = "condition-1"
         val POSITION_ID = PolymarketPositionId(conditionId = CONDITION_ID, assetId = ASSET_ID)
         val BUY_PARAMS = PlacePredictionComponent.Params.Buy(

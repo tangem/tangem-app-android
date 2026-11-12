@@ -55,8 +55,8 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   owner route is refused. The route comes from `PolymarketOrderSigningRouter` (a BFF record is required, unlike iOS)
   unless the preference is `OWNER_ONLY`.
 - A session key refused by the CLOB (`401`, a signer/authorization `4xx` message, `NotSent`) stays out of trading
-  until a new authorization or restart; the order is re-signed with the owner key. A bare `403` is a geoblock, not
-  a refusal.
+  until a new authorization or restart. The order is never re-signed with the owner key behind the user's back: the
+  user confirms it again on the owner button. A bare `403` is a geoblock, not a refusal.
 
 ## Session key lifecycle
 

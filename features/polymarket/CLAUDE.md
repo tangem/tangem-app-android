@@ -46,6 +46,8 @@ Rules of "Predictions" that the code does not make evident. Read the domain inva
 - Two flows, chosen once per opening by `isPolymarketFastOrdersEnabled` (`TWI_1881_POLYMARKET_FAST_ORDERS_ENABLED`, also gates session keys): single-step Order, or legacy
   Amount → Summary. The quote engine, the submitter and the result screen are shared, so a change there reaches
   both flows.
+- The button shows the signer: the card/hold button signs with the owner only, the plain one with the session key
+  only. A plain button that cannot sign falls back to the owner button and signs nothing.
 - Signing uses the `PreparedPrediction` frozen at the tap, never the live screen: nothing may requote or reload
   the position under the signature, NFC pause/resume included.
 - A quote older than 30 s at the tap is refused, as on iOS.
