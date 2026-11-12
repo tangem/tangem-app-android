@@ -68,6 +68,28 @@ internal class GetMcpIntentHistoryUseCaseTest {
     }
 
     @Test
+    fun `GIVEN a partially filled page WHEN invoke THEN only remaining capacity is requested`() = runTest {
+        // Arrange
+        val firstItems = List(PAGE_SIZE - 1) { item("mine-$it", SESSION_ID) }
+        val lastItem = item("last", SESSION_ID)
+        coEvery { repository.getIntentHistory(WALLET_ID, 0, PAGE_SIZE) } returns Either.Right(
+            McpIntentHistoryPage(items = firstItems, nextOffset = PAGE_SIZE),
+        )
+        coEvery { repository.getIntentHistory(WALLET_ID, PAGE_SIZE, 1) } returns Either.Right(
+            McpIntentHistoryPage(items = listOf(lastItem), nextOffset = PAGE_SIZE + 1),
+        )
+
+        // Act
+        val actual = useCase(walletId = WALLET_ID, sessionId = SESSION_ID, offset = 0)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            Either.Right(McpIntentHistoryPage(items = firstItems + lastItem, nextOffset = PAGE_SIZE + 1)),
+        )
+        coVerify(exactly = 1) { repository.getIntentHistory(WALLET_ID, PAGE_SIZE, 1) }
+    }
+
+    @Test
     fun `GIVEN history ends before the page is filled WHEN invoke THEN reading stops without a next page`() = runTest {
         // Arrange
         coEvery { repository.getIntentHistory(WALLET_ID, 0, PAGE_SIZE) } returns Either.Right(

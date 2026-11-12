@@ -27,8 +27,11 @@ class GetMcpIntentHistoryUseCase @Inject constructor(
         var nextOffset: Int? = offset
 
         while (items.size < PAGE_SIZE && nextOffset != null) {
-            val page = mcpRepository.getIntentHistory(walletId = walletId, offset = nextOffset, limit = PAGE_SIZE)
-                .bind()
+            val page = mcpRepository.getIntentHistory(
+                walletId = walletId,
+                offset = nextOffset,
+                limit = PAGE_SIZE - items.size,
+            ).bind()
             items += page.items.filter { it.sessionId == sessionId }
             nextOffset = page.nextOffset
         }
