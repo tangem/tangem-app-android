@@ -37,7 +37,11 @@ internal sealed interface PolymarketRoute : Route {
 
     data class History(val userWalletId: UserWalletId) : PolymarketRoute
 
-    data class FastTradingSettings(val userWalletId: UserWalletId) : PolymarketRoute
+    sealed interface FastTrading : PolymarketRoute
+
+    data class FastTradingSettings(val userWalletId: UserWalletId) : FastTrading
+
+    data class FastTradingActivation(val userWalletId: UserWalletId) : FastTrading
 
     data class Positions(val userWalletId: UserWalletId, val initialTab: PolymarketPositionsTab) : PolymarketRoute
 
