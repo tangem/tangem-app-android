@@ -87,11 +87,25 @@ internal class FeeTokenForListConverter(
         )
     }
 
-    // TODO [REDACTED_TASK_KEY] Show "Balance: …" as the subtitle once TangemTokenRow supports a text subtitle
     private fun tokenRow(value: CryptoCurrencyStatus, appCurrency: AppCurrency, isSelectable: Boolean) =
         TokenRowStateConverter(appCurrency)
-            .convert(currencyStatus = value, onClick = onTokenClick.takeIf { isSelectable })
+            .convert(
+                currencyStatus = value,
+                onClick = onTokenClick.takeIf { isSelectable },
+                subtitle = resourceReference(
+                    R.string.common_balance,
+                    wrappedList(
+                        value.value.fiatAmount.format {
+                            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                        },
+                    ),
+                ),
+            )
+            .withoutBalances()
             .withSponsoredFee(value)
+
+    private fun TangemTokenRow.State.withoutBalances(): TangemTokenRow.State =
+        if (this is TangemTokenRow.State.Network) copy(fiatBalance = null, cryptoBalance = null) else this
 
     private fun TangemTokenRow.State.withSponsoredFee(value: CryptoCurrencyStatus): TangemTokenRow.State =
         if (isSponsoredFee) asSponsoredFee(value.currency.symbol) else this

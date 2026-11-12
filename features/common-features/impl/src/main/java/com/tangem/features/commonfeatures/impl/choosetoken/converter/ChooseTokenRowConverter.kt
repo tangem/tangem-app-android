@@ -58,7 +58,13 @@ internal class ChooseTokenRowConverter(
         }
     }
 
-    // TODO [REDACTED_TASK_KEY] Show the network instead of the price once TangemTokenRow supports a network subtitle
     private fun tokenRow(account: AccountStatus, status: CryptoCurrencyStatus): TangemTokenRow.State =
-        tokenRowStateConverter.convert(currencyStatus = status, onClick = { onTokenClick(account, status) })
+        tokenRowStateConverter.convert(
+            currencyStatus = status,
+            onClick = { onTokenClick(account, status) },
+            subtitle = resourceReference(
+                id = R.string.wallet_network_group_title,
+                formatArgs = wrappedList(status.currency.network.name),
+            ),
+        )
 }
