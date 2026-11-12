@@ -131,8 +131,31 @@ internal class PolymarketFastTradingBannerSourceTest {
             expected = PolymarketFastTradingBanner.Activate,
         ),
         BannerModel(
-            state = stateOf(PolymarketSessionKeyDeviceState.RepairByRenewal(keyOf())),
-            expected = PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Activate),
+            state = stateOf(
+                PolymarketSessionKeyDeviceState.RepairByRenewal(keyOf(status = PolymarketSessionKeyStatus.FAILED)),
+            ),
+            expected = PolymarketFastTradingBanner.Activate,
+        ),
+        BannerModel(
+            state = stateOf(
+                PolymarketSessionKeyDeviceState.Reenable(keyOf(status = PolymarketSessionKeyStatus.PENDING)),
+            ),
+            expected = PolymarketFastTradingBanner.Activate,
+        ),
+        BannerModel(
+            state = stateOf(
+                PolymarketSessionKeyDeviceState.Reenable(
+                    keyOf(status = PolymarketSessionKeyStatus.PENDING, createdAt = NOW),
+                ),
+            ),
+            expected = REACTIVATE,
+        ),
+        BannerModel(
+            state = stateOf(
+                PolymarketSessionKeyDeviceState.Reenable(keyOf(status = PolymarketSessionKeyStatus.FAILED)),
+            ),
+            dismissals = mapOf(REACTIVATE_KIND to NOW),
+            expected = PolymarketFastTradingBanner.Activate,
         ),
         BannerModel(
             state = stateOf(PolymarketSessionKeyDeviceState.Reenable(keyOf())),
@@ -207,7 +230,7 @@ internal class PolymarketFastTradingBannerSourceTest {
                 PolymarketSessionKeyDeviceState.RepairByRenewal(keyOf(status = PolymarketSessionKeyStatus.FAILED)),
                 foreignSigners = listOf(FOREIGN_SIGNER.copy(address = "0xOWN")),
             ),
-            expected = PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Activate),
+            expected = PolymarketFastTradingBanner.Activate,
         ),
         BannerModel(
             state = stateOf(PolymarketSessionKeyDeviceState.Replace.ByRevocation(keyOf())),

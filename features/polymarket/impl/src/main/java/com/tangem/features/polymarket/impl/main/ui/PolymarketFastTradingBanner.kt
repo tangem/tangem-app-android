@@ -29,7 +29,7 @@ internal fun PolymarketFastTradingBanner(state: PolymarketFastTradingBannerUM, m
             description = resourceReference(R.string.prediction_session_key_unknown_signers_text),
             variant = TangemMessageBanner.Variant.Warning,
             primaryButton = TangemMessageBanner.Button(
-                text = resourceReference(R.string.prediction_session_key_revoke),
+                text = resourceReference(R.string.prediction_session_key_review),
                 onClick = state.onActionClick,
             ),
             modifier = modifier,
