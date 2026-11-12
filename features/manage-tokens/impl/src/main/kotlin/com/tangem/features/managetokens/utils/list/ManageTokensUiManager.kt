@@ -26,11 +26,16 @@ internal class ManageTokensUiManager(
     private val manageTokensWarningDelegate: ManageTokensWarningDelegate,
 ) {
 
+    /**
+     * Pages are fetched by limit/offset over a live ranking, so a coin whose rank shifts between two
+     * requests comes back in both batches. The list keys rows by id, so only its first occurrence is kept.
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     val items: Flow<ImmutableList<CurrencyItemUM>> = state
         .mapLatest { state ->
             state.uiBatches.asSequence()
                 .flatMap { it.data }
+                .distinctBy(CurrencyItemUM::id)
                 .toImmutableList()
         }
         .distinctUntilChanged()
