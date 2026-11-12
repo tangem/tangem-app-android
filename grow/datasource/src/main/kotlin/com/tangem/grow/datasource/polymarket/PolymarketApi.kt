@@ -25,6 +25,7 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketRevokeSessionKeyRe
 import com.tangem.grow.datasource.polymarket.models.PolymarketSessionKeyDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketSoccerEventResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketSetSessionKeyEnabledRequest
+import com.tangem.lib.auth.api.RequiresSessionAuth
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -150,6 +151,7 @@ interface PolymarketApi {
         @Path("eventId") eventId: String,
     ): ApiResponse<PolymarketEventResponse>
 
+    @RequiresSessionAuth
     @GET("api/predictions/v1/sports/soccer/events/{eventId}")
     suspend fun getSoccerEvent(
         @Header("wallet-id") walletId: String,
