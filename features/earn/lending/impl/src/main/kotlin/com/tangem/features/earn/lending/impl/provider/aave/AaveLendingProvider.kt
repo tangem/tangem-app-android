@@ -139,7 +139,7 @@ internal class AaveLendingProvider @Inject constructor(
         isSupported: Boolean,
     ): LendingMarket {
         val read = chain.read?.let { AaveModuleRead(status.status, it.version, it.withdrawLiquidity) }
-        val position = status.status?.effectiveProtocolBalance?.takeIf { it.signum() > 0 }
+        val position = status.status?.position
         // Without the pool liquidity a withdrawal is capped by the position only
         val liquidity = read?.withdrawLiquidity
 
