@@ -82,20 +82,20 @@ internal fun OnrampRedirectContentDs(state: OnrampRedirectUM, modifier: Modifier
 @Composable
 private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().padding(bottom = 24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         LogoBlock(providerImageUrl = state.providerImageUrl)
         Text(
-            modifier = Modifier.padding(top = 16.dp),
+            modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
             text = state.title.resolveReference(),
             style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
         Text(
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp),
             text = state.subtitle.resolveReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
@@ -145,7 +145,7 @@ private fun LogoBlock(providerImageUrl: String, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(LOGO_SIZE)
                 .clip(CircleShape)
-                .background(TangemTheme.colors3.bg.secondary),
+                .background(TangemTheme.colors3.bg.transparent.primary),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
