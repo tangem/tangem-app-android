@@ -8,6 +8,8 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusProducer
+import com.tangem.domain.tangempay.usecase.order.ApplyActiveOrdersUseCase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -24,6 +26,8 @@ internal class DefaultPaymentAccountStatusProducer @AssistedInject constructor(
     @Assisted private val params: PaymentAccountStatusProducer.Params,
     override val flowProducerTools: FlowProducerTools,
     private val paymentAccountStatusesStore: PaymentAccountStatusesStore,
+    private val applyActiveOrdersUseCase: ApplyActiveOrdersUseCase,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PaymentAccountStatusProducer {
 
@@ -35,7 +39,7 @@ internal class DefaultPaymentAccountStatusProducer @AssistedInject constructor(
 
     override fun produce(): Flow<AccountStatus.Payment> {
         logger.i("[${params.userWalletId}] produce() called")
-        return paymentAccountStatusesStore.get(userWalletId = params.userWalletId)
+        val statuses = paymentAccountStatusesStore.get(userWalletId = params.userWalletId)
             .onStart { logger.i("[${params.userWalletId}] flow subscribed to store") }
             .map { status ->
                 if (status != null) {
@@ -52,7 +56,14 @@ internal class DefaultPaymentAccountStatusProducer @AssistedInject constructor(
                     )
                 }
             }
-            .flowOn(dispatchers.default)
+
+        val statusesWithActiveOrders = if (tangemPayFeatureToggles.isOrderFrameworkEnabled) {
+            applyActiveOrdersUseCase(userWalletId = params.userWalletId, statuses = statuses)
+        } else {
+            statuses
+        }
+
+        return statusesWithActiveOrders.flowOn(dispatchers.default)
     }
 
     @AssistedFactory
