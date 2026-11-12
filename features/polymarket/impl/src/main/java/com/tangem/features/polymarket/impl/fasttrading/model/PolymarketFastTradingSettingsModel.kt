@@ -18,6 +18,7 @@ import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUs
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeysUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingRevokeConfirmationUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingSettingsUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -46,7 +48,7 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     private val params = paramsContainer.require<PolymarketFastTradingSettingsComponent.Params>()
     private val converter = PolymarketFastTradingKeysUMConverter(thisDeviceName = deviceIdProvider.deviceName)
     private val isRefreshing = MutableStateFlow(false)
-    private val revokeConfirmation = MutableStateFlow<FastTradingRevokeConfirmationUM?>(null)
+    private val revokeConfirmation = MutableStateFlow<PendingRevocation?>(null)
 
     val uiState: StateFlow<PolymarketFastTradingSettingsUM>
         field = MutableStateFlow<PolymarketFastTradingSettingsUM>(
@@ -58,19 +60,23 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
             observeFastTrading(params.userWalletId),
             isRefreshing,
             revokeConfirmation,
-        ) { state, isRefreshing, revokeConfirmation ->
+        ) { state, isRefreshing, pendingRevocation ->
             state.overview.fold(
                 ifLeft = {
+                    pendingRevocation?.let(::dismiss)
                     PolymarketFastTradingSettingsUM.Error(onBackClick = ::onBackClick, onRetryClick = ::refresh)
                 },
                 ifRight = { overview ->
+                    val keys = converter.convert(overview, state.operation)
+                    val stillOffered = pendingRevocation?.takeIf { keys.isRevokeOffered(it.address) }
+                    if (stillOffered == null) pendingRevocation?.let(::dismiss)
                     PolymarketFastTradingSettingsUM.Content(
                         onBackClick = ::onBackClick,
-                        keys = converter.convert(overview, state.operation),
+                        keys = keys,
                         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = isRefreshing) { refresh() },
                         onActionClick = ::onActionClick,
                         onActivateClick = ::onActivateClick,
-                        revokeConfirmation = revokeConfirmation,
+                        revokeConfirmation = stillOffered?.confirmation,
                     )
                 },
             )
@@ -129,15 +135,24 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
                 formatArgs = wrappedList(action.address),
             )
         }
-        revokeConfirmation.value = FastTradingRevokeConfirmationUM(
-            description = description,
-            isHoldToConfirm = isHoldToConfirm,
-            onConfirm = {
-                revokeConfirmation.value = null
-                revoke(action.address)
-            },
-            onDismiss = { revokeConfirmation.value = null },
+        lateinit var pendingRevocation: PendingRevocation
+        pendingRevocation = PendingRevocation(
+            address = action.address,
+            confirmation = FastTradingRevokeConfirmationUM(
+                description = description,
+                isHoldToConfirm = isHoldToConfirm,
+                onConfirm = {
+                    dismiss(pendingRevocation)
+                    revoke(action.address)
+                },
+                onDismiss = { dismiss(pendingRevocation) },
+            ),
         )
+        revokeConfirmation.value = pendingRevocation
+    }
+
+    private fun dismiss(pendingRevocation: PendingRevocation) {
+        revokeConfirmation.update { if (it === pendingRevocation) null else it }
     }
 
     private fun revoke(address: String) {
@@ -146,9 +161,12 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
 
     private fun isRevokeOffered(address: String): Boolean {
         val keys = (uiState.value as? PolymarketFastTradingSettingsUM.Content)?.keys ?: return false
-        if (!keys.areActionsEnabled) return false
-        val rows = keys.thisDevice + keys.otherDevices
-        val actions = rows.flatMap { it.actions } + keys.unknownSigners.flatMap { it.actions }
+        return keys.isRevokeOffered(address)
+    }
+
+    private fun FastTradingKeysUM.isRevokeOffered(address: String): Boolean {
+        if (!areActionsEnabled) return false
+        val actions = (thisDevice + otherDevices).flatMap { it.actions } + unknownSigners.flatMap { it.actions }
         return actions.any { it is FastTradingKeyActionUM.Revoke && it.address.equals(address, ignoreCase = true) }
     }
 
@@ -168,4 +186,6 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
             }
         }
     }
+
+    private class PendingRevocation(val address: String, val confirmation: FastTradingRevokeConfirmationUM)
 }

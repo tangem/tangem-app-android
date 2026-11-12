@@ -230,6 +230,77 @@ internal class PolymarketFastTradingSettingsModelTest {
     }
 
     @Test
+    fun `GIVEN a second confirmation opened WHEN the first one dismisses late THEN the second one stays`() = runTest {
+        // Arrange
+        val model = createContentModel()
+        content(model).onActionClick(DEVICE_REVOKE)
+        advanceUntilIdle()
+        val firstOnDismiss = content(model).revokeConfirmation?.onDismiss
+        content(model).onActionClick(UNKNOWN_SIGNER_REVOKE)
+        advanceUntilIdle()
+        val second = content(model).revokeConfirmation
+
+        // Act
+        firstOnDismiss?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(content(model).revokeConfirmation).isSameInstanceAs(second)
+    }
+
+    @Test
+    fun `GIVEN revoke confirmation WHEN an operation starts and finishes THEN confirmation does not reappear`() =
+        runTest {
+            // Arrange
+            val model = createContentModel()
+            content(model).onActionClick(DEVICE_REVOKE)
+            advanceUntilIdle()
+
+            // Act
+            states.emit(createState(OVERVIEW.right(), runningOperation(PolymarketSessionKeyOperationRequest.Extend)))
+            advanceUntilIdle()
+            val whileRunning = content(model).revokeConfirmation
+            states.emit(createState(OVERVIEW.right()))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(whileRunning).isNull()
+            assertThat(content(model).revokeConfirmation).isNull()
+        }
+
+    @Test
+    fun `GIVEN revoke confirmation WHEN the key is revoked elsewhere THEN confirmation clears`() = runTest {
+        // Arrange
+        val model = createContentModel()
+        content(model).onActionClick(DEVICE_REVOKE)
+        advanceUntilIdle()
+
+        // Act
+        states.emit(createState(OVERVIEW.copy(wallet = OVERVIEW.wallet.copy(sessionKeys = emptyList())).right()))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(content(model).revokeConfirmation).isNull()
+    }
+
+    @Test
+    fun `GIVEN revoke confirmation WHEN overview fails and recovers THEN confirmation does not reappear`() = runTest {
+        // Arrange
+        val model = createContentModel()
+        content(model).onActionClick(DEVICE_REVOKE)
+        advanceUntilIdle()
+
+        // Act
+        states.emit(createState(PolymarketWalletError.Network.left()))
+        advanceUntilIdle()
+        states.emit(createState(OVERVIEW.right()))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(content(model).revokeConfirmation).isNull()
+    }
+
+    @Test
     fun `GIVEN another operation started meanwhile WHEN revoke confirmed THEN busy toast is shown`() = runTest {
         // Arrange
         every { startOperation(USER_WALLET_ID, REVOKE) } returns PolymarketSessionKeyOperationStart.Busy
