@@ -1627,10 +1627,10 @@ internal class SwapInteractorImpl @Inject constructor(
         sponsoredFeeFor: (feePayer: String) -> TransactionFeeExtended,
     ): Either<SendTransactionError, String> {
         val feePayer = solanaGaslessSwapResolver.resolveTransferFeePayer(fromSwapCurrencyStatus, transfer)
-        if (feePayer == null) {
-            TangemLogger.i("Solana sponsored CEX swap is not sent: no sponsor for the deposit transfer")
-            return SendTransactionError.SolanaGasless(SolanaGaslessError.ServiceUnavailable(code = null)).left()
-        }
+            .getOrElse { error ->
+                TangemLogger.i("Solana sponsored CEX swap is not sent: $error")
+                return SendTransactionError.SolanaGasless(error).left()
+            }
         return createAndSendGaslessTransactionUseCase(
             transactionData = transfer,
             userWallet = fromSwapCurrencyStatus.userWallet,
