@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -43,6 +44,7 @@ import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.modal.reportMeasuredHeight
 import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -52,7 +54,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
-import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.core.ui.res.generated.icons.ic_cross_24
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodStatus
@@ -222,11 +224,7 @@ private fun ProviderTitleDs(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
     TangemModal.TopNavigation(
         startButton = { NavigationDiscButtonDs(icon = Icons.ic_chevron_left_20, onClick = onBackClick) },
         endButton = {
-            NavigationDiscButtonDs(
-                icon = Icons.ic_cross_20,
-                modifier = Modifier.testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
-                onClick = onCloseClick,
-            )
+            CloseDiscButtonDs(onClick = onCloseClick)
         },
         contentColumn = {
             TitleSubtitleDs(
@@ -242,11 +240,7 @@ private fun ProviderTitleDs(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
 private fun PaymentMethodTitleDs(onCloseClick: () -> Unit) {
     TangemModal.TopNavigation(
         endButton = {
-            NavigationDiscButtonDs(
-                icon = Icons.ic_cross_20,
-                modifier = Modifier.testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
-                onClick = onCloseClick,
-            )
+            CloseDiscButtonDs(onClick = onCloseClick)
         },
         contentColumn = {
             TitleSubtitleDs(
@@ -292,6 +286,31 @@ private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit, modif
                 imageVector = icon,
                 tint = TangemTheme.colors3.icon.primary,
                 contentDescription = null,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CloseDiscButtonDs(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemSurface(
+        modifier = modifier
+            .size(44.dp)
+            .semantics { role = Role.Button }
+            .testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
+        isMaterial = true,
+        shape = CircleShape,
+        onClick = onClick,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                imageVector = Icons.ic_cross_24,
+                tint = TangemTheme.colors3.icon.primary,
+                contentDescription = stringResourceSafe(R.string.common_close),
             )
         }
     }
