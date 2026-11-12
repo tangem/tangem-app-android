@@ -25,7 +25,6 @@ internal class WalletConnectDeepLinkHandler @Inject constructor(
                 ?: uri.toString()
         if (wcUri.isNotBlank()) {
             try {
-                // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
                 getSelectedWalletSyncUseCase().fold(
                     ifLeft = {
                         TangemLogger.e("Error on getting user wallet: $it")
