@@ -18,8 +18,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 /**
- * The host must mark the content behind the calculator with `Modifier.hazeSourceTangem()`, otherwise the horizon
- * menu has no background to blur.
+ * The host marks the calculator, or the content behind it, with `Modifier.hazeSourceTangem()`: otherwise the horizon
+ * menu has nothing to blur.
  */
 internal class EarnCalculatorComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
