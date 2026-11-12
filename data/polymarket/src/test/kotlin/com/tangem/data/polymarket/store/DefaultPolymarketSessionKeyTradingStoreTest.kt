@@ -64,6 +64,20 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
     }
 
     @Test
+    fun `GIVEN a missing key WHEN marked ready THEN it is no longer missing`() = runTest {
+        // Arrange
+        store.setReconciliation(WALLET_A, checked(missing = setOf(KEY)))
+        val missingBefore = store.isMissingOnExchange(WALLET_A, KEY)
+
+        // Act
+        store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Assert
+        assertThat(missingBefore).isTrue()
+        assertThat(store.isMissingOnExchange(WALLET_A, KEY)).isFalse()
+    }
+
+    @Test
     fun `GIVEN a refused and missing key WHEN authorized again THEN it is neither refused nor missing nor ready`() =
         runTest {
             // Arrange

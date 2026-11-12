@@ -354,6 +354,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 coVerify(exactly = LISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
                 assertThat(testScheduler.currentTime).isEqualTo(LISTING_WAIT_MILLIS)
                 coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+                coVerify(exactly = 1) { tradingStore.markAuthorized(USER_WALLET_ID, KEY) }
             }
 
         @Test
@@ -979,6 +980,8 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     PolymarketSessionKeyProgress.Finished(key().right()),
                 ).inOrder()
                 coVerify(exactly = 1) { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) }
+                coVerify(exactly = 1) { tradingStore.markAuthorized(USER_WALLET_ID, KEY) }
+                coVerify(exactly = 0) { tradingStore.markAuthorized(USER_WALLET_ID, PREVIOUS) }
             }
 
         @Test
