@@ -417,21 +417,20 @@ private fun BalanceBlock(
             style = TangemTheme.typography3.caption.medium,
         )
 
-        when (state) {
-            is TangemPayDetailsBalanceBlockState.Loading -> Unit
-            is TangemPayDetailsBalanceBlockState.Content -> Unit
-            is TangemPayDetailsBalanceBlockState.Error -> {
-                if (state.isInactive) {
-                    TangemBadge(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        text = resourceReference(R.string.tangempay_status_inactive),
-                        variant = TangemBadge.Variant.Outline,
-                        status = TangemBadge.Status.Warning,
-                        size = TangemBadge.Size.X6,
-                        iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
-                    )
-                }
-            }
+        val isInactive = when (state) {
+            is TangemPayDetailsBalanceBlockState.Loading -> false
+            is TangemPayDetailsBalanceBlockState.Content -> state.isInactive
+            is TangemPayDetailsBalanceBlockState.Error -> state.isInactive
+        }
+        if (isInactive) {
+            TangemBadge(
+                modifier = Modifier.padding(vertical = 4.dp),
+                text = resourceReference(R.string.tangempay_status_inactive),
+                variant = TangemBadge.Variant.Outline,
+                status = TangemBadge.Status.Warning,
+                size = TangemBadge.Size.X6,
+                iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
+            )
         }
     }
 }

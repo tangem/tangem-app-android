@@ -84,6 +84,7 @@ internal class CashbackUMTest {
             fiatBalance = TextReference.EMPTY,
             isBalanceFlickering = false,
             isNegative = false,
+            isInactive = false,
         ),
         isBalanceHidden = false,
         messageBanner = null,
