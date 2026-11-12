@@ -109,8 +109,14 @@ internal class PlaceResultUMConverterTest {
         PartialSellModel(
             name = "a fee above the proceeds leaves nothing",
             shares = BigDecimal("0.979592"),
-            received = BigDecimal("0.010000"),
+            received = BigDecimal("0.001000"),
             expectedTotal = BigDecimal("0.00"),
+        ),
+        PartialSellModel(
+            name = "the fill ratio follows the shares, not the collateral",
+            shares = QUOTED_SHARES.half(),
+            received = BigDecimal("30.000000"),
+            expectedTotal = BigDecimal("29.30"),
         ),
     )
 
