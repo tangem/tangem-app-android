@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.domain.tangempay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayRegionsUseCase
@@ -93,6 +94,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
                 source = result.source,
                 destination = result.destination,
                 networkFee = result.networkFee,
+                quote = null,
             )
         }
     }
@@ -107,6 +109,10 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
 
     fun onNetworkFeeChanged(networkFee: BigDecimal) {
         draft.update { it.copy(networkFee = networkFee) }
+    }
+
+    fun onQuoteChanged(quote: BankOfframpQuote) {
+        draft.update { it.copy(quote = quote) }
     }
 
     fun onOrderSigned() {
@@ -150,6 +156,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         if (allowed.isEmpty()) return this
         return copy(
             recipient = account,
+            quote = null,
             destination = destination?.let { current ->
                 allowed.firstOrNull { it.rail == account.details.rail }
                     ?: current.takeIf { it in allowed }

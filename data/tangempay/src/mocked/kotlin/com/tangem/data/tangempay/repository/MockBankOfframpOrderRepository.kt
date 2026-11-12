@@ -153,6 +153,7 @@ internal class MockBankOfframpOrderRepository(
                     recipient = recipient,
                 ),
             ).bind()
+            ensure(amount >= MOCK_SPEI_MIN_AMOUNT) { BankOfframpError.AmountOutOfLimits }
             amountTriggeredError(amountInCents = amount.movePointRight(2).toLong())?.let { raise(it) }
             quotes.getOrPut(idempotencyKey) { createMockQuote(amount = amount, recipient = recipient) }
         }
@@ -166,9 +167,7 @@ internal class MockBankOfframpOrderRepository(
             transfers.getOrPut(quoteId) {
                 val quote = quotes.values.firstOrNull { it.quoteId == quoteId }
                     ?: raise(BankOfframpError.Unknown(cause = IllegalArgumentException("Unknown quote $quoteId")))
-                ensure(currentTimeMillis() < quote.expiresAt.millis) {
-                    BankOfframpError.Unknown(cause = IllegalStateException("Quote $quoteId has expired"))
-                }
+                ensure(currentTimeMillis() < quote.sendDeadline.millis) { BankOfframpError.QuoteExpired }
                 BankOfframpTransfer(
                     transferId = "$TRANSFER_ID_PREFIX${nextTransferIndex++}",
                     depositAddress = FAKE_TRANSFER_DEPOSIT_ADDRESS,
@@ -187,8 +186,8 @@ internal class MockBankOfframpOrderRepository(
             quoteId = "$QUOTE_ID_PREFIX${nextQuoteIndex++}",
             bankAccountId = bankAccountIdOf(recipient),
             feeAmount = feeAmount,
-            sourceAmount = amount + feeAmount,
-            destinationAmount = amount.multiply(MXN_PER_USD).setScale(2, RoundingMode.HALF_UP),
+            sourceAmount = amount,
+            destinationAmount = (amount - feeAmount).multiply(MXN_PER_USD).setScale(2, RoundingMode.HALF_UP),
             destinationCurrency = MXN,
             exchangeRate = MXN_PER_USD,
             fee = fee,
@@ -224,6 +223,8 @@ internal class MockBankOfframpOrderRepository(
     private fun amountTriggeredError(amountInCents: Long): BankOfframpError? = when (amountInCents) {
         SENDER_REGION_TRIGGER_CENTS -> BankOfframpError.SenderRegionUnsupported
         WITHDRAWAL_IN_PROGRESS_TRIGGER_CENTS -> BankOfframpError.WithdrawalInProgress
+        VERIFICATION_INCOMPLETE_TRIGGER_CENTS -> BankOfframpError.VerificationIncomplete
+        REJECTED_TRIGGER_CENTS -> BankOfframpError.Rejected
         else -> null
     }
 
@@ -265,6 +266,8 @@ internal class MockBankOfframpOrderRepository(
         const val SUPPORTED_COUNTRY_CODE = "US"
         const val SENDER_REGION_TRIGGER_CENTS = 66_600L
         const val WITHDRAWAL_IN_PROGRESS_TRIGGER_CENTS = 77_700L
+        const val VERIFICATION_INCOMPLETE_TRIGGER_CENTS = 55_500L
+        const val REJECTED_TRIGGER_CENTS = 44_400L
         const val FAILED_TRIGGER_CENTS = 88_800L
         const val STUCK_TRIGGER_CENTS = 99_900L
         const val BLOCKED_BUSINESS_NAME = "Blocked"
@@ -276,6 +279,7 @@ internal class MockBankOfframpOrderRepository(
         const val QUOTE_LIFETIME_MILLIS = 15 * 60_000L
         const val MXN = "MXN"
         val MXN_PER_USD = BigDecimal("17.25")
+        val MOCK_SPEI_MIN_AMOUNT: BigDecimal = MOCK_SPEI_DESTINATION.amountLimits?.min ?: BigDecimal.ZERO
         const val USD = "USD"
         val ACH_FEE = fixedFee(name = "ACH", amount = "1.50")
         val ACH_ETA = OfframpEta(minDays = 1, maxDays = 3)
