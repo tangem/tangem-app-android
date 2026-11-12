@@ -51,6 +51,9 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
+import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketSessionKeyMessagesFactory
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
@@ -94,6 +97,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import java.math.BigDecimal
@@ -150,7 +154,8 @@ internal class PolymarketMainModelTest {
     private val fastTradingBannerSource: PolymarketFastTradingBannerSource = mockk {
         every { observe(any(), capture(fastTradingRechecks)) } returns fastTradingBanner
         coEvery { refresh(any()) } just Runs
-        coEvery { dismissActivation(any()) } just Runs
+        coEvery { dismiss(any(), any()) } just Runs
+        every { start(any(), any()) } returns PolymarketSessionKeyOperationStart.Started(id = 1)
     }
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
@@ -795,11 +800,32 @@ internal class PolymarketMainModelTest {
         model.onDestroy()
     }
 
-    @Test
-    fun `GIVEN activate banner WHEN action clicked THEN fast trading settings open for the wallet`() = runTest {
+    @ParameterizedTest
+    @MethodSource("startedBanners")
+    fun `GIVEN an actionable banner WHEN action clicked THEN its operation starts without navigation`(
+        banner: PolymarketFastTradingBanner,
+    ) = runTest {
         // Arrange
         val model = createModel(testScope = this)
-        fastTradingBanner.value = PolymarketFastTradingBanner.Activate
+        fastTradingBanner.value = banner
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.fastTradingBanner!!.onActionClick()
+
+        // Assert
+        verify(exactly = 1) { fastTradingBannerSource.start(USER_WALLET_ID, banner) }
+        verify(exactly = 0) { router.push(any(), any()) }
+        verify(exactly = 0) { messageSender.send(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN another operation runs WHEN banner action clicked THEN the busy toast is shown`() = runTest {
+        // Arrange
+        every { fastTradingBannerSource.start(USER_WALLET_ID, any()) } returns PolymarketSessionKeyOperationStart.Busy
+        val model = createModel(testScope = this)
+        fastTradingBanner.value = PolymarketFastTradingBanner.Extend(daysLeft = 3)
         advanceUntilIdle()
 
         // Act
@@ -807,7 +833,7 @@ internal class PolymarketMainModelTest {
 
         // Assert
         verify(exactly = 1) {
-            router.push(PolymarketRoute.FastTradingSettings(userWalletId = USER_WALLET_ID), any())
+            messageSender.send(PolymarketSessionKeyMessagesFactory.create(PolymarketSessionKeyOperationStart.Busy)!!)
         }
         model.onDestroy()
     }
@@ -830,21 +856,43 @@ internal class PolymarketMainModelTest {
             model.onDestroy()
         }
 
+    @ParameterizedTest
+    @MethodSource("startedBanners")
+    fun `GIVEN a dismissible banner WHEN closed THEN its dismissal is stored`(banner: PolymarketFastTradingBanner) =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            fastTradingBanner.value = banner
+            advanceUntilIdle()
+
+            // Act
+            when (val state = model.uiState.value.fastTradingBanner) {
+                is PolymarketFastTradingBannerUM.Activate -> state.onCloseClick()
+                is PolymarketFastTradingBannerUM.Reactivate -> state.onCloseClick()
+                is PolymarketFastTradingBannerUM.Extend -> state.onCloseClick()
+                is PolymarketFastTradingBannerUM.UnknownSigners,
+                null,
+                -> error("Banner $banner has no close button")
+            }
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { fastTradingBannerSource.dismiss(USER_WALLET_ID, banner) }
+            model.onDestroy()
+        }
+
     @Test
-    fun `GIVEN activate banner WHEN closed THEN activate dismissal is stored`() = runTest {
+    fun `GIVEN extend banner WHEN shown THEN days left reach the UI`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
-        fastTradingBanner.value = PolymarketFastTradingBanner.Activate
-        advanceUntilIdle()
 
         // Act
-        (model.uiState.value.fastTradingBanner as PolymarketFastTradingBannerUM.Activate).onCloseClick()
+        fastTradingBanner.value = PolymarketFastTradingBanner.Extend(daysLeft = 7)
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) {
-            fastTradingBannerSource.dismissActivation(USER_WALLET_ID)
-        }
+        assertThat((model.uiState.value.fastTradingBanner as PolymarketFastTradingBannerUM.Extend).daysLeft)
+            .isEqualTo(7)
         model.onDestroy()
     }
 
@@ -2467,6 +2515,14 @@ internal class PolymarketMainModelTest {
     }
 
     private companion object {
+
+        @JvmStatic
+        fun startedBanners() = listOf(
+            PolymarketFastTradingBanner.Activate,
+            PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
+            PolymarketFastTradingBanner.Extend(daysLeft = 12),
+        )
+
         const val DEPOSIT_ADDRESS = "0xbridge0000000000000000000000000000000001"
         const val STATUS_FETCH_MS = 1_000L
         const val REQUISITES_ADDRESS = "0xrequisites00000000000000000000000000002"
