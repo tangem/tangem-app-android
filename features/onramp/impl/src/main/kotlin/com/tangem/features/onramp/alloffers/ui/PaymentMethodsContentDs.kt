@@ -70,7 +70,7 @@ private fun PaymentMethodDs(methodUM: AllOffersPaymentMethodUM, modifier: Modifi
         modifier = modifier
             .fillMaxWidth()
             .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD),
-        color = TangemTheme.colors3.bg.secondary,
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = RoundedCornerShape(14.dp),
         onClick = methodUM.methodConfig.onClick,
     ) {
