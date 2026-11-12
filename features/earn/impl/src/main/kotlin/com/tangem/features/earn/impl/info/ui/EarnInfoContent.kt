@@ -107,6 +107,7 @@ private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?, pu
     val density = LocalDensity.current
 
     Box(modifier = Modifier.fillMaxSize()) {
+        HazeBackdrop()
         TangemPullToRefreshSlidingContainer(
             config = pullToRefresh,
             indicatorOffset = with(density) { navigationHeightPx.toDp() },
@@ -169,6 +170,17 @@ private fun Navigation(state: EarnInfoUM, isChipsPinned: Boolean, modifier: Modi
             @Suppress("MagicNumber")
             traversalIndex = -2f
         },
+    )
+}
+
+/** The pulled content slides away from under the navigation; this source stays, so its glass always has a backdrop. */
+@Composable
+private fun HazeBackdrop() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .hazeSourceTangem(zIndex = -1f)
+            .background(TangemTheme.colors3.bg.primary),
     )
 }
 
