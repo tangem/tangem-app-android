@@ -8,6 +8,7 @@ import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.model.AmountLimits
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
@@ -135,6 +136,7 @@ internal fun offrampDestination(
     minDays: Int = 1,
     maxDays: Int = 3,
     fixedFeeAmount: BigDecimal? = null,
+    amountLimits: AmountLimits? = null,
 ): OfframpDestination = OfframpDestination(
     rail = rail,
     currency = "USD",
@@ -147,6 +149,7 @@ internal fun offrampDestination(
         fixedAmount = fixedFeeAmount,
     ),
     eta = OfframpEta(minDays = minDays, maxDays = maxDays),
+    amountLimits = amountLimits,
 )
 
 internal fun offrampOptions(
@@ -176,15 +179,19 @@ internal fun bankWithdrawOptions(
         offrampDestination(),
         offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0),
     ),
-    minAmount: BigDecimal = BigDecimal("1.00"),
-    maxAmount: BigDecimal = BigDecimal("10000.00"),
     currency: Currency = Currency.getInstance("USD"),
+    defaultAmountLimits: AmountLimits = AmountLimits(
+        min = BigDecimal("1.00"),
+        max = BigDecimal("10000.00"),
+        currency = currency.currencyCode,
+    ),
+    isLimitedPerRail: Boolean = false,
 ): BankWithdrawOptions = BankWithdrawOptions(
     sources = sources.toImmutableList(),
     destinations = destinations.toImmutableList(),
-    minAmount = minAmount,
-    maxAmount = maxAmount,
     currency = currency,
+    defaultAmountLimits = defaultAmountLimits,
+    isLimitedPerRail = isLimitedPerRail,
 )
 
 internal fun savedRecipientDraft(recipient: BankAccount? = bankAccount(id = "acc-1")): BankWithdrawDraft =

@@ -45,12 +45,13 @@ internal data class AmountState(
         val amount = displayValue.parseBigDecimalOrNull()
         val networkFee = (networkFee as? NetworkFeeState.Loaded)?.fee.orZero()
         val fees = destination.fee.amount + networkFee
+        val limits = options.amountLimitsFor(destination)
         return AmountSelection(
             currency = options.currency,
-            minAmount = options.minAmount,
-            maxAmount = options.maxAmount,
+            minAmount = limits.min,
+            maxAmount = limits.max,
             maxInputAmount = BankWithdrawAmountValidator.maxInputAmount(
-                maxAmount = options.maxAmount,
+                maxAmount = limits.max,
                 balance = source.fiatBalance,
                 fee = fees,
             ),
@@ -64,8 +65,8 @@ internal data class AmountState(
             amount = amount,
             validation = BankWithdrawAmountValidator.validate(
                 amount = amount,
-                minAmount = options.minAmount,
-                maxAmount = options.maxAmount,
+                minAmount = limits.min,
+                maxAmount = limits.max,
                 balance = source.fiatBalance,
                 fee = fees,
             ).withNetworkFeeCoverage(),
@@ -91,7 +92,7 @@ internal data class AmountState(
 internal data class AmountSelection(
     val currency: Currency,
     val minAmount: BigDecimal,
-    val maxAmount: BigDecimal,
+    val maxAmount: BigDecimal?,
     val maxInputAmount: BigDecimal,
     val sources: ImmutableList<BankWithdrawSource>,
     val destinations: ImmutableList<OfframpDestination>,
