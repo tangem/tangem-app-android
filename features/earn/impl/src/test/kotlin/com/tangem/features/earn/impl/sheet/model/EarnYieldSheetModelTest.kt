@@ -16,6 +16,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -71,6 +72,8 @@ internal class EarnYieldSheetModelTest {
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val accountStatusList: AccountStatusList = mockk()
     private val getSelectedAppCurrency: GetSelectedAppCurrencyUseCase = mockk()
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
+    private val isBalanceHidden = MutableStateFlow(false)
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
 
     private val lending = createFakeEarnProduct(FakeEarnProductPreset.Lending)
@@ -90,10 +93,13 @@ internal class EarnYieldSheetModelTest {
             accountStatusListSupplier,
             accountStatusList,
             getSelectedAppCurrency,
+            getBalanceHidingSettingsUseCase,
         )
         mockkObject(CryptoCurrencyStatusOperations)
+        isBalanceHidden.value = false
         every { accountStatusListSupplier(USER_WALLET_ID) } returns flowOf(accountStatusList)
         every { getSelectedAppCurrency.invokeOrDefault() } returns flowOf(AppCurrency.Default)
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHidden
         stubStatus(accountStatusList, none())
     }
 
@@ -350,6 +356,52 @@ internal class EarnYieldSheetModelTest {
         }
 
     @Test
+    fun `GIVEN hidden balance WHEN model created THEN the active row masks the amount and the fiat amount`() =
+        runTest {
+            // Arrange
+            stubFiatRate(accountStatusList, BigDecimal("4000"))
+            isBalanceHidden.value = true
+            val summary = createSummary(productId = lending.id, position = EarnPositionSummary(BigDecimal("0.5031")))
+
+            // Act
+            val model = createModel(listOf(summary))
+            advanceUntilIdle()
+
+            // Assert
+            val row = model.uiState.value.active.single()
+            assertThat(row.amount).isEqualTo(stringReference("***"))
+            assertThat(row.amountFiat).isEqualTo(stringReference("***"))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN rows shown WHEN balance hiding is switched THEN the amounts are masked and shown again`() = runTest {
+        // Arrange
+        val amount = BigDecimal("0.5031")
+        val fiatRate = BigDecimal("4000")
+        stubFiatRate(accountStatusList, fiatRate)
+        val model = createModel(listOf(createSummary(productId = lending.id, position = EarnPositionSummary(amount))))
+        advanceUntilIdle()
+        val shown = model.uiState.value.active.single()
+
+        // Act
+        isBalanceHidden.value = true
+        advanceUntilIdle()
+        val masked = model.uiState.value.active.single()
+        isBalanceHidden.value = false
+        advanceUntilIdle()
+        val shownAgain = model.uiState.value.active.single()
+
+        // Assert
+        assertThat(shown.amountFiat).isEqualTo(fiatText(amount, fiatRate, AppCurrency.Default))
+        assertThat(masked.amount).isEqualTo(stringReference("***"))
+        assertThat(masked.amountFiat).isEqualTo(stringReference("***"))
+        assertThat(shownAgain.amount).isEqualTo(shown.amount)
+        assertThat(shownAgain.amountFiat).isEqualTo(shown.amountFiat)
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN no status for the currency WHEN model created THEN the active row has no fiat amount`() = runTest {
         // Arrange
         val summary = createSummary(productId = lending.id, position = EarnPositionSummary(BigDecimal("0.5031")))
@@ -389,6 +441,7 @@ internal class EarnYieldSheetModelTest {
             summarySupplier = summarySupplier,
             singleAccountStatusListSupplier = accountStatusListSupplier,
             getSelectedAppCurrency = getSelectedAppCurrency,
+            getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             converter = EarnYieldSheetConverter(registry = registry),
             router = router,
         )

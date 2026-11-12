@@ -8,6 +8,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.impl.HostEarnNavigator
 import com.tangem.features.earn.impl.overview.EarnProductSummarySupplier
@@ -41,6 +42,7 @@ internal class EarnYieldSheetModel @Inject constructor(
     summarySupplier: EarnProductSummarySupplier,
     singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     getSelectedAppCurrency: GetSelectedAppCurrencyUseCase,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val converter: EarnYieldSheetConverter,
     router: Router,
 ) : Model(), EarnYieldSheetClickIntents {
@@ -68,6 +70,7 @@ internal class EarnYieldSheetModel @Inject constructor(
             flow = summarySupplier(params.userWalletId).map { it[params.cryptoCurrency.id] },
             flow2 = fiatRate,
             flow3 = getSelectedAppCurrency.invokeOrDefault(),
+            flow4 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
             transform = ::createUiState,
         )
             .flowOn(dispatchers.default)
@@ -92,11 +95,13 @@ internal class EarnYieldSheetModel @Inject constructor(
         summaries: List<EarnProductSummary>,
         fiatRate: BigDecimal?,
         appCurrency: AppCurrency,
+        isBalanceHidden: Boolean,
     ): EarnYieldSheetUM = converter.convert(
         summaries = summaries,
         currency = params.cryptoCurrency,
         fiatRate = fiatRate,
         appCurrency = appCurrency,
+        isBalanceHidden = isBalanceHidden,
         intents = this,
     )
 }
