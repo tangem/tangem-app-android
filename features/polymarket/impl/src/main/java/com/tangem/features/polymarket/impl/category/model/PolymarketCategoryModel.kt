@@ -25,8 +25,8 @@ import com.tangem.features.polymarket.impl.common.feed.model.PolymarketFeedContr
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryFilterUMConverter
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
-import com.tangem.features.polymarket.impl.main.model.PolymarketFastTradingBannerController
-import com.tangem.features.polymarket.impl.main.model.PolymarketFastTradingBannerSource
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerController
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder

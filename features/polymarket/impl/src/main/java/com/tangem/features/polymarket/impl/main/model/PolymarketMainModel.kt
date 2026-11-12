@@ -36,6 +36,8 @@ import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerController
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory

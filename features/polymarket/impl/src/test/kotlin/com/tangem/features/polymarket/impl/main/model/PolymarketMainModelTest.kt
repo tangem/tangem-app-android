@@ -4,6 +4,9 @@ import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBanner
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.domain.polymarket.model.PolymarketLiveQuote
 import com.tangem.domain.polymarket.model.PolymarketSportsState
@@ -53,7 +56,6 @@ import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFo
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent.Action as ActivationAction
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction

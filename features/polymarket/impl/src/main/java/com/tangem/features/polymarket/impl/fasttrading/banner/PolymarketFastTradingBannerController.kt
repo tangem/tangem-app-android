@@ -1,9 +1,9 @@
-package com.tangem.features.polymarket.impl.main.model
+package com.tangem.features.polymarket.impl.fasttrading.banner
 
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent.Action
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder

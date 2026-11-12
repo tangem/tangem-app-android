@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.impl.main.model
+package com.tangem.features.polymarket.impl.fasttrading.banner
 
 import arrow.core.left
 import arrow.core.right

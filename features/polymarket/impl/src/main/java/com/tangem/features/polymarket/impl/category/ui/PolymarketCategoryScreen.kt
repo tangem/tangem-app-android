@@ -27,7 +27,7 @@ import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketScrollIdleEf
 import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketVisibleEventsEffect
 import com.tangem.features.polymarket.impl.common.feed.ui.polymarketEventsSection
 import com.tangem.features.polymarket.impl.common.feed.ui.toTangemTabItemUM
-import com.tangem.features.polymarket.impl.main.ui.PolymarketFastTradingBanner
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBanner
 import kotlinx.collections.immutable.toImmutableList
 
 private const val KEY_FAST_TRADING_BANNER = "fast_trading_banner"

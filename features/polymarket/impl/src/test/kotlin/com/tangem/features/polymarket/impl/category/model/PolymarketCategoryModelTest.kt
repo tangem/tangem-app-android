@@ -24,9 +24,9 @@ import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent.Action as ActivationAction
-import com.tangem.features.polymarket.impl.main.model.PolymarketFastTradingBanner
-import com.tangem.features.polymarket.impl.main.model.PolymarketFastTradingBannerSource
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBanner
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction

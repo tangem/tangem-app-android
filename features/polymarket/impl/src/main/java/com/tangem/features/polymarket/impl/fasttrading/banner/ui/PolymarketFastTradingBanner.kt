@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.impl.main.ui
+package com.tangem.features.polymarket.impl.fasttrading.banner.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -19,7 +19,6 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
 
 @Composable
 internal fun PolymarketFastTradingBanner(state: PolymarketFastTradingBannerUM, modifier: Modifier = Modifier) {

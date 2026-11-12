@@ -6,7 +6,7 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketCategoryTabUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBannerUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM

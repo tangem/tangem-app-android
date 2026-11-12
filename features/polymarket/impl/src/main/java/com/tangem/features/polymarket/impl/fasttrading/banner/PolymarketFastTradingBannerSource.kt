@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.impl.main.model
+package com.tangem.features.polymarket.impl.fasttrading.banner
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
