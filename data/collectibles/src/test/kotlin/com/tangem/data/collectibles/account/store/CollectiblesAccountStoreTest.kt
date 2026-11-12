@@ -285,6 +285,7 @@ internal class CollectiblesAccountStoreTest {
         val BALANCE_DTO = CollectiblesVaultBalanceDTO(
             usdcAmount = BigDecimal("20"),
             usdcMint = MockCollectibles.USDC_MINT,
+            vaultAddress = MockCollectibles.VAULT_ADDRESS,
             usdcAtaAddress = MockCollectibles.USDC_ATA_ADDRESS,
         )
 
