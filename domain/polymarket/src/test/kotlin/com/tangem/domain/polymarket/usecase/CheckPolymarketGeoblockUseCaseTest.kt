@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -27,25 +28,25 @@ internal class CheckPolymarketGeoblockUseCaseTest {
     @Test
     fun `GIVEN region is blocked WHEN invoke THEN returns true`() = runTest {
         // Arrange
-        coEvery { polymarketRepository.checkGeoblock() } returns true.right()
+        coEvery { polymarketRepository.checkGeoblock() } returns PolymarketGeoblock.BLOCKED.right()
 
         // Act
         val actual = useCase()
 
         // Assert
-        assertThat(actual).isEqualTo(true.right())
+        assertThat(actual).isEqualTo(PolymarketGeoblock.BLOCKED.right())
     }
 
     @Test
     fun `GIVEN region is not blocked WHEN invoke THEN returns false`() = runTest {
         // Arrange
-        coEvery { polymarketRepository.checkGeoblock() } returns false.right()
+        coEvery { polymarketRepository.checkGeoblock() } returns PolymarketGeoblock.ALLOWED.right()
 
         // Act
         val actual = useCase()
 
         // Assert
-        assertThat(actual).isEqualTo(false.right())
+        assertThat(actual).isEqualTo(PolymarketGeoblock.ALLOWED.right())
     }
 
     @Test

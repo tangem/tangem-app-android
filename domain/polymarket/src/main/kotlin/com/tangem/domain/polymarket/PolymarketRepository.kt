@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket
 import arrow.core.Either
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -145,9 +146,8 @@ interface PolymarketRepository {
 
     /**
      * Check whether Polymarket is geo-blocked for the caller's region (`GET polymarket.com/api/geoblock`).
-     * Returns `true` when trading is blocked.
      */
-    suspend fun checkGeoblock(): Either<DataError, Boolean>
+    suspend fun checkGeoblock(): Either<DataError, PolymarketGeoblock>
 
     /**
      * Fetch the relayer nonce for [ownerAddress] (`GET relayer-v2.polymarket.com/nonce?address=&type=WALLET`),

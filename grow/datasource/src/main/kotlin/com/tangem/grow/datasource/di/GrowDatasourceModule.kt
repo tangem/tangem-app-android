@@ -391,6 +391,7 @@ internal object GrowDatasourceModule {
                 apiConfigId = PolymarketWeb.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
+                serialization = ApiSerialization.KOTLINX,
             ),
         )
     }

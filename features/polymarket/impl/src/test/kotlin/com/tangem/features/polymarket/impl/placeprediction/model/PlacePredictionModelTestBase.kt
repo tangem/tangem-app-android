@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
 import arrow.core.right
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -159,7 +160,7 @@ internal abstract class PlacePredictionModelTestBase {
             PolymarketBalanceAllowance(balance = BigDecimal("100"), allowances = mapOf("0xspender" to BigDecimal("1000"))).right()
         coEvery { getQuoteUseCase(any(), request = any()) } returns createQuote().right()
         coEvery { getPriceUseCase(assetId = any(), side = any()) } returns BigDecimal("0.48").right()
-        coEvery { checkGeoblockUseCase() } returns false.right()
+        coEvery { checkGeoblockUseCase() } returns PolymarketGeoblock.ALLOWED.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
         every { featureToggles.isPolymarketFastOrdersEnabled } returns false

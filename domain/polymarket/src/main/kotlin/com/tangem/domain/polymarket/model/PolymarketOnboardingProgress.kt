@@ -15,12 +15,7 @@ sealed interface PolymarketOnboardingProgress {
      */
     data class Ready(val isNewAccount: Boolean) : PolymarketOnboardingProgress
 
-    /**
-     * Terminal: [isRetryable] tells whether starting another run can plausibly succeed.
-     *
-     * The UI does not currently read [isRetryable] — both values return the Start button to idle.
-     * The flag is reserved for the error design that is still to be agreed.
-     */
+    /** Terminal: [isRetryable] tells whether starting another run can plausibly succeed. */
     data class Failed(
         val error: PolymarketOnboardingError,
         val isRetryable: Boolean,

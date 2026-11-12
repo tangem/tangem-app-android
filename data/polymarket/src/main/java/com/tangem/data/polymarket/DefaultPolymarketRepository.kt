@@ -53,6 +53,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsPage
 import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchingContext
@@ -78,6 +79,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.toHexString
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.math.BigDecimal
@@ -419,10 +421,27 @@ internal class DefaultPolymarketRepository @Inject constructor(
         )
     }
 
-    override suspend fun checkGeoblock(): Either<DataError, Boolean> = withContext(dispatchers.io) {
+    override suspend fun checkGeoblock(): Either<DataError, PolymarketGeoblock> = withContext(dispatchers.io) {
         safeApiCall(
-            call = { geoApi.getGeoblock().bind().blocked.right() },
-            onError = { DataError.NetworkError.NoInternetConnection().left() },
+            call = {
+                val geoblock = if (geoApi.getGeoblock().bind().blocked) {
+                    PolymarketGeoblock.BLOCKED
+                } else {
+                    PolymarketGeoblock.ALLOWED
+                }
+                TangemLogger.i("Geoblock: $geoblock")
+
+                geoblock.right()
+            },
+            onError = { error ->
+                when {
+                    error is ApiResponseError.NetworkException ||
+                        error is ApiResponseError.TimeoutException -> PolymarketGeoblock.NO_RESPONSE.right()
+                    error is ApiResponseError.UnknownException && error.cause is SerializationException ->
+                        PolymarketGeoblock.UNRECOGNIZED_RESPONSE.right()
+                    else -> DataError.NetworkError.NoInternetConnection().left()
+                }
+            },
         )
     }
 
