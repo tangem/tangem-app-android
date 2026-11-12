@@ -118,6 +118,27 @@ internal class EarnListBatchFlowManagerTest {
     }
 
     @Test
+    fun `GIVEN a page already shown WHEN the next one repeats its token THEN the token is listed once`() = runTest {
+        // Arrange
+        val manager = createManager()
+        advanceUntilIdle()
+        batchState.value = paginating(batch(key = 0, ids = listOf("btc", "tether")))
+        advanceUntilIdle()
+
+        // Act
+        batchState.value = paginating(
+            batch(key = 0, ids = listOf("btc", "tether")),
+            batch(key = 1, ids = listOf("tether", "eth")),
+        )
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(manager.uiItems.value.map { it.id })
+            .containsExactly("btc_ethereum_STAKING", "tether_ethereum_STAKING", "eth_ethereum_STAKING")
+            .inOrder()
+    }
+
+    @Test
     fun `GIVEN two pages shown WHEN a reload brings back a single page THEN the list is rebuilt from it`() =
         runTest {
             // Arrange

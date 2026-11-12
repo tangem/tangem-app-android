@@ -61,7 +61,9 @@ internal class EarnListBatchFlowManager(
                     accItems.addAll(newItems) to newState.data.lastIndex
                 }
             }
-            .map { (items, _) -> items }
+            // limit/offset pages over a live ranking: an opportunity whose rank shifts between two requests
+            // comes back in both, and the list keys rows by id
+            .map { (items, _) -> items.distinctBy(TangemTokenRow.State.Content::id).toPersistentList() }
             .distinctUntilChanged()
             .stateIn(
                 scope = modelScope,
