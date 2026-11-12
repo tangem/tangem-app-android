@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -24,6 +25,9 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -269,17 +273,30 @@ private fun ColumnScope.TitleSubtitleDs(title: TextReference, subtitle: TextRefe
     }
 }
 
+private val HeaderDiscShineBorder = BorderStroke(
+    width = 1.dp,
+    brush = Brush.linearGradient(
+        colors = listOf(Color.White.copy(alpha = 0.12f), Color.White.copy(alpha = 0.09f)),
+        start = Offset.Zero,
+        end = Offset(120f, 120f),
+    ),
+)
+
+private val HeaderDiscShineFill = Brush.verticalGradient(
+    listOf(Color.White.copy(alpha = 0.040f), Color.White.copy(alpha = 0.062f)),
+)
+
 @Composable
-private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun HeaderDiscDs(icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(
-        modifier = modifier.size(44.dp).semantics { role = Role.Button },
-        color = TangemTheme.colors3.bg.transparent.primary,
-        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
+        modifier = modifier,
+        color = Color.Transparent,
         shape = CircleShape,
+        border = HeaderDiscShineBorder,
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().background(HeaderDiscShineFill),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -293,9 +310,20 @@ private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit, modif
 }
 
 @Composable
+private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    HeaderDiscDs(
+        icon = icon,
+        onClick = onClick,
+        modifier = modifier.size(44.dp).semantics { role = Role.Button },
+    )
+}
+
+@Composable
 private fun CloseDiscButtonDs(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val closeDescription = stringResourceSafe(CoreUiR.string.common_close)
-    TangemSurface(
+    HeaderDiscDs(
+        icon = Icons.ic_cross_24,
+        onClick = onClick,
         modifier = modifier
             .size(44.dp)
             .semantics {
@@ -303,23 +331,7 @@ private fun CloseDiscButtonDs(onClick: () -> Unit, modifier: Modifier = Modifier
                 contentDescription = closeDescription
             }
             .testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
-        color = TangemTheme.colors3.bg.transparent.primary,
-        shape = CircleShape,
-        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
-        onClick = onClick,
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                modifier = Modifier.size(24.dp),
-                imageVector = Icons.ic_cross_24,
-                tint = TangemTheme.colors3.icon.primary,
-                contentDescription = null,
-            )
-        }
-    }
+    )
 }
 
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
