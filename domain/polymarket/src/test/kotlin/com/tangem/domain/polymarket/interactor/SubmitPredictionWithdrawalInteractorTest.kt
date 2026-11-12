@@ -355,6 +355,34 @@ internal class SubmitPredictionWithdrawalInteractorTest {
     }
 
     @Test
+    fun `GIVEN two withdrawals prepared WHEN both confirmed THEN only the first is sent and kept`() =
+        runTest {
+            // Arrange
+            val stored = mutableListOf<PredictionWithdrawalRecord>()
+            coEvery { store.get(USER_WALLET_ID) } answers { stored.lastOrNull() }
+            coEvery { store.save(USER_WALLET_ID, any()) } answers { stored += secondArg<PredictionWithdrawalRecord>() }
+            coEvery { polymarketRepository.getRelayerNonce(any()) } returnsMany listOf(
+                BigInteger.valueOf(9).right(),
+                BigInteger.valueOf(10).right(),
+            )
+            val first = interactor.prepare(params()).getOrNull()!!
+            val second = interactor.prepare(params()).getOrNull()!!
+
+            // Act
+            val firstResult = interactor.confirm(first)
+            val secondResult = interactor.confirm(second)
+
+            // Assert
+            assertThat(firstResult).isEqualTo(receipt().right())
+            assertThat(secondResult).isEqualTo(PredictionWithdrawalFailure.AlreadyInFlight.left())
+            coVerify(exactly = 1) { withdrawRepository.submit(any(), any()) }
+            coVerify(exactly = 1) { polymarketRepository.getRelayerNonce(any()) }
+            coVerify(exactly = 1) { signer.signRelayedBatch(any(), any()) }
+            assertThat(stored.last().transactionId).isEqualTo(TX_ID)
+            assertThat(stored.last().batch.nonce).isEqualTo("9")
+        }
+
+    @Test
     fun `GIVEN the pre-submit save throws WHEN confirmed THEN PersistenceFailed and nothing is submitted`() = runTest {
         // Arrange
         val prepared = interactor.prepare(params()).getOrNull()!!

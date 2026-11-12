@@ -115,6 +115,7 @@ class SubmitPredictionWithdrawalInteractor(
         prepared: PreparedPredictionWithdrawal,
     ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = either {
         ensure(!PolymarketRelayerDeadline.isExpired(prepared.deadline)) { PredictionWithdrawalFailure.Expired }
+        ensure(readRecord(prepared.userWalletId) == null) { PredictionWithdrawalFailure.AlreadyInFlight }
 
         val nonce = polymarketRepository.getRelayerNonce(prepared.ownerAddress)
             .getOrNull()
