@@ -1,12 +1,14 @@
 package com.tangem.features.onramp.main.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -135,7 +137,8 @@ private fun PaymentBlockInOfferDs(paymentMethod: OnrampPaymentMethod, providerNa
 
         SubcomposeAsyncImage(
             modifier = Modifier
-                .size(width = 31.dp, height = 12.dp)
+                .size(16.dp)
+                .clip(CircleShape)
                 .testTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON),
             alignment = Alignment.CenterEnd,
             model = ImageRequest.Builder(context = LocalContext.current)
