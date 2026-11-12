@@ -132,7 +132,7 @@ private fun LogoBlock(providerImageUrl: String, modifier: Modifier = Modifier) {
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(32.dp),
                 painter = painterResource(id = R.drawable.ic_tangem_24),
                 tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
