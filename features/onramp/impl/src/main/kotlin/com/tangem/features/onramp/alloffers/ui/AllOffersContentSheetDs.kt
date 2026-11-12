@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -274,13 +273,13 @@ private fun ColumnScope.TitleSubtitleDs(title: TextReference, subtitle: TextRefe
 private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(
         modifier = modifier.size(44.dp).semantics { role = Role.Button },
-        isMaterial = true,
+        color = TangemTheme.colors3.bg.transparent.primary,
         border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         shape = CircleShape,
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -304,13 +303,13 @@ private fun CloseDiscButtonDs(onClick: () -> Unit, modifier: Modifier = Modifier
                 contentDescription = closeDescription
             }
             .testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
-        isMaterial = true,
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = CircleShape,
         border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
