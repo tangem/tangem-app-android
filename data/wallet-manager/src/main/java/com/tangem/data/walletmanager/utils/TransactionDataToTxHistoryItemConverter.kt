@@ -3,11 +3,15 @@ package com.tangem.data.walletmanager.utils
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.factory.EthereumYieldSupplyDeployCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterWithNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
@@ -35,7 +39,8 @@ internal class TransactionDataToTxHistoryItemConverter(
     override fun convert(value: TransactionData.Uncompiled): TxInfo? {
         val hash = value.hash ?: return null
         val millis = value.date?.timeInMillis ?: return null
-        val amount = getTransactionAmountValue(value.amount) ?: return null
+        val type = getTransactionType(value)
+        val amount = type.movedAmount(reported = getTransactionAmountValue(value.amount)) ?: return null
         val isOutgoing = value.sourceAddress in walletAddresses.map(Address::value)
 
         return TxInfo.Single(
@@ -51,7 +56,7 @@ internal class TransactionDataToTxHistoryItemConverter(
                 TransactionStatus.Confirmed -> TxInfo.TransactionStatus.Confirmed
                 TransactionStatus.Unconfirmed -> TxInfo.TransactionStatus.Unconfirmed
             },
-            type = getTransactionType(value).orCoinFeeOnly(isOutgoing = isOutgoing, moved = value.amount.value),
+            type = type.orCoinFeeOnly(isOutgoing = isOutgoing, moved = value.amount.value),
             amount = amount,
             fee = value.fee?.amount?.toDomain(),
         )
@@ -132,10 +137,23 @@ internal class TransactionDataToTxHistoryItemConverter(
                         amount = callData.amount?.toDomain() ?: transactionData.amount.toDomain().copy(value = null),
                         address = callData.spenderAddress,
                     )
-                    else -> TxInfo.TransactionType.Transfer
+                    else -> callData?.toLendingType() ?: TxInfo.TransactionType.Transfer
                 }
             }
             else -> TxInfo.TransactionType.Transfer
         }
+    }
+
+    private fun SmartContractCallData.toLendingType(): TxInfo.TransactionType.Lending? = when (this) {
+        is EthereumYieldSupplyEnterWithNativeCallData -> TxInfo.TransactionType.Lending.Deposit
+        is EthereumYieldSupplyWithdrawNativeCallData -> TxInfo.TransactionType.Lending.Withdraw(
+            isEntire = false,
+            requestedAmount = amount.value,
+        )
+        is EthereumYieldSupplyExitNativeCallData -> TxInfo.TransactionType.Lending.Withdraw(
+            isEntire = true,
+            requestedAmount = null,
+        )
+        else -> null
     }
 }

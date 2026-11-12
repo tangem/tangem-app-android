@@ -85,16 +85,25 @@ internal class SdkTransactionHistoryItemConverter(
 
     private fun List<TxInfo.Single>.mergeTransfers(): TxInfo.MultiTransfer {
         val withoutGaslessFee = filterNot { it.type is TransactionType.GaslessFee }
-        val delta = withoutGaslessFee.fold(BigDecimal.ZERO) { sum, transfer -> sum + transfer.signedAmount() }
+        val lendingCall = withoutGaslessFee.firstOrNull { it.type is TransactionType.Lending }
+        // The payout leg already moves the withdrawn coin, so the call's requested amount must not count again
+        val delta = withoutGaslessFee
+            .filterNot { it.type is TransactionType.Lending.Withdraw }
+            .fold(BigDecimal.ZERO) { sum, transfer -> sum + transfer.signedAmount() }
 
         return TxInfo.MultiTransfer(
             amount = delta.abs(),
-            isOutgoing = delta.isNegative(),
-            type = if (delta.isZero()) TransactionType.UnknownOperation else TransactionType.Transfer,
+            isOutgoing = lendingCall?.isOutgoing ?: delta.isNegative(),
+            type = when {
+                lendingCall != null -> lendingCall.type
+                delta.isZero() -> TransactionType.UnknownOperation
+                else -> TransactionType.Transfer
+            },
             destinationType = withoutGaslessFee.mergeDestinationType(),
             sourceType = withoutGaslessFee.mergeSourceType(),
             interactionAddressType = withoutGaslessFee.mergeInteractionAddressType(),
-            transfers = this,
+            // The row takes its fee from the first transfer, and only the call paid one; the explorer's order is not fixed
+            transfers = sortedByDescending { it.type is TransactionType.Lending },
         )
     }
 
@@ -171,7 +180,9 @@ internal class SdkTransactionHistoryItemConverter(
         interactionAddressType = value.extractInteractionAddressType(),
         status = value.status.toDomain(),
         type = type,
-        amount = requireNotNull(value.amount.value) { "Transaction amount value must not be null" },
+        amount = requireNotNull(type.movedAmount(reported = value.amount.value)) {
+            "Transaction amount value must not be null"
+        },
         fee = value.fee.toDomain(),
     )
 

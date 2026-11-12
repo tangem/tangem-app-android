@@ -78,14 +78,16 @@ internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
         // made from the user's own address, so its counterparty can be another portfolio of theirs — it reads exactly
         // like Transfer.
         is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
-            tx.statusAwareTitle(
-                pending = R.string.common_withdrawing,
-                confirmed = R.string.transaction_history_withdrawn,
-                failed = R.string.transaction_history_status_withdraw_failed,
-            )
+            tx.withdrawnTitle()
         } else {
             tx.transferTitle(isOwnTransfer)
         }
+        is TransactionType.Lending.Deposit -> tx.statusAwareTitle(
+            pending = R.string.common_depositing,
+            confirmed = R.string.transaction_history_deposited,
+            failed = R.string.transaction_history_status_deposit_failed,
+        )
+        is TransactionType.Lending.Withdraw -> tx.withdrawnTitle()
         is TransactionType.YieldSupply.DeployContract ->
             resourceReference(R.string.yield_module_transaction_deploy_contract)
         is TransactionType.YieldSupply.InitializeToken ->
@@ -98,6 +100,12 @@ internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
         -> resourceReference(R.string.common_network_fee_title)
         // endregion
     }
+
+    private fun TxInfo.withdrawnTitle(): TextReference = statusAwareTitle(
+        pending = R.string.common_withdrawing,
+        confirmed = R.string.transaction_history_withdrawn,
+        failed = R.string.transaction_history_status_withdraw_failed,
+    )
 
     private fun TxInfo.transferTitle(isOwnTransfer: Boolean): TextReference = when {
         isOwnTransfer -> statusAwareTitle(

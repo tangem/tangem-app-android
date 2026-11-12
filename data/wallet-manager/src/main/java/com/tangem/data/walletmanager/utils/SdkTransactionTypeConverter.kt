@@ -14,6 +14,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.express.models.ExpressAsset
@@ -176,7 +177,7 @@ internal class SdkTransactionTypeConverter(
             "execTransaction",
             "aggregate3",
             -> safeExecutionDecoder.decode(callData = callData, item = historyItem)
-            else -> fallbackOperation(methodName)
+            else -> decodeLending(methodName, callData) ?: fallbackOperation(methodName)
         } ?: fallbackOperation(methodName)
 
         // A call decoded into a protocol interaction (yield supply for now, other protocols may join) describes what
@@ -192,6 +193,25 @@ internal class SdkTransactionTypeConverter(
         }
         return result
     }
+
+    private fun decodeLending(methodName: String?, callData: String?): TxInfo.TransactionType.Lending? =
+        when (methodName) {
+            "enterProtocolByOwnerWithNative" -> TxInfo.TransactionType.Lending.Deposit
+            "withdrawNative" -> TxInfo.TransactionType.Lending.Withdraw(
+                isEntire = false,
+                requestedAmount = decodeWithdrawNative(callData),
+            )
+            "withdrawAndDeactivateNative" -> TxInfo.TransactionType.Lending.Withdraw(
+                isEntire = true,
+                requestedAmount = null,
+            )
+            else -> null
+        }
+
+    private fun decodeWithdrawNative(callData: String?): BigDecimal? = callData
+        ?.let { data -> EthereumYieldSupplyWithdrawNativeCallData.decode(data, currency.network.toBlockchain()) }
+        ?.amount
+        ?.value
 
     private fun fallbackOperation(
         methodName: String?,
@@ -347,3 +367,7 @@ internal class SdkTransactionTypeConverter(
         const val YIELD_MODULE_INFO = "yieldModule"
     }
 }
+
+/** A withdrawal call carries no value of its own: what it moves is the amount it asked for, when that is known */
+internal fun TxInfo.TransactionType.movedAmount(reported: BigDecimal?): BigDecimal? =
+    (this as? TxInfo.TransactionType.Lending.Withdraw)?.requestedAmount ?: reported
