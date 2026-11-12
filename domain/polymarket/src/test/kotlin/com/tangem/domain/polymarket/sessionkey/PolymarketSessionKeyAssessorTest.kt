@@ -615,6 +615,11 @@ internal class PolymarketSessionKeyAssessorTest {
                 expected = ALMOST_EXPIRED,
             ),
             NextChangeModel(
+                case = "own active key changes when the extension offer opens",
+                snapshot = snapshot(keys = listOf(key(Owner.LOCAL, validUntil = NOW + Duration.ofDays(40)))),
+                expected = NOW + Duration.ofDays(10),
+            ),
+            NextChangeModel(
                 case = "own active key changes when its renewal is due",
                 snapshot = snapshot(keys = listOf(key(Owner.LOCAL, renewAfter = IN_ONE_HOUR))),
                 expected = IN_ONE_HOUR,
@@ -635,7 +640,7 @@ internal class PolymarketSessionKeyAssessorTest {
             NextChangeModel(
                 case = "readiness grace changes nothing without signers",
                 snapshot = snapshot(keys = listOf(key(Owner.LOCAL, authorizedAt = FRESH)), signers = null),
-                expected = VALID_UNTIL - Duration.ofMinutes(10),
+                expected = VALID_UNTIL - Duration.ofDays(30),
             ),
         )
     }

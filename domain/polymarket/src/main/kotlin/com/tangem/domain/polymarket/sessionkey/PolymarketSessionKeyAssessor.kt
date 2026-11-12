@@ -13,6 +13,7 @@ object PolymarketSessionKeyAssessor {
 
     internal val SIGNING_EXPIRY_MARGIN: Duration = Duration.ofMinutes(10)
     private val READINESS_GRACE: Duration = Duration.ofMinutes(10)
+    val EXTENSION_OFFER_WINDOW: Duration = Duration.ofDays(30)
 
     fun assess(snapshot: PolymarketSessionKeySnapshot): PolymarketSessionKeyAssessment {
         val reconciliation = reconcile(snapshot)
@@ -28,7 +29,11 @@ object PolymarketSessionKeyAssessor {
             .newestPerAddress()
             .filter { it.status == PolymarketSessionKeyStatus.ACTIVE }
         val own = snapshot.ownRecord()?.takeIf { it.status == PolymarketSessionKeyStatus.ACTIVE }
-        val ownBoundaries = listOfNotNull(own?.validUntil?.minus(SIGNING_EXPIRY_MARGIN), own?.renewAfter)
+        val ownBoundaries = listOfNotNull(
+            own?.validUntil?.minus(SIGNING_EXPIRY_MARGIN),
+            own?.validUntil?.minus(EXTENSION_OFFER_WINDOW),
+            own?.renewAfter,
+        )
         val expiries = activeKeys.mapNotNull { it.validUntil }
         val readinessGraces = if (snapshot.signers == null) {
             emptyList()

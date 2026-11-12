@@ -12,8 +12,10 @@ import com.tangem.domain.polymarket.model.PolymarketSessionSigner
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessment
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessor
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeySnapshot
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
@@ -208,6 +210,29 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             // Assert
             assertThat(actual.thisDevice.single().status).isEqualTo(FastTradingKeyStatusUM.Extending)
             assertThat(actual.otherDevices).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN extend after the old key is revoked and reenable offered WHEN convert THEN no activate banner`() {
+            // Arrange
+            val ownKey = createKey(address = OWN_ADDRESS, status = PolymarketSessionKeyStatus.REVOKED)
+            val overview = createOverview(
+                sessionKeys = listOf(ownKey),
+                localKeyAddress = OWN_ADDRESS,
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(ownKey),
+            )
+            val operation = createOperation(
+                request = PolymarketSessionKeyOperationRequest.Extend,
+                stage = PolymarketSessionKeyOperationStage.REVOKED,
+                targetAddress = OWN_ADDRESS,
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation)
+
+            // Assert
+            assertThat(actual.activateBanner).isNull()
+            assertThat(actual.thisDevice.single().status).isEqualTo(FastTradingKeyStatusUM.Extending)
         }
 
         @Test
@@ -470,12 +495,12 @@ internal class PolymarketFastTradingKeysUMConverterTest {
         }
 
         @Test
-        fun `GIVEN this device expired key honoured as a foreign signer WHEN convert THEN it stays under the banner`() {
+        fun `GIVEN this device expired key the exchange still lists WHEN convert THEN it is offered for reactivation`() {
             // Arrange
-            val ownKey = createKey(address = OWN_ADDRESS, status = PolymarketSessionKeyStatus.EXPIRED)
+            val ownKey = ownKey(status = PolymarketSessionKeyStatus.EXPIRED, validUntil = NOW.minus(Duration.ofDays(5)))
             val overview = createOverview(
                 sessionKeys = listOf(ownKey),
-                foreignSigners = listOf(signerOf(OWN_ADDRESS)),
+                foreignSigners = foreignSignersOf(listOf(ownKey), listedSigners = setOf(OWN_ADDRESS)),
                 listedSigners = setOf(OWN_ADDRESS),
                 deviceState = PolymarketSessionKeyDeviceState.Reenable(ownKey),
             )
@@ -484,10 +509,13 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             val actual = converter.convert(overview, operation = null)
 
             // Assert
-            assertThat(actual.isUnknownSignersWarningShown).isTrue()
+            assertThat(overview.assessment.reconciliation)
+                .isInstanceOf(PolymarketSessionKeyReconciliation.Checked::class.java)
+            assertThat(actual.isUnknownSignersWarningShown).isFalse()
             assertThat(actual.unknownSigners).isEmpty()
-            assertThat(actual.thisDevice.single().status).isEqualTo(FastTradingKeyStatusUM.UnknownSigner)
-            assertThat(actual.thisDevice.single().actions).isEqualTo(signerRevokeOf(OWN_ADDRESS))
+            assertThat(actual.activateBanner).isNull()
+            assertThat(actual.thisDevice.single().status).isEqualTo(FastTradingKeyStatusUM.Expired(at = "Nov 4, 2026"))
+            assertThat(actual.thisDevice.single().actions).containsExactly(FastTradingKeyActionUM.Reactivate)
         }
 
         @Test
@@ -716,7 +744,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             BannerOperationModel(
                 request = PolymarketSessionKeyOperationRequest.Reactivate,
                 stage = PolymarketSessionKeyOperationStage.SIGNING,
-                expectedBanner = LOADING_BANNER,
+                expectedBanner = null,
                 expectedRow = null,
             ),
             BannerOperationModel(
@@ -746,7 +774,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             BannerOperationModel(
                 request = PolymarketSessionKeyOperationRequest.Extend,
                 stage = PolymarketSessionKeyOperationStage.REVOKED,
-                expectedBanner = DISABLED_BANNER,
+                expectedBanner = null,
                 expectedRow = FastTradingKeyStatusUM.Extending,
             ),
         )
@@ -763,6 +791,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             val overview = createOverview(
                 sessionKeys = listOf(model.key),
                 missingOnExchange = model.missingOnExchange,
+                foreignSigners = foreignSignersOf(listOf(model.key), model.listedSigners),
                 listedSigners = model.listedSigners,
                 deviceState = model.deviceState(model.key),
             )
@@ -785,6 +814,8 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             assertThat(actual.thisDevice).containsExactlyElementsIn(expectedRows)
             assertThat(actual.activateBanner).isEqualTo(model.expectedBanner)
             assertThat(actual.otherDevices).isEmpty()
+            assertThat(actual.isUnknownSignersWarningShown).isFalse()
+            assertThat(actual.unknownSigners).isEmpty()
         }
 
         @ParameterizedTest
@@ -1261,6 +1292,21 @@ internal class PolymarketFastTradingKeysUMConverterTest {
 
         fun signerOf(address: String) =
             PolymarketSessionSigner(address = address, scopes = listOf("CLOB"), validUntil = null)
+
+        fun foreignSignersOf(
+            sessionKeys: List<PolymarketSessionKey>,
+            listedSigners: Set<String>,
+        ): List<PolymarketSessionSigner> {
+            val snapshot = PolymarketSessionKeySnapshot(
+                sessionKeys = sessionKeys,
+                localKeyAddress = OWN_ADDRESS,
+                deviceId = THIS_DEVICE_ID,
+                signers = listedSigners.map(::signerOf),
+                now = NOW,
+            )
+            val reconciliation = PolymarketSessionKeyAssessor.assess(snapshot).reconciliation
+            return (reconciliation as PolymarketSessionKeyReconciliation.Checked).foreignSigners
+        }
 
         fun revokeOf(address: String, name: TextReference = stringReference(OTHER_DEVICE_NAME)) =
             persistentListOf<FastTradingKeyActionUM>(

@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSessionSigner
 import com.tangem.domain.polymarket.model.newestPerAddress
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessor
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
@@ -41,7 +42,9 @@ internal class PolymarketFastTradingKeysUMConverter(
 
     fun convert(overview: PolymarketSessionKeyOverview, operation: PolymarketSessionKeyOperation?): FastTradingKeysUM {
         val reconciliation = overview.assessment.reconciliation as? PolymarketSessionKeyReconciliation.Checked
+        val localKeyAddress = overview.localKeyAddress?.lowercase()
         val foreignSigners = reconciliation?.foreignSigners.orEmpty()
+            .filterNot { it.address.lowercase() == localKeyAddress }
         val deviceState = overview.assessment.deviceState
         val submittedOperation = operation?.takeIf { it.stage != PolymarketSessionKeyOperationStage.SIGNING }
         val rowOperation = operation?.takeIf { it.request.isStartedFromRow } ?: submittedOperation
@@ -50,7 +53,7 @@ internal class PolymarketFastTradingKeysUMConverter(
             submittedOperation = submittedOperation,
             rowOperation = rowOperation,
             operationTarget = rowOperation?.targetAddress?.lowercase(),
-            localKeyAddress = overview.localKeyAddress?.lowercase(),
+            localKeyAddress = localKeyAddress,
             reactivatedAddress = (deviceState as? PolymarketSessionKeyDeviceState.Reenable)
                 ?.sessionKey?.address?.lowercase(),
             missingOnExchange = reconciliation?.missingOnExchange.orEmpty(),
@@ -154,6 +157,7 @@ internal class PolymarketFastTradingKeysUMConverter(
     ): FastTradingActivateBannerUM? = when {
         !isActivationOffered -> null
         operation == null -> FastTradingActivateBannerUM(isLoading = false, isEnabled = true)
+        operation.request.isStartedFromRow -> null
         !operation.request.isActivation -> FastTradingActivateBannerUM(isLoading = false, isEnabled = false)
         operation.stage == PolymarketSessionKeyOperationStage.SIGNING -> {
             FastTradingActivateBannerUM(isLoading = true, isEnabled = false)
@@ -264,7 +268,7 @@ internal class PolymarketFastTradingKeysUMConverter(
     private fun PolymarketSessionKey.isExpiringSoon(now: Instant): Boolean {
         val until = validUntil ?: return false
         val isLive = status == PolymarketSessionKeyStatus.ACTIVE && until.isAfter(now)
-        return isLive && Duration.between(now, until) <= EXPIRY_WARNING_WINDOW
+        return isLive && Duration.between(now, until) <= PolymarketSessionKeyAssessor.EXTENSION_OFFER_WINDOW
     }
 
     private fun RowContext.operationStatusFor(address: String): FastTradingKeyStatusUM? {
@@ -324,7 +328,6 @@ internal class PolymarketFastTradingKeysUMConverter(
     )
 
     private companion object {
-        val EXPIRY_WARNING_WINDOW: Duration = Duration.ofDays(30)
         const val THIS_DEVICE_PENDING_ROW_ID = "this_device_pending"
         val REVOCATION_STAGES =
             setOf(PolymarketSessionKeyOperationStage.REVOKING, PolymarketSessionKeyOperationStage.REVOKED)

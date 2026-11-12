@@ -60,7 +60,7 @@ internal class PolymarketSessionKeyMessagesFactoryTest {
             OutcomeModel(failure(EXTEND), error(R.string.prediction_session_key_toast_extension_failed)),
             OutcomeModel(
                 failure(EXTEND, isAfterRevocation = true),
-                error(R.string.prediction_session_key_toast_extension_failed_revoked),
+                error(R.string.prediction_session_key_toast_extension_failed),
             ),
             OutcomeModel(failure(REVOKE), error(R.string.prediction_session_key_toast_revocation_failed)),
             OutcomeModel(failure(PAUSE), error(R.string.prediction_session_key_toast_pausing_failed)),
@@ -77,7 +77,7 @@ internal class PolymarketSessionKeyMessagesFactoryTest {
             OutcomeModel(failure(REVOKE, error = BACKEND_BUSY), BUSY),
             OutcomeModel(
                 failure(EXTEND, error = BACKEND_BUSY, isAfterRevocation = true),
-                error(R.string.prediction_session_key_toast_extension_failed_revoked),
+                error(R.string.prediction_session_key_toast_extension_failed),
             ),
             OutcomeModel(
                 failure(REACTIVATE, error = IN_PROGRESS, isAfterRevocation = true),
