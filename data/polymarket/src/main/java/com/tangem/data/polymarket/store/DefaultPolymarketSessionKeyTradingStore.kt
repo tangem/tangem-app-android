@@ -33,11 +33,14 @@ internal class DefaultPolymarketSessionKeyTradingStore(
         sessionKeyAddress: String,
         validUntil: Instant,
     ) {
+        markAuthorized(userWalletId, sessionKeyAddress)
+        recordReadiness(userWalletId, sessionKeyAddress.normalized(), validUntil)
+    }
+
+    override fun markAuthorized(userWalletId: UserWalletId, sessionKeyAddress: String) {
         val address = sessionKeyAddress.normalized()
         refused.update { it.without(userWalletId, address) }
         missingOnExchange.update { it.without(userWalletId, address) }
-
-        recordReadiness(userWalletId, address, validUntil)
     }
 
     override suspend fun restoreReadyOnExchange(

@@ -279,6 +279,7 @@ class ManagePolymarketSessionKeyInteractor(
             TangemLogger.e("Polymarket session key ${settled.address} not authorized: ${settled.status}")
             PolymarketSessionKeyLifecycleError.AuthorizationFailed(settled)
         }
+        tradingStore.markAuthorized(userWalletId, settled.address)
         awaitReady(userWalletId = userWalletId, ownerAddress = ownerAddress, active = settled)
         return settled
     }

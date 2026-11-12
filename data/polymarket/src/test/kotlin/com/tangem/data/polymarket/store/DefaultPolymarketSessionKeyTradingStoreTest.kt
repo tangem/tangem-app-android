@@ -64,6 +64,37 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
     }
 
     @Test
+    fun `GIVEN a refused and missing key WHEN authorized again THEN it is neither refused nor missing nor ready`() =
+        runTest {
+            // Arrange
+            store.markRefused(WALLET_A, KEY)
+            store.setReconciliation(WALLET_A, checked(missing = setOf(KEY)))
+
+            // Act
+            store.markAuthorized(WALLET_A, KEY.uppercase().replace("0X", "0x"))
+
+            // Assert
+            assertThat(store.isRefused(WALLET_A, KEY)).isFalse()
+            assertThat(store.isMissingOnExchange(WALLET_A, KEY)).isFalse()
+            assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isFalse()
+        }
+
+    @Test
+    fun `GIVEN a key refused on both wallets WHEN authorized on one THEN the other wallet keeps the refusal`() =
+        runTest {
+            // Arrange
+            store.markRefused(WALLET_A, KEY)
+            store.markRefused(WALLET_B, KEY)
+
+            // Act
+            store.markAuthorized(WALLET_A, KEY)
+
+            // Assert
+            assertThat(store.isRefused(WALLET_A, KEY)).isFalse()
+            assertThat(store.isRefused(WALLET_B, KEY)).isTrue()
+        }
+
+    @Test
     fun `GIVEN a key not refused WHEN readiness is restored THEN it is ready`() = runTest {
         // Act
         store.restoreReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)

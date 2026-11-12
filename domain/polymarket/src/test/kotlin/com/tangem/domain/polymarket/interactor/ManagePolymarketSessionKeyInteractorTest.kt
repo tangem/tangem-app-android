@@ -292,6 +292,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 ),
             )
             coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+            coVerify(exactly = 0) { tradingStore.markAuthorized(any(), any()) }
         }
 
         @Test
@@ -657,7 +658,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN Polymarket does not list the renewed active key yet WHEN renew THEN it succeeds not ready`() =
+        fun `GIVEN Polymarket does not list the renewed key yet WHEN renew THEN it is authorized not ready`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -683,6 +684,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 // Assert
                 assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
                 coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+                coVerify(exactly = 1) { tradingStore.markAuthorized(USER_WALLET_ID, KEY) }
             }
 
         @Test
