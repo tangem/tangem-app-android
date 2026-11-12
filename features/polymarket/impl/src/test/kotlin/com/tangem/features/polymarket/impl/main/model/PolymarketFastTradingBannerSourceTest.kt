@@ -24,10 +24,8 @@ import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOpe
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationFailure
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationOutcome
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
-import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.getEmittedValues
@@ -61,7 +59,6 @@ internal class PolymarketFastTradingBannerSourceTest {
 
     private val observeFastTrading: ObservePolymarketFastTradingUseCase = mockk()
     private val refreshFastTrading: RefreshPolymarketFastTradingUseCase = mockk()
-    private val startOperation: StartPolymarketSessionKeyOperationUseCase = mockk()
     private val bannerStore: PolymarketFastTradingBannerStore = mockk()
     private val featureToggles: PolymarketFeatureToggles = mockk()
     private val clock = MutableClock(NOW)
@@ -69,7 +66,6 @@ internal class PolymarketFastTradingBannerSourceTest {
     private val source = PolymarketFastTradingBannerSource(
         observeFastTrading = observeFastTrading,
         refreshFastTrading = refreshFastTrading,
-        startOperation = startOperation,
         bannerStore = bannerStore,
         featureToggles = featureToggles,
         clock = clock,
@@ -77,13 +73,12 @@ internal class PolymarketFastTradingBannerSourceTest {
 
     @BeforeEach
     fun reset() {
-        clearMocks(observeFastTrading, refreshFastTrading, startOperation, bannerStore, featureToggles)
+        clearMocks(observeFastTrading, refreshFastTrading, bannerStore, featureToggles)
         clock.now = NOW
         every { featureToggles.isPolymarketFastOrdersEnabled } returns true
         every { bannerStore.dismissedAt(any(), any()) } returns flowOf(null)
         coEvery { bannerStore.dismiss(any(), any(), any()) } returns Unit
         coEvery { refreshFastTrading(any()) } returns Unit
-        every { startOperation(any(), any()) } returns PolymarketSessionKeyOperationStart.Started(id = 1)
     }
 
     @ParameterizedTest
@@ -505,37 +500,6 @@ internal class PolymarketFastTradingBannerSourceTest {
 
         // Assert
         coVerify(exactly = 0) { bannerStore.dismiss(any(), any(), any()) }
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideStartModels")
-    fun `GIVEN an actionable banner WHEN started THEN its operation is requested`(model: StartModel) {
-        // Act
-        val actual = source.start(WALLET_ID, model.banner)
-
-        // Assert
-        assertThat(actual).isEqualTo(PolymarketSessionKeyOperationStart.Started(id = 1))
-        verify(exactly = 1) { startOperation(WALLET_ID, model.request) }
-    }
-
-    private fun provideStartModels() = listOf(
-        StartModel(PolymarketFastTradingBanner.Activate, PolymarketSessionKeyOperationRequest.Activate),
-        StartModel(REACTIVATE, PolymarketSessionKeyOperationRequest.Reactivate),
-        StartModel(
-            PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Activate),
-            PolymarketSessionKeyOperationRequest.Activate,
-        ),
-        StartModel(PolymarketFastTradingBanner.Extend(daysLeft = 3), PolymarketSessionKeyOperationRequest.Extend),
-    )
-
-    @Test
-    fun `GIVEN unknown signers banner WHEN started THEN no operation is requested`() {
-        // Act
-        val actual = source.start(WALLET_ID, PolymarketFastTradingBanner.UnknownSigners)
-
-        // Assert
-        assertThat(actual).isNull()
-        verify(exactly = 0) { startOperation(any(), any()) }
     }
 
     @Test

@@ -52,7 +52,6 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent.Action as ActivationAction
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -156,7 +155,6 @@ internal class PolymarketMainModelTest {
         every { observe(any(), capture(fastTradingRechecks), any()) } returns fastTradingBanner
         coEvery { refresh(any()) } just Runs
         coEvery { dismiss(any(), any()) } just Runs
-        every { start(any(), any()) } returns PolymarketSessionKeyOperationStart.Started(id = 1)
     }
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
@@ -820,7 +818,6 @@ internal class PolymarketMainModelTest {
         verify(exactly = 1) {
             router.push(PolymarketRoute.FastTradingActivation(userWalletId = USER_WALLET_ID, action = action), any())
         }
-        verify(exactly = 0) { fastTradingBannerSource.start(any(), any()) }
         model.onDestroy()
     }
 

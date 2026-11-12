@@ -18,7 +18,6 @@ import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
 import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
@@ -57,6 +56,9 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -77,7 +79,6 @@ internal class PolymarketCategoryModelTest {
         every { observe(any(), any(), any()) } returns fastTradingBanner
         coEvery { refresh(any()) } just Runs
         coEvery { dismiss(any(), any()) } just Runs
-        every { start(any(), any()) } returns PolymarketSessionKeyOperationStart.Started(id = 1)
     }
     private val feeds = mutableListOf<Feed>()
     private var model: PolymarketCategoryModel? = null
@@ -366,10 +367,13 @@ internal class PolymarketCategoryModelTest {
         model.onDestroy()
     }
 
-    @Test
-    fun `GIVEN a shown banner WHEN action clicked THEN the activation screen opens with its action`() = runTest {
+    @ParameterizedTest
+    @MethodSource("bannerActivationActions")
+    fun `GIVEN a shown banner WHEN action clicked THEN the activation screen opens with its action`(
+        banner: PolymarketFastTradingBanner,
+        action: ActivationAction,
+    ) = runTest {
         // Arrange
-        val banner = PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate)
         val model = createModel()
         model.onResume()
         fastTradingBanner.value = banner
@@ -379,7 +383,6 @@ internal class PolymarketCategoryModelTest {
         model.uiState.value.fastTradingBanner!!.onActionClick()
 
         // Assert
-        val action = ActivationAction.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate)
         verify(exactly = 1) { router.push(PolymarketRoute.FastTradingActivation(walletId, action), any()) }
         verify(exactly = 0) { messages.send(any()) }
         model.onDestroy()
@@ -493,5 +496,22 @@ internal class PolymarketCategoryModelTest {
                 PaginationStatus.EndOfPagination,
             )
         }
+    }
+
+    private companion object {
+
+        @JvmStatic
+        fun bannerActivationActions() = listOf(
+            Arguments.of(PolymarketFastTradingBanner.Activate, ActivationAction.Activate),
+            Arguments.of(
+                PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
+                ActivationAction.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
+            ),
+            Arguments.of(
+                PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Activate),
+                ActivationAction.Reactivate(PolymarketSessionKeyOperationRequest.Activate),
+            ),
+            Arguments.of(PolymarketFastTradingBanner.Extend(daysLeft = 12), ActivationAction.Extend),
+        )
     }
 }
