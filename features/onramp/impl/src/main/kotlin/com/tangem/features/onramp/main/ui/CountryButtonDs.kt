@@ -1,6 +1,5 @@
 package com.tangem.features.onramp.main.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +19,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.core.ui.components.CircleShimmer
-import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.TopAppBarTestTags
@@ -32,7 +30,7 @@ import com.tangem.utils.annotations.RemoveWithToggle
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 internal fun CountryButtonDs(state: OnrampCountryButtonUM, modifier: Modifier = Modifier) {
     val residenceClickLabel = stringResourceSafe(R.string.onramp_settings_residence)
-    TangemSurface(
+    RoundGlassSurface(
         modifier = modifier
             .size(44.dp)
             .semantics {
@@ -41,28 +39,20 @@ internal fun CountryButtonDs(state: OnrampCountryButtonUM, modifier: Modifier = 
                 state.countryName?.let { contentDescription = it }
             }
             .testTag(TopAppBarTestTags.MORE_BUTTON),
-        color = TangemTheme.colors3.bg.transparent.primary,
-        shape = CircleShape,
-        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         enabled = state.isEnabled,
         onClick = state.onClick,
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (state.flagUrl != null) {
-                SubcomposeAsyncImage(
-                    modifier = Modifier.size(24.dp).clip(CircleShape),
-                    model = state.flagUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    loading = { CircleShimmer(modifier = Modifier.fillMaxSize()) },
-                    error = {
-                        Box(Modifier.fillMaxSize().background(TangemTheme.colors3.border.primary, CircleShape))
-                    },
-                )
-            }
+        if (state.flagUrl != null) {
+            SubcomposeAsyncImage(
+                modifier = Modifier.size(24.dp).clip(CircleShape),
+                model = state.flagUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                loading = { CircleShimmer(modifier = Modifier.fillMaxSize()) },
+                error = {
+                    Box(Modifier.fillMaxSize().background(TangemTheme.colors3.border.primary, CircleShape))
+                },
+            )
         }
     }
 }
