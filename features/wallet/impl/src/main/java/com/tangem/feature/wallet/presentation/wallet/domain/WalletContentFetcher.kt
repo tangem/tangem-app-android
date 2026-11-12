@@ -1,12 +1,20 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
+import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
@@ -27,16 +35,28 @@ import javax.inject.Singleton
 @Singleton
 internal class WalletContentFetcher @Inject constructor(
     private val walletBalanceFetcher: WalletBalanceFetcher,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val accountsCRUDRepository: AccountsCRUDRepository,
+    private val singleAccountListFetcher: SingleAccountListFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletDataCleaner {
 
     private val fetchingJobMap = ConcurrentHashMap<UserWalletId, JobHolder>()
+    private val lockedWalletFetchingJobMap = ConcurrentHashMap<UserWalletId, JobHolder>()
     private val mutex = Mutex()
 
     suspend operator fun invoke(userWalletId: UserWalletId, forceUpdate: Boolean = false) = supervisorScope {
         withContext(dispatchers.default) {
+            val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId)
+
             // Use mutex to ensure thread safety
-            val fetchingJob = mutex.withLock {
+            val fetchingJob: Job = mutex.withLock {
+                if (userWallet?.isLocked == true) {
+                    if (lockedWalletFetchingJobMap[userWalletId]?.isActive == true) return@withContext
+
+                    return@withLock launch { fetchLockedWalletAccounts(userWallet) }
+                        .saveIn(JobHolder().also { lockedWalletFetchingJobMap[userWalletId] = it })
+                }
                 val savedJobHolder = fetchingJobMap[userWalletId]
 
                 // If this is not a forced update and the balance is already being fetched or has been fetched,
@@ -77,6 +97,20 @@ internal class WalletContentFetcher @Inject constructor(
     }
 
     /**
+     * The content of a locked wallet can't be fetched, but the account lists of all wallets are combined, so a wallet
+     * whose accounts were never saved would keep the other wallets loading forever.
+     */
+    private suspend fun fetchLockedWalletAccounts(userWallet: UserWallet) {
+        if (!userWallet.isMultiCurrency) return
+
+        val userWalletId = userWallet.walletId
+        if (accountsCRUDRepository.getAccountListSync(userWalletId).isSome()) return
+
+        singleAccountListFetcher(params = SingleAccountListFetcher.Params(userWalletId))
+            .onLeft { TangemLogger.e("Failed to fetch accounts of locked wallet $userWalletId", it) }
+    }
+
+    /**
      * Drops the cached fetching state of the deleted wallets.
      *
      * A re-added wallet reuses the same [UserWalletId], so a completed job left in the cache would make the fetcher
@@ -88,6 +122,7 @@ internal class WalletContentFetcher @Inject constructor(
         mutex.withLock {
             userWalletIds.forEach { userWalletId ->
                 fetchingJobMap.remove(userWalletId)?.cancel()
+                lockedWalletFetchingJobMap.remove(userWalletId)?.cancel()
 
                 TangemLogger.d("Clear fetching state for $userWalletId")
             }
