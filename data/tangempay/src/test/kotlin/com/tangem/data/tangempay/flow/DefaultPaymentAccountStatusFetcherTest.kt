@@ -1741,6 +1741,14 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             runTest {
                 // Arrange
                 stubHappyPath(buildCustomerInfo(productInstances = listOf(cardProductInstance)))
+                every { getActiveOrdersUseCase(userWalletId) } returns listOf(
+                    TangemPayOrder(
+                        id = "frozen-state-order",
+                        status = TangemPayOrder.Status.PROCESSING,
+                        step = OrderStep.UNKNOWN,
+                        details = OrderDetails.CardFreeze(productInstanceId = cardProductInstance.id),
+                    ),
+                )
                 val storedStatuses = captureStoredStatuses()
 
                 // Act
