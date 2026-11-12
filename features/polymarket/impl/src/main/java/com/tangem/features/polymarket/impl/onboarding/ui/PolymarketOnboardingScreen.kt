@@ -36,7 +36,7 @@ import com.tangem.features.polymarket.impl.regionrestrictions.ui.RegionRestricti
 @Composable
 internal fun PolymarketOnboardingScreen(
     state: PolymarketOnboardingUM,
-    welcomeVideo: VideoSurfaceState?,
+    heroVideo: VideoSurfaceState?,
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -44,12 +44,13 @@ internal fun PolymarketOnboardingScreen(
         PolymarketOnboardingUM.Resolving -> ResolvingScreen(onCloseClick = onCloseClick, modifier = modifier)
         is PolymarketOnboardingUM.Welcome -> WelcomeScreen(
             state = state,
-            video = welcomeVideo,
+            video = heroVideo,
             onCloseClick = onCloseClick,
             modifier = modifier,
         )
         is PolymarketOnboardingUM.Reconnect -> ReconnectScreen(
             state = state,
+            video = heroVideo,
             onCloseClick = onCloseClick,
             modifier = modifier,
         )
@@ -130,6 +131,7 @@ private fun WelcomeScreen(
 @Composable
 private fun ReconnectScreen(
     state: PolymarketOnboardingUM.Reconnect,
+    video: VideoSurfaceState?,
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -159,6 +161,7 @@ private fun ReconnectScreen(
         },
     ) { contentPadding ->
         PolymarketReconnectContent(
+            video = video,
             scrollState = scrollState,
             contentPadding = contentPadding,
             trailingSpace = with(LocalDensity.current) { footerHeight.toDp() } + 54.dp,
@@ -171,7 +174,7 @@ private fun ReconnectScreen(
 @Composable
 private fun PolymarketOnboardingScreenResolvingPreview() {
     TangemThemePreviewRedesign {
-        PolymarketOnboardingScreen(state = PolymarketOnboardingUM.Resolving, welcomeVideo = null, onCloseClick = {})
+        PolymarketOnboardingScreen(state = PolymarketOnboardingUM.Resolving, heroVideo = null, onCloseClick = {})
     }
 }
 
@@ -180,7 +183,7 @@ private fun PolymarketOnboardingScreenResolvingPreview() {
 @Composable
 private fun PolymarketOnboardingScreenWelcomePreview() {
     TangemThemePreviewRedesign {
-        PolymarketOnboardingScreen(state = previewState(isInProgress = false), welcomeVideo = null, onCloseClick = {})
+        PolymarketOnboardingScreen(state = previewState(isInProgress = false), heroVideo = null, onCloseClick = {})
     }
 }
 
@@ -189,7 +192,7 @@ private fun PolymarketOnboardingScreenWelcomePreview() {
 @Composable
 private fun PolymarketOnboardingScreenStartingPreview() {
     TangemThemePreviewRedesign {
-        PolymarketOnboardingScreen(state = previewState(isInProgress = true), welcomeVideo = null, onCloseClick = {})
+        PolymarketOnboardingScreen(state = previewState(isInProgress = true), heroVideo = null, onCloseClick = {})
     }
 }
 
@@ -198,7 +201,7 @@ private fun PolymarketOnboardingScreenStartingPreview() {
 @Composable
 private fun PolymarketOnboardingScreenReconnectPreview() {
     TangemThemePreviewRedesign {
-        PolymarketOnboardingScreen(state = previewReconnectState(), welcomeVideo = null, onCloseClick = {})
+        PolymarketOnboardingScreen(state = previewReconnectState(), heroVideo = null, onCloseClick = {})
     }
 }
 

@@ -85,15 +85,15 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private var storyContentPrefetch: Deferred<Boolean>? = null
 
-    private val welcomeVideo = videoFactory.create(
+    private val heroVideo = videoFactory.create(
         scope = modelScope,
         videoRes = PolymarketR.raw.polymarket_welcome_background,
-        frameSize = WELCOME_VIDEO_SIZE,
+        frameSize = HERO_VIDEO_SIZE,
         diagnosticsSubject = "Polymarket welcome video",
     )
 
-    val welcomeVideoState: StateFlow<LoopingVideoState>
-        get() = welcomeVideo.state
+    val heroVideoState: StateFlow<LoopingVideoState>
+        get() = heroVideo.state
 
     init {
         resolveEntry()
@@ -103,12 +103,12 @@ internal class PolymarketOnboardingModel @Inject constructor(
         router.pop()
     }
 
-    fun setWelcomeVideoRunning(isRunning: Boolean) {
-        welcomeVideo.setRunning(isRunning = isRunning)
+    fun setHeroVideoRunning(isRunning: Boolean) {
+        heroVideo.setRunning(isRunning = isRunning)
     }
 
     override fun onDestroy() {
-        welcomeVideo.release()
+        heroVideo.release()
         super.onDestroy()
     }
 
@@ -288,6 +288,6 @@ internal class PolymarketOnboardingModel @Inject constructor(
         val STORY_ID = StoryContentIds.STORY_POLYMARKET_ONBOARDING.id
         val STORY_SOURCE = AnalyticsParam.ScreensSources.Onboarding.value
         val STORY_AVAILABILITY_TIMEOUT = 1.seconds
-        val WELCOME_VIDEO_SIZE = VideoFrameSize(width = 1080, height = 1632)
+        val HERO_VIDEO_SIZE = VideoFrameSize(width = 1080, height = 1632)
     }
 }

@@ -80,7 +80,7 @@ internal class PolymarketOnboardingComponentTest {
     }
 
     @Test
-    fun `GIVEN the gate WHEN lifecycle resumes THEN the welcome video runs`() {
+    fun `GIVEN the gate WHEN lifecycle resumes THEN the hero video runs`() {
         // Arrange
         createComponentWithMockedModel()
         lifecycle.create()
@@ -90,11 +90,11 @@ internal class PolymarketOnboardingComponentTest {
         lifecycle.resume()
 
         // Assert
-        verify(exactly = 1) { mockedModel.setWelcomeVideoRunning(isRunning = true) }
+        verify(exactly = 1) { mockedModel.setHeroVideoRunning(isRunning = true) }
     }
 
     @Test
-    fun `GIVEN a resumed gate WHEN lifecycle pauses THEN the welcome video stops`() {
+    fun `GIVEN a resumed gate WHEN lifecycle pauses THEN the hero video stops`() {
         // Arrange
         createComponentWithMockedModel()
         lifecycle.create()
@@ -105,7 +105,7 @@ internal class PolymarketOnboardingComponentTest {
         lifecycle.pause()
 
         // Assert
-        verify(exactly = 1) { mockedModel.setWelcomeVideoRunning(isRunning = false) }
+        verify(exactly = 1) { mockedModel.setHeroVideoRunning(isRunning = false) }
     }
 
     private fun createComponentWithMockedModel() {

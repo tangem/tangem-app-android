@@ -68,7 +68,7 @@ internal class PolymarketOnboardingModelTest {
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
-    private val welcomeVideo: LoopingVideoController = mockk(relaxed = true)
+    private val heroVideo: LoopingVideoController = mockk(relaxed = true)
     private val videoFactory: LoopingVideoController.Factory = mockk()
 
     private val userWalletId = UserWalletId("011")
@@ -86,10 +86,10 @@ internal class PolymarketOnboardingModelTest {
             router,
             urlOpener,
             messageSender,
-            welcomeVideo,
+            heroVideo,
             videoFactory,
         )
-        every { videoFactory.create(any(), any(), any(), any(), any()) } returns welcomeVideo
+        every { videoFactory.create(any(), any(), any(), any(), any()) } returns heroVideo
         allowsNewAccount(PolymarketNewAccountAllowance.ALLOWED)
         storyWasSeen()
         coEvery { getStoryContentUseCase.invokeSync(id = any(), refresh = any()) } returns null.right()
@@ -1040,10 +1040,10 @@ internal class PolymarketOnboardingModelTest {
     }
 
     @Nested
-    inner class WelcomeVideo {
+    inner class HeroVideo {
 
         @Test
-        fun `GIVEN the gate WHEN model created THEN the welcome clip is declared at its own size`() = runTest {
+        fun `GIVEN the gate WHEN model created THEN the hero clip is declared at its own size`() = runTest {
             // Arrange
             gateResolves(PolymarketEntry.Undetermined)
 
@@ -1071,10 +1071,10 @@ internal class PolymarketOnboardingModelTest {
                 val model = createModel(testScope = this)
 
                 // Act
-                model.setWelcomeVideoRunning(isRunning = isRunning)
+                model.setHeroVideoRunning(isRunning = isRunning)
 
                 // Assert
-                verify(exactly = 1) { welcomeVideo.setRunning(isRunning = isRunning) }
+                verify(exactly = 1) { heroVideo.setRunning(isRunning = isRunning) }
             }
 
         @Test
@@ -1088,7 +1088,7 @@ internal class PolymarketOnboardingModelTest {
             model.onDestroy()
 
             // Assert
-            verify(exactly = 1) { welcomeVideo.release() }
+            verify(exactly = 1) { heroVideo.release() }
         }
     }
 

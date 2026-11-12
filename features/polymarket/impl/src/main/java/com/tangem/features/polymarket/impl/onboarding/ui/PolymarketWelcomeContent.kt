@@ -1,9 +1,7 @@
 package com.tangem.features.polymarket.impl.onboarding.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,9 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.onboarding.OnboardingBenefitCard
@@ -28,7 +24,6 @@ import com.tangem.common.ui.onboarding.OnboardingFaqItem
 import com.tangem.common.ui.onboarding.OnboardingHeadline
 import com.tangem.common.ui.onboarding.OnboardingHero
 import com.tangem.core.media.VideoSurfaceState
-import com.tangem.core.media.ui.VideoSurface
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -36,7 +31,6 @@ import com.tangem.core.ui.res.generated.icons.ic_lightning_24
 import com.tangem.core.ui.res.generated.icons.ic_percent_backward_24
 import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_24
 import com.tangem.core.ui.res.generated.icons.ic_wallet_24
-import com.tangem.features.polymarket.impl.R as PolymarketR
 
 internal const val HERO_TINT_START_Y = 448f
 internal const val HERO_TINT_END_Y = 528f
@@ -69,7 +63,7 @@ internal fun PolymarketWelcomeContent(
     ) {
         // No top padding: the hero is full-bleed and scrolls under the status bar and the top navigation.
         OnboardingHero(
-            media = { WelcomeHeroMedia(video = video) },
+            media = { PolymarketOnboardingHeroMedia(video = video) },
             tintStartY = HERO_TINT_START_Y,
             tintEndY = HERO_TINT_END_Y,
         ) {
@@ -82,27 +76,6 @@ internal fun PolymarketWelcomeContent(
         }
         Spacer(modifier = Modifier.height(trailingSpace))
     }
-}
-
-@Composable
-private fun BoxScope.WelcomeHeroMedia(video: VideoSurfaceState?) {
-    if (video == null) {
-        WelcomeHeroPoster(modifier = Modifier.matchParentSize())
-    } else {
-        VideoSurface(state = video, modifier = Modifier.matchParentSize()) {
-            WelcomeHeroPoster(modifier = Modifier.matchParentSize())
-        }
-    }
-}
-
-@Composable
-private fun WelcomeHeroPoster(modifier: Modifier = Modifier) {
-    Image(
-        modifier = modifier,
-        painter = painterResource(PolymarketR.drawable.ill_polymarket_welcome_poster),
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-    )
 }
 
 @Composable

@@ -33,18 +33,18 @@ internal class PolymarketOnboardingComponent(
     )
 
     init {
-        lifecycle.doOnResume { model.setWelcomeVideoRunning(isRunning = true) }
-        lifecycle.doOnPause { model.setWelcomeVideoRunning(isRunning = false) }
+        lifecycle.doOnResume { model.setHeroVideoRunning(isRunning = true) }
+        lifecycle.doOnPause { model.setHeroVideoRunning(isRunning = false) }
     }
 
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val welcomeVideo by model.welcomeVideoState.collectAsStateWithLifecycle()
+        val heroVideo by model.heroVideoState.collectAsStateWithLifecycle()
 
         PolymarketOnboardingScreen(
             state = state,
-            welcomeVideo = welcomeVideo.surface,
+            heroVideo = heroVideo.surface,
             onCloseClick = model::onCloseClick,
             modifier = modifier,
         )
