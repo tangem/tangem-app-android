@@ -8,7 +8,10 @@ import com.tangem.domain.markets.TokenListBatchingContext
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.TokenMarketUpdateRequest
+import com.tangem.domain.markets.TokenQuotesShort
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.rwa.categories.CategorySelection
+import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
@@ -33,8 +36,10 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 
 /** The category filter is only ever applied here, so this is the one place it can be proven to leave the app. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -66,6 +71,52 @@ internal class RwaBatchFlowManagerTest {
         assertThat(reloadConfigs(actions)).containsExactly(model.expected)
     }
 
+    @Test
+    fun `GIVEN a token returned in two batches WHEN items are built THEN it is listed once`() = runTest {
+        // Arrange
+        val state = MutableStateFlow(
+            BatchListState<Int, List<TokenMarket>>(data = emptyList(), status = PaginationStatus.None),
+        )
+        captureActions(state = state)
+        val manager = createManager(testScope = this, selection = CategorySelection())
+        advanceUntilIdle()
+
+        // Act
+        state.value = BatchListState(
+            data = listOf(
+                Batch(key = 0, data = listOf(tokenMarket("gold"), tokenMarket("paxg"))),
+                Batch(key = 1, data = listOf(tokenMarket("paxg"), tokenMarket("xaut"))),
+            ),
+            status = PaginationStatus.EndOfPagination,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(manager.uiItems.value.map { it.id }).containsExactly("gold", "paxg", "xaut").inOrder()
+    }
+
+    private fun tokenMarket(id: String) = TokenMarket(
+        id = CryptoCurrency.RawID(id),
+        name = id,
+        symbol = id.uppercase(),
+        marketRating = 1,
+        // null keeps the converter off CompactDecimalFormat, which the JVM test runtime does not stub
+        marketCap = null,
+        isUnderMarketCapLimit = false,
+        tokenQuotesShort = TokenQuotesShort(
+            currentPrice = BigDecimal.ONE,
+            h24ChangePercent = BigDecimal.ZERO,
+            weekChangePercent = null,
+            monthChangePercent = null,
+        ),
+        tokenCharts = TokenMarket.Charts(h24 = null, week = null, month = null),
+        yieldRate = null,
+        updateTimestamp = null,
+        networks = null,
+        isRestrictedForCountry = false,
+        imageHost = "",
+    )
+
     private fun provideTestModels() = listOf(
         ReloadModel(
             selection = CategorySelection(),
@@ -95,7 +146,11 @@ internal class RwaBatchFlowManagerTest {
 
     private fun entryOf(id: String) = CategorySelection.Entry(id = id, displayName = id, code = id)
 
-    private fun TestScope.captureActions(): MutableList<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>> {
+    private fun TestScope.captureActions(
+        state: MutableStateFlow<BatchListState<Int, List<TokenMarket>>> = MutableStateFlow(
+            BatchListState(data = emptyList(), status = PaginationStatus.None),
+        ),
+    ): MutableList<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>> {
         val actions = mutableListOf<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
         // PER_CLASS shares the mock, and a stale stub would hand the manager a previous test's fake
         clearMocks(getMarketsTokenListFlowUseCase)
@@ -106,7 +161,7 @@ internal class RwaBatchFlowManagerTest {
             context.coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
                 context.actionsFlow.collect(actions::add)
             }
-            FakeBatchFlow(MutableStateFlow(BatchListState(data = emptyList(), status = PaginationStatus.None)))
+            FakeBatchFlow(state)
         }
         return actions
     }
