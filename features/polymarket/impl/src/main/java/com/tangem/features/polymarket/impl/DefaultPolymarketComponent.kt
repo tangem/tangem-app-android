@@ -140,7 +140,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         is PolymarketRoute.PlacePrediction -> PlacePredictionComponent(
             appComponentContext = factoryContext,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
-            isQuickOrderEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
+            isQuickOrderEnabled = polymarketFeatureToggles.isPolymarketFastOrdersEnabled,
             params = PlacePredictionComponent.Params.Buy(
                 userWalletId = configuration.userWalletId,
                 eventId = configuration.eventId,
@@ -151,7 +151,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         is PolymarketRoute.ClosePosition -> PlacePredictionComponent(
             appComponentContext = factoryContext,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
-            isQuickOrderEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
+            isQuickOrderEnabled = polymarketFeatureToggles.isPolymarketFastOrdersEnabled,
             params = PlacePredictionComponent.Params.Sell(
                 userWalletId = configuration.userWalletId,
                 positionId = configuration.positionId,

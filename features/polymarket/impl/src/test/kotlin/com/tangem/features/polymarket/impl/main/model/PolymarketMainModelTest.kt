@@ -744,17 +744,17 @@ internal class PolymarketMainModelTest {
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
     fun `GIVEN the session keys toggle WHEN the screen opens THEN fast trading settings follow it`(
-        isSessionKeysEnabled: Boolean,
+        isFastOrdersEnabled: Boolean,
     ) = runTest {
         // Arrange
         coEvery { getCategoriesUseCase(any()) } returns categories().right()
 
         // Act
-        val model = createModel(testScope = this, isSessionKeysEnabled = isSessionKeysEnabled)
+        val model = createModel(testScope = this, isFastOrdersEnabled = isFastOrdersEnabled)
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.isFastTradingSettingsAvailable).isEqualTo(isSessionKeysEnabled)
+        assertThat(model.uiState.value.isFastTradingSettingsAvailable).isEqualTo(isFastOrdersEnabled)
         model.onDestroy()
     }
 
@@ -762,7 +762,7 @@ internal class PolymarketMainModelTest {
     fun `WHEN fast trading settings clicked THEN its screen opens for the wallet`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase(any()) } returns categories().right()
-        val model = createModel(testScope = this, isSessionKeysEnabled = true)
+        val model = createModel(testScope = this, isFastOrdersEnabled = true)
         advanceUntilIdle()
 
         // Act
@@ -2031,11 +2031,11 @@ internal class PolymarketMainModelTest {
     private fun createModel(
         testScope: TestScope,
         isPhaseTwoEnabled: Boolean = false,
-        isSessionKeysEnabled: Boolean = false,
+        isFastOrdersEnabled: Boolean = false,
     ): PolymarketMainModel {
         val featureToggles = mockk<PolymarketFeatureToggles> {
             every { isPolymarketPhaseTwoEnabled } returns isPhaseTwoEnabled
-            every { isPolymarketSessionKeysEnabled } returns isSessionKeysEnabled
+            every { isPolymarketFastOrdersEnabled } returns isFastOrdersEnabled
         }
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns statusFlow
 

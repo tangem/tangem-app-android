@@ -162,7 +162,7 @@ internal abstract class PlacePredictionModelTestBase {
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
-        every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+        every { featureToggles.isPolymarketFastOrdersEnabled } returns false
         every { featureToggles.isPolymarketPhaseTwoEnabled } returns false
         coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
