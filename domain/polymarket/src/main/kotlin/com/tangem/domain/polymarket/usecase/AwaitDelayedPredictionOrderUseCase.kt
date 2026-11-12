@@ -11,14 +11,6 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * Waits for an order the exchange accepted as `delayed` to be matched, reading it back a fixed number of times.
- *
- * A read that leaves the status unknown — a timeout, a dropped connection, a 5xx — is tried again: the book
- * has not answered, so the order may still be matching. Every actual answer is final — a match, a status that
- * is not a match, an id the book does not know, refused credentials — and the wait ends with it. When the
- * reads run out without an answer the order stays [DelayedPredictionOrderOutcome.Unconfirmed].
- */
 class AwaitDelayedPredictionOrderUseCase(
     private val polymarketRepository: PolymarketRepository,
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase,
@@ -74,12 +66,16 @@ class AwaitDelayedPredictionOrderUseCase(
         -> false
     }
 
-    private fun PredictionOrderState.toOutcome(orderId: String): DelayedPredictionOrderOutcome {
+    private fun PredictionOrderState.toOutcome(orderId: String): DelayedPredictionOrderOutcome? {
         return when (val status = status) {
             PredictionOrderStatus.Matched -> DelayedPredictionOrderOutcome.Matched(order = this)
-            is PredictionOrderStatus.Other -> DelayedPredictionOrderOutcome.Failed(
-                detail = "Order $orderId is ${status.raw}, not matched",
+            is PredictionOrderStatus.Rejected -> DelayedPredictionOrderOutcome.Failed(
+                detail = "Order $orderId is ${status.raw}",
             )
+            is PredictionOrderStatus.Other -> {
+                TangemLogger.v("Delayed order $orderId is ${status.raw}, reading again")
+                null
+            }
         }
     }
 

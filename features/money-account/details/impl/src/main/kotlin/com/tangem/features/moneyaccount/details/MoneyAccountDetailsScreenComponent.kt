@@ -21,6 +21,7 @@ import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsCom
 import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
@@ -32,6 +33,7 @@ internal class MoneyAccountDetailsScreenComponent(
     txHistoryComponentFactory: TxHistoryComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val bankingDetailsErrorComponentFactory: TangemPayBankingDetailsErrorComponent.Factory,
+    yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: MoneyAccountDetailsModel = getOrCreateModel(params = params)
@@ -56,6 +58,23 @@ internal class MoneyAccountDetailsScreenComponent(
         },
     )
 
+    private val yieldSupplySlotNavigation = SlotNavigation<CryptoCurrency.Token>()
+
+    private val yieldSupplySlot = childSlot(
+        key = "yieldSupplySlot",
+        source = yieldSupplySlotNavigation,
+        serializer = null,
+        childFactory = { currency, ctx ->
+            yieldSupplyComponentFactory.create(
+                context = childByContext(ctx),
+                params = YieldSupplyComponent.Params(
+                    userWalletId = params.userWalletId,
+                    cryptoCurrency = currency,
+                ),
+            )
+        },
+    )
+
     private val bottomSheetSlot = childSlot(
         key = "bottomSheetSlot",
         source = model.bottomSheetNavigation,
@@ -70,6 +89,12 @@ internal class MoneyAccountDetailsScreenComponent(
             .distinctUntilChanged()
             .onEach { currency -> txHistorySlotNavigation.activate(currency) }
             .launchIn(componentScope)
+
+        model.uiState
+            .mapNotNull { state -> state.yieldSupplyCurrency }
+            .distinctUntilChanged()
+            .onEach { currency -> yieldSupplySlotNavigation.activate(currency) }
+            .launchIn(componentScope)
     }
 
     @Composable
@@ -77,10 +102,12 @@ internal class MoneyAccountDetailsScreenComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         val txHistorySlotState by txHistorySlot.subscribeAsState()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
+        val yieldSupplySlotState by yieldSupplySlot.subscribeAsState()
         val txHistoryComponent = txHistorySlotState.child?.instance
         MoneyAccountDetailsScreen(
             state = state,
             txHistoryComponent = txHistoryComponent,
+            yieldSupplyComponent = yieldSupplySlotState.child?.instance,
             modifier = modifier,
         )
         txHistoryComponent?.Content(modifier)

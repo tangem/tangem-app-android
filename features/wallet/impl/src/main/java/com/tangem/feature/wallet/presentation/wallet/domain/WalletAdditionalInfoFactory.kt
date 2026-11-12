@@ -67,7 +67,6 @@ internal object WalletAdditionalInfoFactory {
             isHideable = false,
             content = content,
             isHotBackedUp = isBackedUp,
-            isSocialLogin = isSocialBackupCompleted,
         )
     }
 

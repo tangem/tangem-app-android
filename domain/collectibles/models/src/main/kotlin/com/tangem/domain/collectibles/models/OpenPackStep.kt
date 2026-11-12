@@ -14,7 +14,7 @@ sealed interface OpenPackStep {
 
     data class Opened(val pack: OpenedCollectiblePack) : OpenPackStep
 
-    data class AutoBuybacked(val amount: BigDecimal) : OpenPackStep
+    data class AutoBuybacked(val amount: BigDecimal, val pack: OpenedCollectiblePack?) : OpenPackStep
 
     sealed interface Failed : OpenPackStep {
 

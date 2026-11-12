@@ -117,6 +117,9 @@ internal fun PlacePredictionUM.canPollPrice(): Boolean = when (val order = order
 internal val PlacePredictionUM.isReadyToPlace: Boolean
     get() = placeAction == PlaceActionUM.Ready
 
+internal fun PlacePredictionUM.isTradable(): Boolean =
+    isMarketAcceptingOrders && PredictionNotificationUM.MarketClosed !in notifications
+
 internal fun PlacePredictionUM.feeBreakdownQuote(): QuoteUM.Content? =
     (quote as? QuoteUM.Content)?.takeIf { submit is SubmitUM.Idle }
 

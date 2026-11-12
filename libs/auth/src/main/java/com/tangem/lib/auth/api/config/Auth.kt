@@ -19,12 +19,13 @@ class Auth : TangemGatewayApiConfig() {
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
         gatewayEnvironment(ApiEnvironment.DEV),
+        gatewayEnvironment(ApiEnvironment.MOCK),
         gatewayEnvironment(ApiEnvironment.PROD),
     )
 
     private fun getInitialEnvironment(): ApiEnvironment {
         return when (BuildConfig.BUILD_TYPE) {
-            MOCKED_BUILD_TYPE,
+            MOCKED_BUILD_TYPE -> ApiEnvironment.MOCK
             DEBUG_BUILD_TYPE,
             INTERNAL_BUILD_TYPE,
             -> ApiEnvironment.DEV

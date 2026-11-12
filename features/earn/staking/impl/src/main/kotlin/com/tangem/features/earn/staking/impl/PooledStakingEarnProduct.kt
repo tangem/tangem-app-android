@@ -19,6 +19,7 @@ import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.navigation.EarnNavigator
 import com.tangem.features.earn.product.api.product.EarnActionHandler
@@ -53,6 +54,8 @@ internal class PooledStakingEarnProduct @Inject constructor(
     override val id: EarnProductId = POOLED_STAKING_ID
 
     override val rank: Int = 1
+
+    override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Info
 
     // Temporary plain text: becomes a Lokalise resource together with the other plain strings of this product.
     override val title: TextReference = stringReference("Pooled staking")

@@ -2,6 +2,7 @@ package com.tangem.domain.models.currency
 
 import com.tangem.domain.models.network.isJoint
 import com.tangem.domain.models.normalizeEvmAddress
+import com.tangem.domain.models.yield.supply.yieldSupply
 import java.math.BigDecimal
 
 val CryptoCurrency.isJoint: Boolean
@@ -24,7 +25,7 @@ fun CryptoCurrencyStatus.shouldShowNotSuppliedNotification(dustAmount: BigDecima
 fun CryptoCurrencyStatus.notSuppliedCryptoAmountOrNull(): BigDecimal? {
     if (this.currency !is CryptoCurrency.Token) return null
 
-    val supplyStatus = this.value.yieldSupplyStatus
+    val supplyStatus = this.value.yieldSupply
     if (supplyStatus?.isActive != true) return null
 
     val protocolBalance = supplyStatus.effectiveProtocolBalance

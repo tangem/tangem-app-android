@@ -3,6 +3,7 @@ package com.tangem.features.feed.rwa.categories.model.transformer
 import com.tangem.domain.markets.CoinCategory
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.model.converter.CategorySectorConverter
+import com.tangem.features.feed.rwa.categories.model.hasSectorChoice
 import com.tangem.features.feed.rwa.categories.model.converter.CategoryTagConverter
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorFooterUM
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorUM
@@ -12,8 +13,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal class CategorySelectorTransformer(
     private val categoryList: List<CoinCategory>,
     private val categorySelection: CategorySelection,
-    private val isEdited: Boolean,
-    private val onReset: () -> Unit,
+    private val isApplyVisible: Boolean,
     private val onApply: () -> Unit,
     private val onSelectionChange: (CategorySelection) -> Unit,
 ) : Transformer<CategorySelectorUM> {
@@ -27,10 +27,8 @@ internal class CategorySelectorTransformer(
                     categorySelection = categorySelection,
                     onSelectionChange = onSelectionChange,
                 ).convert(categoryList),
-                // a lone sector filters no differently than its category, so the rail earns its place
-                // only from two sectors up — below that the category row is the whole filter
                 selectedCategory
-                    ?.takeIf { it.sectors.size > 1 }
+                    ?.takeIf { it.hasSectorChoice }
                     ?.let { category ->
                         CategorySectorConverter(
                             categorySelection = categorySelection,
@@ -38,8 +36,8 @@ internal class CategorySelectorTransformer(
                         ).convert(category)
                     },
             ).toPersistentList(),
-            isEdited = isEdited,
-            footer = CategorySelectorFooterUM(onReset = onReset, onApply = onApply),
+            isApplyVisible = isApplyVisible,
+            footer = CategorySelectorFooterUM(onApply = onApply),
         )
     }
 }

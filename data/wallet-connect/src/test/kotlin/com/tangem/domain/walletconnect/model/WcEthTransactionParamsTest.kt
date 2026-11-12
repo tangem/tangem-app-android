@@ -58,7 +58,9 @@ internal class WcEthTransactionParamsTest {
 
         private fun provideTestModels() = listOf(
             DeclaredChainIdModel(chainId = "0x89", expected = POLYGON_CHAIN_ID),
-            DeclaredChainIdModel(chainId = "0x1", expected = 1),
+            DeclaredChainIdModel(chainId = "0x1", expected = 1L),
+            DeclaredChainIdModel(chainId = "0x59454e4951", expected = ZENIQ_CHAIN_ID),
+            DeclaredChainIdModel(chainId = "383414847825", expected = ZENIQ_CHAIN_ID),
             DeclaredChainIdModel(chainId = "137", expected = POLYGON_CHAIN_ID),
             DeclaredChainIdModel(chainId = null, expected = null),
             DeclaredChainIdModel(chainId = "", expected = null),
@@ -90,7 +92,7 @@ internal class WcEthTransactionParamsTest {
         )
     }
 
-    internal data class DeclaredChainIdModel(val chainId: String?, val expected: Int?)
+    internal data class DeclaredChainIdModel(val chainId: String?, val expected: Long?)
 
     internal data class HasCallDataModel(val data: String?, val expected: Boolean)
 
@@ -106,6 +108,7 @@ internal class WcEthTransactionParamsTest {
     )
 
     private companion object {
-        const val POLYGON_CHAIN_ID = 137
+        const val POLYGON_CHAIN_ID = 137L
+        const val ZENIQ_CHAIN_ID = 383414847825L
     }
 }

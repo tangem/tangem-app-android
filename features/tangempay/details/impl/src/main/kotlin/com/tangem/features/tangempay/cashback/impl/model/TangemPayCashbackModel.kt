@@ -22,6 +22,7 @@ import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackAcc
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackDetailsUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackScreenUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
+import com.tangem.features.tangempay.common.openTrustedLink
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.Job
@@ -60,7 +61,9 @@ internal class TangemPayCashbackModel @Inject constructor(
     private val cashbackConverter = TangemPayCashbackUmConverter()
     private val histogramConverter = TangemPayCashbackHistogramConverter()
     private val cardsConverter = TangemPayCashbackCardsConverter()
-    private val additionalCashbackConverter = TangemPayAdditionalCashbackConverter(onLinkClick = urlOpener::openUrl)
+    private val additionalCashbackConverter = TangemPayAdditionalCashbackConverter(
+        onLinkClick = urlOpener::openTrustedLink,
+    )
     private val infoTilesConverter = TangemPayCashbackInfoTilesConverter(
         onRateClick = ::onConditionsTileClick,
         onAccrualsClick = ::onAccrualsTileClick,
@@ -184,7 +187,7 @@ internal class TangemPayCashbackModel @Inject constructor(
 
     private fun onDocClick(doc: CashbackDocument) {
         analytics.send(TangemPayAnalyticsEvents.Cashback.TermsDocClicked(title = doc.title))
-        urlOpener.openUrl(doc.url)
+        urlOpener.openTrustedLink(doc.url)
     }
 
     private fun sendBannerAnalytics(bannerType: TangemPayCashbackUM.Banner.Type?) {

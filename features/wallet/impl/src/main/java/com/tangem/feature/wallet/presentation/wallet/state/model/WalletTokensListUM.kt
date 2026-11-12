@@ -92,12 +92,14 @@ internal sealed class WalletTokensListUM {
 internal sealed interface TokensListItemUM2 {
     val id: String
 
+    @RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
     data class GroupTitle(
         val tokenRowUM: TangemHeaderRowUM,
     ) : TokensListItemUM2 {
         override val id: String = tokenRowUM.id
     }
 
+    @RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
     data class Token(
         val tokenRowUM: TangemTokenRowUM,
     ) : TokensListItemUM2 {

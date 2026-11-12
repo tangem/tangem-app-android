@@ -12,6 +12,7 @@ import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.models.request.WaitlistRequest
 import com.tangem.spend.datasource.tangempay.models.response.WaitlistResponse
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -19,7 +20,10 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultTangemPayWaitlistRepositoryTest {
 
     private val tangemPayApi: TangemPayApi = mockk()
@@ -44,69 +48,32 @@ internal class DefaultTangemPayWaitlistRepositoryTest {
         coEvery { tangemPayApi.joinWaitlist(any(), any(), any()) } returns ApiResponse.Success(WAITLIST_RESPONSE)
     }
 
-    @Test
-    fun `GIVEN api succeeds WHEN join THEN maps entry to request and returns Unit`() = runTest {
-        // WHEN
-        val actual = repository.join(
-            userWalletId = USER_WALLET_ID,
-            product = TangemPayProduct.BANKING_ACCOUNT,
-            entry = ENTRY,
-            idempotencyKey = IDEMPOTENCY_KEY,
-        )
-
-        // THEN
-        assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) {
-            tangemPayApi.joinWaitlist(
-                authHeader = AUTH_HEADER,
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN api succeeds WHEN join THEN maps product and entry to request and returns Unit`(model: JoinModel) =
+        runTest {
+            // Act
+            val actual = repository.join(
+                userWalletId = USER_WALLET_ID,
+                product = model.product,
+                entry = model.entry,
                 idempotencyKey = IDEMPOTENCY_KEY,
-                body = WaitlistRequest(
-                    email = "user@tangem.com",
-                    product = "BANKING_ACCOUNT",
-                    country = "US",
-                    region = "CA",
-                    hasMarketingConsent = true,
-                ),
             )
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 1) {
+                tangemPayApi.joinWaitlist(
+                    authHeader = AUTH_HEADER,
+                    idempotencyKey = IDEMPOTENCY_KEY,
+                    body = model.expectedBody,
+                )
+            }
         }
-    }
-
-    @Test
-    fun `GIVEN payment account entry without region WHEN join THEN request carries null region`() = runTest {
-        // GIVEN
-        val entry = ENTRY.copy(
-            regionCode = null,
-            isMarketingConsentGiven = false,
-        )
-
-        // WHEN
-        val actual = repository.join(
-            userWalletId = USER_WALLET_ID,
-            product = TangemPayProduct.PAYMENT_ACCOUNT,
-            entry = entry,
-            idempotencyKey = IDEMPOTENCY_KEY,
-        )
-
-        // THEN
-        assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) {
-            tangemPayApi.joinWaitlist(
-                authHeader = AUTH_HEADER,
-                idempotencyKey = IDEMPOTENCY_KEY,
-                body = WaitlistRequest(
-                    email = "user@tangem.com",
-                    product = "PAYMENT_ACCOUNT",
-                    country = "US",
-                    region = null,
-                    hasMarketingConsent = false,
-                ),
-            )
-        }
-    }
 
     @Test
     fun `GIVEN no user wallet WHEN join THEN request is performed with null userWalletId`() = runTest {
-        // WHEN
+        // Act
         val actual = repository.join(
             userWalletId = null,
             product = TangemPayProduct.BANKING_ACCOUNT,
@@ -114,7 +81,7 @@ internal class DefaultTangemPayWaitlistRepositoryTest {
             idempotencyKey = IDEMPOTENCY_KEY,
         )
 
-        // THEN
+        // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerify(exactly = 1) {
             requestHelper.performWithOptionalToken<WaitlistResponse>(userWalletId = null, requestBlock = any())
@@ -123,11 +90,11 @@ internal class DefaultTangemPayWaitlistRepositoryTest {
 
     @Test
     fun `GIVEN api fails WHEN join THEN returns error`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery { tangemPayApi.joinWaitlist(any(), any(), any()) } returns
             ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<WaitlistResponse>
 
-        // WHEN
+        // Act
         val actual = repository.join(
             userWalletId = USER_WALLET_ID,
             product = TangemPayProduct.BANKING_ACCOUNT,
@@ -135,9 +102,43 @@ internal class DefaultTangemPayWaitlistRepositoryTest {
             idempotencyKey = IDEMPOTENCY_KEY,
         )
 
-        // THEN
+        // Assert
         assertThat(actual).isEqualTo(TangemPayApiError.Unspecified.left())
     }
+
+    private fun provideTestModels() = listOf(
+        JoinModel(
+            product = TangemPayProduct.BANKING_ACCOUNT,
+            entry = ENTRY,
+            expectedBody = WaitlistRequest(
+                email = "user@tangem.com",
+                product = "BANKING_ACCOUNT",
+                country = "US",
+                region = "CA",
+                hasMarketingConsent = true,
+            ),
+        ),
+        JoinModel(
+            product = TangemPayProduct.PAYMENT_ACCOUNT,
+            entry = ENTRY.copy(
+                regionCode = null,
+                isMarketingConsentGiven = false,
+            ),
+            expectedBody = WaitlistRequest(
+                email = "user@tangem.com",
+                product = "PAYMENT_ACCOUNT",
+                country = "US",
+                region = null,
+                hasMarketingConsent = false,
+            ),
+        ),
+    )
+
+    internal data class JoinModel(
+        val product: TangemPayProduct,
+        val entry: TangemPayWaitlistEntry,
+        val expectedBody: WaitlistRequest,
+    )
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")

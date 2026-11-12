@@ -79,6 +79,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangempay.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import com.tangem.features.allservices.api.AllServicesFeatureToggles
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
@@ -149,6 +150,7 @@ internal class WalletModel @Inject constructor(
     private val wcPairService: WcPairService,
     private val mcpRequestService: McpRequestService,
     private val mcpFeatureToggles: McpFeatureToggles,
+    private val allServicesFeatureToggles: AllServicesFeatureToggles,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val deeplinkLauncher: DeeplinkLauncher,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
@@ -699,6 +701,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isAllServicesEnabled = allServicesFeatureToggles.isAllServicesEnabled,
             ),
         )
 
@@ -711,11 +714,9 @@ internal class WalletModel @Inject constructor(
 
         val otherWallets = action.wallets.minus(action.selectedWallet)
 
-        otherWallets
-            .filterNot(UserWallet::isLocked)
-            .onEach { userWallet ->
-                modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
-            }
+        otherWallets.forEach { userWallet ->
+            modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+        }
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
             val direction = if (action.selectedWalletIndex == action.wallets.lastIndex) {
@@ -894,8 +895,6 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun fetchWalletContent(userWallet: UserWallet, forceUpdate: Boolean = false) {
-        if (userWallet.isLocked) return
-
         /*
          * Updating the balance of the current wallet is an essential part of InitializationWallets,
          * so the coroutine is launched in the current context

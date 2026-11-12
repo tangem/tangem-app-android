@@ -22,70 +22,26 @@ internal class PhoneVisualTransformationTest {
         hintColor = hintColor,
     )
 
-    @Test
-    fun `GIVEN empty input WHEN filter THEN mask skeleton with country code is shown`() {
+    @ParameterizedTest
+    @MethodSource("maskedTextCases")
+    fun `GIVEN digits WHEN filter THEN entered part is masked and the rest of the mask stays a hint`(
+        model: MaskedTextModel,
+    ) {
         // Act
-        val result = transformation().filter(AnnotatedString(""))
+        val result = transformation().filter(AnnotatedString(model.raw))
 
         // Assert
-        assertThat(result.text.text).isEqualTo("+1 (___) ___-____")
+        assertThat(result.text.text).isEqualTo(model.expected)
     }
 
-    @Test
-    fun `GIVEN partial digits WHEN filter THEN entered part is masked and the rest stays a hint`() {
+    @ParameterizedTest
+    @MethodSource("spanStyleCases")
+    fun `GIVEN digits WHEN filter THEN entered and hint parts carry their own colours`(model: SpanStyleModel) {
         // Act
-        val result = transformation().filter(AnnotatedString("234"))
+        val result = transformation().filter(AnnotatedString(model.raw))
 
         // Assert
-        assertThat(result.text.text).isEqualTo("+1 (234) ___-____")
-    }
-
-    @Test
-    fun `GIVEN all digits WHEN filter THEN no hint characters remain`() {
-        // Act
-        val result = transformation().filter(AnnotatedString("2345678901"))
-
-        // Assert
-        assertThat(result.text.text).isEqualTo("+1 (234) 567-8901")
-    }
-
-    @Test
-    fun `GIVEN empty input WHEN filter THEN the persistent prefix is entered and the skeleton is a hint`() {
-        // Act
-        val result = transformation().filter(AnnotatedString(""))
-
-        // Assert
-        assertThat(result.text.spanStyles)
-            .containsExactly(
-                AnnotatedString.Range(SpanStyle(color = enteredColor), 0, 3),
-                AnnotatedString.Range(SpanStyle(color = hintColor), 3, 17),
-            )
-            .inOrder()
-    }
-
-    @Test
-    fun `GIVEN partial digits WHEN filter THEN entered and hint parts carry their own colours`() {
-        // Act
-        val result = transformation().filter(AnnotatedString("234"))
-
-        // Assert
-        assertThat(result.text.spanStyles)
-            .containsExactly(
-                AnnotatedString.Range(SpanStyle(color = enteredColor), 0, 9),
-                AnnotatedString.Range(SpanStyle(color = hintColor), 9, 17),
-            )
-            .inOrder()
-    }
-
-    @Test
-    fun `GIVEN all digits WHEN filter THEN the whole text is coloured as entered`() {
-        // Act
-        val result = transformation().filter(AnnotatedString("2345678901"))
-
-        // Assert
-        assertThat(result.text.spanStyles).containsExactly(
-            AnnotatedString.Range(SpanStyle(color = enteredColor), 0, 17),
-        )
+        assertThat(result.text.spanStyles).containsExactlyElementsIn(model.expected).inOrder()
     }
 
     @Test
@@ -132,17 +88,27 @@ internal class PhoneVisualTransformationTest {
     @ParameterizedTest
     @MethodSource("originalToTransformedCases")
     fun originalToTransformed(model: OffsetModel) {
+        // Arrange
         val mapping = transformation().filter(AnnotatedString(model.raw)).offsetMapping
 
-        assertThat(mapping.originalToTransformed(model.offset)).isEqualTo(model.expected)
+        // Act
+        val actual = mapping.originalToTransformed(model.offset)
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
     }
 
     @ParameterizedTest
     @MethodSource("transformedToOriginalCases")
     fun transformedToOriginal(model: OffsetModel) {
+        // Arrange
         val mapping = transformation().filter(AnnotatedString(model.raw)).offsetMapping
 
-        assertThat(mapping.transformedToOriginal(model.offset)).isEqualTo(model.expected)
+        // Act
+        val actual = mapping.transformedToOriginal(model.offset)
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
     }
 
     @ParameterizedTest
@@ -162,6 +128,35 @@ internal class PhoneVisualTransformationTest {
     }
 
     internal data class OffsetModel(val raw: String, val offset: Int, val expected: Int)
+    internal data class MaskedTextModel(val raw: String, val expected: String)
+    internal data class SpanStyleModel(val raw: String, val expected: List<AnnotatedString.Range<SpanStyle>>)
+
+    private fun maskedTextCases() = listOf(
+        MaskedTextModel(raw = "", expected = "+1 (___) ___-____"),
+        MaskedTextModel(raw = "234", expected = "+1 (234) ___-____"),
+        MaskedTextModel(raw = "2345678901", expected = "+1 (234) 567-8901"),
+    )
+
+    private fun spanStyleCases() = listOf(
+        SpanStyleModel(
+            raw = "",
+            expected = listOf(
+                AnnotatedString.Range(SpanStyle(color = enteredColor), 0, 3),
+                AnnotatedString.Range(SpanStyle(color = hintColor), 3, 17),
+            ),
+        ),
+        SpanStyleModel(
+            raw = "234",
+            expected = listOf(
+                AnnotatedString.Range(SpanStyle(color = enteredColor), 0, 9),
+                AnnotatedString.Range(SpanStyle(color = hintColor), 9, 17),
+            ),
+        ),
+        SpanStyleModel(
+            raw = "2345678901",
+            expected = listOf(AnnotatedString.Range(SpanStyle(color = enteredColor), 0, 17)),
+        ),
+    )
 
     private fun originalToTransformedCases() = listOf(
         OffsetModel(raw = "", offset = 0, expected = 4),

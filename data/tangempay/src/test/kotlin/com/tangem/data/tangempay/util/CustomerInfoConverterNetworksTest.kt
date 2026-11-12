@@ -4,9 +4,13 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.spend.datasource.tangempay.models.response.BalanceResponse
 import com.tangem.spend.datasource.tangempay.models.response.CustomerMeResponse
 import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CustomerInfoConverterNetworksTest {
 
     private fun result(balance: BalanceResponse?) = CustomerMeResponse.Result(
@@ -26,20 +30,19 @@ internal class CustomerInfoConverterNetworksTest {
         networks = networks,
     )
 
-    @Test
-    fun `GIVEN null balance WHEN convert THEN empty networks`() {
-        val info = CustomerInfoConverter.convert(result(balance = null))
-        assertThat(info.networks).isEmpty()
-    }
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN null balance or null networks WHEN convert THEN empty networks`(model: MissingNetworksModel) {
+        // Act
+        val info = CustomerInfoConverter.convert(result(balance = model.balance))
 
-    @Test
-    fun `GIVEN null networks WHEN convert THEN empty list`() {
-        val info = CustomerInfoConverter.convert(result(balance = balance(networks = null)))
+        // Assert
         assertThat(info.networks).isEmpty()
     }
 
     @Test
     fun `GIVEN enabled and unknown status WHEN convert THEN maps fields and defaults unknown to DISABLED`() {
+        // Arrange
         val wire = listOf(
             BalanceResponse.NetworkResponse(
                 name = "base", isTestnet = true, chainId = 84532L, status = "ENABLED",
@@ -57,16 +60,40 @@ internal class CustomerInfoConverterNetworksTest {
             ),
         )
 
+        // Act
         val networks = CustomerInfoConverter.convert(result(balance = balance(networks = wire))).networks
 
-        assertThat(networks).hasSize(2)
-        assertThat(networks[0].status).isEqualTo(CustomerInfo.NetworkInfo.Status.ENABLED)
-        assertThat(networks[0].chainId).isEqualTo(84532L)
-        assertThat(networks[0].tokens[0].symbol).isEqualTo("USDC")
-        assertThat(networks[0].tokens[0].availableForWithdrawal).isEqualTo(BigDecimal("6"))
-        assertThat(networks[1].status).isEqualTo(CustomerInfo.NetworkInfo.Status.DISABLED)
-        assertThat(networks[1].depositAddress).isNull()
-        assertThat(networks[1].tokens[0].availableForWithdrawal).isNull()
+        // Assert
+        assertThat(networks).containsExactly(
+            CustomerInfo.NetworkInfo(
+                name = "base",
+                chainId = 84532L,
+                isTestnet = true,
+                status = CustomerInfo.NetworkInfo.Status.ENABLED,
+                depositAddress = "0xEED",
+                tokens = listOf(
+                    CustomerInfo.NetworkInfo.Token(
+                        symbol = "USDC",
+                        contractAddress = "0x036",
+                        availableForWithdrawal = BigDecimal("6"),
+                    ),
+                ),
+            ),
+            CustomerInfo.NetworkInfo(
+                name = "mystery",
+                chainId = 999L,
+                isTestnet = false,
+                status = CustomerInfo.NetworkInfo.Status.DISABLED,
+                depositAddress = null,
+                tokens = listOf(
+                    CustomerInfo.NetworkInfo.Token(
+                        symbol = "USDT",
+                        contractAddress = "0xAAA",
+                        availableForWithdrawal = null,
+                    ),
+                ),
+            ),
+        ).inOrder()
     }
 
     @Test
@@ -122,4 +149,11 @@ internal class CustomerInfoConverterNetworksTest {
             CustomerInfo.NetworkInfo.Token(symbol = "USDC", contractAddress = null, availableForWithdrawal = null),
         )
     }
+
+    private fun provideTestModels() = listOf(
+        MissingNetworksModel(balance = null),
+        MissingNetworksModel(balance = balance(networks = null)),
+    )
+
+    internal data class MissingNetworksModel(val balance: BalanceResponse?)
 }

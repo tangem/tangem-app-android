@@ -8,10 +8,7 @@ data class TransactionFeeExtended(
     val transactionFee: TransactionFee,
     val feeTokenId: CryptoCurrency.ID,
     /**
-     * Resolved gasless fee strategy. Non-null only for token-paid gasless fees; null for native fee.
-     * A null value is semantically equivalent to [GaslessFeePlan.NativePay] — consumers MUST treat them
-     * the same. [GaslessFeePlan.NativePay] is produced only by ResolveGaslessFeePlanUseCase.
-     * When it is [GaslessFeePlan.TokenPayWithYieldWithdraw], the send step builds a batch transaction.
+     * Set only when the fee is paid in a token via gasless; null when it is paid in the native coin.
      */
     val gaslessFeePlan: GaslessFeePlan? = null,
     /**
@@ -21,14 +18,14 @@ data class TransactionFeeExtended(
      */
     val callGasLimits: List<BigInteger>? = null,
     /**
-     * Per-call gas limit for the appended yield-withdraw sub-call in a batch. Non-null only when the
-     * fee is paid via [GaslessFeePlan.TokenPayWithYieldWithdraw]; used as the withdraw transaction's
-     * [GaslessTransactionData.Transaction.gasLimit].
+     * Per-call gas limit for the appended yield-withdraw sub-call in a batch. Non-null whenever the fee token is
+     * in yield; used as the withdraw transaction's [GaslessTransactionData.Transaction.gasLimit] when
+     * [GaslessFeePlan.TokenPay.yieldWithdraw] is set.
      */
     val withdrawGasLimit: BigInteger? = null,
     /**
      * Per-call gas limit for the approve sub-call that precedes the main transaction in a batch. Non-null only
-     * when the fee is paid via [GaslessFeePlan.TokenPayWithApproval].
+     * when [GaslessFeePlan.TokenPay.approval] is set.
      */
     val approveGasLimit: BigInteger? = null,
     /**

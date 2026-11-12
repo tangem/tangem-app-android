@@ -1,10 +1,11 @@
 package com.tangem.features.tangempay.deeplink
 
-import android.net.Uri
+import com.tangem.common.routing.deeplink.DeepLinkHandler
 
-interface TangemPayOnboardDeepLinkHandler {
+interface TangemPayOnboardDeepLinkHandler : DeepLinkHandler {
 
-    interface Factory {
-        fun create(uri: Uri): TangemPayOnboardDeepLinkHandler
+    companion object {
+        const val TANGEM_DEEPLINK_KEY = "tangem://onboard-visa"
+        const val HTTPS_DEEPLINK_KEY = "https://tangem.com/pay-app"
     }
 }

@@ -27,7 +27,7 @@ sealed interface CustomerOrderRequest {
         val transitionType: TangemPayTariffPlanTransition.Type,
     ) : CustomerOrderRequest
 
-    data class SmartContractIssue(val chainId: Int) : CustomerOrderRequest
+    data class SmartContractIssue(val chainId: Long) : CustomerOrderRequest
 
     data class Onboarding(
         val tariffPlanTransition: TariffPlanTransition?,

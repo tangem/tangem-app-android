@@ -5,6 +5,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.product.api.product.EarnRateEntry
 import com.tangem.features.earn.product.api.product.EarnRateSource
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,8 @@ internal class YieldModeRateSource @Inject constructor(
     override val id: EarnProductId = EarnProductId("yield_mode")
 
     override val rank: Int = 3
+
+    override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success
 
     override fun rates(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnRateEntry>> = combine(
         flow = accountStatusListSupplier(userWalletId).map { it.flattenCurrencies() },

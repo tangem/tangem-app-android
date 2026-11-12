@@ -2,9 +2,7 @@ package com.tangem.tap.routing.utils
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
-import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst
@@ -13,6 +11,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.MarketingUidBindingRepository
+import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -35,9 +34,8 @@ internal class DeepLinkFactory @Inject constructor(
     private val marketingFeatureToggles: MarketingFeatureToggles,
     private val marketingUidBindingRepository: MarketingUidBindingRepository,
     private val appCoroutineScope: AppCoroutineScope,
-    deepLinkHandlers: Map<String, @JvmSuppressWildcards DeepLinkHandler>,
+    private val deepLinkHandlerRegistry: DeepLinkHandlerRegistry,
 ) {
-    private val deepLinkHandlerRegistry = DeepLinkHandlerRegistry(deepLinkHandlers)
     private val permittedAppRoute = MutableStateFlow(false)
 
     private var parkedDeeplink: ParkedDeeplink? = null
@@ -56,7 +54,7 @@ internal class DeepLinkFactory @Inject constructor(
         isFromOnNewIntent: Boolean,
         source: DeeplinkSource = DeeplinkSource.External,
     ) {
-        if (source == DeeplinkSource.External && deeplinkUri.isTangemPayMainLink()) {
+        if (source == DeeplinkSource.External && TangemPayMainDeepLinkHandler.canHandle(deeplinkUri)) {
             TangemLogger.i("Tangem Pay main deep link is openable only from push")
             return
         }
@@ -181,25 +179,6 @@ internal class DeepLinkFactory @Inject constructor(
         return true
     }
 
-    /**
-     * Whole-segment path match: `/news` and `/news/1-slug` match `/news`, `/newsletter` does not.
-     *
-     * A plain `startsWith` would claim `/pay-application` and `/newsletter` as routed, and the handler would then
-     * silently do nothing — suppressing the web fallback and turning the tap into a no-op.
-     */
-    private fun String.matchesPathSegment(segment: String): Boolean = this == segment || startsWith("$segment/")
-
-    private fun Uri.isTangemPayMainLink(): Boolean = when (scheme) {
-        DeepLinkScheme.Tangem.scheme -> host == DeepLinkRoute.PayAppMain.host
-        DeepLinkScheme.Https.scheme -> host == DeepLinkRoute.PayApp.host && isPayAppMainPath()
-        else -> false
-    }
-
-    private fun Uri.isPayAppMainPath(): Boolean {
-        return path.orEmpty().matchesPathSegment(PAY_APP_MAIN_PATH) ||
-            pathSegments.firstOrNull() == PAY_APP_MAIN_SEGMENT
-    }
-
     private fun getQueryParams(uri: Uri): Map<String, String> {
         // An opaque URI such as `wc:…` has no query: `queryParameterNames` throws for it
         if (uri.isOpaque) return emptyMap()
@@ -227,8 +206,5 @@ internal class DeepLinkFactory @Inject constructor(
          * [ExternalUrlValidator]'s trusted hosts because they serve attribution redirects rather than content.
          */
         val APPSFLYER_ONELINK_HOSTS = setOf("tangem.onelink.me", "join.tangem.com")
-
-        const val PAY_APP_MAIN_SEGMENT = "pay-app-main"
-        const val PAY_APP_MAIN_PATH = "/$PAY_APP_MAIN_SEGMENT"
     }
 }

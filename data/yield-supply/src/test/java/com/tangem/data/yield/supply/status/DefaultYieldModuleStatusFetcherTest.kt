@@ -2,6 +2,10 @@ package com.tangem.data.yield.supply.status
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.yieldsupply.providers.YieldSupplyStatus
 import com.tangem.data.yield.supply.status.store.YieldModuleStatusStore
@@ -128,12 +132,24 @@ internal class DefaultYieldModuleStatusFetcherTest {
         }
 
     @Test
-    fun `GIVEN active and inactive tokens WHEN invoke THEN protocol balance is read for the active one only`() =
+    fun `GIVEN active and inactive tokens WHEN invoke THEN the active one is read as one paired balance`() =
         runTest {
-            // Arrange
+            // Arrange — allowance false in the paired read, true from the standalone call: the active token must
+            // take everything from the one read
             coEvery { walletManager.getYieldSupplyStatus(USDC_ADDRESS) } returns sdkStatus(isActive = true)
             coEvery { walletManager.getYieldSupplyStatus(USDT_ADDRESS) } returns sdkStatus(isActive = false)
-            coEvery { walletManager.getEffectiveProtocolBalance(any()) } returns BigDecimal("12.5")
+            coEvery { walletManager.getBalance(yieldSupplyStatus = any(), token = any()) } returns Amount(
+                value = BigDecimal("20"),
+                blockchain = Blockchain.Ethereum,
+                currencySymbol = "USDC",
+                type = AmountType.TokenYieldSupply(
+                    token = Token(symbol = "USDC", contractAddress = USDC_ADDRESS, decimals = 6),
+                    isActive = true,
+                    isInitialized = true,
+                    isAllowedToSpend = false,
+                    effectiveProtocolBalance = BigDecimal("12.5"),
+                ),
+            )
 
             // Act
             val actual = fetcher(params(tokens = setOf(usdc, usdt)))
@@ -145,15 +161,38 @@ internal class DefaultYieldModuleStatusFetcherTest {
                     token = usdc,
                     isActive = true,
                     isInitialized = true,
-                    isAllowedToSpend = true,
+                    isAllowedToSpend = false,
                     effectiveProtocolBalance = BigDecimal("12.5"),
+                    effectiveBalance = BigDecimal("20"),
                 ),
                 createStatus(token = usdt, isInitialized = true, isAllowedToSpend = true),
             )
             coVerify { store.storeActual(userWalletId, expected) }
-            coVerify(exactly = 1) { walletManager.getEffectiveProtocolBalance(match { it.contractAddress == USDC_ADDRESS }) }
+            coVerify(exactly = 1) {
+                walletManager.getBalance(yieldSupplyStatus = any(), token = match { it.contractAddress == USDC_ADDRESS })
+            }
+            coVerify(exactly = 0) { walletManager.getEffectiveProtocolBalance(any()) }
             coVerify { store.storeError(userWalletId, emptySet()) }
         }
+
+    @Test
+    fun `GIVEN paired balance of another amount type WHEN invoke THEN that token is stored as error`() = runTest {
+        // Arrange
+        coEvery { walletManager.getYieldSupplyStatus(USDC_ADDRESS) } returns sdkStatus(isActive = true)
+        coEvery { walletManager.getBalance(yieldSupplyStatus = any(), token = any()) } returns Amount(
+            value = BigDecimal("20"),
+            blockchain = Blockchain.Ethereum,
+            currencySymbol = "USDC",
+            type = AmountType.Coin,
+        )
+
+        // Act
+        val actual = fetcher(params(tokens = setOf(usdc)))
+
+        // Assert
+        assertThat(actual.isLeft()).isTrue()
+        coVerify { store.storeError(userWalletId, setOf(createStatus(usdc).key)) }
+    }
 
     @Test
     fun `GIVEN status read fails for one token WHEN invoke THEN returns left and only that token is stored as error`() =

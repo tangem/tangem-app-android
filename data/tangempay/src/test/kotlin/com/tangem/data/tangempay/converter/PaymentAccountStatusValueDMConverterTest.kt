@@ -7,6 +7,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.tangempay.TangemPayCard
 import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardLimitData
 import com.tangem.domain.models.tangempay.TangemPayCardState
 import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
@@ -16,9 +17,9 @@ import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -45,294 +46,231 @@ internal class PaymentAccountStatusValueDMConverterTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Convert {
 
-        @Test
-        fun `GIVEN domain Empty WHEN convert THEN returns DM Empty`() {
-            // GIVEN
-            val domain = PaymentAccountStatusValue.Empty
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN persisted domain status WHEN convert THEN returns its DM`(model: ConvertModel) {
+            // Act
+            val actual = converter.convert(model.domain)
 
-            // WHEN
-            val result = converter.convert(domain)
-
-            // THEN
-            assertThat(result).isInstanceOf(PaymentAccountStatusValueDM.Empty::class.java)
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
         }
 
-        @Test
-        fun `GIVEN domain Deactivated with balance WHEN convert THEN returns DM DeactivatedAccount with same balance`() {
-            // GIVEN
-            val domain = PaymentAccountStatusValue.Deactivated(
-                source = StatusSource.ACTUAL,
-                customerId = "customer-1",
-                balance = PaymentAccountStatusValue.Balance(
-                    fiatBalance = PaymentAccountStatusValue.FiatBalance(
+        @ParameterizedTest
+        @MethodSource("provideTransientStatuses")
+        fun `GIVEN transient domain status WHEN convert THEN returns null (not persisted)`(
+            domain: PaymentAccountStatusValue,
+        ) {
+            // Act
+            val actual = converter.convert(domain)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        private fun provideTestModels() = listOf(
+            ConvertModel(
+                domain = PaymentAccountStatusValue.Empty,
+                expected = PaymentAccountStatusValueDM.Empty,
+            ),
+            ConvertModel(
+                domain = PaymentAccountStatusValue.NotCreated,
+                expected = PaymentAccountStatusValueDM.NotCreated,
+            ),
+            ConvertModel(
+                domain = PaymentAccountStatusValue.Deactivated(
+                    source = StatusSource.ACTUAL,
+                    customerId = "customer-1",
+                    balance = PaymentAccountStatusValue.Balance(
+                        fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                            availableBalance = BigDecimal("100"),
+                            currency = "USD",
+                        ),
+                    ),
+                    cryptoCurrency = cryptoCurrency,
+                    networks = emptyList(),
+                    fiatRate = BigDecimal("1.05"),
+                    error = null,
+                ),
+                expected = PaymentAccountStatusValueDM.DeactivatedAccount(
+                    customerId = "customer-1",
+                    fiatRate = BigDecimal("1.05"),
+                    fiatBalance = PaymentAccountStatusValueDM.FiatBalanceDM(
                         availableBalance = BigDecimal("100"),
                         currency = "USD",
                     ),
                 ),
-                cryptoCurrency = cryptoCurrency,
-                networks = emptyList(),
-                fiatRate = BigDecimal("1.05"),
-                error = null,
-            )
+            ),
+            ConvertModel(
+                domain = PaymentAccountStatusValue.Loaded(
+                    source = StatusSource.ACTUAL,
+                    customerId = "customer-3",
+                    paymentAccountAddress = null,
+                    balance = null,
+                    cryptoCurrency = cryptoCurrency,
+                    networks = emptyList(),
+                    cards = emptyList(),
+                    fiatRate = null,
+                    error = null,
+                    virtualAccount = null,
+                    isBankOfframpAvailable = null,
+                    tariffPlan = null,
+                    isPaymentAccountIssuing = false,
+                ),
+                expected = PaymentAccountStatusValueDM.ActiveAccount(
+                    customerId = "customer-3",
+                    currencyCode = null,
+                    paymentAccountAddress = null,
+                    fiatBalance = null,
+                    fiatRate = null,
+                    cards = emptyList(),
+                ),
+            ),
+        )
 
-            // WHEN
-            val result = converter.convert(domain)
-
-            // THEN
-            assertThat(result).isInstanceOf(PaymentAccountStatusValueDM.DeactivatedAccount::class.java)
-            val dm = result as PaymentAccountStatusValueDM.DeactivatedAccount
-            assertThat(dm.customerId).isEqualTo("customer-1")
-            assertThat(dm.fiatBalance?.availableBalance).isEqualTo(BigDecimal("100"))
-            assertThat(dm.fiatBalance?.currency).isEqualTo("USD")
-            assertThat(dm.fiatRate).isEqualTo(BigDecimal("1.05"))
-        }
-
-        @Test
-        fun `GIVEN domain Loading WHEN convert THEN returns null (transient, not persisted)`() {
-            // GIVEN
-            val domain = PaymentAccountStatusValue.Loading
-
-            // WHEN
-            val result = converter.convert(domain)
-
-            // THEN
-            assertThat(result).isNull()
-        }
-
-        @Test
-        fun `GIVEN domain AwaitingPlanSelection WHEN convert THEN returns null (transient, not persisted)`() {
-            // GIVEN
-            val domain = PaymentAccountStatusValue.AwaitingPlanSelection(
+        private fun provideTransientStatuses() = listOf(
+            PaymentAccountStatusValue.Loading,
+            PaymentAccountStatusValue.AwaitingPlanSelection(
                 source = StatusSource.ACTUAL,
                 tariffPlan = mockk(),
-            )
-
-            // WHEN
-            val result = converter.convert(domain)
-
-            // THEN
-            assertThat(result).isNull()
-        }
-
-        @Test
-        fun `GIVEN domain Inactive WHEN convert THEN returns null (transient, not persisted)`() {
-            // GIVEN
-            val domain = PaymentAccountStatusValue.Inactive(
+            ),
+            PaymentAccountStatusValue.Inactive(
                 source = StatusSource.ACTUAL,
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
                     availableBalance = BigDecimal("100"),
                     currency = "USD",
                 ),
                 tariffPlan = mockk(),
-            )
-
-            // WHEN
-            val result = converter.convert(domain)
-
-            // THEN
-            assertThat(result).isNull()
-        }
-
-        @Test
-        fun `GIVEN domain Error Unavailable WHEN convert THEN returns null (transient, not persisted)`() {
-            // GIVEN
-            val domain = PaymentAccountStatusValue.Error.Unavailable
-
-            // WHEN
-            val result = converter.convert(domain)
-
-            // THEN
-            assertThat(result).isNull()
-        }
-
-        @Test
-        fun `GIVEN domain Loaded without balance WHEN convert THEN returns DM ActiveAccount without balance`() {
-            // GIVEN
-            val domain = PaymentAccountStatusValue.Loaded(
-                source = StatusSource.ACTUAL,
-                customerId = "customer-3",
-                paymentAccountAddress = null,
-                balance = null,
-                cryptoCurrency = cryptoCurrency,
-                networks = emptyList(),
-                cards = emptyList(),
-                fiatRate = null,
-                error = null,
-                virtualAccount = null,
-                isBankOfframpAvailable = null,
-                tariffPlan = null,
-                isPaymentAccountIssuing = false,
-            )
-
-            // WHEN
-            val result = converter.convert(domain)
-
-            // THEN
-            val dm = result as PaymentAccountStatusValueDM.ActiveAccount
-            assertThat(dm.customerId).isEqualTo("customer-3")
-            assertThat(dm.fiatBalance).isNull()
-            assertThat(dm.currencyCode).isNull()
-        }
-
-        @Test
-        fun `GIVEN domain NotCreated WHEN convert THEN returns DM NotCreated`() {
-            // GIVEN
-            val domain = PaymentAccountStatusValue.NotCreated
-
-            // WHEN
-            val result = converter.convert(domain)
-
-            // THEN
-            assertThat(result).isInstanceOf(PaymentAccountStatusValueDM.NotCreated::class.java)
-        }
+            ),
+            PaymentAccountStatusValue.Error.Unavailable,
+        )
     }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ConvertBack {
 
-        @Test
-        fun `GIVEN card issue failed with a balance WHEN round tripped THEN the account payload survives`() {
-            // Arrange
-            val domain = PaymentAccountStatusValue.Error.CardIssueFailed(
-                customerId = "customer-id",
-                tariffPlan = null,
-                balance = accountBalance(),
-                fiatRate = BigDecimal("1.5"),
-            )
-
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN stored DM WHEN convertBack THEN returns its domain status`(model: ConvertBackModel) {
             // Act
-            val restored = converter.convertBack(userWalletId, converter.convert(domain))
+            val actual = converter.convertBack(userWalletId, model.dm)
 
             // Assert
-            assertThat(restored).isEqualTo(
-                PaymentAccountStatusValue.Error.CardIssueFailed(
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideRoundTripModels")
+        fun `GIVEN card issue failed or KYC required WHEN round tripped THEN restored from cache with payload`(
+            model: RoundTripModel,
+        ) {
+            // Act
+            val restored = converter.convertBack(userWalletId, converter.convert(model.domain))
+
+            // Assert
+            assertThat(restored).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            ConvertBackModel(
+                dm = PaymentAccountStatusValueDM.Empty,
+                expected = PaymentAccountStatusValue.Empty,
+            ),
+            ConvertBackModel(
+                dm = PaymentAccountStatusValueDM.NotCreated,
+                expected = PaymentAccountStatusValue.NotCreated,
+            ),
+            ConvertBackModel(
+                dm = null,
+                expected = PaymentAccountStatusValue.Error.Unavailable,
+            ),
+            ConvertBackModel(
+                dm = PaymentAccountStatusValueDM.DeactivatedAccount(
+                    customerId = "customer-2",
+                    fiatBalance = PaymentAccountStatusValueDM.FiatBalanceDM(
+                        availableBalance = BigDecimal("200"),
+                        currency = "EUR",
+                    ),
+                    fiatRate = BigDecimal("0.92"),
+                ),
+                expected = PaymentAccountStatusValue.Deactivated(
+                    source = StatusSource.CACHE,
+                    customerId = "customer-2",
+                    balance = PaymentAccountStatusValue.Balance(
+                        fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                            availableBalance = BigDecimal("200"),
+                            currency = "EUR",
+                        ),
+                    ),
+                    cryptoCurrency = cryptoCurrency,
+                    networks = emptyList(),
+                    fiatRate = BigDecimal("0.92"),
+                    error = null,
+                ),
+            ),
+            ConvertBackModel(
+                dm = PaymentAccountStatusValueDM.ActiveAccount(
+                    customerId = "customer-4",
+                    currencyCode = null,
+                    paymentAccountAddress = null,
+                    fiatBalance = null,
+                    fiatRate = null,
+                    cards = emptyList(),
+                ),
+                expected = PaymentAccountStatusValue.Loaded(
+                    source = StatusSource.CACHE,
+                    customerId = "customer-4",
+                    paymentAccountAddress = null,
+                    balance = null,
+                    cryptoCurrency = cryptoCurrency,
+                    networks = emptyList(),
+                    cards = emptyList(),
+                    fiatRate = null,
+                    error = null,
+                    virtualAccount = null,
+                    isBankOfframpAvailable = null,
+                    tariffPlan = null,
+                    isPaymentAccountIssuing = false,
+                ),
+            ),
+        )
+
+        private fun provideRoundTripModels() = listOf(
+            RoundTripModel(
+                domain = PaymentAccountStatusValue.Error.CardIssueFailed(
+                    customerId = "customer-id",
+                    tariffPlan = null,
+                    balance = accountBalance(),
+                    fiatRate = BigDecimal("1.5"),
+                ),
+                expected = PaymentAccountStatusValue.Error.CardIssueFailed(
                     customerId = "customer-id",
                     source = StatusSource.CACHE,
                     balance = accountBalance(),
                     fiatRate = BigDecimal("1.5"),
                 ),
-            )
-        }
-
-        @Test
-        fun `GIVEN card issue failed without a balance WHEN round tripped THEN it restores from cache`() {
-            // Arrange
-            val domain = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "customer-id")
-
-            // Act
-            val restored = converter.convertBack(userWalletId, converter.convert(domain))
-
-            // Assert
-            assertThat(restored).isEqualTo(
-                PaymentAccountStatusValue.Error.CardIssueFailed(
+            ),
+            RoundTripModel(
+                domain = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "customer-id"),
+                expected = PaymentAccountStatusValue.Error.CardIssueFailed(
                     customerId = "customer-id",
                     source = StatusSource.CACHE,
                 ),
-            )
-        }
-
-        @Test
-        fun `GIVEN KYC required WHEN round tripped THEN it restores from cache`() {
-            // Arrange
-            val domain = PaymentAccountStatusValue.KycRequired(
-                source = StatusSource.ACTUAL,
-                customerId = "customer-id",
-                customerResidency = TangemPayCustomerResidency(countryCode = "US", regionCode = "TX"),
-            )
-
-            // Act
-            val restored = converter.convertBack(userWalletId, converter.convert(domain))
-
-            // Assert
-            assertThat(restored).isEqualTo(
-                PaymentAccountStatusValue.KycRequired(
+            ),
+            RoundTripModel(
+                domain = PaymentAccountStatusValue.KycRequired(
+                    source = StatusSource.ACTUAL,
+                    customerId = "customer-id",
+                    customerResidency = TangemPayCustomerResidency(countryCode = "US", regionCode = "TX"),
+                ),
+                expected = PaymentAccountStatusValue.KycRequired(
                     source = StatusSource.CACHE,
                     customerId = "customer-id",
                     customerResidency = null,
                 ),
-            )
-        }
-
-        @Test
-        fun `GIVEN DM Empty WHEN convertBack THEN returns domain Empty`() {
-            // GIVEN
-            val dm = PaymentAccountStatusValueDM.Empty
-
-            // WHEN
-            val result = converter.convertBack(userWalletId, dm)
-
-            // THEN
-            assertThat(result).isEqualTo(PaymentAccountStatusValue.Empty)
-        }
-
-        @Test
-        fun `GIVEN DM DeactivatedAccount WHEN convertBack THEN returns domain Deactivated with CACHE source`() {
-            // GIVEN
-            val dm = PaymentAccountStatusValueDM.DeactivatedAccount(
-                customerId = "customer-2",
-                fiatBalance = PaymentAccountStatusValueDM.FiatBalanceDM(
-                    availableBalance = BigDecimal("200"),
-                    currency = "EUR",
-                ),
-                fiatRate = BigDecimal("0.92"),
-            )
-
-            // WHEN
-            val result = converter.convertBack(userWalletId, dm)
-
-            // THEN
-            assertThat(result).isInstanceOf(PaymentAccountStatusValue.Deactivated::class.java)
-            val deactivated = result as PaymentAccountStatusValue.Deactivated
-            assertThat(deactivated.source).isEqualTo(StatusSource.CACHE)
-            assertThat(deactivated.customerId).isEqualTo("customer-2")
-            assertThat(deactivated.balance?.fiatBalance?.availableBalance).isEqualTo(BigDecimal("200"))
-            assertThat(deactivated.balance?.fiatBalance?.currency).isEqualTo("EUR")
-            assertThat(deactivated.fiatRate).isEqualTo(BigDecimal("0.92"))
-        }
-
-        @Test
-        fun `GIVEN DM ActiveAccount without balance WHEN convertBack THEN returns Loaded with null balance`() {
-            // GIVEN
-            val dm = PaymentAccountStatusValueDM.ActiveAccount(
-                customerId = "customer-4",
-                currencyCode = null,
-                paymentAccountAddress = null,
-                fiatBalance = null,
-                fiatRate = null,
-                cards = emptyList(),
-            )
-
-            // WHEN
-            val result = converter.convertBack(userWalletId, dm)
-
-            // THEN
-            val loaded = result as PaymentAccountStatusValue.Loaded
-            assertThat(loaded.balance).isNull()
-            assertThat(loaded.cryptoCurrencyStatuses).isEmpty()
-            assertThat(loaded.source).isEqualTo(StatusSource.CACHE)
-        }
-
-        @Test
-        fun `GIVEN null DM WHEN convertBack THEN returns Error Unavailable`() {
-            // GIVEN / WHEN
-            val result = converter.convertBack(userWalletId, null)
-
-            // THEN
-            assertThat(result).isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
-        }
-
-        @Test
-        fun `GIVEN DM NotCreated WHEN convertBack THEN returns domain NotCreated`() {
-            // GIVEN
-            val dm = PaymentAccountStatusValueDM.NotCreated
-
-            // WHEN
-            val result = converter.convertBack(userWalletId, dm)
-
-            // THEN
-            assertThat(result).isEqualTo(PaymentAccountStatusValue.NotCreated)
-        }
+            ),
+        )
     }
 
     @Nested
@@ -341,24 +279,20 @@ internal class PaymentAccountStatusValueDMConverterTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun convert(model: CardStateModel) {
-            // GIVEN
-            val domain = loadedWithCard(
-                state = model.state,
-                frozenState = model.frozenState,
-                cardType = model.cardType,
-            )
+        fun `GIVEN card state, frozen state and type WHEN round tripped THEN the card is restored`(
+            model: CardStateModel,
+        ) {
+            // Arrange
+            val card = card(state = model.state, frozenState = model.frozenState, cardType = model.cardType)
+            val domain = loadedWithCard(card)
 
-            // WHEN
+            // Act
             val restored = converter.convertBack(userWalletId, converter.convert(domain))
 
-            // THEN
-            val card = (restored as PaymentAccountStatusValue.Loaded).cards.single()
-            assertThat(card.state).isEqualTo(model.state)
-            assertThat(card.frozenState).isEqualTo(model.frozenState)
-            assertThat(card.cardType).isEqualTo(model.cardType)
-            assertThat(card.embossName).isEqualTo("JOHNNY SILVERHAND")
-            assertThat(card.lastDigits).isEqualTo("8890")
+            // Assert
+            val restoredCard = (restored as PaymentAccountStatusValue.Loaded).cards.single()
+            val expected = card.copy(limit = TangemPayCardLimitData(actualCardLimit = null, adminCardLimit = null))
+            assertThat(restoredCard).isEqualTo(expected)
         }
 
         private fun provideTestModels() = TangemPayCardState.entries.map { state ->
@@ -375,6 +309,21 @@ internal class PaymentAccountStatusValueDMConverterTest {
         )
     }
 
+    internal data class ConvertModel(
+        val domain: PaymentAccountStatusValue,
+        val expected: PaymentAccountStatusValueDM,
+    )
+
+    internal data class ConvertBackModel(
+        val dm: PaymentAccountStatusValueDM?,
+        val expected: PaymentAccountStatusValue,
+    )
+
+    internal data class RoundTripModel(
+        val domain: PaymentAccountStatusValue,
+        val expected: PaymentAccountStatusValue,
+    )
+
     internal data class CardStateModel(
         val state: TangemPayCardState,
         val frozenState: TangemPayCardFrozenState,
@@ -383,11 +332,26 @@ internal class PaymentAccountStatusValueDMConverterTest {
         override fun toString(): String = "$state / $frozenState / $cardType"
     }
 
-    private fun loadedWithCard(
+    private fun card(
         state: TangemPayCardState,
         frozenState: TangemPayCardFrozenState,
-        cardType: TangemPayCardType = TangemPayCardType.VIRTUAL,
-    ) = PaymentAccountStatusValue.Loaded(
+        cardType: TangemPayCardType,
+    ) = TangemPayCard(
+        id = "card_1",
+        productInstanceId = "pi_1",
+        cardStatus = TangemPayCard.Status.INACTIVE,
+        hasPinCode = false,
+        displayName = null,
+        limit = null,
+        frozenState = frozenState,
+        lastDigits = "8890",
+        images = emptyList(),
+        state = state,
+        embossName = "JOHNNY SILVERHAND",
+        cardType = cardType,
+    )
+
+    private fun loadedWithCard(card: TangemPayCard) = PaymentAccountStatusValue.Loaded(
         source = StatusSource.ACTUAL,
         customerId = "cust_1",
         paymentAccountAddress = "0xDEPOSIT",
@@ -398,22 +362,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             ),
         ),
         cryptoCurrency = cryptoCurrency,
-        cards = listOf(
-            TangemPayCard(
-                id = "card_1",
-                productInstanceId = "pi_1",
-                cardStatus = TangemPayCard.Status.INACTIVE,
-                hasPinCode = false,
-                displayName = null,
-                limit = null,
-                frozenState = frozenState,
-                lastDigits = "8890",
-                images = emptyList(),
-                state = state,
-                embossName = "JOHNNY SILVERHAND",
-                cardType = cardType,
-            ),
-        ),
+        cards = listOf(card),
         fiatRate = null,
         error = null,
         virtualAccount = null,

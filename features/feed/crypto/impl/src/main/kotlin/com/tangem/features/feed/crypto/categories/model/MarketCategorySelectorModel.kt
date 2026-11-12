@@ -48,11 +48,8 @@ internal class MarketCategorySelectorModel @Inject constructor(
 
     private var appliedQuery: String? = null
 
-    /** The filter as it stood when the screen opened; [onReset] returns here and the footer compares to it. */
+    /** A tap applies and closes the screen, so the filter it opened on is the only one it ever renders. */
     private val appliedSelection: MarketCategorySelection = filterController.selection.value
-
-    /** Pending choice; [appliedSelection] stands until [onApply] publishes this one to the tab. */
-    private var draftSelection: MarketCategorySelection = appliedSelection
 
     private val listManager = MarketCategoryListManager(
         getMarketCategoryListFlowUseCase = getMarketCategoryListFlowUseCase,
@@ -88,8 +85,8 @@ internal class MarketCategorySelectorModel @Inject constructor(
             // hidden while the field is idle and empty, which is when there is most to escape from.
             onCloseClick = null,
         ),
-        isEdited = false,
-        footer = MarketCategorySelectorFooterUM(onReset = ::onReset, onApply = ::onApply),
+        isResetVisible = appliedSelection.category != null,
+        footer = MarketCategorySelectorFooterUM(onReset = ::onReset),
         content = MarketCategorySelectorUM.ContentUM.Loading,
     )
 
@@ -140,41 +137,33 @@ internal class MarketCategorySelectorModel @Inject constructor(
         uiState.update { it.copy(search = it.search.copy(isActive = isActive)) }
     }
 
+    /** Re-tapping the applied category re-publishes an equal value, which the controller's flow drops. */
     private fun onSelectionChange(selection: MarketCategorySelection) {
-        draftSelection = selection
-        render()
-    }
-
-    private fun onReset() {
-        draftSelection = appliedSelection
-        render()
-    }
-
-    private fun onApply() {
-        filterController.onSelectionApplied(draftSelection)
+        filterController.onSelectionApplied(selection)
         router.pop()
     }
 
-    private fun render() {
-        val isEdited = draftSelection != appliedSelection
+    private fun onReset() {
+        onSelectionChange(MarketCategorySelection())
+    }
 
+    private fun render() {
         when {
             listStatus is PaginationStatus.None || listStatus is PaginationStatus.InitialLoading ->
-                renderBody(isEdited = isEdited, content = MarketCategorySelectorUM.ContentUM.Loading)
+                renderBody(content = MarketCategorySelectorUM.ContentUM.Loading)
             listStatus is PaginationStatus.InitialLoadingError ->
-                renderBody(isEdited = isEdited, content = MarketCategorySelectorUM.ContentUM.Error(onRetry = ::load))
+                renderBody(content = MarketCategorySelectorUM.ContentUM.Error(onRetry = ::load))
             // "No results" is search copy, so an unfiltered listing that comes back empty keeps the
             // ordinary list body rather than borrowing it
             appliedQuery != null && categories.isEmpty() ->
-                renderBody(isEdited = isEdited, content = MarketCategorySelectorUM.ContentUM.Empty)
+                renderBody(content = MarketCategorySelectorUM.ContentUM.Empty)
             else -> uiState.update(
                 transformer = MarketCategorySelectorTransformer(
                     featured = featured,
                     categories = categories,
-                    selection = draftSelection,
+                    selection = appliedSelection,
                     appCurrency = appCurrency.value,
                     isSearching = appliedQuery != null,
-                    isEdited = isEdited,
                     isLoadingMore = listStatus is PaginationStatus.NextBatchLoading,
                     onLoadMore = listManager::loadMore,
                     onSelectionChange = ::onSelectionChange,
@@ -183,7 +172,7 @@ internal class MarketCategorySelectorModel @Inject constructor(
         }
     }
 
-    private fun renderBody(isEdited: Boolean, content: MarketCategorySelectorUM.ContentUM) {
-        uiState.update { it.copy(isEdited = isEdited, content = content) }
+    private fun renderBody(content: MarketCategorySelectorUM.ContentUM) {
+        uiState.update { it.copy(content = content) }
     }
 }

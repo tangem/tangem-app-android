@@ -23,8 +23,12 @@ import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.portfolio.UserAssetEntry
 import com.tangem.domain.search.model.toEntries
 import com.tangem.domain.search.usecase.GetSearchResultsUseCase
+import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetAvailabilityUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
+import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.feed.earn.components.EarnBottomSheetRoute
 import com.tangem.features.feed.earn.components.EarnFeedSearchTabComponent
 import com.tangem.features.feed.earn.model.analytics.EarnSearchAnalyticsEvent
@@ -80,6 +84,10 @@ internal class EarnFeedSearchTabModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
     addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    portfolioSelectorBridgeFactory: PortfolioSelectorBridge.Factory,
+    earnFeatureToggles: EarnFeatureToggles,
+    getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
+    yieldSupplyGetAvailabilityUseCase: YieldSupplyGetAvailabilityUseCase,
 ) : Model() {
 
     private val query = paramsContainer.require<EarnFeedSearchTabComponent.Params>().query
@@ -94,6 +102,10 @@ internal class EarnFeedSearchTabModel @Inject constructor(
 
     private val addToPortfolioLauncher = EarnAddToPortfolioLauncher(
         addToPortfolioManagerFactory = addToPortfolioManagerFactory,
+        portfolioSelectorBridgeFactory = portfolioSelectorBridgeFactory,
+        earnFeatureToggles = earnFeatureToggles,
+        getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
+        yieldSupplyGetAvailabilityUseCase = yieldSupplyGetAvailabilityUseCase,
         analyticsEventHandler = analyticsEventHandler,
         router = router,
         modelScope = modelScope,

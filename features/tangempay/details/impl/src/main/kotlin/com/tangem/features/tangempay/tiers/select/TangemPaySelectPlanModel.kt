@@ -20,6 +20,7 @@ import com.tangem.domain.tangempay.usecase.SubmitTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
+import com.tangem.features.tangempay.common.openTrustedLink
 import com.tangem.features.tangempay.components.TangemPaySelectPlanComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
@@ -92,7 +93,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     }
 
     override fun onLinkClick(url: String) {
-        urlOpener.openUrl(url)
+        urlOpener.openTrustedLink(url)
     }
 
     override fun onPlanSelected(index: Int) {

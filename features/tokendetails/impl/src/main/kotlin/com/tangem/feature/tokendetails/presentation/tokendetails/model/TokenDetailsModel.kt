@@ -64,6 +64,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
 import com.tangem.domain.onramp.OnrampGetDefaultCurrencyUseCase
@@ -515,7 +516,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun subscribeOnYieldSupplyBalanceIfActive(status: CryptoCurrencyStatus) {
-        if (status.value.yieldSupplyStatus?.isActive == true) {
+        if (status.value.yieldSupply?.isActive == true) {
             if (yieldSupplyBalanceJobHolder.isActive && status.value.sources.networkSource != StatusSource.ACTUAL) {
                 return
             }
@@ -931,12 +932,10 @@ internal class TokenDetailsModel @Inject constructor(
 
     /**
      * Routes a tapped marketing-banner deeplink contextually for the current token, reusing the
-     * regular swap/buy intents (availability checks, yield-supply warning, analytics). Returns
-     * `false` for external links and for `tangem://swap`, so the banner falls back to the generic
-     * deeplink launcher (the swap deeplink handler).
+     * regular buy intent (availability checks, yield-supply warning, analytics). Returns `false` for
+     * other links, so the banner falls back to the generic deeplink launcher.
      */
     fun onMarketingBannerDeeplink(deeplink: String): Boolean = when (resolveMarketingDeeplink(deeplink)) {
-        MarketingDeeplink.SWAP -> false
         MarketingDeeplink.BUY -> {
             val reason = latestTokenActions
                 .filterIsInstance<TokenActionsState.ActionState.Buy>()
@@ -1475,7 +1474,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun isActiveYieldSupply(): Boolean {
-        return cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
+        return cryptoCurrencyStatus?.value?.yieldSupply?.isActive == true
     }
 
     override fun onYieldSupplyWarningAcknowledged(tokenAction: TokenAction) {

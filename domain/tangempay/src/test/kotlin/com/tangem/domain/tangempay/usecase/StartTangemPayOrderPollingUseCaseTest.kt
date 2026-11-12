@@ -10,80 +10,79 @@ import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.TangemPayOrderInfo
 import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.test.core.ProvideTestModels
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import kotlin.time.Duration.Companion.milliseconds
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class StartTangemPayOrderPollingUseCaseTest {
 
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
 
-    private val useCase = StartTangemPayOrderPollingUseCase(
-        cardDetailsRepository = cardDetailsRepository,
-        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-    )
+    private lateinit var useCase: StartTangemPayOrderPollingUseCase
 
-    @Test
-    fun `GIVEN order already COMPLETED WHEN invoke THEN returns true without polling`() = runTest {
-        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED)
+    @BeforeEach
+    fun setUp() {
+        clearMocks(cardDetailsRepository, paymentAccountStatusFetcher)
+        useCase = StartTangemPayOrderPollingUseCase(
+            cardDetailsRepository = cardDetailsRepository,
+            paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+        )
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN order already COMPLETED or CANCELED WHEN invoke THEN returns true only for COMPLETED without polling`(
+        model: TerminalStatusModel,
+    ) = runTest {
+        // Arrange
+        val order = TangemPayOrderInfo(ORDER_ID, model.status)
         coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
 
+        // Act
         val result = useCase(order, USER_WALLET_ID)
 
-        assertThat(result).isTrue()
+        // Assert
+        assertThat(result).isEqualTo(model.expectedResult)
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
         coVerify(exactly = 0) { cardDetailsRepository.getOrderInfo(any(), any()) }
     }
 
-    @Test
-    fun `GIVEN order already CANCELED WHEN invoke THEN returns false without polling`() = runTest {
-        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.CANCELED)
-        coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
-
-        val result = useCase(order, USER_WALLET_ID)
-
-        assertThat(result).isFalse()
-        coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
-        coVerify(exactly = 0) { cardDetailsRepository.getOrderInfo(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN processing order WHEN poll returns COMPLETED THEN returns true and fetches status`() = runTest {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN processing order WHEN poll returns COMPLETED or CANCELED THEN returns true only for COMPLETED and fetches status`(
+        model: TerminalStatusModel,
+    ) = runTest {
+        // Arrange
         val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
         coEvery {
             cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
-        } returns TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED).right()
+        } returns TangemPayOrderInfo(ORDER_ID, model.status).right()
         coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
 
+        // Act
         val result = useCase(order, USER_WALLET_ID)
 
-        assertThat(result).isTrue()
+        // Assert
+        assertThat(result).isEqualTo(model.expectedResult)
         coVerify(exactly = 1) { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) }
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
     }
 
     @Test
-    fun `GIVEN processing order WHEN poll returns CANCELED THEN returns false and fetches status`() = runTest {
-        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
-        coEvery {
-            cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
-        } returns TangemPayOrderInfo(ORDER_ID, OrderStatus.CANCELED).right()
-        coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
-
-        val result = useCase(order, USER_WALLET_ID)
-
-        assertThat(result).isFalse()
-        coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
-    }
-
-    @Test
     fun `GIVEN new order WHEN getOrderInfo fails once then returns COMPLETED THEN returns true after two polls`() = runTest {
+        // Arrange
         val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.NEW)
         coEvery {
             cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
@@ -93,14 +92,17 @@ internal class StartTangemPayOrderPollingUseCaseTest {
         )
         coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
 
+        // Act
         val result = useCase(order, USER_WALLET_ID)
 
+        // Assert
         assertThat(result).isTrue()
         coVerify(exactly = 2) { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) }
     }
 
     @Test
     fun `GIVEN processing order WHEN multiple non-final polls then COMPLETED THEN returns true after all polls`() = runTest {
+        // Arrange
         val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
         coEvery {
             cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
@@ -111,8 +113,10 @@ internal class StartTangemPayOrderPollingUseCaseTest {
         )
         coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
 
+        // Act
         val result = useCase(order, USER_WALLET_ID)
 
+        // Assert
         assertThat(result).isTrue()
         coVerify(exactly = 3) { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) }
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
@@ -233,7 +237,7 @@ internal class StartTangemPayOrderPollingUseCaseTest {
 
     @Test
     fun `GIVEN processing order WHEN backend reports order not found THEN resolves as CANCELED and stops`() = runTest {
-        // GIVEN
+        // Arrange
         val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
         val changes = mutableListOf<TangemPayOrderInfo>()
         coEvery {
@@ -241,10 +245,10 @@ internal class StartTangemPayOrderPollingUseCaseTest {
         } returns TangemPayApiError.OrderNotFound.left()
         coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
 
-        // WHEN
+        // Act
         val result = useCase(order, USER_WALLET_ID, onOrderStateChange = { changes.add(it) })
 
-        // THEN
+        // Assert
         assertThat(result).isFalse()
         assertThat(changes).containsExactly(TangemPayOrderInfo(ORDER_ID, OrderStatus.CANCELED))
         coVerify(exactly = 1) { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) }
@@ -253,7 +257,7 @@ internal class StartTangemPayOrderPollingUseCaseTest {
 
     @Test
     fun `GIVEN long outage WHEN backend recovers THEN order is still polled to terminal`() = runTest {
-        // GIVEN
+        // Arrange
         val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
         val outage = List(size = 100) { TangemPayApiError.ServerUnavailable.left() }
         coEvery {
@@ -261,17 +265,17 @@ internal class StartTangemPayOrderPollingUseCaseTest {
         } returnsMany outage + TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED).right()
         coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
 
-        // WHEN
+        // Act
         val result = useCase(order, USER_WALLET_ID)
 
-        // THEN
+        // Assert
         assertThat(result).isTrue()
         coVerify(exactly = 101) { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) }
     }
 
     @Test
     fun `GIVEN non-terminal order WHEN polling THEN polls at a flat 5s cadence`() = runTest {
-        // GIVEN
+        // Arrange
         val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
         coEvery {
             cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
@@ -282,10 +286,10 @@ internal class StartTangemPayOrderPollingUseCaseTest {
         )
         coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
 
-        // WHEN
+        // Act
         val result = useCase(order, USER_WALLET_ID)
 
-        // THEN
+        // Assert
         assertThat(result).isTrue()
         assertThat(testScheduler.currentTime).isEqualTo(10_000L)
     }
@@ -308,15 +312,24 @@ internal class StartTangemPayOrderPollingUseCaseTest {
 
     @Test
     fun `GIVEN order already COMPLETED WHEN invoke with a timeout THEN returns true without polling`() = runTest {
-        // A terminal order resolves immediately regardless of timeout — no polling to time out on.
+        // Arrange — a terminal order resolves immediately regardless of timeout, no polling to time out on.
         val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED)
         coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
 
+        // Act
         val result = useCase(order, USER_WALLET_ID, timeout = 100.milliseconds)
 
+        // Assert
         assertThat(result).isTrue()
         coVerify(exactly = 0) { cardDetailsRepository.getOrderInfo(any(), any()) }
     }
+
+    private fun provideTestModels() = listOf(
+        TerminalStatusModel(status = OrderStatus.COMPLETED, expectedResult = true),
+        TerminalStatusModel(status = OrderStatus.CANCELED, expectedResult = false),
+    )
+
+    internal data class TerminalStatusModel(val status: OrderStatus, val expectedResult: Boolean)
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")

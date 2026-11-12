@@ -4,7 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.test.core.ProvideTestModels
 import org.joda.time.DateTime
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -19,7 +18,7 @@ internal class TangemPayTxHistoryItemDMConverterTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN every item subtype WHEN converted to DM and back THEN all fields preserved`(
+    fun `GIVEN every item subtype or spend without cashback WHEN converted to DM and back THEN all fields preserved`(
         item: TangemPayTxHistoryItem,
     ) {
         assertRoundTrip(item)
@@ -57,11 +56,6 @@ internal class TangemPayTxHistoryItemDMConverterTest {
         assertRoundTrip(spend().copy(cashback = cashback().copy(exclusionReason = reason)))
     }
 
-    @Test
-    fun `GIVEN spend without cashback WHEN converted to DM and back THEN cashback stays null`() {
-        assertRoundTrip(spend().copy(cashback = null))
-    }
-
     private fun assertRoundTrip(item: TangemPayTxHistoryItem) {
         // Act
         val restored = toDomainConverter.convert(toDMConverter.convert(item))
@@ -70,7 +64,7 @@ internal class TangemPayTxHistoryItemDMConverterTest {
         assertThat(restored).isEqualTo(item)
     }
 
-    private fun provideTestModels() = listOf(spend(), payment(), fee(), collateral())
+    private fun provideTestModels() = listOf(spend(), spend().copy(cashback = null), payment(), fee(), collateral())
 
     private fun spend() = TangemPayTxHistoryItem.Spend(
         id = "spend-1",

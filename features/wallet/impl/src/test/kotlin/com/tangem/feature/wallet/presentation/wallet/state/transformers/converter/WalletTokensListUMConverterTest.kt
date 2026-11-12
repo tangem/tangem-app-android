@@ -4,9 +4,11 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.models.AccountStatusList
@@ -36,6 +38,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.StringsSigns
 import io.mockk.every
@@ -82,7 +85,9 @@ internal class WalletTokensListUMConverterTest {
         clickIntents: WalletClickIntents = mockk(relaxed = true),
         isAccountsModeEnabled: Boolean = false,
         isRedesignedAccountRowsEnabled: Boolean = false,
+        isRedesignedTokenRowsEnabled: Boolean = false,
         jointPendingOperations: List<JointPendingOperation> = emptyList(),
+        earnOverviews: EarnOverviews = EarnOverviews.Empty,
     ): WalletTokensListUMConverter = WalletTokensListUMConverter(
         appCurrency = AppCurrency.Default,
         selectedWallet = selectedWallet,
@@ -90,10 +95,11 @@ internal class WalletTokensListUMConverterTest {
         yieldModuleApyMap = emptyMap(),
         isAccountsModeEnabled = isAccountsModeEnabled,
         expandedAccounts = emptySet(),
-        stakingAvailabilityMap = emptyMap(),
+        earnOverviews = earnOverviews,
         shouldShowMainPromo = false,
         jointPendingOperations = jointPendingOperations,
         isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
+        isRedesignedTokenRowsEnabled = isRedesignedTokenRowsEnabled,
     )
 
     private fun mockColdWallet(isSingleCurrency: Boolean, isSingleWalletWithToken: Boolean): UserWallet.Cold {
@@ -107,6 +113,25 @@ internal class WalletTokensListUMConverterTest {
         return mockk<UserWallet.Cold>(relaxed = true) {
             every { this@mockk.scanResponse } returns scanResponse
         }
+    }
+
+    @Test
+    fun `GIVEN an overview with a headline for a token WHEN convert THEN that token row carries the badge text`() {
+        // Arrange
+        val tokenList = ungroupedTokenList()
+        val currency = tokenList.currencies.first().currency
+        val converter = createConverter(
+            selectedWallet = mockColdWallet(isSingleCurrency = false, isSingleWalletWithToken = false),
+            earnOverviews = earnOverviewsOf(currency, earnHeadline(isActive = true)),
+        )
+
+        // Act
+        val result = converter.convert(accountListOf(personalStatus(tokenList)))
+
+        // Assert
+        val row = (result as WalletTokensListUM.Content).tokenList.single() as TokensListItemUM2.Token
+        val title = row.tokenRowUM.titleUM as TangemTokenRowUM.TitleUM.Content
+        assertThat(title.badge?.text).isEqualTo(TEST_EARN_BADGE_TEXT)
     }
 
     @Test
@@ -298,6 +323,60 @@ internal class WalletTokensListUMConverterTest {
         // Assert
         val content = result as WalletTokensListUM.Content
         assertThat(content.tokenList.single()).isInstanceOf(TokensListItemUM2.Token::class.java)
+    }
+
+    @Test
+    fun `GIVEN redesigned token rows enabled AND accounts mode off WHEN convert ungrouped THEN DS3 token rows`() {
+        // Arrange
+        val converter = createConverter(
+            selectedWallet = mockColdWallet(false, false),
+            isRedesignedTokenRowsEnabled = true,
+        )
+
+        // Act
+        val result = converter.convert(nonEmptyAccountList())
+
+        // Assert
+        val content = result as WalletTokensListUM.Content
+        val token = content.tokenList.single() as TokensListItemUM2.TokenV2
+        assertThat(token.state).isInstanceOf(TangemTokenRow.State.Content::class.java)
+    }
+
+    @Test
+    fun `GIVEN redesigned token rows enabled AND accounts mode off WHEN convert grouped THEN section precedes tokens`() {
+        // Arrange
+        val converter = createConverter(
+            selectedWallet = mockColdWallet(false, false),
+            isRedesignedTokenRowsEnabled = true,
+        )
+        val token = createToken()
+        val personal = AccountStatus.Personal(
+            account = createMainAccount(userWalletId),
+            tokenList = TokenList.GroupedByNetwork(
+                groups = listOf(
+                    TokenList.GroupedByNetwork.NetworkGroup(
+                        network = token.network,
+                        currencies = listOf(createLoadedStatus(token)),
+                    ),
+                ),
+                totalFiatBalance = TotalFiatBalance.Loaded(BigDecimal.ZERO, StatusSource.ACTUAL),
+                sortedBy = TokensSortType.NONE,
+            ),
+            priceChangeLce = Unit.lceError(),
+        )
+
+        // Act
+        val result = converter.convert(accountListOf(personal))
+
+        // Assert
+        val content = result as WalletTokensListUM.Content
+        assertThat(content.tokenList.map { it::class }).containsExactly(
+            TokensListItemUM2.SectionV2::class,
+            TokensListItemUM2.TokenV2::class,
+        ).inOrder()
+        assertThat((content.tokenList.first() as TokensListItemUM2.SectionV2).title).isEqualTo(
+            resourceReference(R.string.wallet_network_group_title, wrappedList(token.network.name)),
+        )
     }
 
     private val TangemAccountRow.State.label: TextReference?

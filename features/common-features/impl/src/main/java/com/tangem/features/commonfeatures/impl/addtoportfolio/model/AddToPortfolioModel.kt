@@ -4,7 +4,6 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.popToFirst
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceAll
-import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.QuickActionsConverter.toQuickActions
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
@@ -20,7 +19,6 @@ import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.account.isMainAccount
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -37,6 +35,7 @@ import com.tangem.features.commonfeatures.impl.addtoportfolio.analytics.Portfoli
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.UserPortfolioComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.state.UserPortfolioStateController
+import com.tangem.features.commonfeatures.impl.userportfolio.transformer.heldCurrencyEntries
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
@@ -181,15 +180,25 @@ internal class AddToPortfolioModel @Inject constructor(
 
             setupPortfolioSelector(initialData, launchMode)
 
+            val isUserPortfolioScopedToNetworks =
+                (launchMode as? AddToPortfolioManager.LaunchMode.ViaUserPortfolio)?.shouldScopeToNetworks == true
+            val userPortfolioNetworkIds = paramsSnapshot.networks
+                .map { it.networkId }
+                .toSet()
+                .takeIf { isUserPortfolioScopedToNetworks }
             val shouldShowUserPortfolio =
                 launchMode is AddToPortfolioManager.LaunchMode.ViaUserPortfolio &&
-                    initialData.hasAnyAddedCurrency(tokenMarketParams.id)
+                    initialData.heldCurrencyEntries(
+                        rawCurrencyId = tokenMarketParams.id,
+                        networkIds = userPortfolioNetworkIds,
+                    ).isNotEmpty()
 
             if (shouldShowUserPortfolio) {
                 // suspend, must prepare UM before navigate to UserPortfolio
                 userPortfolioStateController.updateAndWaitNotNullState(
                     allAvailableData = initialData,
                     rawCurrencyId = tokenMarketParams.id,
+                    networkIds = userPortfolioNetworkIds,
                 )
                 navigation.replaceAll(AddToPortfolioRoutes.UserPortfolio)
                 callbackDelegate.onContinueFromUserPortfolio.receiveAsFlow().first()
@@ -550,16 +559,5 @@ internal class AddToPortfolioCallbackDelegate @Inject constructor() :
 
     override fun onContinueFromUserPortfolio() {
         onContinueFromUserPortfolio.trySend(Unit)
-    }
-}
-
-private fun AvailableToAddData.hasAnyAddedCurrency(rawCurrencyId: CryptoCurrency.RawID): Boolean {
-    return availableToAddWallets.values.any { wallet ->
-        wallet.accounts.filterCryptoPortfolio().any { accountStatus ->
-            accountStatus.tokenList.flattenCurrencies().any { status ->
-                val id = status.currency.id.rawCurrencyId ?: return@any false
-                getTokenIdIfL2Network(id.value) == rawCurrencyId.value
-            }
-        }
     }
 }

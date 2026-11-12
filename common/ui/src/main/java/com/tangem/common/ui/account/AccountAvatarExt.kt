@@ -39,6 +39,9 @@ fun Account.CryptoPortfolio.toAvatarState(hasPendingOperation: Boolean = false):
         )
     }
 
+fun Account.Payment.toAvatarState(): TangemAvatar.UiState =
+    TangemAvatar.UiState.Account(kind = TangemAvatar.AccountKind.Visa)
+
 fun CryptoPortfolioIcon.Color.toFillColor(): TangemAvatar.FillColor = when (this) {
     CryptoPortfolioIcon.Color.Azure -> TangemAvatar.FillColor.AzureBlue
     CryptoPortfolioIcon.Color.CaribbeanBlue -> TangemAvatar.FillColor.CaribbeanBlue

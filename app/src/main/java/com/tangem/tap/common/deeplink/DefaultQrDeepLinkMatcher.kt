@@ -1,11 +1,8 @@
 package com.tangem.tap.common.deeplink
 
-import android.net.Uri
 import androidx.core.net.toUri
-import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
-import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.common.uri.ExternalUrlValidator
 import com.tangem.domain.qrscanning.QrDeepLinkMatcher
 
@@ -21,19 +18,10 @@ internal class DefaultQrDeepLinkMatcher(
         val uri = link.toUri()
 
         return when (uri.scheme) {
-            DeepLinkScheme.Tangem.scheme -> isScreenLink(uri)
+            // A printed code is as untrusted as a push payload
+            DeepLinkScheme.Tangem.scheme -> deepLinkHandlerRegistry.isOpenableFromPush(uri)
             DeepLinkScheme.Https.scheme -> ExternalUrlValidator.isUriTrusted(uri)
             else -> false
         }
-    }
-
-    /**
-     * A printed code is as untrusted as a push payload, so [PushDeeplinkPolicy] applies; the buy redirect is bound to a
-     * no-op handler and would open nothing.
-     */
-    private fun isScreenLink(uri: Uri): Boolean {
-        return uri.host != DeepLinkRoute.BuyRedirect.host &&
-            PushDeeplinkPolicy.isOpenableFromPush(uri.scheme, uri.host) &&
-            deepLinkHandlerRegistry.find(uri) != null
     }
 }

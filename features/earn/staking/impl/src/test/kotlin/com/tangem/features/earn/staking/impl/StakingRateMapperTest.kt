@@ -77,6 +77,24 @@ internal class StakingRateMapperTest {
         assertThat(actual).isEqualTo(expected)
     }
 
+    @Test
+    fun `GIVEN position at a validator missing in the option WHEN entry THEN rate of the best preferred validator and active`() {
+        // Arrange
+        val option = option(validator("v1", "0.05"), validator("v2", "0.08"))
+
+        // Act
+        val actual = mapper.entry(userWalletId, stakedAt(solana, "unknown"), StakingAvailability.Available(option))
+
+        // Assert
+        val expected = EarnRateEntry(
+            rate = EarnProductRate(BigDecimal("0.08"), EarnRateType.APR),
+            isActive = true,
+            source = StatusSource.ACTUAL,
+            route = solanaRoute,
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class RewardTypes {
@@ -250,6 +268,13 @@ internal class StakingRateMapperTest {
                 AvailabilityModel("best preferred", currencyStatus(solana), StakingAvailability.Available(two), true),
                 AvailabilityModel("staked validator", stakedAt(solana, "v1"), StakingAvailability.Available(two), true),
                 AvailabilityModel("Full without position", currencyStatus(solana), StakingAvailability.Full(two), false),
+                AvailabilityModel("Full with position", stakedAt(solana, "v1"), StakingAvailability.Full(two), true),
+                AvailabilityModel(
+                    name = "staked validator missing in the option",
+                    status = stakedAt(solana, "unknown"),
+                    availability = StakingAvailability.Available(two),
+                    hasEntry = true,
+                ),
                 AvailabilityModel("Unavailable", currencyStatus(solana), StakingAvailability.Unavailable, false),
                 AvailabilityModel("no preferred validator", currencyStatus(solana), StakingAvailability.Available(unusable), false),
                 AvailabilityModel("UNKNOWN reward type", currencyStatus(solana), StakingAvailability.Available(unknown), true),

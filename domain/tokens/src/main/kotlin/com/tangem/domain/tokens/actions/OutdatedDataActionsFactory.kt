@@ -4,6 +4,8 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.yield.supply.activeYieldSupplySource
+import com.tangem.domain.models.yield.supply.isSpendableAmountActual
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
@@ -41,6 +43,7 @@ internal class OutdatedDataActionsFactory(
         yieldSupplyAvailability: YieldSupplyAvailability,
     ): Set<ActionState> = coroutineScope {
         val sources = cryptoCurrencyStatus.value.sources
+        val isSpendableAmountActual = cryptoCurrencyStatus.value.isSpendableAmountActual
 
         val isAddressAvailable = isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)
 
@@ -52,7 +55,7 @@ internal class OutdatedDataActionsFactory(
             null
         }
 
-        val sendUnavailabilityReasonDeferred = if (sources.networkSource == StatusSource.ACTUAL) {
+        val sendUnavailabilityReasonDeferred = if (isSpendableAmountActual) {
             async {
                 getSendUnavailabilityReason(
                     userWalletId = userWallet.walletId,
@@ -75,7 +78,7 @@ internal class OutdatedDataActionsFactory(
             // endregion
 
             // region Swap
-            createSwapAction(sources = sources).addByReason()
+            createSwapAction(value = cryptoCurrencyStatus.value).addByReason()
             // endregion
 
             // region Buy
@@ -106,7 +109,7 @@ internal class OutdatedDataActionsFactory(
             // endregion
 
             val sendUnavailabilityReason = getSendUnavailabilityReason(
-                sources = sources,
+                isSpendableAmountActual = isSpendableAmountActual,
                 reasonDeferred = sendUnavailabilityReasonDeferred,
             )
 
@@ -138,13 +141,15 @@ internal class OutdatedDataActionsFactory(
         }
     }
 
-    private fun createSwapAction(sources: CryptoCurrencyStatus.Sources): ActionState {
-        val isSwapAvailable = with(sources) { quoteSource.isActual() && networkSource.isActual() }
+    private fun createSwapAction(value: CryptoCurrencyStatus.Value): ActionState {
+        val isSwapAvailable = value.sources.quoteSource.isActual() && value.isSpendableAmountActual
+        val isOutdated = value.sources.networkSource == StatusSource.ONLY_CACHE ||
+            value.activeYieldSupplySource == StatusSource.ONLY_CACHE
 
         return ActionState.Swap(
             unavailabilityReason = when {
                 isSwapAvailable -> ScenarioUnavailabilityReason.None
-                sources.networkSource == StatusSource.ONLY_CACHE -> ScenarioUnavailabilityReason.UsedOutdatedData
+                isOutdated -> ScenarioUnavailabilityReason.UsedOutdatedData
                 else -> ScenarioUnavailabilityReason.DataLoading // CACHE source always when loading
             },
             shouldShowBadge = false,
@@ -152,10 +157,10 @@ internal class OutdatedDataActionsFactory(
     }
 
     private suspend fun getSendUnavailabilityReason(
-        sources: CryptoCurrencyStatus.Sources,
+        isSpendableAmountActual: Boolean,
         reasonDeferred: Deferred<ScenarioUnavailabilityReason>?,
     ): ScenarioUnavailabilityReason {
-        if (sources.networkSource != StatusSource.ACTUAL || reasonDeferred == null) {
+        if (!isSpendableAmountActual || reasonDeferred == null) {
             return ScenarioUnavailabilityReason.UsedOutdatedData
         }
 

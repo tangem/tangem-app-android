@@ -43,11 +43,11 @@ data class WcEthTransactionParams(
         get() = data?.removePrefix(HEX_PREFIX)?.isNotEmpty() == true
 
     /** [chainId] as an EIP-155 number, read as hex or decimal the way the dApp wrote it. */
-    val declaredChainId: Int?
+    val declaredChainId: Long?
         get() = when {
             chainId == null -> null
-            chainId.startsWith(HEX_PREFIX) -> chainId.removePrefix(HEX_PREFIX).toIntOrNull(radix = HEX_RADIX)
-            else -> chainId.toIntOrNull()
+            chainId.startsWith(HEX_PREFIX) -> chainId.removePrefix(HEX_PREFIX).toLongOrNull(radix = HEX_RADIX)
+            else -> chainId.toLongOrNull()
         }
 
     private companion object {

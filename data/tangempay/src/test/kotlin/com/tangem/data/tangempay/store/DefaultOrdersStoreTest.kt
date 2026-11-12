@@ -1,5 +1,7 @@
 package com.tangem.data.tangempay.store
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.json.NetworkJsonFactory
@@ -9,8 +11,14 @@ import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.io.IOException
 
 internal class DefaultOrdersStoreTest {
 
@@ -98,6 +106,45 @@ internal class DefaultOrdersStoreTest {
 
         // Assert
         assertThat(store.getAll(WALLET_A)).containsExactly(FIRST_ORDER)
+    }
+
+    @Nested
+    inner class FailingDataStore {
+
+        private val failingDataStore: DataStore<Preferences> = mockk {
+            every { data } returns flow { throw IOException() }
+            coEvery { updateData(any()) } throws IOException()
+        }
+        private val failingStore = DefaultOrdersStore(
+            prefs = createAppPreferencesStore(
+                dispatchers = TestingCoroutineDispatcherProvider(),
+                preferencesDataStore = failingDataStore,
+            ),
+            spendPreferencesKeys = spendPreferencesKeys,
+            json = NetworkJsonFactory.create(),
+        )
+
+        @Test
+        fun `GIVEN failing data store WHEN save, remove and clear THEN nothing is thrown`() = runTest {
+            // Act
+            val error = runCatching {
+                failingStore.save(FIRST_ORDER)
+                failingStore.remove(FIRST_ORDER)
+                failingStore.clear(WALLET_A)
+            }.exceptionOrNull()
+
+            // Assert
+            assertThat(error).isNull()
+        }
+
+        @Test
+        fun `GIVEN failing data store WHEN getAll THEN empty list`() = runTest {
+            // Act
+            val actual = failingStore.getAll(WALLET_A)
+
+            // Assert
+            assertThat(actual).isEmpty()
+        }
     }
 
     private companion object {

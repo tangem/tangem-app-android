@@ -25,7 +25,10 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
 
     val walletConnectButton: KNode = child {
         hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
-        hasText(getResourceString(R.string.wallet_connect_title))
+        addSemanticsMatcher(
+            withText(getResourceString(R.string.wc_connections))
+                .or(withText(getResourceString(R.string.wallet_connect_title))),
+        )
     }
 
     val walletNameButton: KNode = child {

@@ -46,7 +46,7 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.store.entity.CashbackSummaryDM
@@ -203,6 +203,7 @@ internal interface TangemPayDataModule {
             scope: AppCoroutineScope,
             converter: PaymentAccountStatusValueDMConverter,
             dataStoreFactory: AppDataStoreFactory,
+            userWalletsListRepository: UserWalletsListRepository,
         ): PaymentAccountStatusesStore {
             return PaymentAccountStatusesStore(
                 runtimeStore = RuntimeSharedStore(),
@@ -219,6 +220,7 @@ internal interface TangemPayDataModule {
                     scope = scope,
                 ),
                 converter = converter,
+                userWalletsListRepository = userWalletsListRepository,
                 scope = scope,
             )
         }
@@ -337,23 +339,23 @@ internal interface TangemPayDataModule {
             orderRepository: TangemPayOrderRepository,
             ordersStore: OrdersStore,
             orderPoller: OrderPoller,
+            onboardingRepository: OnboardingRepository,
         ): RestoreOrdersUseCase {
             return RestoreOrdersUseCase(
                 orderRepository = orderRepository,
                 ordersStore = ordersStore,
                 orderPoller = orderPoller,
+                onboardingRepository = onboardingRepository,
             )
         }
 
         @Provides
         fun provideStartOrderUseCase(
             orderRepository: TangemPayOrderRepository,
-            ordersStore: OrdersStore,
             orderPoller: OrderPoller,
         ): StartOrderUseCase {
             return StartOrderUseCase(
                 orderRepository = orderRepository,
-                ordersStore = ordersStore,
                 orderPoller = orderPoller,
             )
         }

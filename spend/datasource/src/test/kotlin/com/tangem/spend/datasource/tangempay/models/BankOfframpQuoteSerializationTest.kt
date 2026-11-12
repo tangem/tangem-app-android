@@ -122,6 +122,7 @@ internal class BankOfframpQuoteSerializationTest {
                             name = "SPEI",
                             calculationType = "PERCENTAGE",
                             amount = BigDecimal("1"),
+                            fixedAmount = null,
                             currency = "USD",
                             description = "SPEI offramp fee",
                         ),

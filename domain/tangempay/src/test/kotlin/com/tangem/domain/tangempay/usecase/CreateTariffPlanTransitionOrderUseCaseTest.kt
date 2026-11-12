@@ -41,15 +41,15 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
 
     @Test
     fun `GIVEN findOrders fails WHEN invoke THEN returns Left and skips create and store`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery {
             customerOrderRepository.findOrders(USER_WALLET_ID, ACTIVE_TRANSITION_TYPES, OrderStatus.activeStatuses)
         } returns TangemPayApiError.Unspecified.left()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
 
-        // THEN
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
         coVerify(exactly = 0) {
             customerOrderRepository.createOrder(any(), any(), any())
@@ -60,16 +60,16 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
 
     @Test
     fun `GIVEN active transition order exists WHEN invoke THEN reuses it without calling createOrder`() = runTest {
-        // GIVEN
+        // Arrange
         val existing = order(id = "existing", status = OrderStatus.PROCESSING)
         coEvery {
             customerOrderRepository.findOrders(USER_WALLET_ID, ACTIVE_TRANSITION_TYPES, OrderStatus.activeStatuses)
         } returns listOf(existing).right()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
 
-        // THEN
+        // Assert
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) {
             customerOrderRepository.createOrder(any(), any(), any())
@@ -79,7 +79,7 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
 
     @Test
     fun `GIVEN no active order AND createOrder fails WHEN invoke THEN returns Left and skips store`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery {
             customerOrderRepository.findOrders(USER_WALLET_ID, ACTIVE_TRANSITION_TYPES, OrderStatus.activeStatuses)
         } returns emptyList<Order>().right()
@@ -94,17 +94,17 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
             )
         } returns TangemPayApiError.Unspecified.left()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
 
-        // THEN
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
         coVerify(exactly = 0) { issueCardRepository.storeIssueOrderId(any(), any()) }
     }
 
     @Test
     fun `GIVEN no active order AND createOrder succeeds WHEN invoke THEN stores the new order id`() = runTest {
-        // GIVEN
+        // Arrange
         val newOrder = order(id = "new", status = OrderStatus.NEW)
         coEvery {
             customerOrderRepository.findOrders(USER_WALLET_ID, ACTIVE_TRANSITION_TYPES, OrderStatus.activeStatuses)
@@ -120,10 +120,10 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
             )
         } returns newOrder.right()
 
-        // WHEN
+        // Act
         val result = useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
 
-        // THEN
+        // Assert
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(USER_WALLET_ID, newOrder.id) }
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
@@ -131,67 +131,67 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
 
     @Test
     fun `GIVEN order was AWAITING_DEPOSIT WHEN step changes THEN account status is refreshed once`() = runTest {
-        // GIVEN
+        // Arrange
         val newOrder = order(id = "new", status = OrderStatus.NEW)
         stubCreateOrder(newOrder)
         val onOrderStateChange = captureOnOrderStateChange()
         useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
         onOrderStateChange.captured.invoke(orderInfo(newOrder.id, OrderStep.AWAITING_DEPOSIT))
 
-        // WHEN — PRODUCT_ISSUE and any other unmapped server step resolve to UNKNOWN
+        // Act — PRODUCT_ISSUE and any other unmapped server step resolve to UNKNOWN
         onOrderStateChange.captured.invoke(orderInfo(newOrder.id, OrderStep.UNKNOWN))
         onOrderStateChange.captured.invoke(orderInfo(newOrder.id, OrderStep.UNKNOWN))
 
-        // THEN — initial invoke, AWAITING_DEPOSIT, and the step right after it; further steps change nothing
+        // Assert — initial invoke, AWAITING_DEPOSIT, and the step right after it; further steps change nothing
         coVerify(exactly = 3) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
         coVerify(exactly = 0) { issueCardRepository.removeIssueOrderId(any(), any()) }
     }
 
     @Test
     fun `GIVEN order created in AWAITING_DEPOSIT WHEN step changes THEN account status is refreshed`() = runTest {
-        // GIVEN
+        // Arrange
         val newOrder = order(id = "new", status = OrderStatus.NEW, step = OrderStep.AWAITING_DEPOSIT)
         stubCreateOrder(newOrder)
         val onOrderStateChange = captureOnOrderStateChange()
         useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
 
-        // WHEN — the first observed step is already past AWAITING_DEPOSIT
+        // Act — the first observed step is already past AWAITING_DEPOSIT
         onOrderStateChange.captured.invoke(orderInfo(newOrder.id, OrderStep.UNKNOWN))
 
-        // THEN — once for the initial invoke, once for the step that follows AWAITING_DEPOSIT
+        // Assert — once for the initial invoke, once for the step that follows AWAITING_DEPOSIT
         coVerify(exactly = 2) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
     }
 
     @Test
     fun `GIVEN order never was AWAITING_DEPOSIT WHEN step changes THEN account status is not refreshed`() = runTest {
-        // GIVEN
+        // Arrange
         val newOrder = order(id = "new", status = OrderStatus.NEW)
         stubCreateOrder(newOrder)
         val onOrderStateChange = captureOnOrderStateChange()
         useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
 
-        // WHEN
+        // Act
         onOrderStateChange.captured.invoke(orderInfo(newOrder.id, OrderStep.UNKNOWN))
 
-        // THEN — only the initial invoke refreshed; nothing the screen shows depends on this step
+        // Assert — only the initial invoke refreshed; nothing the screen shows depends on this step
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
     }
 
     @Test
     fun `GIVEN polled order becomes terminal WHEN state changes THEN order id is forgotten without extra refresh`() =
         runTest {
-            // GIVEN
+            // Arrange
             val newOrder = order(id = "new", status = OrderStatus.NEW)
             stubCreateOrder(newOrder)
             val onOrderStateChange = captureOnOrderStateChange()
             useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
 
-            // WHEN
+            // Act
             onOrderStateChange.captured.invoke(
                 TangemPayOrderInfo(orderId = newOrder.id, orderStatus = OrderStatus.COMPLETED),
             )
 
-            // THEN — the poller itself refreshes on a terminal order, so the callback must not do it again
+            // Assert — the poller itself refreshes on a terminal order, so the callback must not do it again
             coVerify(exactly = 1) { issueCardRepository.removeIssueOrderId(USER_WALLET_ID, newOrder.id) }
             coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
         }

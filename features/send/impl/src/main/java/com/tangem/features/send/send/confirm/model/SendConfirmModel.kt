@@ -1,5 +1,8 @@
 package com.tangem.features.send.send.confirm.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import android.os.SystemClock
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
@@ -31,10 +34,13 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
+import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase.SubmitResult
 import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSendUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
@@ -50,8 +56,12 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
+import com.tangem.features.jointaccount.analytics.JointBlockaidAnalyticsSender
+import com.tangem.features.jointaccount.blockaid.JointBlockaidSheetKind
+import com.tangem.common.ui.blockaid.BlockaidSheetUM
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
@@ -125,6 +135,7 @@ internal class SendConfirmModel @Inject constructor(
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
     private val jointSendDelegate: JointSendDelegate,
+    private val blockaidAnalyticsSender: JointBlockaidAnalyticsSender,
     private val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase,
     private val reportSendIntentHashUseCase: ReportSendIntentHashUseCase,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
@@ -165,6 +176,12 @@ internal class SendConfirmModel @Inject constructor(
             fee = feeUMV2?.selectedFeeItem?.fee,
             feeError = (uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Error)?.error,
         )
+
+    val jointBlockaidNavigation = SlotNavigation<JointBlockaidSheetKind>()
+
+    private var pendingJointOperation: PendingJointOperation? = null
+
+    private var shownJointBlockaidSheet: JointBlockaidSheetKind? = null
 
     private var sendIdleTimer: Long = 0L
     private var isAmountSubtractAvailable = false
@@ -286,27 +303,116 @@ internal class SendConfirmModel @Inject constructor(
             feeValue = feeValue,
             reduceAmountBy = confirmData.reduceAmountBy.orZero(),
         )
+        val feeToken = feeCurrencyStatus.currency
         modelScope.launch {
             jointSendDelegate
-                .createOperation(
+                .prepareOperation(
                     account = account,
                     currency = cryptoCurrency,
                     amount = sendingAmount,
                     destinationUM = uiState.value.destinationUM,
-                    feeToken = feeCurrencyStatus.currency.takeIf { isFeeInSmartGasToken() } as? CryptoCurrency.Token,
+                    feeToken = feeToken.takeIf { isFeeInSmartGasToken() } as? CryptoCurrency.Token,
                 )
                 .fold(
                     ifLeft = ::showJointOperationError,
-                    ifRight = {
-                        sendJointOperationCreatedAnalytics(account = account, feeToken = feeCurrencyStatus.currency)
-                        _uiState.update(
-                            SendConfirmJointOperationCreatedTransformer(createdAt = System.currentTimeMillis()),
-                        )
-                        params.callback.onResult(uiState.value)
-                        params.onSendTransaction()
-                    },
+                    ifRight = { prepared -> onJointOperationPrepared(prepared = prepared, feeToken = feeToken) },
                 )
         }
+    }
+
+    private suspend fun onJointOperationPrepared(prepared: PreparedJointOperation.Creation, feeToken: CryptoCurrency) {
+        blockaidAnalyticsSender.sendCheck(
+            source = BlockaidSource.CreateOperation,
+            verdict = prepared.verdict,
+            blockchain = cryptoCurrency.network.name,
+        )
+        when (val kind = JointBlockaidSheetKind.of(prepared.verdict)) {
+            null -> submitJointOperation(prepared = prepared, feeToken = feeToken)
+            JointBlockaidSheetKind.RISKY -> {
+                pendingJointOperation = PendingJointOperation(prepared = prepared, feeToken = feeToken)
+                showJointBlockaidSheet(kind = kind)
+            }
+            JointBlockaidSheetKind.MALICIOUS -> showJointBlockaidSheet(kind = kind)
+        }
+    }
+
+    private suspend fun submitJointOperation(prepared: PreparedJointOperation.Creation, feeToken: CryptoCurrency) {
+        jointSendDelegate
+            .submitOperation(prepared = prepared)
+            .fold(
+                ifLeft = ::showJointOperationError,
+                ifRight = { result ->
+                    when (result) {
+                        SubmitResult.Created -> onJointOperationCreated(prepared.account, feeToken)
+                        is SubmitResult.Rebuilt -> onJointOperationPrepared(result.prepared, feeToken)
+                    }
+                },
+            )
+    }
+
+    private fun onJointOperationCreated(account: Account.Joint, feeToken: CryptoCurrency) {
+        sendJointOperationCreatedAnalytics(account = account, feeToken = feeToken)
+        _uiState.update(SendConfirmJointOperationCreatedTransformer(createdAt = System.currentTimeMillis()))
+        params.callback.onResult(uiState.value)
+        params.onSendTransaction()
+    }
+
+    private fun showJointBlockaidSheet(kind: JointBlockaidSheetKind) {
+        blockaidAnalyticsSender.sendSheetShown(
+            source = BlockaidSource.CreateOperation,
+            kind = kind,
+            blockchain = cryptoCurrency.network.name,
+        )
+        shownJointBlockaidSheet = kind
+        jointBlockaidNavigation.activate(kind)
+    }
+
+    fun restoreJointBlockaidSheet() {
+        shownJointBlockaidSheet?.let(jointBlockaidNavigation::activate)
+    }
+
+    fun jointBlockaidSheetUM(kind: JointBlockaidSheetKind): BlockaidSheetUM = when (kind) {
+        JointBlockaidSheetKind.RISKY -> BlockaidSheetUM.risky(
+            primaryButton = BlockaidSheetUM.ButtonUM(
+                text = resourceReference(R.string.joint_blockaid_create_anyway),
+                hasTangemIcon = userWallet is UserWallet.Cold,
+                onClick = ::onCreateAnywayClick,
+            ),
+            secondaryButton = BlockaidSheetUM.ButtonUM(
+                text = resourceReference(R.string.common_cancel),
+                onClick = ::closeJointBlockaidSheet,
+            ),
+            onClose = ::closeJointBlockaidSheet,
+        )
+        JointBlockaidSheetKind.MALICIOUS -> BlockaidSheetUM.malicious(
+            primaryButton = BlockaidSheetUM.ButtonUM(
+                text = resourceReference(R.string.common_got_it),
+                onClick = ::closeJointBlockaidSheet,
+            ),
+            onClose = ::closeJointBlockaidSheet,
+        )
+    }
+
+    private fun onCreateAnywayClick() {
+        val pending = pendingJointOperation ?: return
+        pendingJointOperation = null
+        dismissJointBlockaidSheet()
+        blockaidAnalyticsSender.sendSignAnyway(
+            source = BlockaidSource.CreateOperation,
+            blockchain = cryptoCurrency.network.name,
+        )
+        modelScope.launch { submitJointOperation(prepared = pending.prepared, feeToken = pending.feeToken) }
+    }
+
+    private fun closeJointBlockaidSheet() {
+        pendingJointOperation = null
+        dismissJointBlockaidSheet()
+        _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+    }
+
+    private fun dismissJointBlockaidSheet() {
+        shownJointBlockaidSheet = null
+        jointBlockaidNavigation.dismiss()
     }
 
     private fun sendJointOperationCreatedAnalytics(account: Account.Joint, feeToken: CryptoCurrency) {
@@ -339,7 +445,7 @@ internal class SendConfirmModel @Inject constructor(
             is JointOperationCreateError.SlotBusy -> alertFactory.getJointSlotBusyState()
             is JointOperationCreateError.AccountNotReady -> alertFactory.getJointAccountNotReadyState()
             is JointOperationCreateError.NetworkStateMoved -> alertFactory.getJointNetworkStateMovedState()
-            is JointOperationCreateError.Malicious -> alertFactory.getJointMaliciousState()
+            is JointOperationCreateError.Malicious -> showJointBlockaidSheet(kind = JointBlockaidSheetKind.MALICIOUS)
             is JointOperationCreateError.CompositionMismatch -> {
                 TangemLogger.e("Unable to create the joint operation: $error")
                 alertFactory.getJointSendBlockedState(onSupportClick = { onFailedTxEmailClick(error.toString()) })
@@ -359,7 +465,9 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun sendJointOperationError(error: JointOperationCreateError) {
         val analyticsEvent = when (error) {
-            is JointOperationCreateError.UserCancelled -> return
+            is JointOperationCreateError.UserCancelled,
+            is JointOperationCreateError.Malicious,
+            -> return
             is JointOperationCreateError.Failed -> JointAccountError(
                 source = ErrorSource.CreateOperation,
                 cause = error.cause,
@@ -844,3 +952,8 @@ internal class SendConfirmModel @Inject constructor(
         const val NO_TX_HASH_ERROR_CODE = "no_hash"
     }
 }
+
+private data class PendingJointOperation(
+    val prepared: PreparedJointOperation.Creation,
+    val feeToken: CryptoCurrency,
+)

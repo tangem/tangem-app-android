@@ -79,26 +79,34 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
 
 @Composable
 private fun MembersFooter(state: JointAccountMembersUM.FooterUM, modifier: Modifier = Modifier) {
-    val hint = state.hint
-    val button = state.button
-    if (button == null) {
-        TangemFooter(modifier = modifier) {
-            if (hint != null) FooterHint(hint = hint)
+    when (state) {
+        is JointAccountMembersUM.FooterUM.Confirm -> ConfirmFooter(state = state, modifier = modifier)
+        is JointAccountMembersUM.FooterUM.AwaitingOthers -> TangemFooter(modifier = modifier) {
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                variant = TangemButton.Variant.Ghost,
+                size = TangemButton.Size.X12,
+                text = state.text,
+                isEnabled = false,
+                onClick = {},
+            )
         }
-        return
     }
+}
 
+@Composable
+private fun ConfirmFooter(state: JointAccountMembersUM.FooterUM.Confirm, modifier: Modifier = Modifier) {
     TangemFooter(
         modifier = modifier,
-        extraTop = hint?.let { { FooterHint(hint = it) } },
+        extraTop = state.hint?.let { { FooterHint(hint = it) } },
     ) {
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(CoreUiR.string.joint_account_confirm_shared_address),
-            isEnabled = button.isEnabled,
-            onClick = button.onClick,
+            isEnabled = state.button.isEnabled,
+            onClick = state.button.onClick,
         )
     }
 }
@@ -196,7 +204,7 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
 
 @Composable
 private fun MembersHeader(header: JointAccountMembersUM.HeaderUM, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
+    Column(modifier = modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
         AnimatedContent(
             targetState = header.title.resolveReference(),
             transitionSpec = { fadeIn().togetherWith(fadeOut()) },
@@ -213,7 +221,7 @@ private fun MembersHeader(header: JointAccountMembersUM.HeaderUM, modifier: Modi
             SpacerH(8.dp)
             Text(
                 text = subtitle.resolveReference(),
-                style = TangemTheme.typography3.body.medium,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
         }
@@ -405,7 +413,7 @@ private fun SlotAction(action: SlotActionUM) {
 private fun SlotActionButton(textRes: Int, isLoading: Boolean, onClick: () -> Unit) {
     TangemButton(
         variant = TangemButton.Variant.Secondary,
-        size = TangemButton.Size.X9,
+        size = TangemButton.Size.X8,
         isLoading = isLoading,
         text = resourceReference(textRes),
         onClick = onClick,
@@ -418,7 +426,7 @@ private fun FreeSlotAvatar(modifier: Modifier = Modifier) {
         modifier = modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(TangemTheme.colors3.bg.tertiary),
+            .background(TangemTheme.colors3.bg.transparent.secondary),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -608,15 +616,12 @@ private fun previewSlots(slots: List<PreviewSlot>, joinedCount: Int, canInvite: 
     }
     .toImmutableList()
 
-private fun previewFooter(hint: String?, hasButton: Boolean, isEnabled: Boolean) = JointAccountMembersUM.FooterUM(
-    hint = hint?.let(::stringReference),
-    button = if (hasButton) {
-        JointAccountMembersUM.ConfirmButtonUM(
-            isEnabled = isEnabled,
-            onClick = {},
-        )
-    } else {
-        null
-    },
-)
+private fun previewFooter(hint: String?, hasButton: Boolean, isEnabled: Boolean) = if (hasButton) {
+    JointAccountMembersUM.FooterUM.Confirm(
+        hint = hint?.let(::stringReference),
+        button = JointAccountMembersUM.ConfirmButtonUM(isEnabled = isEnabled, onClick = {}),
+    )
+} else {
+    JointAccountMembersUM.FooterUM.AwaitingOthers(text = stringReference(hint.orEmpty()))
+}
 // endregion

@@ -17,6 +17,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SelectWalletError
 import com.tangem.domain.models.wallet.UserWallet
@@ -24,6 +25,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUseCase
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.features.hotwallet.SocialLoginConsent
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
@@ -446,6 +448,44 @@ internal class IntroductionSocialLoginHandlerTest {
         // Assert
         assertThat(message.captured.message)
             .isEqualTo(resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved))
+    }
+
+    @Test
+    fun `GIVEN hot wallets limit reached WHEN signIn THEN the limit is reported and the dialog is shown`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
+            SocialLoginError.HotWalletsLimitReached.left()
+        val message = slot<DialogMessage>()
+        every { uiMessageSender.send(capture(message)) } just Runs
+
+        // Act
+        handler.signIn(PROVIDER, host)
+
+        // Assert
+        assertThat(message.captured.message).isEqualTo(Dialogs.hotWalletsLimitReachedDialog().message)
+        verify(exactly = 1) {
+            analyticsEventHandler.send(SocialLoginAnalyticsEvents.ErrorShown(errorMessage = "Mobile wallets limit reached"))
+        }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                NoticeMobileWalletLimit(
+                    type = NoticeMobileWalletLimit.Type.SocialLogin,
+                    limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN another failure WHEN signIn THEN no limit notice is sent`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.NetworkError.left()
+
+        // Act
+        handler.signIn(PROVIDER, host)
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<NoticeMobileWalletLimit>()) }
     }
 
     private fun provideSilentErrors() = listOf(

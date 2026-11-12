@@ -12,6 +12,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.core.ui.res.generated.icons.ic_percent_backward_24
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.common.TangemPayUrlValidator
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
@@ -50,6 +51,7 @@ internal class TangemPayTxHistoryItemsConverter(
         val formattedAmount = amountPrefix + amount.abs().format {
             fiat(fiatCurrencyCode = spend.currency.currencyCode, fiatCurrencySymbol = spend.currency.symbol)
         }
+        val merchantIconUrl = spend.enrichedMerchantIconUrl?.takeIf(TangemPayUrlValidator::isImageUrlSecure)
         return TangemPayTransactionState.Content.Spend(
             id = spend.id,
             onClick = { txHistoryUiActions.onTransactionClick(spend) },
@@ -64,9 +66,9 @@ internal class TangemPayTxHistoryItemsConverter(
             title = stringReference(spend.enrichedMerchantName ?: spend.merchantName),
             subtitle = paySpendSubtitleConverter.convert(spend),
             time = DateTimeFormatters.formatDate(localDate, DateTimeFormatters.timeFormatter),
-            icon = if (spend.enrichedMerchantIconUrl != null) {
+            icon = if (merchantIconUrl != null) {
                 TangemIconUM.Url(
-                    url = spend.enrichedMerchantIconUrl,
+                    url = merchantIconUrl,
                     fallbackRes = R.drawable.ic_category_24,
                 )
             } else {

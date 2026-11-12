@@ -6,7 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.tangempay.TangemPayEligibility
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify

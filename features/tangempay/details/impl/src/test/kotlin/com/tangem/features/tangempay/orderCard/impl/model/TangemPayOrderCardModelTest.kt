@@ -4,7 +4,6 @@ import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
@@ -13,6 +12,7 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.model.Offer
 import com.tangem.domain.tangempay.model.OrderType
 import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -32,9 +32,8 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.Currency
 
-internal class TangemPayOrderCardModelTest {
+internal class TangemPayOrderCardModelTest : TangemPayModelTestBase() {
 
-    private val router: Router = mockk(relaxed = true)
     private val getCustomerOffers: GetCustomerOffersUseCase = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()

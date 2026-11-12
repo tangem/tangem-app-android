@@ -13,15 +13,9 @@ data class TangemPayOrderResponse(
     @Serializable
     data class Result(
         @SerialName("id") val id: String,
-        @SerialName("customer_id") val customerId: String,
-        @SerialName("type") val type: String,
         @SerialName("status") val status: String,
         @SerialName("step") val step: String?,
         @SerialName("data") val data: OrderDataResponse,
-        @SerialName("step_change_code") val stepChangeCode: Int,
-        @SerialName("created_at") val createdAt: String,
-        @SerialName("updated_at") val updatedAt: String,
-        @SerialName("error_code") val errorCode: String?,
     )
 }
 
