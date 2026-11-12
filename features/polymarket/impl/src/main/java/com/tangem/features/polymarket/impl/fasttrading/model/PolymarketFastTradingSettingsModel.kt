@@ -22,6 +22,7 @@ import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyAc
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeysUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingRevokeConfirmationUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingSettingsUM
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
@@ -109,7 +110,7 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     }
 
     private fun onActivateClick() {
-        if (isActivationOffered()) start(PolymarketSessionKeyOperationRequest.Activate)
+        if (isActivationOffered()) router.push(PolymarketRoute.FastTradingActivation(params.userWalletId))
     }
 
     private fun isActivationOffered(): Boolean {

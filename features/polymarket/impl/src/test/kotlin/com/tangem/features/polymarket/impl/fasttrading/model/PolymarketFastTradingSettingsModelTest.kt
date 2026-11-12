@@ -39,6 +39,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingSettingsUM
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -467,10 +468,8 @@ internal class PolymarketFastTradingSettingsModelTest {
     }
 
     @Test
-    fun `GIVEN activation offered WHEN activate clicked THEN activation starts without a toast`() = runTest {
+    fun `GIVEN activation offered WHEN activate clicked THEN activation screen opens without starting`() = runTest {
         // Arrange
-        every { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) } returns
-            PolymarketSessionKeyOperationStart.Started(OPERATION_ID)
         val model = createContentModel()
 
         // Act
@@ -478,7 +477,8 @@ internal class PolymarketFastTradingSettingsModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) }
+        verify(exactly = 1) { router.push(PolymarketRoute.FastTradingActivation(USER_WALLET_ID), any()) }
+        verify(exactly = 0) { startOperation(any(), any()) }
         assertThat(sentMessages).isEmpty()
     }
 
@@ -500,24 +500,9 @@ internal class PolymarketFastTradingSettingsModelTest {
 
             // Assert
             verify(exactly = 0) { startOperation(any(), any()) }
+            verify(exactly = 0) { router.push(any(), any()) }
             assertThat(sentMessages).isEmpty()
         }
-
-    @Test
-    fun `GIVEN another operation running WHEN activate clicked THEN busy toast is shown`() = runTest {
-        // Arrange
-        every { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) } returns
-            PolymarketSessionKeyOperationStart.Busy
-        val model = createContentModel()
-
-        // Act
-        content(model).onActivateClick()
-        advanceUntilIdle()
-
-        // Assert
-        val toast = sentMessages.single() as SnackbarMessage
-        assertThat(toast.message).isEqualTo(resourceReference(R.string.prediction_session_key_toast_busy))
-    }
 
     @ParameterizedTest
     @MethodSource("provideThisDeviceActionModels")

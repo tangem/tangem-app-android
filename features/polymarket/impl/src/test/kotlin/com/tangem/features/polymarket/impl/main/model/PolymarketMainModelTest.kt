@@ -821,6 +821,25 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN activate banner WHEN action clicked THEN activation screen opens without starting the operation`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            fastTradingBanner.value = PolymarketFastTradingBanner.Activate
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.fastTradingBanner!!.onActionClick()
+
+            // Assert
+            verify(exactly = 1) {
+                router.push(PolymarketRoute.FastTradingActivation(userWalletId = USER_WALLET_ID), any())
+            }
+            verify(exactly = 0) { fastTradingBannerSource.start(any(), any()) }
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN another operation runs WHEN banner action clicked THEN the busy toast is shown`() = runTest {
         // Arrange
         every { fastTradingBannerSource.start(USER_WALLET_ID, any()) } returns PolymarketSessionKeyOperationStart.Busy
@@ -857,7 +876,7 @@ internal class PolymarketMainModelTest {
         }
 
     @ParameterizedTest
-    @MethodSource("startedBanners")
+    @MethodSource("dismissibleBanners")
     fun `GIVEN a dismissible banner WHEN closed THEN its dismissal is stored`(banner: PolymarketFastTradingBanner) =
         runTest {
             // Arrange
@@ -2518,10 +2537,12 @@ internal class PolymarketMainModelTest {
 
         @JvmStatic
         fun startedBanners() = listOf(
-            PolymarketFastTradingBanner.Activate,
             PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
             PolymarketFastTradingBanner.Extend(daysLeft = 12),
         )
+
+        @JvmStatic
+        fun dismissibleBanners() = listOf(PolymarketFastTradingBanner.Activate) + startedBanners()
 
         const val DEPOSIT_ADDRESS = "0xbridge0000000000000000000000000000000001"
         const val STATUS_FETCH_MS = 1_000L

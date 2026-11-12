@@ -325,7 +325,7 @@ internal class PolymarketMainModel @Inject constructor(
             onActionClick = ::onFastTradingSettingsClick,
         )
         PolymarketFastTradingBanner.Activate -> PolymarketFastTradingBannerUM.Activate(
-            onActionClick = { startFastTradingOperation(this) },
+            onActionClick = ::onFastTradingActivationClick,
             onCloseClick = { dismissFastTradingBanner(this) },
         )
         is PolymarketFastTradingBanner.Reactivate -> PolymarketFastTradingBannerUM.Reactivate(
@@ -337,6 +337,10 @@ internal class PolymarketMainModel @Inject constructor(
             onActionClick = { startFastTradingOperation(this) },
             onCloseClick = { dismissFastTradingBanner(this) },
         )
+    }
+
+    private fun onFastTradingActivationClick() {
+        router.push(PolymarketRoute.FastTradingActivation(userWalletId = params.userWalletId))
     }
 
     private fun startFastTradingOperation(banner: PolymarketFastTradingBanner) {
