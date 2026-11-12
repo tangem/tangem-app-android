@@ -112,14 +112,13 @@ private fun CountryCloseButton(onClick: () -> Unit, modifier: Modifier = Modifie
                 role = Role.Button
                 contentDescription = closeDescription
             },
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = CircleShape,
         border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(TangemTheme.colors3.bg.transparent.primary),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
