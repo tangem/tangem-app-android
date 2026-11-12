@@ -151,11 +151,19 @@ private fun CountryRow(item: CountryItemState.WithContent) {
             },
             endSlot = if (item.isSelected) {
                 {
-                    Icon(
-                        imageVector = Icons.ic_control_checkmark_20,
-                        contentDescription = null,
-                        tint = TangemTheme.colors3.icon.primary,
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(SELECTED_MARK_SIZE)
+                            .clip(CircleShape)
+                            .background(color = TangemTheme.colors3.icon.primary),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.ic_control_checkmark_20,
+                            contentDescription = null,
+                            tint = TangemTheme.colors3.bg.primary,
+                        )
+                    }
                 }
             } else {
                 null
@@ -293,6 +301,7 @@ private fun SearchBarUM.toSearchState() = TangemSearch.State(
 )
 
 private val FLAG_SIZE = 40.dp
+private val SELECTED_MARK_SIZE = 20.dp
 private val FOOTER_INSET = 88.dp
 private val FADE_HEIGHT = 112.dp
 private const val UNAVAILABLE_ALPHA = 0.4f
