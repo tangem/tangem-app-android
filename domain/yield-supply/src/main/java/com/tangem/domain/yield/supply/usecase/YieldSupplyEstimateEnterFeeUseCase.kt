@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterWithNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -83,8 +84,10 @@ class YieldSupplyEstimateEnterFeeUseCase(
         }
     }
 
-    private fun TransactionData.Uncompiled.isEnter(): Boolean =
-        (extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade() is EthereumYieldSupplyEnterCallData
+    private fun TransactionData.Uncompiled.isEnter(): Boolean {
+        val callData = (extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade()
+        return callData is EthereumYieldSupplyEnterCallData || callData is EthereumYieldSupplyEnterWithNativeCallData
+    }
 
     private suspend fun estimateFeeWithStatic(
         userWallet: UserWallet,
