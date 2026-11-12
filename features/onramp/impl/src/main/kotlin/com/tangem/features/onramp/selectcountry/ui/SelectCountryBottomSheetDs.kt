@@ -1,7 +1,6 @@
 package com.tangem.features.onramp.selectcountry.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -60,7 +59,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_control_checkmark_20
-import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.core.ui.res.generated.icons.ic_cross_24
 import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcountry.entity.CountryItemState
@@ -107,20 +106,21 @@ private fun CountryCloseButton(onClick: () -> Unit, modifier: Modifier = Modifie
         modifier = modifier
             .size(CLOSE_BUTTON_SIZE)
             .semantics { role = Role.Button },
-        color = TangemTheme.colors3.bg.transparent.primary,
-        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
+        isMaterial = true,
         shape = CircleShape,
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(TangemTheme.colors3.bg.transparent.primary),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 modifier = Modifier.size(CLOSE_ICON_SIZE),
-                imageVector = Icons.ic_cross_20,
+                imageVector = Icons.ic_cross_24,
                 tint = TangemTheme.colors3.icon.primary,
-                contentDescription = null,
+                contentDescription = stringResourceSafe(R.string.common_close),
             )
         }
     }
@@ -345,7 +345,7 @@ private fun SearchBarUM.toSearchState() = TangemSearch.State(
 private val FLAG_SIZE = 40.dp
 private val SELECTED_MARK_SIZE = 20.dp
 private val CLOSE_BUTTON_SIZE = 44.dp
-private val CLOSE_ICON_SIZE = 18.dp
+private val CLOSE_ICON_SIZE = 24.dp
 private val SEARCH_SHAPE = RoundedCornerShape(percent = 50)
 private val FOOTER_INSET = 88.dp
 private val FADE_HEIGHT = 112.dp
