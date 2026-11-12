@@ -7,6 +7,7 @@ import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
@@ -17,6 +18,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.buildSwapProvider
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.features.swap.SwapFeatureToggles
@@ -55,6 +57,8 @@ internal class SolanaGaslessSwapResolverTest {
 
     private val liFi = buildSwapProvider(providerId = "li-fi")
     private val jupiter = buildSwapProvider(providerId = "jupiter")
+    private val changeNow = buildSwapProvider(type = ExchangeProviderType.CEX, providerId = "changenow")
+    private val depositTransfer: TransactionData.Uncompiled = mockk()
 
     // Recreated per test: the resolver caches its last resolution
     private lateinit var sut: SolanaGaslessSwapResolver
@@ -332,6 +336,117 @@ internal class SolanaGaslessSwapResolverTest {
         coVerify(exactly = 0) { solanaGaslessTransactionRepository.getFeePayer() }
     }
 
+    @Test
+    fun `GIVEN CEX provider WHEN resolveFeePayer THEN fee payer offered without simulation`() = runTest {
+        // Arrange
+        val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
+        coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
+
+        // Act
+        val actual = sut.resolveFeePayer(from, changeNow, swapData = null)
+
+        // Assert
+        assertThat(actual).isEqualTo("FeePayer")
+        coVerify(exactly = 0) { walletManagersFacade.simulateSolanaGaslessTransaction(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN toggle disabled WHEN resolveFeePayer for CEX provider THEN returns null`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isSolanaGaslessEnabled } returns false
+        val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
+
+        // Act
+        val actual = sut.resolveFeePayer(from, changeNow, swapData = null)
+
+        // Assert
+        assertThat(actual).isNull()
+        coVerify(exactly = 0) { solanaGaslessTransactionRepository.getFeePayer() }
+    }
+
+    @Test
+    fun `GIVEN deposit transfer simulates WHEN resolveTransferFeePayer THEN returns fee payer`() = runTest {
+        // Arrange
+        val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
+        val userWalletId = from.userWalletId
+        val network = from.currency.network
+        coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
+
+        // Act
+        val actual = sut.resolveTransferFeePayer(from, depositTransfer)
+
+        // Assert
+        assertThat(actual).isEqualTo("FeePayer".right())
+        coVerify(exactly = 1) {
+            walletManagersFacade.simulateSolanaGaslessTransaction(
+                userWalletId = userWalletId,
+                network = network,
+                transactionData = depositTransfer,
+                feePayer = "FeePayer",
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN deposit transfer fails simulation WHEN resolveTransferFeePayer THEN rejected`() = runTest {
+        // Arrange
+        val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
+        coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
+        coEvery {
+            walletManagersFacade.simulateSolanaGaslessTransaction(
+                userWalletId = any(), network = any(), transactionData = any(), feePayer = any(),
+            )
+        } returns Result.Success(SolanaGaslessSimulation.Failed(error = "InsufficientFundsForRent", logs = emptyList()))
+
+        // Act
+        val actual = sut.resolveTransferFeePayer(from, depositTransfer)
+
+        // Assert
+        assertThat(actual).isEqualTo(SolanaGaslessError.Rejected(code = null).left())
+    }
+
+    @Test
+    fun `GIVEN fee payer unavailable WHEN resolveTransferFeePayer THEN service unavailable without simulating`() =
+        runTest {
+            // Arrange
+            val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
+            coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns SolanaGaslessError.Unauthorized.left()
+
+            // Act
+            val actual = sut.resolveTransferFeePayer(from, depositTransfer)
+
+            // Assert
+            assertThat(actual).isEqualTo(SolanaGaslessError.ServiceUnavailable(code = null).left())
+            coVerify(exactly = 0) {
+                walletManagersFacade.simulateSolanaGaslessTransaction(
+                    userWalletId = any(), network = any(), transactionData = any(), feePayer = any(),
+                )
+            }
+        }
+
+    @ParameterizedTest
+    @MethodSource("provideUnsponsorableTransferModels")
+    fun `GIVEN transfer not sponsorable WHEN resolveTransferFeePayer THEN unavailable without asking the service`(
+        model: UnsponsorableTransferModel,
+    ) = runTest {
+        // Arrange
+        every { swapFeatureToggles.isSolanaGaslessEnabled } returns model.isToggleEnabled
+        val from = buildSwapCurrencyStatus(networkRawId = model.fromNetwork, isCoin = model.isFromCoin)
+
+        // Act
+        val actual = sut.resolveTransferFeePayer(from, depositTransfer)
+
+        // Assert
+        assertThat(actual).isEqualTo(SolanaGaslessError.ServiceUnavailable(code = null).left())
+        coVerify(exactly = 0) { solanaGaslessTransactionRepository.getFeePayer() }
+    }
+
+    data class UnsponsorableTransferModel(
+        val fromNetwork: String,
+        val isFromCoin: Boolean,
+        val isToggleEnabled: Boolean = true,
+    )
+
     @ParameterizedTest
     @MethodSource("provideUnsupportedProviderModels")
     fun `GIVEN LI_FI among providers WHEN excludeUnsupportedProviders THEN dropped only when only a sponsor can pay`(
@@ -432,6 +547,12 @@ internal class SolanaGaslessSwapResolverTest {
             solBalance = BigDecimal.ZERO,
             isLiFiKept = true,
         ),
+    )
+
+    private fun provideUnsponsorableTransferModels() = listOf(
+        UnsponsorableTransferModel(fromNetwork = solanaNetwork, isFromCoin = false, isToggleEnabled = false),
+        UnsponsorableTransferModel(fromNetwork = solanaNetwork, isFromCoin = true),
+        UnsponsorableTransferModel(fromNetwork = ethNetwork, isFromCoin = false),
     )
 
     private fun provideUnavailableSimulations() = listOf(
