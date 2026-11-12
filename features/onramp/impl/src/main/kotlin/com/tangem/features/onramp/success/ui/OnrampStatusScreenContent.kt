@@ -164,7 +164,7 @@ private fun DetailRow(
     TangemRow(
         divider = divider,
         onClick = onClick,
-        contentLead = TangemRowContentLead.Start,
+        contentLead = TangemRowContentLead.End,
         titleSlot = { RowTitle(text = title) },
         valueSlot = {
             Row(
