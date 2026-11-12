@@ -5,6 +5,7 @@ package com.tangem.features.earn.flow.impl.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -62,11 +63,12 @@ internal fun EarnConfirmContent(
         },
         bottom = { EarnFlowButton(button = state.primary, modifier = Modifier.fillMaxWidth()) },
         modifier = modifier,
-    ) {
+    ) { contentPadding ->
         LazyColumn(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxSize()
                 .padding(horizontal = 16.dp),
+            contentPadding = contentPadding,
         ) {
             item(key = "amount") { Amount(state) }
             state.notice?.let { notice ->
