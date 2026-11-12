@@ -12,7 +12,6 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.scenarios.exitTangemPayKycScreen
 import com.tangem.scenarios.openMainScreenWithNewHotWallet
 import com.tangem.scenarios.selectTangemPayResidency
@@ -34,9 +33,6 @@ class TangemPayHotWalletOnboardingTest : BaseTestCase() {
 
     @Inject
     lateinit var appsFlyerRepository: AppsFlyerRepository
-
-    @Inject
-    lateinit var moneyAccountFeatureToggles: MoneyAccountFeatureToggles
 
     private val kycInProgressText = getResourceString(CoreResR.string.tangempay_kyc_in_progress)
     private val residencyCountry = "United States"
@@ -137,10 +133,7 @@ class TangemPayHotWalletOnboardingTest : BaseTestCase() {
             }
             step("Assert Tangem Pay mobile onboarding screen opens without any tap") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTangemPayHotWalletOnboardingScreen {
-                        title.assertIsDisplayed()
-                        if (!moneyAccountFeatureToggles.isMoneyAccountsEnabled) legalCaption.assertIsDisplayed()
-                    }
+                    onTangemPayHotWalletOnboardingScreen { title.assertIsDisplayed() }
                 }
             }
             step("Click on 'Get card' button") {

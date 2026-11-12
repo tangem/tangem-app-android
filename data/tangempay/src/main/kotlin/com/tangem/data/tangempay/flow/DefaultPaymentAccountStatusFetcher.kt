@@ -29,7 +29,6 @@ import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.tangempay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -72,7 +71,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
     private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase,
     private val resolvePaymentAccountStatusFromSummaryUseCase: ResolvePaymentAccountStatusFromSummaryUseCase,
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
 ) : PaymentAccountStatusFetcher {
 
@@ -180,8 +178,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun resolveStatusFromSummary(userWalletId: UserWalletId): PaymentAccountStatusValue? {
-        if (!moneyAccountFeatureToggles.isMoneyAccountsEnabled) return null
-
         return getCustomerSummaryUseCase.invoke(userWalletId, CachePolicy.REFRESH).fold(
             ifLeft = { error ->
                 error.toCachedStatusOrNull(userWalletId) ?: error.toStatusValueWhenHasTangemPay(userWalletId)
@@ -498,8 +494,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun isPaymentAccountIssuing(userWalletId: UserWalletId): Boolean {
-        if (!moneyAccountFeatureToggles.isMoneyAccountsEnabled) return false
-
         val summary = getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE).getOrNull() ?: return false
         val state = TangemPayCustomerStateConverter.convert(summary) as? TangemPayCustomerState.Accounts
         return state?.paymentAccount == PaymentAccountActivationState.Issuing(

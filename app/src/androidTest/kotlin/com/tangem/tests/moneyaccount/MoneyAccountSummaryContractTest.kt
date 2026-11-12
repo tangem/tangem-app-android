@@ -7,7 +7,6 @@ import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.utils.getWireMockRequestCountByQueryParam
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.assertMoneyAccountRowKeepsShowing
 import com.tangem.scenarios.assertMoneyAccountRowNeverShown
@@ -29,10 +28,6 @@ import org.junit.Test
 
 @HiltAndroidTest
 class MoneyAccountSummaryContractTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1525_MONEY_ACCOUNTS_ENABLED.rawName to true,
-    )
 
     private val eligibilityState = "PaeraCustomer"
     private val moneyAccountScenario = "tangem_pay_money_account"

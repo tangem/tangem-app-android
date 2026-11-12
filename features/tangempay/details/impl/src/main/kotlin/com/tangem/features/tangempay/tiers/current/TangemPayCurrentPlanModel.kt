@@ -19,10 +19,8 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.tangempay.usecase.CancelTariffPlanPendingTransitionUseCase
-import com.tangem.domain.tangempay.usecase.CancelTariffTransitionUseCase
 import com.tangem.domain.tangempay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
@@ -51,10 +49,8 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase,
-    private val cancelTariffTransitionUseCase: CancelTariffTransitionUseCase,
     private val cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
     private val isTangemPayCustomerVerifiedUseCase: IsTangemPayCustomerVerifiedUseCase,
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
@@ -185,32 +181,25 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         isProcessing = true
         updateState()
         modelScope.launch {
-            if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
-                cancelTangemPayOrderUseCase(
-                    userWalletId = params.userWalletId,
-                    orderId = orderId,
-                ).onRight {
-                    if (currentPlanState.tariff.isDefaultTariff) {
-                        coroutineScope {
-                            launch {
-                                paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(params.userWalletId))
-                            }
-                            launch {
-                                moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
-                            }
+            cancelTangemPayOrderUseCase(
+                userWalletId = params.userWalletId,
+                orderId = orderId,
+            ).onRight {
+                if (currentPlanState.tariff.isDefaultTariff) {
+                    coroutineScope {
+                        launch {
+                            paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(params.userWalletId))
                         }
-                        when (isTangemPayCustomerVerifiedUseCase(userWalletId = params.userWalletId).getOrNull()) {
-                            null -> router.replaceAll(AppRoute.Wallet)
-                            true -> router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
-                            false -> Unit
+                        launch {
+                            moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
                         }
                     }
+                    when (isTangemPayCustomerVerifiedUseCase(userWalletId = params.userWalletId).getOrNull()) {
+                        null -> router.replaceAll(AppRoute.Wallet)
+                        true -> router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
+                        false -> Unit
+                    }
                 }
-            } else {
-                cancelTariffTransitionUseCase(
-                    userWalletId = params.userWalletId,
-                    orderId = orderId,
-                )
             }.onLeft {
                 uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
             }

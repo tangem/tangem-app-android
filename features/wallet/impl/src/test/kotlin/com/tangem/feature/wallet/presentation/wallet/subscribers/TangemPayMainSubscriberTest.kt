@@ -144,7 +144,6 @@ internal class TangemPayMainSubscriberTest {
             restoreOrdersUseCase = restoreOrdersUseCase,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
             pollTangemPayAccountStatusesUseCase = mockk(relaxed = true),
-            moneyAccountFeatureToggles = mockk(relaxed = true),
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             analytics = mockk(relaxed = true),
         ).subscribe(

@@ -44,9 +44,9 @@ internal class DefaultTangemPayOnboardingComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val video = model.videoState?.collectAsStateWithLifecycle()?.value
+        val video = model.videoState.collectAsStateWithLifecycle().value
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-        TangemPayOnboardingScreen(modifier = modifier, state = state, video = video?.surface)
+        TangemPayOnboardingScreen(modifier = modifier, state = state, video = video.surface)
         bottomSheet.child?.instance?.BottomSheet()
     }
 

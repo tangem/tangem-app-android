@@ -9,7 +9,6 @@ import com.tangem.core.media.LoopingVideoController
 import com.tangem.core.media.LoopingVideoState
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.model.createPayBundleVideo
@@ -29,7 +28,6 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val analytics: AnalyticsEventHandler,
-    moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     videoFactory: LoopingVideoController.Factory,
 ) : Model() {
 
@@ -40,12 +38,9 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     val uiState: StateFlow<TangemPayHotWalletOnboardingUM>
         field = MutableStateFlow(
             TangemPayHotWalletOnboardingUM(
-                isUnifiedOnboarding = moneyAccountFeatureToggles.isMoneyAccountsEnabled,
                 isLoading = false,
                 onGetCardClick = ::onGetCardClick,
                 onTermsClick = ::onTermsClick,
-                onTermsOfServiceClick = ::onTermsOfServiceClick,
-                onPrivacyPolicyClick = ::onPrivacyPolicyClick,
             ),
         )
 
@@ -67,14 +62,6 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
         urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
     }
 
-    private fun onTermsOfServiceClick() {
-        urlOpener.openUrl(TERMS_OF_SERVICE_URL)
-    }
-
-    private fun onPrivacyPolicyClick() {
-        urlOpener.openUrl(PRIVACY_POLICY_URL)
-    }
-
     private fun onGetCardClick() {
         // A loading TangemButton still takes taps
         if (uiState.value.isLoading) return
@@ -94,10 +81,5 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
 
     private fun setLoading(isLoading: Boolean) {
         uiState.update { state -> state.copy(isLoading = isLoading) }
-    }
-
-    private companion object {
-        const val TERMS_OF_SERVICE_URL = "https://www.paera.com/tangempay"
-        const val PRIVACY_POLICY_URL = "https://tangem.com/docs/en/pay-privacy-policy.pdf"
     }
 }

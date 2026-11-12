@@ -20,11 +20,9 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.tangempay.usecase.CancelTariffPlanPendingTransitionUseCase
-import com.tangem.domain.tangempay.usecase.CancelTariffTransitionUseCase
 import com.tangem.domain.tangempay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.awaitingDepositOrder
@@ -58,9 +56,7 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
 
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase = mockk()
-    private val cancelTariffTransition: CancelTariffTransitionUseCase = mockk()
     private val cancelTangemPayOrder: CancelTangemPayOrderUseCase = mockk()
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
     private val isCustomerVerified: IsTangemPayCustomerVerifiedUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
@@ -72,9 +68,7 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
         clearMocks(
             router,
             cancelPendingTransition,
-            cancelTariffTransition,
             cancelTangemPayOrder,
-            moneyAccountFeatureToggles,
             isCustomerVerified,
             paymentAccountStatusFetcher,
             moneyAccountStatusFetcher,
@@ -84,7 +78,6 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
             paymentAccountStatusSupplier,
         )
         every { paymentAccountStatusSupplier(USER_WALLET_ID) } returns emptyFlow()
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
         coEvery { paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(USER_WALLET_ID)) } returns Unit.right()
         coEvery { moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(USER_WALLET_ID)) } returns Unit.right()
         // DateTimeFormatters.dateMMMd resolves the locale pattern through the Android framework,
@@ -189,16 +182,16 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
     }
 
     @Test
-    fun `GIVEN awaiting deposit WHEN cancel clicked THEN transition cancelled by order id AND analytics sent`() {
+    fun `GIVEN awaiting deposit WHEN cancel clicked THEN order cancelled by id AND analytics sent`() {
         // Arrange
-        coEvery { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
+        coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
         val model = createModel(planState = awaitingDepositState())
 
         // Act
         model.state.value.notification?.button?.onClick?.invoke()
 
         // Assert
-        coVerify(exactly = 1) { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) }
+        coVerify(exactly = 1) { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) }
         verify(exactly = 1) {
             analytics.send(ofType<TangemPayAnalyticsEvents.Tiers.CancelPlusMoveToBasicClicked>())
         }
@@ -206,24 +199,10 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
     }
 
     @Test
-    fun `GIVEN cancel fails WHEN cancel clicked THEN error message sent AND processing reset`() {
-        // Arrange
-        coEvery { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) } returns TangemPayApiError.Unspecified.left()
-        val model = createModel(planState = awaitingDepositState())
-
-        // Act
-        model.state.value.notification?.button?.onClick?.invoke()
-
-        // Assert
-        verify(exactly = 1) { uiMessageSender.send(any()) }
-        assertThat(model.state.value.notification?.button?.isProcessing).isFalse()
-    }
-
-    @Test
     fun `GIVEN cancel in progress WHEN cancel clicked again THEN use case called once AND back is ignored`() {
         // Arrange
         val pending = CompletableDeferred<Either<TangemPayApiError, Unit>>()
-        coEvery { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) } coAnswers { pending.await() }
+        coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } coAnswers { pending.await() }
         val model = createModel(planState = awaitingDepositState())
         model.state.value.notification?.button?.onClick?.invoke()
 
@@ -233,14 +212,13 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
 
         // Assert
         assertThat(model.state.value.notification?.button?.isProcessing).isTrue()
-        coVerify(exactly = 1) { cancelTariffTransition(USER_WALLET_ID, ORDER_ID) }
+        coVerify(exactly = 1) { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) }
         verify(exactly = 0) { router.pop() }
     }
 
     @Test
-    fun `GIVEN money accounts AND onboarding order AND customer verified WHEN cancel clicked THEN verified opened`() {
+    fun `GIVEN onboarding order AND customer verified WHEN cancel clicked THEN verified opened`() {
         // Arrange
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
         coEvery { isCustomerVerified(USER_WALLET_ID) } returns true.right()
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
@@ -250,7 +228,6 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
 
         // Assert
         coVerify(exactly = 1) { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) }
-        coVerify(exactly = 0) { cancelTariffTransition(any(), any()) }
         coVerifyOrder {
             paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(USER_WALLET_ID))
             isCustomerVerified(USER_WALLET_ID)
@@ -270,9 +247,8 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
     }
 
     @Test
-    fun `GIVEN money accounts AND onboarding order AND customer not verified WHEN cancel clicked THEN no navigation`() {
+    fun `GIVEN onboarding order AND customer not verified WHEN cancel clicked THEN no navigation`() {
         // Arrange
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
         coEvery { isCustomerVerified(USER_WALLET_ID) } returns false.right()
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
@@ -287,9 +263,8 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
     }
 
     @Test
-    fun `GIVEN money accounts AND onboarding order AND summary fails WHEN cancel clicked THEN wallet opened`() {
+    fun `GIVEN onboarding order AND summary fails WHEN cancel clicked THEN wallet opened`() {
         // Arrange
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
         coEvery { isCustomerVerified(USER_WALLET_ID) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
@@ -303,9 +278,8 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
     }
 
     @Test
-    fun `GIVEN money accounts AND upgrade order WHEN cancel clicked THEN order cancelled AND screen kept`() {
+    fun `GIVEN upgrade order WHEN cancel clicked THEN order cancelled AND screen kept`() {
         // Arrange
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
         val model = createModel(planState = awaitingDepositState())
 
@@ -322,9 +296,8 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
     }
 
     @Test
-    fun `GIVEN money accounts AND cancel fails WHEN cancel clicked THEN error sent AND no navigation`() {
+    fun `GIVEN cancel fails WHEN cancel clicked THEN error sent AND no navigation`() {
         // Arrange
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
 
@@ -380,10 +353,8 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
             dispatchers = TestingCoroutineDispatcherProvider(),
             router = router,
             cancelPendingTransition = cancelPendingTransition,
-            cancelTariffTransitionUseCase = cancelTariffTransition,
             cancelTangemPayOrderUseCase = cancelTangemPayOrder,
             isTangemPayCustomerVerifiedUseCase = isCustomerVerified,
-            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             moneyAccountStatusFetcher = moneyAccountStatusFetcher,

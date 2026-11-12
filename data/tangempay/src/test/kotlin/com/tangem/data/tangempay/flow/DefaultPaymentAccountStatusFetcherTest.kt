@@ -47,7 +47,6 @@ import com.tangem.domain.tangempay.usecase.GetTangemPayFiatRateUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.tangempay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
@@ -83,7 +82,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
     private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase = mockk()
     private val resolvePaymentAccountStatusFromSummaryUseCase: ResolvePaymentAccountStatusFromSummaryUseCase = mockk()
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
 
     private val fetcher = DefaultPaymentAccountStatusFetcher(
@@ -102,7 +100,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
         findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
         resolvePaymentAccountStatusFromSummaryUseCase = resolvePaymentAccountStatusFromSummaryUseCase,
-        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
         getCustomerSummaryUseCase = getCustomerSummaryUseCase,
     )
 
@@ -256,7 +253,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             getTangemPayTariffPlanStateUseCase,
             findMoneyAccountCreationOrderUseCase,
             resolvePaymentAccountStatusFromSummaryUseCase,
-            moneyAccountFeatureToggles,
             getCustomerSummaryUseCase,
         )
         // Relaxed mocks don't need clearing — deviceSecurity, eligibilityManager, paymentAccountStatusesStore
@@ -264,7 +260,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         clearMocks(paymentAccountStatusesStore, answers = false)
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
         coEvery { findMoneyAccountCreationOrderUseCase(userWalletId) } returns null.right()
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
+        coEvery { getCustomerSummaryUseCase(userWalletId, any()) } returns null.right()
     }
 
     /**
@@ -766,7 +762,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
         @BeforeEach
         fun setUpSummary() {
-            every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
             coEvery { onboardingRepository.hasTangemPayInWallet(userWalletId) } returns Either.Right(true)
             coEvery { onboardingRepository.isTangemPayInitialDataProduced(userWalletId) } returns true
             coEvery { onboardingRepository.getOrderId(userWalletId) } returns null
@@ -855,19 +850,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     ),
                 )
             }
-
-        @Test
-        fun `GIVEN money accounts disabled WHEN invoke THEN summary not requested`() = runTest {
-            // Arrange
-            every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            coVerify(exactly = 0) { getCustomerSummaryUseCase(any(), any()) }
-            coVerify(exactly = 1) { onboardingRepository.getCustomerInfo(userWalletId) }
-        }
     }
 
     @Nested
@@ -957,7 +939,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
             findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
             resolvePaymentAccountStatusFromSummaryUseCase = resolvePaymentAccountStatusFromSummaryUseCase,
-            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             getCustomerSummaryUseCase = getCustomerSummaryUseCase,
         )
 
@@ -1426,7 +1407,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
         @BeforeEach
         fun setUpSummary() {
-            every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
             coEvery { resolvePaymentAccountStatusFromSummaryUseCase(userWalletId, any()) } returns null
             coEvery {
                 getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)

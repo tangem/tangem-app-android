@@ -24,12 +24,10 @@ import com.tangem.domain.tangempay.model.CustomerInfo
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.onboarding.impl.R
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
-import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -58,7 +56,6 @@ internal class TangemPayOnboardingModelTest {
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val video: LoopingVideoController = mockk(relaxed = true)
@@ -80,7 +77,6 @@ internal class TangemPayOnboardingModelTest {
             video,
             videoFactory,
         )
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
         every { videoFactory.create(any(), any(), any(), any(), any()) } returns video
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
         coEvery {
@@ -447,19 +443,13 @@ internal class TangemPayOnboardingModelTest {
         model.onDestroy()
     }
 
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN money accounts toggle WHEN model created THEN bundle video created only for unified onboarding`(
-        testModel: VideoToggleTestModel,
-    ) = runTest {
-        // Arrange
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns testModel.isMoneyAccountsEnabled
-
+    @Test
+    fun `GIVEN onboarding WHEN model created THEN bundle video created`() = runTest {
         // Act
         val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
 
         // Assert
-        verify(exactly = if (testModel.isVideoExpected) 1 else 0) {
+        verify(exactly = 1) {
             videoFactory.create(
                 scope = any(),
                 videoRes = R.raw.tangem_pay_bundle_background,
@@ -468,7 +458,6 @@ internal class TangemPayOnboardingModelTest {
                 onFailed = any(),
             )
         }
-        assertThat(model.videoState != null).isEqualTo(testModel.isVideoExpected)
         model.onDestroy()
     }
 
@@ -476,7 +465,6 @@ internal class TangemPayOnboardingModelTest {
     @ValueSource(booleans = [true, false])
     fun `GIVEN bundle video WHEN screen resumes or pauses THEN video is told`(isRunning: Boolean) = runTest {
         // Arrange
-        enableBundleVideo()
         val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
 
         // Act
@@ -490,7 +478,6 @@ internal class TangemPayOnboardingModelTest {
     @Test
     fun `GIVEN bundle video WHEN model destroyed THEN video released`() = runTest {
         // Arrange
-        enableBundleVideo()
         val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
 
         // Act
@@ -499,20 +486,6 @@ internal class TangemPayOnboardingModelTest {
         // Assert
         verify(exactly = 1) { video.release() }
     }
-
-    private fun enableBundleVideo() {
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
-    }
-
-    private fun provideTestModels() = listOf(
-        VideoToggleTestModel(isMoneyAccountsEnabled = true, isVideoExpected = true),
-        VideoToggleTestModel(isMoneyAccountsEnabled = false, isVideoExpected = false),
-    )
-
-    data class VideoToggleTestModel(
-        val isMoneyAccountsEnabled: Boolean,
-        val isVideoExpected: Boolean,
-    )
 
     private fun buildCustomerInfo(kycStatus: KycStatus) = CustomerInfo(
         customerId = "cust_1",
@@ -566,7 +539,6 @@ internal class TangemPayOnboardingModelTest {
             repository = repository,
             urlOpener = urlOpener,
             eligibilityManager = eligibilityManager,
-            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             onboardingStarter = TangemPayOnboardingStarter(
                 router = router,
                 uiMessageSender = mockk(relaxed = true),

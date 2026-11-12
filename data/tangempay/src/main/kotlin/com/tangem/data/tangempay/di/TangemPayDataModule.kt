@@ -46,7 +46,6 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.store.entity.CashbackSummaryDM
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
@@ -425,22 +424,18 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideGetTangemPayProductsAvailabilityForCustomerUseCase(
             checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
-            moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
         ): GetTangemPayProductsAvailabilityForCustomerUseCase {
             return GetTangemPayProductsAvailabilityForCustomerUseCase(
                 checkTangemPayEligibilityForCustomerUseCase = checkTangemPayEligibilityForCustomerUseCase,
-                moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             )
         }
 
         @Provides
         fun provideGetTangemPayProductsAvailabilityForCountryUseCase(
             checkTangemPayEligibilityUseCase: CheckTangemPayEligibilityUseCase,
-            moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
         ): GetTangemPayProductsAvailabilityForCountryUseCase {
             return GetTangemPayProductsAvailabilityForCountryUseCase(
                 checkTangemPayEligibilityUseCase = checkTangemPayEligibilityUseCase,
-                moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             )
         }
 
@@ -736,21 +731,6 @@ internal interface TangemPayDataModule {
             return SubmitTariffTransitionUseCase(
                 createTransitionOrder = createTransitionOrder,
                 setPendingTransition = setPendingTransition,
-            )
-        }
-
-        @Provides
-        fun provideCancelTariffTransitionUseCase(
-            cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
-            getTariffTransitionUseCase: GetTangemPayTariffPlanTransitionsUseCase,
-            submitTariffTransitionUseCase: SubmitTariffTransitionUseCase,
-            getCurrentTariffUseCase: GetCurrentTariffUseCase,
-        ): CancelTariffTransitionUseCase {
-            return CancelTariffTransitionUseCase(
-                cancelTangemPayOrderUseCase = cancelTangemPayOrderUseCase,
-                getTariffTransitionUseCase = getTariffTransitionUseCase,
-                submitTariffTransitionUseCase = submitTariffTransitionUseCase,
-                getCurrentTariffUseCase = getCurrentTariffUseCase,
             )
         }
 
