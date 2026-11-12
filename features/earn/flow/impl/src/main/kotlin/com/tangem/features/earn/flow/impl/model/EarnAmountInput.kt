@@ -21,10 +21,7 @@ import java.math.RoundingMode
  * the session's `maxAmount`: the fee is not part of it, the flow deducts it on submit. Every function returns `null`
  * while the card has nothing to change.
  */
-internal class EarnAmountInput(
-    private val clickIntents: AmountScreenClickIntents,
-    private val accountTitle: AccountTitleUM,
-) {
+internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntents) {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
@@ -41,7 +38,7 @@ internal class EarnAmountInput(
             maxEnterAmount = EnterAmountBoundary(amount = max, fiatRate = status.value.fiatRate),
             iconStateConverter = iconStateConverter,
             isBalanceHidden = false,
-            accountTitleUM = accountTitle,
+            accountTitleUM = state.source ?: AccountTitleUM.Text(TextReference.EMPTY),
         ).convert(AmountParameters(title = TextReference.EMPTY, value = ""))
     }
 
