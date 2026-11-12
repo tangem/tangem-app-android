@@ -12,6 +12,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketLiveQuote
 import com.tangem.domain.polymarket.model.PolymarketHistoryToken
@@ -49,11 +51,17 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketSoccerModelTest {
     private val getEvent: GetPolymarketSoccerEventUseCase = mockk()
+    private val getMainEvent: GetPolymarketEventUseCase = mockk {
+        coEvery { this@mockk(any(), any()) } returns soccerEvent(emptyList()).mainEvent().right()
+    }
     private val getPrices: GetPredictionPricesUseCase = mockk {
         coEvery { this@mockk(any(), any()) } returns emptyMap<String, BigDecimal?>().right()
     }
@@ -62,7 +70,7 @@ internal class PolymarketSoccerModelTest {
     }
     private val sports = MutableStateFlow(PolymarketSportsState(emptyMap()))
     private val observeSports: ObservePolymarketSportsStateUseCase = mockk {
-        every { observeSoccer(any(), any()) } returns sports
+        every { observeSoccer(any(), any(), any()) } returns sports
     }
     private val getHistory: GetPolymarketPriceHistoryUseCase = mockk {
         coEvery { getSoccerHistory(any(), any(), any()) } returns emptyMap()
@@ -90,10 +98,11 @@ internal class PolymarketSoccerModelTest {
 
         // Assert
         coVerify(exactly = 0) { getEvent(any(), any()) }
+        coVerify(exactly = 0) { getMainEvent(any(), any()) }
         coVerify(exactly = 0) { getPrices(any(), any()) }
         coVerify(exactly = 0) { getHistory.getSoccerHistory(any(), any(), any()) }
         verify(exactly = 0) { observeQuotes(any()) }
-        verify(exactly = 0) { observeSports.observeSoccer(any(), any()) }
+        verify(exactly = 0) { observeSports.observeSoccer(any(), any(), any()) }
         model.onDestroy()
     }
 
@@ -108,18 +117,21 @@ internal class PolymarketSoccerModelTest {
         runCurrent()
         advanceTimeBy(10_000)
         runCurrent()
-        coVerify(exactly = 2) { getEvent(wallet, "child") }
+        coVerify(exactly = 1) { getEvent(wallet, "child") }
+        coVerify(exactly = 1) { getMainEvent(wallet, "main") }
 
         // Act
         model.onPause()
         advanceTimeBy(30_000)
         runCurrent()
-        coVerify(exactly = 2) { getEvent(any(), any()) }
+        coVerify(exactly = 1) { getEvent(any(), any()) }
+        coVerify(exactly = 1) { getMainEvent(any(), any()) }
         model.onResume()
         runCurrent()
 
         // Assert
-        coVerify(exactly = 3) { getEvent(wallet, "child") }
+        coVerify(exactly = 1) { getEvent(wallet, "child") }
+        coVerify(exactly = 2) { getMainEvent(wallet, "main") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketSoccerUM.Content::class.java)
         model.onDestroy()
     }
@@ -176,9 +188,10 @@ internal class PolymarketSoccerModelTest {
     fun `GIVEN content WHEN refresh fails repeatedly THEN retain content and respect notification cooldown`() = runTest {
         // Arrange
         val event = soccerEvent(emptyList())
-        coEvery { getEvent(any(), any()) } returnsMany listOf(
-            event.right(), PolymarketEventError.Network.left(), PolymarketEventError.Network.left(),
-            event.copy(title = "Updated").right(), PolymarketEventError.Network.left(),
+        coEvery { getEvent(any(), any()) } returns event.right()
+        coEvery { getMainEvent(any(), any()) } returnsMany listOf(
+            PolymarketEventError.Network.left(), PolymarketEventError.Network.left(),
+            event.mainEvent().right(), PolymarketEventError.Network.left(),
         )
         val model = createModel()
         model.onResume()
@@ -194,29 +207,29 @@ internal class PolymarketSoccerModelTest {
             messages.send(SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)))
         }
         repeat(2) { advanceTimeBy(10_000); runCurrent() }
-        assertThat(content().title).isEqualTo(stringReference("Updated"))
+        coVerify(exactly = 4) { getMainEvent(wallet, "main") }
         verify(exactly = 1) { messages.send(any()) }
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN ended match WHEN REST refreshes THEN settlement data still updates`() = runTest {
+    fun `GIVEN ended match WHEN light REST refreshes THEN family is not repeatedly downloaded`() = runTest {
         // Arrange
-        coEvery { getEvent(any(), any()) } returnsMany listOf(
-            soccerEvent(emptyList()).copy(isEnded = true).right(),
-            soccerEvent(emptyList()).copy(isEnded = true, description = "Settled").right(),
-        )
+        val event = soccerEvent(emptyList()).copy(isEnded = true)
+        coEvery { getEvent(any(), any()) } returns event.right()
+        coEvery { getMainEvent(any(), any()) } returns event.mainEvent().right()
         val model = createModel()
         model.onResume()
         runCurrent()
 
         // Act
-        advanceTimeBy(10_000)
+        advanceTimeBy(30_000)
         runCurrent()
 
         // Assert
-        assertThat(content().description).isEqualTo(stringReference("Settled"))
-        coVerify(exactly = 2) { getEvent(any(), any()) }
+        coVerify(exactly = 1) { getEvent(any(), any()) }
+        coVerify(exactly = 3) { getMainEvent(wallet, "main") }
+        coVerify(exactly = 0) { getPrices(any(), any()) }
         model.onDestroy()
     }
 
@@ -304,8 +317,8 @@ internal class PolymarketSoccerModelTest {
         model.onResume()
         runCurrent()
         model.onPause()
-        val response = CompletableDeferred<PolymarketSoccerEvent>()
-        coEvery { getEvent(any(), any()) } coAnswers { response.await().right() }
+        val response = CompletableDeferred<PolymarketEvent>()
+        coEvery { getMainEvent(any(), any()) } coAnswers { response.await().right() }
 
         // Act
         model.onResume()
@@ -314,7 +327,8 @@ internal class PolymarketSoccerModelTest {
 
         // Assert
         coVerify(exactly = 1) { getPrices(any(), any()) }
-        response.complete(event.copy(isEnded = true))
+        coEvery { getEvent(any(), any()) } returns event.copy(isEnded = true).right()
+        response.complete(event.mainEvent().copy(isEnded = true))
         runCurrent()
         advanceTimeBy(10_000)
         runCurrent()
@@ -326,9 +340,8 @@ internal class PolymarketSoccerModelTest {
     fun `GIVEN REST and batch failures WHEN both report stale data THEN one shared notification is shown`() = runTest {
         // Arrange
         val card = soccerPickerCard().let { it.copy(markets = it.markets.map { m -> m.copy(volume = null) }) }
-        coEvery { getEvent(any(), any()) } returnsMany listOf(
-            soccerEvent(listOf(card)).right(), PolymarketEventError.Network.left(),
-        )
+        coEvery { getEvent(any(), any()) } returns soccerEvent(listOf(card)).right()
+        coEvery { getMainEvent(any(), any()) } returns PolymarketEventError.Network.left()
         coEvery { getPrices(any(), any()) } returns PredictionPriceError.Network.left()
         val model = createModel()
 
@@ -391,7 +404,8 @@ internal class PolymarketSoccerModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 2) { getEvent(any(), any()) }
+        coVerify(exactly = 1) { getEvent(any(), any()) }
+        coVerify(exactly = 1) { getMainEvent(wallet, "main") }
         model.onDestroy()
     }
 
@@ -425,11 +439,12 @@ internal class PolymarketSoccerModelTest {
     @Test
     fun `GIVEN live chart history failure WHEN quotes and REST update THEN retry only on REST and resume after fresh snapshot`() = runTest {
         // Arrange
-        val card = threeWayCard().let { it.copy(markets = it.markets.map { m -> m.copy(volume = null) }) }
+        val card = threeWayCard().let { it.copy(markets = it.markets.map { m -> m.copy(volume = null, eventId = "main") }) }
         val event = soccerEvent(listOf(card))
         val quotes = MutableStateFlow(emptyMap<String, PolymarketLiveQuote>())
         every { observeQuotes(any()) } returns quotes
         coEvery { getEvent(any(), any()) } returns event.right()
+        coEvery { getMainEvent(any(), any()) } returns event.mainEvent().right()
         val model = createModel()
         model.onResume()
         runCurrent()
@@ -452,13 +467,13 @@ internal class PolymarketSoccerModelTest {
         coVerify(exactly = 2) { getHistory.getSoccerHistory(any(), any(), any()) }
         verify(exactly = 1) { observeQuotes(any()) }
         model.onPause()
-        val response = CompletableDeferred<PolymarketSoccerEvent>()
-        coEvery { getEvent(any(), any()) } coAnswers { response.await().right() }
+        val response = CompletableDeferred<PolymarketEvent>()
+        coEvery { getMainEvent(any(), any()) } coAnswers { response.await().right() }
         model.onResume()
         advanceTimeBy(30_000)
         runCurrent()
         coVerify(exactly = 2) { getHistory.getSoccerHistory(any(), any(), any()) }
-        response.complete(event)
+        response.complete(event.mainEvent())
         runCurrent()
         coVerify(exactly = 3) { getHistory.getSoccerHistory(any(), any(), any()) }
         model.onDestroy()
@@ -468,9 +483,8 @@ internal class PolymarketSoccerModelTest {
     fun `GIVEN loaded chart WHEN structural refresh fails THEN keep history visible`() = runTest {
         // Arrange
         val card = threeWayCard().let { it.copy(markets = it.markets.map { m -> m.copy(volume = null) }) }
-        coEvery { getEvent(any(), any()) } returnsMany listOf(
-            soccerEvent(listOf(card)).right(), PolymarketEventError.Network.left(),
-        )
+        coEvery { getEvent(any(), any()) } returns soccerEvent(listOf(card)).right()
+        coEvery { getMainEvent(any(), any()) } returns PolymarketEventError.Network.left()
         coEvery { getHistory.getSoccerHistory(any(), any(), any()) } coAnswers {
             secondArg<Set<PolymarketHistoryToken>>().associateWith { listOf(
                 PolymarketPricePoint(1_789_999_880_000, BigDecimal("0.4")),
@@ -492,6 +506,148 @@ internal class PolymarketSoccerModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN open soccer screen WHEN ten minutes pass THEN poll main without downloading family`() = runTest {
+        // Arrange
+        coEvery { getEvent(wallet, "child") } returns soccerEvent(emptyList()).right()
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        advanceTimeBy(600_000)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { getEvent(wallet, "child") }
+        coVerify(exactly = 60) { getMainEvent(wallet, "main") }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN main reports ended WHEN full response is stale then fresh THEN only fresh family prices freeze`() = runTest {
+        // Arrange
+        val card = soccerPickerCard().let { it.copy(markets = it.markets.map { m -> m.copy(volume = null) }) }
+        val event = soccerEvent(listOf(card)).copy(dataFetchedAt = Instant.ofEpochSecond(10))
+        val finalCard = card.copy(markets = card.markets.map { market -> market.copy(
+            outcomes = market.outcomes.map { it.copy(probability = BigDecimal("0.75")) },
+        ) })
+        val finalEvent = soccerEvent(listOf(finalCard)).copy(isEnded = true, dataFetchedAt = Instant.ofEpochSecond(21))
+        coEvery { getEvent(any(), any()) } returnsMany listOf(
+            event.right(), event.copy(isEnded = true, dataFetchedAt = Instant.ofEpochSecond(19)).right(), finalEvent.right(),
+        )
+        coEvery { getMainEvent(wallet, "main") } returns event.mainEvent().copy(
+            isEnded = true, dataFetchedAt = Instant.ofEpochSecond(20),
+        ).right()
+        coEvery { getPrices(any(), any()) } returns mapOf("p2-left" to BigDecimal("0.61")).right()
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        advanceTimeBy(10_000)
+        runCurrent()
+        val beforeFinal = (content().cards.single().content as PolymarketSoccerCardUM.Content.Picker).outcomes.first().price
+        advanceTimeBy(10_000)
+        runCurrent()
+        advanceTimeBy(30_000)
+        runCurrent()
+
+        // Assert
+        assertThat(beforeFinal).isEqualTo(stringReference("61¢"))
+        val afterFinal = (content().cards.single().content as PolymarketSoccerCardUM.Content.Picker).outcomes.first().price
+        assertThat(afterFinal).isEqualTo(stringReference("75¢"))
+        coVerify(exactly = 1) { getEvent(wallet, "child") }
+        coVerify(exactly = 2) { getEvent(wallet, "main") }
+        coVerify(atMost = 2) { getPrices(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN light refresh in flight WHEN paused THEN cancel it and resume with main event only`() = runTest {
+        // Arrange
+        val event = soccerEvent(emptyList())
+        coEvery { getEvent(any(), any()) } returns event.right()
+        val cancelled = CompletableDeferred<Unit>()
+        coEvery { getMainEvent(any(), any()) } coAnswers {
+            try { awaitCancellation() } finally { cancelled.complete(Unit) }
+        }
+        val model = createModel()
+        model.onResume()
+        advanceTimeBy(10_000)
+        runCurrent()
+
+        // Act
+        model.onPause()
+        runCurrent()
+        coEvery { getMainEvent(any(), any()) } returns event.mainEvent().right()
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(cancelled.isCompleted).isTrue()
+        coVerify(exactly = 1) { getEvent(any(), any()) }
+        coVerify(exactly = 2) { getMainEvent(wallet, "main") }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["older", "timestamp missing", "event id", "game id"])
+    fun `GIVEN a loaded match WHEN main response is invalid THEN retain prices and report stale data`(kind: String) = runTest {
+        // Arrange
+        val event = soccerEvent(emptyList()).copy(dataFetchedAt = Instant.ofEpochSecond(10))
+        coEvery { getEvent(any(), any()) } returns event.right()
+        val update = when (kind) {
+            "older" -> event.mainEvent().copy(dataFetchedAt = Instant.ofEpochSecond(9))
+            "timestamp missing" -> event.mainEvent().copy(dataFetchedAt = null)
+            "event id" -> event.mainEvent().copy(id = "other")
+            "game id" -> event.mainEvent().copy(gameId = "other")
+            else -> error("Unexpected case: $kind")
+        }
+        coEvery { getMainEvent(any(), any()) } returns update.right()
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+        val initial = model.uiState.value
+
+        // Act
+        advanceTimeBy(10_000)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value).isSameInstanceAs(initial)
+        verify(exactly = 1) { messages.send(any()) }
+        coVerify(exactly = 1) { getEvent(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN incomplete main markets WHEN refreshing THEN old chart series do not receive fresh REST updates`() = runTest {
+        // Arrange
+        val card = threeWayCard().let { it.copy(markets = it.markets.map { m -> m.copy(eventId = "main", volume = null) }) }
+        val event = soccerEvent(listOf(card))
+        coEvery { getEvent(any(), any()) } returns event.right()
+        coEvery { getMainEvent(any(), any()) } returnsMany listOf(
+            event.mainEvent().copy(markets = card.markets.drop(1)).right(), event.mainEvent().right(),
+        )
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        advanceTimeBy(10_000)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { getMainEvent(wallet, "main") }
+        coVerify(exactly = 1) { getHistory.getSoccerHistory(any(), any(), any()) }
+        advanceTimeBy(10_000)
+        runCurrent()
+        coVerify(exactly = 2) { getMainEvent(wallet, "main") }
+        coVerify(exactly = 2) { getHistory.getSoccerHistory(any(), any(), any()) }
+        model.onDestroy()
+    }
+
     private fun soccerGame(event: PolymarketSoccerEvent, ended: Boolean) = PolymarketSportsState.Game(
         gameId = requireNotNull(event.gameId), score = PolymarketSportsState.Score(2, 1),
         period = if (ended) "FT" else "2H", isLive = !ended, isEnded = ended,
@@ -503,6 +659,7 @@ internal class PolymarketSoccerModelTest {
         paramsContainer = MutableParamsContainer(PolymarketSoccerComponent.Params("child", wallet)),
         dispatchers = createTestingCoroutineDispatcherProvider(),
         getEvent = getEvent,
+        getMainEvent = getMainEvent,
         getPrices = getPrices,
         observeQuotes = observeQuotes,
         observeSports = observeSports,

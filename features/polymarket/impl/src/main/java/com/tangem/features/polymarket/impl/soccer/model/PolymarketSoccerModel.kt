@@ -10,6 +10,9 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
@@ -34,12 +37,15 @@ import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 @ModelScoped
@@ -48,6 +54,7 @@ internal class PolymarketSoccerModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getEvent: GetPolymarketSoccerEventUseCase,
+    private val getMainEvent: GetPolymarketEventUseCase,
     getPrices: GetPredictionPricesUseCase,
     observeQuotes: ObservePolymarketLiveQuotesUseCase,
     observeSports: ObservePolymarketSportsStateUseCase,
@@ -66,6 +73,8 @@ internal class PolymarketSoccerModel @Inject constructor(
     private var selection = PolymarketSoccerSelection()
     private val isResumed = MutableStateFlow(false)
     private val sportsEvents = MutableStateFlow<PolymarketSoccerEvent?>(null)
+    private val mainEvents = MutableStateFlow<PolymarketEvent?>(null)
+    private var isAwaitingFinalSnapshot = false
     private var sportsGame: PolymarketSportsState.Game? = null
     private var resnapshotRevision = 0L
     private var isStaleReported = false
@@ -98,7 +107,11 @@ internal class PolymarketSoccerModel @Inject constructor(
     init {
         if (toggles.isPolymarketPhaseTwoEnabled) {
             modelScope.launch {
-                observeSports.observeSoccer(sportsEvents.filterNotNull(), isResumed).collect(::updateSports)
+                observeSports.observeSoccer(
+                    sportsEvents.filterNotNull(),
+                    isResumed,
+                    mainEvents.filterNotNull(),
+                ).collect(::updateSports)
             }
         }
         modelScope.launch { prices.liveQuotes.collect { updateChart() } }
@@ -170,37 +183,88 @@ internal class PolymarketSoccerModel @Inject constructor(
         modelScope.launch {
             if (event == null) uiState.value = PolymarketSoccerUM.Loading
             do {
-                val result = withContext(dispatchers.default) { getEvent(params.userWalletId, params.eventId) }
-                result.fold(
-                    ifLeft = { error ->
-                        chart.onRefreshFailed()
-                        TangemLogger.e("Soccer details: load of ${params.eventId} failed: $error")
-                        if (event == null) {
-                            uiState.value = PolymarketSoccerUM.Error
-                        } else if (!isStaleReported) {
-                            isStaleReported = true
-                            staleReporter.report()
-                        }
-                    },
-                    ifRight = { loaded ->
-                        event = loaded
-                        selection = selection.reconcile(loaded)
-                        isStaleReported = false
-                        sportsEvents.value = loaded
-                        prices.update(loaded.withGamePhase())
-                        prices.onResume()
-                        updateChart(isRestUpdate = true)
-                        if (!isChartResumed) {
-                            isChartResumed = true
-                            chart.onResume()
-                        }
-                        showContent()
-                    },
-                )
+                if (event == null || isAwaitingFinalSnapshot) loadSoccer() else loadMainEvent()
                 if (event == null) break
                 delay(POLL_INTERVAL)
             } while (true)
         }.saveIn(loadingJob)
+    }
+
+    private suspend fun loadSoccer() {
+        val result = withContext(dispatchers.default) { getEvent(params.userWalletId, event?.id ?: params.eventId) }
+        coroutineContext.ensureActive()
+        result.fold(
+            ifLeft = ::onRefreshFailed,
+            ifRight = { loaded ->
+                if (isOutdated(loaded.dataFetchedAt) || isAwaitingFinalSnapshot && loaded.isEnded != true) {
+                    onRefreshFailed(PolymarketEventError.Unknown(null, "Outdated soccer snapshot"))
+                    return@fold
+                }
+                event = loaded
+                selection = selection.reconcile(loaded)
+                sportsEvents.value = loaded
+                isAwaitingFinalSnapshot = false
+                onRefreshed()
+            },
+        )
+    }
+
+    private suspend fun loadMainEvent() {
+        val loaded = event ?: return
+        val result = withContext(dispatchers.default) { getMainEvent(params.userWalletId, loaded.id) }
+        coroutineContext.ensureActive()
+        result.fold(
+            ifLeft = ::onRefreshFailed,
+            ifRight = { update ->
+                if (update.id != loaded.id || update.gameId != loaded.gameId) {
+                    onRefreshFailed(PolymarketEventError.Unknown(null, "Mismatched main event"))
+                    return@fold
+                }
+                if (isOutdated(update.dataFetchedAt)) {
+                    onRefreshFailed(PolymarketEventError.Unknown(null, "Outdated main event snapshot"))
+                    return@fold
+                }
+                val shouldFetchFinalSnapshot = update.isEnded == true && loaded.isEnded != true
+                isAwaitingFinalSnapshot = isAwaitingFinalSnapshot || shouldFetchFinalSnapshot
+                mainEvents.value = update
+                event = loaded.withMainEvent(update)
+                if (shouldFetchFinalSnapshot) {
+                    prices.awaitFinalSnapshot()
+                    loadSoccer()
+                } else {
+                    onRefreshed(isRestUpdate = loaded.hasCurrentMoneyline(update))
+                }
+            },
+        )
+    }
+
+    private fun isOutdated(timestamp: Instant?): Boolean {
+        val previous = listOfNotNull(mainEvents.value?.dataFetchedAt, event?.dataFetchedAt).maxOrNull() ?: return false
+        return timestamp == null || timestamp < previous
+    }
+
+    private fun onRefreshFailed(error: PolymarketEventError) {
+        chart.onRefreshFailed()
+        TangemLogger.e("Soccer details: load of ${params.eventId} failed: $error")
+        if (event == null) {
+            uiState.value = PolymarketSoccerUM.Error
+        } else if (!isStaleReported) {
+            isStaleReported = true
+            staleReporter.report()
+        }
+    }
+
+    private fun onRefreshed(isRestUpdate: Boolean = true) {
+        val loaded = event ?: return
+        isStaleReported = false
+        prices.update(loaded.withGamePhase())
+        prices.onResume()
+        updateChart(isRestUpdate = isRestUpdate)
+        if (!isChartResumed) {
+            isChartResumed = true
+            chart.onResume()
+        }
+        showContent()
     }
 
     private fun showContent() {
@@ -217,9 +281,12 @@ internal class PolymarketSoccerModel @Inject constructor(
         val game = state.events[loaded.id]?.takeIf { it.gameId == loaded.gameId }
         sportsGame = game
         val hasJustEnded = game?.isEnded == true && previous?.isEnded != true
+        val shouldRequestFinalSnapshot = hasJustEnded && loaded.isEnded != true && !isAwaitingFinalSnapshot
         if (hasJustEnded && loaded.isEnded != true) {
+            isAwaitingFinalSnapshot = true
             prices.awaitFinalSnapshot()
         } else {
+            if (game?.isEnded == false && previous?.isEnded == true) isAwaitingFinalSnapshot = false
             prices.update(
                 loaded.withGamePhase(),
                 hasReopened = previous?.isEnded == true && game?.isEnded == false,
@@ -228,7 +295,7 @@ internal class PolymarketSoccerModel @Inject constructor(
         val content = uiState.value as? PolymarketSoccerUM.Content
         if (content != null) uiState.value = content.copy(sports = loaded.sportsUM(game))
         if (game?.isStale == true) staleReporter.report()
-        val shouldRefresh = state.resnapshotRevision > resnapshotRevision || hasJustEnded && loaded.isEnded != true
+        val shouldRefresh = state.resnapshotRevision > resnapshotRevision || shouldRequestFinalSnapshot
         resnapshotRevision = state.resnapshotRevision
         updateChart()
         if (shouldRefresh) load()
