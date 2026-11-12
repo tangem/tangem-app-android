@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -52,6 +53,7 @@ import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodStatus
 import com.tangem.domain.onramp.model.PaymentMethodType
@@ -219,7 +221,13 @@ private object IntrinsicFreeMeasurePolicyDs : MeasurePolicy {
 private fun ProviderTitleDs(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
     TangemModal.TopNavigation(
         startButton = { NavigationDiscButtonDs(icon = Icons.ic_chevron_left_20, onClick = onBackClick) },
-        endButton = { NavigationDiscButtonDs(icon = Icons.ic_cross_20, onClick = onCloseClick) },
+        endButton = {
+            NavigationDiscButtonDs(
+                icon = Icons.ic_cross_20,
+                modifier = Modifier.testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
+                onClick = onCloseClick,
+            )
+        },
         contentColumn = {
             TitleSubtitleDs(
                 title = TextReference.Res(R.string.onramp_all_offers_button_title),
@@ -233,7 +241,13 @@ private fun ProviderTitleDs(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
 @Composable
 private fun PaymentMethodTitleDs(onCloseClick: () -> Unit) {
     TangemModal.TopNavigation(
-        endButton = { NavigationDiscButtonDs(icon = Icons.ic_cross_20, onClick = onCloseClick) },
+        endButton = {
+            NavigationDiscButtonDs(
+                icon = Icons.ic_cross_20,
+                modifier = Modifier.testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
+                onClick = onCloseClick,
+            )
+        },
         contentColumn = {
             TitleSubtitleDs(
                 title = TextReference.Res(R.string.onramp_all_offers_button_title),
@@ -245,17 +259,25 @@ private fun PaymentMethodTitleDs(onCloseClick: () -> Unit) {
 
 @Composable
 private fun ColumnScope.TitleSubtitleDs(title: TextReference, subtitle: TextReference?) {
-    TangemNavigationText(text = title.resolveReference(), role = TangemNavigationText.Role.Title)
+    TangemNavigationText(
+        text = title.resolveReference(),
+        role = TangemNavigationText.Role.Title,
+        modifier = Modifier.testTag(BaseBottomSheetTestTags.TITLE),
+    )
     subtitle?.let { subtitleReference ->
         Spacer(Modifier.height(4.dp))
-        TangemNavigationText(text = subtitleReference.resolveReference(), role = TangemNavigationText.Role.Subtitle)
+        TangemNavigationText(
+            text = subtitleReference.resolveReference(),
+            role = TangemNavigationText.Role.Subtitle,
+            modifier = Modifier.testTag(BaseBottomSheetTestTags.SUBTITLE),
+        )
     }
 }
 
 @Composable
-private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit) {
+private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(
-        modifier = Modifier.size(44.dp).semantics { role = Role.Button },
+        modifier = modifier.size(44.dp).semantics { role = Role.Button },
         color = TangemTheme.colors3.bg.transparent.primary,
         border = BorderStroke(1.dp, TangemTheme.colors3.bg.transparent.secondary),
         shape = CircleShape,
