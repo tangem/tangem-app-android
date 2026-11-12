@@ -2,29 +2,20 @@ package com.tangem.features.feed.deeplink.di
 
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkKey
-import com.tangem.features.feed.deeplink.DefaultNewsDetailsDeepLinkHandler
 import com.tangem.features.feed.deeplink.DiscoverDeepLinkHandler
 import com.tangem.features.feed.deeplink.EarnDeepLinkHandler
 import com.tangem.features.feed.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.deeplink.NewsWebDeepLinkHandler
 import com.tangem.features.feed.deeplink.YieldDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface FeedDeepLinkModule {
-
-    @Binds
-    @Singleton
-    fun bindNewsDetailsDeepLinkHandlerFactory(
-        impl: DefaultNewsDetailsDeepLinkHandler.Factory,
-    ): NewsDetailsDeepLinkHandler.Factory
 
     @Binds
     @IntoMap
