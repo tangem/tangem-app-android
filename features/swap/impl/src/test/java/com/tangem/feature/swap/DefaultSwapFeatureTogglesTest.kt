@@ -71,4 +71,21 @@ internal class DefaultSwapFeatureTogglesTest {
         // Assert
         assertThat(actual).isFalse()
     }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN Solana gasless rent toggle WHEN read isSolanaGaslessRentEnabled THEN reflects toggle`(
+        isRentEnabled: Boolean,
+    ) {
+        // Arrange
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_19141_SOLANA_GASLESS_RENT_ENABLED)
+        } returns isRentEnabled
+
+        // Act
+        val actual = toggles.isSolanaGaslessRentEnabled
+
+        // Assert
+        assertThat(actual).isEqualTo(isRentEnabled)
+    }
 }

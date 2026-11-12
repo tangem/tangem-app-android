@@ -53,6 +53,7 @@ import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
@@ -104,6 +105,8 @@ internal class ForYouModelTest {
     private val earnErrorResolver: EarnErrorResolver = mockk()
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk()
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk(relaxed = true)
+    private val portfolioSelectorBridge: PortfolioSelectorBridge = mockk()
+    private val portfolioSelectorBridgeFactory: PortfolioSelectorBridge.Factory = mockk()
     private val router: Router = mockk(relaxUnitFun = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val walletFeatureToggles: WalletFeatureToggles = mockk {
@@ -142,6 +145,7 @@ internal class ForYouModelTest {
         // actually exercised in every test, not bypassed by an empty flow.
         every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
+        every { portfolioSelectorBridgeFactory.create(any(), any(), any()) } returns portfolioSelectorBridge
         every { yieldSupplyApyFlowUseCase() } returns flowOf(emptyMap())
         coEvery { stakingAvailabilityListUseCase.invokeSync(any(), any()) } returns emptyMap()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
@@ -716,6 +720,42 @@ internal class ForYouModelTest {
             )
             verify { router.push(route = expected, onComplete = any()) }
         }
+
+        @Test
+        fun `GIVEN unheld suggestion WHEN earn row clicked THEN add sheet loads multi-currency wallets without joint`() =
+            runTest {
+                // Arrange
+                every { addToPortfolioManagerFactory.create(any(), any(), any(), any()) } returns mockk(relaxed = true)
+                val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
+                stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+                stubTopEarnTokens(
+                    status = PaginationStatus.EndOfPagination,
+                    suggestions = listOf(createTopEarnSuggestion()),
+                )
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Act
+                model.clickFirstEarnRow()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    portfolioSelectorBridgeFactory.create(
+                        mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
+                        scope = any(),
+                        isJointAccountsIncluded = false,
+                    )
+                }
+                verify(exactly = 1) {
+                    addToPortfolioManagerFactory.create(
+                        scope = any(),
+                        settings = AddToPortfolioManager.Settings(shouldSkipTokenActionsScreen = true),
+                        analyticsParams = any(),
+                        portfolioSelectorBridge = portfolioSelectorBridge,
+                    )
+                }
+            }
     }
 
     @Nested
@@ -1123,6 +1163,7 @@ internal class ForYouModelTest {
             earnErrorResolver = earnErrorResolver,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
             portfolioFetcherFactory = portfolioFetcherFactory,
+            portfolioSelectorBridgeFactory = portfolioSelectorBridgeFactory,
             portfolioSelectorController = portfolioSelectorController,
             walletHeaderConverter = walletHeaderConverter,
             analyticsEventHandler = analyticsEventHandler,

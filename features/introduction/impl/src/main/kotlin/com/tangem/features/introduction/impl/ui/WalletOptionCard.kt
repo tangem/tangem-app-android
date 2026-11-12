@@ -32,7 +32,13 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
         onClick = if (option.isEnabled && !option.isLoading) option.onClick else null,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { OptionIcon(icon = option.icon) },
-        titleSlot = { TangemRowText(text = option.title, role = TangemRowTextRole.Title) },
+        titleSlot = {
+            TangemRowText(
+                text = option.title,
+                role = TangemRowTextRole.Title,
+                maxLines = 2,
+            )
+        },
         subtitleSlot = {
             TangemRowText(
                 text = option.description,

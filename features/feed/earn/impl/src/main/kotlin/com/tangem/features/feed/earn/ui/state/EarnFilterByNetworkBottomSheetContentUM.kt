@@ -8,7 +8,7 @@ import kotlinx.collections.immutable.ImmutableList
 /**
  * @property scopeTabs which set of networks [networks] lists: every earn network, or the user's own ones
  * @property networks the "All" option of the selected scope followed by every network it covers
- * @property footer Reset/Apply buttons, present exactly while the draft differs from the applied filter
+ * @property footer Apply button, present while the viewed tab differs from the one the sheet opened on
  */
 internal data class EarnFilterByNetworkBottomSheetContentUM(
     val scopeTabs: ImmutableList<TangemTabItemUM>,
@@ -17,7 +17,4 @@ internal data class EarnFilterByNetworkBottomSheetContentUM(
 ) : TangemBottomSheetConfigContent
 
 @Immutable
-internal data class EarnFilterFooterUM(
-    val onReset: () -> Unit,
-    val onApply: () -> Unit,
-)
+internal data class EarnFilterFooterUM(val onApply: () -> Unit)

@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl.fake
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -65,21 +66,21 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
             id = "lending",
             rank = 0,
             title = "Lending on Aave",
-            provider = "Aave",
+            provider = fakeProvider(name = "Aave", logo = R.drawable.ic_aave_36),
             product = "Lending",
         )
         FakeEarnProductPreset.Staking -> fakeSpec(
             id = "staking",
             rank = 1,
             title = "Pooled staking",
-            provider = "P2P",
+            provider = fakeProvider(name = "P2P", logo = R.drawable.ic_p2p_logo),
             product = "Staking",
         ).copy(badgeAccent = EarnBadgeAccent.Info, hasLegacyBlock = true)
         FakeEarnProductPreset.Vault -> fakeSpec(
             id = "vault",
             rank = 2,
             title = "Vault",
-            provider = "Vault",
+            provider = fakeProvider(name = "Vault", logo = R.drawable.ic_p2p_logo),
             product = "Vault",
         )
     }
@@ -205,18 +206,21 @@ internal fun fakeApyHistory(period: EarnPeriod): Either<Throwable, EarnApyHistor
     ).right()
 }
 
-private fun fakeSpec(id: String, rank: Int, title: String, provider: String, product: String) = FakeEarnProductSpec(
-    id = EarnProductId(id),
-    rank = rank,
-    badgeAccent = EarnBadgeAccent.Success,
-    title = stringReference(title),
-    provider = EarnProvider(
-        title = stringReference(provider),
-        icon = ImageReference.Url("https://example.com/${provider.lowercase()}.png"),
-    ),
-    analytics = EarnProductAnalytics(category = "Earn", product = product),
-    hasLegacyBlock = false,
+private fun fakeProvider(name: String, logo: Int) = EarnProvider(
+    title = stringReference(name),
+    icon = ImageReference.Res(logo),
 )
+
+private fun fakeSpec(id: String, rank: Int, title: String, provider: EarnProvider, product: String) =
+    FakeEarnProductSpec(
+        id = EarnProductId(id),
+        rank = rank,
+        badgeAccent = EarnBadgeAccent.Success,
+        title = stringReference(title),
+        provider = provider,
+        analytics = EarnProductAnalytics(category = "Earn", product = product),
+        hasLegacyBlock = false,
+    )
 
 private fun fakeHowItWorks() = EarnHowItWorks(
     title = stringReference("How it works"),

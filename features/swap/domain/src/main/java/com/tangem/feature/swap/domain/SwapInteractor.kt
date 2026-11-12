@@ -67,6 +67,8 @@ interface SwapInteractor {
     /**
      * Branch selection:
      *  - CEX, native fee → `sendTransactionUseCase`
+     *  - CEX (Solana), `fee.isSponsored` → the deposit transfer sent by `createAndSendGaslessTransactionUseCase` with a
+     *    sponsored fee, once the sponsor resolved at send has simulated it
      *  - CEX, gasless / token fee (`fee.transactionFeeResult is LoadedExtended` and
      *    `fee.selectedFeeToken.currency is CryptoCurrency.Token`) → `createAndSendGaslessTransactionUseCase`
 

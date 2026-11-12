@@ -5,6 +5,7 @@ import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.R
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -28,6 +29,39 @@ class TokenRowStateConverter(private val appCurrency: AppCurrency) {
         onClick: (() -> Unit)?,
         badge: TangemTokenRow.Badge? = null,
         messageBubble: TangemTokenRow.MessageBubble? = null,
+        subtitle: TextReference? = null,
+    ): TangemTokenRow.State {
+        val state = convertDefault(
+            currencyStatus = currencyStatus,
+            onClick = onClick,
+            badge = badge,
+            messageBubble = messageBubble,
+        )
+        return if (subtitle != null && state is TangemTokenRow.State.Content) state.withSubtitle(subtitle) else state
+    }
+
+    private fun TangemTokenRow.State.Content.withSubtitle(subtitle: TextReference) = TangemTokenRow.State.Network(
+        id = id,
+        icon = icon,
+        title = title,
+        network = subtitle,
+        badge = badge,
+        hasPending = hasPending,
+        fiatBalance = fiatBalance,
+        cryptoBalance = cryptoBalance,
+        shouldShowContractWarning = shouldShowContractWarning,
+        shouldShowUpdateWarning = shouldShowUpdateWarning,
+        isBalanceFlickering = isBalanceFlickering,
+        messageBubble = messageBubble,
+        onClick = onClick,
+        onLongClick = onLongClick,
+    )
+
+    private fun convertDefault(
+        currencyStatus: CryptoCurrencyStatus,
+        onClick: (() -> Unit)?,
+        badge: TangemTokenRow.Badge?,
+        messageBubble: TangemTokenRow.MessageBubble?,
     ): TangemTokenRow.State {
         val id = currencyStatus.currency.id.value
         val icon = currencyToIconStateConverter.convert(currencyStatus).toTokenIconState()

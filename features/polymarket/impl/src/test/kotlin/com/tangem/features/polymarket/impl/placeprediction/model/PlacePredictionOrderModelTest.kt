@@ -423,7 +423,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
         @BeforeEach
         fun enableSessionKeys() {
-            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+            every { featureToggles.isPolymarketFastOrdersEnabled } returns true
         }
 
         @Test
@@ -556,7 +556,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a hot wallet and session keys disabled WHEN the screen opens THEN it is held unchecked`() =
             runOrderTest {
                 // Arrange
-                every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+                every { featureToggles.isPolymarketFastOrdersEnabled } returns false
                 coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
                 every { getUserWalletUseCase(any()) } returns hotWallet().right()
 
@@ -773,7 +773,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN session keys turned off WHEN a plain tap places THEN the owner key never signs`() = runOrderTest {
             // Arrange
-            every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+            every { featureToggles.isPolymarketFastOrdersEnabled } returns false
             coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
             val model = createQuotedModel()
             runCurrent()
@@ -815,7 +815,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN session keys disabled WHEN the screen opens and resumes THEN the session key is not checked`() =
             runOrderTest {
                 // Arrange
-                every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+                every { featureToggles.isPolymarketFastOrdersEnabled } returns false
                 coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
                 val model = openOrderModel()
                 model.onPause()

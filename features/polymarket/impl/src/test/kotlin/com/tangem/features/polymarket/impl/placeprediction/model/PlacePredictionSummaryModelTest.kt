@@ -1153,7 +1153,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN session keys turned on WHEN a delayed order is placed THEN the router's route signs and reads it back`() =
             runTest {
                 // Arrange
-                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                every { featureToggles.isPolymarketFastOrdersEnabled } returns true
                 coEvery { signingRouter.route(ADDRESSES) } returns SESSION_ROUTE
                 coEvery { placeOrderUseCase(any(), any(), any(), SESSION_ROUTE) } returns
                     createPlaceResult(status = "delayed").right()
@@ -1218,7 +1218,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a plain hot wallet tap on the summary WHEN the router picks the owner key THEN nothing is signed`() = runTest {
             // Arrange
             every { getUserWalletUseCase(any()) } returns hotWallet().right()
-            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+            every { featureToggles.isPolymarketFastOrdersEnabled } returns true
             coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
             val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
 
@@ -1236,7 +1236,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a plain card tap on the summary WHEN the router picks the owner key THEN the card is asked for the next tap`() =
             runTest {
                 // Arrange
-                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                every { featureToggles.isPolymarketFastOrdersEnabled } returns true
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
                 val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
 
@@ -1254,7 +1254,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN the session key of a card could not sign on the summary WHEN the card is tapped THEN the card signs`() =
             runTest {
                 // Arrange
-                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                every { featureToggles.isPolymarketFastOrdersEnabled } returns true
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
                 val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
                 model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.PLAIN)
@@ -1273,7 +1273,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         @Test
         fun `GIVEN a usable session key WHEN the summary resumes THEN the button is plain`() = runTest {
             // Arrange
-            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+            every { featureToggles.isPolymarketFastOrdersEnabled } returns true
             coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
             val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
 
@@ -1288,7 +1288,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         @Test
         fun `GIVEN no usable session key WHEN the summary resumes THEN the card is asked`() = runTest {
             // Arrange
-            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+            every { featureToggles.isPolymarketFastOrdersEnabled } returns true
             coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
             val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
 
@@ -1303,7 +1303,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         @Test
         fun `GIVEN the session key expired meanwhile WHEN the summary resumes THEN the card is asked`() = runTest {
             // Arrange
-            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+            every { featureToggles.isPolymarketFastOrdersEnabled } returns true
             coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
                 listOf(true, false)
             val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())

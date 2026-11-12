@@ -108,6 +108,9 @@ internal class AaveLendingProvider @Inject constructor(
         fetchStatus(userWalletId, asset).bind()
     }
 
+    override suspend fun refreshPosition(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit> =
+        fetchStatus(userWalletId, asset)
+
     override suspend fun minDeposit(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, BigDecimal> =
         minDepositProvider.get(userWalletId, asset)
 

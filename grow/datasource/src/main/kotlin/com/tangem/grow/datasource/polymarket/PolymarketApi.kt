@@ -24,6 +24,7 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchRespon
 import com.tangem.grow.datasource.polymarket.models.PolymarketRevokeSessionKeyRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketSessionKeyDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketSetSessionKeyEnabledRequest
+import com.tangem.lib.auth.api.RequiresSessionAuth
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -47,6 +48,7 @@ interface PolymarketApi {
      * @param redeemResult optional redemption result: `WON`, `LOST` or `SPLIT`
      * @param cursor opaque cursor from the previous page; `null` for the first page
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/activity")
     suspend fun getActivity(
         @Header("wallet-id") walletId: String,
@@ -61,6 +63,7 @@ interface PolymarketApi {
      * Ask the service to look for deposits. A `202` means the scan was accepted or is already running;
      * it does not mean that the history has finished updating.
      */
+    @RequiresSessionAuth
     @POST("api/predictions/v1/activity/deposits/reconcile")
     suspend fun reconcileDeposits(
         @Header("wallet-id") walletId: String,
@@ -71,6 +74,7 @@ interface PolymarketApi {
      * Open holdings, most valuable first. The first page carries only [limit]; every next page carries only the
      * [cursor] of the page before it, which also fixes the page size — a cursor sent with a limit is a `400`.
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/positions")
     suspend fun getPositions(
         @Header("wallet-id") walletId: String,
@@ -80,6 +84,7 @@ interface PolymarketApi {
     ): ApiResponse<PolymarketPositionsResponse>
 
     /** Closed holdings, most recently closed first. Paged like [getPositions]. */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/positions/closed")
     suspend fun getClosedPositions(
         @Header("wallet-id") walletId: String,
@@ -88,6 +93,7 @@ interface PolymarketApi {
         @Query("cursor") cursor: String?,
     ): ApiResponse<PolymarketClosedPositionsResponse>
 
+    @RequiresSessionAuth
     @GET("api/predictions/v1/positions/outcome")
     suspend fun getPosition(
         @Header("wallet-id") walletId: String,
@@ -101,6 +107,7 @@ interface PolymarketApi {
      *
      * @param locale optional locale for the category labels; BFF defaults to `en`
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/categories")
     suspend fun getCategories(
         @Header("wallet-id") walletId: String,
@@ -114,6 +121,7 @@ interface PolymarketApi {
      * @param limit page size (BFF default 20)
      * @param cursor keyset pagination cursor; `null` for the first page
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/events")
     suspend fun getEvents(
         @Header("wallet-id") walletId: String,
@@ -131,6 +139,7 @@ interface PolymarketApi {
      * @param limit page size (BFF default 20)
      * @param page 1-based page number (BFF default 1)
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/search")
     suspend fun searchEvents(
         @Header("wallet-id") walletId: String,
@@ -143,6 +152,7 @@ interface PolymarketApi {
      * Details of a single prediction event. Unlike the feed, which carries only the top active
      * markets of an event, this endpoint carries all of them (including closed ones).
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/events/{eventId}")
     suspend fun getEvent(
         @Header("wallet-id") walletId: String,
@@ -153,6 +163,7 @@ interface PolymarketApi {
      * Onboarding status of the owner's deposit wallet — the endpoint the client polls to observe
      * deploy/approval progress. Serves the stored status; no on-chain calls on the read path.
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/wallet")
     suspend fun getWalletStatus(
         @Header("wallet-id") walletId: String,
@@ -163,6 +174,7 @@ interface PolymarketApi {
      * The same status, looked up by the Tangem wallet id the deposit wallet was bound to on first deploy.
      * This is the only way to ask about a wallet whose owner address this device has never derived.
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/wallet")
     suspend fun getWalletStatusByWalletId(
         @Header("wallet-id") walletIdHeader: String,
@@ -170,6 +182,7 @@ interface PolymarketApi {
     ): ApiResponse<PolymarketWalletStatusResponse>
 
     /** @param walletId Tangem wallet id, 64 hex without the `0x` prefix. */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/configuration")
     suspend fun getConfiguration(@Header("wallet-id") walletId: String): ApiResponse<PolymarketConfigurationResponse>
 
@@ -177,6 +190,7 @@ interface PolymarketApi {
      * Initiate deposit-wallet deployment via the relayer (gasless, unsigned). Returns as soon as the
      * relayer accepts the submission; the client then polls [getWalletStatusByWalletId].
      */
+    @RequiresSessionAuth
     @POST("api/predictions/v1/wallet/deploy")
     suspend fun deployWallet(
         @Header("wallet-id") walletId: String,
@@ -187,24 +201,28 @@ interface PolymarketApi {
      * Relay the fully-signed 17-approval batch (gasless). The DW must be deployed first. Returns as soon
      * as the relayer accepts; the client then polls [getWalletStatusByWalletId].
      */
+    @RequiresSessionAuth
     @POST("api/predictions/v1/wallet/approvals")
     suspend fun submitApprovals(
         @Header("wallet-id") walletId: String,
         @Body request: PolymarketWalletApprovalsRequest,
     ): ApiResponse<PolymarketWalletOperationResponse>
 
+    @RequiresSessionAuth
     @POST("api/predictions/v1/wallet/session-keys")
     suspend fun authorizeSessionKey(
         @Header("wallet-id") walletId: String,
         @Body request: PolymarketAuthorizeSessionKeyRequest,
     ): ApiResponse<PolymarketSessionKeyDto>
 
+    @RequiresSessionAuth
     @POST("api/predictions/v1/wallet/session-keys/revocations")
     suspend fun revokeSessionKey(
         @Header("wallet-id") walletId: String,
         @Body request: PolymarketRevokeSessionKeyRequest,
     ): ApiResponse<PolymarketSessionKeyDto>
 
+    @RequiresSessionAuth
     @PUT("api/predictions/v1/wallet/session-keys/{sessionKeyAddress}/enabled")
     suspend fun setSessionKeyEnabled(
         @Header("wallet-id") walletId: String,
@@ -216,6 +234,7 @@ interface PolymarketApi {
      * Preview the execution of a fill-and-kill order against the live order book. Read-only: nothing is
      * placed, and the quote is only valid for as long as the book stands still, so callers re-request it.
      */
+    @RequiresSessionAuth
     @POST("api/predictions/v1/orders/quote")
     suspend fun getOrderQuote(
         @Header("wallet-id") walletId: String,
@@ -226,6 +245,7 @@ interface PolymarketApi {
      * Relay the signed pUSD transfer that empties part of the deposit wallet (gasless). Always `202` on
      * acceptance; resubmitting the identical batch answers with the same `transactionId`.
      */
+    @RequiresSessionAuth
     @POST("api/predictions/v1/withdraw")
     suspend fun submitWithdraw(
         @Header("wallet-id") walletId: String,
@@ -236,6 +256,7 @@ interface PolymarketApi {
      * Read leg 1 from the BFF's own record of the withdrawal, not from the relayer. A `404` means the id is
      * not this wallet's withdrawal.
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/withdraw/{transactionId}")
     suspend fun getWithdrawState(
         @Header("wallet-id") walletId: String,
@@ -246,6 +267,7 @@ interface PolymarketApi {
      * Read the contract calls that redeem a resolved position. Offline lookup: it relays nothing and may be
      * retried freely. A `409` means there is nothing to redeem, or the market's version is not supported.
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/positions/redeem/call")
     suspend fun getRedeemCall(
         @Header("wallet-id") walletId: String,
@@ -257,6 +279,7 @@ interface PolymarketApi {
      * Relay the signed redeem calls (gasless). Idempotent per (wallet, market): a claim already in flight
      * answers with its own `transactionId` and current state instead of relaying a second one.
      */
+    @RequiresSessionAuth
     @POST("api/predictions/v1/positions/redeem")
     suspend fun submitRedeem(
         @Header("wallet-id") walletId: String,
@@ -266,6 +289,7 @@ interface PolymarketApi {
     /**
      * Read the BFF's own record of the claim. A `404` means the id is not this wallet's claim — stop polling.
      */
+    @RequiresSessionAuth
     @GET("api/predictions/v1/positions/redeem/{transactionId}")
     suspend fun getRedeemState(
         @Header("wallet-id") walletId: String,

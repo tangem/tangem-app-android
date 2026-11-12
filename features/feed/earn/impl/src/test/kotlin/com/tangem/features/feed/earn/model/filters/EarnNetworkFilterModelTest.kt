@@ -21,10 +21,9 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 /**
- * The sheet holds a draft that only reaches the tab on Apply, so most assertions read the draft through
- * the state: which tab is selected, which row is selected, and whether the Reset/Apply footer is there.
- * The footer is the model's own answer to "does the draft differ from what is applied", which makes it
- * the sharpest probe of the draft logic.
+ * A tap on an option applies it straight away, so the filter handed to the tab and the analytics event
+ * are the outcome of every pick. Switching to the other scope tab applies nothing by itself: it checks
+ * that tab's "All" and offers an Apply footer until the user returns to the tab the sheet opened on.
  */
 internal class EarnNetworkFilterModelTest {
 
@@ -86,6 +85,7 @@ internal class EarnNetworkFilterModelTest {
             // Assert
             assertThat(state.selectedScope()).isEqualTo(EarnNetworkScope.MyNetworks)
             assertThat(state.networkIds()).containsExactly("ethereum")
+            assertThat(state.isAllOptionSelected()).isTrue()
             assertThat(state.footer).isNull()
         }
 
@@ -125,9 +125,7 @@ internal class EarnNetworkFilterModelTest {
     inner class ScopeSwitching {
 
         @Test
-        fun `GIVEN a network reachable from both tabs WHEN the tab is switched THEN nothing is offered to apply`() {
-            // The draft is compared through the filter it produces, so a network that both tabs can reach
-            // must not read as a change just because the tab moved.
+        fun `GIVEN a network both tabs list WHEN the tab is switched THEN all is checked and apply offered`() {
             // Arrange
             val model = createModel(selectedFilter = specific(ethereum))
 
@@ -136,12 +134,27 @@ internal class EarnNetworkFilterModelTest {
 
             // Assert
             assertThat(model.state.value.selectedScope()).isEqualTo(EarnNetworkScope.AllNetworks)
+            assertThat(model.state.value.selectedNetworkId()).isNull()
+            assertThat(model.state.value.isAllOptionSelected()).isTrue()
+            assertThat(model.state.value.footer).isNotNull()
+        }
+
+        @Test
+        fun `GIVEN a specific network applied WHEN switched away and back THEN it is checked again and apply hidden`() {
+            // Arrange
+            val model = createModel(selectedFilter = specific(ethereum))
+
+            // Act
+            model.state.value.clickTab(EarnNetworkScope.AllNetworks)
+            model.state.value.clickTab(EarnNetworkScope.MyNetworks)
+
+            // Assert
             assertThat(model.state.value.selectedNetworkId()).isEqualTo("ethereum")
             assertThat(model.state.value.footer).isNull()
         }
 
         @Test
-        fun `GIVEN a network missing from the other tab WHEN the tab is switched THEN the pick is dropped`() {
+        fun `GIVEN a network missing from the other tab WHEN the tab is switched THEN apply is offered`() {
             // Arrange
             val model = createModel(selectedFilter = specific(solana))
 
@@ -155,7 +168,7 @@ internal class EarnNetworkFilterModelTest {
         }
 
         @Test
-        fun `GIVEN all networks applied WHEN the tab is switched away and back THEN the footer disappears again`() {
+        fun `GIVEN all networks applied WHEN the tab is switched away and back THEN apply disappears again`() {
             // Arrange
             val model = createModel()
 
@@ -168,94 +181,31 @@ internal class EarnNetworkFilterModelTest {
             assertThat(afterSwitch).isNotNull()
             assertThat(model.state.value.footer).isNull()
         }
+
+        @Test
+        fun `GIVEN all networks applied WHEN the tab is switched THEN nothing is applied or reported`() {
+            // Arrange
+            val model = createModel()
+
+            // Act
+            model.state.value.clickTab(EarnNetworkScope.MyNetworks)
+
+            // Assert
+            assertThat(appliedFilter).isNull()
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+        }
     }
 
     @Nested
     inner class Picking {
 
         @Test
-        fun `GIVEN all networks applied WHEN a network is picked THEN it is selected and can be applied`() {
+        fun `GIVEN all networks applied WHEN a network is tapped THEN it is applied and reported as specific`() {
             // Arrange
             val model = createModel()
 
             // Act
             model.state.value.clickNetwork("solana")
-
-            // Assert
-            assertThat(model.state.value.selectedNetworkId()).isEqualTo("solana")
-            assertThat(model.state.value.isAllOptionSelected()).isFalse()
-            assertThat(model.state.value.footer).isNotNull()
-        }
-
-        @Test
-        fun `GIVEN a picked network WHEN the all option is clicked THEN the pick is cleared`() {
-            // Arrange
-            val model = createModel(selectedFilter = specific(solana))
-
-            // Act
-            model.state.value.clickAllOption()
-
-            // Assert
-            assertThat(model.state.value.selectedNetworkId()).isNull()
-            assertThat(model.state.value.footer).isNotNull()
-        }
-
-        @Test
-        fun `GIVEN a pick WHEN the applied network is picked again THEN nothing is left to apply`() {
-            // Arrange
-            val model = createModel(selectedFilter = specific(solana))
-            model.state.value.clickAllOption()
-
-            // Act
-            model.state.value.clickNetwork("solana")
-
-            // Assert
-            assertThat(model.state.value.footer).isNull()
-        }
-    }
-
-    @Nested
-    inner class Reset {
-
-        @Test
-        fun `GIVEN a picked network WHEN reset THEN the sheet returns to all networks`() {
-            // Arrange
-            val model = createModel(selectedFilter = EarnFilterNetwork.MyNetworks(isSelected = true))
-            model.state.value.clickNetwork("ethereum")
-
-            // Act
-            model.state.value.footer!!.onReset()
-
-            // Assert
-            assertThat(model.state.value.selectedScope()).isEqualTo(EarnNetworkScope.AllNetworks)
-            assertThat(model.state.value.selectedNetworkId()).isNull()
-        }
-
-        @Test
-        fun `GIVEN all networks applied WHEN a pick is reset THEN nothing is left to apply`() {
-            // Arrange
-            val model = createModel()
-            model.state.value.clickNetwork("ethereum")
-
-            // Act
-            model.state.value.footer!!.onReset()
-
-            // Assert
-            assertThat(model.state.value.footer).isNull()
-        }
-    }
-
-    @Nested
-    inner class Apply {
-
-        @Test
-        fun `GIVEN a picked network WHEN applied THEN it reaches the tab and is reported as specific`() {
-            // Arrange
-            val model = createModel()
-            model.state.value.clickNetwork("solana")
-
-            // Act
-            model.state.value.footer!!.onApply()
 
             // Assert
             assertThat(appliedFilter).isEqualTo(
@@ -272,7 +222,73 @@ internal class EarnNetworkFilterModelTest {
         }
 
         @Test
-        fun `GIVEN the my networks tab and no pick WHEN applied THEN the scope reaches the tab`() {
+        fun `GIVEN the my networks tab WHEN all is tapped THEN my networks reaches the tab`() {
+            // Arrange
+            val model = createModel()
+            model.state.value.clickTab(EarnNetworkScope.MyNetworks)
+
+            // Act
+            model.state.value.clickAllOption()
+
+            // Assert
+            assertThat(appliedFilter).isEqualTo(EarnFilterNetwork.MyNetworks(isSelected = true))
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnAnalyticsEvent.BestOpportunitiesFilterNetworkApplied(
+                        networkId = "",
+                        filterType = FilterNetworkAnalytic.MY_NETWORKS,
+                    ),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN my networks applied WHEN all is tapped on the all tab THEN the filter widens to all networks`() {
+            // Arrange
+            val model = createModel(selectedFilter = EarnFilterNetwork.MyNetworks(isSelected = true))
+            model.state.value.clickTab(EarnNetworkScope.AllNetworks)
+
+            // Act
+            model.state.value.clickAllOption()
+
+            // Assert
+            assertThat(appliedFilter).isEqualTo(EarnFilterNetwork.AllNetworks(isSelected = true))
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnAnalyticsEvent.BestOpportunitiesFilterNetworkApplied(
+                        networkId = "",
+                        filterType = FilterNetworkAnalytic.ALL_NETWORKS,
+                    ),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN a specific network applied WHEN all is tapped THEN the network is cleared`() {
+            // Arrange
+            val model = createModel(selectedFilter = specific(solana))
+
+            // Act
+            model.state.value.clickAllOption()
+
+            // Assert
+            assertThat(appliedFilter).isEqualTo(EarnFilterNetwork.AllNetworks(isSelected = true))
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnAnalyticsEvent.BestOpportunitiesFilterNetworkApplied(
+                        networkId = "",
+                        filterType = FilterNetworkAnalytic.ALL_NETWORKS,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Nested
+    inner class Apply {
+
+        @Test
+        fun `GIVEN all networks applied WHEN my tab applied THEN my networks reach the tab`() {
             // Arrange
             val model = createModel()
             model.state.value.clickTab(EarnNetworkScope.MyNetworks)
@@ -293,9 +309,30 @@ internal class EarnNetworkFilterModelTest {
         }
 
         @Test
-        fun `GIVEN my networks applied WHEN reset and applied THEN the filter widens back to all networks`() {
+        fun `GIVEN my networks applied WHEN all tab applied THEN all networks reach the tab`() {
             // Arrange
             val model = createModel(selectedFilter = EarnFilterNetwork.MyNetworks(isSelected = true))
+            model.state.value.clickTab(EarnNetworkScope.AllNetworks)
+
+            // Act
+            model.state.value.footer!!.onApply()
+
+            // Assert
+            assertThat(appliedFilter).isEqualTo(EarnFilterNetwork.AllNetworks(isSelected = true))
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnAnalyticsEvent.BestOpportunitiesFilterNetworkApplied(
+                        networkId = "",
+                        filterType = FilterNetworkAnalytic.ALL_NETWORKS,
+                    ),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN a specific network applied WHEN all tab applied THEN all networks reach the tab`() {
+            // Arrange
+            val model = createModel(selectedFilter = specific(ethereum))
             model.state.value.clickTab(EarnNetworkScope.AllNetworks)
 
             // Act

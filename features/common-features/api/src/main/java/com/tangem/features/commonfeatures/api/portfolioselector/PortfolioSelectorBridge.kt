@@ -15,6 +15,15 @@ import kotlinx.coroutines.CoroutineScope
 interface PortfolioSelectorBridge : PortfolioFetcher {
 
     interface Factory {
-        fun create(mode: PortfolioFetcher.Mode, scope: CoroutineScope): PortfolioSelectorBridge
+
+        /**
+         * @param isJointAccountsIncluded `false` drops joint accounts from [PortfolioFetcher.data], for the flows
+         *  that cannot work with a Safe-held balance
+         */
+        fun create(
+            mode: PortfolioFetcher.Mode,
+            scope: CoroutineScope,
+            isJointAccountsIncluded: Boolean = true,
+        ): PortfolioSelectorBridge
     }
 }

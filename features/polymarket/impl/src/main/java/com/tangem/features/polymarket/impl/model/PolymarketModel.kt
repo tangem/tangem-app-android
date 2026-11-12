@@ -43,7 +43,7 @@ internal class PolymarketModel @Inject constructor(
     private val isVisible = MutableStateFlow(false)
 
     init {
-        if (featureToggles.isPolymarketSessionKeysEnabled) {
+        if (featureToggles.isPolymarketFastOrdersEnabled) {
             toastSessionKeyOutcomes()
             toastSubmittedOperations()
         }

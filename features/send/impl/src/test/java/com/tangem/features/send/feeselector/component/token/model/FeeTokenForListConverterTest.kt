@@ -4,10 +4,15 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.features.send.impl.R
 import com.tangem.utils.Provider
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -26,8 +31,23 @@ internal class FeeTokenForListConverterTest {
         val actual = converter.convert(loadedStatus(amount = BigDecimal.ONE))
 
         // Assert
-        val row = actual.tokenRow as TangemTokenRow.State.Content
+        val row = actual.tokenRow as TangemTokenRow.State.Network
         assertThat(row.id).isEqualTo(coin.id.value)
+        assertThat(row.network).isEqualTo(
+            resourceReference(
+                R.string.common_balance,
+                wrappedList(
+                    BigDecimal.ONE.format {
+                        fiat(
+                            fiatCurrencyCode = AppCurrency.Default.code,
+                            fiatCurrencySymbol = AppCurrency.Default.symbol,
+                        )
+                    },
+                ),
+            ),
+        )
+        assertThat(row.fiatBalance).isNull()
+        assertThat(row.cryptoBalance).isNull()
         row.onClick?.invoke()
         assertThat(clicked).isTrue()
     }
@@ -42,7 +62,7 @@ internal class FeeTokenForListConverterTest {
 
         // Assert
         assertThat(actual.isAvailable).isFalse()
-        assertThat((actual.tokenRow as TangemTokenRow.State.Content).onClick).isNull()
+        assertThat((actual.tokenRow as TangemTokenRow.State.Network).onClick).isNull()
     }
 
     @Test
@@ -54,7 +74,7 @@ internal class FeeTokenForListConverterTest {
         val actual = converter.convert(loadedStatus(amount = BigDecimal.ZERO))
 
         // Assert
-        val row = actual.tokenRow as TangemTokenRow.State.Content
+        val row = actual.tokenRow as TangemTokenRow.State.Network
         assertThat(row.id).isEqualTo("${coin.id.value}_sponsored")
         assertThat(row.title).isEqualTo(stringReference("SmartGas ${coin.symbol}"))
         assertThat(row.id).isEqualTo(actual.state.id)

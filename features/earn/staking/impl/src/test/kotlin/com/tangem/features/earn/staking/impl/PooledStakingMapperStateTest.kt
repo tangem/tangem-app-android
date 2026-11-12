@@ -200,12 +200,18 @@ internal class PooledStakingMapperStateTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN balance contribution WHEN state THEN position and button label`(model: PositionModel) {
+        fun `GIVEN balance contribution and failure flag WHEN state THEN position and button label`(
+            model: PositionModel,
+        ) {
             // Arrange
             val status = status(position = model.contribution)
 
             // Act
-            val actual = mapper.state(status, StakingAvailability.Available(option())) as EarnProductState.Ready
+            val actual = mapper.state(
+                status = status,
+                availability = StakingAvailability.Available(option()),
+                isBalanceFailed = model.isBalanceFailed,
+            ) as EarnProductState.Ready
 
             // Assert
             assertThat(actual.position).isEqualTo(model.expectedPosition)
@@ -214,35 +220,46 @@ internal class PooledStakingMapperStateTest {
             )
         }
 
+        @Test
+        fun `GIVEN a failed balance and a Full pool without position WHEN state THEN Unavailable`() {
+            // Act
+            val actual = mapper.state(
+                status = status(),
+                availability = StakingAvailability.Full(option()),
+                isBalanceFailed = true,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(EarnProductState.Unavailable)
+        }
+
         private fun provideTestModels(): List<PositionModel> {
             val stakingId = MockStaking.stakingId(MockStaking.P2P_ID)
             val staked = MockStaking.p2pBalance(
                 accounts = listOf(MockStaking.p2pAccount(staked = BigDecimal("2"), earned = BigDecimal("0.1"))),
             )
-            return listOf(
-                PositionModel(
-                    name = "P2P staking balance",
-                    contribution = staked,
-                    expectedPosition = EarnPositionState.Known(
-                        EarnPosition(
-                            cryptoAmount = BigDecimal("2"),
-                            earned = BigDecimal("0.1"),
-                            description = null,
-                            rows = emptyList(),
-                            rewards = null,
-                            freshness = null,
-                        ),
-                    ),
-                    expectedLabel = "Manage",
+            val known = EarnPositionState.Known(
+                EarnPosition(
+                    cryptoAmount = BigDecimal("2"),
+                    earned = BigDecimal("0.1"),
+                    description = null,
+                    rows = emptyList(),
+                    rewards = null,
+                    freshness = null,
                 ),
-                PositionModel("Error balance", StakingBalance.Error(stakingId), EarnPositionState.Unknown, "Manage"),
+            )
+            return listOf(
+                PositionModel("P2P staking balance", staked, isBalanceFailed = false, known, "Manage"),
+                PositionModel("P2P staking balance, refresh failed", staked, isBalanceFailed = true, known, "Manage"),
+                PositionModel("Failed balance", null, isBalanceFailed = true, EarnPositionState.Unknown, "Manage"),
                 PositionModel(
                     name = "Empty balance",
                     contribution = StakingBalance.Empty(stakingId, StatusSource.ACTUAL),
+                    isBalanceFailed = false,
                     expectedPosition = EarnPositionState.None,
                     expectedLabel = "Start earning",
                 ),
-                PositionModel("No balance", null, EarnPositionState.None, "Start earning"),
+                PositionModel("No balance", null, isBalanceFailed = false, EarnPositionState.None, "Start earning"),
             )
         }
     }
@@ -348,6 +365,7 @@ internal class PooledStakingMapperStateTest {
     internal data class PositionModel(
         val name: String,
         val contribution: StakingBalance?,
+        val isBalanceFailed: Boolean,
         val expectedPosition: EarnPositionState,
         val expectedLabel: String,
     ) {
