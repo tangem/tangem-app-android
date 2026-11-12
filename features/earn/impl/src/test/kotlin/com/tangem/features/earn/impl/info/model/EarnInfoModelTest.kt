@@ -741,11 +741,13 @@ internal class EarnInfoModelTest {
                 model.pull()
                 runCurrent()
                 val whileRefreshing = model.pullToRefresh.value.isRefreshing
+                val callsWhileRefreshing = product.refreshCalls.toList()
                 gate.complete(Unit)
                 advanceUntilIdle()
 
                 // Assert
                 assertThat(whileRefreshing).isTrue()
+                assertThat(callsWhileRefreshing).containsExactly(productParams)
                 assertThat(model.pullToRefresh.value.isRefreshing).isFalse()
                 assertThat(product.refreshCalls).containsExactly(productParams)
                 model.onDestroy()
@@ -856,6 +858,9 @@ internal class EarnInfoModelTest {
                 assertThat(model.pullToRefresh.value.isRefreshing).isFalse()
                 assertThat(model.uiState.value).isSameInstanceAs(before)
                 verify(exactly = 1) { TangemLogger.e(any(), any(), any()) }
+                verify(exactly = 1) {
+                    TangemLogger.e("Earn info: refresh of ${product.id.value} failed", any(), any())
+                }
                 verify(exactly = 0) { router.replaceCurrent(any(), any()) }
                 verify(exactly = 0) { router.pop(any()) }
                 assertThat(reloads).isEmpty()
@@ -893,6 +898,7 @@ internal class EarnInfoModelTest {
 
                 // Assert
                 verify(exactly = 1) { TangemLogger.e(any(), any(), any()) }
+                verify(exactly = 1) { TangemLogger.e("Earn info: quote refresh failed", any(), any()) }
                 assertThat(model.pullToRefresh.value.isRefreshing).isFalse()
                 assertThat(reloads).containsExactly(Unit)
                 model.onDestroy()
