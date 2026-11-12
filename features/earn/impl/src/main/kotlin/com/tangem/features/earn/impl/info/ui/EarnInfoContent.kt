@@ -61,7 +61,6 @@ import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.picker.ui.PAGE_MARGIN
 import kotlinx.collections.immutable.ImmutableList
 
-/** The list is the haze source: the glass buttons of the overlays and the calculator's sheet blur it. */
 @Composable
 internal fun EarnInfoContent(
     state: EarnInfoUM?,
@@ -81,10 +80,9 @@ internal fun EarnInfoContent(
 }
 
 /**
- * The chips float over the list, outside its haze source, so their glass pill has something to blur; a sticky header
- * would stick behind the navigation (Foundation's StickToTopPlacement places it at -beforeContentPadding).
- * The pull-to-refresh container wraps the chips too: it moves its content by an offset, not through the list state,
- * so chips left outside would stay put while the list slides.
+ * The chips float over the list: a sticky header would stick behind the navigation (Foundation's StickToTopPlacement
+ * places it at -beforeContentPadding). They sit inside the pull-to-refresh container, which moves its content by an
+ * offset, not through the list state.
  */
 @Composable
 private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?, pullToRefresh: PullToRefreshConfig) {
@@ -173,7 +171,7 @@ private fun Navigation(state: EarnInfoUM, isChipsPinned: Boolean, modifier: Modi
     )
 }
 
-/** The pulled content slides away from under the navigation; this source stays, so its glass always has a backdrop. */
+/** Stays under the navigation while the pulled content slides away, so the glass keeps a backdrop. */
 @Composable
 private fun HazeBackdrop() {
     Box(

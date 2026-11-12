@@ -1013,7 +1013,6 @@ internal class EarnInfoModelTest {
         return tracked
     }
 
-    /** A fake product with its state under the test's control, recording the handled actions and history requests. */
     internal class InfoProduct(
         private val delegate: EarnProduct,
         initialState: EarnProductState,
