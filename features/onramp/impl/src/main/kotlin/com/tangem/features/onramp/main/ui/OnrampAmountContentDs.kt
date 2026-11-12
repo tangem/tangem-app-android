@@ -50,7 +50,7 @@ internal fun OnrampAmountContentDs(state: OnrampMainComponentUM.Content, modifie
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 24.dp, horizontal = 16.dp),
+                .padding(vertical = 32.dp, horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             OnrampHeaderTitle()
@@ -82,7 +82,7 @@ private fun OnrampHeaderTitle() {
     Text(
         text = stringResourceSafe(R.string.onramp_you_will_pay_title),
         style = TangemTheme.typography3.subheading.medium,
-        color = TangemTheme.colors3.text.secondary,
+        color = TangemTheme.colors3.text.primary,
     )
 }
 
@@ -119,12 +119,7 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
         onValuePastedTriggerDismiss = amountField.onValuePastedTriggerDismiss,
         modifier = Modifier
             .focusRequester(requester)
-            .padding(
-                top = 8.dp,
-                bottom = 4.dp,
-                start = 12.dp,
-                end = 12.dp,
-            )
+            .padding(horizontal = 12.dp)
             .requiredHeightIn(min = 32.dp)
             .testTag(BuyTokenDetailsScreenTestTags.FIAT_AMOUNT_TEXT_FIELD),
     )
@@ -161,7 +156,7 @@ private fun OnrampAmountSecondary(state: OnrampSecondaryFieldErrorUM.Error) {
 private fun OnrampCurrencyIcon(currencyUM: OnrampCurrencyUM, modifier: Modifier = Modifier) {
     TangemSurface(
         modifier = modifier,
-        color = TangemTheme.colors3.bg.transparent.secondary,
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = CircleShape,
         onClick = currencyUM.onClick,
     ) {
