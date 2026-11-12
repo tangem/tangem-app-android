@@ -965,6 +965,42 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN model observing banner WHEN paused THEN the fast trading banner is no longer observed`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        model.onPause()
+        runCurrent()
+
+        // Assert
+        assertThat(fastTradingBanner.subscriptionCount.value).isEqualTo(0)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a paused model WHEN resumed THEN the fast trading banner is observed again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onResume()
+        runCurrent()
+        model.onPause()
+        runCurrent()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(fastTradingBanner.subscriptionCount.value).isEqualTo(1)
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN the wallet is linked WHEN the screen opens THEN the fast trading banner is observed after the check`() = runTest {
         // Act
         val model = createModel(testScope = this)

@@ -231,6 +231,8 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val fastTradingBannerJobHolder = JobHolder()
 
+    private var isWalletLinked = false
+
     init {
         feedController.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
         modelScope.launch { regionAccess.refresh() }
@@ -280,7 +282,10 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onResume() {
         fastTradingBannerRechecks.tryEmit(Unit)
-        modelScope.launch { refreshFastTradingBannerIfObserved() }
+        if (isWalletLinked) {
+            observeFastTradingBanner()
+            modelScope.launch { fastTradingBannerSource.refresh(params.userWalletId) }
+        }
         feedController.resume()
         fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
@@ -292,6 +297,7 @@ internal class PolymarketMainModel @Inject constructor(
         uiState.update { it.copy(isCategoriesLoading = true) }
         modelScope.launch {
             if (walletLinkGate.ensureLinked(params.userWalletId)) {
+                isWalletLinked = true
                 observeFastTradingBanner()
                 loadCategories()
             } else {
@@ -309,8 +315,8 @@ internal class PolymarketMainModel @Inject constructor(
             .saveIn(fastTradingBannerJobHolder)
     }
 
-    private suspend fun refreshFastTradingBannerIfObserved() {
-        if (fastTradingBannerJobHolder.isActive) fastTradingBannerSource.refresh(params.userWalletId)
+    private suspend fun refreshFastTradingBannerIfLinked() {
+        if (isWalletLinked) fastTradingBannerSource.refresh(params.userWalletId)
     }
 
     private fun PolymarketFastTradingBanner.toUM(): PolymarketFastTradingBannerUM = when (this) {
@@ -335,6 +341,7 @@ internal class PolymarketMainModel @Inject constructor(
     fun onPause() {
         feedController.pause()
         balancePollJobHolder.cancel()
+        fastTradingBannerJobHolder.cancel()
     }
 
     private fun loadCategories() {
@@ -442,7 +449,7 @@ internal class PolymarketMainModel @Inject constructor(
                     listOf(
                         async { regionAccess.refresh() },
                         async { blocksRefresh.refreshAll() },
-                        async { refreshFastTradingBannerIfObserved() },
+                        async { refreshFastTradingBannerIfLinked() },
                         async {
                             predictionAccountStatusFetcher(
                                 PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
