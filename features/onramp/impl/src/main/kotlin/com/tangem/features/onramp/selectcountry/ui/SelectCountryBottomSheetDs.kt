@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.selectcountry.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -46,12 +50,15 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_control_checkmark_20
+import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcountry.entity.CountryItemState
@@ -68,8 +75,13 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun OnrampCountryListDs(state: CountryListUM, onCloseClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize()) {
         TangemModal.TopNavigation(
-            title = resourceReference(R.string.tangempay_order_data_country),
-            onClose = onCloseClick,
+            contentColumn = {
+                TangemNavigationText(
+                    text = resourceReference(R.string.tangempay_order_data_country),
+                    role = TangemNavigationText.Role.Title,
+                )
+            },
+            endButton = { CountryCloseButton(onClick = onCloseClick) },
         )
         Box(modifier = Modifier.weight(1f)) {
             when (state) {
@@ -83,6 +95,31 @@ internal fun OnrampCountryListDs(state: CountryListUM, onCloseClick: () -> Unit,
                     modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun CountryCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemSurface(
+        modifier = modifier
+            .size(CLOSE_BUTTON_SIZE)
+            .semantics { role = Role.Button },
+        color = TangemTheme.colors3.bg.transparent.primary,
+        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
+        shape = CircleShape,
+        onClick = onClick,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                modifier = Modifier.size(CLOSE_ICON_SIZE),
+                imageVector = Icons.ic_cross_20,
+                tint = TangemTheme.colors3.icon.primary,
+                contentDescription = null,
+            )
         }
     }
 }
@@ -302,6 +339,8 @@ private fun SearchBarUM.toSearchState() = TangemSearch.State(
 
 private val FLAG_SIZE = 40.dp
 private val SELECTED_MARK_SIZE = 20.dp
+private val CLOSE_BUTTON_SIZE = 44.dp
+private val CLOSE_ICON_SIZE = 18.dp
 private val FOOTER_INSET = 88.dp
 private val FADE_HEIGHT = 112.dp
 private const val UNAVAILABLE_ALPHA = 0.4f
