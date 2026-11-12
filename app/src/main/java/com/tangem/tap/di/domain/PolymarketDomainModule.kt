@@ -70,6 +70,7 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStateService
+import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRunner
@@ -552,11 +553,13 @@ internal object PolymarketDomainModule {
         manage: ManagePolymarketSessionKeyInteractor,
         stateService: PolymarketSessionKeyStateService,
         sessionKeyStore: PolymarketSessionKeyStore,
+        bannerStore: PolymarketFastTradingBannerStore,
         appCoroutineScope: AppCoroutineScope,
     ): PolymarketSessionKeyOperationRunner = PolymarketSessionKeyOperationRunner(
         manage = manage,
         stateService = stateService,
         sessionKeyStore = sessionKeyStore,
+        bannerStore = bannerStore,
         appScope = appCoroutineScope,
     )
 
