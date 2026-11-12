@@ -65,7 +65,8 @@ sealed interface PolymarketSessionKeyReconciliation {
 
     /**
      * @property foreignSigners signers registered around the BFF; each one trades the whole deposit wallet
-     * @property missingOnExchange addresses `ACTIVE` at the BFF that Polymarket no longer honours
+     * @property missingOnExchange addresses `ACTIVE` at the BFF that Polymarket no longer honours, or honours only on
+     * terms other than the record's
      */
     data class Checked(
         val foreignSigners: List<PolymarketSessionSigner>,
