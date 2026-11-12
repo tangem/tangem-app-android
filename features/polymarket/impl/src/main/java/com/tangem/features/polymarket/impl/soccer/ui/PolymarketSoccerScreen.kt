@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -15,14 +16,13 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
-import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketSportsHeader
+import com.tangem.features.polymarket.impl.details.ui.PolymarketEventDetailsScaffold
+import com.tangem.features.polymarket.impl.details.ui.EVENT_DETAILS_HEADER_KEY
 import com.tangem.features.polymarket.impl.details.ui.EventDetailsErrorState
 import com.tangem.features.polymarket.impl.details.ui.EventDetailsLoadingState
 import com.tangem.features.polymarket.impl.details.ui.EventMetaRow
@@ -43,22 +43,28 @@ internal fun PolymarketSoccerScreen(
     onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    TangemTopBarScaffold(
+    val listState = rememberLazyListState()
+    val content = state as? PolymarketSoccerUM.Content
+    PolymarketEventDetailsScaffold(
         modifier = modifier,
-        topBar = { TangemTopNavigation(title = stringReference(""), onBack = onBack) },
+        listState = listState,
+        title = content?.title,
+        categoryLabel = content?.league,
+        onBackClick = onBack,
     ) { padding ->
         when (state) {
             PolymarketSoccerUM.Loading -> EventDetailsLoadingState(Modifier.fillMaxSize().padding(padding))
             PolymarketSoccerUM.Error -> EventDetailsErrorState(onRetry, Modifier.fillMaxSize().padding(padding))
             is PolymarketSoccerUM.Content -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
+                state = listState,
                 contentPadding = PaddingValues(
                     top = padding.calculateTopPadding(),
                     bottom = padding.calculateBottomPadding() + 24.dp,
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item(key = "header") { SoccerHeader(state) }
+                item(key = EVENT_DETAILS_HEADER_KEY) { SoccerHeader(state) }
                 item(key = "score") {
                     PolymarketSportsHeader(
                         state = state.sports,
