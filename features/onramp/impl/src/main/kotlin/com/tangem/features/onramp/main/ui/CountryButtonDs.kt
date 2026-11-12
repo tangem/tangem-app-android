@@ -13,25 +13,30 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.TopAppBarTestTags
+import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampCountryButtonUM
 import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 internal fun CountryButtonDs(state: OnrampCountryButtonUM, modifier: Modifier = Modifier) {
+    val residenceClickLabel = stringResourceSafe(R.string.onramp_settings_residence)
     TangemSurface(
         modifier = modifier
             .size(44.dp)
             .semantics {
                 role = Role.Button
+                onClick(label = residenceClickLabel, action = null)
                 state.countryName?.let { contentDescription = it }
             }
             .testTag(TopAppBarTestTags.MORE_BUTTON),
