@@ -6,7 +6,7 @@ import com.tangem.domain.polymarket.model.PolymarketSoccerCard
 import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PolymarketSoccerTab
 import com.tangem.features.polymarket.impl.R
-import com.tangem.features.polymarket.impl.common.probability
+import com.tangem.features.polymarket.impl.common.midpoint
 import com.tangem.features.polymarket.impl.common.ui.chart.PolymarketProbabilityChart.SeriesColor
 import kotlinx.collections.immutable.toImmutableList
 
@@ -27,7 +27,7 @@ internal object PolymarketSoccerChartContent {
             PolymarketChartOutcome(
                 key = PolymarketChartOutcome.Key(market.id, outcome.assetId, market.version),
                 title = button.title(event),
-                probability = quotes[outcome.assetId].probability(outcome.probability),
+                probability = quotes[outcome.assetId].midpoint() ?: outcome.probability,
                 color = when (index) {
                     0 -> SeriesColor.Blue
                     1 -> SeriesColor.Red

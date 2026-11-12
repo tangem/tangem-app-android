@@ -64,7 +64,7 @@ internal class DefaultPolymarketLiveQuotesRepositoryTest {
         // Assert
         assertThat(values).containsExactly(
             mapOf("a" to PolymarketLiveQuote("a")),
-            mapOf("a" to expected(timestamp = 4).copy(lastTradePrice = BigDecimal("0.55"), lastTradeAtMillis = 5)),
+            mapOf("a" to expected(timestamp = 4).copy(lastTradePrice = BigDecimal("0.55"))),
         ).inOrder()
     }
 

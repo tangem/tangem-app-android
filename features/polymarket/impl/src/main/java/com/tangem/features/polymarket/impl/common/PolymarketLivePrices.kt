@@ -13,28 +13,20 @@ internal fun PolymarketEvent.isLiveForQuotes(game: PolymarketSportsState.Game?):
 internal fun PolymarketLiveQuote?.buyPrice(restPrice: BigDecimal?): BigDecimal? =
     if (this?.status == PolymarketLiveQuote.Status.LIVE) bestAsk else restPrice
 
+/** Feed probability uses the spread threshold; soccer charts consume the uncapped midpoint directly. */
 internal fun PolymarketLiveQuote?.probability(restProbability: BigDecimal?): BigDecimal? {
     if (this?.status != PolymarketLiveQuote.Status.LIVE) return restProbability
-    return midpoint() ?: lastTradePrice ?: restProbability
+    val bid = bestBid
+    val ask = bestAsk
+    val midpoint = midpoint()?.takeIf { bid != null && ask != null && ask - bid <= MAX_MIDPOINT_SPREAD }
+    return midpoint ?: lastTradePrice ?: restProbability
 }
 
-internal fun PolymarketLiveQuote?.probabilityUpdatedAtMillis(): Long? {
+internal fun PolymarketLiveQuote?.midpoint(): BigDecimal? {
     if (this?.status != PolymarketLiveQuote.Status.LIVE) return null
-    return when {
-        midpoint() != null -> updatedAtMillis
-        lastTradePrice != null -> listOfNotNull(updatedAtMillis, lastTradeAtMillis).maxOrNull()
-        else -> null
-    }
-}
-
-private fun PolymarketLiveQuote.midpoint(): BigDecimal? {
     val bid = bestBid ?: return null
     val ask = bestAsk ?: return null
-    return if (bid <= ask && ask - bid <= MAX_MIDPOINT_SPREAD) {
-        (bid + ask).divide(BigDecimal(2))
-    } else {
-        null
-    }
+    return if (bid <= ask) (bid + ask).divide(BigDecimal(2)) else null
 }
 
 private val MAX_MIDPOINT_SPREAD = BigDecimal("0.10")

@@ -9,7 +9,6 @@ data class PolymarketLiveQuote(
     val lastTradePrice: BigDecimal? = null,
     val updatedAtMillis: Long? = null,
     val status: Status = Status.WAITING,
-    val lastTradeAtMillis: Long? = null,
 ) {
 
     /** Only LIVE overrides REST. A LIVE quote with a null ask is an empty book, not a fallback request. */

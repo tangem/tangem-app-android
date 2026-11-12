@@ -30,6 +30,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
 import java.time.Instant
 
@@ -295,7 +297,7 @@ internal class PolymarketSoccerChartTest {
     }
 
     @Test
-    fun `GIVEN midpoint WHEN the spread widens THEN older trade becomes the current probability at book time`() = runTest {
+    fun `GIVEN midpoint WHEN the spread widens THEN the chart keeps midpoint and ignores trades`() = runTest {
         // Arrange
         stubHistory()
         val controller = controller()
@@ -303,7 +305,7 @@ internal class PolymarketSoccerChartTest {
         controller.updateSoccer(event, emptyMap())
         runCurrent()
         advanceTimeBy(10_000)
-        val narrow = quote(NOW + 8_000).copy(lastTradePrice = BigDecimal("0.52"), lastTradeAtMillis = NOW + 5_000)
+        val narrow = quote(NOW + 8_000).copy(lastTradePrice = BigDecimal("0.52"))
         controller.updateSoccer(event, mapOf("left-yes" to narrow), isRestUpdate = false)
         val wide = narrow.copy(bestAsk = BigDecimal("0.9"), updatedAtMillis = NOW + 9_000)
 
@@ -312,16 +314,60 @@ internal class PolymarketSoccerChartTest {
         val widened = controller.points()[0]
         controller.updateSoccer(event, mapOf("left-yes" to wide), isRestUpdate = false)
         val repeated = controller.points()[0]
-        val trade = wide.copy(lastTradePrice = BigDecimal("0.53"), lastTradeAtMillis = NOW + 10_000)
+        val trade = wide.copy(lastTradePrice = BigDecimal("0.53"))
         controller.updateSoccer(event, mapOf("left-yes" to trade), isRestUpdate = false)
+        val incomplete = trade.copy(bestBid = null, updatedAtMillis = NOW + 10_000)
+        controller.updateSoccer(event, mapOf("left-yes" to incomplete), isRestUpdate = false)
 
         // Assert
         assertThat(widened.takeLast(2)).containsExactly(
             PolymarketProbabilityChart.Point(NOW + 8_000, 0.62),
-            PolymarketProbabilityChart.Point(NOW + 9_000, 0.52),
+            PolymarketProbabilityChart.Point(NOW + 9_000, 0.75),
         ).inOrder()
         assertThat(repeated).isEqualTo(widened)
-        assertThat(controller.points()[0].last()).isEqualTo(PolymarketProbabilityChart.Point(NOW + 10_000, 0.53))
+        assertThat(controller.points()[0]).isEqualTo(widened)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "0.40,0.50,LIVE,0.45",
+        "0.40,0.51,LIVE,0.455",
+        "0.10,0.90,LIVE,0.5",
+        "0.50,0.50,LIVE,0.5",
+        "0.60,0.50,LIVE,0.42",
+        ",0.50,LIVE,0.42",
+        "0.40,,LIVE,0.42",
+        ",,LIVE,0.42",
+        "0.40,0.50,STALE,0.42",
+        "0.40,0.50,WAITING,0.42",
+    )
+    fun `GIVEN a book and a trade WHEN updating soccer chart THEN only valid live midpoint replaces REST`(
+        bid: String?,
+        ask: String?,
+        status: PolymarketLiveQuote.Status,
+        expected: Double,
+    ) = runTest {
+        // Arrange
+        stubHistory()
+        val controller = controller()
+        controller.onResume()
+        controller.updateSoccer(event, emptyMap())
+        runCurrent()
+        advanceTimeBy(10_000)
+        val quote = quote(NOW + 9_000).copy(
+            bestBid = bid?.toBigDecimal(),
+            bestAsk = ask?.toBigDecimal(),
+            lastTradePrice = BigDecimal("0.83"),
+            status = status,
+        )
+        val rest = event.copy(dataFetchedAt = Instant.ofEpochMilli(NOW + 8_000))
+
+        // Act
+        controller.updateSoccer(rest, mapOf("left-yes" to quote))
+
+        // Assert
+        val timestamp = if (expected == 0.42) NOW + 8_000 else NOW + 9_000
+        assertThat(controller.points()[0].last()).isEqualTo(PolymarketProbabilityChart.Point(timestamp, expected))
     }
 
     @Test

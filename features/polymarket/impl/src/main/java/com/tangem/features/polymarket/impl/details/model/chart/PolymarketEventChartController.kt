@@ -3,7 +3,7 @@ package com.tangem.features.polymarket.impl.details.model.chart
 import androidx.annotation.MainThread
 import com.tangem.domain.polymarket.model.PolymarketLiveQuote
 import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
-import com.tangem.features.polymarket.impl.common.probabilityUpdatedAtMillis
+import com.tangem.features.polymarket.impl.common.midpoint
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketHistoryToken
 import com.tangem.domain.polymarket.usecase.GetPolymarketPriceHistoryUseCase
@@ -66,8 +66,8 @@ internal class PolymarketEventChartController(
             ?: if (isRestUpdate) now else previous?.restTimestampMillis
         val latestTimestamp = now + PolymarketEventChartSession.CLOCK_SKEW_TOLERANCE_MILLIS
         val liveQuotes = quotes.filterValues { quote ->
-            event.isLive && event.isEnded != true &&
-                quote.probabilityUpdatedAtMillis()?.let { it in 1..latestTimestamp } == true
+            event.isLive && event.isEnded != true && quote.midpoint() != null &&
+                quote.updatedAtMillis?.let { it in 1..latestTimestamp } == true
         }
         update(Source.Soccer(event, liveQuotes, timestamp), retryFailed = isRestUpdate)
     }
@@ -180,7 +180,7 @@ internal class PolymarketEventChartController(
             is Soccer -> if (value.isEnded == true) {
                 null
             } else {
-                quotes[assetId].probabilityUpdatedAtMillis() ?: restTimestampMillis
+                quotes[assetId]?.updatedAtMillis ?: restTimestampMillis
             }
         }
     }
