@@ -115,13 +115,13 @@ private fun RedirectCloseButton(onClick: () -> Unit, modifier: Modifier = Modifi
                 contentDescription = closeDescription
             }
             .testTag(TopAppBarTestTags.CLOSE_BUTTON),
-        isMaterial = true,
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = CircleShape,
         border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
