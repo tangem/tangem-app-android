@@ -86,7 +86,7 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
         runTest {
             // Arrange
             val from = hotSolanaTokenStatus()
-            coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), depositTransfer) } returns FEE_PAYER
+            coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), depositTransfer) } returns FEE_PAYER.right()
             coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns SIGNATURE.right()
 
             // Act
@@ -114,18 +114,20 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
         }
 
     @Test
-    fun `GIVEN sponsored fee picked AND deposit transfer not sponsorable WHEN onSwap CEX THEN not sent at all`() =
+    fun `GIVEN sponsored fee picked AND deposit transfer rejected WHEN onSwap CEX THEN rejection shown, not sent`() =
         runTest {
             // Arrange
             val from = hotSolanaTokenStatus()
-            coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any()) } returns null
+            coEvery {
+                solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any())
+            } returns SolanaGaslessError.Rejected(code = null).left()
 
             // Act
             val result = onSwapCex(from, solanaSwapFee(isSponsored = true))
 
             // Assert
             assertThat(result).isEqualTo(
-                SwapTransactionState.Error.SolanaGaslessError(SolanaGaslessError.ServiceUnavailable(code = null)),
+                SwapTransactionState.Error.SolanaGaslessError(SolanaGaslessError.Rejected(code = null)),
             )
             coVerify(exactly = 0) { createAndSendGaslessTransactionUseCase(any(), any(), any()) }
             coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
@@ -135,7 +137,7 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
     fun `GIVEN service may have sent with signature WHEN onSwap CEX THEN deposit tracked as sent`() = runTest {
         // Arrange
         val from = hotSolanaTokenStatus()
-        coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any()) } returns FEE_PAYER
+        coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any()) } returns FEE_PAYER.right()
         coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns
             SendTransactionError.SolanaGasless(SolanaGaslessError.MaybeSent(signature = SIGNATURE)).left()
 
@@ -156,7 +158,7 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
     fun `GIVEN service rejects the transfer WHEN onSwap CEX THEN Solana gasless error`() = runTest {
         // Arrange
         val from = hotSolanaTokenStatus()
-        coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any()) } returns FEE_PAYER
+        coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any()) } returns FEE_PAYER.right()
         coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns
             SendTransactionError.SolanaGasless(SolanaGaslessError.BlockhashExpired).left()
 

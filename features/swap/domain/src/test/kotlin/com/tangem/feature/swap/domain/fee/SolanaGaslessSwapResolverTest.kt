@@ -376,7 +376,7 @@ internal class SolanaGaslessSwapResolverTest {
         val actual = sut.resolveTransferFeePayer(from, depositTransfer)
 
         // Assert
-        assertThat(actual).isEqualTo("FeePayer")
+        assertThat(actual).isEqualTo("FeePayer".right())
         coVerify(exactly = 1) {
             walletManagersFacade.simulateSolanaGaslessTransaction(
                 userWalletId = userWalletId,
@@ -388,7 +388,7 @@ internal class SolanaGaslessSwapResolverTest {
     }
 
     @Test
-    fun `GIVEN deposit transfer fails simulation WHEN resolveTransferFeePayer THEN returns null`() = runTest {
+    fun `GIVEN deposit transfer fails simulation WHEN resolveTransferFeePayer THEN rejected`() = runTest {
         // Arrange
         val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
@@ -402,12 +402,31 @@ internal class SolanaGaslessSwapResolverTest {
         val actual = sut.resolveTransferFeePayer(from, depositTransfer)
 
         // Assert
-        assertThat(actual).isNull()
+        assertThat(actual).isEqualTo(SolanaGaslessError.Rejected(code = null).left())
     }
+
+    @Test
+    fun `GIVEN fee payer unavailable WHEN resolveTransferFeePayer THEN service unavailable without simulating`() =
+        runTest {
+            // Arrange
+            val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
+            coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns SolanaGaslessError.Unauthorized.left()
+
+            // Act
+            val actual = sut.resolveTransferFeePayer(from, depositTransfer)
+
+            // Assert
+            assertThat(actual).isEqualTo(SolanaGaslessError.ServiceUnavailable(code = null).left())
+            coVerify(exactly = 0) {
+                walletManagersFacade.simulateSolanaGaslessTransaction(
+                    userWalletId = any(), network = any(), transactionData = any(), feePayer = any(),
+                )
+            }
+        }
 
     @ParameterizedTest
     @MethodSource("provideUnsponsorableTransferModels")
-    fun `GIVEN transfer not sponsorable WHEN resolveTransferFeePayer THEN returns null without asking the service`(
+    fun `GIVEN transfer not sponsorable WHEN resolveTransferFeePayer THEN unavailable without asking the service`(
         model: UnsponsorableTransferModel,
     ) = runTest {
         // Arrange
@@ -418,7 +437,7 @@ internal class SolanaGaslessSwapResolverTest {
         val actual = sut.resolveTransferFeePayer(from, depositTransfer)
 
         // Assert
-        assertThat(actual).isNull()
+        assertThat(actual).isEqualTo(SolanaGaslessError.ServiceUnavailable(code = null).left())
         coVerify(exactly = 0) { solanaGaslessTransactionRepository.getFeePayer() }
     }
 

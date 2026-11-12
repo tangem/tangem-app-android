@@ -1,6 +1,10 @@
 package com.tangem.feature.swap.domain.fee
 
+import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import arrow.core.raise.ensureNotNull
 
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
@@ -13,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.SolanaGaslessTransactionRepository
+import com.tangem.domain.transaction.error.SolanaGaslessError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
@@ -92,16 +97,18 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
     }
 
     /**
-     * The sponsor of a CEX deposit [transfer], or null when the transfer fails its simulation: the sponsor does not
-     * pay the rent of the deposit address's token account, so a fresh address needs SOL the wallet may not have.
+     * The sponsor of a CEX deposit [transfer]. The sponsor does not pay the rent of the deposit address's token
+     * account, so a fresh address needs SOL the wallet may not have: such a transfer fails its simulation and is
+     * [SolanaGaslessError.Rejected], as only topping up SOL lets it through.
      */
     suspend fun resolveTransferFeePayer(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         transfer: TransactionData.Uncompiled,
-    ): String? {
-        if (!isSponsorable(fromSwapCurrencyStatus.currency)) return null
-        val feePayer = getFeePayerOrNull() ?: return null
-        return feePayer.takeIf { simulates(fromSwapCurrencyStatus, transfer, feePayer) }
+    ): Either<SolanaGaslessError, String> = either {
+        ensure(isSponsorable(fromSwapCurrencyStatus.currency)) { SolanaGaslessError.ServiceUnavailable(code = null) }
+        val feePayer = ensureNotNull(getFeePayerOrNull()) { SolanaGaslessError.ServiceUnavailable(code = null) }
+        ensure(simulates(fromSwapCurrencyStatus, transfer, feePayer)) { SolanaGaslessError.Rejected(code = null) }
+        feePayer
     }
 
     private suspend fun getFeePayerOrNull(): String? = solanaGaslessTransactionRepository.getFeePayer()
