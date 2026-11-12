@@ -2,6 +2,7 @@ package com.tangem.features.onramp.success.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -108,7 +109,9 @@ private fun StatusAsset(status: OnrampStatus.Status) {
             TangemStatusIcon(kind = TangemStatusIcon.Kind.HeartBroken, modifier = modifier)
         TangemStatusScreen.Variant.Warning ->
             TangemStatusIcon(kind = TangemStatusIcon.Kind.Warning, modifier = modifier)
-        else -> TangemLoader(size = TangemLoaderSize.X32, color = TangemTheme.colors3.icon.accent.blue)
+        else -> Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            TangemLoader(size = TangemLoaderSize.X32, color = TangemTheme.colors3.icon.status.info)
+        }
     }
 }
 
@@ -168,7 +171,7 @@ private fun DetailRow(
         titleSlot = { RowTitle(text = title) },
         valueSlot = {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -185,7 +188,7 @@ private fun DetailRow(
                         imageVector = Icons.ic_copy_24,
                         contentDescription = null,
                         tint = TangemTheme.colors3.icon.primary,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -236,14 +239,14 @@ private fun Footer(onCloseClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
             modifier = Modifier.fillMaxWidth(),
             text = resourceReference(R.string.onramp_transaction_status_footer_text).resolveReference(),
             style = TangemTheme.typography3.caption.medium,
-            color = TangemTheme.colors3.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
         TangemButton(
