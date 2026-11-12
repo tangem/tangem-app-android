@@ -55,7 +55,6 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.tariffPlanState
-import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -1351,9 +1350,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             ),
             DeepLinkRouteModel(
                 initialRoute = TangemPayDetailsInitialRoute.CHANGE_PLAN,
-                expectedRoute = TangemPayAccountDetailsInnerRoute.SelectPlan(
-                    source = TangemPaySelectPlanSource.CHANGE_PLAN,
-                ),
+                expectedRoute = TangemPayAccountDetailsInnerRoute.SelectPlan,
             ),
         )
 
@@ -1366,11 +1363,6 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             InitialAddFundsCase(
                 name = "default route -> sheet not opened",
                 initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
-                expectedAddFundsSheets = 0,
-            ),
-            InitialAddFundsCase(
-                name = "tiers route -> sheet not opened",
-                initialRoute = TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
                 expectedAddFundsSheets = 0,
             ),
         )

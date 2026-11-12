@@ -49,7 +49,6 @@ import com.tangem.features.tangempay.components.TangemPayDetailsContainerCompone
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
 import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
-import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUiActions
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUpdateListener
 import com.tangem.features.tangempay.withdraw.buildWithdrawSwapRoute
@@ -176,9 +175,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         isInitialRouteHandled.update { true }
 
         when (params.initialRoute) {
-            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
-            TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
-            -> Unit
+            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS -> Unit
             TangemPayDetailsInitialRoute.ADD_FUNDS -> openAddFunds()
             TangemPayDetailsInitialRoute.VA_ONRAMP,
             TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
@@ -487,7 +484,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun openChangePlan() {
         if (currentStatus.value.tariffPlan == null) return
-        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.CHANGE_PLAN))
+        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan)
     }
 
     private fun openCashback() {

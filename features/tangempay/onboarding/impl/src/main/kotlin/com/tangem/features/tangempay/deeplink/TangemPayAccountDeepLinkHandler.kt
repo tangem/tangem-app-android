@@ -26,7 +26,7 @@ internal class TangemPayAccountDeepLinkHandler @Inject constructor(
 ) : DeepLinkHandler {
 
     override fun handle(request: DeepLinkRequest) {
-        val initialRoute = resolveInitialRoute(request.queryParams)
+        val screen = request.queryParams[SCREEN_KEY]?.takeIf(String::isNotBlank)?.lowercase()
 
         request.scope.launch {
             val userWallet = userWalletsListRepository.selectedUserWalletSync()
@@ -37,25 +37,34 @@ internal class TangemPayAccountDeepLinkHandler @Inject constructor(
             }
 
             val status = loadPaymentAccountStatus(userWallet.walletId)
-            if (status == null) {
-                appRouter.popTo(AppRoute.Wallet)
-                return@launch
+            when {
+                status == null -> appRouter.popTo(AppRoute.Wallet)
+                screen == SELECT_PLAN_SCREEN && status.value is PaymentAccountStatusValue.Verified -> {
+                    openOnTopOfWallet(AppRoute.TangemPayVerified(userWalletId = userWallet.walletId))
+                }
+                status.value.canOpenPaymentAccount() -> {
+                    val initialRoute = resolveInitialRoute(screen)
+                    openOnTopOfWallet(AppRoute.TangemPayDetails(status = status, initialRoute = initialRoute))
+                }
+                else -> {
+                    TangemLogger.i("$TAG: selected wallet has no openable payment account")
+                    appRouter.popTo(AppRoute.Wallet)
+                }
             }
-
-            appRouter.popTo(
-                route = AppRoute.Wallet,
-                onComplete = {
-                    appRouter.push(AppRoute.TangemPayDetails(status = status, initialRoute = initialRoute))
-                },
-            )
         }
     }
 
-    private fun resolveInitialRoute(queryParams: Map<String, String>): TangemPayDetailsInitialRoute {
-        val screen = queryParams[SCREEN_KEY]?.takeIf(String::isNotBlank)
-            ?: return TangemPayDetailsInitialRoute.ACCOUNT_DETAILS
+    private fun openOnTopOfWallet(route: AppRoute) {
+        appRouter.popTo(
+            route = AppRoute.Wallet,
+            onComplete = { appRouter.push(route) },
+        )
+    }
 
-        return SCREEN_ROUTES[screen.lowercase()] ?: run {
+    private fun resolveInitialRoute(screen: String?): TangemPayDetailsInitialRoute {
+        if (screen == null || screen == SELECT_PLAN_SCREEN) return TangemPayDetailsInitialRoute.ACCOUNT_DETAILS
+
+        return SCREEN_ROUTES[screen] ?: run {
             TangemLogger.i("$TAG: unknown '$SCREEN_KEY' value '$screen', falling back to the account details")
             TangemPayDetailsInitialRoute.ACCOUNT_DETAILS
         }
@@ -63,14 +72,7 @@ internal class TangemPayAccountDeepLinkHandler @Inject constructor(
 
     private suspend fun loadPaymentAccountStatus(userWalletId: UserWalletId): AccountStatus.Payment? {
         paymentAccountStatusFetcher.invoke(userWalletId)
-
-        val status = paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull()
-        if (status == null || !status.value.canOpenPaymentAccount()) {
-            TangemLogger.i("$TAG: selected wallet has no openable payment account")
-            return null
-        }
-
-        return status
+        return paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull()
     }
 
     private fun PaymentAccountStatusValue.canOpenPaymentAccount(): Boolean = when (this) {
@@ -92,12 +94,12 @@ internal class TangemPayAccountDeepLinkHandler @Inject constructor(
         const val DEEPLINK_KEY = "tangem://pay-account"
 
         private const val TAG = "TangemPayAccountDeepLink"
+        private const val SELECT_PLAN_SCREEN = "select_plan"
 
         private val SCREEN_ROUTES = mapOf(
             "add_funds" to TangemPayDetailsInitialRoute.ADD_FUNDS,
             "va_onramp" to TangemPayDetailsInitialRoute.VA_ONRAMP,
             "va_onramp_details" to TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
-            "select_plan" to TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
             "current_plan" to TangemPayDetailsInitialRoute.CURRENT_PLAN,
             "change_plan" to TangemPayDetailsInitialRoute.CHANGE_PLAN,
             "cashback" to TangemPayDetailsInitialRoute.CASHBACK,

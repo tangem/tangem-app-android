@@ -2,8 +2,11 @@ package com.tangem.features.tangempay.account
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
@@ -30,6 +33,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
+import java.util.Currency
 import com.tangem.core.ui.R as CoreUiR
 
 @Suppress("LongParameterList", "LargeClass")
@@ -171,7 +175,7 @@ internal class TangemPayDetailsStateFactory(
         }
         return TangemPayDetailsBalanceBlockState.Content(
             isBalanceFlickering = false,
-            fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(fiatBalance),
+            fiatBalance = getFiatBalanceText(fiatBalance),
             isMuted = isMuted,
             isNegative = fiatBalance.availableBalance.signum() < 0,
             isInactive = isInactive,
@@ -257,7 +261,7 @@ internal class TangemPayDetailsStateFactory(
                     onAddCardClick = { intents.onAddCardClick(tariffPlan) },
                     isAddCardEnabled = true,
                 ),
-                fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(fiatBalance),
+                fiatBalance = getFiatBalanceText(fiatBalance),
                 isNegative = fiatBalance.availableBalance.signum() < 0,
                 isInactive = false,
                 isBalanceFlickering = false,
@@ -374,5 +378,16 @@ internal class TangemPayDetailsStateFactory(
 
     private companion object {
         const val FALLBACK_FIAT_CURRENCY = "USD"
+    }
+}
+
+internal fun getFiatBalanceText(fiatBalance: PaymentAccountStatusValue.FiatBalance): TextReference {
+    val currency = Currency.getInstance(fiatBalance.currency)
+    return fiatBalance.availableBalance.formatStyled {
+        fiat(
+            fiatCurrencyCode = currency.currencyCode,
+            fiatCurrencySymbol = currency.symbol,
+            spanStyleReference = { TangemTheme.typography3.heading.medium.toSpanStyle() },
+        )
     }
 }

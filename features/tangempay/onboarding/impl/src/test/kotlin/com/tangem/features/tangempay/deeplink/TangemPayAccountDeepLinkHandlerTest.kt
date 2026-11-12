@@ -92,7 +92,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             ScreenModel(screen = "add_funds", expectedRoute = TangemPayDetailsInitialRoute.ADD_FUNDS),
             ScreenModel(screen = "va_onramp", expectedRoute = TangemPayDetailsInitialRoute.VA_ONRAMP),
             ScreenModel(screen = "va_onramp_details", expectedRoute = TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS),
-            ScreenModel(screen = "select_plan", expectedRoute = TangemPayDetailsInitialRoute.TIERS_ONBOARDING),
+            ScreenModel(screen = "select_plan", expectedRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS),
             ScreenModel(screen = "current_plan", expectedRoute = TangemPayDetailsInitialRoute.CURRENT_PLAN),
             ScreenModel(screen = "change_plan", expectedRoute = TangemPayDetailsInitialRoute.CHANGE_PLAN),
             ScreenModel(screen = "cashback", expectedRoute = TangemPayDetailsInitialRoute.CASHBACK),
@@ -101,6 +101,42 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             ScreenModel(screen = "unknown", expectedRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS),
             ScreenModel(screen = " ", expectedRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS),
         )
+    }
+
+    @Nested
+    inner class SelectPlan {
+
+        @Test
+        fun `GIVEN verified status WHEN select plan deeplink handled THEN verified screen opens`() = runTest {
+            // Arrange
+            val status = paymentStatus(PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL))
+            every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns flowOf(status)
+
+            // Act
+            handle(scope = this, queryParams = mapOf("screen" to "select_plan"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                appRouter.push(route = AppRoute.TangemPayVerified(userWalletId = USER_WALLET_ID), onComplete = any())
+            }
+            verify(exactly = 0) { appRouter.push(any<AppRoute.TangemPayDetails>(), any()) }
+        }
+
+        @Test
+        fun `GIVEN verified status WHEN another screen deeplink handled THEN nothing opens`() = runTest {
+            // Arrange
+            val status = paymentStatus(PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL))
+            every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns flowOf(status)
+
+            // Act
+            handle(scope = this, queryParams = mapOf("screen" to "add_funds"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 1) { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        }
     }
 
     @Nested
@@ -174,6 +210,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             StatusModel(PaymentAccountStatusValue.Error.ExposedDevice, isOpenable = false),
             StatusModel(PaymentAccountStatusValue.Error.CardIssueFailed("customer-id"), isOpenable = false),
             StatusModel(mockk<PaymentAccountStatusValue.UnderReview>(relaxed = true), isOpenable = false),
+            StatusModel(PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL), isOpenable = false),
             StatusModel(PaymentAccountStatusValue.Loading, isOpenable = true),
             StatusModel(mockk<PaymentAccountStatusValue.Loaded>(relaxed = true), isOpenable = true),
             StatusModel(mockk<PaymentAccountStatusValue.Deactivated>(relaxed = true), isOpenable = true),

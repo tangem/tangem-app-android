@@ -55,9 +55,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
     private val analyticsContext = when (params.mode) {
         TangemPaySelectPlanComponent.Mode.ChangePlan -> TangemPayAnalyticsEvents.Tiers.PlanContext.CHANGE_PLAN
-        TangemPaySelectPlanComponent.Mode.TiersOnboarding,
-        is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder,
-        -> TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING
+        is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder -> TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING
     }
 
     val state: StateFlow<TangemPaySelectPlanUM>
@@ -115,7 +113,6 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         )
 
         when (val mode = params.mode) {
-            TangemPaySelectPlanComponent.Mode.TiersOnboarding -> applyTransition(transition)
             TangemPaySelectPlanComponent.Mode.ChangePlan -> {
                 analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeConfirmationScreenShowed(tierId))
                 updateData { it.copy(isConfirm = true) }
@@ -169,14 +166,10 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         modelScope.launch {
             submitTariffTransitionUseCase(params.userWalletId, transition).fold(
                 ifRight = {
-                    when {
-                        transition.type == TangemPayTariffPlanTransition.Type.UPGRADE -> {
-                            router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
-                        }
-                        params.mode == TangemPaySelectPlanComponent.Mode.TiersOnboarding -> {
-                            router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
-                        }
-                        else -> router.pop()
+                    if (transition.type == TangemPayTariffPlanTransition.Type.UPGRADE) {
+                        router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
+                    } else {
+                        router.pop()
                     }
                 },
                 ifLeft = {

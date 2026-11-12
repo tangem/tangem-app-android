@@ -426,7 +426,7 @@ internal class TangemPayDetailsStateFactoryTest {
             .isEqualTo(zeroBalanceText(currency = "USD"))
     }
 
-    private fun zeroBalanceText(currency: String) = DetailsBalanceTransformer.getFiatBalanceText(
+    private fun zeroBalanceText(currency: String) = getFiatBalanceText(
         PaymentAccountStatusValue.FiatBalance(availableBalance = BigDecimal.ZERO, currency = currency),
     )
 
