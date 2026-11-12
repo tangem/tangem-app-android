@@ -1,5 +1,7 @@
 package com.tangem.features.feed.components.v2
 
+import com.tangem.features.feed.nav.FeedFilterSheetRoute
+import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedTabContributor
 import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.v2.FeedEntryRequest
@@ -12,4 +14,9 @@ internal fun FeedEntryRequest.resolveTab(tabs: List<FeedTabContributor>): FeedTa
     val requested = section?.tabId?.takeIf { id -> tabs.any { it.id == id } }
 
     return requested ?: tabs.firstOrNull()?.id
+}
+
+/** The request asks for exactly the picker already on top, so the host keeps it for the tab to update. */
+internal fun FeedEntryRequest.isShownBy(active: FeedRoute): Boolean {
+    return active is FeedFilterSheetRoute && active.sheet == sheet && active.tabId == section?.tabId
 }
