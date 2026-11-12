@@ -35,5 +35,7 @@ internal fun BankWithdrawDraft.offeredDestinations(
 ): List<OfframpDestination> = when {
     recipient != null -> options.destinationsFor(recipient.details.rail)
     isEditing && destination != null -> options.destinationsFor(destination.rail)
+    entry == BankWithdrawEntry.NewBusiness ->
+        options.destinationsFor(recipientRail = null).ifEmpty { options.destinations }
     else -> options.destinations
 }
