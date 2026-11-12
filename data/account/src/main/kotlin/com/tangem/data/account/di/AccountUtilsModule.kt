@@ -1,6 +1,8 @@
 package com.tangem.data.account.di
 
 import com.tangem.data.account.repository.DefaultAccountsExpandedRepository
+import com.tangem.data.account.store.DefaultWalletTokensLocalStore
+import com.tangem.data.common.currency.WalletTokensLocalStore
 import com.tangem.domain.account.repository.AccountsExpandedRepository
 import dagger.Binds
 import dagger.Module
@@ -15,4 +17,7 @@ internal interface AccountUtilsModule {
     fun provideAccountsExpandedRepositoryFactory(
         factory: DefaultAccountsExpandedRepository.Factory,
     ): AccountsExpandedRepository.Factory
+
+    @Binds
+    fun bindWalletTokensLocalStore(store: DefaultWalletTokensLocalStore): WalletTokensLocalStore
 }
