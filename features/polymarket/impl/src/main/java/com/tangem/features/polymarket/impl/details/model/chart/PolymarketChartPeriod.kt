@@ -1,15 +1,18 @@
 package com.tangem.features.polymarket.impl.details.model.chart
 
+import com.tangem.domain.polymarket.model.PolymarketPriceInterval
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
+import kotlin.time.toKotlinDuration
 
-/** Presentation periods. Request fidelity and wire-format intervals belong to the history provider. */
-enum class PolymarketChartPeriod(val id: String, val duration: Duration?) {
-    Hour("1h", 1.hours),
-    SixHours("6h", 6.hours),
-    Day("1d", 1.days),
-    Week("1w", 7.days),
-    Month("1m", 30.days),
-    Max("max", null),
+/** Presentation labels paired with the domain history policy. */
+enum class PolymarketChartPeriod(val id: String, val interval: PolymarketPriceInterval) {
+    Hour("1h", PolymarketPriceInterval.HOUR),
+    SixHours("6h", PolymarketPriceInterval.SIX_HOURS),
+    Day("1d", PolymarketPriceInterval.DAY),
+    Week("1w", PolymarketPriceInterval.WEEK),
+    Month("1m", PolymarketPriceInterval.MONTH),
+    Max("max", PolymarketPriceInterval.MAX),
+    ;
+
+    val duration: Duration? get() = interval.duration?.toKotlinDuration()
 }

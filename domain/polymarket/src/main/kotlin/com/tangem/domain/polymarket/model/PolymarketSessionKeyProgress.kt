@@ -8,6 +8,8 @@ sealed interface PolymarketSessionKeyProgress {
 
     data class Revoking(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyProgress
 
+    data class Revoked(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyProgress
+
     data class Authorizing(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyProgress
 
     data class CheckingReadiness(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyProgress
@@ -31,8 +33,8 @@ sealed interface PolymarketSessionKeyLifecycleError : PolymarketError {
 
     data class AuthorizationFailed(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyLifecycleError
 
-    /** @property sessionKey the key back in its previous status, `null` if its record was dropped */
-    data class RevocationFailed(val sessionKey: PolymarketSessionKey?) : PolymarketSessionKeyLifecycleError
+    /** @property sessionKey the key's last known record: back in its previous status, or still `REVOKING` */
+    data class RevocationFailed(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyLifecycleError
 
     data class Unsettled(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyLifecycleError
 

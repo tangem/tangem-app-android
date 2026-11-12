@@ -12,7 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_percent_backward_20
-import com.tangem.domain.pay.model.TangemPayCashback
+import com.tangem.domain.tangempay.model.TangemPayCashback
 import com.tangem.features.tangempay.account.CashbackBlockUM
 import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM

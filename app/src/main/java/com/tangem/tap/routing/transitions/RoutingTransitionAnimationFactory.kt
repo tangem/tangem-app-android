@@ -1,21 +1,18 @@
 package com.tangem.tap.routing.transitions
 
-import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.layout
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.animation.Direction
 import com.tangem.core.decompose.ui.stack.animation.StackAnimator
 import com.tangem.core.decompose.ui.stack.animation.fade
 import com.tangem.core.decompose.ui.stack.animation.plus
 import com.tangem.core.decompose.ui.stack.animation.scale
+import com.tangem.core.decompose.ui.stack.animation.slideAndFade
 import com.tangem.core.decompose.ui.stack.animation.stackAnimator
 import com.tangem.common.routing.AppRoute
-import kotlin.math.abs
 
 @OptIn(ExperimentalDecomposeApi::class)
 object RoutingTransitionAnimationFactory {
@@ -65,76 +62,6 @@ object RoutingTransitionAnimationFactory {
             }
             scaleX = scaleFactor
             scaleY = scaleFactor
-        }
-    }
-
-    /**
-     * @param slideDirections directions in which the horizontal slide is applied.
-     *   `null` (default) means slide in all directions.
-     * @param fadeDirections directions in which the alpha fade is applied.
-     *   `null` (default) means fade in all directions. Pass `emptySet()` to disable the fade
-     *   entirely — useful for screens that own a `hazeEffect` (e.g. WalletTopBar's progressive
-     *   blur), where wrapping the screen in an animated `graphicsLayer { alpha = ... }` causes
-     *   a visible blink over the blurred region.
-     */
-    @Suppress("MagicNumber")
-    private fun slideAndFade(
-        slideDirections: Set<Direction>? = null,
-        fadeDirections: Set<Direction>? = null,
-    ): StackAnimator {
-        val easing = CubicBezierEasing(a = 0.55f, b = 0.0f, c = 0.0f, d = 1f)
-
-        val slide = stackAnimator(
-            animationSpec = tween(durationMillis = 400, easing = easing),
-        ) { factor, direction ->
-            if (slideDirections == null || slideDirections.contains(direction)) {
-                Modifier.offsetXFactor(factor)
-            } else {
-                Modifier
-            }
-        }
-
-        val fade = directionalFade(
-            animationSpec = tween(
-                delayMillis = 50,
-                durationMillis = 300,
-                easing = easing,
-            ),
-            directions = fadeDirections,
-        )
-
-        return slide.plus(fade)
-    }
-
-    /**
-     * Like `decompose.fade(...)` but only applies the alpha `graphicsLayer` when `direction`
-     * is in [directions]. `null` directions = always fade (matches stock `fade()` behavior).
-     * `emptySet()` directions = never fade (modifier passes through untouched).
-     *
-     * Uses [CompositingStrategy.ModulateAlpha] (not `Offscreen` and not the default `Auto`)
-     * because screens that own a `hazeEffect` (e.g. `WalletTopBar`'s progressive blur) render
-     * through a `RenderEffect`, which always allocates its own offscreen buffer.
-     */
-    private fun directionalFade(
-        animationSpec: FiniteAnimationSpec<Float>,
-        directions: Set<Direction>?,
-    ): StackAnimator = stackAnimator(animationSpec) { factor, direction ->
-        if (directions == null || directions.contains(direction)) {
-            Modifier.graphicsLayer {
-                alpha = 1f - abs(factor)
-                compositingStrategy = CompositingStrategy.ModulateAlpha
-            }
-        } else {
-            Modifier
-        }
-    }
-
-    @Suppress("MagicNumber")
-    private fun Modifier.offsetXFactor(factor: Float): Modifier = layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-
-        layout(placeable.width, placeable.height) {
-            placeable.placeRelative(x = (placeable.width.toFloat() * factor * 0.15f).toInt(), y = 0)
         }
     }
 }

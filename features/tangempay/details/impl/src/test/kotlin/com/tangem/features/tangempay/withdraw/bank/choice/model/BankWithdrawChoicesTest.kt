@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.choice.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.pay.model.bankofframp.BankAccountType
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.features.tangempay.details.impl.R
 import org.junit.jupiter.api.Test
 

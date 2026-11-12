@@ -70,6 +70,15 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
+    fun provideResetOnrampCountryUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): ResetOnrampCountryUseCase {
+        return ResetOnrampCountryUseCase(onrampRepository, onrampErrorResolver)
+    }
+
+    @Provides
+    @Singleton
     fun provideCheckOnrampAvailabilityUseCase(
         onrampRepository: OnrampRepository,
         onrampErrorResolver: OnrampErrorResolver,

@@ -34,7 +34,7 @@ dependencies {
     /* Project - Domain */
     api(projects.domain.card)
     api(projects.domain.feedback)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.walletConnect)
     api(projects.domain.wallets)
     implementation(projects.domain.common)

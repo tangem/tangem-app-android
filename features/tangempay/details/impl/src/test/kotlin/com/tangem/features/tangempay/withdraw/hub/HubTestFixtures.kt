@@ -1,12 +1,12 @@
 package com.tangem.features.tangempay.withdraw.hub
 
-import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
-import com.tangem.domain.pay.model.bankofframp.BankAccountType
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
-import com.tangem.domain.pay.model.bankofframp.PostalAddress
-import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.PostalAddress
+import com.tangem.domain.tangempay.model.bankofframp.RecentBankAccounts
 
 internal fun recentBankAccounts(
     recents: List<BankAccount> = emptyList(),

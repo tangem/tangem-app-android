@@ -1,6 +1,7 @@
 package com.tangem.features.send.feeselector.component.token.model
 
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.stringReference
 
 // A product name, not translated in any locale
@@ -21,5 +22,17 @@ internal fun TokenItemState.asSponsoredFee(symbol: String): TokenItemState {
         is TokenItemState.Locked,
         is TokenItemState.Draggable,
         -> this
+    }
+}
+
+internal fun TangemTokenRow.State.asSponsoredFee(symbol: String): TangemTokenRow.State {
+    val sponsoredId = "${id}_sponsored"
+    val sponsoredTitle = stringReference("$SPONSORED_FEE_TITLE $symbol")
+    return when (this) {
+        is TangemTokenRow.State.Content -> copy(id = sponsoredId, title = sponsoredTitle)
+        is TangemTokenRow.State.Unreachable -> copy(id = sponsoredId, title = sponsoredTitle)
+        is TangemTokenRow.State.NoAddress -> copy(id = sponsoredId, title = sponsoredTitle)
+        is TangemTokenRow.State.Organize -> copy(id = sponsoredId, title = sponsoredTitle)
+        is TangemTokenRow.State.Shimmer -> copy(id = sponsoredId)
     }
 }

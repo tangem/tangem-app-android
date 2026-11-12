@@ -8,6 +8,8 @@ import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.EarnToken
 import com.tangem.domain.models.earn.EarnYieldOffers
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.yield.supply.YieldSupplyContribution
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoResolution
 import com.tangem.test.core.ProvideTestModels
@@ -125,6 +127,20 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
         // Arrange
         val tronToken = MockYieldSupply.token(contractAddress = "0xC0", symbol = "TRX_USDT", network = tronNetwork)
         val statuses = listOf(MockYieldSupply.loadedStatus(usdt), CryptoCurrencyStatus(tronToken, tronValue))
+
+        // Act
+        val actual = useCase(statuses = statuses, yieldSupplyApy = apyOf(usdt), earnOffers = earnOffers())
+
+        // Assert
+        assertThat(actual).isEqualTo(ready(userMaxApy = offer(apy = "5.00", tokenSymbol = "USDT")))
+    }
+
+    @Test
+    fun `GIVEN a fresh inactive Yield Mode status WHEN invoke THEN the promo is offered`() {
+        // Arrange — the Yield Module status source reports the Yield Mode state on its own, here fresh and inactive
+        val statuses = listOf(
+            MockYieldSupply.loadedStatus(usdt).withYieldContribution(source = StatusSource.ACTUAL),
+        )
 
         // Act
         val actual = useCase(statuses = statuses, yieldSupplyApy = apyOf(usdt), earnOffers = earnOffers())
@@ -280,6 +296,10 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
             MockYieldSupply.loadedStatus(usdt, amount = BigDecimal("100")),
             MockYieldSupply.loadedStatus(usdc, networkSource = StatusSource.ONLY_CACHE),
         ),
+        listOf(
+            MockYieldSupply.loadedStatus(usdt, amount = BigDecimal("100"))
+                .withYieldContribution(source = StatusSource.ONLY_CACHE),
+        ),
     )
 
     private fun provideUnsettledTronValues() = listOf(CryptoCurrencyStatus.Loading, unreachable())
@@ -294,6 +314,7 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
             yieldSupplyStatus = MockYieldSupply.activeYieldSupplyStatus(),
             networkSource = StatusSource.CACHE,
         ),
+        MockYieldSupply.loadedStatus(usdc).withYieldContribution(source = StatusSource.CACHE),
     )
 
     private fun provideUnusableTopRows() = listOf(null, MockEarn.yieldToken(apy = "0"))
@@ -301,6 +322,21 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
     private fun apyOf(token: CryptoCurrency.Token) = mapOf(token.yieldSupplyKey() to BigDecimal("5"))
 
     private fun earnOffers() = EarnYieldOffers(total = 36, best = MockEarn.yieldToken())
+
+    /** An inactive Yield Mode status delivered as a contribution, the shape the Yield Module status source produces. */
+    private fun CryptoCurrencyStatus.withYieldContribution(source: StatusSource): CryptoCurrencyStatus {
+        val contribution = YieldSupplyContribution(
+            status = YieldSupplyStatus(
+                isActive = false,
+                isInitialized = true,
+                isAllowedToSpend = true,
+                effectiveProtocolBalance = null,
+            ),
+            source = source,
+        )
+
+        return copy(value = (value as CryptoCurrencyStatus.Loaded).copy(contributions = listOf(contribution)))
+    }
 
     private fun unreachable() = CryptoCurrencyStatus.Unreachable(
         priceChange = null,

@@ -18,6 +18,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
@@ -544,7 +545,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private fun List<ExpressProvider>.filterYieldSupplyProvider(
         cryptoCurrencyStatus: CryptoCurrencyStatus?,
     ): List<ExpressProvider> {
-        val isYieldSupplyActive = cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
+        val isYieldSupplyActive = cryptoCurrencyStatus?.value?.yieldSupply?.isActive == true
         if (!isYieldSupplyActive) return this
 
         return filter { provider ->

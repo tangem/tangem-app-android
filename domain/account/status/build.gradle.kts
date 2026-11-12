@@ -25,7 +25,7 @@ dependencies {
     api(projects.domain.staking) // AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED
     api(projects.domain.tokens)
     api(projects.domain.tokens.models)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
     api(projects.core.analytics)
@@ -58,6 +58,7 @@ dependencies {
     testImplementation(projects.test.mock)
     testImplementation(projects.domain.wallets.models)
     testImplementation(projects.domain.staking.models)
+    testImplementation(projects.domain.yieldSupply)
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(deps.kotlin.datetime)

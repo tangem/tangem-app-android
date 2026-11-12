@@ -56,7 +56,6 @@ internal class DefaultWalletManagersFacadeTest {
         getCachedTokenInfoUseCase = mockk(),
         jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = mockk(),
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns false },
         yieldSendUpgradeDecisions = YieldSendUpgradeDecisions(),
     )
 
@@ -127,10 +126,10 @@ internal class DefaultWalletManagersFacadeTest {
         }
 
         @Test
-        fun `GIVEN yield send and toggle on and upgrade available WHEN estimateFee THEN estimates wrapped send`() =
+        fun `GIVEN yield send and upgrade available WHEN estimateFee THEN estimates wrapped send`() =
             runTest {
                 // Arrange
-                val facade = createFacade(isToggleEnabled = true)
+                val facade = createFacade()
 
                 // Act
                 facade.estimateFee(
@@ -147,7 +146,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN yield send and upgrade not allowed WHEN estimateFee THEN estimates bare send`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
 
             // Act
             facade.estimateFee(
@@ -161,25 +160,6 @@ internal class DefaultWalletManagersFacadeTest {
             assertThat(sentCallData.captured).isInstanceOf(EthereumYieldSupplySendCallData::class.java)
             coVerify(exactly = 0) { walletManager.checkModuleVersionStatus() }
         }
-
-        @Test
-        fun `GIVEN yield send and toggle off WHEN estimateFee THEN estimates bare send without version check`() =
-            runTest {
-                // Arrange
-                val facade = createFacade(isToggleEnabled = false)
-
-                // Act
-                facade.estimateFee(
-                    amount = yieldSupplyAmount,
-                    userWalletId = userWalletId,
-                    network = ethereumNetwork,
-                    isYieldModuleUpgradeAllowed = true,
-                )
-
-                // Assert
-                assertThat(sentCallData.captured).isInstanceOf(EthereumYieldSupplySendCallData::class.java)
-                coVerify(exactly = 0) { walletManager.checkModuleVersionStatus() }
-            }
     }
 
     @Nested
@@ -200,7 +180,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN fee estimated wrapped and version check fails now WHEN wrap THEN wrapped as estimated`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
             facade.estimateFee(
                 amount = yieldSupplyAmount,
                 userWalletId = userWalletId,
@@ -222,7 +202,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN fee estimated bare after failed check and check passes now WHEN wrap THEN stays bare`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
             coEvery { walletManager.checkModuleVersionStatus() } throws IllegalStateException("RPC is down")
             facade.estimateFee(
                 amount = yieldSupplyAmount,
@@ -242,7 +222,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN no fee estimate WHEN wrap THEN checks module version now`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
 
             // Act
             val actual = facade.wrapYieldSendWithModuleUpgrade(userWalletId, ethereumNetwork, sendCallData)
@@ -256,7 +236,7 @@ internal class DefaultWalletManagersFacadeTest {
         fun `GIVEN transfer built bare after failed check WHEN built again after check passes THEN stays bare`() =
             runTest {
                 // Arrange
-                val facade = createFacade(isToggleEnabled = true)
+                val facade = createFacade()
                 coEvery { walletManager.checkModuleVersionStatus() } throws IllegalStateException("RPC is down")
                 facade.wrapYieldSendWithModuleUpgrade(userWalletId, ethereumNetwork, sendCallData)
                 stubUpgradeAvailable()
@@ -271,7 +251,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN decision reset after a sent upgrade WHEN wrap THEN checks module version again`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
             facade.estimateFee(
                 amount = yieldSupplyAmount,
                 userWalletId = userWalletId,
@@ -291,7 +271,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN fee estimated with upgrade not allowed WHEN wrap THEN checks module version now`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
             facade.estimateFee(
                 amount = yieldSupplyAmount,
                 userWalletId = userWalletId,
@@ -330,7 +310,7 @@ internal class DefaultWalletManagersFacadeTest {
         )
     }
 
-    private fun createFacade(isToggleEnabled: Boolean) = DefaultWalletManagersFacade(
+    private fun createFacade() = DefaultWalletManagersFacade(
         walletManagersStore = walletManagersStore,
         userWalletsListRepository = userWalletsListRepository,
         assetLoader = mockk(),
@@ -340,7 +320,6 @@ internal class DefaultWalletManagersFacadeTest {
         getCachedTokenInfoUseCase = mockk(),
         jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = mockk(),
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns isToggleEnabled },
         yieldSendUpgradeDecisions = YieldSendUpgradeDecisions(),
     )
 

@@ -72,7 +72,6 @@ class GenerateWalletNameUseCase(
             ProductType.Note -> "Note"
             ProductType.Twins -> "Twin"
             ProductType.Start2Coin -> "Start2Coin"
-            ProductType.Visa -> "Tangem Visa"
             ProductType.Wallet,
             ProductType.Wallet2,
             ProductType.Ring,

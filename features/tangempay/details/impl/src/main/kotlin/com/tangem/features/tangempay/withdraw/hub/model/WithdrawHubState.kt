@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.withdraw.hub.model
 
-import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.domain.pay.model.recents.RecentTokenTransfer
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.recents.RecentTokenTransfer
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 
 /** Raw inputs of the withdraw hub; the UM factory turns them into the swap and bank sections. */

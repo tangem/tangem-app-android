@@ -11,4 +11,14 @@ internal sealed interface CollectiblesMainBottomSheetConfig {
 
     @Serializable
     data class Receive(val config: TokenReceiveConfig) : CollectiblesMainBottomSheetConfig
+
+    @Serializable
+    data object PaymentInProgress : CollectiblesMainBottomSheetConfig
+
+    @Serializable
+    data class PackUnopened(
+        val txId: String,
+        val machineId: String,
+        val isTurboModeEnabled: Boolean,
+    ) : CollectiblesMainBottomSheetConfig
 }

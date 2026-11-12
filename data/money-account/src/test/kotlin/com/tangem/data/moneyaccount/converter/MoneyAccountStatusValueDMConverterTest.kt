@@ -6,7 +6,7 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
-import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
+import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test

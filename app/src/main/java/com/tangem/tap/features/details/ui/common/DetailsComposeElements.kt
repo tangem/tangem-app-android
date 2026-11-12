@@ -2,7 +2,6 @@ package com.tangem.tap.features.details.ui.common
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -11,7 +10,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
@@ -78,16 +76,6 @@ internal fun SettingsScreensScaffold(
     )
 }
 
-@Composable
-internal fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
-    Text(
-        text = stringResourceSafe(id = titleRes),
-        modifier = modifier.padding(start = 20.dp, end = 20.dp),
-        style = TangemTheme.typography.h1,
-        color = TangemTheme.colors3.text.primary,
-    )
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun EmptyTopBarWithNavigation(
@@ -116,58 +104,4 @@ internal fun EmptyTopBarWithNavigation(
             containerColor = backgroundColor,
         ),
     )
-}
-
-@Composable
-internal fun DetailsMainButton(
-    title: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-) {
-    PrimaryButtonIconEnd(
-        text = title,
-        enabled = enabled,
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth(),
-        iconResId = R.drawable.ic_tangem_24,
-    )
-}
-
-@Composable
-internal fun DetailsRadioButtonElement(title: String, subtitle: String, isSelected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectable(
-                selected = isSelected,
-                onClick = { onClick() },
-            )
-            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
-    ) {
-        RadioButton(
-            selected = isSelected,
-            onClick = null,
-            modifier = Modifier.padding(end = 20.dp),
-            colors = RadioButtonDefaults.colors(
-                unselectedColor = TangemTheme.colors3.icon.secondary,
-                selectedColor = TangemTheme.colors3.icon.accent.blue,
-            ),
-        )
-
-        Column {
-            Text(
-                text = title,
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors3.text.primary,
-            )
-            Spacer(modifier = Modifier.size(4.dp))
-            Text(
-                text = subtitle,
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors3.text.secondary,
-            )
-        }
-    }
 }

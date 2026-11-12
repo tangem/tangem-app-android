@@ -1,0 +1,50 @@
+package com.tangem.spend.datasource.tangempay.models.response
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+/**
+ * Response of `v1/account/bank-credentials/{product_instance_id}`
+ */
+@Serializable
+data class BankCredentialsResponse(
+    @SerialName("result") val result: Result?,
+) {
+    @Serializable
+    data class Result(
+        @SerialName("type") val type: String?,
+        @SerialName("beneficiary_name") val beneficiaryName: String?,
+        @SerialName("beneficiary_address") val beneficiaryAddress: String?,
+        @SerialName("beneficiary_bank_name") val beneficiaryBankName: String?,
+        @SerialName("beneficiary_bank_address") val beneficiaryBankAddress: String?,
+        @SerialName("account_number") val accountNumber: String?,
+        @SerialName("routing_number") val routingNumber: String?,
+        @SerialName("rail") val rail: String?,
+        @SerialName("transfer_message") val transferMessage: String?,
+        @Deprecated("Sent for apps up to 6.8, replaced by depositFee")
+        @SerialName("fee") val fee: LegacyFee?,
+        @SerialName("deposit_fee") val depositFee: FeesResponse.Fee?,
+        @SerialName("deposit_limit") val depositLimit: DepositLimit?,
+        @SerialName("amount_limits") val amountLimits: AmountLimitsResponse?,
+        @SerialName("exchange_rate") val exchangeRate: ExchangeRate?,
+    )
+
+    @Serializable
+    data class LegacyFee(
+        @SerialName("type") val type: String?,
+        @SerialName("amount") val amount: String?,
+    )
+
+    @Serializable
+    data class DepositLimit(
+        @SerialName("amount") val amount: String?,
+        @SerialName("period") val period: String?,
+    )
+
+    @Serializable
+    data class ExchangeRate(
+        @SerialName("rate") val rate: String?,
+        @SerialName("base") val base: String?,
+        @SerialName("quote") val quote: String?,
+    )
+}

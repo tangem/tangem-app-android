@@ -31,8 +31,8 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.moneyAccount)
     implementation(projects.domain.txhistory)
-    implementation(projects.domain.visa)
-    implementation(projects.domain.visa.models)
+    implementation(projects.domain.tangempay)
+    implementation(projects.domain.tangempay.models)
     implementation(projects.domain.wallets)
 
     /** Features */
@@ -41,6 +41,7 @@ dependencies {
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.txhistory.api)
+    implementation(projects.features.yieldSupply.api)
 
     /** Compose */
     implementation(deps.compose.foundation)

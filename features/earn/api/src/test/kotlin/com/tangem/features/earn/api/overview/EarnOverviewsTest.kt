@@ -97,6 +97,7 @@ internal class EarnOverviewsTest {
             rate = EarnProductRate(fraction = BigDecimal("0.05"), type = EarnRateType.APY),
             isActive = true,
             badge = stringReference("5% APY"),
+            badgeAccent = EarnBadgeAccent.Success,
             route = null,
         ),
         banner: EarnBannerOverview? = EarnBannerOverview(

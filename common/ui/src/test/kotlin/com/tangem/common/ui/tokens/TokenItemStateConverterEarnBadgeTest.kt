@@ -6,6 +6,8 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -15,313 +17,141 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.network.NetworkAddress
-import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import com.tangem.domain.staking.model.BalanceItem
-import com.tangem.domain.staking.model.StakingAvailability
-import com.tangem.domain.staking.model.StakingBalance
-import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.staking.model.StakingOption
-import com.tangem.domain.staking.model.common.RewardInfo
-import com.tangem.domain.staking.model.common.RewardType
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
+import io.mockk.verify
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
-import java.util.Locale
 import kotlin.reflect.KClass
 
-/**
- * Characterizes the earn badge [TokenItemStateConverter] puts into a token title: which rate the badge shows, which
- * wording it uses and whether it counts as active. The cases pin what the converter does today, quirks included.
- *
- * Staked balances are mocked: the converter only reads `validatorAddress` off the items, never the totals.
- */
 internal class TokenItemStateConverterEarnBadgeTest {
 
     private val factory = MockCryptoCurrencyFactory()
     private val ethereum = factory.createCoin(Blockchain.Ethereum)
-    private val solana = factory.createCoin(Blockchain.Solana)
-    private val cardano = factory.createCoin(Blockchain.Cardano)
-    private val stakeToken = factory.createToken(
-        blockchain = Blockchain.Ethereum,
-        contractAddress = "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6",
-    )
     private val yieldToken = factory.createToken(
         blockchain = Blockchain.Ethereum,
         contractAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     )
 
+    private val badgeText = stringReference("APY 5.50%")
     private val yieldApy = BigDecimal("5.851295672613467")
     private val yieldApyMap = mapOf(yieldToken.yieldSupplyKey() to yieldApy)
-    private val yieldBadge = badge(R.string.yield_module_earn_badge, yieldApy)
 
     private val networkAddress = NetworkAddress.Single(
         NetworkAddress.Address("address", NetworkAddress.Address.Type.Primary),
     )
 
-    private var originalLocale: Locale = Locale.getDefault()
-
-    @BeforeEach
-    fun setUp() {
-        originalLocale = Locale.getDefault()
-        Locale.setDefault(Locale.US)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Locale.setDefault(originalLocale)
-    }
-
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class StakingAlone {
+    inner class StatusesWithBalance {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN staking option and no stake WHEN convert THEN badge shows the rate and is inactive`(
-            model: StakingBadgeModel,
+        fun `GIVEN a provider badge AND a status with balance WHEN convert THEN the title carries the badge text and activity`(
+            model: BadgeModel,
         ) {
             // Arrange
-            val converter = converter(stakingApyMap = mapOf(model.currency to model.availability))
+            val converter = converter(earnBadgeProvider = { TangemBadgeUM(text = badgeText, status = model.status) })
 
             // Act
-            val actual = converter.contentTitle(loaded(model.currency))
+            val actual = converter.contentTitle(CryptoCurrencyStatus(currency = ethereum, value = model.value))
 
             // Assert
-            assertThat(actual).isEqualTo(expectedTitle(model.currency, earnApy = model.expectedBadge))
-        }
-
-        @Test
-        fun `GIVEN staking rate below the displayed precision WHEN convert THEN badge shows the rounded number`() {
-            // Arrange
-            val availability = StakingAvailability.Available(
-                stakeKitOption(validator("v1", preferred = true, rate = "0.00001")),
-            )
-            val converter = converter(stakingApyMap = mapOf(solana to availability))
-
-            // Act
-            val actual = converter.contentTitle(loaded(solana))
-
-            // Assert
-            val expected = expectedTitle(solana, earnApy = badge(R.string.yield_module_earn_badge, "0.00"))
-            assertThat(actual).isEqualTo(expected)
-        }
-
-        @Test
-        fun `GIVEN coin AND yield map of another token WHEN convert THEN yield map is ignored`() {
-            // Arrange
-            val availability = StakingAvailability.Available(
-                stakeKitOption(validator("v1", preferred = true, rate = "0.07", type = RewardType.APR)),
-            )
-            val converter = converter(yieldModuleApyMap = yieldApyMap, stakingApyMap = mapOf(solana to availability))
-
-            // Act
-            val actual = converter.contentTitle(loaded(solana))
-
-            // Assert
-            val expected = expectedTitle(solana, earnApy = badge(R.string.staking_apr_earn_badge, "7.00"))
+            val expected = expectedTitle(ethereum, earnApy = badgeText, isEarnApyActive = model.isActive)
             assertThat(actual).isEqualTo(expected)
         }
 
         private fun provideTestModels() = listOf(
-            StakingBadgeModel(
-                description = "P2P ETH pool",
-                currency = ethereum,
-                availability = StakingAvailability.Available(p2pOption(apy = "0.04")),
-                expectedBadge = badge(R.string.yield_module_earn_badge, "4.00"),
-            ),
-            StakingBadgeModel(
-                description = "StakeKit coin with APR",
-                currency = solana,
-                availability = StakingAvailability.Available(
-                    stakeKitOption(validator("v1", preferred = true, rate = "0.07", type = RewardType.APR)),
-                ),
-                expectedBadge = badge(R.string.staking_apr_earn_badge, "7.00"),
-            ),
-            StakingBadgeModel(
-                description = "StakeKit coin with APY",
-                currency = cardano,
-                availability = StakingAvailability.Available(
-                    stakeKitOption(
-                        validator("v1", preferred = true, rate = "0.0312", type = RewardType.APY),
-                        integrationId = StakingIntegrationID.StakeKit.Coin.Cardano,
-                    ),
-                ),
-                expectedBadge = badge(R.string.yield_module_earn_badge, "3.12"),
-            ),
-            StakingBadgeModel(
-                description = "StakeKit token",
-                currency = stakeToken,
-                availability = StakingAvailability.Available(
-                    stakeKitOption(
-                        validator("v1", preferred = true, rate = "0.055", type = RewardType.APY),
-                        integrationId = StakingIntegrationID.StakeKit.EthereumToken.Polygon,
-                    ),
-                ),
-                expectedBadge = badge(R.string.yield_module_earn_badge, "5.50"),
-            ),
-            StakingBadgeModel(
-                description = "StakeKit coin with unknown reward type",
-                currency = solana,
-                availability = StakingAvailability.Available(
-                    stakeKitOption(validator("v1", preferred = true, rate = "0.06", type = RewardType.UNKNOWN)),
-                ),
-                expectedBadge = badge(R.string.yield_module_earn_badge, "6.00"),
-            ),
+            BadgeModel("Loaded, active", loaded(), TangemBadge.Status.Success, isActive = true),
+            BadgeModel("Loaded, inactive", loaded(), TangemBadge.Status.Neutral, isActive = false),
+            BadgeModel("Custom, active", custom(), TangemBadge.Status.Info, isActive = true),
+            BadgeModel("NoQuote, inactive", noQuote(), TangemBadge.Status.Neutral, isActive = false),
+            BadgeModel("NoAccount, active", noAccount(), TangemBadge.Status.Success, isActive = true),
         )
     }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class FullAvailability {
-
-        @Test
-        fun `GIVEN Full availability AND no stake WHEN convert THEN no badge`() {
-            // Arrange
-            val availability = StakingAvailability.Full(
-                stakeKitOption(validator("v1", preferred = true, rate = "0.07")),
-            )
-            val converter = converter(stakingApyMap = mapOf(solana to availability))
-
-            // Act
-            val actual = converter.contentTitle(loaded(solana))
-
-            // Assert
-            assertThat(actual).isEqualTo(expectedTitle(solana))
-        }
+    inner class BadgeStatuses {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN Full availability AND a stake WHEN convert THEN badge is shown and active`(
-            model: StakedBadgeModel,
+        fun `GIVEN a provider badge with a status WHEN convert THEN only the neutral status is inactive`(
+            model: StatusModel,
         ) {
             // Arrange
-            val converter = converter(stakingApyMap = mapOf(model.currency to model.availability))
+            val converter = converter(earnBadgeProvider = { TangemBadgeUM(text = badgeText, status = model.status) })
 
             // Act
-            val actual = converter.contentTitle(loaded(model.currency, stakingBalance = model.stake))
+            val actual = converter.contentTitle(CryptoCurrencyStatus(currency = ethereum, value = loaded()))
 
             // Assert
-            val expected = expectedTitle(model.currency, earnApy = model.expectedBadge, isEarnApyActive = true)
+            val expected = expectedTitle(ethereum, earnApy = badgeText, isEarnApyActive = model.isActive)
             assertThat(actual).isEqualTo(expected)
         }
 
         private fun provideTestModels() = listOf(
-            StakedBadgeModel(
-                description = "StakeKit balance",
-                currency = solana,
-                availability = StakingAvailability.Full(
-                    stakeKitOption(validator("v1", preferred = true, rate = "0.07", type = RewardType.APR)),
-                ),
-                stake = stakeKitBalance("v1"),
-                expectedBadge = badge(R.string.staking_apr_earn_badge, "7.00"),
-            ),
-            StakedBadgeModel(
-                description = "P2P contribution",
-                currency = ethereum,
-                availability = StakingAvailability.Full(p2pOption(apy = "0.04")),
-                stake = mockk<StakingBalance.Data.P2PEthPool>(),
-                expectedBadge = badge(R.string.yield_module_earn_badge, "4.00"),
-            ),
+            StatusModel(TangemBadge.Status.Neutral, isActive = false),
+            StatusModel(TangemBadge.Status.Info, isActive = true),
+            StatusModel(TangemBadge.Status.Success, isActive = true),
+            StatusModel(TangemBadge.Status.Warning, isActive = true),
+            StatusModel(TangemBadge.Status.Error, isActive = true),
+            StatusModel(TangemBadge.Status.Violet, isActive = true),
         )
     }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class YieldModeAlone {
+    inner class WithoutProvider {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN token in yield map WHEN convert THEN badge shows the raw percent and follows yield activity`(
-            model: YieldStatusModel,
+        fun `GIVEN no provider AND a status with balance WHEN convert THEN the title has no badge`(
+            model: BalanceStatusModel,
         ) {
             // Arrange
-            val converter = converter(yieldModuleApyMap = yieldApyMap)
+            val converter = converter()
 
             // Act
-            val actual = converter.contentTitle(loaded(yieldToken, yieldSupplyStatus = model.yieldSupplyStatus))
+            val actual = converter.contentTitle(CryptoCurrencyStatus(currency = ethereum, value = model.value))
 
             // Assert
-            val expected = expectedTitle(yieldToken, earnApy = yieldBadge, isEarnApyActive = model.expectedActive)
-            assertThat(actual).isEqualTo(expected)
+            assertThat(actual).isEqualTo(expectedTitle(ethereum))
         }
 
         private fun provideTestModels() = listOf(
-            YieldStatusModel(description = "active", yieldSupplyStatus = yieldSupplyStatus(true), expectedActive = true),
-            YieldStatusModel(
-                description = "inactive",
-                yieldSupplyStatus = yieldSupplyStatus(false),
-                expectedActive = false,
-            ),
-            YieldStatusModel(description = "no status", yieldSupplyStatus = null, expectedActive = false),
+            BalanceStatusModel(description = "Loaded", value = loaded()),
+            BalanceStatusModel(description = "Custom", value = custom()),
+            BalanceStatusModel(description = "NoQuote", value = noQuote()),
+            BalanceStatusModel(description = "NoAccount", value = noAccount()),
         )
     }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class YieldModeAndStaking {
+    inner class StatusesWithoutBalance {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN token in yield map AND staking map WHEN convert THEN yield badge wins with yield activity`(
-            model: ActivityModel,
-        ) {
-            // Arrange
-            val availability = StakingAvailability.Available(
-                stakeKitOption(validator("v1", preferred = true, rate = "0.07", type = RewardType.APR)),
-            )
-            val converter = converter(yieldModuleApyMap = yieldApyMap, stakingApyMap = mapOf(yieldToken to availability))
-            val status = loaded(
-                currency = yieldToken,
-                stakingBalance = if (model.isStakingActive) stakeKitBalance("v1") else null,
-                yieldSupplyStatus = yieldSupplyStatus(model.isYieldActive),
-            )
-
-            // Act
-            val actual = converter.contentTitle(status)
-
-            // Assert
-            val expected = expectedTitle(yieldToken, earnApy = yieldBadge, isEarnApyActive = model.isYieldActive)
-            assertThat(actual).isEqualTo(expected)
-        }
-
-        private fun provideTestModels() = listOf(
-            ActivityModel(isYieldActive = true, isStakingActive = true),
-            ActivityModel(isYieldActive = true, isStakingActive = false),
-            ActivityModel(isYieldActive = false, isStakingActive = true),
-            ActivityModel(isYieldActive = false, isStakingActive = false),
-        )
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class NonContentStatuses {
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN yield and staking maps AND status without balance WHEN convert THEN title has no badge`(
+        fun `GIVEN a provider badge AND a status without balance WHEN convert THEN no badge and the provider is not asked`(
             model: NonContentStatusModel,
         ) {
             // Arrange
-            val availability = StakingAvailability.Available(
-                stakeKitOption(validator("v1", preferred = true, rate = "0.07", type = RewardType.APR)),
-            )
-            val converter = converter(yieldModuleApyMap = yieldApyMap, stakingApyMap = mapOf(yieldToken to availability))
-            val status = CryptoCurrencyStatus(currency = yieldToken, value = model.value)
+            val provider: (CryptoCurrency.ID) -> TangemBadgeUM? = mockk()
+            every { provider(any()) } returns TangemBadgeUM(text = badgeText, status = TangemBadge.Status.Success)
+            val converter = converter(earnBadgeProvider = provider)
 
             // Act
-            val actual = converter.convert(status)
+            val actual = converter.convert(CryptoCurrencyStatus(currency = ethereum, value = model.value))
 
             // Assert
             assertThat(actual).isInstanceOf(model.expectedState.java)
-            assertThat(actual.titleState).isEqualTo(expectedTitle(yieldToken))
+            assertThat(actual.titleState).isEqualTo(expectedTitle(ethereum))
+            verify(exactly = 0) { provider(any()) }
         }
 
         private fun provideTestModels() = listOf(
@@ -335,22 +165,101 @@ internal class TokenItemStateConverterEarnBadgeTest {
                 value = CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
                 expectedState = TokenItemState.Unreachable::class,
             ),
+            NonContentStatusModel(
+                description = "NoAmount",
+                value = CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null),
+                expectedState = TokenItemState.Unreachable::class,
+            ),
+            NonContentStatusModel(
+                description = "MissedDerivation",
+                value = CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null),
+                expectedState = TokenItemState.NoAddress::class,
+            ),
         )
     }
 
-    private fun converter(
-        yieldModuleApyMap: Map<String, BigDecimal> = emptyMap(),
-        stakingApyMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
-    ) = TokenItemStateConverter(
-        appCurrency = AppCurrency.Default,
-        yieldModuleApyMap = yieldModuleApyMap,
-        stakingApyMap = stakingApyMap,
-        iconStateProvider = { CurrencyIconState.Loading },
-        subtitleStateProvider = { TokenItemState.SubtitleState.Loading },
-        subtitle2StateProvider = { TokenItemState.Subtitle2State.Loading },
-        fiatAmountStateProvider = { TokenItemState.FiatAmountState.Loading },
-        promoBannerProvider = { TokenItemState.PromoBannerState.Empty },
-    )
+    @Nested
+    inner class ProviderArgument {
+
+        @Test
+        fun `GIVEN a currency WHEN convert THEN the provider is asked once with the currency id`() {
+            // Arrange
+            val asked = mutableListOf<CryptoCurrency.ID>()
+            val converter = converter(
+                earnBadgeProvider = { id ->
+                    asked += id
+                    null
+                },
+            )
+
+            // Act
+            converter.convert(CryptoCurrencyStatus(currency = ethereum, value = loaded()))
+
+            // Assert
+            assertThat(asked).containsExactly(ethereum.id)
+        }
+    }
+
+    @Nested
+    inner class YieldPromo {
+
+        private val status = CryptoCurrencyStatus(currency = yieldToken, value = loaded())
+
+        @Test
+        fun `GIVEN the yield map AND the promo currency WHEN convert THEN the promo banner carries the yield rate`() {
+            // Arrange
+            val converter = promoConverter()
+
+            // Act
+            val actual = (converter.convert(status) as TokenItemState.Content).promoBannerState
+
+            // Assert
+            val expectedTitle = resourceReference(
+                R.string.yield_module_main_screen_promo_banner_message,
+                wrappedList(yieldApy),
+            )
+            assertThat(actual).isInstanceOf(TokenItemState.PromoBannerState.Content::class.java)
+            assertThat((actual as TokenItemState.PromoBannerState.Content).title).isEqualTo(expectedTitle)
+        }
+
+        @Test
+        fun `GIVEN the promo banner WHEN it is clicked THEN the yield percent of the token is passed`() {
+            // Arrange
+            val clicks = mutableListOf<Pair<CryptoCurrencyStatus, String>>()
+            val converter = promoConverter(onYieldPromoClicked = { clicked, apy -> clicks += clicked to apy })
+            val banner = (converter.convert(status) as TokenItemState.Content).promoBannerState
+                as TokenItemState.PromoBannerState.Content
+
+            // Act
+            banner.onPromoBannerClick()
+
+            // Assert
+            assertThat(clicks).containsExactly(status to yieldApy.toString())
+        }
+
+        private fun promoConverter(onYieldPromoClicked: ((CryptoCurrencyStatus, String) -> Unit)? = null) =
+            TokenItemStateConverter(
+                appCurrency = AppCurrency.Default,
+                yieldModuleApyMap = yieldApyMap,
+                promoCryptoCurrencyStatus = status,
+                onYieldPromoClicked = onYieldPromoClicked,
+                iconStateProvider = { CurrencyIconState.Loading },
+                subtitleStateProvider = { TokenItemState.SubtitleState.Loading },
+                subtitle2StateProvider = { TokenItemState.Subtitle2State.Loading },
+                fiatAmountStateProvider = { TokenItemState.FiatAmountState.Loading },
+            )
+    }
+
+    private fun converter(earnBadgeProvider: (CryptoCurrency.ID) -> TangemBadgeUM? = { null }) =
+        TokenItemStateConverter(
+            appCurrency = AppCurrency.Default,
+            earnBadgeProvider = earnBadgeProvider,
+            iconStateProvider = { CurrencyIconState.Loading },
+            subtitleStateProvider = { TokenItemState.SubtitleState.Loading },
+            subtitle2StateProvider = { TokenItemState.Subtitle2State.Loading },
+            fiatAmountStateProvider = { TokenItemState.FiatAmountState.Loading },
+            promoBannerProvider = { TokenItemState.PromoBannerState.Empty },
+        )
 
     private fun TokenItemStateConverter.contentTitle(status: CryptoCurrencyStatus): TokenItemState.TitleState {
         return (convert(status) as TokenItemState.Content).titleState as TokenItemState.TitleState.Content
@@ -366,106 +275,67 @@ internal class TokenItemStateConverterEarnBadgeTest {
         isEarnApyActive = isEarnApyActive,
     )
 
-    private fun badge(res: Int, rate: Any) = resourceReference(res, wrappedList(rate))
-
-    private fun loaded(
-        currency: CryptoCurrency,
-        stakingBalance: StakingBalance.Data? = null,
-        yieldSupplyStatus: YieldSupplyStatus? = null,
-    ) = CryptoCurrencyStatus(
-        currency = currency,
-        value = CryptoCurrencyStatus.Loaded(
-            amount = BigDecimal.ONE,
-            fiatAmount = BigDecimal.ONE,
-            fiatRate = BigDecimal.ONE,
-            priceChange = BigDecimal.ZERO,
-            yieldSupplyStatus = yieldSupplyStatus,
-            hasCurrentNetworkTransactions = false,
-            pendingTransactions = emptySet(),
-            networkAddress = networkAddress,
-            sources = CryptoCurrencyStatus.Sources(),
-            contributions = listOfNotNull(stakingBalance),
-        ),
+    private fun loaded() = CryptoCurrencyStatus.Loaded(
+        amount = BigDecimal.ONE,
+        fiatAmount = BigDecimal.ONE,
+        fiatRate = BigDecimal.ONE,
+        priceChange = BigDecimal.ZERO,
+        yieldSupplyStatus = null,
+        hasCurrentNetworkTransactions = false,
+        pendingTransactions = emptySet(),
+        networkAddress = networkAddress,
+        sources = CryptoCurrencyStatus.Sources(),
+        contributions = emptyList(),
     )
 
-    private fun yieldSupplyStatus(isActive: Boolean) = YieldSupplyStatus(
-        isActive = isActive,
-        isInitialized = true,
-        isAllowedToSpend = true,
-        effectiveProtocolBalance = null,
+    private fun custom() = CryptoCurrencyStatus.Custom(
+        amount = BigDecimal.ONE,
+        fiatAmount = BigDecimal.ONE,
+        fiatRate = BigDecimal.ONE,
+        priceChange = BigDecimal.ZERO,
+        yieldSupplyStatus = null,
+        hasCurrentNetworkTransactions = false,
+        pendingTransactions = emptySet(),
+        networkAddress = networkAddress,
+        sources = CryptoCurrencyStatus.Sources(),
+        contributions = emptyList(),
     )
 
-    /**
-     * A real option over a mocked [Yield]: stubbing `integrationId` on an option mock would make MockK retransform
-     * the enum implementations of `StakingIntegrationID`, which the JVM rejects.
-     */
-    private fun stakeKitOption(
-        vararg validatorList: Yield.Validator,
-        integrationId: StakingIntegrationID.StakeKit = StakingIntegrationID.StakeKit.Coin.Solana,
-    ): StakingOption.StakeKit {
-        val yieldModel: Yield = mockk {
-            every { validators } returns validatorList.toList()
-            every { apy } returns BigDecimal("0.10")
-            every { token } returns mockk()
-            every { isAvailable } returns true
-        }
-        return StakingOption.StakeKit(integrationId = integrationId, yield = yieldModel)
-    }
-
-    private fun p2pOption(apy: String): StakingOption.P2PEthPool = mockk {
-        every { this@mockk.apy } returns BigDecimal(apy)
-    }
-
-    private fun validator(
-        address: String,
-        preferred: Boolean,
-        rate: String,
-        type: RewardType = RewardType.APY,
-    ): Yield.Validator = Yield.Validator(
-        address = address,
-        status = Yield.Validator.ValidatorStatus.ACTIVE,
-        name = "validator-$address",
-        isPreferred = preferred,
-        isStrategicPartner = false,
-        rewardInfo = RewardInfo(rate = BigDecimal(rate), type = type),
+    private fun noQuote() = CryptoCurrencyStatus.NoQuote(
+        amount = BigDecimal.ONE,
+        yieldSupplyStatus = null,
+        hasCurrentNetworkTransactions = false,
+        pendingTransactions = emptySet(),
+        networkAddress = networkAddress,
+        sources = CryptoCurrencyStatus.Sources(),
+        contributions = emptyList(),
     )
 
-    private fun stakeKitBalance(vararg validatorAddresses: String?): StakingBalance.Data.StakeKit = mockk {
-        every { balance } returns mockk {
-            every { items } returns validatorAddresses.map { address ->
-                mockk<BalanceItem> { every { validatorAddress } returns address }
-            }
-        }
-    }
+    private fun noAccount() = CryptoCurrencyStatus.NoAccount(
+        amountToCreateAccount = BigDecimal.ONE,
+        fiatAmount = BigDecimal.ONE,
+        priceChange = BigDecimal.ZERO,
+        fiatRate = BigDecimal.ONE,
+        networkAddress = networkAddress,
+        sources = CryptoCurrencyStatus.Sources(),
+    )
 
-    internal data class StakingBadgeModel(
+    internal data class BadgeModel(
         val description: String,
-        val currency: CryptoCurrency,
-        val availability: StakingAvailability,
-        val expectedBadge: TextReference,
+        val value: CryptoCurrencyStatus.Value,
+        val status: TangemBadge.Status,
+        val isActive: Boolean,
     ) {
         override fun toString(): String = description
     }
 
-    internal data class StakedBadgeModel(
-        val description: String,
-        val currency: CryptoCurrency,
-        val availability: StakingAvailability,
-        val stake: StakingBalance.Data,
-        val expectedBadge: TextReference,
-    ) {
-        override fun toString(): String = description
+    internal data class StatusModel(val status: TangemBadge.Status, val isActive: Boolean) {
+        override fun toString(): String = status.name
     }
 
-    internal data class YieldStatusModel(
-        val description: String,
-        val yieldSupplyStatus: YieldSupplyStatus?,
-        val expectedActive: Boolean,
-    ) {
+    internal data class BalanceStatusModel(val description: String, val value: CryptoCurrencyStatus.Value) {
         override fun toString(): String = description
     }
-
-    internal data class ActivityModel(val isYieldActive: Boolean, val isStakingActive: Boolean)
 
     internal data class NonContentStatusModel(
         val description: String,

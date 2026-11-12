@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.card.activation
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.pay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
+import com.tangem.domain.tangempay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
 
 @Immutable
 internal data class TangemPayCardActivationUM(

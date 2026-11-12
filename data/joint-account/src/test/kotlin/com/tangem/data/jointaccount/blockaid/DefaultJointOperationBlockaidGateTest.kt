@@ -9,19 +9,21 @@ import com.domain.blockaid.models.transaction.TransactionParams
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.blockaid.BlockAidVerifier
-import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate.Verdict
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.data.jointaccount.safe.SafeTxTypedDataBuilder
 import com.tangem.domain.models.network.Network
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -35,9 +37,9 @@ internal class DefaultJointOperationBlockaidGateTest {
     private val blockAidVerifier: BlockAidVerifier = mockk()
     private val network: Network = mockk()
 
-    private val gate = DefaultJointOperationBlockaidGate(
+    private fun TestScope.createGate() = DefaultJointOperationBlockaidGate(
         blockAidVerifier = blockAidVerifier,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        dispatchers = createTestingCoroutineDispatcherProvider(),
     )
 
     @BeforeEach
@@ -57,7 +59,7 @@ internal class DefaultJointOperationBlockaidGateTest {
             ).right()
 
         // Act
-        val actual = gate.verify(
+        val actual = createGate().verify(
             network = network,
             safeTx = SAFE_TX,
             chainId = CHAIN_ID,
@@ -72,14 +74,14 @@ internal class DefaultJointOperationBlockaidGateTest {
 
     internal data class VerdictModel(
         val validation: ValidationResult,
-        val expected: JointOperationBlockaidGate.Verdict,
+        val expected: Verdict,
     )
 
     private fun provideTestModels() = listOf(
-        VerdictModel(ValidationResult.SAFE, JointOperationBlockaidGate.Verdict.SAFE),
-        VerdictModel(ValidationResult.WARNING, JointOperationBlockaidGate.Verdict.WARNING),
-        VerdictModel(ValidationResult.UNSAFE, JointOperationBlockaidGate.Verdict.MALICIOUS),
-        VerdictModel(ValidationResult.FAILED_TO_VALIDATE, JointOperationBlockaidGate.Verdict.UNKNOWN),
+        VerdictModel(ValidationResult.SAFE, Verdict.Safe),
+        VerdictModel(ValidationResult.WARNING, Verdict.Warning),
+        VerdictModel(ValidationResult.UNSAFE, Verdict.Malicious),
+        VerdictModel(ValidationResult.FAILED_TO_VALIDATE, Verdict.NoVerdict(Verdict.NoVerdict.Reason.ERROR)),
     )
 
     @Test
@@ -93,7 +95,7 @@ internal class DefaultJointOperationBlockaidGateTest {
             ).right()
 
         // Act
-        gate.verify(
+        createGate().verify(
             network = network,
             safeTx = SAFE_TX,
             chainId = CHAIN_ID,
@@ -125,7 +127,7 @@ internal class DefaultJointOperationBlockaidGateTest {
             ).right()
 
         // Act
-        val actual = gate.verify(
+        val actual = createGate().verify(
             network = network,
             safeTx = SAFE_TX,
             chainId = CHAIN_ID,
@@ -135,7 +137,7 @@ internal class DefaultJointOperationBlockaidGateTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(JointOperationBlockaidGate.Verdict.SAFE)
+        assertThat(actual).isEqualTo(Verdict.Safe)
         assertThat(dataSlot.captured).isEqualTo(
             TransactionData(
                 chain = "polygon",
@@ -162,7 +164,7 @@ internal class DefaultJointOperationBlockaidGateTest {
                 ).right()
 
             // Act
-            gate.verify(
+            createGate().verify(
                 network = network,
                 safeTx = SAFE_TX.copy(to = SAFE_TX.to.removePrefix("0x"), data = ""),
                 chainId = CHAIN_ID,
@@ -178,13 +180,13 @@ internal class DefaultJointOperationBlockaidGateTest {
         }
 
     @Test
-    fun `GIVEN blockaid transport fails WHEN verify THEN UNAVAILABLE, apart from a verdict it could not give`() = runTest {
+    fun `GIVEN blockaid transport fails WHEN verify THEN no verdict with an error`() = runTest {
         // Arrange
         coEvery { blockAidVerifier.verifyTransaction(data = any()) } returns
             IllegalStateException("blockaid down").left()
 
         // Act
-        val actual = gate.verify(
+        val actual = createGate().verify(
             network = network,
             safeTx = SAFE_TX,
             chainId = CHAIN_ID,
@@ -194,13 +196,13 @@ internal class DefaultJointOperationBlockaidGateTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(JointOperationBlockaidGate.Verdict.UNAVAILABLE)
+        assertThat(actual).isEqualTo(Verdict.NoVerdict(Verdict.NoVerdict.Reason.ERROR))
     }
 
     @Test
-    fun `GIVEN a payload the builder refuses WHEN verify THEN UNKNOWN without a request`() = runTest {
+    fun `GIVEN a payload the builder refuses WHEN verify THEN no verdict with an error and no request`() = runTest {
         // Act
-        val actual = gate.verify(
+        val actual = createGate().verify(
             network = network,
             safeTx = SAFE_TX.copy(data = "0xabc"),
             chainId = CHAIN_ID,
@@ -210,17 +212,17 @@ internal class DefaultJointOperationBlockaidGateTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(JointOperationBlockaidGate.Verdict.UNKNOWN)
+        assertThat(actual).isEqualTo(Verdict.NoVerdict(Verdict.NoVerdict.Reason.ERROR))
         coVerify(exactly = 0) { blockAidVerifier.verifyTransaction(data = any()) }
     }
 
     @Test
-    fun `GIVEN a chain blockaid does not cover WHEN verify THEN UNKNOWN without a request`() = runTest {
+    fun `GIVEN a chain blockaid does not cover WHEN verify THEN unsupported network and no request`() = runTest {
         // Arrange
         every { network.rawId } returns "some-unknown-network"
 
         // Act
-        val actual = gate.verify(
+        val actual = createGate().verify(
             network = network,
             safeTx = SAFE_TX,
             chainId = CHAIN_ID,
@@ -230,11 +232,80 @@ internal class DefaultJointOperationBlockaidGateTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(JointOperationBlockaidGate.Verdict.UNKNOWN)
+        assertThat(actual).isEqualTo(Verdict.NoVerdict(Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK))
         coVerify(exactly = 0) { blockAidVerifier.verifyTransaction(data = any()) }
     }
 
+    @Test
+    fun `GIVEN blockaid does not answer in 10 seconds WHEN verify THEN no verdict with a timeout`() = runTest {
+        // Arrange
+        coEvery { blockAidVerifier.verifyTransaction(data = any()) } coAnswers {
+            delay(10_001)
+            CheckTransactionResult(
+                validation = ValidationResult.UNSAFE,
+                simulation = SimulationResult.FailedToSimulate,
+            ).right()
+        }
+
+        // Act
+        val actual = createGate().verify(
+            network = network,
+            safeTx = SAFE_TX,
+            chainId = CHAIN_ID,
+            safeAddress = SAFE_ADDRESS,
+            ownerAddress = OWNER,
+            deployment = SafeDeployment.DEPLOYED,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Verdict.NoVerdict(Verdict.NoVerdict.Reason.TIMEOUT))
+    }
+
+    @Test
+    fun `GIVEN blockaid answers just within 10 seconds WHEN verify THEN its verdict is kept`() = runTest {
+        // Arrange
+        coEvery { blockAidVerifier.verifyTransaction(data = any()) } coAnswers {
+            delay(9_999)
+            CheckTransactionResult(
+                validation = ValidationResult.WARNING,
+                simulation = SimulationResult.FailedToSimulate,
+            ).right()
+        }
+
+        // Act
+        val actual = createGate().verify(
+            network = network,
+            safeTx = SAFE_TX,
+            chainId = CHAIN_ID,
+            safeAddress = SAFE_ADDRESS,
+            ownerAddress = OWNER,
+            deployment = SafeDeployment.DEPLOYED,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Verdict.Warning)
+    }
+
+    @Test
+    fun `GIVEN a safe not deployed yet and a non CALL operation WHEN verify THEN malicious without a request`() =
+        runTest {
+            // Act
+            val actual = createGate().verify(
+                network = network,
+                safeTx = SAFE_TX.copy(operation = DELEGATE_CALL),
+                chainId = CHAIN_ID,
+                safeAddress = SAFE_ADDRESS,
+                ownerAddress = OWNER,
+                deployment = SafeDeployment.NOT_DEPLOYED,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(Verdict.Malicious)
+            coVerify(exactly = 0) { blockAidVerifier.verifyTransaction(data = any()) }
+        }
+
     private companion object {
+        const val DELEGATE_CALL = 1
         const val CHAIN_ID = 137L
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
         const val OWNER = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"

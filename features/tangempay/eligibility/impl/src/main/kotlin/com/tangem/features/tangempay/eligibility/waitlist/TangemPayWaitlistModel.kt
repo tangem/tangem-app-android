@@ -13,10 +13,10 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.pay.model.TangemPayWaitlistEntry
-import com.tangem.domain.pay.usecase.JoinTangemPayWaitlistUseCase
+import com.tangem.domain.tangempay.model.TangemPayWaitlistEntry
+import com.tangem.domain.tangempay.usecase.JoinTangemPayWaitlistUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.eligibility.TangemPayWaitlistComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.withCacheBypass
@@ -121,7 +121,7 @@ internal class TangemPayWaitlistModel @Inject constructor(
         router.replaceAll(AppRoute.Wallet)
     }
 
-    private fun onJoinFailed(error: VisaApiError) {
+    private fun onJoinFailed(error: TangemPayApiError) {
         uiState.update { state ->
             state.copy(
                 isSaveInProgress = false,
@@ -129,7 +129,7 @@ internal class TangemPayWaitlistModel @Inject constructor(
             )
         }
         when (error) {
-            is VisaApiError.WaitlistInvalidEmail -> {
+            is TangemPayApiError.WaitlistInvalidEmail -> {
                 uiState.update { state ->
                     state.copy(
                         emailError = resourceReference(R.string.common_error_email_incorrect_format),

@@ -4,15 +4,15 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.model.bankofframp.BankOfframpError
-import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
-import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
-import com.tangem.domain.pay.model.bankofframp.OfframpEta
-import com.tangem.domain.pay.model.bankofframp.OfframpFee
-import com.tangem.domain.pay.repository.BankOfframpOrderRepository
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRoute
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
+import com.tangem.domain.tangempay.model.bankofframp.OfframpFee
+import com.tangem.domain.tangempay.repository.BankOfframpOrderRepository
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.MoneyAccountTransfer
 import com.tangem.features.tangempay.withdraw.bank.model.MoneyAccountTransferError
@@ -122,7 +122,7 @@ internal class RouteBankWithdrawCompletionTest {
         runTest {
             // Arrange
             coEvery { bankOfframpOrderRepository.createRoute(userWalletId, any(), any(), any(), any()) } returns
-                route(calculationType = AccountFee.CalculationType.PERCENTAGE).right()
+                route(calculationType = FeeCalculationType.PERCENTAGE).right()
             val completion = createCompletion()
 
             // Act
@@ -338,7 +338,7 @@ internal class RouteBankWithdrawCompletionTest {
 
     private fun route(
         fee: BigDecimal = BigDecimal("1.00"),
-        calculationType: AccountFee.CalculationType = AccountFee.CalculationType.FIXED,
+        calculationType: FeeCalculationType = FeeCalculationType.FIXED,
         minDays: Int = 1,
         maxDays: Int = 3,
     ) = BankOfframpRoute(

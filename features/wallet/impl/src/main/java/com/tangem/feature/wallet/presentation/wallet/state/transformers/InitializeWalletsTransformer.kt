@@ -28,6 +28,7 @@ internal class InitializeWalletsTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val isAllServicesEnabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -63,6 +64,7 @@ internal class InitializeWalletsTransformer(
 
     private fun createTopBarConfig(): WalletTopBarConfig {
         return WalletTopBarConfig(
+            onAllServicesClick = clickIntents::onAllServicesClick.takeIf { isAllServicesEnabled },
             endActions = listOf(
                 TangemTopBarActionUM(
                     iconRes = CoreUiR.drawable.ic_qrcode_scaner_24,

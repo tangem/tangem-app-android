@@ -8,7 +8,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 
 internal class TangemPayVerifiedUMFactory(
     private val onChoosePlanClick: () -> Unit,
@@ -18,9 +18,9 @@ internal class TangemPayVerifiedUMFactory(
 
     fun create(availableProducts: Set<TangemPayProduct>): TangemPayVerifiedUM.Content {
         val isMoneyAccountAvailable = TangemPayProduct.BANKING_ACCOUNT in availableProducts
-        val isVisaCardAvailable = TangemPayProduct.PAYMENT_ACCOUNT in availableProducts
+        val isPaymentAccountAvailable = TangemPayProduct.PAYMENT_ACCOUNT in availableProducts
         return TangemPayVerifiedUM.Content(
-            description = description(isMoneyAccountAvailable, isVisaCardAvailable),
+            description = description(isMoneyAccountAvailable, isPaymentAccountAvailable),
             moneyAccount = TangemPayVerifiedUM.ProductUM(
                 title = resourceReference(R.string.money_account_main_name),
                 subtitle = if (isMoneyAccountAvailable) {
@@ -31,45 +31,48 @@ internal class TangemPayVerifiedUMFactory(
                 isAvailable = isMoneyAccountAvailable,
                 badge = createBadge(isMoneyAccountAvailable),
             ),
-            visaCard = TangemPayVerifiedUM.ProductUM(
+            paymentAccount = TangemPayVerifiedUM.ProductUM(
                 title = resourceReference(R.string.tangempay_verified_payment_account_title),
-                subtitle = if (isVisaCardAvailable) {
+                subtitle = if (isPaymentAccountAvailable) {
                     resourceReference(R.string.tangempay_verified_payment_account_subtitle)
                 } else {
                     resourceReference(R.string.tangempay_verified_product_not_available)
                 },
-                isAvailable = isVisaCardAvailable,
-                badge = createBadge(isVisaCardAvailable),
+                isAvailable = isPaymentAccountAvailable,
+                badge = createBadge(isPaymentAccountAvailable),
             ),
-            primaryButton = primaryButton(isVisaCardAvailable, isMoneyAccountAvailable),
+            primaryButton = primaryButton(isPaymentAccountAvailable, isMoneyAccountAvailable),
             onCloseClick = onCloseClick,
         )
     }
 
     private fun primaryButton(
-        isVisaCardAvailable: Boolean,
+        isPaymentAccountAvailable: Boolean,
         isMoneyAccountAvailable: Boolean,
     ): TangemPayVerifiedUM.ButtonUM = TangemPayVerifiedUM.ButtonUM(
         text = when {
-            isVisaCardAvailable -> resourceReference(R.string.tangempay_verified_choose_plan)
+            isPaymentAccountAvailable -> resourceReference(R.string.tangempay_verified_choose_plan)
             isMoneyAccountAvailable -> resourceReference(R.string.tangempay_verified_open_money_account)
             else -> resourceReference(R.string.common_close)
         },
         iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
-            .takeIf { isMoneyAccountAvailable && !isVisaCardAvailable },
+            .takeIf { isMoneyAccountAvailable && !isPaymentAccountAvailable },
         onClick = when {
-            isVisaCardAvailable -> onChoosePlanClick
+            isPaymentAccountAvailable -> onChoosePlanClick
             isMoneyAccountAvailable -> onOpenMoneyAccountClick
             else -> onCloseClick
         },
     )
 
-    private fun description(isMoneyAccountAvailable: Boolean, isVisaCardAvailable: Boolean): TextReference = when {
-        isMoneyAccountAvailable && isVisaCardAvailable -> resourceReference(R.string.tangempay_verified_description_all)
-        isMoneyAccountAvailable -> resourceReference(R.string.tangempay_verified_description_money_account)
-        isVisaCardAvailable -> resourceReference(R.string.tangempay_verified_description_payment_account)
-        else -> resourceReference(R.string.tangempay_verified_description_none)
-    }
+    private fun description(isMoneyAccountAvailable: Boolean, isPaymentAccountAvailable: Boolean): TextReference =
+        when {
+            isMoneyAccountAvailable && isPaymentAccountAvailable -> resourceReference(
+                R.string.tangempay_verified_description_all,
+            )
+            isMoneyAccountAvailable -> resourceReference(R.string.tangempay_verified_description_money_account)
+            isPaymentAccountAvailable -> resourceReference(R.string.tangempay_verified_description_payment_account)
+            else -> resourceReference(R.string.tangempay_verified_description_none)
+        }
 
     private fun createBadge(isAvailable: Boolean): TangemBadgeUM = if (isAvailable) {
         TangemBadgeUM(

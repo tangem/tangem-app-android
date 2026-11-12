@@ -50,6 +50,9 @@ sealed interface SocialLoginError {
     /** The restored wallet is already on this device, so nothing is imported */
     data object WalletAlreadySaved : SocialLoginError
 
+    /** The device already holds the maximum number of mobile wallets, so nothing is created or restored */
+    data object HotWalletsLimitReached : SocialLoginError
+
     /** The backup needs a passphrase a social restore cannot ask for; the seed alone builds another wallet */
     data object PassphraseNotSupported : SocialLoginError
 

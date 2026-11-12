@@ -1,6 +1,9 @@
 package com.tangem.domain.models.currency
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.balance.BalanceContribution
+import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import io.mockk.every
 import io.mockk.mockk
@@ -401,14 +404,43 @@ class CryptoCurrencyExtensionsTest {
         assertThat(result).isEqualTo(BigDecimal("7"))
     }
 
+    @Test
+    fun `GIVEN yield only as a contribution WHEN notSuppliedCryptoAmountOrNull THEN returns amount minus protocolBalance`() {
+        // Arrange — the yield positions source leaves the field empty and delivers yield as a contribution
+        val status = createCryptoCurrencyStatus(
+            currency = mockk<CryptoCurrency.Token>(),
+            yieldSupplyStatus = null,
+            amount = BigDecimal("10"),
+            contributions = listOf(
+                YieldSupplyContribution(
+                    status = YieldSupplyStatus(
+                        isActive = true,
+                        isInitialized = true,
+                        isAllowedToSpend = true,
+                        effectiveProtocolBalance = BigDecimal("7"),
+                    ),
+                    source = StatusSource.ACTUAL,
+                ),
+            ),
+        )
+
+        // Act
+        val actual = status.notSuppliedCryptoAmountOrNull()
+
+        // Assert
+        assertThat(actual).isEqualTo(BigDecimal("3"))
+    }
+
     private fun createCryptoCurrencyStatus(
         currency: CryptoCurrency,
         yieldSupplyStatus: YieldSupplyStatus? = null,
         amount: BigDecimal? = null,
         fiatRate: BigDecimal? = null,
+        contributions: List<BalanceContribution> = emptyList(),
     ): CryptoCurrencyStatus {
         val value = mockk<CryptoCurrencyStatus.Value> {
             every { this@mockk.yieldSupplyStatus } returns yieldSupplyStatus
+            every { this@mockk.contributions } returns contributions
             every { this@mockk.amount } returns amount
             every { this@mockk.fiatRate } returns fiatRate
         }

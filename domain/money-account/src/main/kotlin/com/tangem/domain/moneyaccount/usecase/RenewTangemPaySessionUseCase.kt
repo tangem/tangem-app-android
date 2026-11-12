@@ -3,8 +3,8 @@ package com.tangem.domain.moneyaccount.usecase
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.usecase.ProduceTangemPayInitialDataUseCase
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 

@@ -173,4 +173,8 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Arc, ArcTestnet -> null
         Onyx, OnyxTestnet -> null
         PublicMasterpiece -> null
+        Zeniq -> null
+        Katana, KatanaTestnet -> null
+        XLayer, XLayerTestnet -> null
+        Ink, InkTestnet -> null
     }
