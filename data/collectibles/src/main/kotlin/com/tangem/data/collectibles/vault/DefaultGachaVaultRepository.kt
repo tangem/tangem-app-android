@@ -122,6 +122,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 // The provider lists only the accounts holding something, so an absent entry is an empty one
                 usdcAmount = balances.firstOrNull { it.contractAddress == token.contractAddress }?.amount
                     ?: BigDecimal.ZERO,
+                vaultAddress = vaultAddress,
                 ataAddress = ata,
             )
         }
