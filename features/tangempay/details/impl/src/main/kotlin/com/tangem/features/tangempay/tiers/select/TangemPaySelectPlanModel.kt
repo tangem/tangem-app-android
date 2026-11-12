@@ -54,8 +54,12 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         ?.let(TangemPayAnalyticsEvents.ProductSet::of)
 
     private val analyticsContext = when (params.mode) {
-        TangemPaySelectPlanComponent.Mode.ChangePlan -> TangemPayAnalyticsEvents.Tiers.PlanContext.CHANGE_PLAN
-        is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder -> TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING
+        TangemPaySelectPlanComponent.Mode.ChangePlan -> {
+            TangemPayAnalyticsEvents.Tiers.PlanContext.CHANGE_PLAN
+        }
+        is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder -> {
+            TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING
+        }
     }
 
     val state: StateFlow<TangemPaySelectPlanUM>

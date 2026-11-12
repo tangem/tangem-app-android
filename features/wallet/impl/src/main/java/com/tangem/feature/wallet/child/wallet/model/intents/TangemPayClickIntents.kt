@@ -18,7 +18,6 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -161,7 +160,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     }
 
     private fun openEligibility(userWalletId: UserWalletId) {
-        router.openTangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT, userWalletId = userWalletId)
+        router.openTangemPayEligibility(userWalletId = userWalletId)
     }
 
     override fun onVerifiedClicked(userWalletId: UserWalletId) {

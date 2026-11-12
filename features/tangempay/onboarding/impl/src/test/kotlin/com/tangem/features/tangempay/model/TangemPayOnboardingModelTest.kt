@@ -16,7 +16,6 @@ import com.tangem.core.error.UniversalError
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayEligibilityManager
@@ -296,7 +295,6 @@ internal class TangemPayOnboardingModelTest {
                 router.replaceAll(
                     AppRoute.Wallet,
                     AppRoute.TangemPayEligibility(
-                        product = TangemPayProduct.PAYMENT_ACCOUNT,
                         userWalletId = userWalletId,
                     ),
                     onComplete = any(),
@@ -353,7 +351,6 @@ internal class TangemPayOnboardingModelTest {
                 router.replaceAll(
                     AppRoute.Wallet,
                     AppRoute.TangemPayEligibility(
-                        product = TangemPayProduct.PAYMENT_ACCOUNT,
                         userWalletId = userWalletId,
                     ),
                     onComplete = any(),
@@ -434,7 +431,6 @@ internal class TangemPayOnboardingModelTest {
             router.replaceAll(
                 AppRoute.Wallet,
                 AppRoute.TangemPayEligibility(
-                    product = TangemPayProduct.PAYMENT_ACCOUNT,
                     userWalletId = userWalletId,
                 ),
                 onComplete = any(),
