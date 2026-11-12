@@ -32,6 +32,10 @@
         "version": "undefined"
     },
     {
+        "name": "AND_19141_SOLANA_GASLESS_RENT_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1906_EXPRESS_V2_ENABLED",
         "version": "6.8"
     },
