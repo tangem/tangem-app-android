@@ -343,7 +343,7 @@ private fun OffersBasedOnPaymentMethodContentDs(
         offers.fastForEach { offer ->
             key("${offer.paymentMethod.id} ${offer.providerName} ${offer.rate}") {
                 OfferWithLinkedBanner(offer, linkedMarketingBannerComponent)
-                SpacerH(8.dp)
+                SpacerH(4.dp)
             }
         }
     }

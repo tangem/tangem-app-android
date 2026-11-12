@@ -52,12 +52,12 @@ internal fun PaymentMethodsContentDs(methods: ImmutableList<AllOffersPaymentMeth
     ) {
         if (notification != null) {
             TangemMessage(config = notification.config)
-            SpacerH(8.dp)
+            SpacerH(4.dp)
         }
         methods.fastForEach { method ->
             key(method.methodConfig.method.id) {
                 PaymentMethodDs(methodUM = method)
-                SpacerH(8.dp)
+                SpacerH(4.dp)
             }
         }
     }
