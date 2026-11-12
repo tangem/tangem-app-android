@@ -3,6 +3,8 @@ package com.tangem.feature.swap.deeplink
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_AMOUNT_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_TOKEN_ID_KEY
@@ -34,17 +36,13 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.math.BigDecimal
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -61,9 +59,7 @@ import kotlin.time.Duration.Companion.seconds
  * over it, so re-opening the deeplink lands on a single swap screen instead of failing the navigation.
  */
 @Suppress("LongParameterList")
-internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val scope: CoroutineScope,
-    @Assisted private val queryParams: Map<String, String>,
+internal class SwapDeepLinkHandler @Inject constructor(
     private val router: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
@@ -73,18 +69,15 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val rampStateManager: RampStateManager,
     private val swapInteractor: SwapInteractor,
-) : SwapDeepLinkHandler {
+) : DeepLinkHandler {
 
-    init {
-        handleDeepLink()
-    }
-
-    private fun handleDeepLink() {
+    override fun handle(request: DeepLinkRequest) {
+        val queryParams = request.queryParams
         val selectedResult = getSelectedWalletSyncUseCase()
 
-        scope.launch {
-            val targetWalletId = resolveTargetWalletId(selectedResult) ?: return@launch
-            resolveTokensAndNavigate(targetWalletId)
+        request.scope.launch {
+            val targetWalletId = resolveTargetWalletId(queryParams, selectedResult) ?: return@launch
+            resolveTokensAndNavigate(queryParams, targetWalletId)
         }
     }
 
@@ -103,16 +96,19 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
      * Returns `null` also when there is no wallet to open at all, or when switching to the resolved
      * target wallet fails.
      */
-    private suspend fun resolveTargetWalletId(selectedResult: Either<GetUserWalletError, UserWallet>): UserWalletId? {
+    private suspend fun resolveTargetWalletId(
+        queryParams: Map<String, String>,
+        selectedResult: Either<GetUserWalletError, UserWallet>,
+    ): UserWalletId? {
         val wallets = getWalletsUseCase.invokeSync()
         if (wallets.isEmpty()) return null
         val existingIds = wallets.map { it.walletId }.toSet()
         val unlockedIds = wallets.filterNot { it.isLocked }.map { it.walletId }.toSet()
 
         // AI-MCP / broadcast wallet ids; drop non-existent ones (degrade, not Main)
-        val fromWalletId = existingWalletId(FROM_USER_WALLET_ID_KEY, existingIds)
-        val toWalletId = existingWalletId(TO_USER_WALLET_ID_KEY, existingIds)
-        val broadcastWalletId = existingWalletId(WALLET_ID_KEY, existingIds)
+        val fromWalletId = existingWalletId(queryParams, FROM_USER_WALLET_ID_KEY, existingIds)
+        val toWalletId = existingWalletId(queryParams, TO_USER_WALLET_ID_KEY, existingIds)
+        val broadcastWalletId = existingWalletId(queryParams, WALLET_ID_KEY, existingIds)
 
         val selectedWalletId = selectedResult.getOrNull()?.walletId
 
@@ -150,7 +146,11 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
      * The value comes from untrusted external input, so a malformed (non-hex) id is treated as absent
      * rather than crashing on [UserWalletId] construction.
      */
-    private fun existingWalletId(key: String, existingIds: Set<UserWalletId>): UserWalletId? {
+    private fun existingWalletId(
+        queryParams: Map<String, String>,
+        key: String,
+        existingIds: Set<UserWalletId>,
+    ): UserWalletId? {
         val raw = queryParams[key] ?: return null
         return runCatching { UserWalletId(raw) }.getOrNull()?.takeIf { it in existingIds }
     }
@@ -203,7 +203,7 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
      * exists (unavailable -> Main, best-effort dropped otherwise), and opens the resulting
      * [AppRoute.Swap].
      */
-    private suspend fun resolveTokensAndNavigate(targetWalletId: UserWalletId) {
+    private suspend fun resolveTokensAndNavigate(queryParams: Map<String, String>, targetWalletId: UserWalletId) {
         val isFromRequested = !queryParams[FROM_TOKEN_ID_KEY].isNullOrBlank()
         val isToRequested = !queryParams[TO_TOKEN_ID_KEY].isNullOrBlank()
 
@@ -221,7 +221,12 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
         }
 
         val accounts = loadAccountCurrencies(targetWalletId)
-        val (from, to) = resolvePair(accounts, isFromRequested, isToRequested)
+        val (from, to) = resolvePair(
+            queryParams = queryParams,
+            accounts = accounts,
+            isFromRequested = isFromRequested,
+            isToRequested = isToRequested,
+        )
 
         // Both sides requested but neither resolved in the portfolio -> Main
         if (isUnresolvedPair(isFromRequested = isFromRequested, isToRequested = isToRequested, from = from, to = to)) {
@@ -266,6 +271,7 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
 
     /** Resolves the FROM/TO concrete tokens (or `null` to degrade), TO preferring FROM's account. */
     private fun resolvePair(
+        queryParams: Map<String, String>,
         accounts: List<SwapCurrencyStatus>,
         isFromRequested: Boolean,
         isToRequested: Boolean,
@@ -389,14 +395,6 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
             filterProviderTypes = ExchangeProviderType.getSwapProviderTypes(),
         ).getOrNull().orEmpty()
         return swapInteractor.findProvidersForPairWithCheck(from, to, pairs).map { it.providerId }
-    }
-
-    @AssistedFactory
-    interface Factory : SwapDeepLinkHandler.Factory {
-        override fun create(
-            coroutineScope: CoroutineScope,
-            queryParams: Map<String, String>,
-        ): DefaultSwapDeepLinkHandler
     }
 
     companion object {

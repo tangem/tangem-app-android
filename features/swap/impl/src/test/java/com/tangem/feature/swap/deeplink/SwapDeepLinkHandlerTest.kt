@@ -1,8 +1,10 @@
 package com.tangem.feature.swap.deeplink
 
+import android.net.Uri
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_AMOUNT_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_TOKEN_ID_KEY
@@ -60,7 +62,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class DefaultSwapDeepLinkHandlerTest {
+internal class SwapDeepLinkHandlerTest {
 
     private val router: AppRouter = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
@@ -195,20 +197,23 @@ internal class DefaultSwapDeepLinkHandlerTest {
         coEvery { singleAccountStatusListSupplier.getSyncOrNull(walletId) } returns accountList
     }
 
-    private fun createHandler(scope: TestScope, queryParams: Map<String, String>): DefaultSwapDeepLinkHandler =
-        DefaultSwapDeepLinkHandler(
-            scope = scope,
-            queryParams = queryParams,
-            router = router,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            getWalletsUseCase = getWalletsUseCase,
-            selectWalletUseCase = selectWalletUseCase,
-            getWalletTotalBalanceUseCase = getWalletTotalBalanceUseCase,
-            getUserWalletUseCase = getUserWalletUseCase,
-            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
-            rampStateManager = rampStateManager,
-            swapInteractor = swapInteractor,
+    private val handler = SwapDeepLinkHandler(
+        router = router,
+        getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+        getWalletsUseCase = getWalletsUseCase,
+        selectWalletUseCase = selectWalletUseCase,
+        getWalletTotalBalanceUseCase = getWalletTotalBalanceUseCase,
+        getUserWalletUseCase = getUserWalletUseCase,
+        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        rampStateManager = rampStateManager,
+        swapInteractor = swapInteractor,
+    )
+
+    private fun handle(scope: TestScope, queryParams: Map<String, String>) {
+        handler.handle(
+            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = scope, isFromOnNewIntent = false),
         )
+    }
 
     @Test
     fun `GIVEN no params and wallet selected WHEN handle THEN bare swap for selected`() = runTest {
@@ -216,7 +221,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(this, emptyMap())
+        handle(this, emptyMap())
         advanceUntilIdle()
 
         // Assert
@@ -233,7 +238,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             val expected = bareSwap(other)
 
             // Act
-            createHandler(this, mapOf(WALLET_ID_KEY to other.stringValue))
+            handle(this, mapOf(WALLET_ID_KEY to other.stringValue))
             advanceUntilIdle()
 
             // Assert
@@ -250,7 +255,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             val expected = bareSwap(walletId)
 
             // Act
-            createHandler(
+            handle(
                 this,
                 mapOf(WALLET_ID_KEY to walletId.stringValue, FROM_USER_WALLET_ID_KEY to other.stringValue),
             )
@@ -267,7 +272,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(this, mapOf(FROM_USER_WALLET_ID_KEY to "099"))
+        handle(this, mapOf(FROM_USER_WALLET_ID_KEY to "099"))
         advanceUntilIdle()
 
         // Assert
@@ -281,7 +286,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act — a non-hex id from untrusted deeplink input must not crash UserWalletId construction
-        createHandler(this, mapOf(FROM_USER_WALLET_ID_KEY to "not-a-hex-id"))
+        handle(this, mapOf(FROM_USER_WALLET_ID_KEY to "not-a-hex-id"))
         advanceUntilIdle()
 
         // Assert
@@ -309,7 +314,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(richer)
 
         // Act
-        createHandler(this, emptyMap())
+        handle(this, emptyMap())
         advanceUntilIdle()
 
         // Assert
@@ -333,7 +338,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             val expected = bareSwap(richer)
 
             // Act
-            createHandler(this, emptyMap())
+            handle(this, emptyMap())
             advanceUntilIdle()
 
             // Assert
@@ -346,7 +351,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         every { getWalletsUseCase.invokeSync() } returns emptyList()
 
         // Act
-        createHandler(this, emptyMap())
+        handle(this, emptyMap())
         advanceUntilIdle()
 
         // Assert
@@ -368,7 +373,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(this, emptyMap())
+        handle(this, emptyMap())
         advanceUntilIdle()
 
         // Assert
@@ -387,7 +392,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             val expected = bareSwap(walletId)
 
             // Act
-            createHandler(this, mapOf(WALLET_ID_KEY to locked.stringValue))
+            handle(this, mapOf(WALLET_ID_KEY to locked.stringValue))
             advanceUntilIdle()
 
             // Assert
@@ -403,7 +408,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(this, mapOf(FROM_TOKEN_ID_KEY to "btc"))
+        handle(this, mapOf(FROM_TOKEN_ID_KEY to "btc"))
         advanceUntilIdle()
 
         // Assert
@@ -429,7 +434,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         )
 
         // Act
-        createHandler(
+        handle(
             this,
             mapOf(
                 FROM_TOKEN_ID_KEY to "btc",
@@ -456,7 +461,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             )
 
             // Act
-            createHandler(
+            handle(
                 this,
                 mapOf(
                     FROM_TOKEN_ID_KEY to "btc",
@@ -478,7 +483,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(
+        handle(
             this,
             mapOf(
                 FROM_TOKEN_ID_KEY to "btc",
@@ -499,7 +504,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(this, mapOf(FROM_AMOUNT_KEY to "10"))
+        handle(this, mapOf(FROM_AMOUNT_KEY to "10"))
         advanceUntilIdle()
 
         // Assert
@@ -513,7 +518,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(this, mapOf(PROVIDER_ID_KEY to "changelly"))
+        handle(this, mapOf(PROVIDER_ID_KEY to "changelly"))
         advanceUntilIdle()
 
         // Assert
@@ -532,7 +537,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         )
 
         // Act
-        createHandler(
+        handle(
             this,
             mapOf(TO_TOKEN_ID_KEY to "eth", TO_NETWORK_ID_KEY to "ethereum", FROM_AMOUNT_KEY to "10"),
         )
@@ -553,7 +558,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         )
 
         // Act
-        createHandler(
+        handle(
             this,
             mapOf(FROM_TOKEN_ID_KEY to "btc", FROM_NETWORK_ID_KEY to "bitcoin", FROM_AMOUNT_KEY to "10"),
         )
@@ -577,7 +582,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         )
 
         // Act
-        createHandler(
+        handle(
             this,
             mapOf(
                 FROM_TOKEN_ID_KEY to "btc",
@@ -616,7 +621,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             )
 
             // Act
-            createHandler(
+            handle(
                 this,
                 mapOf(
                     FROM_TOKEN_ID_KEY to "btc",
@@ -656,7 +661,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         )
 
         // Act
-        createHandler(
+        handle(
             this,
             mapOf(
                 FROM_TOKEN_ID_KEY to "btc",
@@ -685,7 +690,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(
+        handle(
             this,
             mapOf(
                 FROM_TOKEN_ID_KEY to "btc",
@@ -714,7 +719,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         )
 
         // Act
-        createHandler(
+        handle(
             this,
             mapOf(
                 FROM_TOKEN_ID_KEY to "btc",
@@ -746,7 +751,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             )
 
             // Act
-            createHandler(
+            handle(
                 this,
                 mapOf(
                     FROM_TOKEN_ID_KEY to "btc",
@@ -771,7 +776,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         )
 
         // Act
-        createHandler(
+        handle(
             this,
             mapOf(
                 FROM_TOKEN_ID_KEY to "btc",
@@ -807,7 +812,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             )
 
             // Act
-            createHandler(
+            handle(
                 this,
                 mapOf(
                     FROM_TOKEN_ID_KEY to "btc",
@@ -838,7 +843,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             )
 
             // Act
-            createHandler(
+            handle(
                 this,
                 mapOf(
                     FROM_TOKEN_ID_KEY to "btc",
@@ -875,7 +880,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             )
 
             // Act
-            createHandler(
+            handle(
                 this,
                 mapOf(
                     FROM_TOKEN_ID_KEY to "btc",
@@ -901,7 +906,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(this, emptyMap())
+        handle(this, emptyMap())
         advanceUntilIdle()
 
         // Assert
@@ -916,7 +921,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(this, emptyMap())
+        handle(this, emptyMap())
         advanceUntilIdle()
 
         // Assert
@@ -929,7 +934,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         every { router.stack } returns listOf(AppRoute.Wallet, bareSwap(walletId))
 
         // Act
-        createHandler(this, emptyMap())
+        handle(this, emptyMap())
         advanceUntilIdle()
 
         // Assert
@@ -945,7 +950,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         val expected = bareSwap(walletId)
 
         // Act
-        createHandler(this, emptyMap())
+        handle(this, emptyMap())
         advanceUntilIdle()
 
         // Assert
