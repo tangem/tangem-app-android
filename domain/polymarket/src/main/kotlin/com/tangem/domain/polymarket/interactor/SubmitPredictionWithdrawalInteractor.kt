@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.left
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
@@ -40,6 +41,8 @@ sealed interface PredictionWithdrawalFailure {
     data object AddressUnavailable : PredictionWithdrawalFailure
 
     data object NonceUnavailable : PredictionWithdrawalFailure
+
+    data object WalletBusy : PredictionWithdrawalFailure
 
     data class SigningFailed(val error: PolymarketSigningError) : PredictionWithdrawalFailure
 
@@ -87,15 +90,11 @@ class SubmitPredictionWithdrawalInteractor(
         }
         ensure(decoded.amountBaseUnits == amountBaseUnits) { PredictionWithdrawalFailure.CalldataMismatch }
 
-        val nonce = polymarketRepository.getRelayerNonce(params.ownerAddress)
-            .getOrNull() ?: raise(PredictionWithdrawalFailure.NonceUnavailable)
-
         PreparedPredictionWithdrawal(
             userWalletId = params.userWalletId,
             walletId = params.walletId,
             ownerAddress = params.ownerAddress,
             depositWalletAddress = params.depositWalletAddress,
-            nonce = nonce.toString(),
             deadline = PolymarketRelayerDeadline.fromNow(),
             call = call,
             decoded = decoded,
@@ -108,20 +107,25 @@ class SubmitPredictionWithdrawalInteractor(
      */
     suspend fun confirm(
         prepared: PreparedPredictionWithdrawal,
-    ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = depositWalletLock.withLock(
-        prepared.userWalletId,
-    ) { confirmLocked(prepared) }
+    ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> =
+        depositWalletLock.withBatchOrBusy(prepared.userWalletId) { confirmLocked(prepared) }
+            .getOrElse { walletBusy() }
 
     private suspend fun confirmLocked(
         prepared: PreparedPredictionWithdrawal,
     ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = either {
         ensure(!PolymarketRelayerDeadline.isExpired(prepared.deadline)) { PredictionWithdrawalFailure.Expired }
 
+        val nonce = polymarketRepository.getRelayerNonce(prepared.ownerAddress)
+            .getOrNull()
+            ?.toString()
+            ?: raise(PredictionWithdrawalFailure.NonceUnavailable)
+
         val signature = signer.signRelayedBatch(
             userWalletId = prepared.userWalletId,
             payload = PolymarketApprovalsPayload(
                 depositWalletAddress = prepared.depositWalletAddress,
-                nonce = prepared.nonce,
+                nonce = nonce,
                 deadline = prepared.deadline,
                 calls = listOf(prepared.call),
             ),
@@ -130,7 +134,7 @@ class SubmitPredictionWithdrawalInteractor(
         val batch = PredictionWithdrawalBatch(
             ownerAddress = prepared.ownerAddress,
             depositWalletAddress = prepared.depositWalletAddress,
-            nonce = prepared.nonce,
+            nonce = nonce,
             deadline = prepared.deadline,
             call = prepared.call,
             signature = signature,
@@ -147,12 +151,18 @@ class SubmitPredictionWithdrawalInteractor(
     suspend fun resend(
         userWalletId: UserWalletId,
         walletId: String,
-    ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = depositWalletLock.withLock(userWalletId) {
-        either {
-            val record = readRecord(userWalletId) ?: raise(PredictionWithdrawalFailure.NothingToResend)
+    ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> =
+        depositWalletLock.withBatchOrBusy(userWalletId) {
+            either {
+                val record = readRecord(userWalletId) ?: raise(PredictionWithdrawalFailure.NothingToResend)
 
-            send(userWalletId = userWalletId, walletId = walletId, batch = record.batch)
-        }
+                send(userWalletId = userWalletId, walletId = walletId, batch = record.batch)
+            }
+        }.getOrElse { walletBusy() }
+
+    private fun walletBusy(): Either<PredictionWithdrawalFailure, Nothing> {
+        TangemLogger.i("Polymarket withdrawal refused: a session key operation holds the deposit wallet")
+        return PredictionWithdrawalFailure.WalletBusy.left()
     }
 
     private suspend fun Raise<PredictionWithdrawalFailure>.send(

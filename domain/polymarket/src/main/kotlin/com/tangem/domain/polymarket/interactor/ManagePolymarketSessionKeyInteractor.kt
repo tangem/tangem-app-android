@@ -112,7 +112,7 @@ class ManagePolymarketSessionKeyInteractor(
         operation(userWalletId) {
             val revoke = PolymarketSessionKeyBatch.Revoke(sessionKeyAddress = sessionKeyAddress)
             emit(PolymarketSessionKeyProgress.Signing)
-            val (signed, revoking) = depositWalletLock.withLock(userWalletId) {
+            val (signed, revoking) = depositWalletLock.withSessionKeyOperation(userWalletId) {
                 val signed = sign(userWalletId, nonEmptyListOf(revoke))
                 signed to send { relay.revoke(userWalletId, revocationOf(signed)) }
             }
@@ -141,7 +141,7 @@ class ManagePolymarketSessionKeyInteractor(
         authorize: PolymarketSessionKeyBatch.Authorize,
     ): PolymarketSessionKey {
         emit(PolymarketSessionKeyProgress.Signing)
-        val (sent, pending) = depositWalletLock.withLock(userWalletId) {
+        val (sent, pending) = depositWalletLock.withSessionKeyOperation(userWalletId) {
             sendAuthorization(userWalletId = userWalletId, signed = sign(userWalletId, nonEmptyListOf(authorize)))
         }
         emit(PolymarketSessionKeyProgress.Authorizing(pending))
@@ -155,16 +155,14 @@ class ManagePolymarketSessionKeyInteractor(
     ): PolymarketSessionKey {
         val batches = nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(sessionKeyAddress = revokedAddress), authorize)
         emit(PolymarketSessionKeyProgress.Signing)
-        val (signedBoth, revoking) = depositWalletLock.withLock(userWalletId) {
+        val (sent, pending) = depositWalletLock.withSessionKeyOperation(userWalletId) {
             val signed = sign(userWalletId, batches)
-            signed to send { relay.revoke(userWalletId, revocationOf(signed)) }
-        }
-        val revoked = awaitRevoked(userWalletId, signedBoth.ownerAddress(), revoking)
-        emit(PolymarketSessionKeyProgress.Revoked(revoked))
-        val (sent, pending) = depositWalletLock.withLock(userWalletId) {
+            val revoking = send { relay.revoke(userWalletId, revocationOf(signed)) }
+            val revoked = awaitRevoked(userWalletId, signed.ownerAddress(), revoking)
+            emit(PolymarketSessionKeyProgress.Revoked(revoked))
             sendAuthorization(
                 userWalletId = userWalletId,
-                signed = signedBoth,
+                signed = signed,
                 relayerRejectionRetries = FOLLOW_UP_REJECTION_RETRIES,
             )
         }

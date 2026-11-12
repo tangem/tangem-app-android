@@ -430,7 +430,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN a signing in progress WHEN another deposit wallet operation starts THEN it waits for the send`() =
+        fun `GIVEN a signing in progress WHEN a deposit wallet batch starts THEN it is busy at once`() =
             runTest {
                 // Arrange
                 val signing = CompletableDeferred<Unit>()
@@ -439,21 +439,19 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     signed(authorization()).right()
                 }
                 coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, any()) } returns key().right()
-                var isClaimStarted = false
+                var isBatchRun = false
                 val interactor = createInteractor()
 
                 // Act
                 val enabling = launch { interactor.enable(USER_WALLET_ID).toList() }
                 runCurrent()
-                launch { depositWalletLock.withLock(USER_WALLET_ID) { isClaimStarted = true } }
-                runCurrent()
-                val isStartedWhileSigning = isClaimStarted
+                val batch = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) { isBatchRun = true }
                 signing.complete(Unit)
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(isStartedWhileSigning).isFalse()
-                assertThat(isClaimStarted).isTrue()
+                assertThat(batch).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+                assertThat(isBatchRun).isFalse()
                 enabling.join()
             }
 
@@ -474,7 +472,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     }
                 }
                 runCurrent()
-                launch { depositWalletLock.withLock(USER_WALLET_ID) { isClaimStarted = true } }
+                launch { depositWalletLock.withBatchOrBusy(USER_WALLET_ID) { isClaimStarted = true } }
                 runCurrent()
                 val isStartedWhileCollecting = isClaimStarted
                 collecting.complete(Unit)
@@ -847,7 +845,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             }
 
         @Test
-        fun `GIVEN the revocation is settling WHEN another deposit wallet operation starts THEN it does not wait`() =
+        fun `GIVEN the revocation is settling WHEN a claim starts THEN it is busy and the authorization keeps its nonce`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -865,19 +863,23 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     listOf(key(status = PolymarketSessionKeyStatus.REVOKED)),
                     listOf(key()),
                 )
-                var isClaimStarted = false
+                val claimInteractor = SubmitPredictionClaimInteractor(
+                    redeemRepository = mockk(),
+                    polymarketRepository = mockk(),
+                    positionsRepository = mockk(),
+                    signer = mockk(),
+                    depositWalletLock = depositWalletLock,
+                )
                 val interactor = createInteractor()
 
                 // Act
                 val renewing = launch { interactor.renew(USER_WALLET_ID).toList() }
                 runCurrent()
-                launch { depositWalletLock.withLock(USER_WALLET_ID) { isClaimStarted = true } }
-                runCurrent()
-                val isStartedWhileSettling = isClaimStarted
+                val claim = claimInteractor.claim(claimParams())
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(isStartedWhileSettling).isTrue()
+                assertThat(claim).isEqualTo(PredictionClaimFailure.WalletBusy.left())
                 coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) }
                 renewing.join()
             }
@@ -1513,6 +1515,17 @@ internal class ManagePolymarketSessionKeyInteractorTest {
 
         override fun instant(): Instant = NOW.plusMillis(scheduler.currentTime)
     }
+
+    private fun claimParams() = SubmitPredictionClaimInteractor.Params(
+        userWalletId = USER_WALLET_ID,
+        walletId = USER_WALLET_ID.stringValue,
+        ownerAddress = OWNER,
+        depositWalletAddress = OWNER,
+        conditionId = "0xcondition",
+        assetId = "1",
+        isNegRisk = false,
+        version = null,
+    )
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
