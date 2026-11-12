@@ -86,7 +86,8 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
         runTest {
             // Arrange
             val from = hotSolanaTokenStatus()
-            coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), depositTransfer) } returns FEE_PAYER.right()
+            coEvery { solanaGaslessSwapResolver.resolveTransferSponsorship(any(), depositTransfer) } returns
+                feeOnlySponsorship(from).right()
             coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns SIGNATURE.right()
 
             // Act
@@ -94,13 +95,13 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
 
             // Assert
             assertThat((result as SwapTransactionState.TxSent).txHash).isEqualTo(SIGNATURE)
-            val network = from.currency.network
+            val sponsorship = feeOnlySponsorship(from)
             coVerify(exactly = 1) {
                 createAndSendGaslessTransactionUseCase(
                     transactionData = depositTransfer,
                     userWallet = from.userWallet,
                     fee = match {
-                        it.gaslessProtocolData == GaslessProtocolData.Solana(feePayer = FEE_PAYER, network = network)
+                        it.gaslessProtocolData == sponsorship
                     },
                 )
             }
@@ -119,7 +120,7 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
             // Arrange
             val from = hotSolanaTokenStatus()
             coEvery {
-                solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any())
+                solanaGaslessSwapResolver.resolveTransferSponsorship(any(), any())
             } returns SolanaGaslessError.Rejected(code = null).left()
 
             // Act
@@ -137,7 +138,8 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
     fun `GIVEN service may have sent with signature WHEN onSwap CEX THEN deposit tracked as sent`() = runTest {
         // Arrange
         val from = hotSolanaTokenStatus()
-        coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any()) } returns FEE_PAYER.right()
+        coEvery { solanaGaslessSwapResolver.resolveTransferSponsorship(any(), any()) } returns
+            feeOnlySponsorship(from).right()
         coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns
             SendTransactionError.SolanaGasless(SolanaGaslessError.MaybeSent(signature = SIGNATURE)).left()
 
@@ -158,7 +160,8 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
     fun `GIVEN service rejects the transfer WHEN onSwap CEX THEN Solana gasless error`() = runTest {
         // Arrange
         val from = hotSolanaTokenStatus()
-        coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any()) } returns FEE_PAYER.right()
+        coEvery { solanaGaslessSwapResolver.resolveTransferSponsorship(any(), any()) } returns
+            feeOnlySponsorship(from).right()
         coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns
             SendTransactionError.SolanaGasless(SolanaGaslessError.BlockhashExpired).left()
 
@@ -189,7 +192,7 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
         coVerify(exactly = 1) {
             sendTransactionUseCase(txData = depositTransfer, userWallet = from.userWallet, network = any())
         }
-        coVerify(exactly = 0) { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any()) }
+        coVerify(exactly = 0) { solanaGaslessSwapResolver.resolveTransferSponsorship(any(), any()) }
         coVerify(exactly = 0) { createAndSendGaslessTransactionUseCase(any(), any(), any()) }
     }
 
@@ -244,6 +247,12 @@ internal class SwapInteractorImplSolanaGaslessCexTest : SwapInteractorImplTestBa
             externalTxUrl = "https://explorer/tx",
             txExtraIdName = null,
         ),
+    )
+
+    private fun feeOnlySponsorship(from: SwapCurrencyStatus) = GaslessProtocolData.Solana(
+        feePayer = FEE_PAYER,
+        network = from.currency.network,
+        isRentSponsored = false,
     )
 
     private companion object {

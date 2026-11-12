@@ -51,7 +51,11 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
             normal = Fee.Common(amount = Amount(blockchain = Blockchain.Solana, value = 0.toBigDecimal())),
         ),
         feeTokenId = sol.id,
-        gaslessProtocolData = GaslessProtocolData.Solana(feePayer = "FeePayer", network = network),
+        gaslessProtocolData = GaslessProtocolData.Solana(
+            feePayer = "FeePayer",
+            network = network,
+            isRentSponsored = false,
+        ),
     )
     private val txData = TransactionData.Compiled(TransactionData.Compiled.Data.Bytes(ByteArray(10)))
     private val signedBytes = ByteArray(20) { 1 }
@@ -66,7 +70,7 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
     fun `GIVEN signing and submit succeed WHEN invoke THEN returns backend signature`() = runTest {
         // Arrange
         coEvery {
-            walletManagersFacade.signSolanaGaslessTransaction(walletId, network, txData, "FeePayer", hotSigner)
+            walletManagersFacade.signSolanaGaslessTransaction(walletId, network, txData, "FeePayer", hotSigner, false)
         } returns Result.Success(SolanaGaslessSignedTransaction(signedBytes, lastValidBlockHeight = 9))
         coEvery { repository.submit(walletId, signedBytes, 9) } returns "sig".right()
 
@@ -78,9 +82,34 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
     }
 
     @Test
+    fun `GIVEN sponsorship with rent WHEN invoke THEN signs with sponsorsRent`() = runTest {
+        // Arrange
+        val rentSponsoredFee = fee.copy(
+            gaslessProtocolData = GaslessProtocolData.Solana(
+                feePayer = "FeePayer",
+                network = network,
+                isRentSponsored = true,
+            ),
+        )
+        coEvery {
+            walletManagersFacade.signSolanaGaslessTransaction(walletId, network, txData, "FeePayer", hotSigner, true)
+        } returns Result.Success(SolanaGaslessSignedTransaction(signedBytes, lastValidBlockHeight = 9))
+        coEvery { repository.submit(walletId, signedBytes, 9) } returns "sig".right()
+
+        // Act
+        val actual = useCase(userWallet, txData, rentSponsoredFee)
+
+        // Assert
+        assertThat(actual).isEqualTo("sig".right())
+        coVerify(exactly = 1) {
+            walletManagersFacade.signSolanaGaslessTransaction(walletId, network, txData, "FeePayer", hotSigner, true)
+        }
+    }
+
+    @Test
     fun `GIVEN backend rejects WHEN invoke THEN Service error`() = runTest {
         // Arrange
-        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any()) } returns
+        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) } returns
             Result.Success(SolanaGaslessSignedTransaction(signedBytes, lastValidBlockHeight = 9))
         coEvery { repository.submit(any(), any(), any()) } returns SolanaGaslessError.BlockhashExpired.left()
 
@@ -94,7 +123,7 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
     @Test
     fun `GIVEN signing fails WHEN invoke THEN signing error and nothing submitted`() = runTest {
         // Arrange
-        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any()) } returns
+        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) } returns
             Result.Failure(BlockchainSdkError.Solana.GaslessMessageTooLarge)
 
         // Act
@@ -108,7 +137,7 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
     @Test
     fun `GIVEN no Solana wallet manager WHEN invoke THEN UnknownError`() = runTest {
         // Arrange
-        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any()) } returns null
+        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) } returns null
 
         // Act
         val actual = useCase(userWallet, txData, fee)
@@ -194,17 +223,19 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(SendTransactionError.DataError::class.java)
-        coVerify(exactly = 0) { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any()) }
+        coVerify(
+            exactly = 0,
+        ) { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) }
     }
 
     private fun givenSignedAndRejected(error: SolanaGaslessError) {
-        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any()) } returns
+        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) } returns
             Result.Success(SolanaGaslessSignedTransaction(signedBytes, lastValidBlockHeight = 9))
         coEvery { repository.submit(any(), any(), any()) } returns error.left()
     }
 
     private fun givenSignedAndSubmitted(signature: String) {
-        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any()) } returns
+        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) } returns
             Result.Success(SolanaGaslessSignedTransaction(signedBytes, lastValidBlockHeight = 9))
         coEvery { repository.submit(any(), any(), any()) } returns signature.right()
     }

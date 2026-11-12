@@ -19,6 +19,8 @@ sealed interface GaslessProtocolData {
     /**
      * Solana sponsorship: the sponsor pays the network fee as [feePayer], with no compensation from the user.
      * [network] is the network whose account signs, which a provider-built (compiled) transaction does not name.
+     * [isRentSponsored] — the sponsor may also pay the rent of the wallet's own new token accounts, where the SDK finds
+     * it safe; decided when the sponsorship was simulated, so the send signs the same bytes.
      */
-    data class Solana(val feePayer: String, val network: Network) : GaslessProtocolData
+    data class Solana(val feePayer: String, val network: Network, val isRentSponsored: Boolean) : GaslessProtocolData
 }
