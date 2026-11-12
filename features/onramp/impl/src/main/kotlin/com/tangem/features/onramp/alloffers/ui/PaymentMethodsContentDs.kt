@@ -10,12 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
@@ -24,6 +28,9 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_clock_24
+import com.tangem.core.ui.res.generated.icons.ic_stack_24
 import com.tangem.core.ui.test.SelectPaymentMethodBottomSheetTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodStatus
@@ -36,7 +43,7 @@ import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
 import com.tangem.features.onramp.main.entity.OnrampOfferUM
 import com.tangem.features.onramp.main.ui.TimingBlock
-import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
+import com.tangem.features.onramp.paymentmethod.ui.themedImageUrl
 import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -87,12 +94,7 @@ private val PaymentMethodContentPaddingDs = PaddingValues(all = 16.dp)
 @Composable
 private fun PaymentMethodBodyDs(methodUM: AllOffersPaymentMethodUM, modifier: Modifier = Modifier) {
     Row(modifier = modifier) {
-        PaymentMethodIcon(
-            modifier = Modifier
-                .size(36.dp)
-                .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_ICON),
-            method = methodUM.methodConfig.method,
-        )
+        PaymentMethodIconDs(method = methodUM.methodConfig.method)
 
         SpacerW(12.dp)
 
@@ -105,9 +107,12 @@ private fun PaymentMethodBodyDs(methodUM: AllOffersPaymentMethodUM, modifier: Mo
                         diff = methodUM.diff,
                         isBestRate = methodUM.isBestRate,
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         ProvidersCountBlockInfoDs(providersCount = methodUM.providersCount)
-                        SpacerW(8.dp)
+                        SpacerW(4.dp)
                         TimingBlockInfoDs(speed = methodUM.methodConfig.method.type.getProcessingSpeed())
                     }
                 }
@@ -125,19 +130,38 @@ private fun PaymentMethodBodyDs(methodUM: AllOffersPaymentMethodUM, modifier: Mo
 
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 @Composable
+private fun PaymentMethodIconDs(method: OnrampPaymentMethod, modifier: Modifier = Modifier) {
+    SubcomposeAsyncImage(
+        modifier = modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(TangemTheme.colors3.bg.transparent.primary)
+            .padding(10.dp)
+            .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_ICON),
+        model = ImageRequest.Builder(context = LocalContext.current)
+            .data(method.themedImageUrl())
+            .crossfade(enable = true)
+            .allowHardware(false)
+            .build(),
+        contentDescription = null,
+    )
+}
+
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
 private fun UnavailablePaymentMethodInfoBlockDs(
     paymentMethodName: String,
     errorAmount: String,
     unavailableStatus: PaymentMethodStatus.Unavailable,
 ) {
-    Column(modifier = Modifier.padding(bottom = 14.dp)) {
+    Column {
         Text(
             text = paymentMethodName,
-            style = TangemTheme.typography.subtitle2,
+            style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_NAME),
         )
-        SpacerH(2.dp)
+        SpacerH(4.dp)
         val messageResId = when (unavailableStatus) {
             is PaymentMethodStatus.Unavailable.MinAmount -> R.string.onramp_provider_min_amount
             is PaymentMethodStatus.Unavailable.MaxAmount -> R.string.onramp_provider_max_amount
@@ -159,21 +183,21 @@ private fun PaymentMethodInfoBlockDs(
     diff: TextReference?,
     isBestRate: Boolean,
 ) {
-    Column(modifier = Modifier.padding(bottom = 14.dp)) {
+    Column {
         Text(
             text = paymentMethodName,
-            style = TangemTheme.typography.subtitle2,
+            style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.primary,
             modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_NAME),
         )
-        SpacerH(2.dp)
+        SpacerH(4.dp)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 text = stringResourceSafe(R.string.onramp_up_to_rate),
-                style = TangemTheme.typography.caption2,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.UP_TO_TEXT),
             )
@@ -197,13 +221,13 @@ private fun PaymentMethodInfoBlockDs(
                     Text(
                         modifier = Modifier
                             .background(
-                                color = TangemTheme.colors3.text.accent.red.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(4.dp),
+                                color = TangemTheme.colors3.bg.status.errorSubtle,
+                                shape = RoundedCornerShape(percent = 50),
                             )
-                            .padding(horizontal = 4.dp),
+                            .padding(horizontal = 2.dp),
                         text = diff.resolveReference(),
-                        style = TangemTheme.typography.caption1,
-                        color = TangemTheme.colors3.text.accent.red,
+                        style = TangemTheme.typography3.caption.medium,
+                        color = TangemTheme.colors3.text.status.error,
                     )
                 }
             }
@@ -214,12 +238,12 @@ private fun PaymentMethodInfoBlockDs(
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 @Composable
 private fun ProvidersCountBlockInfoDs(providersCount: Int) {
-    BorderedRow {
+    ChipRowDs {
         Icon(
             modifier = Modifier
-                .size(10.dp)
+                .size(12.dp)
                 .testTag(SelectPaymentMethodBottomSheetTestTags.PROVIDER_COUNT_ICON),
-            imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
+            imageVector = Icons.ic_stack_24,
             tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
@@ -239,13 +263,29 @@ private fun ProvidersCountBlockInfoDs(providersCount: Int) {
 
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 @Composable
+private fun ChipRowDs(content: @Composable RowScope.() -> Unit) {
+    Row(
+        modifier = Modifier
+            .defaultMinSize(minHeight = 16.dp)
+            .background(
+                color = TangemTheme.colors3.bg.transparent.primary,
+                shape = RoundedCornerShape(percent = 50),
+            )
+            .padding(horizontal = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
+}
+
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
 private fun TimingBlockInfoDs(speed: PaymentMethodType.PaymentSpeed) {
-    BorderedRow {
+    ChipRowDs {
         Icon(
             modifier = Modifier
-                .size(10.dp)
+                .size(12.dp)
                 .testTag(SelectPaymentMethodBottomSheetTestTags.TIMING_ICON),
-            imageVector = ImageVector.vectorResource(R.drawable.ic_staking_24),
+            imageVector = Icons.ic_clock_24,
             tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
