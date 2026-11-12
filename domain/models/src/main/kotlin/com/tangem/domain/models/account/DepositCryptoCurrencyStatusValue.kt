@@ -4,12 +4,14 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.serialization.SerializedBigDecimal
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 
 internal fun depositCryptoCurrencyStatusValue(
     amount: SerializedBigDecimal,
     fiatRate: SerializedBigDecimal?,
     depositAddress: String,
     source: StatusSource,
+    yieldSupplyStatus: YieldSupplyStatus? = null,
 ): CryptoCurrencyStatus.Value {
     val networkAddress = NetworkAddress.Single(
         defaultAddress = NetworkAddress.Address(
@@ -32,14 +34,14 @@ internal fun depositCryptoCurrencyStatusValue(
             networkAddress = networkAddress,
             sources = sources,
             pendingTransactions = emptySet(),
-            yieldSupplyStatus = null,
+            yieldSupplyStatus = yieldSupplyStatus,
             hasCurrentNetworkTransactions = false,
         )
     } else {
         CryptoCurrencyStatus.NoQuote(
             amount = amount,
             networkAddress = networkAddress,
-            yieldSupplyStatus = null,
+            yieldSupplyStatus = yieldSupplyStatus,
             sources = sources,
             pendingTransactions = emptySet(),
             hasCurrentNetworkTransactions = false,

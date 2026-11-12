@@ -10,6 +10,7 @@ import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusFetcher
 import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusProducer
 import com.tangem.data.moneyaccount.repository.DefaultMoneyAccountActivationRepository
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
+import com.tangem.data.moneyaccount.yield.DefaultMoneyAccountYieldModeStatusProvider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
@@ -35,6 +36,7 @@ import com.tangem.domain.tangempay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
 import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
+import com.tangem.domain.moneyaccount.yield.MoneyAccountYieldModeStatusProvider
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
@@ -83,6 +85,12 @@ internal interface MoneyAccountDataModule {
     @Binds
     @Singleton
     fun bindNonPortfolioCurrenciesProvider(impl: MoneyAccountCurrenciesProvider): NonPortfolioCurrenciesProvider
+
+    @Binds
+    @Singleton
+    fun bindMoneyAccountYieldModeStatusProvider(
+        impl: DefaultMoneyAccountYieldModeStatusProvider,
+    ): MoneyAccountYieldModeStatusProvider
 
     @Binds
     @IntoSet
@@ -162,12 +170,14 @@ internal interface MoneyAccountDataModule {
             singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
             singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
             singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
+            yieldModeStatusProvider: MoneyAccountYieldModeStatusProvider,
         ): GetMoneyAccountBalanceUseCase {
             return GetMoneyAccountBalanceUseCase(
                 singleNetworkStatusFetcher = singleNetworkStatusFetcher,
                 singleNetworkStatusSupplier = singleNetworkStatusSupplier,
                 singleQuoteStatusFetcher = singleQuoteStatusFetcher,
                 singleQuoteStatusSupplier = singleQuoteStatusSupplier,
+                yieldModeStatusProvider = yieldModeStatusProvider,
             )
         }
 

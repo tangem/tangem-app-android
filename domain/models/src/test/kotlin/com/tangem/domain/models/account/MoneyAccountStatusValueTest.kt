@@ -7,6 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -129,6 +130,43 @@ internal class MoneyAccountStatusValueTest {
     }
 
     @Test
+    fun `GIVEN balance with yield status WHEN cryptoCurrencyStatus THEN token status carries it`() {
+        // Arrange
+        val account = activeWith(balanceOf(fiatRate = null).copy(yieldSupplyStatus = YIELD_SUPPLY_STATUS))
+            .copy(source = StatusSource.CACHE)
+
+        // Act
+        val actual = account.cryptoCurrencyStatus
+
+        // Assert
+        val expected = CryptoCurrencyStatus(
+            currency = cryptoCurrency,
+            value = CryptoCurrencyStatus.NoQuote(
+                amount = BigDecimal("100"),
+                yieldSupplyStatus = YIELD_SUPPLY_STATUS,
+                hasCurrentNetworkTransactions = false,
+                pendingTransactions = emptySet(),
+                networkAddress = DEPOSIT_NETWORK_ADDRESS,
+                sources = CACHE_SOURCES,
+            ),
+        )
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN balance with yield status WHEN statusOf another currency THEN yield status absent`() {
+        // Arrange
+        val coin = mockk<CryptoCurrency.Coin>(relaxed = true)
+        val account = activeWith(balanceOf(fiatRate = null).copy(yieldSupplyStatus = YIELD_SUPPLY_STATUS))
+
+        // Act
+        val actual = account.statusOf(currency = coin, amount = BigDecimal.ONE, fiatRate = null)
+
+        // Assert
+        Truth.assertThat(actual?.value?.yieldSupplyStatus).isNull()
+    }
+
+    @Test
     fun `GIVEN account without balance WHEN cryptoCurrencyStatus THEN null`() {
         // Act & Assert
         Truth.assertThat(activeWith(balance = null).cryptoCurrencyStatus).isNull()
@@ -137,6 +175,12 @@ internal class MoneyAccountStatusValueTest {
     private companion object {
         val DEPOSIT_NETWORK_ADDRESS = NetworkAddress.Single(
             defaultAddress = NetworkAddress.Address(type = NetworkAddress.Address.Type.Primary, value = "0xabc"),
+        )
+        val YIELD_SUPPLY_STATUS = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = true,
+            effectiveProtocolBalance = BigDecimal("10"),
         )
         val CACHE_SOURCES = CryptoCurrencyStatus.Sources(
             networkSource = StatusSource.CACHE,
