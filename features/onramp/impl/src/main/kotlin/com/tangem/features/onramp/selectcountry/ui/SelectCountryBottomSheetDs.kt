@@ -102,6 +102,17 @@ internal fun OnrampCountryListDs(state: CountryListUM, onCloseClick: () -> Unit,
 }
 
 @Composable
+private fun closeButtonStrokeBrush(): Brush {
+    val materialBorder = TangemTheme.colors3.material.border
+    return Brush.linearGradient(
+        0f to materialBorder.start,
+        CLOSE_STROKE_MID_START_STOP to materialBorder.mid,
+        CLOSE_STROKE_MID_END_STOP to materialBorder.mid,
+        1f to materialBorder.end,
+    )
+}
+
+@Composable
 private fun CountryCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val closeDescription = stringResourceSafe(R.string.common_close)
     TangemSurface(
@@ -115,9 +126,7 @@ private fun CountryCloseButton(onClick: () -> Unit, modifier: Modifier = Modifie
         shape = CircleShape,
         border = BorderStroke(
             width = 1.dp,
-            brush = Brush.linearGradient(
-                colors = listOf(TangemTheme.colors3.material.border.start, TangemTheme.colors3.material.border.end),
-            ),
+            brush = closeButtonStrokeBrush(),
         ),
         onClick = onClick,
     ) {
@@ -361,6 +370,8 @@ private val FLAG_SIZE = 40.dp
 private val SELECTED_MARK_SIZE = 24.dp
 private val CLOSE_BUTTON_SIZE = 44.dp
 private val CLOSE_ICON_SIZE = 24.dp
+private const val CLOSE_STROKE_MID_START_STOP = 0.4f
+private const val CLOSE_STROKE_MID_END_STOP = 0.6f
 private val FOOTER_INSET = 88.dp
 private val FADE_HEIGHT = 112.dp
 private const val UNAVAILABLE_ALPHA = 0.4f
