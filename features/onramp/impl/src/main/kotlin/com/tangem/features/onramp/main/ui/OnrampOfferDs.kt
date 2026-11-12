@@ -59,7 +59,7 @@ internal fun OfferDs(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     OfferHeaderDs(advantage = onrampOfferUM.advantages)
                     RateBlock(
                         rate = onrampOfferUM.rate,
@@ -103,15 +103,11 @@ private fun PaymentBlockInOfferDs(paymentMethod: OnrampPaymentMethod, providerNa
 
         TimingBlock(speed = paymentMethod.type.getProcessingSpeed())
 
-        SpacerW(6.dp)
-
-        DrawDot(color = TangemTheme.colors3.text.secondary)
-
-        SpacerW(6.dp)
+        SpacerW(8.dp)
 
         Text(
             text = stringResourceSafe(R.string.onramp_via_provider, providerName),
-            style = TangemTheme.typography.caption2,
+            style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.testTag(OnrampOffersBlockTestTags.PROVIDER_NAME),
         )
@@ -120,7 +116,7 @@ private fun PaymentBlockInOfferDs(paymentMethod: OnrampPaymentMethod, providerNa
 
         Text(
             text = stringResourceSafe(R.string.onramp_pay_with),
-            style = TangemTheme.typography.caption2,
+            style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.testTag(OnrampOffersBlockTestTags.PAY_WITH),
         )
@@ -129,7 +125,7 @@ private fun PaymentBlockInOfferDs(paymentMethod: OnrampPaymentMethod, providerNa
 
         SubcomposeAsyncImage(
             modifier = Modifier
-                .size(width = 38.dp, height = 16.dp)
+                .size(width = 31.dp, height = 12.dp)
                 .testTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON),
             alignment = Alignment.CenterEnd,
             model = ImageRequest.Builder(context = LocalContext.current)
@@ -158,11 +154,11 @@ private fun OfferHeaderDs(advantage: OnrampOfferAdvantagesUM) {
                 tint = TangemTheme.colors3.icon.accent.yellow,
                 modifier = Modifier.size(12.dp),
             )
-            SpacerW(2.dp)
+            SpacerW(4.dp)
             Text(
                 text = stringResourceSafe(R.string.onramp_offer_type_fastet),
-                style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors3.icon.accent.yellow,
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.status.warning,
             )
         }
     } else {
