@@ -8,9 +8,13 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.CATEGORY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.domain.models.earn.PreselectedEarnType
+import com.tangem.features.feed.FeedFeatureToggles
+import com.tangem.features.feed.deeplink.DiscoverDeepLinkHandler.Companion.FILTER_KEY
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryRequest
+import com.tangem.features.feed.v2.FeedFilterSheet
 import com.tangem.features.feed.v2.FeedSection
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.every
@@ -19,19 +23,24 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 internal class DiscoverDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk()
     private val feedEntryController: FeedEntryController = mockk()
+    private val feedFeatureToggles: FeedFeatureToggles = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(appRouter, feedEntryController)
+        clearMocks(appRouter, feedEntryController, feedFeatureToggles)
         every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
         every { appRouter.stack } returns listOf(AppRoute.Wallet, AppRoute.AppSettings)
         every { feedEntryController.request(any()) } just Runs
+        every { feedFeatureToggles.isDiscoverDeeplinkFiltersEnabled } returns false
     }
 
     @Test
@@ -140,9 +149,126 @@ internal class DiscoverDeepLinkHandlerTest {
         verify(exactly = 0) { appRouter.popTo(any<AppRoute>(), any()) }
     }
 
+    @Test
+    fun `GIVEN toggle off and a filter WHEN handled THEN the section opens without a sheet`() {
+        // Act
+        handle(queryParams = mapOf(SECTION_KEY to "earn", FILTER_KEY to "type", TYPE_KEY to "yield"))
+
+        // Assert
+        verify(exactly = 1) {
+            feedEntryController.request(
+                FeedEntryRequest(section = FeedSection.Earn, earnType = PreselectedEarnType.Yield),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN toggle off and for you section WHEN handled THEN the default tab opens`() {
+        // Act
+        handle(queryParams = mapOf(SECTION_KEY to "foryou"))
+
+        // Assert
+        verify(exactly = 1) { feedEntryController.request(FeedEntryRequest()) }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class FiltersEnabled {
+
+        @BeforeEach
+        fun enableToggle() {
+            every { feedFeatureToggles.isDiscoverDeeplinkFiltersEnabled } returns true
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN deeplink params WHEN handled THEN requests the expected entry`(model: EntryModel) {
+            // Act
+            handle(queryParams = model.queryParams)
+
+            // Assert
+            verify(exactly = 1) { feedEntryController.request(model.expected) }
+        }
+
+        @Test
+        fun `GIVEN for you section WHEN handled THEN the wallet is uncovered`() {
+            // Act
+            handle(queryParams = mapOf(SECTION_KEY to "foryou"))
+
+            // Assert
+            verify(exactly = 1) { appRouter.popTo(AppRoute.Wallet, any()) }
+        }
+
+        private fun provideTestModels() = listOf(
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "foryou"),
+                expected = FeedEntryRequest(isForYou = true),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "foryou", FILTER_KEY to "category", CATEGORY_KEY to "layer-1"),
+                expected = FeedEntryRequest(isForYou = true),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "crypto", FILTER_KEY to "category"),
+                expected = FeedEntryRequest(section = FeedSection.Crypto, sheet = FeedFilterSheet.Category),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "crypto", FILTER_KEY to "category", CATEGORY_KEY to "layer-1"),
+                expected = FeedEntryRequest(
+                    section = FeedSection.Crypto,
+                    categoryId = "layer-1",
+                    sheet = FeedFilterSheet.Category,
+                ),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "assets", FILTER_KEY to "category"),
+                expected = FeedEntryRequest(section = FeedSection.Assets, sheet = FeedFilterSheet.Category),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "earn", FILTER_KEY to "network"),
+                expected = FeedEntryRequest(section = FeedSection.Earn, sheet = FeedFilterSheet.Network),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "earn", FILTER_KEY to "type", TYPE_KEY to "staking"),
+                expected = FeedEntryRequest(
+                    section = FeedSection.Earn,
+                    earnType = PreselectedEarnType.Staking,
+                    sheet = FeedFilterSheet.Type,
+                ),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "crypto", FILTER_KEY to "type"),
+                expected = FeedEntryRequest(section = FeedSection.Crypto),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "assets", FILTER_KEY to "network"),
+                expected = FeedEntryRequest(section = FeedSection.Assets),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "earn", FILTER_KEY to "category"),
+                expected = FeedEntryRequest(section = FeedSection.Earn),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "earn", FILTER_KEY to "nonsense"),
+                expected = FeedEntryRequest(section = FeedSection.Earn),
+            ),
+            EntryModel(
+                queryParams = mapOf(FILTER_KEY to "category"),
+                expected = FeedEntryRequest(),
+            ),
+            EntryModel(
+                queryParams = mapOf(SECTION_KEY to "assets"),
+                expected = FeedEntryRequest(section = FeedSection.Assets),
+            ),
+        )
+    }
+
+    data class EntryModel(val queryParams: Map<String, String>, val expected: FeedEntryRequest)
+
     private fun handle(queryParams: Map<String, String>) = DiscoverDeepLinkHandler(
         feedEntryController = feedEntryController,
         appRouter = appRouter,
+        feedFeatureToggles = feedFeatureToggles,
     ).handle(
         DeepLinkRequest(
             uri = mockk<Uri>(),
