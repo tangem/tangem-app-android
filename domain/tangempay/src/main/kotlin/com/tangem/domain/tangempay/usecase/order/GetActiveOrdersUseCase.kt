@@ -13,10 +13,7 @@ class GetActiveOrdersUseCase(
     }
 }
 
-fun GetActiveOrdersUseCase.hasCardFrozenStateOrderFor(
-    productInstanceId: String,
-    userWalletId: UserWalletId,
-): Boolean {
+fun GetActiveOrdersUseCase.hasCardFrozenStateOrderFor(productInstanceId: String, userWalletId: UserWalletId): Boolean {
     return invoke(userWalletId).any { order ->
         when (val details = order.details) {
             is OrderDetails.CardFreeze -> details.productInstanceId == productInstanceId
