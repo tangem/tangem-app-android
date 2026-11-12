@@ -30,6 +30,7 @@ import com.tangem.domain.tangempay.usecase.ResolvePaymentAccountStatusFromSummar
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -74,6 +75,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val resolvePaymentAccountStatusFromSummaryUseCase: ResolvePaymentAccountStatusFromSummaryUseCase,
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -557,7 +559,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return cardProductInstances.mapNotNull { productInstance ->
             val cardId = productInstance.cardId.ifEmpty { return@mapNotNull null }
             val cardInfo = cardsById[cardId]
-            val cardFrozenState = cardDetailsRepository.cardFrozenStateSync(cardId)
             val cardState = resolveCardState(
                 cardInfo = cardInfo,
                 productInstance = productInstance,
@@ -575,11 +576,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     actualCardLimit = productInstance.actualCardLimit,
                     adminCardLimit = productInstance.adminCardLimit,
                 ),
-                frozenState = if (cardFrozenState == TangemPayCardFrozenState.Pending) {
-                    TangemPayCardFrozenState.Pending
-                } else {
-                    productInstance.frozenState
-                },
+                frozenState = resolveFrozenState(productInstance = productInstance, cardId = cardId),
                 lastDigits = cardInfo?.lastFourDigits.orEmpty(),
                 images = cardInfo?.images ?: tariffPlan?.plan?.images.orEmpty(),
                 state = cardState,
@@ -587,6 +584,16 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 cardType = cardInfo?.cardType ?: TangemPayCardType.UNDEFINED,
             )
         }
+    }
+
+    private suspend fun resolveFrozenState(
+        productInstance: CustomerInfo.ProductInstance,
+        cardId: String,
+    ): TangemPayCardFrozenState {
+        if (tangemPayFeatureToggles.isOrderFrameworkEnabled) return productInstance.frozenState
+
+        val isChanging = cardDetailsRepository.cardFrozenStateSync(cardId) == TangemPayCardFrozenState.Pending
+        return if (isChanging) TangemPayCardFrozenState.Pending else productInstance.frozenState
     }
 
     /**
