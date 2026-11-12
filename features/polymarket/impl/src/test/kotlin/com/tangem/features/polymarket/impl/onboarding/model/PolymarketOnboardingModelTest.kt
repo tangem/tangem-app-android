@@ -27,7 +27,6 @@ import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContent
 import com.tangem.domain.stories.models.StoryContentIds
-import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.test.core.ProvideTestModels
@@ -65,7 +64,6 @@ internal class PolymarketOnboardingModelTest {
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
-    private val walletLinkGate: PolymarketWalletLinkGate = mockk()
 
     private val userWalletId = UserWalletId("011")
     private val params = PolymarketOnboardingParams(userWalletId = userWalletId)
@@ -82,9 +80,7 @@ internal class PolymarketOnboardingModelTest {
             router,
             urlOpener,
             messageSender,
-            walletLinkGate,
         )
-        coEvery { walletLinkGate.ensureLinked(any()) } returns true
         allowsNewAccount(PolymarketNewAccountAllowance.ALLOWED)
         storyWasSeen()
         coEvery { getStoryContentUseCase.invokeSync(id = any(), refresh = any()) } returns null.right()
@@ -262,27 +258,6 @@ internal class PolymarketOnboardingModelTest {
                 coVerify(exactly = 0) { resolvePolymarketEntryInteractor(userWalletId) }
                 coVerify(exactly = 1) { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) }
                 verify(exactly = 1) { runOnboardingUseCase(userWalletId) }
-                model.onDestroy()
-            }
-
-        @Test
-        fun `GIVEN the wallet is not linked WHEN start is pressed THEN nothing runs AND the button returns to idle silently`() =
-            runTest {
-                // Arrange
-                owesOnboarding()
-                coEvery { walletLinkGate.ensureLinked(userWalletId) } returns false
-                val model = createModel(testScope = this)
-                advanceUntilIdle()
-
-                // Act
-                model.welcome().onActionClick()
-                advanceUntilIdle()
-
-                // Assert
-                assertThat(model.welcome().isInProgress).isFalse()
-                coVerify(exactly = 0) { checkNewAccountAllowed(any()) }
-                verify(exactly = 0) { runOnboardingUseCase(any()) }
-                verify(exactly = 0) { messageSender.send(any()) }
                 model.onDestroy()
             }
 
@@ -1074,7 +1049,6 @@ internal class PolymarketOnboardingModelTest {
         shouldShowStoriesInteractor = shouldShowStoriesInteractor,
         getStoryContentUseCase = getStoryContentUseCase,
         imagePreloader = imagePreloader,
-        walletLinkGate = walletLinkGate,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
     )
 
