@@ -44,6 +44,8 @@ internal class CollectiblesConfirmOrderSheetComponent(
             is CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback -> CollectiblesAutoBuybackSheet(
                 amount = config.amount,
                 price = config.price,
+                cardImageUrl = config.cardImageUrl,
+                cardTitle = config.cardTitle,
                 onOpenAgainClick = params.onOpenAgain,
                 onExplorePacksClick = params.onExplorePacks,
                 onDismiss = whileShown(params.onOpenAgain),

@@ -2124,7 +2124,7 @@
   <string name="social_login_error_generic">Une erreur est survenue. Veuillez réessayer</string>
   <string name="social_login_error_generic_v2">Veuillez réessayer. Si le problème persiste, vérifiez votre connexion Internet.</string>
   <string name="social_login_error_network_description">Vérifiez votre connexion et réessayez.</string>
-  <string name="social_login_error_network_title">Aucune connexion Internet</string>
+  <string name="social_login_error_network_title">Pas de connexion internet</string>
   <string name="social_login_error_no_account">Ajoutez votre compte %s à cet appareil pour continuer.</string>
   <string name="social_login_error_no_account_title">Aucun compte %1$s sur cet appareil</string>
   <string name="social_login_error_restore_failed_description">Nous n’avons pas pu restaurer le portefeuille associé à ce compte. Réessayez ou contactez l’assistance</string>

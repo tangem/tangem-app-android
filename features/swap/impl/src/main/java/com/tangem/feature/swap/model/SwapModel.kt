@@ -18,7 +18,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
-import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.backup.BackupErrorWarningSender
@@ -53,6 +52,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
@@ -82,6 +82,7 @@ import com.tangem.domain.tangempay.usecase.GetPaymentAccountCryptoCurrencyStatus
 import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
+import com.tangem.domain.collectibles.usecase.WithdrawFromCollectiblesVaultUseCase
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
@@ -115,6 +116,8 @@ import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
+import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
+import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
@@ -183,6 +186,7 @@ internal class SwapModel @Inject constructor(
     private val analyticsErrorEventHandler: AnalyticsErrorHandler,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
+    private val balanceContributionsRefresher: BalanceContributionsRefresher,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
@@ -195,6 +199,7 @@ internal class SwapModel @Inject constructor(
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
+    private val appTxHistoryFetcher: AppTxHistoryFetcher,
     private val swapInteractor: SwapInteractor,
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
@@ -215,6 +220,7 @@ internal class SwapModel @Inject constructor(
     private val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase,
     polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val submitPredictionWithdrawalInteractor: SubmitPredictionWithdrawalInteractor,
+    private val withdrawFromCollectiblesVaultUseCase: WithdrawFromCollectiblesVaultUseCase,
     private val predictionWithdrawalTracker: PredictionWithdrawalTracker,
     private val predictionFundingWindow: PredictionFundingWindow,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
@@ -254,6 +260,9 @@ internal class SwapModel @Inject constructor(
     private val isCollectiblesTopUpFlow: Boolean
         get() = accountFlow is AccountFlow.CollectiblesTopUp
 
+    private val isCollectiblesWithdrawFlow: Boolean
+        get() = accountFlow is AccountFlow.CollectiblesWithdraw
+
     private val isMoneyTopUpFlow: Boolean
         get() = accountFlow is AccountFlow.MoneyTopUp
 
@@ -261,7 +270,7 @@ internal class SwapModel @Inject constructor(
         get() = accountFlow is AccountFlow.MoneyWithdraw
 
     val isGaslessWithdrawal: Boolean
-        get() = isTangemPayWithdrawal() || isPredictionWithdrawFlow
+        get() = isTangemPayWithdrawal() || isPredictionWithdrawFlow || isCollectiblesWithdrawFlow
 
     private var isBalanceHidden = true
 
@@ -273,6 +282,10 @@ internal class SwapModel @Inject constructor(
 
     private val predictionWithdrawTargets: StateFlow<List<PredefinedTokenToAdd>> = MutableStateFlow(
         listOfNotNull(polymarketCollateralCurrencyFactory.createDepositTarget().toPredefinedToken()),
+    )
+
+    private val collectiblesWithdrawTargets: StateFlow<List<PredefinedTokenToAdd>> = MutableStateFlow(
+        listOfNotNull((initialCryptoCurrency as? CryptoCurrency.Token)?.toPredefinedToken()),
     )
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
@@ -309,6 +322,12 @@ internal class SwapModel @Inject constructor(
             isPredictionWithdrawFlow ->
                 ChooseTokenBridge.Settings.SwapTo.copy(
                     chooserBlock = ChooserBlock.Predefined(predictionWithdrawTargets),
+                    paymentAccountTokens = PaymentAccountTokens.Hidden,
+                    isJointAccountsShown = false,
+                )
+            isCollectiblesWithdrawFlow ->
+                ChooseTokenBridge.Settings.SwapTo.copy(
+                    chooserBlock = ChooserBlock.Predefined(collectiblesWithdrawTargets),
                     paymentAccountTokens = PaymentAccountTokens.Hidden,
                     isJointAccountsShown = false,
                 )
@@ -354,6 +373,7 @@ internal class SwapModel @Inject constructor(
             isPredictionWithdrawFlow ||
             isPredictionTopUpFlow ||
             isCollectiblesTopUpFlow ||
+            isCollectiblesWithdrawFlow ||
             dataState.fromSwapCurrencyStatus?.account is Account.Prediction ||
             isTargetOnlyDestination
 
@@ -547,11 +567,9 @@ internal class SwapModel @Inject constructor(
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val fromCurrency = dataState.fromSwapCurrencyStatus?.currency ?: return false
         val marketing = resolveMarketingDeeplink(deeplink)
-        if (marketing == MarketingDeeplink.SWAP) return false
         val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = fromCurrency,
-            screenSource = ScreensSources.Swap,
         ) ?: return false
         router.push(route)
         return true
@@ -618,6 +636,7 @@ internal class SwapModel @Inject constructor(
                 isPredictionTopUpFlow ||
                 isPredictionWithdrawFlow ||
                 isCollectiblesTopUpFlow ||
+                isCollectiblesWithdrawFlow ||
                 isMoneyTopUpFlow ||
                 isMoneyWithdrawFlow
 
@@ -1055,6 +1074,7 @@ internal class SwapModel @Inject constructor(
 
     private fun shouldTransfer(fromSwapCurrency: CryptoCurrency?, toSwapCurrency: CryptoCurrency?): Boolean {
         return isPredictionWithdrawFlow ||
+            isCollectiblesWithdrawFlow ||
             swapTransferInteractor.shouldTransferInsteadOfSwap(fromSwapCurrency, toSwapCurrency)
     }
 
@@ -1863,6 +1883,7 @@ internal class SwapModel @Inject constructor(
                         )
                         sendSwapInProgressEvent()
                         openPredictionFundingWindow()
+                        notifySwapExecuted(fromSwapCurrencyStatus.userWalletId)
 
                         router.replaceAll(SwapRoute.Success)
                     }
@@ -1921,6 +1942,10 @@ internal class SwapModel @Inject constructor(
                     amount = transferState.sendingAmount,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                 )
+                isCollectiblesWithdrawFlow -> withdrawFromCollectiblesVault(
+                    amount = transferState.sendingAmount,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                )
                 isTangemPayWithdrawal() -> withdrawTangemPay(
                     transferState = transferState,
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -1937,6 +1962,28 @@ internal class SwapModel @Inject constructor(
                     showAlert()
                 }
             }
+        }
+    }
+
+    private suspend fun withdrawFromCollectiblesVault(amount: BigDecimal, toSwapCurrencyStatus: SwapCurrencyStatus) {
+        val networkAddress = toSwapCurrencyStatus.status.value.networkAddress
+        val recipientAddress = networkAddress?.defaultAddress?.value
+
+        if (recipientAddress == null) {
+            TangemLogger.e("onTransferClick: collectibles withdrawal recipient address is unavailable")
+            startLoadingQuotesFromLastState()
+            showAlert()
+            return
+        }
+
+        withdrawFromCollectiblesVaultUseCase(
+            userWalletId = params.userWalletId,
+            recipientAddress = recipientAddress,
+            amount = amount,
+        ).onLeft { error ->
+            TangemLogger.e("onTransferClick: collectibles withdrawal failed: $error")
+            startLoadingQuotesFromLastState()
+            showAlert()
         }
     }
 
@@ -2198,6 +2245,7 @@ internal class SwapModel @Inject constructor(
                         txUrl = txUrl.orEmpty(),
                         onExploreClick = { if (txUrl != null) urlOpener.openUrl(txUrl) },
                     )
+                    notifySwapExecuted(swapTransactionState.storeData.fromSwapCurrencyStatus.userWalletId)
                     router.replaceAll(SwapRoute.Success)
                 }
             }
@@ -2942,7 +2990,10 @@ internal class SwapModel @Inject constructor(
         }
 
         chooseFromTokenBridge.tokenFilter.value = fromFilter
-        if (!isPredictionWithdrawFlow) chooseToTokenBridge.tokenFilter.value = baseFilter
+
+        if (!isPredictionWithdrawFlow && !isCollectiblesWithdrawFlow) {
+            chooseToTokenBridge.tokenFilter.value = baseFilter
+        }
     }
 
     private fun CryptoCurrency.Token.toPredefinedToken(): PredefinedTokenToAdd? {
@@ -3198,7 +3249,7 @@ internal class SwapModel @Inject constructor(
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder = withAccountFlowPresentation(
         accountFlow = accountFlow,
         isReverseLocked = isReverseLocked,
-        accountBalance = if (isPredictionWithdrawFlow) {
+        accountBalance = if (isPredictionWithdrawFlow || isCollectiblesWithdrawFlow) {
             dataState.fromSwapCurrencyStatus?.status?.value?.amount
         } else {
             dataState.toSwapCurrencyStatus?.status?.value?.amount
@@ -3259,6 +3310,19 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    /**
+     * The express deal exists on the backend from the moment the swap is sent, so the history sync is asked for
+     * it right away instead of waiting for the next screen open — its status is polled from the local rows.
+     */
+    private fun notifySwapExecuted(userWalletId: UserWalletId) {
+        appTxHistoryFetcher.invoke(
+            TxHistoryFetchTrigger.OnExpressOperationExecute(
+                walletId = userWalletId,
+                type = TxHistoryFetchTrigger.OnExpressOperationExecute.Swap,
+            ),
+        )
+    }
+
     private fun updateWalletBalance() {
         dataState.fromSwapCurrencyStatus?.let { fromSwapCurrencyStatus ->
             modelScope.launch {
@@ -3299,6 +3363,7 @@ internal class SwapModel @Inject constructor(
             network = network,
             delayMillis = UPDATE_BALANCE_DELAY_MILLIS,
         )
+        balanceContributionsRefresher(userWalletId = userWalletId, network = network)
     }
 
     private fun triggerPromoProviderEvent(recommendedProvider: SwapProvider?, bestQuotesProvider: SwapProvider?) {
@@ -3774,8 +3839,7 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun isGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
-        !fromSwapCurrencyStatus.isYieldSupplyActive &&
-            (isTronGaslessDexSwap(fromSwapCurrencyStatus) || isEvmGaslessDexSwap(fromSwapCurrencyStatus))
+        isTronGaslessDexSwap(fromSwapCurrencyStatus) || isEvmGaslessDexSwap(fromSwapCurrencyStatus)
 
     private fun isTronGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
         swapFeatureToggles.isTronGaslessDexSwapEnabled && isTron(fromSwapCurrencyStatus.currency.network.rawId)

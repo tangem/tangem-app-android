@@ -2,6 +2,7 @@ package com.tangem.data.txhistory.fetcher
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
 import com.tangem.grow.datasource.express.models.response.ExchangeHistoryDeltaResponse
@@ -51,7 +52,9 @@ internal class DefaultExpressTxHistoryFetcherTest {
         val fetcher = createFetcher(createUtils())
 
         // Act
-        fetcher.invoke(TxHistoryFetchTrigger.TokenDetailsOpen(walletId = WALLET_ID, currency = coin))
+        fetcher.invoke(
+            TxHistoryFetchTrigger.TokenDetailsOpen(walletId = WALLET_ID, currency = coin, modelScope = this),
+        )
         advanceUntilIdle()
 
         // Assert
@@ -63,6 +66,7 @@ internal class DefaultExpressTxHistoryFetcherTest {
 
     @Test
     fun `continues exchange initial pagination while hasMore is true`() = runTest {
+        stubIdleStatusPolling()
         every { historySyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(null)
         // 1st call: initial fetch in fetchExchange (pagination ignored)
         // 2nd call: pagination loop, hasMore = true -> continue
@@ -80,7 +84,9 @@ internal class DefaultExpressTxHistoryFetcherTest {
         val fetcher = createFetcher(createUtils())
 
         // Act
-        fetcher.invoke(TxHistoryFetchTrigger.TokenDetailsOpen(walletId = WALLET_ID, currency = coin))
+        fetcher.invoke(
+            TxHistoryFetchTrigger.TokenDetailsOpen(walletId = WALLET_ID, currency = coin, modelScope = this),
+        )
         advanceUntilIdle()
 
         // Assert
@@ -89,6 +95,7 @@ internal class DefaultExpressTxHistoryFetcherTest {
 
     @Test
     fun `skips initial pagination when it is already completed`() = runTest {
+        stubIdleStatusPolling()
         every { historySyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(completedSyncState())
         coEvery { expressHistoryRepository.fetchExchangeHistoryDelta(WALLET_ID, any()) } returns
             exchangeDeltaResponse(hasMore = false)
@@ -97,7 +104,9 @@ internal class DefaultExpressTxHistoryFetcherTest {
         val fetcher = createFetcher(createUtils())
 
         // Act
-        fetcher.invoke(TxHistoryFetchTrigger.TokenDetailsPTR(walletId = WALLET_ID, currency = coin))
+        fetcher.invoke(
+            TxHistoryFetchTrigger.TokenDetailsPTR(walletId = WALLET_ID, currency = coin, modelScope = this),
+        )
         advanceUntilIdle()
 
         // Assert: no initial history fetch, only the delta pagination runs
@@ -135,7 +144,16 @@ internal class DefaultExpressTxHistoryFetcherTest {
         assertThat(utils.fetcherScope.coroutineContext.job.isActive).isFalse()
     }
 
+    /**
+     * Nothing in flight, so the status polling the token-details triggers start takes no hold and never loops
+     * over virtual time.
+     */
+    private fun stubIdleStatusPolling() {
+        every { expressHistoryRepository.observeActiveOperationIds(any(), any()) } returns flowOf(emptySet())
+    }
+
     private fun stubAllSuccess(hasMore: Boolean) {
+        stubIdleStatusPolling()
         every { historySyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(null)
         coEvery { expressHistoryRepository.fetchExchangeHistory(WALLET_ID, any()) } returns exchangeResponse(hasMore)
         coEvery { expressHistoryRepository.fetchExchangeHistoryDelta(WALLET_ID, any()) } returns
@@ -150,11 +168,12 @@ internal class DefaultExpressTxHistoryFetcherTest {
         analyticsExceptionHandler = mockk(relaxed = true),
     )
 
-    private fun createFetcher(utils: DefaultTxHistoryFetcherUtils) = DefaultExpressTxHistoryFetcher(
+    private fun TestScope.createFetcher(utils: DefaultTxHistoryFetcherUtils) = DefaultExpressTxHistoryFetcher(
         walletId = WALLET_ID,
         utils = utils,
         historySyncStateDao = historySyncStateDao,
         expressHistoryRepository = expressHistoryRepository,
+        dispatchers = createTestingCoroutineDispatcherProvider(),
     )
 
     private fun exchangeResponse(hasMore: Boolean) =

@@ -7,7 +7,6 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
@@ -17,6 +16,7 @@ import com.tangem.domain.tangempay.model.bankofframp.OfframpFee
 import com.tangem.domain.tangempay.model.bankofframp.OfframpSource
 import com.tangem.domain.tangempay.model.bankofframp.OfframpToken
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.models.response.BankAccountsResponse
 import com.tangem.spend.datasource.tangempay.models.response.BankOfframpOptionsResponse
@@ -178,7 +178,7 @@ internal class DefaultBankOfframpRepositoryTest {
                         currency = "USD",
                         fee = OfframpFee(
                             name = "ACH",
-                            calculationType = AccountFee.CalculationType.FIXED,
+                            calculationType = FeeCalculationType.FIXED,
                             amount = BigDecimal("1.50"),
                             currency = "USD",
                             description = null,
@@ -275,10 +275,12 @@ internal class DefaultBankOfframpRepositoryTest {
                         name = "ACH",
                         calculationType = "FIXED",
                         amount = BigDecimal("1.50"),
+                        fixedAmount = null,
                         currency = "USD",
                         description = null,
                     ),
                     eta = BankOfframpOptionsResponse.Eta(minDays = 1, maxDays = 3),
+                    amountLimits = null,
                 ),
             ),
         ),

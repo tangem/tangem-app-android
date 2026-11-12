@@ -86,6 +86,51 @@ internal class OnrampStateFactoryTest {
     }
 
     @Test
+    fun `GIVEN initial loading WHEN getCountryFlagState THEN flag set and button state kept`() {
+        // Arrange
+        currentState = factory.getInitialState(
+            currency = "BTC",
+            onClose = {},
+            openSettings = {},
+            isCountryByIpEnabled = true,
+        )
+
+        // Act
+        val result = factory.getCountryFlagState(
+            state = currentState,
+            flagUrl = "https://flag.png",
+            countryName = "Country",
+        )
+
+        // Assert
+        assertThat(result.topBarConfig.countryButtonUM?.flagUrl).isEqualTo("https://flag.png")
+        assertThat(result.topBarConfig.countryButtonUM?.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN ready state WHEN getCountryNotSupportedState THEN country warning shown and input locked`() {
+        // Arrange
+        currentState = factory.getInitialState(
+            currency = "BTC",
+            onClose = {},
+            openSettings = {},
+            isCountryByIpEnabled = true,
+        )
+        currentState = factory.getReadyState(currency = USD_CURRENCY)
+
+        // Act
+        val result = factory.getCountryNotSupportedState() as OnrampMainComponentUM.Content
+
+        // Assert
+        assertThat(result.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+        assertThat(result.buyNotSupportedMessage?.title)
+            .isEqualTo(resourceReference(R.string.onramp_residency_bottomsheet_country_not_supported))
+        assertThat(result.onrampAmountButtonUMState).isEqualTo(OnrampAmountButtonUMState.None)
+        assertThat(result.amountBlockState.amountFieldModel.isError).isTrue()
+        assertThat(result.topBarConfig.countryButtonUM?.isEnabled).isTrue()
+    }
+
+    @Test
     fun `GIVEN token with standard WHEN getInitialState THEN subtitle has standard and network name`() {
         // Arrange
         val token = MockCryptoCurrencyFactory().createToken(Blockchain.Ethereum)

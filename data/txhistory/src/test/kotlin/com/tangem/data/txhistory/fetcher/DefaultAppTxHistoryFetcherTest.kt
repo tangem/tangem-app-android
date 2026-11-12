@@ -127,7 +127,11 @@ internal class DefaultAppTxHistoryFetcherTest {
         advanceUntilIdle()
 
         // Act
-        val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(walletId = WALLET_ID_1, currency = currency)
+        val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(
+            walletId = WALLET_ID_1,
+            currency = currency,
+            modelScope = this,
+        )
         fetcher.invoke(trigger)
         advanceUntilIdle()
 
@@ -165,7 +169,11 @@ internal class DefaultAppTxHistoryFetcherTest {
         advanceUntilIdle()
 
         // Act
-        val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(walletId = WALLET_ID_1, currency = currency)
+        val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(
+            walletId = WALLET_ID_1,
+            currency = currency,
+            modelScope = this,
+        )
         fetcher.invoke(trigger)
         advanceUntilIdle()
 

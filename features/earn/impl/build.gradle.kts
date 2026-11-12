@@ -15,14 +15,21 @@ dependencies {
     api(projects.features.earn.api)
     api(projects.features.earn.product.api)
 
+    /** Common */
+    implementation(projects.common.routing)
+    implementation(projects.common.ui)
+
     /** Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.common)

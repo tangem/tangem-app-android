@@ -301,6 +301,8 @@ include(":spend:push-provisioning:no-op")
 // endregion Spend modules
 
 // region Store modules
+include(":store:features:card-settings:api")
+include(":store:features:card-settings:impl")
 include(":store:datasource")
 // endregion Store modules
 
@@ -363,6 +365,7 @@ include(":features:earn:api")
 include(":features:earn:flow:api")
 include(":features:earn:flow:impl")
 include(":features:earn:impl")
+include(":features:earn:lending:impl")
 include(":features:earn:product:api")
 include(":features:earn:staking:impl")
 include(":features:earn:yield:impl")
@@ -496,6 +499,9 @@ include(":features:collectibles:impl")
 
 include(":features:mcp:api")
 include(":features:mcp:impl")
+
+include(":features:all-services:api")
+include(":features:all-services:impl")
 // endregion Feature modules
 
 // region Domain modules

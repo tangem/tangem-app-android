@@ -15,7 +15,11 @@ import com.tangem.domain.earn.model.EarnFilterType
 import com.tangem.domain.earn.usecase.*
 import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.PreselectedEarnType
+import com.tangem.domain.staking.GetStakingAvailabilityUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetAvailabilityUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
+import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.feed.earn.components.EarnBottomSheetRoute
 import com.tangem.features.feed.earn.components.EarnNetworkFilterComponent
 import com.tangem.features.feed.earn.components.EarnTypeFilterComponent
@@ -53,6 +57,10 @@ internal class EarnFeedTabModel @Inject constructor(
     private val stateController: EarnStateController,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    portfolioSelectorBridgeFactory: PortfolioSelectorBridge.Factory,
+    private val earnFeatureToggles: EarnFeatureToggles,
+    private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
+    private val yieldSupplyGetAvailabilityUseCase: YieldSupplyGetAvailabilityUseCase,
     private val feedEntryController: FeedEntryController,
 ) : Model() {
 
@@ -78,6 +86,10 @@ internal class EarnFeedTabModel @Inject constructor(
 
     private val addToPortfolioLauncher = EarnAddToPortfolioLauncher(
         addToPortfolioManagerFactory = addToPortfolioManagerFactory,
+        portfolioSelectorBridgeFactory = portfolioSelectorBridgeFactory,
+        earnFeatureToggles = earnFeatureToggles,
+        getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
+        yieldSupplyGetAvailabilityUseCase = yieldSupplyGetAvailabilityUseCase,
         analyticsEventHandler = analyticsEventHandler,
         router = router,
         modelScope = modelScope,

@@ -11,7 +11,7 @@ import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
 import com.tangem.features.polymarket.impl.search.model.transformer.PolymarketSearchContentTransformer

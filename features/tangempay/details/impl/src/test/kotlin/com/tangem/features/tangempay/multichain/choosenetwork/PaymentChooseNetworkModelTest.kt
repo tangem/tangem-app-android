@@ -4,7 +4,6 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.extensions.iconResId
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -18,6 +17,7 @@ import com.tangem.domain.tangempay.usecase.CreatePaymentNetworkContractUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -39,12 +39,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.time.Duration.Companion.seconds
 
-internal class PaymentChooseNetworkModelTest {
+internal class PaymentChooseNetworkModelTest : TangemPayModelTestBase() {
 
     private val supplier: PaymentAccountStatusSupplier = mockk()
     private val createContractUseCase: CreatePaymentNetworkContractUseCase = mockk()
     private val listener: ChooseNetworkListener = mockk(relaxed = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
 
@@ -162,7 +161,7 @@ internal class PaymentChooseNetworkModelTest {
         }
 
     @Test
-    fun `WHEN model created THEN Choose Network Popup Showed is sent`() = runTest {
+    fun `GIVEN the choose network popup WHEN model created THEN Choose Network Popup Showed is sent`() = runTest {
         // Act
         val model = createModel(testScope = this)
         advanceUntilIdle()

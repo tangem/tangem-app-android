@@ -219,13 +219,8 @@ internal class ChangeCardFrozenStateUseCaseTest {
 
     private fun order(status: TangemPayOrder.Status) = TangemPayOrder(
         id = ORDER_ID,
-        customerId = "customer-1",
         status = status,
         step = OrderStep.UNKNOWN,
-        stepChangeCode = 0,
-        createdAt = "2026-11-09T10:00:00Z",
-        updatedAt = "2026-11-09T10:00:00Z",
-        errorCode = null,
         details = OrderDetails.CardFreeze(productInstanceId = "pi-1"),
     )
 

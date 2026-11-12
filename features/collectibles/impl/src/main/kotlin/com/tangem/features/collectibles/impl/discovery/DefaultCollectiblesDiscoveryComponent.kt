@@ -17,9 +17,10 @@ import kotlinx.coroutines.flow.StateFlow
 @Stable
 internal class DefaultCollectiblesDiscoveryComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
+    @Assisted params: CollectiblesDiscoveryComponent.Params,
 ) : CollectiblesDiscoveryComponent, AppComponentContext by context {
 
-    private val model: CollectiblesDiscoveryModel = getOrCreateModel()
+    private val model: CollectiblesDiscoveryModel = getOrCreateModel(params = params)
 
     override val uiState: StateFlow<CollectiblesDiscoveryUM>
         get() = model.uiState
@@ -36,6 +37,9 @@ internal class DefaultCollectiblesDiscoveryComponent @AssistedInject constructor
 
     @AssistedFactory
     interface Factory : CollectiblesDiscoveryComponent.Factory {
-        override fun create(context: AppComponentContext): DefaultCollectiblesDiscoveryComponent
+        override fun create(
+            context: AppComponentContext,
+            params: CollectiblesDiscoveryComponent.Params,
+        ): DefaultCollectiblesDiscoveryComponent
     }
 }

@@ -24,11 +24,15 @@ class OrderPoller(
     private val lock = Any()
     private val pollings = mutableMapOf<OrderRef, Polling>()
 
-    fun poll(orderRef: OrderRef): Flow<OrderPollingState> {
+    fun startPolling(orderRef: OrderRef): Flow<OrderPollingState> {
         return getOrStartPolling(orderRef).state.transformWhile { state ->
             emit(state)
             !state.isTerminal
         }
+    }
+
+    fun launchPolling(orderRef: OrderRef) {
+        getOrStartPolling(orderRef)
     }
 
     fun stopPolling(userWalletIds: Collection<UserWalletId>) {
@@ -63,6 +67,7 @@ class OrderPoller(
     }
 
     private suspend fun pollUntilTerminal(orderRef: OrderRef, state: MutableStateFlow<OrderPollingState>) {
+        ordersStore.save(orderRef)
         var previousStep: OrderStep? = null
         while (true) {
             val result = orderRepository.getOrder(userWalletId = orderRef.userWalletId, orderId = orderRef.id)
@@ -99,9 +104,9 @@ class OrderPoller(
         terminalState: OrderPollingState,
     ) {
         activeOrdersRegistry.remove(orderRef)
-        ordersStore.remove(orderRef)
         refreshAccountStatus(orderRef)
         state.value = terminalState
+        ordersStore.remove(orderRef)
     }
 
     private suspend fun refreshAccountStatus(orderRef: OrderRef) {

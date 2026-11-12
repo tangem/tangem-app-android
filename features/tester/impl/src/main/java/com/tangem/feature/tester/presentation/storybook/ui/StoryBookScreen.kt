@@ -13,6 +13,8 @@ import com.tangem.feature.tester.presentation.storybook.entity.DeviceIconStory
 import com.tangem.feature.tester.presentation.storybook.entity.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.entity.NorthernLightsStory
 import com.tangem.feature.tester.presentation.storybook.entity.PolymarketProbabilityChartStory
+import com.tangem.feature.tester.presentation.storybook.entity.PolymarketCryptoChartStory
+import com.tangem.feature.tester.presentation.storybook.page.polymarket.crypto.PolymarketCryptoChartStory
 import com.tangem.feature.tester.presentation.storybook.entity.PolymarketEventChartStory
 import com.tangem.feature.tester.presentation.storybook.entity.OpportunitiesBGStory
 import com.tangem.feature.tester.presentation.storybook.entity.PlaceholderStory
@@ -114,6 +116,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
         Box(modifier = insetsModifier) {
             when (storyState) {
                 PolymarketEventChartStory -> PolymarketEventChartStory()
+                is PolymarketCryptoChartStory -> PolymarketCryptoChartStory(storyState)
                 PolymarketProbabilityChartStory -> PolymarketProbabilityChartStory()
                 StoryList -> StoryBookListScreen(state = state)
                 StoriesV2Story -> StoriesV2Story()

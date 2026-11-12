@@ -241,6 +241,7 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
                 )
             },
             balanceContributionProviders = emptySet(),
+            tokensFeatureToggles = mockk { every { isYieldContributionEnabled } returns false },
         )
     }
 

@@ -366,6 +366,7 @@ fun BaseTestCase.selectTokenToSendViaSwap(
         onTransferBottomSheet { sendButton.clickWithAssertion() }
     }
     step("Click on 'Swap to another token' button") {
+        awaitSuccess(WAIT_UNTIL_TIMEOUT_LONG) { onSendScreen { swapToAnotherTokenButton.assertIsDisplayed() } }
         onSendScreen { swapToAnotherTokenButton.performClick() }
     }
     step("Click on token: '$swapTokenName'") {

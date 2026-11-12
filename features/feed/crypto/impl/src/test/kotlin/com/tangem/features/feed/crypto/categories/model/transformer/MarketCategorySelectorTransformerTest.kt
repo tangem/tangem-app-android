@@ -93,12 +93,12 @@ internal class MarketCategorySelectorTransformerTest {
     }
 
     @Test
-    fun `GIVEN the screen flags WHEN transformed THEN they reach the state untouched`() {
+    fun `GIVEN reset shown and a next page loading WHEN transformed THEN both reach the state`() {
         // Act
-        val actual = transformState(isEdited = true, isLoadingMore = true)
+        val actual = transformState(isLoadingMore = true, prevState = createSelectorState(isResetVisible = true))
 
         // Assert
-        assertThat(actual.isEdited).isTrue()
+        assertThat(actual.isResetVisible).isTrue()
         assertThat(actual.body().categories.isLoadingMore).isTrue()
     }
 
@@ -113,8 +113,8 @@ internal class MarketCategorySelectorTransformerTest {
 
     @Test
     fun `GIVEN a typed query and a footer WHEN transformed THEN neither is rebuilt`() {
-        // Arrange — a reload must not unmount the field mid-typing or strip a drafted selection
-        val footer = MarketCategorySelectorFooterUM(onReset = {}, onApply = {})
+        // Arrange — a reload must not unmount the field mid-typing or strip the Reset footer
+        val footer = MarketCategorySelectorFooterUM(onReset = {})
         val prevState = createSelectorState(search = createSearchState(query = "mem", isActive = true), footer = footer)
 
         // Act
@@ -132,7 +132,6 @@ internal class MarketCategorySelectorTransformerTest {
         selection: MarketCategorySelection = MarketCategorySelection(),
         appCurrency: AppCurrency = AppCurrency.Default,
         isSearching: Boolean = false,
-        isEdited: Boolean = false,
         isLoadingMore: Boolean = false,
         prevState: MarketCategorySelectorUM = createSelectorState(),
     ): MarketCategorySelectorUM = MarketCategorySelectorTransformer(
@@ -141,7 +140,6 @@ internal class MarketCategorySelectorTransformerTest {
         selection = selection,
         appCurrency = appCurrency,
         isSearching = isSearching,
-        isEdited = isEdited,
         isLoadingMore = isLoadingMore,
         onLoadMore = onLoadMore,
         onSelectionChange = {},
@@ -154,7 +152,6 @@ internal class MarketCategorySelectorTransformerTest {
         selection: MarketCategorySelection = MarketCategorySelection(),
         appCurrency: AppCurrency = AppCurrency.Default,
         isSearching: Boolean = false,
-        isEdited: Boolean = false,
         isLoadingMore: Boolean = false,
         prevState: MarketCategorySelectorUM = createSelectorState(),
     ): MarketCategorySelectorUM.ContentUM.Content = transformState(
@@ -163,7 +160,6 @@ internal class MarketCategorySelectorTransformerTest {
         selection = selection,
         appCurrency = appCurrency,
         isSearching = isSearching,
-        isEdited = isEdited,
         isLoadingMore = isLoadingMore,
         prevState = prevState,
     ).body()
@@ -191,7 +187,6 @@ internal class MarketCategorySelectorTransformerTest {
                 selection = MarketCategorySelection(),
                 appCurrency = AppCurrency.Default,
                 isSearching = false,
-                isEdited = false,
                 isLoadingMore = false,
                 onLoadMore = {},
                 onSelectionChange = {},

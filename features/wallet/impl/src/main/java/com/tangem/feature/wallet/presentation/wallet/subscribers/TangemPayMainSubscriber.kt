@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCase
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
@@ -7,7 +8,7 @@ import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.tangempay.usecase.RestoreActiveCardOrdersUseCase
 import com.tangem.domain.tangempay.usecase.order.RestoreOrdersUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -38,14 +39,21 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
             restoreActiveCardOrdersUseCase(userWallet.walletId)
         }
         if (tangemPayFeatureToggles.isOrderFrameworkEnabled) {
-            launch {
-                restoreOrdersUseCase(userWallet.walletId)
-            }
+            restoreOrdersOnSync(this)
         }
         if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
             pollTangemPayAccountStatusesUseCase(userWallet.walletId).launchIn(this)
         }
         subscribeToStatus(this)
+    }
+
+    private fun restoreOrdersOnSync(coroutineScope: CoroutineScope) {
+        paymentAccountStatusSupplier.invoke(userWalletId = userWallet.walletId)
+            .map { it.value !is PaymentAccountStatusValue.Error.NotSynced }
+            .distinctUntilChanged()
+            .filter { isSynced -> isSynced }
+            .onEach { restoreOrdersUseCase(userWallet.walletId) }
+            .launchIn(coroutineScope)
     }
 
     private fun subscribeToStatus(coroutineScope: CoroutineScope) {

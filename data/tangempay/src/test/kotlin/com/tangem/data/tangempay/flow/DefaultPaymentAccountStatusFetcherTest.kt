@@ -9,6 +9,7 @@ import com.tangem.data.tangempay.store.PaymentAccountStatusesStore
 import com.tangem.data.tangempay.store.WalletIdWithPaymentStatus
 import com.tangem.data.tangempay.store.WalletIdWithPaymentStatusDM
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -48,7 +49,7 @@ import com.tangem.domain.tangempay.usecase.GetTangemPayFiatRateUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.tangempay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.ProvideTestModels
@@ -56,6 +57,7 @@ import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -945,6 +947,9 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
             converter = converter,
+            userWalletsListRepository = mockk<UserWalletsListRepository> {
+                every { userWallets } returns MutableStateFlow(emptyList())
+            },
             scope = TestAppCoroutineScope(),
         )
 
@@ -1409,7 +1414,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         @Test
         fun `GIVEN local issue order missing on backend WHEN invoke THEN placeholder dropped and order forgotten`() =
             runTest {
-                // GIVEN
+                // Arrange
                 val customerInfo = buildCustomerInfo()
                 stubHappyPath(customerInfo)
                 coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_gone")
@@ -1419,10 +1424,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 coEvery { issueCardRepository.removeIssueOrderId(userWalletId, "order_gone") } just Runs
                 val storedStatuses = captureStoredStatuses()
 
-                // WHEN
+                // Act
                 fetcher.invoke(params)
 
-                // THEN
+                // Assert
                 val loaded = storedStatuses.lastLoaded()
                 assertThat(loaded.cards.map { it.state }).doesNotContain(TangemPayCardState.Issuing)
                 coVerify(exactly = 1) { issueCardRepository.removeIssueOrderId(userWalletId, "order_gone") }
@@ -1706,13 +1711,8 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
         private fun typedOrder(details: OrderDetails) = TangemPayOrder(
             id = "frozen-state-order",
-            customerId = "cust_1",
             status = TangemPayOrder.Status.PROCESSING,
             step = OrderStep.UNKNOWN,
-            stepChangeCode = 0,
-            createdAt = "2026-11-09T10:00:00Z",
-            updatedAt = "2026-11-09T10:00:00Z",
-            errorCode = null,
             details = details,
         )
     }

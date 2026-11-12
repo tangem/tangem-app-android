@@ -479,6 +479,23 @@ internal class CollectiblesPackOpeningModelTest {
     }
 
     @Test
+    fun `GIVEN a paid pack from main WHEN the screen starts THEN it is reopened without a purchase`() = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = true) } returns
+            flowOf(OpenPackStep.Opened(PACK))
+
+        // Act
+        val model = startModel(reopenTxId = TX_ID, isTurboEnabled = true)
+
+        // Assert
+        verify(exactly = 1) {
+            openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = true)
+        }
+        verify(exactly = 0) { openCollectiblePackUseCase(any(), ofType<OpenPackRequest.Buy>(), any()) }
+        assertThat(model.reveal().stage).isEqualTo(Stage.Launching)
+    }
+
+    @Test
     fun `GIVEN the pack is left unopened WHEN open pack tapped THEN it is opened again in place`() = runTest {
         // Arrange
         every { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = false) } returns
@@ -572,7 +589,7 @@ internal class CollectiblesPackOpeningModelTest {
             feeAmount = BigDecimal("1"),
         ).right()
         every { openCollectiblePackUseCase(any(), any(), any()) } returns
-            flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5")))
+            flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = createOpenedPack()))
         val model = startModel()
         var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
         model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
@@ -586,10 +603,74 @@ internal class CollectiblesPackOpeningModelTest {
             CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback(
                 amount = "+" + usdc("42.5"),
                 price = usdc("51", minDecimals = 0),
+                cardImageUrl = "https://tangem.com/front.png",
+                cardTitle = "2024 Series One #216",
             ),
         )
         verify(exactly = 0) { messageSender.send(any()) }
     }
+
+    @Test
+    fun `GIVEN turbo sold the card back WHEN its image is still loading THEN the payout sheet waits for it`() = runTest {
+        // Arrange
+        val image = CompletableDeferred<ImageResult>()
+        stubCardImages(image)
+        every { openCollectiblePackUseCase(any(), any(), any()) } returns
+            flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = PACK))
+        val model = startModel()
+        var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+        model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+        model.content().onApproveClick()
+        runCurrent()
+        val sheetWhileLoading = shownSheet
+
+        // Act
+        image.complete(mockk())
+        runCurrent()
+
+        // Assert
+        assertThat(sheetWhileLoading).isNull()
+        assertThat(shownSheet).isInstanceOf(CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback::class.java)
+        verify(exactly = 1) { imagePreloader.preload(PACK.imageFrontUrl!!) }
+    }
+
+    @Test
+    fun `GIVEN turbo sold the card back WHEN its image never loads THEN the payout sheet is shown after the timeout`() =
+        runTest {
+            // Arrange
+            stubCardImages(CompletableDeferred())
+            every { openCollectiblePackUseCase(any(), any(), any()) } returns
+                flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = PACK))
+            val model = startModel()
+            var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+            model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+            model.content().onApproveClick()
+
+            // Act
+            advanceTimeBy(PackOpeningConst.CARD_IMAGES_TIMEOUT_MS + 1)
+
+            // Assert
+            assertThat(shownSheet).isInstanceOf(CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback::class.java)
+        }
+
+    @Test
+    fun `GIVEN turbo sold an unknown card back WHEN approve tapped THEN the payout sheet is shown without preloading`() =
+        runTest {
+            // Arrange
+            every { openCollectiblePackUseCase(any(), any(), any()) } returns
+                flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5"), pack = null))
+            val model = startModel()
+            var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+            model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+            // Act
+            model.content().onApproveClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(shownSheet).isInstanceOf(CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback::class.java)
+            verify(exactly = 0) { imagePreloader.preload(any()) }
+        }
 
     @Test
     fun `GIVEN the payout sheet WHEN open again tapped THEN the flow goes back to the machine`() = runTest {
@@ -601,6 +682,23 @@ internal class CollectiblesPackOpeningModelTest {
 
         // Assert
         verify(exactly = 1) { router.pop(any()) }
+    }
+
+    @Test
+    fun `GIVEN a pack reopened from main WHEN open again tapped THEN its machine replaces the screen`() = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = true) } returns
+            flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal.TEN, pack = null))
+        val model = startModel(reopenTxId = TX_ID, isTurboEnabled = true)
+
+        // Act
+        model.onOpenAgain()
+
+        // Assert
+        verify(exactly = 1) {
+            router.replaceCurrent(CollectiblesRoute.MachineDetails(externalId = EXTERNAL_ID), any())
+        }
+        verify(exactly = 0) { router.pop(any()) }
     }
 
     @Test
@@ -1433,7 +1531,7 @@ internal class CollectiblesPackOpeningModelTest {
     private fun CollectiblesPackOpeningModel.order() = (uiState.value as CollectiblesPackOpeningUM.Content).order
 
     private fun usdc(amount: String, minDecimals: Int? = null) = BigDecimal(amount).format {
-        val usdc = crypto(cryptoCurrency = MockCollectibles.usdc)
+        val usdc = crypto(cryptoCurrency = MockCollectibles.usdc, ignoreSymbolPosition = true)
         if (minDecimals == null) usdc else usdc.anyDecimals(minDecimals = minDecimals)
     }
 
@@ -1442,7 +1540,11 @@ internal class CollectiblesPackOpeningModelTest {
         vaultBalance = MockCollectibles.vaultBalance(amount = BigDecimal(usdcAmount), fiatRate = BigDecimal.ONE),
     )
 
-    private fun TestScope.startModel(isDarkTheme: Boolean? = null): CollectiblesPackOpeningModel {
+    private fun TestScope.startModel(
+        isDarkTheme: Boolean? = null,
+        reopenTxId: String? = null,
+        isTurboEnabled: Boolean = false,
+    ): CollectiblesPackOpeningModel {
         val model = CollectiblesPackOpeningModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getMachineUseCase = getMachineUseCase,
@@ -1460,7 +1562,8 @@ internal class CollectiblesPackOpeningModelTest {
                 CollectiblesPackOpeningComponent.Params(
                     userWalletId = USER_WALLET_ID,
                     externalId = EXTERNAL_ID,
-                    isTurboEnabled = false,
+                    isTurboEnabled = isTurboEnabled,
+                    reopenTxId = reopenTxId,
                 ),
             ),
         ).also { this@CollectiblesPackOpeningModelTest.model = it }

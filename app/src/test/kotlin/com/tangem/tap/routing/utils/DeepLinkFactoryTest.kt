@@ -3,6 +3,7 @@ package com.tangem.tap.routing.utils
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import javax.inject.Provider
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DeepLinkFactoryTest {
@@ -65,12 +67,14 @@ internal class DeepLinkFactoryTest {
         marketingFeatureToggles = marketingFeatureToggles,
         marketingUidBindingRepository = marketingUidBindingRepository,
         appCoroutineScope = TestAppCoroutineScope(),
-        deepLinkHandlers = mapOf(
-            "tangem://main" to registeredWalletHandler,
-            "https://tangem.com/joint-account/join" to registeredJointAccountInviteHandler,
-            "wc:" to registeredWalletConnectHandler,
-            "tangem://pay-app-main" to registeredTangemPayMainHandler,
-            "https://tangem.com/pay-app-main" to registeredTangemPayMainHandler,
+        deepLinkHandlerRegistry = DeepLinkHandlerRegistry(
+            handlers = mapOf(
+                "tangem://main" to registeredWalletHandler,
+                "https://tangem.com/joint-account/join" to registeredJointAccountInviteHandler,
+                "wc:" to registeredWalletConnectHandler,
+                "tangem://pay-app-main" to registeredTangemPayMainHandler,
+                "https://tangem.com/pay-app-main" to registeredTangemPayMainHandler,
+            ).mapValues { (_, handler) -> Provider { handler } },
         ),
     )
 

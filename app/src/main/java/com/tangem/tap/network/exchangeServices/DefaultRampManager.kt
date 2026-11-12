@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -123,7 +124,7 @@ internal class DefaultRampManager(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): ScenarioUnavailabilityReason {
-        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
+        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupply
         return when {
             cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
                 ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)

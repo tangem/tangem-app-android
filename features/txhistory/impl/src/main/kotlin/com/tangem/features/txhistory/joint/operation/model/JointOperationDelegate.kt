@@ -2,8 +2,6 @@ package com.tangem.features.txhistory.joint.operation.model
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import arrow.core.raise.either
-import arrow.core.raise.ensure
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.decompose.navigation.Router
@@ -22,12 +20,12 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
-import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
@@ -162,17 +160,23 @@ internal class JointOperationDelegate @Inject constructor(
             .distinctUntilChanged()
     }
 
-    suspend fun sign(
+    suspend fun prepareSigning(
         state: JointOperationState,
         network: Network,
         operationId: String,
-    ): Either<JointOperationSignError, JointOperation?> = either {
-        val prepared = signJointOperationUseCase
-            .prepare(account = state.account, network = network, operationId = operationId, displayed = state.displayed)
-            .bind()
-        ensure(prepared.verdict != JointOperationBlockaidGate.Verdict.Malicious) { JointOperationSignError.Malicious }
+    ): Either<JointOperationSignError, PreparedJointOperation.Signing> {
+        return signJointOperationUseCase.prepare(
+            account = state.account,
+            network = network,
+            operationId = operationId,
+            displayed = state.displayed,
+        )
+    }
 
-        signJointOperationUseCase.submit(prepared = prepared).bind()
+    suspend fun submitSigning(
+        prepared: PreparedJointOperation.Signing,
+    ): Either<JointOperationSignError, JointOperation?> {
+        return signJointOperationUseCase.submit(prepared = prepared)
     }
 
     suspend fun openSupport(userWalletId: UserWalletId) {

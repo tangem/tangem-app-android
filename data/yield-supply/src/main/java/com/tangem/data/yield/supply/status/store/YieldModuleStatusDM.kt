@@ -17,6 +17,7 @@ internal data class YieldModuleStatusDM(
     @SerialName("is_initialized") val isInitialized: Boolean,
     @SerialName("is_allowed_to_spend") val isAllowedToSpend: Boolean,
     @SerialName("effective_protocol_balance") val effectiveProtocolBalance: SerializedBigDecimal? = null,
+    @SerialName("effective_balance") val effectiveBalance: SerializedBigDecimal? = null,
 ) {
 
     @Serializable
@@ -42,6 +43,7 @@ internal fun YieldModuleStatusDM.toDomain(source: StatusSource): YieldModuleStat
     isInitialized = isInitialized,
     isAllowedToSpend = isAllowedToSpend,
     effectiveProtocolBalance = effectiveProtocolBalance,
+    effectiveBalance = effectiveBalance,
     source = source,
 )
 
@@ -59,6 +61,7 @@ internal fun YieldModuleStatus.toDataModel(): YieldModuleStatusDM = YieldModuleS
     isInitialized = isInitialized,
     isAllowedToSpend = isAllowedToSpend,
     effectiveProtocolBalance = effectiveProtocolBalance,
+    effectiveBalance = effectiveBalance,
 )
 
 internal val YieldModuleStatusDM.key: YieldModuleStatus.Key

@@ -4,13 +4,8 @@ import java.util.Locale
 
 data class TangemPayOrder(
     val id: String,
-    val customerId: String,
     val status: Status,
     val step: OrderStep,
-    val stepChangeCode: Int,
-    val createdAt: String,
-    val updatedAt: String,
-    val errorCode: OrderErrorCode?,
     val details: OrderDetails,
 ) {
 
@@ -33,6 +28,29 @@ data class TangemPayOrder(
         TARIFF_PLAN_TRANSITION,
         ONBOARDING,
         UNDEFINED,
+        ;
+
+        @Suppress("CyclomaticComplexMethod")
+        fun toTypeId(): String = when (this) {
+            CARD_ISSUE_VIRTUAL -> "CARD_ISSUE_VIRTUAL_RAIN"
+            CARD_ISSUE_VIRTUAL_KYC -> "CARD_ISSUE_VIRTUAL_RAIN_KYC"
+            CARD_ISSUE_VIRTUAL_KYC_V2 -> "CARD_ISSUE_VIRTUAL_RAIN_KYC_V2"
+            CARD_ISSUE_PLASTIC -> "CARD_ISSUE_PLASTIC_RAIN"
+            CARD_ACTIVATION_PLASTIC -> "CARD_ACTIVATION_PLASTIC_RAIN"
+            CARD_REISSUE_PLASTIC -> "CARD_REISSUE_PLASTIC_RAIN"
+            CARD_REISSUE_VIRTUAL -> "CARD_REISSUE_VIRTUAL_RAIN"
+            CARD_FREEZE -> "CARD_FREEZE_RAIN"
+            CARD_UNFREEZE -> "CARD_UNFREEZE_RAIN"
+            CARD_CLOSE -> "CARD_CLOSE_RAIN"
+            ACCOUNT_ISSUE_VIRTUAL -> "ACCOUNT_ISSUE_VIRTUAL_RAIN"
+            ACCOUNT_ISSUE_BANKING -> "ACCOUNT_ISSUE_BANKING_RAIN"
+            WITHDRAWAL -> "WITHDRAWAL_RAIN"
+            BANK_OFFRAMP -> "BANK_OFFRAMP_RAIN"
+            SMART_CONTRACT_ISSUE -> "SMART_CONTRACT_ISSUE_RAIN"
+            TARIFF_PLAN_TRANSITION -> "TARIFF_PLAN_TRANSITION"
+            ONBOARDING -> "ONBOARDING_RAIN"
+            UNDEFINED -> "UNDEFINED"
+        }
     }
 
     enum class Status {
@@ -45,6 +63,14 @@ data class TangemPayOrder(
 
         val isTerminal: Boolean get() = this == COMPLETED || this == CANCELED
 
+        fun toStatusId(): String? = when (this) {
+            NEW -> "NEW"
+            PROCESSING -> "PROCESSING"
+            COMPLETED -> "COMPLETED"
+            CANCELED -> "CANCELED"
+            UNKNOWN -> null
+        }
+
         companion object {
             fun fromString(value: String) = when (value.uppercase(Locale.US)) {
                 "NEW" -> NEW
@@ -53,19 +79,6 @@ data class TangemPayOrder(
                 "CANCELED" -> CANCELED
                 else -> UNKNOWN
             }
-        }
-    }
-}
-
-enum class OrderErrorCode {
-    REGION_RESTRICTED,
-    UNKNOWN,
-    ;
-
-    companion object {
-        fun fromString(value: String) = when (value.uppercase(Locale.US)) {
-            "REGION_RESTRICTED" -> REGION_RESTRICTED
-            else -> UNKNOWN
         }
     }
 }

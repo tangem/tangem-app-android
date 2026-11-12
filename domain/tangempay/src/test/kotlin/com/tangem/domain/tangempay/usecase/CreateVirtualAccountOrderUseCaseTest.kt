@@ -33,10 +33,13 @@ internal class CreateVirtualAccountOrderUseCaseTest {
 
     @Test
     fun `GIVEN stored va order id WHEN invoke THEN skips creation and polling`() = runTest {
+        // Arrange
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "existing-id"
 
+        // Act
         val result = useCase(userWalletId, paymentAccountAddress, idempotencyKey)
 
+        // Assert
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { onboardingRepository.createVirtualAccountOrder(any(), any(), any()) }
         coVerify(exactly = 0) { onboardingRepository.storeVirtualAccountOrderId(any(), any()) }
@@ -46,13 +49,16 @@ internal class CreateVirtualAccountOrderUseCaseTest {
 
     @Test
     fun `GIVEN no stored id and create succeeds WHEN invoke THEN stores id and starts polling`() = runTest {
+        // Arrange
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
         coEvery {
             onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress, idempotencyKey)
         } returns "new-id".right()
 
+        // Act
         val result = useCase(userWalletId, paymentAccountAddress, idempotencyKey)
 
+        // Assert
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 1) {
             onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress, idempotencyKey)
@@ -65,13 +71,16 @@ internal class CreateVirtualAccountOrderUseCaseTest {
 
     @Test
     fun `GIVEN no stored id and create fails WHEN invoke THEN returns error and does not store or poll`() = runTest {
+        // Arrange
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
         coEvery {
             onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress, idempotencyKey)
         } returns TangemPayApiError.Unspecified.left()
 
+        // Act
         val result = useCase(userWalletId, paymentAccountAddress, idempotencyKey)
 
+        // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
         coVerify(exactly = 0) { onboardingRepository.storeVirtualAccountOrderId(any(), any()) }
         coVerify(exactly = 0) { pollingUseCase.invoke(any(), any()) }

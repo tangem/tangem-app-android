@@ -1,5 +1,6 @@
 package com.tangem.features.earn.product.api.session
 
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
@@ -11,6 +12,12 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
+/**
+ * [asset] is what the result screen shows above the title. With [isExplorerShown] the screen links the sent
+ * transaction to the network explorer and lets the user share that link; the flow builds the link from [EarnTxRef.id].
+ * The explorer footer has room for one round button only: it shows [primary] without its text, and a result with a
+ * [secondary] keeps its buttons and gets no explorer.
+ */
 data class EarnResult(
     val title: TextReference,
     val subtitle: TextReference?,
@@ -18,7 +25,17 @@ data class EarnResult(
     val rows: List<EarnRow>,
     val primary: EarnResultButton?,
     val secondary: EarnResultButton?,
+    val asset: EarnResultAsset = EarnResultAsset.Logos,
+    val isExplorerShown: Boolean = false,
 )
+
+sealed interface EarnResultAsset {
+
+    /** The currency logo next to the provider logo. */
+    data object Logos : EarnResultAsset
+
+    data class Status(val kind: TangemStatusIcon.Kind) : EarnResultAsset
+}
 
 data class EarnResultButton(val text: TextReference, val exit: EarnFlowExit)
 

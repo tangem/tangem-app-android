@@ -1781,6 +1781,7 @@ internal class SwapTransferInteractorImplTest {
             every { this@mockk.fiatRate } returns fiatRate
             every { this@mockk.networkAddress } returns networkAddress
             every { this@mockk.yieldSupplyStatus } returns null
+            every { this@mockk.contributions } returns emptyList()
             every { this@mockk.amount } returns amount
         }
         val status: CryptoCurrencyStatus = mockk {
@@ -1823,6 +1824,7 @@ internal class SwapTransferInteractorImplTest {
             every { this@mockk.fiatRate } returns BigDecimal.ZERO
             every { this@mockk.networkAddress } returns networkAddress
             every { this@mockk.yieldSupplyStatus } returns null
+            every { this@mockk.contributions } returns emptyList()
             every { this@mockk.amount } returns BigDecimal.ZERO
         }
         val status: CryptoCurrencyStatus = mockk {

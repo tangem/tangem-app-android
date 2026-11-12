@@ -5,9 +5,9 @@ import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayErrorConverterTest {
@@ -15,7 +15,7 @@ internal class TangemPayErrorConverterTest {
     private val converter = TangemPayErrorConverter(json = NetworkJsonFactory.create())
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun convert(model: ConvertModel) {
         // Act
         val actual = converter.convert(model.throwable)

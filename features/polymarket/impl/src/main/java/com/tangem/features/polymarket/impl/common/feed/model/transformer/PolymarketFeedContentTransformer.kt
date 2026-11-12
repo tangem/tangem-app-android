@@ -1,0 +1,54 @@
+package com.tangem.features.polymarket.impl.common.feed.model.transformer
+
+import com.tangem.domain.polymarket.model.PolymarketSportsState
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketLiveQuote
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
+import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
+import com.tangem.pagination.BatchFetchResult
+import com.tangem.pagination.PaginationStatus
+import kotlinx.collections.immutable.toImmutableList
+import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
+
+/** Renders the pagination state of the Discovery feed into the events area of the screen. */
+internal class PolymarketFeedContentTransformer(
+    private val batchListState: PolymarketEventsBatchListState,
+    private val eventUMConverter: PolymarketEventUMConverter,
+    private val onReloadClick: () -> Unit,
+    private val onNextPageRetryClick: () -> Unit,
+    private val sports: PolymarketSportsState = PolymarketSportsState(emptyMap()),
+    private val quotes: Map<String, PolymarketLiveQuote> = emptyMap(),
+) {
+
+    fun transformContent(): PolymarketFeedContentUM {
+        return when (val status = batchListState.status) {
+            is PaginationStatus.None,
+            is PaginationStatus.InitialLoading,
+            -> PolymarketFeedContentUM.Loading
+            is PaginationStatus.InitialLoadingError -> PolymarketFeedContentUM.Error(onReloadClick = onReloadClick)
+            is PaginationStatus.NextBatchLoading -> toContent(footer = PolymarketFeedFooterUM.Loading)
+            is PaginationStatus.Paginating -> toContent(
+                footer = if (status.lastResult is BatchFetchResult.Error) {
+                    PolymarketFeedFooterUM.Error(onRetryClick = onNextPageRetryClick)
+                } else {
+                    PolymarketFeedFooterUM.None
+                },
+            )
+            is PaginationStatus.EndOfPagination -> toContent(footer = PolymarketFeedFooterUM.None)
+        }
+    }
+
+    private fun toContent(footer: PolymarketFeedFooterUM): PolymarketFeedContentUM {
+        // The keyset cursor can serve an event twice; duplicate keys would crash the list.
+        val events = batchListState.data
+            .flatMap { batch -> batch.data.events }
+            .distinctBy(PolymarketEvent::id)
+        if (events.isEmpty()) return PolymarketFeedContentUM.Empty
+
+        return PolymarketFeedContentUM.Content(
+            events = events.map { eventUMConverter.convert(it, sports.events[it.id], quotes) }.toImmutableList(),
+            footer = footer,
+        )
+    }
+}

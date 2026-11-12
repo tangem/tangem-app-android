@@ -40,6 +40,7 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.isPredictionAccountSupported
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.domain.tokens.operations.PriceChangeCalculator
 import com.tangem.domain.tokens.operations.TokenListFactory
@@ -94,6 +95,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
     private val quoteStatusSupplier: MultiQuoteStatusSupplier,
     private val balanceContributionProviders: Set<@JvmSuppressWildcards BalanceContributionProvider>,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) : SingleAccountStatusListProducer {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -427,6 +429,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     }
 
     private fun Box.toCurrencyStatuses(): Map<AccountCurrencyId, CryptoCurrencyStatus> {
+        val isYieldContributionEnabled = tokensFeatureToggles.isYieldContributionEnabled
+
         return flattenCurrencyMap.mapValues { (acId: AccountCurrencyId, currency) ->
             val (_, id) = acId
             val networkStatus: NetworkStatus? = networkStatusMap[currency.network.id]
@@ -440,6 +444,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 maybeNetworkStatus = networkStatus.toOption(),
                 maybeQuoteStatus = quoteStatus.toOption(),
                 contributions = contributions,
+                isYieldContributionEnabled = isYieldContributionEnabled,
             )
         }
     }

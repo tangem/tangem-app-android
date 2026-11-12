@@ -15,6 +15,8 @@ import java.math.BigDecimal
  *
  * @property tokenAddress             token contract address, normalized with [normalizeEvmAddress]
  * @property effectiveProtocolBalance supplied balance excluding the service fee; read only for an active token
+ * @property effectiveBalance         wallet + supplied balance, read alongside [effectiveProtocolBalance] in one SDK
+ * call; read only for an active token, `null` in positions stored before it existed
  */
 data class YieldModuleStatus(
     val networkId: Network.ID,
@@ -23,6 +25,7 @@ data class YieldModuleStatus(
     val isInitialized: Boolean,
     val isAllowedToSpend: Boolean,
     val effectiveProtocolBalance: BigDecimal?,
+    val effectiveBalance: BigDecimal?,
     val source: StatusSource,
 ) {
 

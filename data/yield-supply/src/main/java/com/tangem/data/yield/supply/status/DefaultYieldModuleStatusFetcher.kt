@@ -5,6 +5,7 @@ import arrow.core.flatten
 import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.data.yield.supply.status.store.YieldModuleStatusStore
@@ -138,17 +139,27 @@ internal class DefaultYieldModuleStatusFetcher @Inject constructor(
             ?: error("Yield supply status is unavailable")
 
         val sdkToken = Token(symbol = token.symbol, contractAddress = token.contractAddress, decimals = token.decimals)
-        val protocolBalance = if (sdkStatus.isActive) {
-            walletManager.getEffectiveProtocolBalance(sdkToken)
-        } else {
-            null
-        }
-
-        createInactiveStatus(token).copy(
+        val position = createInactiveStatus(token).copy(
             isActive = sdkStatus.isActive,
             isInitialized = sdkStatus.isInitialized,
-            isAllowedToSpend = walletManager.isAllowedToSpend(sdkToken),
-            effectiveProtocolBalance = protocolBalance,
+        )
+
+        if (!sdkStatus.isActive) {
+            return@catchUnlessCancellation position.copy(isAllowedToSpend = walletManager.isAllowedToSpend(sdkToken))
+        }
+
+        // Wallet + supplied and the supplied part are read side by side in one SDK call, so the status factory can take
+        // the total as the token amount instead of mixing in a wallet balance fetched at another moment. The SDK sends
+        // them as concurrent eth_calls, not a pinned block, so a block boundary between them can skew the split
+        // until the next refresh
+        val balance = walletManager.getBalance(yieldSupplyStatus = sdkStatus, token = sdkToken)
+        val yieldType = balance.type as? AmountType.TokenYieldSupply
+            ?: error("Yield Module balance has unexpected type ${balance.type}")
+
+        position.copy(
+            isAllowedToSpend = yieldType.isAllowedToSpend,
+            effectiveProtocolBalance = yieldType.effectiveProtocolBalance,
+            effectiveBalance = balance.value ?: error("Yield Module balance is unavailable"),
         )
     }
 
@@ -162,6 +173,7 @@ internal class DefaultYieldModuleStatusFetcher @Inject constructor(
             isInitialized = false,
             isAllowedToSpend = false,
             effectiveProtocolBalance = null,
+            effectiveBalance = null,
             source = StatusSource.ACTUAL,
         )
     }

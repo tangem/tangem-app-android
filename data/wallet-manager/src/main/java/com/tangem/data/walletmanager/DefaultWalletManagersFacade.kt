@@ -572,7 +572,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         signer: TransactionSigner,
     ): Result<SolanaGaslessSignedTransaction>? = withContext(dispatchers.io) {
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        (walletManager as? SolanaGaslessTransactionSigner)?.signGaslessTransaction(transactionData, feePayer, signer)
+        (walletManager as? SolanaGaslessTransactionSigner)?.signGaslessTransaction(
+            transactionData = transactionData,
+            feePayer = feePayer,
+            signer = signer,
+            instructionRules = emptyList(),
+        )
     }
 
     override suspend fun simulateSolanaGaslessTransaction(
@@ -582,7 +587,11 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         feePayer: String,
     ): Result<SolanaGaslessSimulation>? = withContext(dispatchers.io) {
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        (walletManager as? SolanaGaslessTransactionSigner)?.simulateGaslessTransaction(transactionData, feePayer)
+        (walletManager as? SolanaGaslessTransactionSigner)?.simulateGaslessTransaction(
+            transactionData = transactionData,
+            feePayer = feePayer,
+            instructionRules = emptyList(),
+        )
     }
 
     override suspend fun getScaledUiAmountMultiplier(

@@ -16,6 +16,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
@@ -134,7 +135,7 @@ class YieldSupplyApplyEnterAmountUseCase(
         // registered by this very batch holds nothing in it.
         if (calls.registersToken(token)) return Either.Right(BigDecimal.ZERO)
 
-        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
+        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupply
 
         yieldSupplyStatus?.effectiveProtocolBalance?.let { return Either.Right(it) }
         if (yieldSupplyStatus?.isInitialized == false) return Either.Right(BigDecimal.ZERO)

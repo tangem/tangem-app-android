@@ -25,6 +25,7 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.navigation.EarnNavigator
 import com.tangem.features.earn.product.api.product.EarnApyHistory
@@ -104,6 +105,12 @@ internal class PooledStakingEarnProductTest {
         )
         assertThat(product.hasLegacyBlock).isTrue()
         assertThat(product.analytics).isEqualTo(EarnProductAnalytics(category = "ETH Staking", product = "Staking"))
+    }
+
+    @Test
+    fun `GIVEN product WHEN reading the badge accent THEN Info`() {
+        // Assert
+        assertThat(product.badgeAccent).isEqualTo(EarnBadgeAccent.Info)
     }
 
     @Test

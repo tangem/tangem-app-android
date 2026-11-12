@@ -9,6 +9,9 @@ import com.tangem.data.collectibles.account.DefaultCollectiblesAccountRepository
 import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
 import com.tangem.data.collectibles.account.entity.CollectiblesAccountDTO
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
+import com.tangem.data.collectibles.flow.DefaultCollectiblesActiveTxsFetcher
+import com.tangem.data.collectibles.flow.DefaultCollectiblesActiveTxsProducer
+import com.tangem.data.collectibles.store.CollectiblesActiveTxsStore
 import com.tangem.data.collectibles.store.CollectiblesMachineStore
 import com.tangem.data.collectibles.store.DefaultCollectiblesDismissedTxRepository
 import com.tangem.data.collectibles.store.DismissedTxsDTO
@@ -23,6 +26,9 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetc
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusProducer
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
+import com.tangem.domain.collectibles.flow.CollectiblesActiveTxsFetcher
+import com.tangem.domain.collectibles.flow.CollectiblesActiveTxsProducer
+import com.tangem.domain.collectibles.flow.CollectiblesActiveTxsSupplier
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerKeysRepository
@@ -93,7 +99,34 @@ internal interface CollectiblesDataModule {
         impl: DefaultCollectiblesAccountStatusFetcher,
     ): CollectiblesAccountStatusFetcher
 
+    @Binds
+    @Singleton
+    fun bindCollectiblesActiveTxsProducerFactory(
+        impl: DefaultCollectiblesActiveTxsProducer.Factory,
+    ): CollectiblesActiveTxsProducer.Factory
+
+    @Binds
+    @Singleton
+    fun bindCollectiblesActiveTxsFetcher(impl: DefaultCollectiblesActiveTxsFetcher): CollectiblesActiveTxsFetcher
+
     companion object {
+
+        @Provides
+        @Singleton
+        fun provideCollectiblesActiveTxsStore(): CollectiblesActiveTxsStore {
+            return CollectiblesActiveTxsStore(store = RuntimeSharedStore())
+        }
+
+        @Provides
+        @Singleton
+        fun provideCollectiblesActiveTxsSupplier(
+            factory: CollectiblesActiveTxsProducer.Factory,
+        ): CollectiblesActiveTxsSupplier {
+            return object : CollectiblesActiveTxsSupplier(
+                factory = factory,
+                keyCreator = { params -> "collectibles_active_txs_${params.userWalletId.stringValue}" },
+            ) {}
+        }
 
         @Provides
         @Singleton

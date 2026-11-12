@@ -1,14 +1,17 @@
 package com.tangem.domain.account.status.producer
 
-import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.status.contribution.YieldSupplyContributionProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -19,9 +22,12 @@ import com.tangem.domain.models.currency.balance.BalanceContributionProvider
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.staking.model.*
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.YieldSupplyContribution
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.domain.models.yield.supply.yieldSupply
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
@@ -29,10 +35,13 @@ import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.contribution.StakingContributionProvider
+import com.tangem.domain.staking.model.*
 import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
-import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
-import com.tangem.domain.account.status.contribution.YieldSupplyContributionProvider
+import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.domain.yield.supply.models.status.YieldModuleStatus
+import com.tangem.domain.yield.supply.status.YieldModuleStatusContributionProvider
+import com.tangem.domain.yield.supply.status.YieldModuleStatusSupplier
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -45,7 +54,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 
 /**
  * Covers the **wiring** of the balance-contributions seam inside the status producer — the part the factory and
@@ -80,6 +88,73 @@ internal class SingleAccountStatusListProducerContributionsTest {
     }
 
     @Test
+    fun `GIVEN yield positions source disabled WHEN produced THEN yield status comes from the network status`() =
+        runTest {
+            // Act
+            val status = produceCurrencyStatus(currency = yieldToken, isYieldPositionsSourceEnabled = false)
+
+            // Assert
+            val expectedStatus = YieldSupplyStatus(
+                isActive = true,
+                isInitialized = true,
+                isAllowedToSpend = true,
+                effectiveProtocolBalance = BigDecimal("4"),
+            )
+            assertThat(status.value.yieldSupply).isEqualTo(expectedStatus)
+            assertThat(status.value.yieldSupplyStatus).isEqualTo(expectedStatus)
+            assertThat(status.value.contributions).containsExactly(
+                YieldSupplyContribution(status = networkYieldStatus, source = StatusSource.ACTUAL),
+            )
+        }
+
+    @Test
+    fun `GIVEN yield positions source enabled WHEN produced THEN yield status comes from the position`() = runTest {
+        // Act
+        val status = produceCurrencyStatus(currency = yieldToken, isYieldPositionsSourceEnabled = true)
+
+        // Assert
+        val expectedStatus = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = false,
+            effectiveProtocolBalance = BigDecimal("7"),
+        )
+        assertThat(status.value.yieldSupply).isEqualTo(expectedStatus)
+        assertThat(status.value.yieldSupplyStatus).isNull()
+        assertThat(status.value.contributions).containsExactly(
+            YieldSupplyContribution(status = expectedStatus, source = StatusSource.ONLY_CACHE),
+        )
+        assertThat(status.value.sources.contributionSources).containsExactly(StatusSource.ONLY_CACHE)
+    }
+
+    @Test
+    fun `GIVEN supplied funds inside the network amount WHEN produced with positions THEN they are not added again`() =
+        runTest {
+            // Act — today's SDK: amount 10 already holds the supplied funds
+            val status = produceCurrencyStatus(currency = yieldToken, isYieldPositionsSourceEnabled = true)
+
+            // Assert
+            assertThat(status.value.amount).isEqualTo(BigDecimal("10"))
+            assertThat(status.value.fiatAmount).isEqualTo(BigDecimal("10"))
+        }
+
+    @Test
+    fun `GIVEN yield positions source enabled and no position WHEN produced THEN network yield status is ignored`() =
+        runTest {
+            // Act
+            val status = produceCurrencyStatus(
+                currency = yieldToken,
+                isYieldPositionsSourceEnabled = true,
+                positions = emptySet(),
+            )
+
+            // Assert
+            assertThat(status.value.yieldSupply).isNull()
+            assertThat(status.value.yieldSupplyStatus).isNull()
+            assertThat(status.value.contributions).isEmpty()
+        }
+
+    @Test
     fun `GIVEN no contribution providers WHEN produced THEN nothing is contributed`() = runTest {
         // Act — an empty set is a legitimate graph state; the `@Multibinds` declaration exists to allow it
         val status = produceCurrencyStatus(contributionProviders = emptySet())
@@ -92,11 +167,17 @@ internal class SingleAccountStatusListProducerContributionsTest {
     /** Drives the producer end to end and returns the single currency status it built. */
     private fun TestScope.produceCurrencyStatus(
         wallet: UserWallet = userWallet,
+        currency: CryptoCurrency = this@SingleAccountStatusListProducerContributionsTest.currency,
         contributionProviders: Set<BalanceContributionProvider>? = null,
+        isYieldPositionsSourceEnabled: Boolean = false,
+        positions: Set<YieldModuleStatus> = setOf(yieldPosition),
     ): CryptoCurrencyStatus {
         val producer = createProducer(
             wallet = wallet,
+            currency = currency,
             contributionProviders = contributionProviders,
+            isYieldPositionsSourceEnabled = isYieldPositionsSourceEnabled,
+            positions = positions,
         )
         val emissions = getEmittedValues(producer.produce())
         val accountStatus = emissions.last().accountStatuses
@@ -108,10 +189,19 @@ internal class SingleAccountStatusListProducerContributionsTest {
 
     @Suppress("LongMethod")
     private fun createProducer(
-        wallet: UserWallet = userWallet,
-        contributionProviders: Set<BalanceContributionProvider>? = null,
+        wallet: UserWallet,
+        currency: CryptoCurrency,
+        contributionProviders: Set<BalanceContributionProvider>?,
+        isYieldPositionsSourceEnabled: Boolean,
+        positions: Set<YieldModuleStatus>,
     ): DefaultSingleAccountStatusListProducer {
         val id = wallet.walletId
+        val tokensFeatureToggles: TokensFeatureToggles = mockk {
+            every { this@mockk.isYieldContributionEnabled } returns isYieldPositionsSourceEnabled
+        }
+        val yieldModuleStatusSupplier: YieldModuleStatusSupplier = mockk {
+            every { this@mockk.invoke(any()) } returns flowOf(positions)
+        }
         val stakingBalanceSupplier: MultiStakingBalanceSupplier = mockk {
             every { this@mockk.invoke(any()) } returns flowOf(setOf(stakingBalance))
         }
@@ -132,7 +222,7 @@ internal class SingleAccountStatusListProducerContributionsTest {
                 every { this@mockk.invoke(userWalletId = any()) } returns flowOf(emptyList())
             },
             singleAccountListSupplier = mockk<SingleAccountListSupplier> {
-                every { this@mockk.invoke(id) } returns flowOf(accountList(id))
+                every { this@mockk.invoke(id) } returns flowOf(accountList(id, currency))
             },
             paymentAccountStatusSupplier = mockk<PaymentAccountStatusSupplier> {
                 every { this@mockk.invoke(userWalletId = id) } returns flowOf(mockk(relaxed = true))
@@ -151,10 +241,12 @@ internal class SingleAccountStatusListProducerContributionsTest {
             },
             dispatchers = TestingCoroutineDispatcherProvider(),
             networkStatusSupplier = mockk<MultiNetworkStatusSupplier> {
-                every { this@mockk.invoke(any()) } returns flowOf(setOf(networkStatus()))
+                every { this@mockk.invoke(any()) } returns flowOf(setOf(networkStatus(currency)))
             },
             quoteStatusSupplier = mockk<MultiQuoteStatusSupplier> {
-                every { this@mockk.invoke(Unit) } returns flowOf(mapOf(currency.id.rawCurrencyId!! to quoteStatus()))
+                every { this@mockk.invoke(Unit) } returns flowOf(
+                    mapOf(currency.id.rawCurrencyId!! to quoteStatus(currency)),
+                )
             },
             // the real providers: this is what makes it a wiring test rather than a mock dance
             balanceContributionProviders = contributionProviders ?: setOf(
@@ -163,13 +255,18 @@ internal class SingleAccountStatusListProducerContributionsTest {
                     stakingIdFactory = stakingIdFactory,
                     analyticsExceptionHandler = analyticsExceptionHandler,
                 ),
-                YieldSupplyContributionProvider(),
+                YieldSupplyContributionProvider(tokensFeatureToggles = tokensFeatureToggles),
+                YieldModuleStatusContributionProvider(
+                    yieldModuleStatusSupplier = yieldModuleStatusSupplier,
+                    tokensFeatureToggles = tokensFeatureToggles,
+                ),
             ),
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
     // region Fixtures
-    private fun accountList(id: UserWalletId): AccountList {
+    private fun accountList(id: UserWalletId, currency: CryptoCurrency): AccountList {
         val account = Account.Personal.createMainAccount(id).copy(cryptoCurrencies = listOf(currency))
 
         return AccountList(
@@ -179,6 +276,30 @@ internal class SingleAccountStatusListProducerContributionsTest {
             totalArchivedAccounts = 0,
         ).getOrNull()!!
     }
+
+    private val yieldToken: CryptoCurrency.Token = cryptoCurrencyFactory.createToken(
+        blockchain = Blockchain.Ethereum,
+        id = "usd-coin",
+        contractAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    )
+
+    private val networkYieldStatus = YieldSupplyStatus(
+        isActive = true,
+        isInitialized = true,
+        isAllowedToSpend = true,
+        effectiveProtocolBalance = BigDecimal("4"),
+    )
+
+    private val yieldPosition = YieldModuleStatus(
+        networkId = yieldToken.network.id,
+        tokenAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        isActive = true,
+        isInitialized = true,
+        isAllowedToSpend = false,
+        effectiveProtocolBalance = BigDecimal("7"),
+        effectiveBalance = BigDecimal("10"),
+        source = StatusSource.ONLY_CACHE,
+    )
 
     private val stakingBalance = StakingBalance.Data.StakeKit(
         stakingId = STAKING_ID,
@@ -198,7 +319,7 @@ internal class SingleAccountStatusListProducerContributionsTest {
         every { this@mockk.type } returns type
     }
 
-    private fun networkStatus() = NetworkStatus(
+    private fun networkStatus(currency: CryptoCurrency) = NetworkStatus(
         network = currency.network,
         value = NetworkStatus.Verified(
             address = NetworkAddress.Single(
@@ -206,12 +327,12 @@ internal class SingleAccountStatusListProducerContributionsTest {
             ),
             amounts = mapOf(currency.id to NetworkStatus.Amount.Loaded(value = BigDecimal.TEN)),
             pendingTransactions = emptyMap(),
-            yieldSupplyStatuses = emptyMap(),
+            yieldSupplyStatuses = mapOf(yieldToken.id to networkYieldStatus),
             source = StatusSource.ACTUAL,
         ),
     )
 
-    private fun quoteStatus() = QuoteStatus(
+    private fun quoteStatus(currency: CryptoCurrency) = QuoteStatus(
         rawCurrencyId = currency.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal.ONE,

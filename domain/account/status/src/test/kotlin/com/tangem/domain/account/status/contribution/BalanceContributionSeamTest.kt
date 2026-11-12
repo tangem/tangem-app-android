@@ -66,7 +66,9 @@ internal class BalanceContributionSeamTest {
         stakingIdFactory = stakingIdFactory,
         analyticsExceptionHandler = analyticsExceptionHandler,
     )
-    private val yieldSupplyProvider = YieldSupplyContributionProvider()
+    private val yieldSupplyProvider = YieldSupplyContributionProvider(
+        tokensFeatureToggles = mockk { every { isYieldContributionEnabled } returns false },
+    )
 
     private val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
     private val wallet = MockUserWalletFactory.create()

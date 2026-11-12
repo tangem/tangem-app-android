@@ -2,20 +2,17 @@ package com.tangem.features.jointaccount.confirmaddress.model
 
 import arrow.core.left
 import arrow.core.right
+import com.tangem.common.routing.AppRoute
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
-import com.tangem.domain.feedback.SendFeedbackEmailUseCase
-import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationError
@@ -34,7 +31,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -56,6 +52,7 @@ import com.tangem.core.ui.R as CoreUiR
 internal class JointAccountConfirmAddressModelTest {
 
     private val router: Router = mockk(relaxed = true)
+    private val onActivated: () -> Unit = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
     private val supplier: SingleJointAccountListSupplier = mockk()
@@ -63,7 +60,6 @@ internal class JointAccountConfirmAddressModelTest {
     private val confirmUseCase: ConfirmJointAccountUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
-    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
 
     private val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
@@ -72,6 +68,7 @@ internal class JointAccountConfirmAddressModelTest {
     fun resetMocks() {
         clearMocks(
             router,
+            onActivated,
             uiMessageSender,
             shareManager,
             supplier,
@@ -79,7 +76,6 @@ internal class JointAccountConfirmAddressModelTest {
             confirmUseCase,
             userWalletsListRepository,
             getWalletMetaInfoUseCase,
-            sendFeedbackEmailUseCase,
             pollingCoordinator,
         )
         every { pollingCoordinator.poll(walletId = any()) } returns emptyFlow()
@@ -152,7 +148,7 @@ internal class JointAccountConfirmAddressModelTest {
     }
 
     @Test
-    fun `GIVEN wallet WHEN mismatch clicked THEN a support email is sent`() = runTest {
+    fun `GIVEN wallet WHEN mismatch clicked THEN the support chat opens`() = runTest {
         // Arrange
         val metaInfo = WalletMetaInfo(userWalletId = USER_WALLET_ID)
         coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } returns metaInfo.right()
@@ -163,13 +159,62 @@ internal class JointAccountConfirmAddressModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) {
-            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
-        }
+        verify(exactly = 1) { router.push(AppRoute.Usedesk(walletMetaInfo = metaInfo)) }
     }
 
     @Test
-    fun `GIVEN the last signature activates the account WHEN confirm clicked THEN snackbar shown and the screen pops`() =
+    fun `GIVEN signing in flight WHEN mismatch clicked THEN the support chat does not open`() = runTest {
+        // Arrange
+        val signing = CompletableDeferred<Unit>()
+        coEvery { confirmUseCase(account = jointAccount) } coAnswers {
+            signing.await()
+            confirmingAccount().right()
+        }
+        coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } returns WalletMetaInfo(USER_WALLET_ID).right()
+        val model = createModel()
+        model.uiState.value.onConfirmClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onMismatchClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(any()) }
+        signing.complete(Unit)
+    }
+
+    @Test
+    fun `GIVEN chat lookup pending WHEN confirm clicked before it resolves THEN the support chat does not open`() =
+        runTest {
+            // Arrange
+            val lookup = CompletableDeferred<Unit>()
+            val signing = CompletableDeferred<Unit>()
+            coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } coAnswers {
+                lookup.await()
+                WalletMetaInfo(USER_WALLET_ID).right()
+            }
+            coEvery { confirmUseCase(account = jointAccount) } coAnswers {
+                signing.await()
+                confirmingAccount().right()
+            }
+            val model = createModel()
+            model.uiState.value.onMismatchClick()
+            advanceUntilIdle()
+            model.uiState.value.onConfirmClick()
+            advanceUntilIdle()
+
+            // Act
+            lookup.complete(Unit)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.push(any()) }
+            signing.complete(Unit)
+        }
+
+    @Test
+    fun `GIVEN the last signature activates the account WHEN confirm clicked THEN the flow is left as activated`() =
         runTest {
             // Arrange
             coEvery { confirmUseCase(account = jointAccount) } returns
@@ -181,12 +226,9 @@ internal class JointAccountConfirmAddressModelTest {
             advanceUntilIdle()
 
             // Assert
-            val message = slot<SnackbarMessage>()
-            verify(exactly = 1) { uiMessageSender.send(capture(message)) }
-            assertThat(message.captured.message).isEqualTo(
-                resourceReference(CoreUiR.string.joint_account_activated_snackbar),
-            )
-            verify(exactly = 1) { router.pop() }
+            verify(exactly = 1) { onActivated() }
+            verify(exactly = 0) { router.pop() }
+            verify(exactly = 0) { uiMessageSender.send(any()) }
             assertThat(model.uiState.value.isConfirming).isFalse()
         }
 
@@ -203,6 +245,7 @@ internal class JointAccountConfirmAddressModelTest {
         // Assert
         verify(exactly = 0) { uiMessageSender.send(any()) }
         verify(exactly = 1) { router.pop() }
+        verify(exactly = 0) { onActivated() }
         assertThat(model.uiState.value.isConfirming).isFalse()
     }
 
@@ -326,7 +369,11 @@ internal class JointAccountConfirmAddressModelTest {
     private fun TestScope.createModel(): JointAccountConfirmAddressModel {
         val model = JointAccountConfirmAddressModel(
             paramsContainer = MutableParamsContainer(
-                JointAccountConfirmAddressComponent.Params(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID),
+                JointAccountConfirmAddressComponent.Params(
+                    userWalletId = USER_WALLET_ID,
+                    cryptoAccountId = ACCOUNT_ID,
+                    onActivated = onActivated,
+                ),
             ),
             dispatchers = createTestingCoroutineDispatcherProvider(),
             router = router,
@@ -337,7 +384,6 @@ internal class JointAccountConfirmAddressModelTest {
             confirmJointAccountUseCase = confirmUseCase,
             userWalletsListRepository = userWalletsListRepository,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
-            sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             pollingCoordinator = pollingCoordinator,
         )
         advanceUntilIdle()
