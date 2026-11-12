@@ -71,7 +71,11 @@ internal fun OnrampMainScreen(
 }
 
 @Composable
-private fun OnrampTopNavigationDs(config: OnrampMainTopBarUM, countryButton: OnrampCountryButtonUM, modifier: Modifier) {
+private fun OnrampTopNavigationDs(
+    config: OnrampMainTopBarUM,
+    countryButton: OnrampCountryButtonUM,
+    modifier: Modifier = Modifier,
+) {
     TangemTopNavigation(
         modifier = modifier,
         contentAlign = TangemTopNavigation.ContentAlign.Center,
