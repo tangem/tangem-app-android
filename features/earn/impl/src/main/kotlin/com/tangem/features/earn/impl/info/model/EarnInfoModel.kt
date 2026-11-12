@@ -70,17 +70,14 @@ internal class EarnInfoModel @Inject constructor(
 
     private val product: EarnProduct? = registry.find(params.productId)
 
-    /** One handler per screen: a handler may keep state between clicks. */
     private val actions: EarnActionHandler? = product?.actionHandler(productParams, InnerEarnNavigator(router))
 
     private val isRedirected = AtomicBoolean(false)
 
     private val chartActivated = AtomicBoolean(false)
 
-    /** The last `Ready` with a position: what the chart and the calculator are built from. */
     private val readyState = MutableStateFlow<EarnProductState.Ready?>(null)
 
-    /** `null` until the wallet has a status for the currency; an unavailable product must not wait for it. */
     private val currencyStatus: Flow<CryptoCurrencyStatus?> = singleAccountStatusListSupplier(params.userWalletId)
         .map { it.getCryptoCurrencyStatus(params.cryptoCurrency).getOrNull() }
         .onStart { emit(null) }
@@ -91,7 +88,6 @@ internal class EarnInfoModel @Inject constructor(
     val uiState: StateFlow<EarnInfoUM?>
         field = MutableStateFlow<EarnInfoUM?>(null)
 
-    /** The model outlives a recreated Activity, the unserialized chart slot restarts empty and restores from this. */
     val isChartActivated: Boolean
         get() = chartActivated.get()
 
@@ -221,7 +217,6 @@ internal class EarnInfoModel @Inject constructor(
 
     private fun onUnknownProduct() {
         TangemLogger.e("Earn info: unknown product ${params.productId.value}")
-        // The model is built while the entry stack is still being created, and popping that stack reads it
         modelScope.launch(dispatchers.main) { router.pop() }
     }
 
@@ -244,7 +239,6 @@ internal class EarnInfoModel @Inject constructor(
         )
     }
 
-    // Info is always the root of the Earn stack, so back and close both leave Earn
     private fun onClose() {
         router.pop()
     }

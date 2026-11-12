@@ -35,7 +35,6 @@ internal class EarnInfoComponent @AssistedInject constructor(
 
     private val model: EarnInfoModel = getOrCreateModel(params)
 
-    /** Created with the screen, not with the sheet: its model computes before the tap and the sheet opens filled. */
     private val calculator = calculatorFactory.create(
         context = child(key = EarnCalculatorComponent.KEY),
         params = EarnCalculatorComponent.Params(

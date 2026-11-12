@@ -18,10 +18,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-/**
- * Needs a `LocalTangemModalHost` in the window to blur the page. The modal isolates the haze scope of its content, so
- * the calculator is its own haze source, see [LocalEarnCalculatorOnGlass].
- */
 internal class EarnCalculatorSheetComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: Params,
