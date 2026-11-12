@@ -35,6 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.milliseconds
@@ -158,7 +159,12 @@ class ManagePolymarketSessionKeyInteractor(
         val (sent, pending) = depositWalletLock.withSessionKeyOperation(userWalletId) {
             val signed = sign(userWalletId, batches)
             val revoking = send { relay.revoke(userWalletId, revocationOf(signed)) }
-            val revoked = awaitRevoked(userWalletId, signed.ownerAddress(), revoking)
+            val revoked = withTimeoutOrNull(authorizationOf(signed).timeLeft()) {
+                awaitRevoked(userWalletId, signed.ownerAddress(), revoking)
+            } ?: run {
+                TangemLogger.e("Polymarket session key authorization expired while waiting for the revocation")
+                raise(PolymarketSessionKeyLifecycleError.StaleSignature(cause = null))
+            }
             emit(PolymarketSessionKeyProgress.Revoked(revoked))
             sendAuthorization(
                 userWalletId = userWalletId,
@@ -338,22 +344,13 @@ class ManagePolymarketSessionKeyInteractor(
         }
     }
 
-    private fun PolymarketSessionKeyAuthorization.isExpired(): Boolean =
-        PolymarketRelayerDeadline.isExpired(deadline = deadline, nowMillis = clock.millis() + DEADLINE_MARGIN_MILLIS)
+    private fun PolymarketSessionKeyAuthorization.isExpired(): Boolean = !timeLeft().isPositive()
 
-    private fun PolymarketSessionKeyError.needsNewSignature(): Boolean =
-        this is PolymarketSessionKeyError.RelayerRejected ||
-            this == PolymarketSessionKeyError.NonceAlreadyUsed ||
-            this == PolymarketSessionKeyError.InvalidDeadline ||
-            this == PolymarketSessionKeyError.InvalidValidUntil
+    private fun PolymarketSessionKeyAuthorization.timeLeft() =
+        PolymarketRelayerDeadline.timeLeft(deadline = deadline, nowMillis = clock.millis() + DEADLINE_MARGIN_MILLIS)
 
     private fun Raise<PolymarketSessionKeyLifecycleError>.unexpectedBatches(): Nothing =
         raise(PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.MalformedRequest))
-
-    private fun PolymarketSignedSessionKeyBatches.ownerAddress(): String = when (val batch = batches.first()) {
-        is PolymarketSignedSessionKeyBatches.Signed.Authorization -> batch.authorization.ownerAddress
-        is PolymarketSignedSessionKeyBatches.Signed.Revocation -> batch.revocation.ownerAddress
-    }
 
     private fun Operation.authorizationOf(signed: PolymarketSignedSessionKeyBatches) = signed.batches
         .filterIsInstance<PolymarketSignedSessionKeyBatches.Signed.Authorization>()
@@ -378,4 +375,15 @@ class ManagePolymarketSessionKeyInteractor(
         val BUSY_RETRY_DELAY = 1_500.milliseconds
         val RELAYER_REJECTION_RETRY_DELAY = 3.seconds
     }
+}
+
+private fun PolymarketSessionKeyError.needsNewSignature(): Boolean =
+    this is PolymarketSessionKeyError.RelayerRejected ||
+        this == PolymarketSessionKeyError.NonceAlreadyUsed ||
+        this == PolymarketSessionKeyError.InvalidDeadline ||
+        this == PolymarketSessionKeyError.InvalidValidUntil
+
+private fun PolymarketSignedSessionKeyBatches.ownerAddress(): String = when (val batch = batches.first()) {
+    is PolymarketSignedSessionKeyBatches.Signed.Authorization -> batch.authorization.ownerAddress
+    is PolymarketSignedSessionKeyBatches.Signed.Revocation -> batch.revocation.ownerAddress
 }

@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -937,6 +938,45 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             }
 
         @Test
+        fun `GIVEN the revocation outlasts the authorization deadline WHEN renew THEN the wallet is released stale`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) } returns
+                    walletState(listOf(key(status = PolymarketSessionKeyStatus.REVOKING))).right()
+                val interactor = createInteractor()
+                var progress: List<PolymarketSessionKeyProgress> = emptyList()
+
+                // Act
+                val renewing = launch { progress = interactor.renew(USER_WALLET_ID).toList() }
+                advanceTimeBy(SENDABLE_FOLLOW_UP_MILLIS - 1)
+                val batchBeforeDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+                advanceTimeBy(2)
+                renewing.join()
+                val batchAfterDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+
+                // Assert
+                assertThat(batchBeforeDeadline).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+                assertThat(batchAfterDeadline).isEqualTo(Unit.right())
+                assertThat(testScheduler.currentTime).isLessThan(SENDABLE_FOLLOW_UP_MILLIS + RELAY_POLL_MILLIS)
+                assertThat(progress).containsExactly(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                    ),
+                ).inOrder()
+                coVerify(exactly = 1) { signBatches(any(), any()) }
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            }
+
+        @Test
         fun `GIVEN no key on the device WHEN renew THEN nothing is signed`() = runTest {
             // Arrange
             coEvery { sessionKeyStore.heldAddress(USER_WALLET_ID) } returns null
@@ -1541,6 +1581,8 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         const val LISTING_ATTEMPTS = 10
         const val LISTING_WAIT_MILLIS = (LISTING_ATTEMPTS - 1) * 3_000L
         const val UNLISTING_ATTEMPTS = 20
+        const val RELAY_POLL_MILLIS = 3_000L
+        const val SENDABLE_FOLLOW_UP_MILLIS = 1_200_000L - 30_000L
         val NOW: Instant = Instant.ofEpochSecond(1_789_430_000)
         val VALID_UNTIL: Instant = NOW.plusSeconds(180L * 24 * 60 * 60)
         val DEADLINE = (NOW.epochSecond + 600).toString()
