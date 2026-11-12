@@ -222,6 +222,50 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
     }
 
     @Test
+    fun `GIVEN signers are unavailable WHEN reconcile THEN the stored readiness is kept`() = runTest {
+        // Arrange
+        givenWallet(listOf(key()))
+        coEvery { getApiCredentials(USER_WALLET_ID) } returns null
+        coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) } returns true
+
+        // Act
+        interactor(USER_WALLET_ID)
+
+        // Assert
+        coVerify(exactly = 0) { tradingStore.forgetReadyOnExchange(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the own key is not listed WHEN reconcile THEN the stored readiness is not forgotten`() = runTest {
+        // Arrange
+        givenWallet(listOf(key()))
+        coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns listOf(signer(FOREIGN)).right()
+        coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) } returns true
+
+        // Act
+        interactor(USER_WALLET_ID)
+
+        // Assert
+        coVerify(exactly = 0) { tradingStore.forgetReadyOnExchange(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the own key in readiness grace is listed on other terms WHEN reconcile THEN it is not forgotten`() =
+        runTest {
+            // Arrange
+            givenWallet(listOf(key(authorizedAt = NOW.minus(Duration.ofMinutes(1)))))
+            coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                listOf(signer(KEY, validUntil = VALID_UNTIL.minusSeconds(60))).right()
+            coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) } returns true
+
+            // Act
+            interactor(USER_WALLET_ID)
+
+            // Assert
+            coVerify(exactly = 0) { tradingStore.forgetReadyOnExchange(any(), any()) }
+        }
+
+    @Test
     fun `GIVEN the own key is listed expiring within ten minutes WHEN reconcile THEN it is not marked ready`() =
         runTest {
             // Arrange
@@ -424,7 +468,10 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
             sessionKeys = sessionKeys,
         )
 
-        fun key(status: PolymarketSessionKeyStatus = PolymarketSessionKeyStatus.ACTIVE) = PolymarketSessionKey(
+        fun key(
+            status: PolymarketSessionKeyStatus = PolymarketSessionKeyStatus.ACTIVE,
+            authorizedAt: Instant = NOW.minus(Duration.ofDays(10)),
+        ) = PolymarketSessionKey(
             address = KEY,
             deviceId = DEVICE_ID,
             deviceName = "Pixel",
@@ -433,7 +480,7 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
             scopes = listOf("CLOB"),
             validUntil = VALID_UNTIL,
             renewAfter = null,
-            authorizedAt = NOW.minus(Duration.ofDays(10)),
+            authorizedAt = authorizedAt,
             createdAt = NOW.minus(Duration.ofDays(10)),
         )
 
