@@ -33,6 +33,9 @@ internal class PolymarketSoccerPrices(
     val state: StateFlow<Map<String, BigDecimal?>>
         field = MutableStateFlow(emptyMap())
 
+    val liveQuotes: StateFlow<Map<String, PolymarketLiveQuote>>
+        field = MutableStateFlow(emptyMap())
+
     private var plan: PolymarketSoccerPricePlan? = null
     private var rest = emptyMap<String, BigDecimal?>()
     private var batch = emptyMap<String, BigDecimal?>()
@@ -149,6 +152,7 @@ internal class PolymarketSoccerPrices(
     }
 
     private fun publish() {
+        liveQuotes.value = if (finalPrices != null) emptyMap() else quotes
         state.value = finalPrices ?: rest + batch + quotes.mapValues { (assetId, quote) ->
             quote.buyPrice(rest[assetId])
         }

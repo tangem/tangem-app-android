@@ -13,11 +13,15 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.model.PolymarketLiveQuote
+import com.tangem.domain.polymarket.model.PolymarketHistoryToken
+import com.tangem.domain.polymarket.model.PolymarketPricePoint
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
 import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PolymarketSoccerTab
+import com.tangem.domain.polymarket.usecase.GetPolymarketPriceHistoryUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPricesUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketSoccerEventUseCase
@@ -60,6 +64,9 @@ internal class PolymarketSoccerModelTest {
     private val observeSports: ObservePolymarketSportsStateUseCase = mockk {
         every { observeSoccer(any(), any()) } returns sports
     }
+    private val getHistory: GetPolymarketPriceHistoryUseCase = mockk {
+        coEvery { getSoccerHistory(any(), any(), any()) } returns emptyMap()
+    }
     private val router: Router = mockk(relaxed = true)
     private val messages: UiMessageSender = mockk(relaxed = true)
     private val region: PredictionRegionAccess = mockk { every { isRestricted } returns false }
@@ -84,6 +91,7 @@ internal class PolymarketSoccerModelTest {
         // Assert
         coVerify(exactly = 0) { getEvent(any(), any()) }
         coVerify(exactly = 0) { getPrices(any(), any()) }
+        coVerify(exactly = 0) { getHistory.getSoccerHistory(any(), any(), any()) }
         verify(exactly = 0) { observeQuotes(any()) }
         verify(exactly = 0) { observeSports.observeSoccer(any(), any()) }
         model.onDestroy()
@@ -414,6 +422,76 @@ internal class PolymarketSoccerModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN live chart history failure WHEN quotes and REST update THEN retry only on REST and resume after fresh snapshot`() = runTest {
+        // Arrange
+        val card = threeWayCard().let { it.copy(markets = it.markets.map { m -> m.copy(volume = null) }) }
+        val event = soccerEvent(listOf(card))
+        val quotes = MutableStateFlow(emptyMap<String, PolymarketLiveQuote>())
+        every { observeQuotes(any()) } returns quotes
+        coEvery { getEvent(any(), any()) } returns event.right()
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+        coVerify(exactly = 1) { getHistory.getSoccerHistory(any(), any(), any()) }
+
+        // Act
+        repeat(3) { index ->
+            quotes.value = mapOf("left-yes" to PolymarketLiveQuote(
+                "left-yes", bestBid = BigDecimal("0.4"), bestAsk = BigDecimal("0.44"),
+                updatedAtMillis = index.toLong(), status = PolymarketLiveQuote.Status.LIVE,
+            ))
+            advanceTimeBy(300)
+            runCurrent()
+        }
+
+        // Assert
+        coVerify(exactly = 1) { getHistory.getSoccerHistory(any(), any(), any()) }
+        advanceTimeBy(9_100)
+        runCurrent()
+        coVerify(exactly = 2) { getHistory.getSoccerHistory(any(), any(), any()) }
+        verify(exactly = 1) { observeQuotes(any()) }
+        model.onPause()
+        val response = CompletableDeferred<PolymarketSoccerEvent>()
+        coEvery { getEvent(any(), any()) } coAnswers { response.await().right() }
+        model.onResume()
+        advanceTimeBy(30_000)
+        runCurrent()
+        coVerify(exactly = 2) { getHistory.getSoccerHistory(any(), any(), any()) }
+        response.complete(event)
+        runCurrent()
+        coVerify(exactly = 3) { getHistory.getSoccerHistory(any(), any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN loaded chart WHEN structural refresh fails THEN keep history visible`() = runTest {
+        // Arrange
+        val card = threeWayCard().let { it.copy(markets = it.markets.map { m -> m.copy(volume = null) }) }
+        coEvery { getEvent(any(), any()) } returnsMany listOf(
+            soccerEvent(listOf(card)).right(), PolymarketEventError.Network.left(),
+        )
+        coEvery { getHistory.getSoccerHistory(any(), any(), any()) } coAnswers {
+            secondArg<Set<PolymarketHistoryToken>>().associateWith { listOf(
+                PolymarketPricePoint(1_789_999_880_000, BigDecimal("0.4")),
+                PolymarketPricePoint(1_789_999_940_000, BigDecimal("0.5")),
+            ).right() }
+        }
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+        val chart = model.chartState.value!!.chart
+
+        // Act
+        advanceTimeBy(10_000)
+        runCurrent()
+
+        // Assert
+        assertThat(model.chartState.value!!.chart).isEqualTo(chart)
+        coVerify(exactly = 1) { getHistory.getSoccerHistory(any(), any(), any()) }
+        model.onDestroy()
+    }
+
     private fun soccerGame(event: PolymarketSoccerEvent, ended: Boolean) = PolymarketSportsState.Game(
         gameId = requireNotNull(event.gameId), score = PolymarketSportsState.Score(2, 1),
         period = if (ended) "FT" else "2H", isLive = !ended, isEnded = ended,
@@ -428,6 +506,8 @@ internal class PolymarketSoccerModelTest {
         getPrices = getPrices,
         observeQuotes = observeQuotes,
         observeSports = observeSports,
+        getHistory = getHistory,
+        currentTimeProvider = { 1_790_000_000_000L + testScheduler.currentTime },
         router = router,
         messageSender = messages,
         regionAccess = region,
