@@ -124,6 +124,25 @@ internal class PolymarketSessionKeyTradabilityTest {
             case = "record expiring exactly in ten minutes",
             wallet = wallet(keys = listOf(key(validUntil = NOW + Duration.ofMinutes(10)))).right(),
         ),
+        TradabilityModel(
+            case = "newest active record listed after an older revoked one",
+            wallet = wallet(
+                keys = listOf(
+                    key(status = PolymarketSessionKeyStatus.REVOKED),
+                    key(createdAt = NOW.plusSeconds(1)),
+                ),
+            ).right(),
+            isTradable = true,
+        ),
+        TradabilityModel(
+            case = "newest revoked record listed after an older active one",
+            wallet = wallet(
+                keys = listOf(
+                    key(),
+                    key(status = PolymarketSessionKeyStatus.REVOKED, createdAt = NOW.plusSeconds(1)),
+                ),
+            ).right(),
+        ),
     )
 
     data class TradabilityModel(
@@ -156,6 +175,7 @@ internal class PolymarketSessionKeyTradabilityTest {
             status: PolymarketSessionKeyStatus = PolymarketSessionKeyStatus.ACTIVE,
             isEnabled: Boolean = true,
             validUntil: Instant? = VALID_UNTIL,
+            createdAt: Instant = NOW,
         ) = PolymarketSessionKey(
             address = address,
             deviceId = "device",
@@ -166,7 +186,7 @@ internal class PolymarketSessionKeyTradabilityTest {
             validUntil = validUntil,
             renewAfter = null,
             authorizedAt = null,
-            createdAt = NOW,
+            createdAt = createdAt,
         )
     }
 }

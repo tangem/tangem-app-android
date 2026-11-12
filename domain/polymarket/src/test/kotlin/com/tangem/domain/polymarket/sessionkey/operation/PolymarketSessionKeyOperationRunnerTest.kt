@@ -630,6 +630,7 @@ internal class PolymarketSessionKeyOperationRunnerTest {
                 sessionKeys = emptyList(),
             ),
             localKeyAddress = OWN,
+            deviceId = "this-device",
             assessment = PolymarketSessionKeyAssessment(
                 deviceState = deviceState,
                 reconciliation = PolymarketSessionKeyReconciliation.Unavailable,

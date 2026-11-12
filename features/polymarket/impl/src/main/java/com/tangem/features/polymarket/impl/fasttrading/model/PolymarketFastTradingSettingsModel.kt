@@ -62,6 +62,7 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
                         keys = converter.convert(overview, state.operation),
                         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = isRefreshing) { refresh() },
                         onActionClick = ::onActionClick,
+                        onActivateClick = ::onActivateClick,
                     )
                 },
             )
@@ -78,6 +79,15 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
         when (action) {
             is FastTradingKeyActionUM.Revoke -> confirmRevocation(action)
         }
+    }
+
+    private fun onActivateClick() {
+        if (isActivationOffered()) start(PolymarketSessionKeyOperationRequest.Activate)
+    }
+
+    private fun isActivationOffered(): Boolean {
+        val content = uiState.value as? PolymarketFastTradingSettingsUM.Content ?: return false
+        return content.keys.activateBanner?.isEnabled == true
     }
 
     private fun confirmRevocation(action: FastTradingKeyActionUM.Revoke) {
@@ -117,7 +127,7 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     private fun isRevokeOffered(address: String): Boolean {
         val keys = (uiState.value as? PolymarketFastTradingSettingsUM.Content)?.keys ?: return false
         if (!keys.areActionsEnabled) return false
-        val rows = listOfNotNull(keys.thisDevice) + keys.otherDevices
+        val rows = keys.thisDevice + keys.otherDevices
         val actions = rows.flatMap { it.actions } + keys.unknownSigners.flatMap { it.actions }
         return actions.any { it is FastTradingKeyActionUM.Revoke && it.address.equals(address, ignoreCase = true) }
     }
