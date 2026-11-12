@@ -294,6 +294,7 @@ internal class DefaultGachaVaultRepositoryTest {
                 MockCollectibles.vaultBalance(
                     amount = BigDecimal("12.5"),
                     currency = expectedCurrency(),
+                    vaultAddress = VAULT_ADDRESS,
                     ataAddress = VAULT_USDC_ADDRESS,
                 ).right(),
             )

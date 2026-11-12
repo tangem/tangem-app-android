@@ -86,11 +86,16 @@ internal class MarketPulseBatchFlowManager(
         dispatchers = dispatchers,
     )
 
+    /**
+     * Pages are fetched by limit/offset over a live ranking, so a token whose rank shifts between two
+     * requests comes back in both batches. The list keys rows by id, so only its first occurrence is kept.
+     */
     val uiItems: StateFlow<ImmutableList<MarketPulseItemUM>> = stateManager.state
         .map { state ->
             state.uiBatches.asSequence()
                 .map { it.data }
                 .flatten()
+                .distinctBy(MarketPulseItemUM::id)
                 .toImmutableList()
         }
         .distinctUntilChanged()

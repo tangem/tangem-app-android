@@ -45,6 +45,7 @@ import com.tangem.domain.tangempay.usecase.GetTangemPayFiatRateUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.tangempay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
@@ -79,6 +80,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
     private val resolvePaymentAccountStatusFromSummaryUseCase: ResolvePaymentAccountStatusFromSummaryUseCase = mockk()
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     private val fetcher = DefaultPaymentAccountStatusFetcher(
         paymentAccountStatusesStore = paymentAccountStatusesStore,
@@ -96,6 +98,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
         resolvePaymentAccountStatusFromSummaryUseCase = resolvePaymentAccountStatusFromSummaryUseCase,
         getCustomerSummaryUseCase = getCustomerSummaryUseCase,
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -243,12 +246,14 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             getTangemPayTariffPlanStateUseCase,
             resolvePaymentAccountStatusFromSummaryUseCase,
             getCustomerSummaryUseCase,
+            tangemPayFeatureToggles,
         )
         // Relaxed mocks don't need clearing — deviceSecurity, eligibilityManager, paymentAccountStatusesStore
         // are relaxed and consistent with their relaxed defaults (false, empty, etc.)
         clearMocks(paymentAccountStatusesStore, answers = false)
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
         coEvery { getCustomerSummaryUseCase(userWalletId, any()) } returns null.right()
+        every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
     }
 
     /**
@@ -803,6 +808,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
             resolvePaymentAccountStatusFromSummaryUseCase = resolvePaymentAccountStatusFromSummaryUseCase,
             getCustomerSummaryUseCase = getCustomerSummaryUseCase,
+            tangemPayFeatureToggles = tangemPayFeatureToggles,
         )
 
         private val account = Account.Payment(userWalletId = userWalletId)
@@ -1131,6 +1137,51 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Assert
                 assertThat(storedStatuses.lastLoaded().cards).isEmpty()
             }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class FrozenStateWithOrderFramework {
+
+        @BeforeEach
+        fun enableOrderFramework() {
+            every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns true
+        }
+
+        @Test
+        fun `GIVEN Pending in the frozen state store WHEN invoke THEN the backend state is stored`() = runTest {
+            // Arrange
+            stubHappyPath(buildCustomerInfo(productInstances = listOf(cardProductInstance)))
+            coEvery { cardDetailsRepository.cardFrozenStateSync(any()) } returns TangemPayCardFrozenState.Pending
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().cards.single().frozenState)
+                .isEqualTo(TangemPayCardFrozenState.Unfrozen)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class FrozenStateFromStore {
+
+        @Test
+        fun `GIVEN order framework disabled and Pending in the store WHEN invoke THEN the card is Pending`() = runTest {
+            // Arrange
+            stubHappyPath(buildCustomerInfo(productInstances = listOf(cardProductInstance)))
+            coEvery { cardDetailsRepository.cardFrozenStateSync(any()) } returns TangemPayCardFrozenState.Pending
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().cards.single().frozenState)
+                .isEqualTo(TangemPayCardFrozenState.Pending)
+        }
     }
 
     @Nested

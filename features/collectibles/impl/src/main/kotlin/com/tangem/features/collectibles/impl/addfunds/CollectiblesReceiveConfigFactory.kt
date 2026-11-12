@@ -5,8 +5,6 @@ import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.wallet.UserWalletId
 
-// TODO([REDACTED_TASK_KEY]): clarify which address belongs here — the vault's USDC ATA is what is shown now, and it is
-//  unconfirmed that an external sender or an exchange can pay to it.
 internal object CollectiblesReceiveConfigFactory {
 
     fun create(vault: CollectiblesVaultBalance, userWalletId: UserWalletId) = TokenReceiveConfig(
@@ -15,7 +13,7 @@ internal object CollectiblesReceiveConfigFactory {
         userWalletId = userWalletId,
         shouldShowMemoDisclaimer = false,
         receiveAddress = listOf(
-            ReceiveAddressModel(displayType = ReceiveAddressModel.DisplayType.Default, value = vault.ataAddress),
+            ReceiveAddressModel(displayType = ReceiveAddressModel.DisplayType.Default, value = vault.vaultAddress),
         ),
     )
 }

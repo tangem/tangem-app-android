@@ -88,6 +88,7 @@ dependencies {
 
     // region Project - Features
     api(projects.features.swap.domain)
+    implementation(projects.features.tangempay.details.api)
     // endregion
 
     // region Project - Libs

@@ -39,11 +39,11 @@ internal class StartOrderUseCaseTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(orderRepository, orderPoller)
-        every { orderPoller.startPolling(any()) } returns flowOf(OrderPollingState.Pending)
+        every { orderPoller.startPolling(any(), any()) } returns flowOf(OrderPollingState.Pending)
     }
 
     @Test
-    fun `GIVEN data launch WHEN invoke THEN creates and polls the order`() = runTest {
+    fun `GIVEN create launch WHEN invoke THEN creates and polls the order`() = runTest {
         // Arrange
         coEvery {
             orderRepository.createOrder(USER_WALLET_ID, CREATE_REQUEST, IDEMPOTENCY_KEY)
@@ -53,7 +53,7 @@ internal class StartOrderUseCaseTest {
         // Act
         val result = useCase(
             userWalletId = USER_WALLET_ID,
-            launch = OrderLaunch.Data(
+            launch = OrderLaunch.Create(
                 request = CREATE_REQUEST,
                 idempotencyKey = IDEMPOTENCY_KEY,
             ),
@@ -61,7 +61,7 @@ internal class StartOrderUseCaseTest {
 
         // Assert
         assertThat(result.getOrNull()?.ref).isEqualTo(expected)
-        verify(exactly = 1) { orderPoller.startPolling(expected) }
+        verify(exactly = 1) { orderPoller.startPolling(expected, createdOrder()) }
     }
 
     @Test
@@ -74,7 +74,7 @@ internal class StartOrderUseCaseTest {
         // Act
         val result = useCase(
             userWalletId = USER_WALLET_ID,
-            launch = OrderLaunch.Data(
+            launch = OrderLaunch.Create(
                 request = CREATE_REQUEST,
                 idempotencyKey = IDEMPOTENCY_KEY,
             ),
@@ -82,24 +82,48 @@ internal class StartOrderUseCaseTest {
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(TangemPayApiError.Unspecified)
-        verify(exactly = 0) { orderPoller.startPolling(any()) }
+        verify(exactly = 0) { orderPoller.startPolling(any(), any()) }
     }
 
     @Test
-    fun `GIVEN id launch WHEN invoke THEN polls without creating`() = runTest {
+    fun `GIVEN track launch with details WHEN invoke THEN polls with a new order snapshot without creating`() =
+        runTest {
+            // Arrange
+            val details = OrderDetails.CardFreeze(productInstanceId = "pi-1")
+            val expectedRef = OrderRef(userWalletId = USER_WALLET_ID, id = ORDER_ID)
+            val expectedSnapshot = TangemPayOrder(
+                id = ORDER_ID,
+                status = TangemPayOrder.Status.NEW,
+                step = OrderStep.UNKNOWN,
+                details = details,
+            )
+
+            // Act
+            val result = useCase(
+                userWalletId = USER_WALLET_ID,
+                launch = OrderLaunch.Track(orderId = ORDER_ID, details = details),
+            )
+
+            // Assert
+            assertThat(result.getOrNull()?.ref).isEqualTo(expectedRef)
+            coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
+            verify(exactly = 1) { orderPoller.startPolling(expectedRef, expectedSnapshot) }
+        }
+
+    @Test
+    fun `GIVEN track launch without details WHEN invoke THEN polls without a snapshot`() = runTest {
         // Arrange
-        val expected = OrderRef(userWalletId = USER_WALLET_ID, id = ORDER_ID)
+        val expectedRef = OrderRef(userWalletId = USER_WALLET_ID, id = ORDER_ID)
 
         // Act
         val result = useCase(
             userWalletId = USER_WALLET_ID,
-            launch = OrderLaunch.Id(orderId = ORDER_ID),
+            launch = OrderLaunch.Track(orderId = ORDER_ID, details = null),
         )
 
         // Assert
-        assertThat(result.getOrNull()?.ref).isEqualTo(expected)
-        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
-        verify(exactly = 1) { orderPoller.startPolling(expected) }
+        assertThat(result.getOrNull()?.ref).isEqualTo(expectedRef)
+        verify(exactly = 1) { orderPoller.startPolling(expectedRef, null) }
     }
 
     private fun createdOrder() = TangemPayOrder(
