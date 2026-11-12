@@ -30,7 +30,6 @@ internal class StakingDeepLinkHandler @Inject constructor(
         val networkId = queryParams[NETWORK_ID_KEY]
         val tokenId = queryParams[TOKEN_ID_KEY]
 
-        // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         val selectedUserWalletId = getSelectedWalletSyncUseCase().getOrNull()?.walletId
         val rawWalletId = queryParams[WALLET_ID_KEY]
         val walletId = if (rawWalletId != null) UserWalletId.fromHexOrNull(rawWalletId) else selectedUserWalletId
