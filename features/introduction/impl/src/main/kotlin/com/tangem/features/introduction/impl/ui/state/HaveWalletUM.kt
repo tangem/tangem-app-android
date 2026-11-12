@@ -21,7 +21,7 @@ internal data class HaveWalletUM(
     /** Dismissing the sheet does not cancel what the tapped row started, so it stays locked until then */
     val isBusy: Boolean
         get() = when (val step = step) {
-            is Step.Options -> isSigningInSocially
+            is Step.Options -> isSigningInSocially || step.seedPhrase?.isLoading == true
             is Step.Import -> step.isCloudLoading
             is Step.Error -> false
         }
@@ -32,6 +32,7 @@ internal data class HaveWalletUM(
             val cardOrRing: WalletOptionUM,
             val socialLogin: WalletOptionUM?,
             val importWallet: WalletOptionUM,
+            val seedPhrase: WalletOptionUM? = null,
         ) : Step
 
         data class Import(

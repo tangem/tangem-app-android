@@ -23,7 +23,7 @@ import kotlinx.coroutines.delay
  * collapse is timed here. The card rides a critically damped `StiffnessMedium` spring (ω = 20 rad/s), which covers
  * ~96% of the way down in this window; the few pixels and the scrim alpha left over are not worth waiting for.
  */
-private const val COLLAPSE_ANIMATION_MS = 250L
+internal const val COLLAPSE_ANIMATION_MS = 250L
 
 /**
  * @param config `null` until the viewer first asks for the sheet — the content is the tap's own product. The sheet
