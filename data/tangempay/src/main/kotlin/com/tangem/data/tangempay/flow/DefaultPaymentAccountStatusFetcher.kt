@@ -13,7 +13,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
 import com.tangem.domain.tangempay.TangemPayEligibilityManager
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.tangempay.usecase.order.GetActiveOrdersUseCase
 import com.tangem.domain.tangempay.model.CachePolicy
 import com.tangem.domain.tangempay.model.CustomerInfo
 import com.tangem.domain.tangempay.model.OrderData
@@ -31,7 +30,6 @@ import com.tangem.domain.tangempay.usecase.ResolvePaymentAccountStatusFromSummar
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
-import com.tangem.domain.tangempay.usecase.order.hasCardFrozenStateOrderFor
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
@@ -77,7 +75,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val resolvePaymentAccountStatusFromSummaryUseCase: ResolvePaymentAccountStatusFromSummaryUseCase,
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
-    private val getActiveOrdersUseCase: GetActiveOrdersUseCase,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : PaymentAccountStatusFetcher {
 
@@ -579,11 +576,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     actualCardLimit = productInstance.actualCardLimit,
                     adminCardLimit = productInstance.adminCardLimit,
                 ),
-                frozenState = resolveFrozenState(
-                    productInstance = productInstance,
-                    cardId = cardId,
-                    userWalletId = userWalletId,
-                ),
+                frozenState = resolveFrozenState(productInstance = productInstance, cardId = cardId),
                 lastDigits = cardInfo?.lastFourDigits.orEmpty(),
                 images = cardInfo?.images ?: tariffPlan?.plan?.images.orEmpty(),
                 state = cardState,
@@ -596,13 +589,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private suspend fun resolveFrozenState(
         productInstance: CustomerInfo.ProductInstance,
         cardId: String,
-        userWalletId: UserWalletId,
     ): TangemPayCardFrozenState {
-        val isChanging = if (tangemPayFeatureToggles.isOrderFrameworkEnabled) {
-            getActiveOrdersUseCase.hasCardFrozenStateOrderFor(productInstance.id, userWalletId)
-        } else {
-            cardDetailsRepository.cardFrozenStateSync(cardId) == TangemPayCardFrozenState.Pending
-        }
+        if (tangemPayFeatureToggles.isOrderFrameworkEnabled) return productInstance.frozenState
+
+        val isChanging = cardDetailsRepository.cardFrozenStateSync(cardId) == TangemPayCardFrozenState.Pending
         return if (isChanging) TangemPayCardFrozenState.Pending else productInstance.frozenState
     }
 
