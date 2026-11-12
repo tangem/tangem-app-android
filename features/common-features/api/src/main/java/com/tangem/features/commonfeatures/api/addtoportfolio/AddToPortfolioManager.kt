@@ -69,7 +69,8 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
          *  The wallet must be one the token can actually be added to — the flow has no way to check that, and a
          *  wallet it loads but cannot add to leaves the selector empty and the flow waiting. Build the bridge on
          *  this same [scope]: it collects for as long as its own scope lives, so a longer-lived one keeps
-         *  fetching after the flow it was built for is gone.
+         *  fetching after the flow it was built for is gone. A flow that cannot work with joint accounts gets a
+         *  bridge built without them, so they are neither offered nor picked.
          */
         fun create(
             scope: CoroutineScope,
@@ -82,7 +83,12 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
     sealed interface LaunchMode {
         data object DirectAdd : LaunchMode
         data object Preselected : LaunchMode
-        data object ViaUserPortfolio : LaunchMode
+
+        /**
+         * @property shouldScopeToNetworks the user portfolio lists only the holdings on the networks passed to
+         * [setTokenNetworks], instead of every network of the token
+         */
+        data class ViaUserPortfolio(val shouldScopeToNetworks: Boolean = false) : LaunchMode
     }
 
     /**

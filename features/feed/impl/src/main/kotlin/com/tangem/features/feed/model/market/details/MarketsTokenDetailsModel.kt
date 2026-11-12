@@ -433,7 +433,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     fun openAddToPortfolioViaUserPortfolio() {
         if (!isAddToPortfolioAvailable) return
-        prepareAddToPortfolioManager(AddToPortfolioManager.LaunchMode.ViaUserPortfolio)
+        prepareAddToPortfolioManager(AddToPortfolioManager.LaunchMode.ViaUserPortfolio())
         addToPortfolioSheetNavigation.activate(AddToPortfolioSlotRoute)
     }
 

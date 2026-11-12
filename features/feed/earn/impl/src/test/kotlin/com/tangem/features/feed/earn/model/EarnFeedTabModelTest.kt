@@ -13,6 +13,7 @@ import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.feed.earn.*
 import com.tangem.features.feed.earn.model.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.earn.model.state.EarnStateController
@@ -49,6 +50,7 @@ internal class EarnFeedTabModelTest {
     private val setEarnFilterUseCase: SetEarnFilterUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val earnFeatureToggles: EarnFeatureToggles = mockk(relaxed = true)
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk(relaxed = true)
 
     private val specificNetwork = EarnFilterNetwork.Specific(
@@ -376,6 +378,10 @@ internal class EarnFeedTabModelTest {
             stateController = EarnStateController(),
             analyticsEventHandler = analyticsEventHandler,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
+            portfolioSelectorBridgeFactory = mockk(relaxed = true),
+            earnFeatureToggles = earnFeatureToggles,
+            getStakingAvailabilityUseCase = mockk(),
+            yieldSupplyGetAvailabilityUseCase = mockk(),
             feedEntryController = feedEntryController,
         ).also { model = it }
     }
