@@ -122,6 +122,7 @@ internal class TangemPayDetailsStateFactory(
                 isMuted = !isFresh,
                 isAddFundsEnabled = isFresh && canAddFunds,
                 isWithdrawEnabled = isFresh && hasWithdrawableBalance,
+                isInactiveWithoutBalance = true,
             ),
             isBalanceHidden = false,
             messageBanner = (errorNotification ?: tiersNotification)?.let(::MessageBannerUM),
@@ -157,11 +158,13 @@ internal class TangemPayDetailsStateFactory(
         isMuted: Boolean,
         isAddFundsEnabled: Boolean,
         isWithdrawEnabled: Boolean,
+        isInactiveWithoutBalance: Boolean,
     ): TangemPayDetailsBalanceBlockState {
         if (fiatBalance == null) {
             return TangemPayDetailsBalanceBlockState.Error(
                 actionButtons = getActionButtonsConfig(isAddFundsEnabled = false, isWithdrawEnabled = false),
                 cardsBlockState = cardsBlockState,
+                isInactive = isInactiveWithoutBalance,
             )
         }
         return TangemPayDetailsBalanceBlockState.Content(
@@ -169,7 +172,6 @@ internal class TangemPayDetailsStateFactory(
             fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(fiatBalance),
             isMuted = isMuted,
             isNegative = fiatBalance.availableBalance.signum() < 0,
-            isInactive = false,
             actionButtons = getActionButtonsConfig(
                 isAddFundsEnabled = isAddFundsEnabled,
                 isWithdrawEnabled = isWithdrawEnabled,
@@ -217,44 +219,10 @@ internal class TangemPayDetailsStateFactory(
                 isMuted = status.source != StatusSource.ACTUAL,
                 isAddFundsEnabled = status.canAddFunds,
                 isWithdrawEnabled = hasWithdrawableBalance,
+                isInactiveWithoutBalance = false,
             ),
             isBalanceHidden = false,
             messageBanner = MessageBannerUM(state = accountDeactivatedBanner),
-            cashbackBlockState = null,
-        )
-    }
-
-    fun getInactiveState(status: PaymentAccountStatusValue.Inactive): TangemPayDetailsUM {
-        val notification = notificationFactory.createTiersConfig(status.tariffPlan)
-        return TangemPayDetailsUM(
-            topBarConfig = TangemPayDetailsTopBarConfig(
-                onBackClick = onBack,
-                onOpenMenu = onOpenMenu,
-                items = getTopBarMenuItems(tariffPlan = null),
-                subtitle = subtitle,
-            ),
-            pullToRefreshConfig = PullToRefreshConfig(
-                isRefreshing = false,
-                onRefresh = intents::onRefreshSwipe,
-            ),
-            balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
-                actionButtons = getActionButtonsConfig(
-                    isAddFundsEnabled = false,
-                    isWithdrawEnabled = false,
-                ),
-                cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
-                    cards = persistentListOf(issuingPlaceholderCard()),
-                    progressBanner = CardsProgressBannerUM.Issuing.takeIf { notification == null },
-                    onAddCardClick = {},
-                    isAddCardEnabled = false,
-                ),
-                fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(status.fiatBalance),
-                isInactive = true,
-                isNegative = false,
-                isBalanceFlickering = false,
-            ),
-            isBalanceHidden = false,
-            messageBanner = notification?.let(::MessageBannerUM),
             cashbackBlockState = null,
         )
     }
@@ -287,7 +255,6 @@ internal class TangemPayDetailsStateFactory(
                     isAddCardEnabled = true,
                 ),
                 fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(fiatBalance),
-                isInactive = false,
                 isNegative = fiatBalance.availableBalance.signum() < 0,
                 isBalanceFlickering = false,
             ),

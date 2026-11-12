@@ -174,10 +174,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             StatusModel(PaymentAccountStatusValue.Error.ExposedDevice, isOpenable = false),
             StatusModel(PaymentAccountStatusValue.Error.CardIssueFailed("customer-id"), isOpenable = false),
             StatusModel(mockk<PaymentAccountStatusValue.UnderReview>(relaxed = true), isOpenable = false),
-            StatusModel(mockk<PaymentAccountStatusValue.IssuingCard>(relaxed = true), isOpenable = false),
             StatusModel(PaymentAccountStatusValue.Loading, isOpenable = true),
-            StatusModel(mockk<PaymentAccountStatusValue.AwaitingPlanSelection>(relaxed = true), isOpenable = true),
-            StatusModel(mockk<PaymentAccountStatusValue.Inactive>(relaxed = true), isOpenable = true),
             StatusModel(mockk<PaymentAccountStatusValue.Loaded>(relaxed = true), isOpenable = true),
             StatusModel(mockk<PaymentAccountStatusValue.Deactivated>(relaxed = true), isOpenable = true),
         )

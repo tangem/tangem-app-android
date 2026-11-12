@@ -410,7 +410,6 @@ internal class TangemPayDetailsStateFactoryTest {
         // Assert
         assertThat(balanceBlock).isInstanceOf(TangemPayDetailsBalanceBlockState.Content::class.java)
         val content = balanceBlock as TangemPayDetailsBalanceBlockState.Content
-        assertThat(content.isInactive).isFalse()
         assertThat(content.fiatBalance).isEqualTo(zeroBalanceText(currency = "EUR"))
     }
 
@@ -532,7 +531,7 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
-    fun `GIVEN loaded status without balance WHEN getLoadedState THEN balance block is Error with cards kept`() {
+    fun `GIVEN loaded status without balance WHEN getLoadedState THEN balance block is inactive Error with cards kept`() {
         // Arrange
         val status = loadedStatus(statusBalance = null)
 
@@ -541,12 +540,13 @@ internal class TangemPayDetailsStateFactoryTest {
 
         // Assert
         assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
+        assertThat((state.balanceBlockState as TangemPayDetailsBalanceBlockState.Error).isInactive).isTrue()
         assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(false, false)
         assertThat(state.balanceBlockState.cardsBlockState?.cards).hasSize(1)
     }
 
     @Test
-    fun `GIVEN deactivated status without balance WHEN getDeactivatedState THEN balance block is Error`() {
+    fun `GIVEN deactivated status without balance WHEN getDeactivatedState THEN balance block is Error not inactive`() {
         // Arrange
         val status = deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO, statusBalance = null)
 
@@ -555,6 +555,7 @@ internal class TangemPayDetailsStateFactoryTest {
 
         // Assert
         assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
+        assertThat((state.balanceBlockState as TangemPayDetailsBalanceBlockState.Error).isInactive).isFalse()
         assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(false, false)
     }
 

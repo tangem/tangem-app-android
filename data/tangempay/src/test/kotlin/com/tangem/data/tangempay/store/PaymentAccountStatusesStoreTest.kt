@@ -77,7 +77,7 @@ internal class PaymentAccountStatusesStoreTest {
     fun `GIVEN persisted status still restoring WHEN getSyncOrNull THEN returns cached status`() = runTest {
         // Arrange
         val persistenceDataStore = MockStateDataStore<WalletIdWithPaymentStatusDM>(
-            default = mapOf(WALLET_A.stringValue to PaymentAccountStatusValueDM.IssuingCard),
+            default = mapOf(WALLET_A.stringValue to PaymentAccountStatusValueDM.Empty),
         )
         val store = createStore(DelayedReadDataStore(persistenceDataStore, readDelayMillis = RESTORE_DELAY_MS))
 
@@ -87,7 +87,7 @@ internal class PaymentAccountStatusesStoreTest {
         // Assert
         val expected = AccountStatus.Payment(
             account = Account.Payment(WALLET_A),
-            value = PaymentAccountStatusValue.IssuingCard(source = StatusSource.CACHE),
+            value = PaymentAccountStatusValue.Empty,
         )
         assertThat(actual).isEqualTo(expected)
     }
@@ -96,7 +96,7 @@ internal class PaymentAccountStatusesStoreTest {
     fun `GIVEN persisted status still restoring WHEN store THEN restored cache does not overwrite it`() = runTest {
         // Arrange
         val persistenceDataStore = MockStateDataStore<WalletIdWithPaymentStatusDM>(
-            default = mapOf(WALLET_A.stringValue to PaymentAccountStatusValueDM.IssuingCard),
+            default = mapOf(WALLET_A.stringValue to PaymentAccountStatusValueDM.Empty),
         )
         val store = createStore(DelayedReadDataStore(persistenceDataStore, readDelayMillis = RESTORE_DELAY_MS))
 
@@ -126,7 +126,7 @@ internal class PaymentAccountStatusesStoreTest {
                 }
             }
             val persistenceDataStore = MockStateDataStore<WalletIdWithPaymentStatusDM>(
-                default = mapOf(WALLET_A.stringValue to PaymentAccountStatusValueDM.IssuingCard),
+                default = mapOf(WALLET_A.stringValue to PaymentAccountStatusValueDM.Empty),
             )
             val store = createStore(persistenceDataStore, userWallets, currencyFactory)
 
@@ -139,9 +139,9 @@ internal class PaymentAccountStatusesStoreTest {
 
             // Assert
             assertThat(isCompletedBeforeWalletsLoaded).isFalse()
-            assertThat(actual.await()).isEqualTo(cachedIssuingCardStatus(WALLET_A))
+            assertThat(actual.await()).isEqualTo(cachedEmptyStatus(WALLET_A))
             assertThat(persistenceDataStore.data.first())
-                .containsExactly(WALLET_A.stringValue, PaymentAccountStatusValueDM.IssuingCard)
+                .containsExactly(WALLET_A.stringValue, PaymentAccountStatusValueDM.Empty)
         }
 
     @Test
@@ -153,8 +153,8 @@ internal class PaymentAccountStatusesStoreTest {
                 every { create(WALLET_B) } returns CRYPTO_CURRENCY
             }
             val persistedStatuses = mapOf(
-                WALLET_A.stringValue to PaymentAccountStatusValueDM.IssuingCard,
-                WALLET_B.stringValue to PaymentAccountStatusValueDM.IssuingCard,
+                WALLET_A.stringValue to PaymentAccountStatusValueDM.Empty,
+                WALLET_B.stringValue to PaymentAccountStatusValueDM.Empty,
             )
             val persistenceDataStore = MockStateDataStore<WalletIdWithPaymentStatusDM>(default = persistedStatuses)
             val store = createStore(persistenceDataStore, currencyFactory = currencyFactory)
@@ -165,7 +165,7 @@ internal class PaymentAccountStatusesStoreTest {
 
             // Assert
             assertThat(actualA).isNull()
-            assertThat(actualB).isEqualTo(cachedIssuingCardStatus(WALLET_B))
+            assertThat(actualB).isEqualTo(cachedEmptyStatus(WALLET_B))
             assertThat(persistenceDataStore.data.first()).isEqualTo(persistedStatuses)
         }
 
@@ -183,9 +183,9 @@ internal class PaymentAccountStatusesStoreTest {
         scope = TestAppCoroutineScope(this),
     )
 
-    private fun cachedIssuingCardStatus(userWalletId: UserWalletId) = AccountStatus.Payment(
+    private fun cachedEmptyStatus(userWalletId: UserWalletId) = AccountStatus.Payment(
         account = Account.Payment(userWalletId),
-        value = PaymentAccountStatusValue.IssuingCard(source = StatusSource.CACHE),
+        value = PaymentAccountStatusValue.Empty,
     )
 
     private suspend fun PaymentAccountStatusesStore.storeNotCreated(userWalletId: UserWalletId) {

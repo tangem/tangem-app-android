@@ -419,7 +419,8 @@ private fun BalanceBlock(
 
         when (state) {
             is TangemPayDetailsBalanceBlockState.Loading -> Unit
-            is TangemPayDetailsBalanceBlockState.Content -> {
+            is TangemPayDetailsBalanceBlockState.Content -> Unit
+            is TangemPayDetailsBalanceBlockState.Error -> {
                 if (state.isInactive) {
                     TangemBadge(
                         modifier = Modifier.padding(vertical = 4.dp),
@@ -431,7 +432,6 @@ private fun BalanceBlock(
                     )
                 }
             }
-            is TangemPayDetailsBalanceBlockState.Error -> Unit
         }
     }
 }

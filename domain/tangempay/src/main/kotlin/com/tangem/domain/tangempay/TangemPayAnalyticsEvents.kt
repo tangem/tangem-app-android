@@ -49,11 +49,6 @@ sealed class TangemPayAnalyticsEvents(
         params = entryParams(entryChannel = null),
     ), AppsFlyerIncludedEvent
 
-    class IssuingBannerDisplayed : TangemPayAnalyticsEvents(
-        categoryName = "Visa Onboarding",
-        event = "Visa Issuing Banner Displayed",
-    )
-
     class PermanentBannerShowed : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Banner Showed",

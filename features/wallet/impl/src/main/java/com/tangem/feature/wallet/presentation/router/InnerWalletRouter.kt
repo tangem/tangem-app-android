@@ -94,8 +94,6 @@ internal interface InnerWalletRouter {
 
     fun openTangemPayDetails(status: AccountStatus.Payment)
 
-    fun openTangemPaySelectPlan(status: AccountStatus.Payment)
-
     /** Open BS abput yield supply active and all money deposited in AAVE */
     fun openYieldSupplyBottomSheet(
         cryptoCurrency: CryptoCurrency,

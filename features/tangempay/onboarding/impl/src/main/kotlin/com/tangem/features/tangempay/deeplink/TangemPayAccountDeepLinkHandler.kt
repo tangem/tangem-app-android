@@ -79,12 +79,9 @@ internal class TangemPayAccountDeepLinkHandler @Inject constructor(
         is PaymentAccountStatusValue.Error,
         is PaymentAccountStatusValue.KycRequired,
         is PaymentAccountStatusValue.UnderReview,
-        is PaymentAccountStatusValue.IssuingCard,
         is PaymentAccountStatusValue.Verified,
         -> false
         PaymentAccountStatusValue.Loading,
-        is PaymentAccountStatusValue.AwaitingPlanSelection,
-        is PaymentAccountStatusValue.Inactive,
         is PaymentAccountStatusValue.Loaded,
         is PaymentAccountStatusValue.Deactivated,
         -> true

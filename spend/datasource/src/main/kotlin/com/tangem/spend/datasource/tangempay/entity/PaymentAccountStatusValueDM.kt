@@ -35,10 +35,6 @@ sealed interface PaymentAccountStatusValueDM {
     ) : PaymentAccountStatusValueDM
 
     @Serializable
-    @SerialName("issuing_card")
-    data object IssuingCard : PaymentAccountStatusValueDM
-
-    @Serializable
     @SerialName("active_account")
     data class ActiveAccount(
         @SerialName("customer_id") val customerId: String,

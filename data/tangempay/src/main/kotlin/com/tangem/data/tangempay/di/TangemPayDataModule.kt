@@ -211,9 +211,10 @@ internal interface TangemPayDataModule {
                         serializer = MapSerializer(String.serializer(), PaymentAccountStatusValueDM.serializer()),
                         json = KotlinxDataStoreSerializer.jsonBuilder { classDiscriminator = "__type" },
                     ),
-                    produceFile = { context.dataStoreFile(fileName = "payment_account_statuses_v2") },
+                    produceFile = { context.dataStoreFile(fileName = "payment_account_statuses_v3") },
                     migrations = listOf(
                         DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "payment_account_statuses") },
+                        DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "payment_account_statuses_v2") },
                     ),
                     scope = scope,
                 ),
@@ -869,18 +870,6 @@ internal interface TangemPayDataModule {
             repository: CustomerOrderRepository,
         ): FindActiveBankOfframpOrderUseCase {
             return FindActiveBankOfframpOrderUseCase(repository = repository)
-        }
-
-        @Provides
-        fun provideFindOrdersUseCase(customerOrderRepository: CustomerOrderRepository): FindOrdersUseCase {
-            return FindOrdersUseCase(customerOrderRepository = customerOrderRepository)
-        }
-
-        @Provides
-        fun provideFindMoneyAccountCreationOrderUseCase(
-            findOrdersUseCase: FindOrdersUseCase,
-        ): FindMoneyAccountCreationOrderUseCase {
-            return FindMoneyAccountCreationOrderUseCase(findOrdersUseCase = findOrdersUseCase)
         }
     }
 }

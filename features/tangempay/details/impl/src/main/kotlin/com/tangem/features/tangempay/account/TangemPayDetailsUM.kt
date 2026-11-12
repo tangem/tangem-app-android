@@ -72,13 +72,13 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         val fiatBalance: TextReference,
         val isBalanceFlickering: Boolean,
         val isNegative: Boolean,
-        val isInactive: Boolean,
         val isMuted: Boolean = false,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class Error(
         override val actionButtons: ImmutableList<TangemPayActionButtonUM>,
         override val cardsBlockState: CardsBlockState?,
+        val isInactive: Boolean,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class CardsBlockState(

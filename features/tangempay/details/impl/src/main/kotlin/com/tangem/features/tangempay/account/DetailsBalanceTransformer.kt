@@ -10,7 +10,6 @@ import java.util.Currency
 
 internal class DetailsBalanceTransformer(
     private val fiatBalance: PaymentAccountStatusValue.FiatBalance,
-    private val isInactive: Boolean = false,
     private val isMuted: Boolean = false,
 ) : Transformer<TangemPayDetailsUM> {
 
@@ -22,7 +21,6 @@ internal class DetailsBalanceTransformer(
             cardsBlockState = prevState.balanceBlockState.cardsBlockState,
             isMuted = isMuted,
             isNegative = fiatBalance.availableBalance.signum() < 0,
-            isInactive = isInactive,
         )
         return prevState.copy(balanceBlockState = balance)
     }

@@ -41,8 +41,6 @@ internal interface TangemPayIntents {
 
     fun openDetails(status: AccountStatus.Payment)
 
-    fun onSelectPlanClicked(status: AccountStatus.Payment)
-
     fun onKycProgressClicked(userWalletId: UserWalletId)
 
     fun onKycRequiredClicked(
@@ -60,8 +58,6 @@ internal interface TangemPayIntents {
     fun onKycRejectedGoToSupportClicked(customerId: String)
 
     fun onKycRejectedHideKycClicked(userWalletId: UserWalletId)
-
-    fun onIssuingCardClicked()
 
     fun onOnboardingBannerClick(userWalletId: UserWalletId)
 
@@ -112,10 +108,6 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
 
     override fun openDetails(status: AccountStatus.Payment) {
         router.openTangemPayDetails(status = status)
-    }
-
-    override fun onSelectPlanClicked(status: AccountStatus.Payment) {
-        router.openTangemPaySelectPlan(status = status)
     }
 
     override fun onKycProgressClicked(userWalletId: UserWalletId) {
@@ -228,25 +220,6 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
                 ),
             )
         }
-    }
-
-    override fun onIssuingCardClicked() {
-        val issuingBottomSheet = bottomSheetMessage {
-            infoBlock {
-                icon(com.tangem.core.ui.R.drawable.ic_clock_24) {
-                    type = MessageBottomSheetUM.Icon.Type.Informative
-                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Informative
-                }
-                title = resourceReference(R.string.tangempay_issuing_your_card)
-                body = resourceReference(R.string.tangempay_issuing_your_card_description)
-            }
-            secondaryButton {
-                text = resourceReference(R.string.common_got_it)
-                onClick { closeBs() }
-            }
-        }
-
-        uiMessageSender.send(issuingBottomSheet)
     }
 
     override fun onOnboardingBannerClick(userWalletId: UserWalletId) {

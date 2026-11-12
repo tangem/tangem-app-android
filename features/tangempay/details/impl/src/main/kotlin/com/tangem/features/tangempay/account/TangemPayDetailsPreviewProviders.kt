@@ -74,7 +74,6 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                     isAddCardEnabled = true,
                 ),
                 isNegative = false,
-                isInactive = false,
             ),
             isBalanceHidden = false,
             messageBanner = MessageBannerUM(

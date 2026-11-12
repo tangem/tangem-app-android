@@ -13,7 +13,7 @@ import java.math.BigDecimal
 
 /**
  * Guards the stored JSON format of every [PaymentAccountStatusValueDM] subtype. The expected strings are what the
- * store writes to `payment_account_statuses_v2`, so statuses cached by one app version must read back unchanged in
+ * store writes to `payment_account_statuses_v3`, so statuses cached by one app version must read back unchanged in
  * the next one.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -72,7 +72,6 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
             status = PaymentAccountStatusValueDM.UnderReview(kycStatus = KycStatus.PENDING, customerId = "cust-1"),
             json = """{"__type":"kyc_status","kyc_status":"in_progress","customer_id":"cust-1"}""",
         ),
-        FormatModel(status = PaymentAccountStatusValueDM.IssuingCard, json = """{"__type":"issuing_card"}"""),
         FormatModel(
             status = PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = "cust-1",
