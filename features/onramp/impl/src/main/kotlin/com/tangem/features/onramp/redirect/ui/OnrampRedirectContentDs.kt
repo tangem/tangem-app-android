@@ -1,7 +1,6 @@
 package com.tangem.features.onramp.redirect.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,7 +41,8 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.core.ui.res.generated.icons.ic_cross_24
+import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectTopBarUM
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectUM
@@ -100,16 +104,21 @@ private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
 @Composable
 private fun RedirectCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(
-        modifier = modifier.size(44.dp),
-        color = TangemTheme.colors3.bg.transparent.primary,
-        border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
+        modifier = modifier
+            .size(44.dp)
+            .semantics { role = Role.Button }
+            .testTag(TopAppBarTestTags.CLOSE_BUTTON),
+        isMaterial = true,
         shape = CircleShape,
         onClick = onClick,
     ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            contentAlignment = Alignment.Center,
+        ) {
             Icon(
-                modifier = Modifier.size(18.dp),
-                imageVector = Icons.ic_cross_20,
+                modifier = Modifier.size(24.dp),
+                imageVector = Icons.ic_cross_24,
                 tint = TangemTheme.colors3.icon.primary,
                 contentDescription = stringResourceSafe(R.string.common_close),
             )
