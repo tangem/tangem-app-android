@@ -409,6 +409,28 @@ internal class AddWalletModelTest {
         }
 
         @Test
+        fun `GIVEN the check fails WHEN the social row tapped THEN the sign-in is aborted with an error`() = runTest {
+            // Arrange
+            coEvery { getHotWalletAdditionRestriction(isSocialLogin = true) } throws IllegalStateException("No wallets")
+            val model = createOpenedModel()
+
+            // Act
+            model.options().requireSocialRow().onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { socialLoginHandler.start(any(), any(), any()) }
+            verify(exactly = 1) {
+                trackingContextProxy.addHotWalletContext()
+                trackingContextProxy.removeContext()
+            }
+            val dialog = capturedDialog()
+            assertThat(dialog.title).isEqualTo(resourceReference(CoreResR.string.common_something_went_wrong))
+            assertThat(dialog.message).isEqualTo(resourceReference(CoreResR.string.common_unknown_error))
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN the sheet dismissed during the check WHEN the check answers THEN nothing starts`() = runTest {
             // Arrange
             val answer = CompletableDeferred<HotWalletAdditionRestriction?>()
