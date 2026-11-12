@@ -28,6 +28,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -138,7 +139,7 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
     }
 
     @Test
-    fun `GIVEN the own key is listed with another expiry WHEN reconcile THEN it is marked ready`() = runTest {
+    fun `GIVEN the own key is listed with another expiry WHEN reconcile THEN it is not marked ready`() = runTest {
         // Arrange
         givenWallet(listOf(key()))
         coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
@@ -148,9 +149,39 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
         interactor(USER_WALLET_ID)
 
         // Assert
-        coVerify(exactly = 1) { tradingStore.restoreReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) }
+        coVerify(exactly = 0) { tradingStore.restoreReadyOnExchange(any(), any(), any()) }
         coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
     }
+
+    @Test
+    fun `GIVEN the own ready key is listed with other scopes WHEN reconcile THEN it is foreign and not tradable`() =
+        runTest {
+            // Arrange
+            val listing = signer(KEY).copy(scopes = listOf("CLOB", "ALL"))
+            givenWallet(listOf(key()))
+            coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns listOf(listing).right()
+            coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) } returns true
+            val kept = slot<PolymarketSessionKeyReconciliation>()
+            every { tradingStore.setReconciliation(USER_WALLET_ID, capture(kept)) } returns Unit
+            every { tradingStore.isMissingOnExchange(USER_WALLET_ID, any()) } answers {
+                val checked = kept.captured as PolymarketSessionKeyReconciliation.Checked
+                secondArg<String>() in checked.missingOnExchange
+            }
+
+            // Act
+            val actual = interactor(USER_WALLET_ID).getOrNull()
+
+            // Assert
+            assertThat(actual?.assessment?.reconciliation).isEqualTo(
+                PolymarketSessionKeyReconciliation.Checked(
+                    foreignSigners = listOf(listing),
+                    missingOnExchange = setOf(KEY),
+                    listedSigners = setOf(KEY),
+                ),
+            )
+            assertThat(actual?.isTradable).isFalse()
+            coVerify(exactly = 0) { tradingStore.restoreReadyOnExchange(any(), any(), any()) }
+        }
 
     @Test
     fun `GIVEN the own key is listed expiring within ten minutes WHEN reconcile THEN it is not marked ready`() =
