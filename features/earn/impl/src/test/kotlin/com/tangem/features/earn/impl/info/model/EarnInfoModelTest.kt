@@ -301,6 +301,25 @@ internal class EarnInfoModelTest {
             infoModel.onDestroy()
         }
 
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN Ready with position None or Unknown and no status for the currency WHEN model created THEN the router replaces the screen with the picker once`(
+            model: EarnPositionState,
+        ) = runTest {
+            // Arrange
+            product.stateFlow.value = product.readyState().copy(position = model)
+            stubStatus(null)
+            val infoModel = createModel()
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            verifyRedirectedOnce()
+            assertThat(infoModel.uiState.value).isNull()
+            infoModel.onDestroy()
+        }
+
         private fun provideTestModels() = listOf(EarnPositionState.None, EarnPositionState.Unknown)
 
         @Test
