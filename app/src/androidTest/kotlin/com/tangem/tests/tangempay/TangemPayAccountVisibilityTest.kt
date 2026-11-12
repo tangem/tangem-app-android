@@ -149,8 +149,8 @@ class TangemPayAccountVisibilityTest : BaseTestCase() {
                 }
                 onPortfolioSelectorSheet { portfolioOption(secondAccountName).assertIsDisplayed() }
             }
-            step("Assert '$payAccountName' is not displayed") {
-                onPortfolioSelectorSheet { portfolioOption(payAccountName).assertDoesNotExist() }
+            step("Assert '$payAccountRowName' account is not displayed") {
+                onPortfolioSelectorSheet { portfolioOption(payAccountRowName).assertDoesNotExist() }
             }
         }
     }
@@ -178,8 +178,8 @@ class TangemPayAccountVisibilityTest : BaseTestCase() {
                 }
                 onAddToPortfolioScreen { walletOption(secondAccountName).assertIsDisplayed() }
             }
-            step("Assert '$payAccountName' is not displayed") {
-                onAddToPortfolioScreen { walletOption(payAccountName).assertDoesNotExist() }
+            step("Assert '$payAccountRowName' account is not displayed") {
+                onAddToPortfolioScreen { walletOption(payAccountRowName).assertDoesNotExist() }
             }
         }
     }
@@ -210,8 +210,8 @@ class TangemPayAccountVisibilityTest : BaseTestCase() {
                 }
                 onPortfolioSelectorSheet { portfolioOption(secondAccountName).assertIsDisplayed() }
             }
-            step("Assert '$payAccountName' is not displayed") {
-                onPortfolioSelectorSheet { portfolioOption(payAccountName).assertDoesNotExist() }
+            step("Assert '$payAccountRowName' account is not displayed") {
+                onPortfolioSelectorSheet { portfolioOption(payAccountRowName).assertDoesNotExist() }
             }
         }
     }
@@ -256,8 +256,8 @@ class TangemPayAccountVisibilityTest : BaseTestCase() {
                 }
                 onPortfolioSelectorSheet { portfolioOption(secondAccountName).assertIsDisplayed() }
             }
-            step("Assert '$payAccountName' is not displayed") {
-                onPortfolioSelectorSheet { portfolioOption(payAccountName).assertDoesNotExist() }
+            step("Assert '$payAccountRowName' account is not displayed") {
+                onPortfolioSelectorSheet { portfolioOption(payAccountRowName).assertDoesNotExist() }
             }
         }
     }
