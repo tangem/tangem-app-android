@@ -41,14 +41,14 @@ internal fun CountryButtonDs(state: OnrampCountryButtonUM, modifier: Modifier = 
                 state.countryName?.let { contentDescription = it }
             }
             .testTag(TopAppBarTestTags.MORE_BUTTON),
-        isMaterial = true,
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = CircleShape,
         border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         enabled = state.isEnabled,
         onClick = state.onClick,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             if (state.flagUrl != null) {

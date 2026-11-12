@@ -1,7 +1,6 @@
 package com.tangem.features.onramp.main.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -38,14 +37,14 @@ internal fun CloseButtonDs(state: TopAppBarButtonUM, modifier: Modifier = Modifi
                 contentDescription = closeDescription
             }
             .testTag(TopAppBarTestTags.CLOSE_BUTTON),
-        isMaterial = true,
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = CircleShape,
         border = BorderStroke(width = 1.dp, color = TangemTheme.colors3.bg.transparent.secondary),
         enabled = state.isEnabled,
         onClick = state.onClicked,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize().background(TangemTheme.colors3.bg.transparent.primary),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
