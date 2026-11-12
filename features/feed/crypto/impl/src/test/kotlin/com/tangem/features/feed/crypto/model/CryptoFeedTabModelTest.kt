@@ -36,6 +36,7 @@ import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryFilter
 import com.tangem.features.feed.v2.FeedEntryRequest
+import com.tangem.features.feed.v2.FeedFilterSheet
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.ExperiencedBuyers
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.MarketCap
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.TopGainers
@@ -611,6 +612,65 @@ internal class CryptoFeedTabModelTest {
             coVerify(exactly = 0) { categoryResolver.resolve(any(), any()) }
         }
 
+    @Test
+    fun `GIVEN a category sheet deeplink WHEN the host handled the entry THEN the selector opens preselected`() =
+        runTest {
+            // Arrange
+            val layer1 = selectionOf(id = "layer-1", name = "Layer 1")
+            feedEntryController.pendingEntry.value = FeedEntryRequest()
+            pendingFilter.value = FeedEntryFilter(
+                tabId = FeedTabId.Crypto,
+                categoryId = "layer-1",
+                sheet = FeedFilterSheet.Category,
+            )
+            coEvery { categoryResolver.resolve(categoryId = "layer-1", currency = any()) } returns
+                layer1.category
+            createModel(testScope = this)
+            advanceUntilIdle()
+            verify(exactly = 0) { router.push(any()) }
+
+            // Act
+            feedEntryController.consumeEntry()
+            advanceUntilIdle()
+
+            // Assert - the host pops its stack to home while handling the entry, so an earlier push is lost
+            verify(exactly = 1) { router.push(MarketCategorySelectorRoute) }
+            assertThat(filterController.selection.value).isEqualTo(layer1)
+        }
+
+    @Test
+    fun `GIVEN a category sheet deeplink WHEN a newer request lands first THEN the selector stays closed`() =
+        runTest {
+            // Arrange
+            feedEntryController.pendingEntry.value = FeedEntryRequest()
+            pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Crypto, sheet = FeedFilterSheet.Category)
+            createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            feedEntryController.request(FeedEntryRequest(isForYou = true))
+            feedEntryController.consumeEntry()
+            advanceUntilIdle()
+
+            // Assert - the newer request's screen is on top; the older picker would cover it
+            verify(exactly = 0) { router.push(MarketCategorySelectorRoute) }
+        }
+
+    @Test
+    fun `GIVEN a category deeplink without a sheet WHEN the tab opens THEN the selector stays closed`() = runTest {
+        // Arrange
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Crypto, categoryId = "layer-1")
+        coEvery { categoryResolver.resolve(categoryId = "layer-1", currency = any()) } returns
+            MarketCategorySelection.Entry(id = "layer-1", name = "Layer 1")
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(any()) }
+    }
+
     /** The capitalisation stays below `1` so `compact()` keeps off `android.icu`, which unit tests lack */
     private fun indicators() = MarketIndicators(
         totalMarketCap = BigDecimal("0.5"),
@@ -825,7 +885,13 @@ internal class CryptoFeedTabModelTest {
 
         override val pendingEntry = MutableStateFlow<FeedEntryRequest?>(null)
 
-        override fun request(request: FeedEntryRequest) = Unit
+        /** Every filter published before a later [request] is superseded by it. */
+        private var isSuperseded = false
+
+        override fun request(request: FeedEntryRequest) {
+            isSuperseded = true
+            pendingEntry.value = request
+        }
 
         override fun consumeEntry() {
             pendingEntry.value = null
@@ -834,6 +900,8 @@ internal class CryptoFeedTabModelTest {
         override fun consumeFilter() {
             pendingFilter.value = null
         }
+
+        override fun isLatest(filter: FeedEntryFilter): Boolean = !isSuperseded
     }
 
     private class FakeBatchFlow : TokenListBatchFlow {

@@ -38,6 +38,8 @@ import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.nav.analyticsSection
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryFilter
+import com.tangem.features.feed.v2.FeedFilterSheet
+import com.tangem.features.feed.v2.awaitEntryHandled
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -227,6 +229,11 @@ internal class CryptoFeedTabModel @Inject constructor(
         }
 
         isAwaitingDeeplinkCategory = false
+
+        if (filter.sheet == FeedFilterSheet.Category) {
+            feedEntryController.awaitEntryHandled()
+            if (feedEntryController.isLatest(filter)) openCategorySelector()
+        }
     }
 
     private suspend fun resolveCategory(categoryId: String): MarketCategorySelection.Entry? {
