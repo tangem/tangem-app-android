@@ -15,6 +15,7 @@ import com.tangem.core.error.ext.universalError
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.transaction.error.SolanaGaslessError
 
 internal fun <T> Result<T>.toEither(): Either<BlockchainError, T> = when (this) {
     is Result.Success -> data.right()
@@ -51,6 +52,18 @@ internal fun TangemError.toVaultFailure(): CollectiblesAccountError = when (this
     is TangemSdkError.UserCancelled -> CollectiblesAccountError.Cancelled
     is TangemSdkError -> CollectiblesAccountError.CardError(code = code, message = customMessage)
     else -> universalError.asFailure()
+}
+
+internal fun SolanaGaslessError.toVaultFailure(): CollectiblesAccountError = when (this) {
+    is SolanaGaslessError.MaybeSent -> CollectiblesAccountError.MaybeSent(txHash = signature)
+    SolanaGaslessError.Unauthorized,
+    SolanaGaslessError.Disabled,
+    is SolanaGaslessError.ServiceUnavailable,
+    is SolanaGaslessError.Unknown,
+    -> GachaVaultError.SponsorUnavailable.asFailure()
+    is SolanaGaslessError.RateLimited -> GachaVaultError.SponsorRateLimited.asFailure()
+    is SolanaGaslessError.Rejected -> GachaVaultError.SponsorRejected(reason = code).asFailure()
+    SolanaGaslessError.BlockhashExpired -> GachaVaultError.TransactionExpired.asFailure()
 }
 
 internal fun UniversalError.asFailure(): CollectiblesAccountError = CollectiblesAccountError.Vault(error = this)

@@ -27,22 +27,22 @@ import kotlinx.coroutines.launch
  * [setUpVault] because the wallet manager it signs through resolves the key from stored derivations. It stays
  * stored when the rest fails, so a retry is still one tap.
  */
-internal class DeriveCollectiblesOwnerAndSetUpVaultTask(
+internal class DeriveCollectiblesOwnerAndSetUpVaultTask<T>(
     private val userWallet: UserWallet.Cold,
     private val seedKey: ByteArray,
     private val derivationsRepository: DerivationsRepository,
     private val scope: CoroutineScope,
-    private val setUpVault: suspend (session: CardSession, callback: CompletionCallback<Unit>) -> Unit,
-) : CardSessionRunnable<Unit> {
+    private val setUpVault: suspend (session: CardSession, callback: CompletionCallback<T>) -> Unit,
+) : CardSessionRunnable<T> {
 
     private val path = DerivationPath(rawPath = COLLECTIBLES_OWNER_DERIVATION_PATH)
 
-    override fun run(session: CardSession, callback: CompletionCallback<Unit>) {
+    override fun run(session: CardSession, callback: CompletionCallback<T>) {
         TangemLogger.d("cardTask: card session opened, deriving the Solana address from the main key")
         scope.launch { deriveAndSetUpVault(session, callback) }
     }
 
-    private suspend fun deriveAndSetUpVault(session: CardSession, callback: CompletionCallback<Unit>) {
+    private suspend fun deriveAndSetUpVault(session: CardSession, callback: CompletionCallback<T>) {
         val derivation = runSuspendCatching { deriveAndStoreOwner(session) }
             .getOrElse { error ->
                 TangemLogger.e("Collectibles vault: the owner derivation threw", error)
