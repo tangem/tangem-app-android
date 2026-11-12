@@ -1,4 +1,4 @@
-package com.tangem.tap.core.navigation.email
+package com.tangem.core.navigation.impl.email
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test

@@ -37,6 +37,7 @@ internal fun BaseExtension.configureCompose(project: Project) {
             contains(Regex(pattern = ":impl\$")) &&
                 !contains(":core:analytics") &&
                 !contains(":core:biometric-auth") &&
+                !contains(":core:navigation") &&
                 !contains(":spend:push-provisioning")
     }
 

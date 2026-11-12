@@ -1,4 +1,4 @@
-package com.tangem.tap.core.navigation.email
+package com.tangem.core.navigation.impl.email
 
 import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
