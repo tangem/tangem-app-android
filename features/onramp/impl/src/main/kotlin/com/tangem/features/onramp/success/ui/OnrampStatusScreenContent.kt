@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
@@ -176,6 +177,8 @@ private fun DetailRow(
                     style = TangemTheme.typography3.body.medium,
                     color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.End,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
                 )
                 if (onClick != null) {
                     Icon(
