@@ -159,8 +159,8 @@ internal open class SwapInteractorImplTestBase {
      */
     @BeforeEach
     open fun setupSolanaGaslessSwapResolverDefault() {
-        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns null
-        coEvery { solanaGaslessSwapResolver.resolveTransferFeePayer(any(), any()) } returns
+        coEvery { solanaGaslessSwapResolver.resolveSponsorship(any(), any(), any()) } returns null
+        coEvery { solanaGaslessSwapResolver.resolveTransferSponsorship(any(), any()) } returns
             SolanaGaslessError.ServiceUnavailable(code = null).left()
         coEvery { solanaGaslessSwapResolver.excludeUnsupportedProviders(any(), any(), any()) } answers { thirdArg() }
     }
