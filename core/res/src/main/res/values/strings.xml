@@ -2117,7 +2117,7 @@
   <string name="prediction_match_previous_line">Previous line</string>
   <string name="prediction_match_rules">Rules</string>
   <string name="prediction_match_tab_exact_score">Exact score</string>
-  <string name="prediction_match_tab_first_half">First half </string>
+  <string name="prediction_match_tab_first_half">First half</string>
   <string name="prediction_match_tab_game_lines">Game lines</string>
   <string name="prediction_match_tab_second_half">Second half</string>
   <string name="prediction_match_under_short">U</string>
