@@ -44,12 +44,12 @@ internal class PolymarketFastTradingKeysUMConverter(
         val reconciliation = overview.assessment.reconciliation as? PolymarketSessionKeyReconciliation.Checked
         val localKeyAddress = overview.localKeyAddress?.lowercase()
         val now = clock.instant()
-        val isOwnSignerShownInRow = overview.wallet.sessionKeys
+        val lapsedOwnRecord = overview.wallet.sessionKeys
             .newestPerAddress()
             .firstOrNull { it.address.lowercase() == localKeyAddress }
-            ?.isLapsedAt(now) == true
+            ?.takeIf { it.isLapsedAt(now) }
         val foreignSigners = reconciliation?.foreignSigners.orEmpty()
-            .filterNot { isOwnSignerShownInRow && it.address.lowercase() == localKeyAddress }
+            .filterNot { signer -> lapsedOwnRecord != null && signer.isLapsedCopyOf(lapsedOwnRecord, now) }
         val deviceState = overview.assessment.deviceState
         val submittedOperation = operation?.takeIf { it.stage != PolymarketSessionKeyOperationStage.SIGNING }
         val rowOperation = operation?.takeIf { it.request.isStartedFromRow } ?: submittedOperation
@@ -281,6 +281,16 @@ internal class PolymarketFastTradingKeysUMConverter(
         PolymarketSessionKeyStatus.FAILED,
         -> false
     }
+
+    private fun PolymarketSessionSigner.isLapsedCopyOf(record: PolymarketSessionKey, now: Instant): Boolean {
+        val until = validUntil ?: return false
+        return address.equals(record.address, ignoreCase = true) &&
+            !until.isAfter(now) &&
+            until.epochSecond == record.validUntil?.epochSecond &&
+            scopes.normalized() == record.scopes.normalized()
+    }
+
+    private fun List<String>.normalized(): Set<String> = mapTo(mutableSetOf()) { it.uppercase() }
 
     private fun PolymarketSessionKey.isExpiringSoon(now: Instant): Boolean {
         val until = validUntil ?: return false

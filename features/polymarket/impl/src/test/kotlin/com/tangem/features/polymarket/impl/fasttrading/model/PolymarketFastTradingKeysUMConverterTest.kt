@@ -959,7 +959,7 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                 expectedActions = listOf(FastTradingKeyActionUM.Reactivate, OWN_REVOKE),
             ),
             OwnActionsModel(
-                key = ownKey(status = PolymarketSessionKeyStatus.UNKNOWN, validUntil = DEFAULT_VALID_UNTIL),
+                key = ownKey(status = PolymarketSessionKeyStatus.UNKNOWN, validUntil = NOW.minus(Duration.ofDays(5))),
                 deviceState = { PolymarketSessionKeyDeviceState.Reenable(it) },
                 listedSigners = setOf(OWN_ADDRESS),
                 expectedStatus = FastTradingKeyStatusUM.Unknown,
@@ -1074,7 +1074,51 @@ internal class PolymarketFastTradingKeysUMConverterTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class UnknownSigners {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN this device expired key the exchange still lets trade WHEN convert THEN it is an unknown signer`(
+            model: LiveOwnSignerModel,
+        ) {
+            // Arrange
+            val ownKey = ownKey(status = PolymarketSessionKeyStatus.EXPIRED, validUntil = NOW.minus(Duration.ofDays(5)))
+            val overview = createOverview(
+                sessionKeys = listOf(ownKey),
+                foreignSigners = listOf(model.signer),
+                listedSigners = setOf(OWN_ADDRESS),
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(ownKey),
+            )
+
+            // Act
+            val actual = converter.convert(overview, operation = null)
+
+            // Assert
+            assertThat(actual.isUnknownSignersWarningShown).isTrue()
+            assertThat(actual.thisDevice.single().status).isEqualTo(FastTradingKeyStatusUM.UnknownSigner)
+            assertThat(actual.thisDevice.single().actions).isEqualTo(signerRevokeOf(OWN_ADDRESS))
+            assertThat(actual.activateBanner).isEqualTo(IDLE_BANNER)
+        }
+
+        private fun provideTestModels() = listOf(
+            LiveOwnSignerModel(
+                case = "later expiry",
+                signer = PolymarketSessionSigner(
+                    address = OWN_ADDRESS,
+                    scopes = listOf("CLOB"),
+                    validUntil = DEFAULT_VALID_UNTIL,
+                ),
+            ),
+            LiveOwnSignerModel(
+                case = "broader scopes",
+                signer = PolymarketSessionSigner(
+                    address = OWN_ADDRESS,
+                    scopes = listOf("CLOB", "ALL"),
+                    validUntil = NOW.minus(Duration.ofDays(5)),
+                ),
+            ),
+        )
 
         @Test
         fun `GIVEN only foreign signers shown as key rows WHEN convert THEN warning is shown without signer rows`() {
@@ -1203,6 +1247,11 @@ internal class PolymarketFastTradingKeysUMConverterTest {
             assertThat(actual.unknownSigners.map { it.address }).containsExactly(OTHER_ADDRESS)
         }
     }
+
+    data class LiveOwnSignerModel(
+        val case: String,
+        val signer: PolymarketSessionSigner,
+    )
 
     data class StatusModel(
         val status: PolymarketSessionKeyStatus,
@@ -1342,12 +1391,17 @@ internal class PolymarketFastTradingKeysUMConverterTest {
                 sessionKeys = sessionKeys,
                 localKeyAddress = OWN_ADDRESS,
                 deviceId = THIS_DEVICE_ID,
-                signers = listedSigners.map(::signerOf),
+                signers = listedSigners.map { address ->
+                    sessionKeys.firstOrNull { it.address == address }?.let(::signerWithTermsOf) ?: signerOf(address)
+                },
                 now = NOW,
             )
             val reconciliation = PolymarketSessionKeyAssessor.assess(snapshot).reconciliation
             return (reconciliation as PolymarketSessionKeyReconciliation.Checked).foreignSigners
         }
+
+        fun signerWithTermsOf(key: PolymarketSessionKey) =
+            PolymarketSessionSigner(address = key.address, scopes = key.scopes, validUntil = key.validUntil)
 
         fun revokeOf(address: String, name: TextReference = stringReference(OTHER_DEVICE_NAME)) =
             persistentListOf<FastTradingKeyActionUM>(
