@@ -11,6 +11,7 @@ import com.tangem.features.feed.earn.model.filters.EarnTypeFilterModel
 import com.tangem.features.feed.earn.ui.components.EarnFilterByTypeBottomSheet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.StateFlow
 
 internal class EarnTypeFilterComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -37,7 +38,7 @@ internal class EarnTypeFilterComponent @AssistedInject constructor(
     }
 
     data class Params(
-        val selectedFilter: EarnFilterType,
+        val selectedFilter: StateFlow<EarnFilterType>,
         val onFilterSelected: (EarnFilterType) -> Unit,
         val onDismiss: () -> Unit,
     )

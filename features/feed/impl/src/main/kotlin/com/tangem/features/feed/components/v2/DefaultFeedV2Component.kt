@@ -263,7 +263,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     }
 
     private fun onEntryRequested(request: FeedEntryRequest) {
-        feedRouter.popTo(FeedHomeRoute)
+        if (!request.isShownBy(active = stack.value.active.configuration)) feedRouter.popTo(FeedHomeRoute)
 
         val tab = request.resolveTab(tabs = tabSet.tabs)
 
@@ -272,6 +272,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         if (tab != request.section?.tabId) feedEntryController.consumeFilter()
 
         tab?.let(requestedTab::tryEmit)
+        if (request.isForYou) feedRouter.push(FeedRoute.ForYou)
         expandSheetRequests.trySend(element = Unit)
         feedEntryController.consumeEntry()
     }
