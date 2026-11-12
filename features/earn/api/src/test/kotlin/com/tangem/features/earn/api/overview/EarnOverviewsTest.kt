@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -102,6 +103,7 @@ internal class EarnOverviewsTest {
         ),
         banner: EarnBannerOverview? = EarnBannerOverview(
             rate = EarnProductRate(fraction = BigDecimal("0.05"), type = EarnRateType.APY),
+            bestProductId = EarnProductId("lending"),
             activeCount = 1,
             totalPosition = BigDecimal("1.5"),
         ),
