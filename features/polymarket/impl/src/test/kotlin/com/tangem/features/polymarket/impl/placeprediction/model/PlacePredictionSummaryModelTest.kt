@@ -1295,9 +1295,12 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             runCurrent()
 
             // Act
-            advanceTimeBy(delayTimeMillis = SIGNING_WINDOW.toMillis() + 1)
+            advanceTimeBy(delayTimeMillis = SIGNING_WINDOW.toMillis() - 1)
+            val styleBeforeWindow = model.uiState.value.placeButtonStyle
+            advanceTimeBy(delayTimeMillis = 2)
 
             // Assert
+            assertThat(styleBeforeWindow).isEqualTo(PlaceButtonStyleUM.PLAIN)
             assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
         }
 
@@ -1344,13 +1347,15 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 listOf(SIGNING_WINDOW, null)
             val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
             model.onResume()
-            advanceUntilIdle()
+            runCurrent()
+            val styleBeforeResume = model.uiState.value.placeButtonStyle
 
             // Act
             model.onResume()
-            advanceUntilIdle()
+            runCurrent()
 
             // Assert
+            assertThat(styleBeforeResume).isEqualTo(PlaceButtonStyleUM.PLAIN)
             assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
         }
 
