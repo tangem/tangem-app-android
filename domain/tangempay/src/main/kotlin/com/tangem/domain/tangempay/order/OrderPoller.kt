@@ -64,10 +64,7 @@ class OrderPoller(
         }
         polling.job.invokeOnCompletion {
             synchronized(lock) {
-                if (pollings[orderRef] === polling) {
-                    pollings.remove(orderRef)
-                    activeOrdersRegistry.remove(orderRef)
-                }
+                if (pollings[orderRef] === polling) pollings.remove(orderRef)
             }
         }
         polling.job.start()
