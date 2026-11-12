@@ -189,7 +189,10 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
     ): ComposableContentComponent = when (configuration) {
         is PolymarketRoute.FastTradingActivation -> PolymarketFastTradingActivationComponent(
             appComponentContext = factoryContext,
-            params = PolymarketFastTradingActivationComponent.Params(userWalletId = configuration.userWalletId),
+            params = PolymarketFastTradingActivationComponent.Params(
+                userWalletId = configuration.userWalletId,
+                action = configuration.action,
+            ),
         )
         is PolymarketRoute.FastTradingSettings -> PolymarketFastTradingSettingsComponent(
             appComponentContext = factoryContext,

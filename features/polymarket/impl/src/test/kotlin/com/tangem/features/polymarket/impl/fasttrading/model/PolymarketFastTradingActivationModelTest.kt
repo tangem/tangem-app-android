@@ -6,7 +6,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.EventMessage
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
@@ -19,10 +22,12 @@ import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOpe
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
-import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationUseCase
-import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOutcomeUseCase
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationState
+import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationStateUseCase
 import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent.Action
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
@@ -36,6 +41,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -44,21 +52,19 @@ internal class PolymarketFastTradingActivationModelTest {
     private val router: Router = mockk(relaxed = true)
     private val startOperation: StartPolymarketSessionKeyOperationUseCase = mockk()
     private val messageSender: UiMessageSender = mockk()
-    private val observeOperation: ObservePolymarketSessionKeyOperationUseCase = mockk()
-    private val observeOutcome: ObservePolymarketSessionKeyOutcomeUseCase = mockk()
-    private val running = MutableStateFlow<PolymarketSessionKeyOperation?>(null)
-    private val finished = MutableStateFlow<PolymarketSessionKeyOperationOutcome?>(null)
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val observeOperationState: ObservePolymarketSessionKeyOperationStateUseCase = mockk()
+    private val operationState = MutableStateFlow(PolymarketSessionKeyOperationState.IDLE)
     private val sentMessages = mutableListOf<EventMessage>()
     private var model: PolymarketFastTradingActivationModel? = null
 
     @BeforeEach
     fun setup() {
-        clearMocks(router, startOperation, messageSender, observeOperation, observeOutcome)
-        running.value = null
-        finished.value = null
+        clearMocks(router, startOperation, messageSender, getUserWalletUseCase, observeOperationState)
+        operationState.value = PolymarketSessionKeyOperationState.IDLE
         sentMessages.clear()
-        every { observeOperation(USER_WALLET_ID) } returns running
-        every { observeOutcome(USER_WALLET_ID) } returns finished
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns mockk<UserWallet.Cold>().right()
+        every { observeOperationState(USER_WALLET_ID) } returns operationState
         every { messageSender.send(capture(sentMessages)) } returns Unit
         every { startOperation(USER_WALLET_ID, ACTIVATE) } returns
             PolymarketSessionKeyOperationStart.Started(OPERATION_ID)
@@ -137,7 +143,7 @@ internal class PolymarketFastTradingActivationModelTest {
         model.uiState.value.onActivateClick()
 
         // Act
-        running.value = operation(PolymarketSessionKeyOperationStage.SIGNING)
+        operationState.value = state(running = operation(PolymarketSessionKeyOperationStage.SIGNING))
         advanceUntilIdle()
 
         // Assert
@@ -151,11 +157,11 @@ internal class PolymarketFastTradingActivationModelTest {
         val model = createModel()
         advanceUntilIdle()
         model.uiState.value.onActivateClick()
-        running.value = operation(PolymarketSessionKeyOperationStage.SIGNING)
+        operationState.value = state(running = operation(PolymarketSessionKeyOperationStage.SIGNING))
         advanceUntilIdle()
 
         // Act
-        running.value = operation(PolymarketSessionKeyOperationStage.AUTHORIZING)
+        operationState.value = state(running = operation(PolymarketSessionKeyOperationStage.AUTHORIZING))
         advanceUntilIdle()
 
         // Assert
@@ -172,7 +178,7 @@ internal class PolymarketFastTradingActivationModelTest {
         advanceUntilIdle()
 
         // Act
-        finished.value = outcome(OPERATION_ID, SESSION_KEY.right())
+        operationState.value = state(finished = outcome(OPERATION_ID, SESSION_KEY.right()))
         advanceUntilIdle()
 
         // Assert
@@ -185,12 +191,11 @@ internal class PolymarketFastTradingActivationModelTest {
         val model = createModel()
         advanceUntilIdle()
         model.uiState.value.onActivateClick()
-        running.value = operation(PolymarketSessionKeyOperationStage.SIGNING)
+        operationState.value = state(running = operation(PolymarketSessionKeyOperationStage.SIGNING))
         advanceUntilIdle()
 
         // Act
-        running.value = null
-        finished.value = outcome(OPERATION_ID, CANCELLED.left())
+        operationState.value = state(finished = outcome(OPERATION_ID, CANCELLED.left()))
         advanceUntilIdle()
 
         // Assert
@@ -205,11 +210,11 @@ internal class PolymarketFastTradingActivationModelTest {
             val model = createModel()
             advanceUntilIdle()
             model.uiState.value.onActivateClick()
-            running.value = operation(PolymarketSessionKeyOperationStage.SIGNING)
+            operationState.value = state(running = operation(PolymarketSessionKeyOperationStage.SIGNING))
             advanceUntilIdle()
 
             // Act
-            running.value = null
+            operationState.value = state()
             advanceUntilIdle()
 
             // Assert
@@ -224,11 +229,13 @@ internal class PolymarketFastTradingActivationModelTest {
             val model = createModel()
             advanceUntilIdle()
             model.uiState.value.onActivateClick()
-            running.value = operation(PolymarketSessionKeyOperationStage.SIGNING)
+            operationState.value = state(running = operation(PolymarketSessionKeyOperationStage.SIGNING))
             advanceUntilIdle()
 
             // Act
-            running.value = operation(PolymarketSessionKeyOperationStage.SIGNING, id = OPERATION_ID + 1)
+            operationState.value = state(
+                running = operation(PolymarketSessionKeyOperationStage.SIGNING, id = OPERATION_ID + 1),
+            )
             advanceUntilIdle()
 
             // Assert
@@ -246,14 +253,96 @@ internal class PolymarketFastTradingActivationModelTest {
             advanceUntilIdle()
 
             // Act
-            running.value = operation(PolymarketSessionKeyOperationStage.SIGNING, id = OPERATION_ID + 1)
-            finished.value = outcome(OPERATION_ID + 1, CANCELLED.left())
+            operationState.value = state(
+                running = operation(PolymarketSessionKeyOperationStage.SIGNING, id = OPERATION_ID + 1),
+                finished = outcome(OPERATION_ID + 1, CANCELLED.left()),
+            )
             advanceUntilIdle()
 
             // Assert
             verify(exactly = 0) { router.pop() }
             assertThat(model.uiState.value.isActivating).isTrue()
         }
+
+    @ParameterizedTest
+    @MethodSource("actions")
+    fun `GIVEN an action WHEN confirm clicked THEN its request starts under its title`(
+        action: Action,
+        request: PolymarketSessionKeyOperationRequest,
+        titleRes: Int,
+    ) = runTest {
+        // Arrange
+        every { startOperation(USER_WALLET_ID, request) } returns
+            PolymarketSessionKeyOperationStart.Started(OPERATION_ID)
+        val model = createModel(action = action)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onActivateClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { startOperation(USER_WALLET_ID, request) }
+        assertThat(model.uiState.value.buttonText).isEqualTo(resourceReference(titleRes))
+    }
+
+    @Test
+    fun `GIVEN a hot wallet WHEN model created THEN the button is hold to confirm`() = runTest {
+        // Arrange
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns mockk<UserWallet.Hot>().right()
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isHoldToConfirm).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a card wallet WHEN model created THEN the button is a regular one`() = runTest {
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isHoldToConfirm).isFalse()
+    }
+
+    @Test
+    fun `GIVEN operation seen signing WHEN it finishes successfully in one snapshot THEN screen closes`() = runTest {
+        // Arrange
+        val model = createModel()
+        advanceUntilIdle()
+        model.uiState.value.onActivateClick()
+        operationState.value = state(running = operation(PolymarketSessionKeyOperationStage.SIGNING))
+        advanceUntilIdle()
+
+        // Act
+        operationState.value = state(finished = outcome(OPERATION_ID, SESSION_KEY.right()))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.pop() }
+        assertThat(model.uiState.value.isActivating).isFalse()
+    }
+
+    @Test
+    fun `GIVEN activation started WHEN a foreign operation succeeds THEN its outcome is ignored`() = runTest {
+        // Arrange
+        val model = createModel()
+        advanceUntilIdle()
+        model.uiState.value.onActivateClick()
+        advanceUntilIdle()
+
+        // Act
+        operationState.value = state(finished = outcome(OPERATION_ID + 1, SESSION_KEY.right()))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.pop() }
+        assertThat(model.uiState.value.isActivating).isTrue()
+    }
 
     @Test
     fun `GIVEN faq hidden WHEN faq clicked and dismissed THEN faq shown toggles`() = runTest {
@@ -285,15 +374,22 @@ internal class PolymarketFastTradingActivationModelTest {
         verify(exactly = 1) { router.pop() }
     }
 
-    private fun TestScope.createModel() = PolymarketFastTradingActivationModel(
+    private fun TestScope.createModel(action: Action = Action.Activate) = PolymarketFastTradingActivationModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(PolymarketFastTradingActivationComponent.Params(USER_WALLET_ID)),
+        paramsContainer = MutableParamsContainer(
+            PolymarketFastTradingActivationComponent.Params(userWalletId = USER_WALLET_ID, action = action),
+        ),
         router = router,
         startOperation = startOperation,
         messageSender = messageSender,
-        observeOperation = observeOperation,
-        observeOutcome = observeOutcome,
+        getUserWalletUseCase = getUserWalletUseCase,
+        observeOperationState = observeOperationState,
     ).also { model = it }
+
+    private fun state(
+        running: PolymarketSessionKeyOperation? = null,
+        finished: PolymarketSessionKeyOperationOutcome? = null,
+    ) = PolymarketSessionKeyOperationState(running = running, finished = finished)
 
     private fun operation(stage: PolymarketSessionKeyOperationStage, id: Long = OPERATION_ID) =
         PolymarketSessionKeyOperation(id = id, request = ACTIVATE, targetAddress = null, stage = stage)
@@ -304,6 +400,27 @@ internal class PolymarketFastTradingActivationModelTest {
     ) = PolymarketSessionKeyOperationOutcome(id = id, request = ACTIVATE, result = result)
 
     private companion object {
+
+        @JvmStatic
+        fun actions() = listOf(
+            Arguments.of(Action.Activate, ACTIVATE, R.string.common_activate),
+            Arguments.of(
+                Action.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
+                PolymarketSessionKeyOperationRequest.Reactivate,
+                R.string.prediction_session_key_reactivate,
+            ),
+            Arguments.of(
+                Action.Reactivate(ACTIVATE),
+                ACTIVATE,
+                R.string.prediction_session_key_reactivate,
+            ),
+            Arguments.of(
+                Action.Extend,
+                PolymarketSessionKeyOperationRequest.Extend,
+                R.string.prediction_session_key_banner_extend_button,
+            ),
+        )
+
         val USER_WALLET_ID = UserWalletId("011")
         const val OPERATION_ID = 5L
         val ACTIVATE = PolymarketSessionKeyOperationRequest.Activate

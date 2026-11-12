@@ -36,6 +36,7 @@ import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingSettingsUM
@@ -477,7 +478,15 @@ internal class PolymarketFastTradingSettingsModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { router.push(PolymarketRoute.FastTradingActivation(USER_WALLET_ID), any()) }
+        verify(exactly = 1) {
+            router.push(
+                PolymarketRoute.FastTradingActivation(
+                    userWalletId = USER_WALLET_ID,
+                    action = PolymarketFastTradingActivationComponent.Action.Activate,
+                ),
+                any(),
+            )
+        }
         verify(exactly = 0) { startOperation(any(), any()) }
         assertThat(sentMessages).isEmpty()
     }

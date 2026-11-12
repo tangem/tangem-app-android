@@ -8,6 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketFastTradingActivationModel
 import com.tangem.features.polymarket.impl.fasttrading.ui.PolymarketFastTradingActivationScreen
 
@@ -24,5 +25,20 @@ internal class PolymarketFastTradingActivationComponent(
         PolymarketFastTradingActivationScreen(state = state, modifier = modifier)
     }
 
-    data class Params(val userWalletId: UserWalletId)
+    data class Params(val userWalletId: UserWalletId, val action: Action)
+
+    sealed interface Action {
+
+        val request: PolymarketSessionKeyOperationRequest
+
+        data object Activate : Action {
+            override val request = PolymarketSessionKeyOperationRequest.Activate
+        }
+
+        data class Reactivate(override val request: PolymarketSessionKeyOperationRequest) : Action
+
+        data object Extend : Action {
+            override val request = PolymarketSessionKeyOperationRequest.Extend
+        }
+    }
 }

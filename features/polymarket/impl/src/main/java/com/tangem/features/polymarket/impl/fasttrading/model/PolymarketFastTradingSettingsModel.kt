@@ -17,6 +17,7 @@ import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeysUM
@@ -110,7 +111,14 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     }
 
     private fun onActivateClick() {
-        if (isActivationOffered()) router.push(PolymarketRoute.FastTradingActivation(params.userWalletId))
+        if (isActivationOffered()) {
+            router.push(
+                PolymarketRoute.FastTradingActivation(
+                    userWalletId = params.userWalletId,
+                    action = PolymarketFastTradingActivationComponent.Action.Activate,
+                ),
+            )
+        }
     }
 
     private fun isActivationOffered(): Boolean {

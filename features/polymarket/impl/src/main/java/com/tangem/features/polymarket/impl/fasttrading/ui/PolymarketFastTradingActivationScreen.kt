@@ -20,6 +20,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.haze.ProvideHaze
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.HoldToConfirm
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
@@ -28,6 +30,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingActivationUM
 
 private val ActivationSections = listOf(
@@ -77,19 +81,35 @@ internal fun PolymarketFastTradingActivationScreen(
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter),
                 ) {
-                    TangemButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        variant = TangemButton.Variant.Primary,
-                        size = TangemButton.Size.X12,
-                        text = resourceReference(R.string.common_activate),
-                        isLoading = state.isActivating,
-                        onClick = state.onActivateClick,
-                    )
+                    ActivationButton(state = state)
                 }
             }
         }
     }
     PolymarketFastTradingFaqSheet(isShown = state.isFaqShown, onDismiss = state.onFaqDismiss)
+}
+
+@Composable
+private fun ActivationButton(state: PolymarketFastTradingActivationUM) {
+    if (state.isHoldToConfirm) {
+        TangemButton.HoldToConfirm(
+            modifier = Modifier.fillMaxWidth(),
+            size = TangemButton.Size.X12,
+            text = state.buttonText,
+            isLoading = state.isActivating,
+            onConfirm = state.onActivateClick,
+        )
+    } else {
+        TangemButton(
+            modifier = Modifier.fillMaxWidth(),
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X12,
+            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
+            text = state.buttonText,
+            isLoading = state.isActivating,
+            onClick = state.onActivateClick,
+        )
+    }
 }
 
 @Preview(name = "Light", widthDp = 390, heightDp = 800)
@@ -105,11 +125,14 @@ private fun PolymarketFastTradingActivationScreenPreview(
 
 private class ActivationPreviewProvider : PreviewParameterProvider<PolymarketFastTradingActivationUM> {
     override val values = sequenceOf(
-        previewState(isActivating = false),
-        previewState(isActivating = true),
+        previewState(isActivating = false, isHoldToConfirm = false),
+        previewState(isActivating = true, isHoldToConfirm = false),
+        previewState(isActivating = false, isHoldToConfirm = true),
     )
 
-    private fun previewState(isActivating: Boolean) = PolymarketFastTradingActivationUM(
+    private fun previewState(isActivating: Boolean, isHoldToConfirm: Boolean) = PolymarketFastTradingActivationUM(
+        buttonText = resourceReference(R.string.common_activate),
+        isHoldToConfirm = isHoldToConfirm,
         isActivating = isActivating,
         isFaqShown = false,
         onBackClick = {},
