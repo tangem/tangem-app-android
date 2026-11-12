@@ -25,6 +25,23 @@ class YieldSupplyActivePageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
+    fun rewardsBannerTitle(total: String): KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(CoreResR.string.yield_module_rewards_banner_title, total))
+        useUnmergedTree = true
+    }
+
+    val claimRewardsButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(CoreResR.string.common_claim))
+        useUnmergedTree = true
+    }
+
+    val claimRewardsControl: KNode = child {
+        hasText(getResourceString(CoreResR.string.common_claim))
+        hasClickAction()
+    }
+
     fun notificationTitle(title: String): KNode = child {
         hasTestTag(NotificationTestTags.TITLE)
         hasText(title)

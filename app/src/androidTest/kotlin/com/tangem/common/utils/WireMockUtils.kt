@@ -5,6 +5,7 @@ import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import com.tangem.utils.logging.TangemLogger
@@ -77,12 +78,20 @@ fun setWireMockScenarioState(
 fun getWireMockRequestCount(
     method: String,
     urlPathPattern: String,
+    bodyContains: List<String> = emptyList(),
     baseUrl: String = getWireMockBaseUrl(),
 ): Int {
     // Build via JSONObject so a regex urlPathPattern with quotes/backslashes stays valid JSON.
     val json = JSONObject()
         .put("method", method)
         .put("urlPathPattern", urlPathPattern)
+        .apply {
+            if (bodyContains.isNotEmpty()) {
+                val patterns = JSONArray()
+                bodyContains.forEach { patterns.put(JSONObject().put("contains", it)) }
+                put("bodyPatterns", patterns)
+            }
+        }
         .toString()
     val mediaType = "application/json".toMediaType()
 
