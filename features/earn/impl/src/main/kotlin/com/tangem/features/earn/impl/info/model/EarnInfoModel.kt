@@ -133,7 +133,7 @@ internal class EarnInfoModel @Inject constructor(
             defaultPeriod = periods.last(),
             history = { period -> product.apyHistory(productParams, period) },
             currentRate = ready.rate,
-            callback = this,
+            callback = this.takeIf { ready.projection != null },
         )
     }
 
