@@ -63,7 +63,11 @@ internal class PolymarketFastTradingBannerSource(
         clock = Clock.systemUTC(),
     )
 
-    fun observe(userWalletId: UserWalletId, rechecks: Flow<Unit>): Flow<PolymarketFastTradingBanner?> {
+    fun observe(
+        userWalletId: UserWalletId,
+        rechecks: Flow<Unit>,
+        includesUnknownSigners: Boolean,
+    ): Flow<PolymarketFastTradingBanner?> {
         if (!featureToggles.isPolymarketFastOrdersEnabled) return flowOf(null)
 
         return combine(
@@ -74,7 +78,14 @@ internal class PolymarketFastTradingBannerSource(
             .transformLatest { (state, dismissals) ->
                 var now = clock.instant()
                 while (true) {
-                    emit(select(state = state, dismissals = dismissals, now = now))
+                    emit(
+                        select(
+                            state = state,
+                            dismissals = dismissals,
+                            now = now,
+                            includesUnknownSigners = includesUnknownSigners,
+                        ),
+                    )
                     val boundary = nextBoundary(state, dismissals, now) ?: break
                     delay(Duration.between(now, boundary).toMillis())
                     now = boundary
@@ -112,9 +123,10 @@ internal class PolymarketFastTradingBannerSource(
         state: PolymarketFastTradingState,
         dismissals: Dismissals,
         now: Instant,
+        includesUnknownSigners: Boolean,
     ): PolymarketFastTradingBanner? {
         val overview = state.overview.getOrNull() ?: return null
-        if (overview.hasForeignSigners()) return PolymarketFastTradingBanner.UnknownSigners
+        if (includesUnknownSigners && overview.hasForeignSigners()) return PolymarketFastTradingBanner.UnknownSigners
         if (state.operation != null) return null
         if (overview.wallet.sessionKeys.newestPerAddress().any { it.isSettlingAt(now) }) return null
 

@@ -6,6 +6,7 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketCategoryTabUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
@@ -18,4 +19,5 @@ internal data class PolymarketCategoryUM(
     val subcategories: ImmutableList<PolymarketCategoryTabUM> = persistentListOf(),
     val filters: ImmutableList<TangemTabItemUM> = persistentListOf(),
     val content: PolymarketFeedContentUM = PolymarketFeedContentUM.Loading,
+    val fastTradingBanner: PolymarketFastTradingBannerUM? = null,
 )

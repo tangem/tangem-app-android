@@ -153,7 +153,7 @@ internal class PolymarketMainModelTest {
     private val fastTradingBanner = MutableStateFlow<PolymarketFastTradingBanner?>(value = null)
     private val fastTradingRechecks = slot<Flow<Unit>>()
     private val fastTradingBannerSource: PolymarketFastTradingBannerSource = mockk {
-        every { observe(any(), capture(fastTradingRechecks)) } returns fastTradingBanner
+        every { observe(any(), capture(fastTradingRechecks), any()) } returns fastTradingBanner
         coEvery { refresh(any()) } just Runs
         coEvery { dismiss(any(), any()) } just Runs
         every { start(any(), any()) } returns PolymarketSessionKeyOperationStart.Started(id = 1)
@@ -975,7 +975,7 @@ internal class PolymarketMainModelTest {
         runCurrent()
 
         // Assert
-        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any()) }
+        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any(), any()) }
         coVerify(exactly = 0) { fastTradingBannerSource.refresh(any()) }
         linkCheck.complete(true)
         model.onDestroy()
@@ -1044,7 +1044,7 @@ internal class PolymarketMainModelTest {
         // Assert
         coVerifyOrder {
             walletLinkGate.ensureLinked(USER_WALLET_ID)
-            fastTradingBannerSource.observe(USER_WALLET_ID, any())
+            fastTradingBannerSource.observe(USER_WALLET_ID, any(), includesUnknownSigners = true)
         }
         model.onDestroy()
     }
@@ -1060,7 +1060,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any()) }
+        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any(), any()) }
     }
 
     @Test
