@@ -63,6 +63,11 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesScreenUM) {
             stickyHeader {
                 Column(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
                     TopBarWithRefresh(state = state.topBar)
+                    SetupNotification(
+                        isCustomSetup = state.topBar.refreshButton.isVisible,
+                        appVersion = state.appVersion,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
                     TangemSearch(
                         state = state.searchBar,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -70,8 +75,6 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesScreenUM) {
                     StreamFilters(filters = state.streamFilters)
                 }
             }
-
-            customSetup(state.topBar, state.appVersion)
 
             emptySearch(state.featureToggleGroups, state.searchBar)
 
@@ -85,31 +88,24 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesScreenUM) {
     }
 }
 
-private fun LazyListScope.customSetup(topBar: TopBarWithRefreshUM, appVersion: String) {
-    if (topBar.refreshButton.isVisible) {
-        item(key = "warning_notification", contentType = "warning_notification") {
-            CustomSetupNotification(
-                subtitle = resourceReference(
-                    id = R.string.feature_toggles_custom_setup_warning_description,
-                    wrappedList(appVersion),
-                ),
-                modifier = Modifier
-                    .animateItem()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-        }
+@Composable
+private fun SetupNotification(isCustomSetup: Boolean, appVersion: String, modifier: Modifier = Modifier) {
+    if (isCustomSetup) {
+        CustomSetupNotification(
+            subtitle = resourceReference(
+                id = R.string.feature_toggles_custom_setup_warning_description,
+                wrappedList(appVersion),
+            ),
+            modifier = modifier,
+        )
     } else {
-        item(key = "warning_notification", contentType = "warning_notification") {
-            InitialSetupNotification(
-                subtitle = resourceReference(
-                    id = R.string.feature_toggles_initial_setup_warning_description,
-                    wrappedList(appVersion),
-                ),
-                modifier = Modifier
-                    .animateItem()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-        }
+        InitialSetupNotification(
+            subtitle = resourceReference(
+                id = R.string.feature_toggles_initial_setup_warning_description,
+                wrappedList(appVersion),
+            ),
+            modifier = modifier,
+        )
     }
 }
 
