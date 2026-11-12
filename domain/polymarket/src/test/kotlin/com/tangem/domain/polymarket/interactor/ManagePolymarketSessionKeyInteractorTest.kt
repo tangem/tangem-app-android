@@ -45,6 +45,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -910,7 +911,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN the authorization expired while revoking WHEN renew THEN it ends stale without a second signing`() =
+        fun `GIVEN the authorization expired while revoking WHEN renew THEN it ends unsettled after one signing`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -930,7 +931,9 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 // Assert
                 assertThat(actual).isEqualTo(
                     PolymarketSessionKeyProgress.Finished(
-                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                        PolymarketSessionKeyLifecycleError.Unsettled(
+                            key(status = PolymarketSessionKeyStatus.REVOKING),
+                        ).left(),
                     ),
                 )
                 coVerify(exactly = 1) { signBatches(any(), any()) }
@@ -938,7 +941,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             }
 
         @Test
-        fun `GIVEN the revocation outlasts the authorization deadline WHEN renew THEN the wallet is released stale`() =
+        fun `GIVEN the revocation outlasts the deadline WHEN renew THEN the wallet is released unsettled`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -969,10 +972,37 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     PolymarketSessionKeyProgress.Signing,
                     PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
                     PolymarketSessionKeyProgress.Finished(
-                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                        PolymarketSessionKeyLifecycleError.Unsettled(
+                            key(status = PolymarketSessionKeyStatus.REVOKING),
+                        ).left(),
                     ),
                 ).inOrder()
                 coVerify(exactly = 1) { signBatches(any(), any()) }
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN signing outlasts the authorization deadline WHEN renew THEN it ends stale and nothing is revoked`() =
+            runTest {
+                // Arrange
+                val signed = signed(revocation(nonce = "7"), authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE))
+                coEvery {
+                    signBatches(USER_WALLET_ID, nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()))
+                } coAnswers {
+                    delay(SENDABLE_FOLLOW_UP_MILLIS + RELAY_POLL_MILLIS)
+                    signed.right()
+                }
+
+                // Act
+                val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                    ),
+                )
+                coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
                 coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
             }
 

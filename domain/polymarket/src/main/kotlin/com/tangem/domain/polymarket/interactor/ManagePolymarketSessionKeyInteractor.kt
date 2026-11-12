@@ -158,12 +158,16 @@ class ManagePolymarketSessionKeyInteractor(
         emit(PolymarketSessionKeyProgress.Signing)
         val (sent, pending) = depositWalletLock.withSessionKeyOperation(userWalletId) {
             val signed = sign(userWalletId, batches)
+            ensure(!authorizationOf(signed).isExpired()) {
+                TangemLogger.i("Polymarket session key authorization expired before the revocation was sent")
+                PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
+            }
             val revoking = send { relay.revoke(userWalletId, revocationOf(signed)) }
             val revoked = withTimeoutOrNull(authorizationOf(signed).timeLeft()) {
                 awaitRevoked(userWalletId, signed.ownerAddress(), revoking)
             } ?: run {
                 TangemLogger.e("Polymarket session key authorization expired while waiting for the revocation")
-                raise(PolymarketSessionKeyLifecycleError.StaleSignature(cause = null))
+                raise(PolymarketSessionKeyLifecycleError.Unsettled(revoking))
             }
             emit(PolymarketSessionKeyProgress.Revoked(revoked))
             sendAuthorization(
