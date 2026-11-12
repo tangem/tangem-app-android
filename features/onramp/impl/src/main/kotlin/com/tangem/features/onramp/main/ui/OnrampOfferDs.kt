@@ -91,8 +91,9 @@ internal fun OfferDs(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier
         if (onrampOfferUM.advantages == OnrampOfferAdvantagesUM.Fastest) {
             TangemGlowRing(
                 modifier = Modifier.matchParentSize(),
-                variant = TangemGlowRing.Variant.Magic,
-                cornerRadius = 24.dp,
+                variant = TangemGlowRing.Variant.Warning,
+                cornerRadius = 28.dp,
+                animated = false,
             )
         }
     }
