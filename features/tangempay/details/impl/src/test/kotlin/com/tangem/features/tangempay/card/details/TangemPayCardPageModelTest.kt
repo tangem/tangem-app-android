@@ -240,7 +240,7 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
 
         // Assert
         assertThat(isLoadingDuringOperation to model.freezeRow().isLoading).isEqualTo(true to false)
-        coVerify(exactly = 1) { changeCardFrozenStateUseCase(userWalletId, firstCard.id, true) }
+        coVerify(exactly = 1) { changeCardFrozenStateUseCase(userWalletId, firstCard, true) }
     }
 
     @Test
@@ -248,8 +248,8 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
         // Arrange
         val firstResult = CompletableDeferred<Either<UniversalError, Unit>>()
         val secondResult = CompletableDeferred<Either<UniversalError, Unit>>()
-        coEvery { changeCardFrozenStateUseCase(any(), firstCard.id, any()) } coAnswers { firstResult.await() }
-        coEvery { changeCardFrozenStateUseCase(any(), secondCard.id, any()) } coAnswers { secondResult.await() }
+        coEvery { changeCardFrozenStateUseCase(any(), firstCard, any()) } coAnswers { firstResult.await() }
+        coEvery { changeCardFrozenStateUseCase(any(), secondCard, any()) } coAnswers { secondResult.await() }
         val model = createModel()
         statusFlow.emit(paymentStatus)
         runCurrent()
@@ -266,8 +266,8 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
 
         // Assert
         assertThat(model.freezeRow().isLoading).isTrue()
-        coVerify(exactly = 1) { changeCardFrozenStateUseCase(userWalletId, firstCard.id, true) }
-        coVerify(exactly = 1) { changeCardFrozenStateUseCase(userWalletId, secondCard.id, true) }
+        coVerify(exactly = 1) { changeCardFrozenStateUseCase(userWalletId, firstCard, true) }
+        coVerify(exactly = 1) { changeCardFrozenStateUseCase(userWalletId, secondCard, true) }
         secondResult.complete(Unit.right())
     }
 

@@ -440,7 +440,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                         R.string.tangem_pay_freeze_card_freeze
                     },
                 ),
-                onClick = { onClickFreezeOrUnfreezeCard(cardId = card.id, isFrozen = card.isFrozen) },
+                onClick = { onClickFreezeOrUnfreezeCard(card) },
                 iconRes = CoreUiR.drawable.ic_freeze_24,
                 testTag = TangemPayTestTags.FREEZE_CARD_ROW,
                 isLoading = frozenState == TangemPayCardFrozenState.Pending,
@@ -543,14 +543,14 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
-    private fun onClickFreezeOrUnfreezeCard(cardId: String, isFrozen: Boolean) {
-        if (cardId in frozenStateChangingCardIds.value) return
+    private fun onClickFreezeOrUnfreezeCard(card: TangemPayCard) {
+        if (card.id in frozenStateChangingCardIds.value) return
         if (selectedCard()?.frozenState == TangemPayCardFrozenState.Pending) return
 
-        val message = if (isFrozen) {
-            TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = { unfreezeCard(cardId) })
+        val message = if (card.isFrozen) {
+            TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = { unfreezeCard(card) })
         } else {
-            TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = { freezeCard(cardId) })
+            TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = { freezeCard(card) })
         }
         uiMessageSender.send(message)
     }
@@ -730,18 +730,18 @@ internal class TangemPayCardPageModel @Inject constructor(
         bottomSheetNavigation.dismiss()
     }
 
-    private fun freezeCard(cardId: String) {
+    private fun freezeCard(card: TangemPayCard) {
         changeFrozenState(
-            cardId = cardId,
+            card = card,
             isFreezing = true,
             failedMessage = R.string.tangem_pay_freeze_card_failed,
             successMessage = R.string.tangem_pay_freeze_card_success,
         )
     }
 
-    private fun unfreezeCard(cardId: String) {
+    private fun unfreezeCard(card: TangemPayCard) {
         changeFrozenState(
-            cardId = cardId,
+            card = card,
             isFreezing = false,
             failedMessage = R.string.tangem_pay_unfreeze_card_failed,
             successMessage = R.string.tangem_pay_unfreeze_card_success,
@@ -749,18 +749,19 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun changeFrozenState(
-        cardId: String,
+        card: TangemPayCard,
         isFreezing: Boolean,
         @StringRes failedMessage: Int,
         @StringRes successMessage: Int,
     ) {
+        val cardId = card.id
         if (cardId in frozenStateChangingCardIds.value) return
         frozenStateChangingCardIds.update { it + cardId }
         modelScope.launch {
             try {
                 changeCardFrozenStateUseCase(
                     userWalletId = userWalletId,
-                    cardId = cardId,
+                    card = card,
                     isFreezing = isFreezing,
                 ).onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(failedMessage)))

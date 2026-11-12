@@ -4,15 +4,17 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import com.tangem.core.error.UniversalError
+import com.tangem.domain.models.tangempay.TangemPayCard
 import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.OrderDetails
 import com.tangem.domain.tangempay.model.TangemPayOrderInfo
 import com.tangem.domain.tangempay.order.OrderLaunch
-import com.tangem.domain.tangempay.usecase.order.StartOrderUseCase
-import com.tangem.domain.tangempay.order.isCompleted
 import com.tangem.domain.tangempay.order.awaitTerminal
+import com.tangem.domain.tangempay.order.isCompleted
 import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.usecase.order.StartOrderUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -28,25 +30,32 @@ class ChangeCardFrozenStateUseCase(
 ) {
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        cardId: String,
+        card: TangemPayCard,
         isFreezing: Boolean,
     ): Either<UniversalError, Unit> {
         return if (tangemPayFeatureToggles.isOrderFrameworkEnabled) {
-            changeViaOrderFramework(userWalletId = userWalletId, cardId = cardId, isFreezing = isFreezing)
+            changeViaOrderFramework(userWalletId = userWalletId, card = card, isFreezing = isFreezing)
         } else {
-            changeViaLegacyPolling(userWalletId = userWalletId, cardId = cardId, isFreezing = isFreezing)
+            changeViaLegacyPolling(userWalletId = userWalletId, cardId = card.id, isFreezing = isFreezing)
         }
     }
 
     private suspend fun changeViaOrderFramework(
         userWalletId: UserWalletId,
-        cardId: String,
+        card: TangemPayCard,
         isFreezing: Boolean,
     ): Either<UniversalError, Unit> = either {
-        val orderInfo = freezeCard(userWalletId = userWalletId, cardId = cardId, isFreezing = isFreezing)
+        val orderInfo = freezeCard(userWalletId = userWalletId, cardId = card.id, isFreezing = isFreezing)
         val runningOrder = startOrderUseCase(
             userWalletId = userWalletId,
-            launch = OrderLaunch.Id(orderId = orderInfo.orderId),
+            launch = OrderLaunch.Track(
+                orderId = orderInfo.orderId,
+                details = if (isFreezing) {
+                    OrderDetails.CardFreeze(productInstanceId = card.productInstanceId)
+                } else {
+                    OrderDetails.CardUnfreeze(productInstanceId = card.productInstanceId)
+                },
+            ),
         ).bind()
 
         if (!runningOrder.awaitTerminal().isCompleted) {
