@@ -256,6 +256,7 @@ internal class BankWithdrawSourcesObserverTest {
                         fiatBalance = BigDecimal("2325.55"),
                     ),
                 ),
+                isLimitedPerRail = true,
             )
             assertThat(actual).containsExactly(expected)
         }
