@@ -47,6 +47,7 @@ import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.store.entity.CashbackSummaryDM
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
@@ -55,7 +56,7 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.data.tangempay.store.DefaultOrdersStore
 import com.tangem.domain.tangempay.order.ActiveOrdersRegistry
-import com.tangem.domain.tangempay.usecase.order.GetActiveOrdersUseCase
+import com.tangem.domain.tangempay.usecase.order.ApplyActiveOrdersUseCase
 import com.tangem.domain.tangempay.order.OrderPoller
 import com.tangem.domain.tangempay.order.OrdersStore
 import com.tangem.domain.tangempay.usecase.order.RestoreOrdersUseCase
@@ -282,12 +283,16 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideChangeCardFrozenStateUseCase(
             cardDetailsRepository: TangemPayCardDetailsRepository,
+            startOrderUseCase: StartOrderUseCase,
             startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            tangemPayFeatureToggles: TangemPayFeatureToggles,
             appCoroutineScope: AppCoroutineScope,
         ): ChangeCardFrozenStateUseCase {
             return ChangeCardFrozenStateUseCase(
                 cardDetailsRepository = cardDetailsRepository,
+                startOrderUseCase = startOrderUseCase,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                tangemPayFeatureToggles = tangemPayFeatureToggles,
                 appCoroutineScope = appCoroutineScope,
             )
         }
@@ -307,8 +312,8 @@ internal interface TangemPayDataModule {
         fun provideActiveOrdersRegistry(): ActiveOrdersRegistry = ActiveOrdersRegistry()
 
         @Provides
-        fun provideGetActiveOrdersUseCase(activeOrdersRegistry: ActiveOrdersRegistry): GetActiveOrdersUseCase {
-            return GetActiveOrdersUseCase(activeOrdersRegistry = activeOrdersRegistry)
+        fun provideApplyActiveOrdersUseCase(activeOrdersRegistry: ActiveOrdersRegistry): ApplyActiveOrdersUseCase {
+            return ApplyActiveOrdersUseCase(activeOrdersRegistry = activeOrdersRegistry)
         }
 
         @Provides
