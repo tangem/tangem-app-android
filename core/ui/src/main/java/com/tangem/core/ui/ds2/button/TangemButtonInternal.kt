@@ -337,19 +337,17 @@ private fun ContentRow(
 }
 
 /**
- * Hold hint ↔ label swap from the Figma "Hold and release" animation: the outgoing text fades over
- * [HINT_FADE_MS] and the incoming one starts [HINT_FADE_IN_DELAY_MS] later. The hugging width moves
- * with the label: it grows as the label fades out (ease in) and shrinks back as the label fades in
- * (ease out), so the wider hint is never cut by a pill that is already narrowing.
+ * Hold hint ↔ label swap from the Figma "Hold and release" animation: a synced crossfade — the
+ * outgoing text fades out while the incoming one fades in over the same [HINT_FADE_MS], and the
+ * hugging width follows — ease in towards the hint, ease out back to the label.
  */
 private fun labelHintCrossfade(isToHint: Boolean): ContentTransform {
-    val easing = if (isToHint) EaseIn else EaseOut
-    val sizeDelay = if (isToHint) 0 else HINT_FADE_IN_DELAY_MS
+    val spec = tween<Float>(HINT_FADE_MS, easing = if (isToHint) EaseIn else EaseOut)
     return ContentTransform(
-        targetContentEnter = fadeIn(tween(HINT_FADE_MS, delayMillis = HINT_FADE_IN_DELAY_MS, easing = easing)),
-        initialContentExit = fadeOut(tween(HINT_FADE_MS, easing = easing)),
+        targetContentEnter = fadeIn(spec),
+        initialContentExit = fadeOut(spec),
         sizeTransform = SizeTransform(clip = false) { _, _ ->
-            tween(HINT_FADE_MS, delayMillis = sizeDelay, easing = easing)
+            tween(HINT_FADE_MS, easing = if (isToHint) EaseIn else EaseOut)
         },
     )
 }

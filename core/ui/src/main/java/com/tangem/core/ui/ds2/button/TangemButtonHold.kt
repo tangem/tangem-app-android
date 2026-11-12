@@ -245,9 +245,8 @@ internal fun TangemButton.HoldVariant.holdOverlayColor(): Color = when (this) {
 @Composable
 internal fun rememberHoldToConfirmState(): HoldToConfirmState = remember { HoldToConfirmState() }
 
-/** Label ↔ hint crossfade: each side fades over this, the incoming one [HINT_FADE_IN_DELAY_MS] later. */
+/** Duration of the synced label ↔ hint crossfade, each way. */
 internal const val HINT_FADE_MS = 140
-internal const val HINT_FADE_IN_DELAY_MS = 100
 
 private const val HOLD_DURATION_MS = 2000
 private const val PULSE_HALF_MS = 100
@@ -258,8 +257,8 @@ private const val SHAKE_OUT_MS = 60
 private const val SHAKE_AMPLITUDE_DP = 8f
 private const val SHAKE_LEFT_DP = -SHAKE_AMPLITUDE_DP
 
-/** Release → hint fully in (240 ms) + 800 ms on screen, after which it crossfades back to the label. */
-private const val HINT_HIDE_DELAY_MS = 1040L
+/** Release → hint fully in ([HINT_FADE_MS]) + 1000 ms on screen, then it crossfades back to the label. */
+private const val HINT_HIDE_DELAY_MS = 1140L
 
 private const val TICK_MIN_INTERVAL_MS = 15L
 private const val TICK_MAX_EXTRA_INTERVAL_MS = 50f
