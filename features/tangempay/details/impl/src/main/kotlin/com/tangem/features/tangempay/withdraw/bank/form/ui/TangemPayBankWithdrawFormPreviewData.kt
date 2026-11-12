@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.form.ui
 
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldError
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
@@ -32,14 +33,14 @@ internal object TangemPayBankWithdrawFormPreviewData {
     val personalEmpty: TangemPayBankWithdrawFormUM = create(
         draft = personalDraft,
         step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
-        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
+        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false, rail = BankRail.ACH),
         state = FormState(edits = emptyMap()),
     )
 
     val personalWithSuggestions: TangemPayBankWithdrawFormUM = create(
         draft = personalDraft,
         step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
-        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
+        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false, rail = BankRail.ACH),
         state = FormState(edits = mapOf(BankWithdrawFormField.AccountNumber to "48")),
     ).copy(
         suggestions = persistentListOf(
@@ -63,7 +64,7 @@ internal object TangemPayBankWithdrawFormPreviewData {
     val personalWithError: TangemPayBankWithdrawFormUM = create(
         draft = personalDraft,
         step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
-        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
+        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false, rail = BankRail.ACH),
         state = FormState(
             edits = mapOf(
                 BankWithdrawFormField.AccountNumber to "000000000000",
@@ -83,7 +84,7 @@ internal object TangemPayBankWithdrawFormPreviewData {
     val personalFreeTextRegion: TangemPayBankWithdrawFormUM = create(
         draft = personalDraft,
         step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
-        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
+        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false, rail = BankRail.ACH),
         state = FormState(
             edits = mapOf(
                 BankWithdrawFormField.Country to "MC",
@@ -95,7 +96,7 @@ internal object TangemPayBankWithdrawFormPreviewData {
     val personalUsRegion: TangemPayBankWithdrawFormUM = create(
         draft = personalDraft,
         step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
-        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
+        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false, rail = BankRail.ACH),
         state = FormState(
             edits = mapOf(
                 BankWithdrawFormField.Country to "US",

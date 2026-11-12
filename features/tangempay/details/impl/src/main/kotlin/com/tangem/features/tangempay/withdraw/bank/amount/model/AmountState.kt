@@ -9,6 +9,7 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.amount.state.totalFee
+import com.tangem.features.tangempay.withdraw.bank.model.offeredDestinations
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -37,8 +38,8 @@ internal data class AmountState(
     val networkFee: NetworkFeeState = NetworkFeeState.Loading,
 ) {
 
-    fun resolve(draft: BankWithdrawDraft, options: BankWithdrawOptions): AmountSelection {
-        val destinations = draft.recipient?.let { options.destinationsFor(it.details.rail) } ?: options.destinations
+    fun resolve(draft: BankWithdrawDraft, options: BankWithdrawOptions, isEditing: Boolean): AmountSelection {
+        val destinations = draft.offeredDestinations(options = options, isEditing = isEditing)
         val preferredRail = draft.recipient?.details?.rail ?: selectedRail ?: draft.destination?.rail
         val destination = destinations.firstOrNull { it.rail == preferredRail } ?: destinations.first()
         val preferredSourceId = selectedSourceId ?: draft.source?.id

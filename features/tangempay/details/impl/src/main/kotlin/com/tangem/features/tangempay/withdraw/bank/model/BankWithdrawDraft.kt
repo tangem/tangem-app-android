@@ -26,3 +26,12 @@ internal fun BankWithdrawDraft.recipientDetails(): BankAccountDetails? = recipie
 
 internal val BankWithdrawDraft.isRailLocked: Boolean
     get() = recipient != null || entry is BankWithdrawEntry.Saved
+
+internal fun BankWithdrawDraft.offeredDestinations(
+    options: BankWithdrawOptions,
+    isEditing: Boolean,
+): List<OfframpDestination> = when {
+    recipient != null -> options.destinationsFor(recipient.details.rail)
+    isEditing && destination != null -> options.destinationsFor(destination.rail)
+    else -> options.destinations
+}

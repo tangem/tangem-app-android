@@ -1,9 +1,11 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -101,6 +103,45 @@ internal class BankWithdrawFlowTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN new SPEI recipient WHEN steps THEN amount, recipient details and preview only`() {
+        // Arrange
+        val draft = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewBusiness,
+            destination = offrampDestination(rail = BankRail.SPEI),
+        )
+
+        // Act
+        val actual = BankWithdrawFlow.steps(draft)
+
+        // Assert
+        assertThat(actual).containsExactly(
+            TangemPayBankWithdrawInnerRoute.Amount,
+            TangemPayBankWithdrawInnerRoute.RecipientDetails,
+            TangemPayBankWithdrawInnerRoute.Preview,
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN new SPEI recipient WHEN next step after amount THEN recipient details counted two of two`() {
+        // Arrange
+        val draft = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            destination = offrampDestination(rail = BankRail.SPEI),
+        )
+
+        // Act
+        val next = BankWithdrawFlow.nextStep(draft = draft, current = TangemPayBankWithdrawInnerRoute.Amount)
+        val counter = BankWithdrawFlow.stepCounter(
+            draft = draft,
+            step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+        )
+
+        // Assert
+        assertThat(next).isEqualTo(TangemPayBankWithdrawInnerRoute.RecipientDetails)
+        assertThat(counter).isEqualTo(BankWithdrawFlow.StepCounter(current = 2, total = 2))
     }
 
     @Test
