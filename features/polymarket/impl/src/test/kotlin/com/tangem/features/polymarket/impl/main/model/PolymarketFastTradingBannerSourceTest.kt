@@ -138,20 +138,6 @@ internal class PolymarketFastTradingBannerSourceTest {
         ),
         BannerModel(
             state = stateOf(
-                PolymarketSessionKeyDeviceState.Reenable(keyOf(status = PolymarketSessionKeyStatus.PENDING)),
-            ),
-            expected = PolymarketFastTradingBanner.Activate,
-        ),
-        BannerModel(
-            state = stateOf(
-                PolymarketSessionKeyDeviceState.Reenable(
-                    keyOf(status = PolymarketSessionKeyStatus.PENDING, createdAt = NOW),
-                ),
-            ),
-            expected = REACTIVATE,
-        ),
-        BannerModel(
-            state = stateOf(
                 PolymarketSessionKeyDeviceState.Reenable(keyOf(status = PolymarketSessionKeyStatus.FAILED)),
             ),
             dismissals = mapOf(REACTIVATE_KIND to NOW),

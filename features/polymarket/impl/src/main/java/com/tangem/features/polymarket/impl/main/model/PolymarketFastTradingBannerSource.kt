@@ -130,12 +130,10 @@ internal class PolymarketFastTradingBannerSource(
             is PolymarketSessionKeyDeviceState.Reenable -> reactivationOffer(
                 sessionKey = deviceState.sessionKey,
                 request = PolymarketSessionKeyOperationRequest.Reactivate,
-                now = now,
             )
             is PolymarketSessionKeyDeviceState.RepairByRenewal -> reactivationOffer(
                 sessionKey = deviceState.sessionKey,
                 request = PolymarketSessionKeyOperationRequest.Activate,
-                now = now,
             )
             is PolymarketSessionKeyDeviceState.Active,
             is PolymarketSessionKeyDeviceState.Disabled,
@@ -150,18 +148,10 @@ internal class PolymarketFastTradingBannerSource(
     private fun reactivationOffer(
         sessionKey: PolymarketSessionKey,
         request: PolymarketSessionKeyOperationRequest,
-        now: Instant,
-    ): PolymarketFastTradingBanner {
-        val isActivationFailed = when (sessionKey.status) {
-            PolymarketSessionKeyStatus.FAILED -> true
-            PolymarketSessionKeyStatus.PENDING -> !sessionKey.isSettlingAt(now)
-            else -> false
-        }
-        return if (isActivationFailed) {
-            PolymarketFastTradingBanner.Activate
-        } else {
-            PolymarketFastTradingBanner.Reactivate(request)
-        }
+    ): PolymarketFastTradingBanner = if (sessionKey.status == PolymarketSessionKeyStatus.FAILED) {
+        PolymarketFastTradingBanner.Activate
+    } else {
+        PolymarketFastTradingBanner.Reactivate(request)
     }
 
     private fun extensionOffer(sessionKey: PolymarketSessionKey, now: Instant): PolymarketFastTradingBanner? {
