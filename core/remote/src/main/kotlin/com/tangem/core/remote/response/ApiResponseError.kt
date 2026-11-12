@@ -127,8 +127,8 @@ sealed class ApiResponseError : Exception() {
 
     /** Represents a network error, typically when there's no connectivity. */
     @Suppress("UnusedPrivateMember")
-    class NetworkException : ApiResponseError() {
-        private fun readResolve(): Any = NetworkException()
+    class NetworkException(override val cause: Throwable? = null) : ApiResponseError() {
+        private fun readResolve(): Any = NetworkException(cause)
     }
 
     /** Represents a timeout error, typically when the server takes too long to respond. */

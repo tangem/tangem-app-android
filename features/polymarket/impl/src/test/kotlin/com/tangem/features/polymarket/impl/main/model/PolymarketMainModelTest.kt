@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.main.model
 
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
@@ -162,7 +163,7 @@ internal class PolymarketMainModelTest {
 
     @BeforeEach
     fun allowTradingByDefault() {
-        coEvery { checkGeoblock() } returns false.right()
+        coEvery { checkGeoblock() } returns PolymarketGeoblock.ALLOWED.right()
         clearMocks(balancePoller)
         every { balancePoller.subscribe(any()) } returns emptyFlow()
         clearMocks(fundingWindow)
@@ -783,7 +784,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a blocked region WHEN the screen opens THEN the banner is shown AND add funds is dimmed`() = runTest {
         // Arrange
-        coEvery { checkGeoblock() } returns true.right()
+        coEvery { checkGeoblock() } returns PolymarketGeoblock.BLOCKED.right()
         statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
 
         // Act
@@ -801,7 +802,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a blocked region WHEN add funds clicked THEN the restriction is explained AND nothing opens`() = runTest {
         // Arrange
-        coEvery { checkGeoblock() } returns true.right()
+        coEvery { checkGeoblock() } returns PolymarketGeoblock.BLOCKED.right()
         statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
         val model = createModel(testScope = this)
         val slot = FakeSlotHost(model.fundingSheetNavigation)
@@ -854,7 +855,7 @@ internal class PolymarketMainModelTest {
             statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
             val model = createModel(testScope = this)
             advanceUntilIdle()
-            coEvery { checkGeoblock() } returns true.right()
+            coEvery { checkGeoblock() } returns PolymarketGeoblock.BLOCKED.right()
 
             // Act
             model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
@@ -1225,7 +1226,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a blocked region WHEN outcome clicked THEN the restriction is explained AND no order opens`() = runTest {
         // Arrange
-        coEvery { checkGeoblock() } returns true.right()
+        coEvery { checkGeoblock() } returns PolymarketGeoblock.BLOCKED.right()
         coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()

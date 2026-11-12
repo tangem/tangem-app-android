@@ -6,11 +6,13 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.routing.AppRoute
 import com.tangem.domain.models.wallet.UserWalletId
@@ -36,6 +38,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -213,7 +216,7 @@ internal class PolymarketOnboardingModelTest {
         }
 
         @Test
-        fun `GIVEN start is pressed WHEN the card tap is cancelled THEN the button returns to idle AND reports`() =
+        fun `GIVEN start is pressed WHEN the card tap is cancelled THEN the button returns to idle AND nothing is reported`() =
             runTest {
                 // Arrange
                 gateResolves(PolymarketEntry.Undetermined)
@@ -234,9 +237,7 @@ internal class PolymarketOnboardingModelTest {
                 val state = model.welcome()
                 assertThat(state.isInProgress).isFalse()
                 assertThat(state.isRegionRestrictionsShown).isFalse()
-                verify(exactly = 1) {
-                    messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
-                }
+                verify(exactly = 0) { messageSender.send(any()) }
                 verify(exactly = 1) { runOnboardingUseCase(userWalletId) }
                 model.onDestroy()
             }
@@ -285,7 +286,7 @@ internal class PolymarketOnboardingModelTest {
             }
 
         @Test
-        fun `GIVEN the region cannot be read WHEN start is pressed THEN a snackbar is sent AND no sheet`() =
+        fun `GIVEN the region cannot be read WHEN start is pressed THEN a retry dialog is shown AND no sheet`() =
             runTest {
                 // Arrange
                 owesOnboarding()
@@ -302,9 +303,12 @@ internal class PolymarketOnboardingModelTest {
                 assertThat(state.isRegionRestrictionsShown).isFalse()
                 assertThat(state.isInProgress).isFalse()
                 coVerify(exactly = 0) { resolvePolymarketEntryInteractor(userWalletId) }
-                verify(exactly = 1) {
-                    messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
-                }
+                val dialog = sentDialog()
+                assertThat(dialog.title).isEqualTo(resourceReference(R.string.common_something_went_wrong))
+                assertThat(dialog.message)
+                    .isEqualTo(resourceReference(R.string.prediction_onboarding_error_region_unknown))
+                assertThat(dialog.firstAction.title).isEqualTo(resourceReference(R.string.alert_button_try_again))
+                assertThat(dialog.secondAction?.title).isEqualTo(resourceReference(R.string.common_cancel))
                 model.onDestroy()
             }
 
@@ -881,9 +885,9 @@ internal class PolymarketOnboardingModelTest {
 
         // Assert
         assertThat(model.welcome().isInProgress).isFalse()
-        verify(exactly = 1) {
-            messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
-        }
+        val dialog = sentDialog()
+        assertThat(dialog.title).isEqualTo(resourceReference(R.string.common_something_went_wrong))
+        assertThat(dialog.message).isEqualTo(resourceReference(R.string.common_unknown_error))
         model.onDestroy()
     }
 
@@ -993,6 +997,81 @@ internal class PolymarketOnboardingModelTest {
         // Assert
         assertThat(model.reconnect().isInProgress).isFalse()
         model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the Reconnect screen WHEN the region refuses THEN the button goes idle AND the restriction is shown`() =
+        runTest {
+            // Arrange
+            gateResolves(PolymarketEntry.Reconnect)
+            allowsNewAccount(PolymarketNewAccountAllowance.REGION_BLOCKED)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.reconnect().onActionClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.reconnect().isInProgress).isFalse()
+            val dialog = sentDialog()
+            assertThat(dialog.title).isEqualTo(resourceReference(R.string.prediction_region_restrictions_title))
+            assertThat(dialog.message).isEqualTo(resourceReference(R.string.prediction_region_restrictions_subtitle))
+            verify(exactly = 0) { runOnboardingUseCase(userWalletId) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the run fails for good WHEN collected THEN an OK dialog explains why`() = runTest {
+        // Arrange
+        owesOnboarding()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(
+            PolymarketOnboardingProgress.Failed(
+                error = PolymarketOnboardingError.AddressMismatch(expected = "0xA", actual = "0xB"),
+                isRetryable = false,
+            ),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Assert
+        val dialog = sentDialog()
+        assertThat(dialog.title).isNull()
+        assertThat(dialog.message).isEqualTo(resourceReference(R.string.prediction_onboarding_error_address_mismatch))
+        assertThat(dialog.firstAction.title).isEqualTo(resourceReference(R.string.common_ok))
+        assertThat(dialog.secondAction).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a retry dialog WHEN try again is tapped THEN the run starts again`() = runTest {
+        // Arrange
+        owesOnboarding()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(
+            PolymarketOnboardingProgress.Failed(error = PolymarketOnboardingError.Network, isRetryable = true),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Act
+        sentDialog().firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 2) { runOnboardingUseCase(userWalletId) }
+        model.onDestroy()
+    }
+
+    private fun sentDialog(): DialogMessage {
+        val sent = slot<UiMessage>()
+        verify(exactly = 1) { messageSender.send(capture(sent)) }
+        return sent.captured as DialogMessage
     }
 
     private fun PolymarketOnboardingModel.welcome(): PolymarketOnboardingUM.Welcome =

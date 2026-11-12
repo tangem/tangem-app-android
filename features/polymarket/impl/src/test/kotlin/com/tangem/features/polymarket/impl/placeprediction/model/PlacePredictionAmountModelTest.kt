@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -47,6 +48,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 import java.util.Locale
 import kotlinx.coroutines.test.runCurrent
@@ -948,6 +951,24 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN the region cannot be read WHEN the screen opens THEN no restriction is claimed`() = runTest {
             // Arrange
             coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
+
+            // Act
+            val model = createAmountModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.tradingPermission).isEqualTo(TradingPermissionUM.Unknown)
+            assertThat(model.uiState.value.notifications).doesNotContain(PredictionNotificationUM.RegionRestricted)
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @EnumSource(PolymarketGeoblock::class, names = ["UNRECOGNIZED_RESPONSE", "NO_RESPONSE"])
+        fun `GIVEN an inconclusive geoblock WHEN the screen opens THEN no restriction is claimed`(
+            geoblock: PolymarketGeoblock,
+        ) = runTest {
+            // Arrange
+            coEvery { checkGeoblockUseCase() } returns geoblock.right()
 
             // Act
             val model = createAmountModel(testScope = this)

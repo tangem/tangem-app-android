@@ -12,6 +12,8 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.CheckNewPolymarketAccountAllowedInteractor
@@ -46,9 +48,6 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Opening the gate prompts for nothing: an undetermined wallet lands on Welcome with an idle button rather than
  * an unasked-for card prompt, and the full decision is taken when the user presses it.
- *
- * Nothing blocks the screen on a failure. Welcome is the gate's only content and its button is the only retry,
- * so a failed resolution and a failed run both leave it idle and report through a snackbar.
  */
 @ModelScoped
 @Suppress("LongParameterList")
@@ -143,7 +142,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
                 }
                 PolymarketNewAccountAllowance.UNDETERMINED -> {
                     stopStarting()
-                    reportFailure()
+                    reportRetryableFailure(resourceReference(R.string.prediction_onboarding_error_region_unknown))
                     return@launch
                 }
             }
@@ -153,7 +152,18 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun showRegionRestrictions() {
-        updateWelcome { it.copy(isInProgress = false, isRegionRestrictionsShown = true) }
+        if (uiState.value is PolymarketOnboardingUM.Welcome) {
+            updateWelcome { it.copy(isInProgress = false, isRegionRestrictionsShown = true) }
+            return
+        }
+
+        stopStarting()
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.prediction_region_restrictions_title),
+                message = resourceReference(R.string.prediction_region_restrictions_subtitle),
+            ),
+        )
     }
 
     private fun dismissRegionRestrictions() {
@@ -175,7 +185,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
             is PolymarketOnboardingProgress.Ready -> completeOnboarding(isNewAccount = progress.isNewAccount)
             is PolymarketOnboardingProgress.Failed -> {
                 stopStarting()
-                reportFailure()
+                reportFailure(progress)
             }
         }
     }
@@ -197,6 +207,32 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun reportFailure() {
         messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
+    }
+
+    private fun reportFailure(failure: PolymarketOnboardingProgress.Failed) {
+        val message = failure.error.toFailureMessage() ?: return
+
+        if (failure.isRetryable) {
+            reportRetryableFailure(message)
+        } else {
+            messageSender.send(DialogMessage(message = message))
+        }
+    }
+
+    private fun reportRetryableFailure(message: TextReference) {
+        messageSender.send(
+            DialogMessage(
+                message = message,
+                title = resourceReference(R.string.common_something_went_wrong),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.alert_button_try_again),
+                        onClick = ::startOnboarding,
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
     }
 
     private fun welcome(

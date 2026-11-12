@@ -5,6 +5,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -261,12 +262,14 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
         scope.launch {
             val permission = withContext(dispatchers.default) {
-                checkPolymarketGeoblockUseCase().fold(
-                    ifLeft = { TradingPermissionUM.Unknown },
-                    ifRight = { isBlocked ->
-                        if (isBlocked) TradingPermissionUM.Restricted else TradingPermissionUM.Allowed
-                    },
-                )
+                when (checkPolymarketGeoblockUseCase().getOrNull()) {
+                    PolymarketGeoblock.ALLOWED -> TradingPermissionUM.Allowed
+                    PolymarketGeoblock.BLOCKED -> TradingPermissionUM.Restricted
+                    PolymarketGeoblock.UNRECOGNIZED_RESPONSE,
+                    PolymarketGeoblock.NO_RESPONSE,
+                    null,
+                    -> TradingPermissionUM.Unknown
+                }
             }
 
             tradingPermission.value = permission

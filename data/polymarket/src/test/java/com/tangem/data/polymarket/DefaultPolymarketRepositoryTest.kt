@@ -7,6 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyEnvelope
 import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteFeesResponse
@@ -35,7 +36,6 @@ import com.tangem.grow.datasource.polymarket.clob.models.PolymarketOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceResponse
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
-import com.tangem.grow.datasource.polymarket.geo.models.PolymarketGeoblockResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketConfigurationResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoryDto
@@ -87,6 +87,8 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CancellationException
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -603,22 +605,72 @@ internal class DefaultPolymarketRepositoryTest {
         assertThat(sent.signature).isEqualTo("0xbatchSig")
     }
 
-    @Test
-    fun `GIVEN geoblock true WHEN checkGeoblock THEN returns right true`() = runTest {
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN geoblock json WHEN checkGeoblock THEN returns its blocked flag`(isBlocked: Boolean) = runTest {
         // Arrange
-        coEvery { geoApi.getGeoblock() } returns ApiResponse.Success(PolymarketGeoblockResponse(blocked = true))
+        coEvery { geoApi.getGeoblock() } returns geoblockBody("""{"blocked":$isBlocked,"country":"DE"}""")
+        val expected = if (isBlocked) PolymarketGeoblock.BLOCKED else PolymarketGeoblock.ALLOWED
 
         // Act
         val actual = repository.checkGeoblock()
 
         // Assert
-        assertThat(actual).isEqualTo(true.right())
+        assertThat(actual).isEqualTo(expected.right())
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "<html><body>Access denied</body></html>",
+            """{"country":"DE"}""",
+            """{"blocked":null}""",
+            """{"blocked":"true"}""",
+            """{"blocked":tr""",
+            "",
+        ],
+    )
+    fun `GIVEN geoblock body without blocked flag WHEN checkGeoblock THEN returns unrecognized response`(
+        body: String,
+    ) = runTest {
+        // Arrange
+        coEvery { geoApi.getGeoblock() } returns geoblockBody(body)
+
+        // Act
+        val actual = repository.checkGeoblock()
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketGeoblock.UNRECOGNIZED_RESPONSE.right())
     }
 
     @Test
-    fun `GIVEN geo api throws WHEN checkGeoblock THEN returns left no internet`() = runTest {
+    fun `GIVEN geo api network error WHEN checkGeoblock THEN returns no response`() = runTest {
         // Arrange
         coEvery { geoApi.getGeoblock() } returns networkError()
+
+        // Act
+        val actual = repository.checkGeoblock()
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketGeoblock.NO_RESPONSE.right())
+    }
+
+    @Test
+    fun `GIVEN geo api timeout WHEN checkGeoblock THEN returns no response`() = runTest {
+        // Arrange
+        coEvery { geoApi.getGeoblock() } returns timeoutError()
+
+        // Act
+        val actual = repository.checkGeoblock()
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketGeoblock.NO_RESPONSE.right())
+    }
+
+    @Test
+    fun `GIVEN geo api server error WHEN checkGeoblock THEN returns left no internet`() = runTest {
+        // Arrange
+        coEvery { geoApi.getGeoblock() } returns httpError(Code.INTERNAL_SERVER_ERROR, body = "<html>oops</html>")
 
         // Act
         val actual = repository.checkGeoblock()
@@ -1406,6 +1458,8 @@ internal class DefaultPolymarketRepositoryTest {
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Network)
     }
+
+    private fun geoblockBody(body: String): ApiResponse<ResponseBody> = ApiResponse.Success(body.toResponseBody())
 
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> httpError(code: Code, body: String?): ApiResponse<T> =
