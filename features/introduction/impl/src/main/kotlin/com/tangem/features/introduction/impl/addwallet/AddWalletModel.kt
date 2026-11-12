@@ -158,7 +158,14 @@ internal class AddWalletModel @Inject constructor(
             trackingContextProxy.removeContext()
             return
         }
-        checkRestriction(isSocialLogin = true, onAbandoned = trackingContextProxy::removeContext) { restriction ->
+        checkRestriction(
+            isSocialLogin = true,
+            onAbandoned = trackingContextProxy::removeContext,
+            onFailed = {
+                trackingContextProxy.removeContext()
+                showUnknownError()
+            },
+        ) { restriction ->
             if (restriction != null) trackingContextProxy.removeContext()
             when (restriction) {
                 HotWalletAdditionRestriction.LimitReached -> showLimitReached(NoticeMobileWalletLimit.Type.SocialLogin)
@@ -224,24 +231,26 @@ internal class AddWalletModel @Inject constructor(
         }
     }
 
-    /** A failed check lets the flow start: each flow checks the restriction again when it saves the wallet. */
+    /** Without [onFailed], a failed check lets the flow start: it checks the limit again when it saves the wallet. */
     private fun checkRestriction(
         isSocialLogin: Boolean,
         onAbandoned: () -> Unit = {},
+        onFailed: (() -> Unit)? = null,
         onChecked: (HotWalletAdditionRestriction?) -> Unit,
     ) {
         if (!activity.compareAndSet(Activity.Idle, Activity.CheckingRestriction)) return
         modelScope.launch {
-            val restriction = try {
+            val result = try {
                 runSuspendCatching { getHotWalletAdditionRestriction(isSocialLogin = isSocialLogin) }
-                    .getOrElse { error ->
-                        TangemLogger.e("Failed to check the hot wallet addition restriction", error)
-                        null
-                    }
             } finally {
                 activity.compareAndSet(Activity.CheckingRestriction, Activity.Idle)
             }
-            if (sheet.isShown) onChecked(restriction) else onAbandoned()
+            result.onFailure { TangemLogger.e("Failed to check the hot wallet addition restriction", it) }
+            when {
+                !sheet.isShown -> onAbandoned()
+                result.isFailure && onFailed != null -> onFailed()
+                else -> onChecked(result.getOrNull())
+            }
         }
     }
 
@@ -250,6 +259,15 @@ internal class AddWalletModel @Inject constructor(
             NoticeMobileWalletLimit(type = type, limit = NoticeMobileWalletLimit.Limit.MobileWallets),
         )
         uiMessageSender.send(Dialogs.hotWalletsLimitReachedDialog())
+    }
+
+    private fun showUnknownError() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(CoreResR.string.common_something_went_wrong),
+                message = resourceReference(CoreResR.string.common_unknown_error),
+            ),
+        )
     }
 
     private fun showSocialWalletAlreadyAdded(provider: SocialLoginProvider) {
