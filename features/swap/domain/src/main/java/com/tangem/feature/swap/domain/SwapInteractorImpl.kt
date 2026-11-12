@@ -5,6 +5,7 @@ import androidx.annotation.VisibleForTesting
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.getOrElse
+import arrow.core.handleErrorWith
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
@@ -1308,6 +1309,7 @@ internal class SwapInteractorImpl @Inject constructor(
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             amount = amountToSwapWithFee,
             swapFee = fee,
+            balanceStatus = balanceStatus,
             swapProvider = swapProvider,
             expressOperationType = expressOperationType,
             isTangemPayWithdrawal = isTangemPayWithdrawal,
@@ -1364,6 +1366,7 @@ internal class SwapInteractorImpl @Inject constructor(
         toSwapCurrencyStatus: SwapCurrencyStatus,
         amount: SwapAmount,
         swapFee: SwapFee?,
+        balanceStatus: SwapBalanceStatus,
         swapProvider: SwapProvider,
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
@@ -1454,8 +1457,12 @@ internal class SwapInteractorImpl @Inject constructor(
             return SwapTransactionState.Error.UnknownError
         }
 
+        val network = fromSwapCurrencyStatus.currency.network
+        val sponsoredFeeFor = if (isSolana(network.rawId)) sponsoredFeeFactory(balanceStatus, fee, network) else null
         val extendedFee = (fee.transactionFeeResult as? TransactionFeeResult.LoadedExtended)?.fee
-        val result = if (extendedFee?.isGasless == true) {
+        val result = if (sponsoredFeeFor != null) {
+            sendSponsoredSolanaCexDeposit(fromSwapCurrencyStatus, txData, sponsoredFeeFor)
+        } else if (extendedFee?.isGasless == true) {
             createAndSendGaslessTransactionUseCase.invoke(
                 transactionData = txData,
                 userWallet = userWallet,
@@ -1480,7 +1487,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val cexNetworkAddress = fromSwapCurrencyStatus.status.value.networkAddress
         val cexFromAddress = cexNetworkAddress?.defaultAddress?.value.orEmpty()
         return result.fold(
-            ifLeft = { error -> SwapTransactionState.Error.TransactionError(error) },
+            ifLeft = { error -> error.toSwapTransactionError() },
             ifRight = { txHash ->
                 repository.exchangeSent(
                     userWallet = userWallet,
@@ -1607,20 +1614,44 @@ internal class SwapInteractorImpl @Inject constructor(
             userWallet = fromSwapCurrencyStatus.userWallet,
             transactionData = compiledTransaction,
             fee = fee,
-        ).fold(
+        ).acceptMaybeSentSignature().fold(
             ifRight = { signature -> finalizeSponsoredSwap(signature) },
-            ifLeft = { error ->
-                val serviceError = (error as? SendTransactionError.SolanaGasless)?.error
-                // The service books the signature before sending, so a swap it may have sent is tracked by it like
-                // any sent swap
-                val maybeSentSignature = (serviceError as? SolanaGaslessError.MaybeSent)?.signature
-                when {
-                    maybeSentSignature != null -> finalizeSponsoredSwap(maybeSentSignature)
-                    serviceError != null -> SwapTransactionState.Error.SolanaGaslessError(serviceError)
-                    else -> SwapTransactionState.Error.TransactionError(error)
-                }
-            },
+            ifLeft = { error -> error.toSwapTransactionError() },
         )
+    }
+
+    /** A sponsored swap goes out sponsored or not at all, so a deposit transfer without a sponsor is not sent. */
+    private suspend fun sendSponsoredSolanaCexDeposit(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transfer: TransactionData.Uncompiled,
+        sponsoredFeeFor: (feePayer: String) -> TransactionFeeExtended,
+    ): Either<SendTransactionError, String> {
+        val feePayer = solanaGaslessSwapResolver.resolveTransferFeePayer(fromSwapCurrencyStatus, transfer)
+            .getOrElse { error ->
+                TangemLogger.i("Solana sponsored CEX swap is not sent: $error")
+                return SendTransactionError.SolanaGasless(error).left()
+            }
+        return createAndSendGaslessTransactionUseCase(
+            transactionData = transfer,
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            fee = sponsoredFeeFor(feePayer),
+        ).acceptMaybeSentSignature()
+    }
+
+    /**
+     * The service books the signature before sending, so a sponsored swap it may have sent is tracked by it like
+     * any sent swap.
+     */
+    private fun Either<SendTransactionError, String>.acceptMaybeSentSignature(): Either<SendTransactionError, String> =
+        handleErrorWith { error ->
+            val serviceError = (error as? SendTransactionError.SolanaGasless)?.error
+            (serviceError as? SolanaGaslessError.MaybeSent)?.signature?.right() ?: error.left()
+        }
+
+    private fun SendTransactionError.toSwapTransactionError(): SwapTransactionState.Error {
+        val serviceError = (this as? SendTransactionError.SolanaGasless)?.error
+        return serviceError?.let(SwapTransactionState.Error::SolanaGaslessError)
+            ?: SwapTransactionState.Error.TransactionError(this)
     }
 
     /**
