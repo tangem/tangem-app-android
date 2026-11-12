@@ -36,6 +36,7 @@ import com.tangem.grow.datasource.polymarket.clob.models.PolymarketOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceResponse
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
+import com.tangem.grow.datasource.polymarket.geo.models.PolymarketGeoblockResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketConfigurationResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoryDto
@@ -87,8 +88,6 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CancellationException
 import okhttp3.RequestBody
-import okhttp3.ResponseBody
-import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -98,6 +97,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.SerializationException
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -607,9 +607,9 @@ internal class DefaultPolymarketRepositoryTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    fun `GIVEN geoblock json WHEN checkGeoblock THEN returns its blocked flag`(isBlocked: Boolean) = runTest {
+    fun `GIVEN geoblock response WHEN checkGeoblock THEN returns its blocked flag`(isBlocked: Boolean) = runTest {
         // Arrange
-        coEvery { geoApi.getGeoblock() } returns geoblockBody("""{"blocked":$isBlocked,"country":"DE"}""")
+        coEvery { geoApi.getGeoblock() } returns ApiResponse.Success(PolymarketGeoblockResponse(blocked = isBlocked))
         val expected = if (isBlocked) PolymarketGeoblock.BLOCKED else PolymarketGeoblock.ALLOWED
 
         // Act
@@ -619,28 +619,28 @@ internal class DefaultPolymarketRepositoryTest {
         assertThat(actual).isEqualTo(expected.right())
     }
 
-    @ParameterizedTest
-    @ValueSource(
-        strings = [
-            "<html><body>Access denied</body></html>",
-            """{"country":"DE"}""",
-            """{"blocked":null}""",
-            """{"blocked":"true"}""",
-            """{"blocked":tr""",
-            "",
-        ],
-    )
-    fun `GIVEN geoblock body without blocked flag WHEN checkGeoblock THEN returns unrecognized response`(
-        body: String,
-    ) = runTest {
+    @Test
+    fun `GIVEN geoblock body that does not decode WHEN checkGeoblock THEN returns unrecognized response`() = runTest {
         // Arrange
-        coEvery { geoApi.getGeoblock() } returns geoblockBody(body)
+        coEvery { geoApi.getGeoblock() } returns unknownError(SerializationException("Unexpected JSON token"))
 
         // Act
         val actual = repository.checkGeoblock()
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketGeoblock.UNRECOGNIZED_RESPONSE.right())
+    }
+
+    @Test
+    fun `GIVEN geo api unknown error not from decoding WHEN checkGeoblock THEN returns left no internet`() = runTest {
+        // Arrange
+        coEvery { geoApi.getGeoblock() } returns unknownError(IllegalStateException("boom"))
+
+        // Act
+        val actual = repository.checkGeoblock()
+
+        // Assert
+        assertEitherLeft(actual, DataError.NetworkError.NoInternetConnection())
     }
 
     @Test
@@ -1459,7 +1459,9 @@ internal class DefaultPolymarketRepositoryTest {
         assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Network)
     }
 
-    private fun geoblockBody(body: String): ApiResponse<ResponseBody> = ApiResponse.Success(body.toResponseBody())
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> unknownError(cause: Throwable): ApiResponse<T> =
+        ApiResponse.Error(ApiResponseError.UnknownException(cause)) as ApiResponse<T>
 
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> httpError(code: Code, body: String?): ApiResponse<T> =

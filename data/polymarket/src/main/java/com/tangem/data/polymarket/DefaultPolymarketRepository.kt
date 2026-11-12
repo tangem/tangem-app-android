@@ -20,7 +20,6 @@ import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
 import com.tangem.data.polymarket.error.PredictionPlaceOrderErrorResolver
-import com.tangem.data.polymarket.geo.PolymarketGeoblockParser
 import com.tangem.data.polymarket.pagination.PolymarketEventsBatchFetcher
 import com.tangem.data.polymarket.pagination.PolymarketEventsUpdateFetcher
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
@@ -80,6 +79,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.toHexString
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.math.BigDecimal
@@ -424,24 +424,21 @@ internal class DefaultPolymarketRepository @Inject constructor(
     override suspend fun checkGeoblock(): Either<DataError, PolymarketGeoblock> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                val response = geoApi.getGeoblock().bind()
-                val contentType = response.contentType()
-                val body = response.use { it.string() }
-
-                val geoblock = when (PolymarketGeoblockParser.parseIsBlocked(body)) {
-                    true -> PolymarketGeoblock.BLOCKED
-                    false -> PolymarketGeoblock.ALLOWED
-                    null -> PolymarketGeoblock.UNRECOGNIZED_RESPONSE
+                val geoblock = if (geoApi.getGeoblock().bind().blocked) {
+                    PolymarketGeoblock.BLOCKED
+                } else {
+                    PolymarketGeoblock.ALLOWED
                 }
-                TangemLogger.i("Geoblock: $geoblock, content type $contentType, body length ${body.length}")
+                TangemLogger.i("Geoblock: $geoblock")
 
                 geoblock.right()
             },
             onError = { error ->
-                when (error) {
-                    is ApiResponseError.NetworkException,
-                    is ApiResponseError.TimeoutException,
-                    -> PolymarketGeoblock.NO_RESPONSE.right()
+                when {
+                    error is ApiResponseError.NetworkException ||
+                        error is ApiResponseError.TimeoutException -> PolymarketGeoblock.NO_RESPONSE.right()
+                    error is ApiResponseError.UnknownException && error.cause is SerializationException ->
+                        PolymarketGeoblock.UNRECOGNIZED_RESPONSE.right()
                     else -> DataError.NetworkError.NoInternetConnection().left()
                 }
             },
