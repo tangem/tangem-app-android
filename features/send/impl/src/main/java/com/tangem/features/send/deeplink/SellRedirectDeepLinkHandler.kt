@@ -4,7 +4,6 @@ import arrow.core.Option
 import arrow.core.getOrElse
 import arrow.core.raise.option
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.ui.utils.parseBigDecimal
@@ -20,7 +19,6 @@ import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 internal class SellRedirectDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val offrampRepository: OfframpRepository,
@@ -74,7 +72,7 @@ internal class SellRedirectDeepLinkHandler @Inject constructor(
                             TangemLogger.e("Error on getting cryptoCurrency for SELL deeplink")
                             return@launch
                         }
-                        appRouter.push(
+                        request.router.push(
                             AppRoute.Send(
                                 currency = cryptoCurrency,
                                 userWalletId = userWallet.walletId,

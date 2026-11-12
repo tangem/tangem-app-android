@@ -3,7 +3,6 @@ package com.tangem.features.feed.deeplink
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.domain.markets.PreselectedTokenDetailsSection
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
@@ -19,18 +18,18 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal class MarketsTokenDetailDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
 ) : DeepLinkHandler {
 
     override fun handle(request: DeepLinkRequest) {
+        val router = request.router
         val tokenId = request.queryParams[TOKEN_ID_KEY]
         val section = PreselectedTokenDetailsSection.parse(request.queryParams[SECTION_KEY])
 
         if (tokenId.isNullOrEmpty()) {
             TangemLogger.e("Markets token details deeplink does not contain token_id")
-            appRouter.push(AppRoute.Markets())
+            router.push(AppRoute.Markets())
             return
         }
 
@@ -49,7 +48,7 @@ internal class MarketsTokenDetailDeepLinkHandler @Inject constructor(
                 return@launch
             }
 
-            appRouter.push(
+            router.push(
                 AppRoute.MarketsTokenDetails(
                     token = TokenMarketParams(
                         id = rawTokenId,
