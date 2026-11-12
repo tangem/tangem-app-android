@@ -51,7 +51,7 @@ internal class PolymarketQuoteStoreTest {
         store.apply(listOf(PolymarketQuoteUpdate("a", 115, lastTradePrice = BigDecimal("0.5"))))
 
         // Assert
-        assertThat(quote()).isEqualTo(expected("0.45", "0.7", 110).copy(lastTradePrice = BigDecimal("0.55")))
+        assertThat(quote()).isEqualTo(expected("0.45", "0.7", 110).copy(lastTradePrice = BigDecimal("0.55"), lastTradeAtMillis = 120))
     }
 
     @Test
@@ -127,7 +127,7 @@ internal class PolymarketQuoteStoreTest {
 
         // Assert
         assertThat(snapshot.resubscribe).containsExactly("a")
-        assertThat(snapshot.quotes["a"]).isEqualTo(expected("0.4", "0.6").copy(lastTradePrice = BigDecimal("0.5")))
+        assertThat(snapshot.quotes["a"]).isEqualTo(expected("0.4", "0.6").copy(lastTradePrice = BigDecimal("0.5"), lastTradeAtMillis = 200))
     }
 
     @Test

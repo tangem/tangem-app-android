@@ -15,12 +15,25 @@ internal fun PolymarketLiveQuote?.buyPrice(restPrice: BigDecimal?): BigDecimal? 
 
 internal fun PolymarketLiveQuote?.probability(restProbability: BigDecimal?): BigDecimal? {
     if (this?.status != PolymarketLiveQuote.Status.LIVE) return restProbability
-    val bid = bestBid
-    val ask = bestAsk
-    return if (bid != null && ask != null && ask - bid <= MAX_MIDPOINT_SPREAD) {
+    return midpoint() ?: lastTradePrice ?: restProbability
+}
+
+internal fun PolymarketLiveQuote?.probabilityUpdatedAtMillis(): Long? {
+    if (this?.status != PolymarketLiveQuote.Status.LIVE) return null
+    return when {
+        midpoint() != null -> updatedAtMillis
+        lastTradePrice != null -> listOfNotNull(updatedAtMillis, lastTradeAtMillis).maxOrNull()
+        else -> null
+    }
+}
+
+private fun PolymarketLiveQuote.midpoint(): BigDecimal? {
+    val bid = bestBid ?: return null
+    val ask = bestAsk ?: return null
+    return if (bid <= ask && ask - bid <= MAX_MIDPOINT_SPREAD) {
         (bid + ask).divide(BigDecimal(2))
     } else {
-        lastTradePrice ?: restProbability
+        null
     }
 }
 

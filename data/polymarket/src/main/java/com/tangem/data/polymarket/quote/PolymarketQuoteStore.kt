@@ -56,6 +56,7 @@ internal class PolymarketQuoteStore(private val timeSource: TimeSource) {
                 bestAsk = entry.ask?.price,
                 lastTradePrice = entry.tradePrice,
                 updatedAtMillis = maxOf(entry.bidTime, entry.askTime).takeIf { it >= 0 },
+                lastTradeAtMillis = entry.tradeTime.takeIf { it >= 0 },
                 status = when {
                     !isComplete -> PolymarketLiveQuote.Status.WAITING
                     isStale -> PolymarketLiveQuote.Status.STALE
