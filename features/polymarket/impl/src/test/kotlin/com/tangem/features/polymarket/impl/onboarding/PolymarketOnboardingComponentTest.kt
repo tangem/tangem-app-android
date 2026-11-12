@@ -2,6 +2,11 @@ package com.tangem.features.polymarket.impl.onboarding
 
 import arrow.core.right
 import com.arkivanov.essenty.instancekeeper.InstanceKeeperDispatcher
+import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.arkivanov.essenty.lifecycle.create
+import com.arkivanov.essenty.lifecycle.pause
+import com.arkivanov.essenty.lifecycle.resume
+import com.arkivanov.essenty.lifecycle.start
 import com.arkivanov.essenty.statekeeper.StateKeeperDispatcher
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.context.AppComponentContext
@@ -28,6 +33,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import javax.inject.Provider
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -45,6 +51,8 @@ internal class PolymarketOnboardingComponentTest {
     private val runPolymarketOnboardingInteractor: RunPolymarketOnboardingInteractor = mockk()
 
     private val userWalletId = UserWalletId("011")
+    private val lifecycle = LifecycleRegistry()
+    private val mockedModel: PolymarketOnboardingModel = mockk(relaxed = true)
 
     @AfterEach
     fun unmockEntryPoints() {
@@ -71,7 +79,48 @@ internal class PolymarketOnboardingComponentTest {
             .isEqualTo(PolymarketOnboardingParams(userWalletId = userWalletId))
     }
 
-    private fun createAppComponentContext(paramsContainerSlot: CapturingSlot<ParamsContainer>): AppComponentContext {
+    @Test
+    fun `GIVEN the gate WHEN lifecycle resumes THEN the welcome video runs`() {
+        // Arrange
+        createComponentWithMockedModel()
+        lifecycle.create()
+        lifecycle.start()
+
+        // Act
+        lifecycle.resume()
+
+        // Assert
+        verify(exactly = 1) { mockedModel.setWelcomeVideoRunning(isRunning = true) }
+    }
+
+    @Test
+    fun `GIVEN a resumed gate WHEN lifecycle pauses THEN the welcome video stops`() {
+        // Arrange
+        createComponentWithMockedModel()
+        lifecycle.create()
+        lifecycle.start()
+        lifecycle.resume()
+
+        // Act
+        lifecycle.pause()
+
+        // Assert
+        verify(exactly = 1) { mockedModel.setWelcomeVideoRunning(isRunning = false) }
+    }
+
+    private fun createComponentWithMockedModel() {
+        val appComponentContext = createAppComponentContext(
+            paramsContainerSlot = slot(),
+            modelProvider = { mockedModel },
+        )
+        every { appComponentContext.lifecycle } returns lifecycle
+        PolymarketOnboardingComponent(appComponentContext = appComponentContext, userWalletId = userWalletId)
+    }
+
+    private fun createAppComponentContext(
+        paramsContainerSlot: CapturingSlot<ParamsContainer>,
+        modelProvider: () -> PolymarketOnboardingModel = { createModel(paramsContainerSlot.captured) },
+    ): AppComponentContext {
         val hiltComponentBuilder: ModelComponent.Builder = mockk()
         every { hiltComponentBuilder.router(any()) } returns hiltComponentBuilder
         every { hiltComponentBuilder.uiMessageSender(any()) } returns hiltComponentBuilder
@@ -80,7 +129,7 @@ internal class PolymarketOnboardingComponentTest {
 
         val entryPoint: ModelsEntryPoint = mockk()
         every { entryPoint.models() } returns mapOf(
-            PolymarketOnboardingModel::class.java to Provider<Model> { createModel(paramsContainerSlot.captured) },
+            PolymarketOnboardingModel::class.java to Provider<Model> { modelProvider() },
         )
         mockkStatic(EntryPoints::class)
         every { EntryPoints.get(any(), ModelsEntryPoint::class.java) } returns entryPoint
