@@ -67,21 +67,7 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBann
                     visible = state.recommended.isNotEmpty(),
                 ) {
                     if (state.recommended.isNotEmpty()) {
-                        if (LocalOnrampDesignSystemEnabled.current) {
-                            Text(
-                                modifier = Modifier.padding(vertical = 12.dp),
-                                text = stringResourceSafe(R.string.onramp_recommended_title),
-                                style = TangemTheme.typography3.subheading.medium,
-                                color = TangemTheme.colors3.text.primary,
-                            )
-                        } else {
-                            Text(
-                                modifier = Modifier.padding(start = 12.dp),
-                                text = stringResourceSafe(R.string.onramp_recommended_title),
-                                style = TangemTheme.typography.subtitle2,
-                                color = TangemTheme.colors3.text.secondary,
-                            )
-                        }
+                        RecommendedTitle()
                         SpacerH(8.dp)
                     }
                 }
@@ -116,6 +102,25 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBann
             }
         }
         OnrampOffersBlockUM.Empty -> Unit
+    }
+}
+
+@Composable
+private fun RecommendedTitle() {
+    if (LocalOnrampDesignSystemEnabled.current) {
+        Text(
+            modifier = Modifier.padding(vertical = 12.dp),
+            text = stringResourceSafe(R.string.onramp_recommended_title),
+            style = TangemTheme.typography3.subheading.medium,
+            color = TangemTheme.colors3.text.primary,
+        )
+    } else {
+        Text(
+            modifier = Modifier.padding(start = 12.dp),
+            text = stringResourceSafe(R.string.onramp_recommended_title),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors3.text.secondary,
+        )
     }
 }
 
