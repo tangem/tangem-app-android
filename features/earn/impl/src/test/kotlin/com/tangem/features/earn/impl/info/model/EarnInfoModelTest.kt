@@ -266,6 +266,23 @@ internal class EarnInfoModelTest {
                 model.onDestroy()
             }
 
+        @Test
+        fun `GIVEN Unavailable and no status for the currency WHEN model created THEN the router replaces the screen with the picker once`() =
+            runTest {
+                // Arrange
+                product.stateFlow.value = EarnProductState.Unavailable
+                stubStatus(null)
+                val model = createModel()
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                verifyRedirectedOnce()
+                assertThat(model.uiState.value).isNull()
+                model.onDestroy()
+            }
+
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN Ready with position None or Unknown WHEN model created THEN the router replaces the screen with the picker once`(
@@ -519,6 +536,22 @@ internal class EarnInfoModelTest {
                 assertThat(params.callback).isSameInstanceAs(model)
                 model.onDestroy()
             }
+
+        @Test
+        fun `GIVEN Ready without projection WHEN chartParams THEN there is no callback and the chart hides the calculator button`() =
+            runTest {
+                // Arrange
+                product.stateFlow.value = knownState().copy(projection = null)
+                val model = createModel()
+                advanceUntilIdle()
+
+                // Act
+                val params = model.chartParams()
+
+                // Assert
+                assertThat(params.callback).isNull()
+                model.onDestroy()
+            }
     }
 
     @Nested
@@ -536,22 +569,6 @@ internal class EarnInfoModelTest {
 
             // Assert
             assertThat(sheet).containsExactly(EarnCalculatorSheetConfig)
-
-        @Test
-        fun `GIVEN Ready without projection WHEN chartParams THEN there is no callback and the chart hides the calculator button`() =
-            runTest {
-                // Arrange
-                product.stateFlow.value = knownState().copy(projection = null)
-                val model = createModel()
-                advanceUntilIdle()
-
-                // Act
-                val params = model.chartParams()
-
-                // Assert
-                assertThat(params.callback).isNull()
-                model.onDestroy()
-            }
             model.onDestroy()
         }
 

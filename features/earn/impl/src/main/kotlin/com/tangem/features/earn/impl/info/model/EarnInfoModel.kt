@@ -40,11 +40,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -79,10 +79,10 @@ internal class EarnInfoModel @Inject constructor(
     /** The last `Ready` with a position: what the chart and the calculator are built from. */
     private val readyState = MutableStateFlow<EarnProductState.Ready?>(null)
 
-    /** Waits until the wallet has a status for the currency, there is nothing to show without it. */
-    private val currencyStatus: Flow<CryptoCurrencyStatus> = singleAccountStatusListSupplier(params.userWalletId)
+    /** `null` until the wallet has a status for the currency; an unavailable product must not wait for it. */
+    private val currencyStatus: Flow<CryptoCurrencyStatus?> = singleAccountStatusListSupplier(params.userWalletId)
         .map { it.getCryptoCurrencyStatus(params.cryptoCurrency).getOrNull() }
-        .filterNotNull()
+        .onStart { emit(null) }
         .distinctUntilChanged()
 
     private val appCurrency: Flow<AppCurrency> = getSelectedAppCurrency.invokeOrDefault()
@@ -167,15 +167,22 @@ internal class EarnInfoModel @Inject constructor(
         when (val state = frame.state) {
             EarnProductState.Loading -> Unit
             EarnProductState.Unavailable -> redirectToPicker()
-            is EarnProductState.Ready -> showPosition(product, state, frame)
+            is EarnProductState.Ready -> frame.status?.let { status ->
+                showPosition(product = product, ready = state, status = status, appCurrency = frame.appCurrency)
+            }
         }
     }
 
-    private fun showPosition(product: EarnProduct, ready: EarnProductState.Ready, frame: Frame) {
+    private fun showPosition(
+        product: EarnProduct,
+        ready: EarnProductState.Ready,
+        status: CryptoCurrencyStatus,
+        appCurrency: AppCurrency,
+    ) {
         val info = converter.convert(
             product = product,
-            status = frame.status,
-            appCurrency = frame.appCurrency,
+            status = status,
+            appCurrency = appCurrency,
             ready = ready,
             callbacks = callbacks,
         )
@@ -234,7 +241,7 @@ internal class EarnInfoModel @Inject constructor(
 
     private data class Frame(
         val state: EarnProductState,
-        val status: CryptoCurrencyStatus,
+        val status: CryptoCurrencyStatus?,
         val appCurrency: AppCurrency,
     )
 }
