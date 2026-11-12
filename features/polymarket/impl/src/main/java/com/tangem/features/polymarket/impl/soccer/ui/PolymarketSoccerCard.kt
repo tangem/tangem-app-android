@@ -52,6 +52,8 @@ internal fun PolymarketSoccerCard(
         when (val content = state.content) {
             is PolymarketSoccerCardUM.Content.Buttons -> OutcomeButtons(content.outcomes, onOutcomeClick)
             is PolymarketSoccerCardUM.Content.Picker -> {
+                OutcomeButtons(content.outcomes, onOutcomeClick)
+                Spacer(Modifier.height(16.dp))
                 PolymarketCounter(
                     items = content.items,
                     selectedId = content.selectedId,
@@ -60,8 +62,6 @@ internal fun PolymarketSoccerCard(
                     nextContentDescription = stringResourceSafe(R.string.prediction_match_next_line),
                     contentPadding = PaddingValues(0.dp),
                 )
-                Spacer(Modifier.height(16.dp))
-                OutcomeButtons(content.outcomes, onOutcomeClick)
             }
             is PolymarketSoccerCardUM.Content.Rows -> content.outcomes.forEachIndexed { index, outcome ->
                 key(outcome.target) {
