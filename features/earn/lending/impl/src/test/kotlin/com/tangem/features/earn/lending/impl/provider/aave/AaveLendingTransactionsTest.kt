@@ -644,6 +644,7 @@ internal class AaveLendingTransactionsTest {
         val withdrawTx = createTx(callData = CallDataFactory.getExitNativeCallData())
         val foreignState = object : LendingProviderState {
             override val planKey: String = "foreign"
+            override val isUpgradeRequired: Boolean = false
         }
 
         fun read(version: YieldModuleVersionStatus, status: YieldModuleStatus?) =

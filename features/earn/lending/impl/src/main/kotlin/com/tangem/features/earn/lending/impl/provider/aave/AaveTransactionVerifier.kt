@@ -38,9 +38,6 @@ internal data class AaveVerifiedAddresses(
 
 internal class AaveTransactionVerifier @Inject constructor() {
 
-    private val AaveModuleRead.isUpgradeRequired: Boolean
-        get() = latestImplementation != null
-
     /** @param read the module state the transactions must have been built for */
     fun verify(
         txs: List<TransactionData.Uncompiled>,

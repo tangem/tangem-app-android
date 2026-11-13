@@ -81,6 +81,38 @@ internal class AaveModuleStateTest {
         assertThat(read.latestImplementation).isEqualTo(LATEST_IMPLEMENTATION)
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsUpgradeRequired {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN module version WHEN isUpgradeRequired THEN only an available upgrade requires it`(
+            model: UpgradeRequiredModel,
+        ) {
+            // Arrange
+            val read = AaveModuleRead(readyStatus, model.version, withdrawLiquidity = null)
+
+            // Act
+            val actual = read.isUpgradeRequired
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            UpgradeRequiredModel(upgradeAvailable, expected = true),
+            UpgradeRequiredModel(YieldModuleVersionStatus.UpToDate, expected = false),
+            UpgradeRequiredModel(YieldModuleVersionStatus.NotDeployed, expected = false),
+            UpgradeRequiredModel(YieldModuleVersionStatus.UpgradeUnavailable(OLD_IMPLEMENTATION), expected = false),
+            UpgradeRequiredModel(YieldModuleVersionStatus.Indeterminate(reason = "rpc"), expected = false),
+        )
+    }
+
+    data class UpgradeRequiredModel(val version: YieldModuleVersionStatus, val expected: Boolean) {
+        override fun toString(): String = "${version::class.simpleName} -> $expected"
+    }
+
     @Test
     fun `GIVEN module up to date WHEN latestImplementation THEN null`() {
         // Arrange
