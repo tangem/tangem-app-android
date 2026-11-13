@@ -13,51 +13,51 @@ class GetTangemPayProductsAvailabilityUseCase(
     private val isMoneyAccountPathOccupiedUseCase: IsMoneyAccountPathOccupiedUseCase,
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
 ) {
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<TangemPayApiError, Set<TangemPayProduct>> =
-        either {
-            val summary = ensureNotNull(getCustomerSummaryUseCase(userWalletId).bind()) {
-                TangemPayApiError.UnknownWithoutCode
-            }
-            TangemPayProduct.entries.filterTo(mutableSetOf()) { product ->
-                isProductAvailable(product = product, summary = summary, userWalletId = userWalletId)
-            }
+    suspend operator fun invoke(userWalletId: UserWalletId): Either<TangemPayApiError, Set<TangemPayProduct>> = either {
+        val summary = ensureNotNull(getCustomerSummaryUseCase(userWalletId).bind()) {
+            TangemPayApiError.UnknownWithoutCode
         }
-
-    private suspend fun isProductAvailable(
-        product: TangemPayProduct,
-        summary: CustomerSummary,
-        userWalletId: UserWalletId,
-    ): Boolean = when (product) {
-        TangemPayProduct.BANKING_ACCOUNT -> {
-            summary.moneyAccount.activation.status.canStartActivation && !isMoneyAccountPathOccupiedUseCase(userWalletId)
-        }
-        TangemPayProduct.PAYMENT_ACCOUNT -> {
-            summary.paymentAccount.activation.status.canStartActivation
+        TangemPayProduct.entries.filterTo(mutableSetOf()) { product ->
+            product.isProductAvailable(summary = summary, userWalletId = userWalletId)
         }
     }
 
-    private val CustomerSummary.MoneyAccount.Activation.Status.canStartActivation: Boolean
-        get() = when (this) {
-            CustomerSummary.MoneyAccount.Activation.Status.NOT_STARTED,
-            CustomerSummary.MoneyAccount.Activation.Status.FAILED,
-            -> true
-            CustomerSummary.MoneyAccount.Activation.Status.UNAVAILABLE,
-            CustomerSummary.MoneyAccount.Activation.Status.PROCESSING,
-            CustomerSummary.MoneyAccount.Activation.Status.COMPLETED,
-            CustomerSummary.MoneyAccount.Activation.Status.DEACTIVATED,
-            CustomerSummary.MoneyAccount.Activation.Status.UNKNOWN,
-            -> false
+    private suspend fun TangemPayProduct.isProductAvailable(
+        summary: CustomerSummary,
+        userWalletId: UserWalletId,
+    ): Boolean = when (this) {
+        TangemPayProduct.BANKING_ACCOUNT -> {
+            val moneyAccount = summary.moneyAccount.activation
+            moneyAccount.status.canStartActivation && !isMoneyAccountPathOccupiedUseCase(userWalletId)
         }
-
-    private val CustomerSummary.PaymentAccount.Activation.Status.canStartActivation: Boolean
-        get() = when (this) {
-            CustomerSummary.PaymentAccount.Activation.Status.NOT_STARTED,
-            CustomerSummary.PaymentAccount.Activation.Status.FAILED,
-            -> true
-            CustomerSummary.PaymentAccount.Activation.Status.UNAVAILABLE,
-            CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
-            CustomerSummary.PaymentAccount.Activation.Status.COMPLETED,
-            CustomerSummary.PaymentAccount.Activation.Status.UNKNOWN,
-            -> false
+        TangemPayProduct.PAYMENT_ACCOUNT -> {
+            val paymentAccount = summary.paymentAccount.activation
+            paymentAccount.status.canStartActivation
         }
+    }
 }
+
+private val CustomerSummary.MoneyAccount.Activation.Status.canStartActivation: Boolean
+    get() = when (this) {
+        CustomerSummary.MoneyAccount.Activation.Status.NOT_STARTED,
+        CustomerSummary.MoneyAccount.Activation.Status.FAILED,
+        -> true
+        CustomerSummary.MoneyAccount.Activation.Status.UNAVAILABLE,
+        CustomerSummary.MoneyAccount.Activation.Status.PROCESSING,
+        CustomerSummary.MoneyAccount.Activation.Status.COMPLETED,
+        CustomerSummary.MoneyAccount.Activation.Status.DEACTIVATED,
+        CustomerSummary.MoneyAccount.Activation.Status.UNKNOWN,
+        -> false
+    }
+
+private val CustomerSummary.PaymentAccount.Activation.Status.canStartActivation: Boolean
+    get() = when (this) {
+        CustomerSummary.PaymentAccount.Activation.Status.NOT_STARTED,
+        CustomerSummary.PaymentAccount.Activation.Status.FAILED,
+        -> true
+        CustomerSummary.PaymentAccount.Activation.Status.UNAVAILABLE,
+        CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
+        CustomerSummary.PaymentAccount.Activation.Status.COMPLETED,
+        CustomerSummary.PaymentAccount.Activation.Status.UNKNOWN,
+        -> false
+    }
