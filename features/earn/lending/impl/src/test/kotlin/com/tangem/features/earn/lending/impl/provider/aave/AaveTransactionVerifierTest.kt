@@ -147,6 +147,17 @@ internal class AaveTransactionVerifierTest {
             txs = listOf(deposit().copy(amount = coin(DEPOSIT).copy(decimals = 6))),
             reason = "Amount is not a native coin",
         ),
+        invalid(
+            name = "deposit from another sender",
+            txs = listOf(deposit().copy(sourceAddress = OTHER)),
+            reason = "Transaction is sent by another address",
+        ),
+        invalid(
+            name = "preparation from another sender",
+            txs = listOf(prepare(initToken).copy(sourceAddress = OTHER), deposit()),
+            read = needsInit,
+            reason = "Transaction is sent by another address",
+        ),
         invalid(name = "no call data", txs = listOf(deposit(callData = null)), reason = "Transaction has no call data"),
         invalid(name = "no transactions", txs = emptyList(), reason = "Unexpected number of transactions: 0"),
         invalid(
@@ -330,6 +341,12 @@ internal class AaveTransactionVerifierTest {
             txs = listOf(withdraw(exit, destination = OTHER)),
             expected = withdrawOf(isEntire = true),
             reason = "Withdrawal goes to another address",
+        ),
+        invalid(
+            name = "withdraw from another sender",
+            txs = listOf(withdraw(exit).copy(sourceAddress = OTHER)),
+            expected = withdrawOf(isEntire = true),
+            reason = "Transaction is sent by another address",
         ),
         invalid(
             name = "withdraw carries a value",

@@ -50,6 +50,8 @@ internal class AaveTransactionVerifier @Inject constructor() {
     ): Either<LendingTxError, Unit> = either {
         val areNativeCoins = txs.all { tx -> tx.amount.isNativeCoinOf(addresses.blockchain) }
         ensure(areNativeCoins) { unverified("Amount is not a native coin") }
+        val areSentByOwner = txs.all { tx -> tx.sourceAddress.isSameAddressAs(expected.owner, addresses.networkId) }
+        ensure(areSentByOwner) { unverified("Transaction is sent by another address") }
         when (expected) {
             is LendingTxExpectation.Deposit -> verifyDeposit(
                 txs = txs,
