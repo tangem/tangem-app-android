@@ -2,6 +2,7 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.ui.test.AddWalletSheetTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -11,9 +12,13 @@ import com.tangem.core.res.R as CoreResR
 class AddWalletBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<AddWalletBottomSheetPageObject>(semanticsProvider = semanticsProvider) {
 
-    val addHardwareWalletButton: KNode = child {
+    val legacyAddHardwareWalletButton: KNode = child {
         hasText(getResourceString(CoreResR.string.user_wallet_add_hardware_title))
         useUnmergedTree = true
+    }
+
+    val cardOrRingRow: KNode = child {
+        hasTestTag(AddWalletSheetTestTags.CARD_OR_RING_ROW)
     }
 }
 
