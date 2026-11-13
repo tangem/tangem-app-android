@@ -1,18 +1,15 @@
 package com.tangem.data.polymarket.store
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.data.polymarket.entity.PolymarketSessionKeyReadinessDTO
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
-import com.tangem.test.core.datastore.MockStateDataStore
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
 internal class DefaultPolymarketSessionKeyTradingStoreTest {
 
-    private val dataStore = MockStateDataStore<Map<String, PolymarketSessionKeyReadinessDTO>>(default = emptyMap())
-    private val store = DefaultPolymarketSessionKeyTradingStore(readinessDataStore = dataStore)
+    private val store = DefaultPolymarketSessionKeyTradingStore()
 
     @Test
     fun `GIVEN nothing recorded WHEN isReadyOnExchange THEN false`() = runTest {
@@ -191,7 +188,7 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
     }
 
     @Test
-    fun `GIVEN a ready key WHEN refused THEN a restarted store does not see it ready`() = runTest {
+    fun `GIVEN a key ready on two wallets WHEN refused on one THEN only the other wallet keeps it ready`() = runTest {
         // Arrange
         store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
         store.markReadyOnExchange(WALLET_B, KEY, VALID_UNTIL)
@@ -200,9 +197,20 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
         store.markRefused(WALLET_A, KEY.uppercase().replace("0X", "0x"))
 
         // Assert
-        val restarted = DefaultPolymarketSessionKeyTradingStore(readinessDataStore = dataStore)
+        assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isFalse()
+        assertThat(store.isReadyOnExchange(WALLET_B, KEY, VALID_UNTIL)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a ready key WHEN the store is created anew THEN nothing is ready until reconciliation`() = runTest {
+        // Arrange
+        store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Act
+        val restarted = DefaultPolymarketSessionKeyTradingStore()
+
+        // Assert
         assertThat(restarted.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isFalse()
-        assertThat(restarted.isReadyOnExchange(WALLET_B, KEY, VALID_UNTIL)).isTrue()
     }
 
     @Test

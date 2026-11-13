@@ -335,6 +335,8 @@ internal abstract class PlacePredictionModelTestBase {
                 featureToggles = featureToggles,
                 getPredictionOrderSessionKeyWindowUseCase = GetPredictionOrderSessionKeyWindowUseCase(
                     router = signingRouter,
+                    sessionKeyStore = mockk { coEvery { heldAddress(any()) } returns null },
+                    stateService = mockk(),
                 ),
                 dispatchers = dispatchers,
             )

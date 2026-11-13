@@ -1,21 +1,15 @@
 package com.tangem.data.polymarket.store
 
-import androidx.datastore.core.DataStore
-import com.tangem.data.polymarket.entity.PolymarketSessionKeyReadinessDTO
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
-import com.tangem.utils.coroutines.runSuspendCatching
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 
-internal class DefaultPolymarketSessionKeyTradingStore(
-    private val readinessDataStore: DataStore<Map<String, PolymarketSessionKeyReadinessDTO>>,
-) : PolymarketSessionKeyTradingStore {
+internal class DefaultPolymarketSessionKeyTradingStore : PolymarketSessionKeyTradingStore {
 
+    private val readiness = MutableStateFlow<Map<UserWalletId, Readiness>>(emptyMap())
     private val refused = MutableStateFlow<Map<UserWalletId, Set<String>>>(emptyMap())
     private val missingOnExchange = MutableStateFlow<Map<UserWalletId, Set<String>>>(emptyMap())
 
@@ -23,10 +17,7 @@ internal class DefaultPolymarketSessionKeyTradingStore(
         userWalletId: UserWalletId,
         sessionKeyAddress: String,
         validUntil: Instant,
-    ): Boolean = runSuspendCatching { readinessDataStore.data.first()[userWalletId.stringValue] }
-        .onFailure { TangemLogger.e("Failed to read the session key readiness of $userWalletId", it) }
-        .getOrNull()
-        .let { it?.address == sessionKeyAddress.normalized() && it.validUntil == validUntil.epochSecond }
+    ): Boolean = readiness.value[userWalletId] == Readiness(sessionKeyAddress.normalized(), validUntil.epochSecond)
 
     override suspend fun markReadyOnExchange(
         userWalletId: UserWalletId,
@@ -52,10 +43,8 @@ internal class DefaultPolymarketSessionKeyTradingStore(
         recordReadiness(userWalletId, sessionKeyAddress.normalized(), validUntil)
     }
 
-    private suspend fun recordReadiness(userWalletId: UserWalletId, address: String, validUntil: Instant) {
-        val record = PolymarketSessionKeyReadinessDTO(address = address, validUntil = validUntil.epochSecond)
-        runSuspendCatching { readinessDataStore.updateData { it + (userWalletId.stringValue to record) } }
-            .onFailure { TangemLogger.e("Failed to record the session key readiness of $userWalletId", it) }
+    private fun recordReadiness(userWalletId: UserWalletId, address: String, validUntil: Instant) {
+        readiness.update { it + (userWalletId to Readiness(address, validUntil.epochSecond)) }
     }
 
     override fun isMissingOnExchange(userWalletId: UserWalletId, sessionKeyAddress: String): Boolean =
@@ -84,24 +73,22 @@ internal class DefaultPolymarketSessionKeyTradingStore(
         dropReadiness(userWalletId, sessionKeyAddress.normalized())
     }
 
-    private suspend fun dropReadiness(userWalletId: UserWalletId, address: String) {
-        runSuspendCatching {
-            readinessDataStore.updateData { records ->
-                val key = userWalletId.stringValue
-                if (records[key]?.address == address) records - key else records
-            }
-        }.onFailure { TangemLogger.e("Failed to drop the session key readiness of $userWalletId", it) }
+    private fun dropReadiness(userWalletId: UserWalletId, address: String) {
+        readiness.update { records ->
+            if (records[userWalletId]?.address == address) records - userWalletId else records
+        }
     }
 
     override suspend fun clear(userWalletId: UserWalletId) {
         refused.update { it - userWalletId }
         missingOnExchange.update { it - userWalletId }
-        runSuspendCatching { readinessDataStore.updateData { it - userWalletId.stringValue } }
-            .onFailure { TangemLogger.e("Failed to clear the session key readiness of $userWalletId", it) }
+        readiness.update { it - userWalletId }
     }
 
     private fun Map<UserWalletId, Set<String>>.without(userWalletId: UserWalletId, address: String) =
         this + (userWalletId to this[userWalletId].orEmpty() - address)
 
     private fun String.normalized(): String = lowercase()
+
+    private data class Readiness(val address: String, val validUntilEpochSecond: Long)
 }

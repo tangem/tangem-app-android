@@ -336,7 +336,13 @@ internal object PolymarketDomainModule {
     @Singleton
     fun provideGetPredictionOrderSessionKeyWindowUseCase(
         router: PolymarketOrderSigningRouter,
-    ): GetPredictionOrderSessionKeyWindowUseCase = GetPredictionOrderSessionKeyWindowUseCase(router = router)
+        sessionKeyStore: PolymarketSessionKeyStore,
+        stateService: PolymarketSessionKeyStateService,
+    ): GetPredictionOrderSessionKeyWindowUseCase = GetPredictionOrderSessionKeyWindowUseCase(
+        router = router,
+        sessionKeyStore = sessionKeyStore,
+        stateService = stateService,
+    )
 
     @Provides
     @Singleton
