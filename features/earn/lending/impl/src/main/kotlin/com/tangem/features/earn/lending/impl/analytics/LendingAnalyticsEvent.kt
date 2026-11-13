@@ -2,6 +2,7 @@ package com.tangem.features.earn.lending.impl.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.features.earn.lending.impl.session.LendingOperation
 
 internal sealed class LendingAnalyticsEvent(
     event: String,
@@ -9,26 +10,32 @@ internal sealed class LendingAnalyticsEvent(
 ) : AnalyticsEvent(category = "ETH Lending", event = event, params = params) {
 
     data class TransactionSigned(
-        private val transaction: LendingAnalyticsTransaction,
+        private val operation: LendingOperation,
+        private val isWithUpgrade: Boolean,
         private val amountBucket: String?,
     ) : LendingAnalyticsEvent(
         event = "Transaction Signed",
         params = buildMap {
-            putAll(transaction.toParams())
+            putAll(transactionParams(operation, isWithUpgrade))
             amountBucket?.let { put(AMOUNT_BUCKET, it) }
         },
     )
 
     data class TransactionSubmitted(
-        private val transaction: LendingAnalyticsTransaction,
-    ) : LendingAnalyticsEvent(event = "Transaction Submitted", params = transaction.toParams())
+        private val operation: LendingOperation,
+        private val isWithUpgrade: Boolean,
+    ) : LendingAnalyticsEvent(
+        event = "Transaction Submitted",
+        params = transactionParams(operation, isWithUpgrade),
+    )
 
     data class TransactionFailed(
-        private val transaction: LendingAnalyticsTransaction,
+        private val operation: LendingOperation,
+        private val isWithUpgrade: Boolean,
         private val errorCode: String,
     ) : LendingAnalyticsEvent(
         event = "Error - Transaction Failed",
-        params = transaction.toParams() + (AnalyticsParam.ERROR_CODE to errorCode),
+        params = transactionParams(operation, isWithUpgrade) + (AnalyticsParam.ERROR_CODE to errorCode),
     )
 
     private companion object {
@@ -36,20 +43,12 @@ internal sealed class LendingAnalyticsEvent(
         const val WITH_UPGRADE = "With Upgrade"
         const val AMOUNT_BUCKET = "Amount Bucket"
 
-        fun LendingAnalyticsTransaction.toParams(): Map<String, String> = mapOf(
-            TRANSACTION_TYPE to type.value,
+        fun transactionParams(operation: LendingOperation, isWithUpgrade: Boolean): Map<String, String> = mapOf(
+            TRANSACTION_TYPE to when (operation) {
+                LendingOperation.Deposit -> "Deposit"
+                LendingOperation.Withdraw -> "Withdraw"
+            },
             WITH_UPGRADE to isWithUpgrade.toString(),
         )
-    }
-}
-
-internal data class LendingAnalyticsTransaction(
-    val type: Type,
-    val isWithUpgrade: Boolean,
-) {
-
-    enum class Type(val value: String) {
-        Deposit("Deposit"),
-        Withdraw("Withdraw"),
     }
 }

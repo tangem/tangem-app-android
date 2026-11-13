@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class AaveModuleStateTest {
@@ -82,32 +81,37 @@ internal class AaveModuleStateTest {
         assertThat(read.latestImplementation).isEqualTo(LATEST_IMPLEMENTATION)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideUpgradeRequiredModels")
-    fun `GIVEN module version WHEN isUpgradeRequired THEN only an available upgrade requires it`(
-        model: UpgradeRequiredModel,
-    ) {
-        // Arrange
-        val read = AaveModuleRead(readyStatus, model.version, withdrawLiquidity = null)
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsUpgradeRequired {
 
-        // Act
-        val actual = read.isUpgradeRequired
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN module version WHEN isUpgradeRequired THEN only an available upgrade requires it`(
+            model: UpgradeRequiredModel,
+        ) {
+            // Arrange
+            val read = AaveModuleRead(readyStatus, model.version, withdrawLiquidity = null)
 
-        // Assert
-        assertThat(actual).isEqualTo(model.expected)
+            // Act
+            val actual = read.isUpgradeRequired
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            UpgradeRequiredModel(upgradeAvailable, expected = true),
+            UpgradeRequiredModel(YieldModuleVersionStatus.UpToDate, expected = false),
+            UpgradeRequiredModel(YieldModuleVersionStatus.NotDeployed, expected = false),
+            UpgradeRequiredModel(YieldModuleVersionStatus.UpgradeUnavailable(OLD_IMPLEMENTATION), expected = false),
+            UpgradeRequiredModel(YieldModuleVersionStatus.Indeterminate(reason = "rpc"), expected = false),
+        )
     }
 
     data class UpgradeRequiredModel(val version: YieldModuleVersionStatus, val expected: Boolean) {
         override fun toString(): String = "${version::class.simpleName} -> $expected"
     }
-
-    private fun provideUpgradeRequiredModels() = listOf(
-        UpgradeRequiredModel(upgradeAvailable, expected = true),
-        UpgradeRequiredModel(YieldModuleVersionStatus.UpToDate, expected = false),
-        UpgradeRequiredModel(YieldModuleVersionStatus.NotDeployed, expected = false),
-        UpgradeRequiredModel(YieldModuleVersionStatus.UpgradeUnavailable(OLD_IMPLEMENTATION), expected = false),
-        UpgradeRequiredModel(YieldModuleVersionStatus.Indeterminate(reason = "rpc"), expected = false),
-    )
 
     @Test
     fun `GIVEN module up to date WHEN latestImplementation THEN null`() {

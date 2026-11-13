@@ -19,7 +19,6 @@ import kotlin.time.Duration
  * @property operation what [txs] were built to do; they are verified against it, not against a fresher state
  * @property txs       estimated transactions, the preparation (if any) first
  * @property planKey   the provider state the transactions were built for
- * @property isWithUpgrade the transactions also upgrade the provider contract
  */
 internal data class LendingPlan(
     override val fee: Fee,

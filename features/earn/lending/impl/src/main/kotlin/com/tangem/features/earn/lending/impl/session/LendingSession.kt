@@ -120,7 +120,7 @@ internal class LendingSession @AssistedInject constructor(
         emit(EarnSigningStep.AwaitingConfirmation(stepLabel = null, tx = analytics))
         sender.send(params.userWalletId, params.currency, lendingPlan).fold(
             ifLeft = { error ->
-                analyticsSender.onSendFailed(lendingPlan, error)
+                analyticsSender.onSendFailed(plan = lendingPlan, operation = operation, error = error)
                 refreshProvider()
                 emit(EarnSigningStep.Failed(error))
             },
@@ -220,12 +220,13 @@ internal class LendingSession @AssistedInject constructor(
     ) {
         val hash = hashes.lastOrNull()
         if (hash == null) {
+            val error = SendTransactionError.UnknownError()
+            analyticsSender.onSendFailed(plan = plan, operation = operation, error = error)
             refreshProvider()
-            emit(EarnSigningStep.Failed(SendTransactionError.UnknownError()))
+            emit(EarnSigningStep.Failed(error))
             return
         }
 
-        analyticsSender.onSent(plan = plan, currency = params.currency)
         val ref = EarnTxRef(
             version = TX_REF_VERSION,
             productId = LendingEarnProduct.ID,
@@ -237,6 +238,7 @@ internal class LendingSession @AssistedInject constructor(
         )
         // Sent goes first: once the flow knows the hash, it never offers to send the plan again
         emit(EarnSigningStep.Sent(ref))
+        analyticsSender.onSent(plan = plan, operation = operation, currency = params.currency)
         refreshProvider()
         val result = when (operation) {
             LendingOperation.Deposit -> lendingDepositResult(plan.amount, params.currency, lendingProvider.info.title)

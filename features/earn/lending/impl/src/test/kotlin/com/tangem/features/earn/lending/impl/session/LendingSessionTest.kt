@@ -861,8 +861,57 @@ internal class LendingSessionTest {
             session.execute(plan).test { cancelAndConsumeRemainingEvents() }
 
             // Assert
-            coVerify(exactly = 1) { analyticsSender.onSent(plan = plan.plan as LendingPlan, currency = eth) }
-            coVerify(exactly = 0) { analyticsSender.onSendFailed(plan = any(), error = any()) }
+            coVerify(exactly = 1) {
+                analyticsSender.onSent(
+                    plan = plan.plan as LendingPlan,
+                    operation = LendingOperation.Deposit,
+                    currency = eth,
+                )
+            }
+            coVerify(exactly = 0) { analyticsSender.onSendFailed(plan = any(), operation = any(), error = any()) }
+        }
+
+        @Test
+        fun `GIVEN analytics fails WHEN execute THEN the sent plan is reported before it`() = runTest {
+            // Arrange
+            arrangeDeposit(built = listOf(rawPreparation, rawDeposit))
+            val plan = verified(depositPlan())
+            arrangeSend(listOf(PREPARATION_HASH, DEPOSIT_HASH).right())
+            coEvery {
+                analyticsSender.onSent(plan = any(), operation = any(), currency = any())
+            } throws IllegalStateException("analytics")
+
+            // Act
+            session.execute(plan).test {
+                // Assert
+                awaitItem()
+                assertThat(awaitItem()).isInstanceOf(EarnSigningStep.Sent::class.java)
+                assertThat(awaitError()).hasMessageThat().isEqualTo("analytics")
+            }
+        }
+
+        @Test
+        fun `GIVEN no hashes returned WHEN execute THEN fails and reports the failure`() = runTest {
+            // Arrange
+            arrangeDeposit(built = listOf(rawPreparation, rawDeposit))
+            val plan = verified(depositPlan())
+            arrangeSend(emptyList<String>().right())
+
+            // Act
+            session.execute(plan).test {
+                // Assert
+                awaitItem()
+                assertThat(awaitItem()).isEqualTo(EarnSigningStep.Failed(SendTransactionError.UnknownError()))
+                awaitComplete()
+            }
+            coVerify(exactly = 1) {
+                analyticsSender.onSendFailed(
+                    plan = plan.plan as LendingPlan,
+                    operation = LendingOperation.Deposit,
+                    error = SendTransactionError.UnknownError(),
+                )
+            }
+            coVerify(exactly = 0) { analyticsSender.onSent(plan = any(), operation = any(), currency = any()) }
         }
 
         @Test
@@ -920,8 +969,14 @@ internal class LendingSessionTest {
                 awaitComplete()
             }
             assertThat(provider.refreshCalls).containsExactly(userWalletId to asset)
-            coVerify(exactly = 1) { analyticsSender.onSendFailed(plan = plan.plan as LendingPlan, error = error) }
-            coVerify(exactly = 0) { analyticsSender.onSent(plan = any(), currency = any()) }
+            coVerify(exactly = 1) {
+                analyticsSender.onSendFailed(
+                    plan = plan.plan as LendingPlan,
+                    operation = LendingOperation.Deposit,
+                    error = error,
+                )
+            }
+            coVerify(exactly = 0) { analyticsSender.onSent(plan = any(), operation = any(), currency = any()) }
             coVerify(exactly = 0) {
                 pendingTracker.addPending(userWalletId = any(), cryptoCurrency = any(), txIds = any(), depositContext = any())
             }

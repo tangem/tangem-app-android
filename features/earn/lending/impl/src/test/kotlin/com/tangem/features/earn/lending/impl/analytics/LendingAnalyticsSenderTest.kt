@@ -3,9 +3,13 @@ package com.tangem.features.earn.lending.impl.analytics
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.earn.lending.impl.provider.LendingTestTransactions.ethFee
+import com.tangem.features.earn.lending.impl.session.LendingOperation
 import com.tangem.features.earn.lending.impl.session.LendingPlan
 import com.tangem.features.earn.lending.impl.session.LendingPlannedOperation
 import com.tangem.features.earn.product.api.session.Deposit
@@ -13,6 +17,7 @@ import com.tangem.features.earn.product.api.session.Withdraw
 import com.tangem.features.earn.product.api.session.WithdrawMode
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
@@ -45,37 +50,81 @@ internal class LendingAnalyticsSenderTest {
     inner class OnSent {
 
         @Test
-        fun `GIVEN usd price known WHEN onSent THEN sends signed with amount bucket and then submitted`() = runTest {
-            // Arrange
-            coEvery { getCurrencyUSDQuoteUseCase(eth.id.rawCurrencyId!!) } returns BigDecimal("3000")
-            val transaction = LendingAnalyticsTransaction(LendingAnalyticsTransaction.Type.Deposit, isWithUpgrade = true)
+        fun `GIVEN usd price known WHEN onSent THEN sends signed with amount bucket, submitted and transaction sent`() =
+            runTest {
+                // Arrange
+                coEvery { getCurrencyUSDQuoteUseCase(eth.id.rawCurrencyId!!) } returns BigDecimal("3000")
 
-            // Act
-            sender.onSent(plan = depositPlan(amount = BigDecimal("0.2"), isWithUpgrade = true), currency = eth)
+                // Act
+                sender.onSent(
+                    plan = depositPlan(amount = BigDecimal("0.2"), isWithUpgrade = true),
+                    operation = LendingOperation.Deposit,
+                    currency = eth,
+                )
 
-            // Assert
-            verifyOrder {
-                analyticsEventHandler.send(LendingAnalyticsEvent.TransactionSigned(transaction, amountBucket = "250-1K"))
-                analyticsEventHandler.send(LendingAnalyticsEvent.TransactionSubmitted(transaction))
+                // Assert
+                verifyOrder {
+                    analyticsEventHandler.send(
+                        LendingAnalyticsEvent.TransactionSigned(
+                            operation = LendingOperation.Deposit,
+                            isWithUpgrade = true,
+                            amountBucket = "250-1K",
+                        ),
+                    )
+                    analyticsEventHandler.send(
+                        LendingAnalyticsEvent.TransactionSubmitted(LendingOperation.Deposit, isWithUpgrade = true),
+                    )
+                    analyticsEventHandler.send(expectedTransactionSent())
+                }
             }
-        }
 
         @Test
         fun `GIVEN usd price unknown WHEN onSent THEN signed goes without amount bucket`() = runTest {
             // Arrange
             coEvery { getCurrencyUSDQuoteUseCase(eth.id.rawCurrencyId!!) } returns null
-            val transaction =
-                LendingAnalyticsTransaction(LendingAnalyticsTransaction.Type.Withdraw, isWithUpgrade = false)
 
             // Act
-            sender.onSent(plan = withdrawPlan(), currency = eth)
+            sender.onSent(plan = withdrawPlan(), operation = LendingOperation.Withdraw, currency = eth)
 
             // Assert
             verify(exactly = 1) {
-                analyticsEventHandler.send(LendingAnalyticsEvent.TransactionSigned(transaction, amountBucket = null))
+                analyticsEventHandler.send(
+                    LendingAnalyticsEvent.TransactionSigned(
+                        operation = LendingOperation.Withdraw,
+                        isWithUpgrade = false,
+                        amountBucket = null,
+                    ),
+                )
             }
-            verify(exactly = 1) { analyticsEventHandler.send(LendingAnalyticsEvent.TransactionSubmitted(transaction)) }
         }
+
+        @Test
+        fun `GIVEN currency without raw id WHEN onSent THEN signed goes without amount bucket and no quote is read`() =
+            runTest {
+                // Arrange
+                val currency = eth.copy(
+                    id = CryptoCurrency.ID(
+                        prefix = CryptoCurrency.ID.Prefix.COIN_PREFIX,
+                        body = CryptoCurrency.ID.Body.NetworkId(rawId = "ethereum"),
+                        suffix = CryptoCurrency.ID.Suffix.ContractAddress(contractAddress = "0x1"),
+                    ),
+                )
+
+                // Act
+                sender.onSent(plan = depositPlan(), operation = LendingOperation.Deposit, currency = currency)
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        LendingAnalyticsEvent.TransactionSigned(
+                            operation = LendingOperation.Deposit,
+                            isWithUpgrade = false,
+                            amountBucket = null,
+                        ),
+                    )
+                }
+                coVerify(exactly = 0) { getCurrencyUSDQuoteUseCase(any()) }
+            }
     }
 
     @Nested
@@ -86,16 +135,18 @@ internal class LendingAnalyticsSenderTest {
         fun `GIVEN send error WHEN onSendFailed THEN sends transaction failed with its error code`() {
             // Arrange
             val error = SendTransactionError.NetworkError(message = "rejected", code = "500")
-            val transaction =
-                LendingAnalyticsTransaction(LendingAnalyticsTransaction.Type.Deposit, isWithUpgrade = false)
 
             // Act
-            sender.onSendFailed(plan = depositPlan(), error = error)
+            sender.onSendFailed(plan = depositPlan(), operation = LendingOperation.Deposit, error = error)
 
             // Assert
             verify(exactly = 1) {
                 analyticsEventHandler.send(
-                    LendingAnalyticsEvent.TransactionFailed(transaction, errorCode = "NetworkError: 500"),
+                    LendingAnalyticsEvent.TransactionFailed(
+                        operation = LendingOperation.Deposit,
+                        isWithUpgrade = false,
+                        errorCode = "NetworkError: 500",
+                    ),
                 )
             }
         }
@@ -103,12 +154,29 @@ internal class LendingAnalyticsSenderTest {
         @Test
         fun `GIVEN user cancelled on the card WHEN onSendFailed THEN sends nothing`() {
             // Act
-            sender.onSendFailed(plan = depositPlan(), error = SendTransactionError.UserCancelledError)
+            sender.onSendFailed(
+                plan = depositPlan(),
+                operation = LendingOperation.Deposit,
+                error = SendTransactionError.UserCancelledError,
+            )
 
             // Assert
             verify(exactly = 0) { analyticsEventHandler.send(any()) }
         }
     }
+
+    private fun expectedTransactionSent() = Basic.TransactionSent(
+        sentFrom = AnalyticsParam.TxSentFrom.Earning(
+            blockchain = "Ethereum",
+            token = "ETH",
+            feeType = AnalyticsParam.FeeType.Normal,
+            feeToken = "ETH",
+            feeAssetType = AnalyticsParam.FeeAssetType.Coin,
+        ),
+        memoType = Basic.TransactionSent.MemoType.Null,
+        isCustomToken = false,
+        isCustomFeeToken = false,
+    )
 
     private fun depositPlan(amount: BigDecimal = BigDecimal.ONE, isWithUpgrade: Boolean = false) = LendingPlan(
         fee = ethFee(BigInteger.ONE),
