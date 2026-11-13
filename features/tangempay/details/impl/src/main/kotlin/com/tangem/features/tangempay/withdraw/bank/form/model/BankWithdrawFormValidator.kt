@@ -37,10 +37,12 @@ internal object BankWithdrawFormValidator {
             ?.let { countryField -> values[countryField] }
             ?.trim()
             ?.equals(BankWithdrawFormFields.US_COUNTRY_CODE, ignoreCase = true) == true
-        return if (field == BankWithdrawFormField.RoutingNumber) {
-            if (isRoutingNumber(value)) null else BankWithdrawFieldError.InvalidRoutingNumber
-        } else {
-            formatError(field = field, value = value, isUsAddress = isUsAddress)
+        return when (field) {
+            BankWithdrawFormField.RoutingNumber ->
+                if (isRoutingNumber(value)) null else BankWithdrawFieldError.InvalidRoutingNumber
+            BankWithdrawFormField.Clabe ->
+                if (ClabeValidator.isValid(value)) null else BankWithdrawFieldError.InvalidClabe
+            else -> formatError(field = field, value = value, isUsAddress = isUsAddress)
         }
     }
 

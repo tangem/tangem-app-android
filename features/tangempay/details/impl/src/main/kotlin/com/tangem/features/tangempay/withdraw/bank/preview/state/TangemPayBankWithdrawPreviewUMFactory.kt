@@ -12,7 +12,7 @@ import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.amount.state.formatFiat
-import com.tangem.features.tangempay.withdraw.bank.amount.state.toTextReference
+import com.tangem.features.tangempay.withdraw.bank.amount.state.toEtaReference
 import com.tangem.features.tangempay.withdraw.bank.amount.state.toTitleReference
 import com.tangem.features.tangempay.withdraw.bank.amount.state.totalFee
 import com.tangem.features.tangempay.withdraw.bank.amount.state.totalFeeText
@@ -114,7 +114,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(
             route = RouteUM(
                 rail = destination.rail,
                 title = railTitle,
-                eta = destination.eta.toTextReference(),
+                eta = destination.toEtaReference(),
                 fee = fee,
                 onClick = if (isSending || draft.isRailLocked) null else callbacks.onRailClick,
             ),

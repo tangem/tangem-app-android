@@ -54,7 +54,9 @@ internal fun BankWithdrawAmountSheets(sheet: SheetUM) {
             onDismissRequest = sheet.onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        title = { SheetHeader(title = R.string.tangempay_withdraw_bank_select_route, onClose = sheet.onDismiss) },
+        title = {
+            SheetHeader(title = R.string.tangempay_withdraw_bank_choose_transfer_method, onClose = sheet.onDismiss)
+        },
     ) {
         routes?.items?.fastForEach { item -> RouteRow(item = item) }
         routes?.networkFeeNote?.let { note -> NetworkFeeNote(note = note) }

@@ -118,6 +118,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
             resourceReference(R.string.tangempay_withdraw_bank_field_error_invalid_format)
         BankWithdrawFieldError.InvalidRoutingNumber ->
             resourceReference(R.string.tangempay_withdraw_bank_field_error_routing_number)
+        BankWithdrawFieldError.InvalidClabe -> resourceReference(R.string.tangempay_withdraw_bank_field_error_clabe)
         BankWithdrawFieldError.NonLatin -> resourceReference(R.string.tangempay_order_data_field_latin_only)
     }
 

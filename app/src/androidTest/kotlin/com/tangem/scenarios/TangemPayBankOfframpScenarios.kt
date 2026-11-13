@@ -213,7 +213,7 @@ fun BaseTestCase.openTangemPayBankWithdrawRouteSelector() {
     step("Click on the route row") {
         onTangemPayBankWithdrawAmountScreen { routeSelector.performClick() }
     }
-    step("Assert 'Select route' sheet is displayed") {
+    step("Assert 'Choose transfer method' sheet is displayed") {
         awaitSuccess { onTangemPayBankWithdrawAmountScreen { routeSheetTitle.assertIsDisplayed() } }
     }
 }
