@@ -443,6 +443,22 @@ internal class EarnInfoConverterTest {
             // Assert
             assertThat(actual.earned).isEqualTo(EarnInfoTexts.earnedChip(fiatText(earned.multiply(RATE))))
         }
+
+        @Test
+        fun `GIVEN hidden balance WHEN convert THEN balance, earned and rewards amounts are masked`() {
+            // Act
+            val actual = requireNotNull(convert(isBalanceHidden = true))
+
+            // Assert
+            assertThat(listOf(actual.balanceFiat, actual.balanceCrypto, actual.earned, actual.rewards?.title))
+                .containsExactly(
+                    stringReference("***"),
+                    stringReference("***"),
+                    EarnInfoTexts.earnedChip("***"),
+                    EarnInfoTexts.rewardsTitle("***"),
+                )
+                .inOrder()
+        }
     }
 
     @Nested
@@ -671,12 +687,14 @@ internal class EarnInfoConverterTest {
     private fun convert(
         ready: EarnProductState.Ready = this.ready,
         status: CryptoCurrencyStatus = status(),
+        isBalanceHidden: Boolean = false,
         locale: Locale = Locale.US,
         zoneId: ZoneId = ZoneOffset.UTC,
     ): EarnInfoUM? = converter.convert(
         product = product,
         status = status,
         appCurrency = AppCurrency.Default,
+        isBalanceHidden = isBalanceHidden,
         ready = ready,
         callbacks = callbacks,
         locale = locale,
