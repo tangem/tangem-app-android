@@ -81,6 +81,9 @@ internal interface LendingProviderState {
 
     /** Fingerprint of what the transactions depend on: when it changes, a prepared plan is stale */
     val planKey: String
+
+    /** The provider contract is outdated: the next transaction also upgrades it */
+    val isUpgradeRequired: Boolean
 }
 
 internal sealed interface LendingDepositGate {

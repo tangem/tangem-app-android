@@ -16,6 +16,8 @@ dependencies {
     implementation(projects.features.earn.product.api)
 
     /** Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)

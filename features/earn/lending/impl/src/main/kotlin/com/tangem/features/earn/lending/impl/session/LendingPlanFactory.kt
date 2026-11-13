@@ -71,6 +71,7 @@ internal class LendingPlanFactory @Inject constructor(
             amount = amount,
             txs = estimated,
             planKey = providerState.planKey,
+            isWithUpgrade = providerState.isUpgradeRequired,
         )
     }
 

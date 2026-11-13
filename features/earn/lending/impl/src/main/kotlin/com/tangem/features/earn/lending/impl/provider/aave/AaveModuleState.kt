@@ -26,6 +26,9 @@ internal data class AaveModuleRead(
     override val planKey: String
         get() = toState().toString()
 
+    override val isUpgradeRequired: Boolean
+        get() = latestImplementation != null
+
     /**
      * The module version and the reserve status are read independently:
      * an outdated module still needs its reserve set up

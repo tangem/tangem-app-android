@@ -15,6 +15,7 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
+import com.tangem.features.earn.lending.impl.analytics.LendingAnalyticsSender
 import com.tangem.features.earn.lending.impl.product.LendingEarnProduct
 import com.tangem.features.earn.lending.impl.product.LendingTexts
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
@@ -46,6 +47,7 @@ import kotlinx.datetime.Clock
 import java.math.BigDecimal
 import kotlin.time.Duration.Companion.seconds
 
+@Suppress("LongParameterList")
 internal class LendingSession @AssistedInject constructor(
     @Assisted private val params: EarnProduct.Params,
     private val lendingSupplier: LendingSupplier,
@@ -53,6 +55,7 @@ internal class LendingSession @AssistedInject constructor(
     private val planFactory: LendingPlanFactory,
     private val sender: LendingTxSender,
     private val transactionRepository: YieldSupplyTransactionRepository,
+    private val analyticsSender: LendingAnalyticsSender,
 ) : EarnSession {
 
     override suspend fun loadFee(action: EarnFlowAction, amount: EarnAmount?): Either<GetFeeError, TransactionFee> =
@@ -117,6 +120,7 @@ internal class LendingSession @AssistedInject constructor(
         emit(EarnSigningStep.AwaitingConfirmation(stepLabel = null, tx = analytics))
         sender.send(params.userWalletId, params.currency, lendingPlan).fold(
             ifLeft = { error ->
+                analyticsSender.onSendFailed(lendingPlan, error)
                 refreshProvider()
                 emit(EarnSigningStep.Failed(error))
             },
@@ -221,6 +225,7 @@ internal class LendingSession @AssistedInject constructor(
             return
         }
 
+        analyticsSender.onSent(plan = plan, currency = params.currency)
         val ref = EarnTxRef(
             version = TX_REF_VERSION,
             productId = LendingEarnProduct.ID,
