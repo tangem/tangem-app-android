@@ -50,6 +50,7 @@ import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -1303,6 +1304,27 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             assertThat(styleBeforeWindow).isEqualTo(PlaceButtonStyleUM.PLAIN)
             assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
         }
+
+        @Test
+        fun `GIVEN a plain summary button WHEN a resume lookup outlasts the signing window THEN the card is asked`() =
+            runTest {
+                // Arrange
+                every { featureToggles.isPolymarketFastOrdersEnabled } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
+                val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
+                model.onResume()
+                runCurrent()
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } coAnswers {
+                    awaitCancellation()
+                }
+
+                // Act
+                model.onResume()
+                advanceTimeBy(delayTimeMillis = SIGNING_WINDOW.toMillis() + 1)
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
 
         @Test
         fun `GIVEN a usable session key WHEN the card button is tapped on the summary THEN only the owner signs`() =

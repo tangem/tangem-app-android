@@ -37,7 +37,9 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
 
     private var sessionKeyStyle: PlaceButtonStyleUM? = null
 
-    private var sessionKeyCheck: Job? = null
+    private var sessionKeyLookup: Job? = null
+
+    private var signingWindowExpiry: Job? = null
 
     init {
         getUserWalletUseCase(userWalletId).onRight { userWallet ->
@@ -49,30 +51,38 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
 
     fun checkSessionKey() {
         val ownerStyle = ownerStyle ?: return
-        sessionKeyCheck?.cancel()
+        sessionKeyLookup?.cancel()
 
         if (!featureToggles.isPolymarketFastOrdersEnabled) {
+            signingWindowExpiry?.cancel()
             sessionKeyStyle = ownerStyle
             applyIfIdle()
             return
         }
 
-        sessionKeyCheck = scope.launch {
+        sessionKeyLookup = scope.launch {
             val signingWindow = withContext(dispatchers.io) {
                 getPredictionOrderSessionKeyWindowUseCase(userWalletId = userWalletId)
             }
-            if (signingWindow != null) {
-                sessionKeyStyle = PlaceButtonStyleUM.PLAIN
+            signingWindowExpiry?.cancel()
+            if (signingWindow == null) {
+                sessionKeyStyle = ownerStyle
                 applyIfIdle()
-                delay(signingWindow.toKotlinDuration())
+                return@launch
             }
-            sessionKeyStyle = ownerStyle
+            sessionKeyStyle = PlaceButtonStyleUM.PLAIN
             applyIfIdle()
+            signingWindowExpiry = scope.launch {
+                delay(signingWindow.toKotlinDuration())
+                sessionKeyStyle = ownerStyle
+                applyIfIdle()
+            }
         }
     }
 
     fun onSessionKeyLost() {
-        sessionKeyCheck?.cancel()
+        sessionKeyLookup?.cancel()
+        signingWindowExpiry?.cancel()
         sessionKeyStyle = ownerStyle
     }
 
