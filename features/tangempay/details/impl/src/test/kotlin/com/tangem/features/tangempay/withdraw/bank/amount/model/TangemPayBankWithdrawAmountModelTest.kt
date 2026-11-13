@@ -47,7 +47,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import io.mockk.verifySequence
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -129,31 +128,20 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
             model.onDestroy()
         }
 
-        @ParameterizedTest
-        @MethodSource("provideBusinessRailModels")
-        fun `GIVEN business entry WHEN amount opened THEN SPEI is picked only when no other rail is offered`(
-            model: BusinessRailModel,
-        ) {
+        @Test
+        fun `GIVEN business entry WHEN amount opened THEN SPEI is neither offered nor picked`() {
             // Arrange
             val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewBusiness)
-            val options = SPEI_OPTIONS.copy(destinations = model.destinations)
+            val options = SPEI_OPTIONS.copy(destinations = persistentListOf(SPEI_DESTINATION, offrampDestination()))
 
             // Act
-            val amountModel = createModel(draft = draft, options = options)
+            val model = createModel(draft = draft, options = options)
 
             // Assert
-            assertThat(amountModel.content().route.rail).isEqualTo(model.expectedRail)
-            assertThat(amountModel.content().route.onClick).isNull()
-            amountModel.onDestroy()
+            assertThat(model.content().route.rail).isEqualTo(BankRail.ACH)
+            assertThat(model.content().route.onClick).isNull()
+            model.onDestroy()
         }
-
-        private fun provideBusinessRailModels() = listOf(
-            BusinessRailModel(
-                destinations = persistentListOf(SPEI_DESTINATION, offrampDestination()),
-                expectedRail = BankRail.ACH,
-            ),
-            BusinessRailModel(destinations = persistentListOf(SPEI_DESTINATION), expectedRail = BankRail.SPEI),
-        )
 
         @ParameterizedTest
         @MethodSource("provideEditedRailModels")
@@ -1307,8 +1295,6 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
         val expectedRails: List<BankRail>,
         val options: BankWithdrawOptions = SPEI_OPTIONS,
     )
-
-    data class BusinessRailModel(val destinations: ImmutableList<OfframpDestination>, val expectedRail: BankRail)
 
     private companion object {
         val NETWORK_FEE = BigDecimal("0.04")
