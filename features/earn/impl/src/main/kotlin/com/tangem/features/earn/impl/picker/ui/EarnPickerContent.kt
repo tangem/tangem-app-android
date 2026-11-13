@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.media.VideoSurfaceState
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds2.button.Close
@@ -85,7 +86,12 @@ import java.math.BigDecimal
 
 /** The page is the haze source: the calculator's horizon menu blurs what is behind it. */
 @Composable
-internal fun EarnPickerContent(state: EarnPickerUM, modifier: Modifier = Modifier, calculator: @Composable () -> Unit) {
+internal fun EarnPickerContent(
+    state: EarnPickerUM,
+    heroVideo: VideoSurfaceState?,
+    modifier: Modifier = Modifier,
+    calculator: @Composable () -> Unit,
+) {
     val listState = rememberLazyListState()
     var heroHeightPx by remember { mutableIntStateOf(0) }
     var barHeightPx by remember { mutableIntStateOf(0) }
@@ -125,7 +131,9 @@ internal fun EarnPickerContent(state: EarnPickerUM, modifier: Modifier = Modifie
                 .hazeSourceTangem(),
             contentPadding = PaddingValues(bottom = with(LocalDensity.current) { footerHeightPx.toDp() }),
         ) {
-            item(key = "hero") { EarnPickerHero(modifier = Modifier.onSizeChanged { heroHeightPx = it.height }) }
+            item(key = "hero") {
+                EarnPickerHero(video = heroVideo, modifier = Modifier.onSizeChanged { heroHeightPx = it.height })
+            }
             item(key = "title") { EarnPickerTitle(title = state.title, subtitle = state.subtitle) }
             if (state.products.isNotEmpty()) {
                 item(key = "products") { EarnProductCards(products = state.products) }
@@ -530,6 +538,7 @@ private fun PreviewContent(state: EarnPickerUM) {
     TangemThemePreviewRedesign {
         EarnPickerContent(
             state = state,
+            heroVideo = null,
             calculator = {
                 Box(
                     modifier = Modifier

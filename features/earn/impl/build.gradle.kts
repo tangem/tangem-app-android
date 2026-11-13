@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.media)
+    implementation(projects.core.media.ui)
     implementation(projects.core.navigation)
     implementation(projects.core.res)
     implementation(projects.core.ui)

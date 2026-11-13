@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -43,14 +45,18 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
 
     init {
         componentScope.launch { model.incentiveSheetRequests.collect(incentiveSheet::show) }
+        lifecycle.doOnResume { model.setHeroVideoRunning(isRunning = true) }
+        lifecycle.doOnPause { model.setHeroVideoRunning(isRunning = false) }
     }
 
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val heroVideo by model.heroVideoState.collectAsStateWithLifecycle()
 
         EarnPickerContent(
             state = state,
+            heroVideo = heroVideo.surface,
             modifier = modifier,
             calculator = { calculator.Content(modifier = Modifier) },
         )
