@@ -42,7 +42,7 @@ internal class EarnCalculatorConverter @Inject constructor() {
         ),
         earnedLabel = EarnCalculatorTexts.earnedIn,
         horizon = horizonSelect(selected = input.horizon, onSelect = onHorizonSelect),
-        bars = bars(result = result, input = input).toImmutableList(),
+        bars = bars(result = result).toImmutableList(),
         axisLabels = axisLabels(input.horizon).toImmutableList(),
         initialBalance = stepper(
             label = EarnCalculatorTexts.initialBalance,
@@ -71,25 +71,23 @@ internal class EarnCalculatorConverter @Inject constructor() {
         }.toImmutableList(),
     )
 
-    private fun bars(result: EarnProjectionResult, input: CalculatorInput): List<EarnProjectionBarUM> {
+    private fun bars(result: EarnProjectionResult): List<EarnProjectionBarUM> {
         val points = result.points.sampled()
-        val tallest = points.maxOf { point -> input.initialFiat + point.capital + input.monthlyTopUpFiat }
+        val tallest = points.maxOf { point -> point.capital }
 
         val bars = points.map { point ->
             EarnProjectionBarUM(
-                initial = input.initialFiat.visibleShareOf(tallest),
-                total = point.capital.visibleShareOf(tallest),
-                topUp = input.monthlyTopUpFiat.visibleShareOf(tallest),
+                deposited = (point.capital - point.income).visibleShareOf(tallest),
+                earned = point.income.visibleShareOf(tallest),
             )
         }
-        val tallestStack = bars.maxOf { it.initial + it.total + it.topUp }
+        val tallestStack = bars.maxOf { it.deposited + it.earned }
 
         return if (tallestStack > 1f) {
             bars.map { bar ->
                 EarnProjectionBarUM(
-                    initial = bar.initial / tallestStack,
-                    total = bar.total / tallestStack,
-                    topUp = bar.topUp / tallestStack,
+                    deposited = bar.deposited / tallestStack,
+                    earned = bar.earned / tallestStack,
                 )
             }
         } else {
