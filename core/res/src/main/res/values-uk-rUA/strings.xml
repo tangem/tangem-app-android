@@ -2303,7 +2303,7 @@
   <string name="tangem_pay_card_frozen">Картку заморожено</string>
   <string name="tangem_pay_card_payment">Оплата карткою</string>
   <string name="tangem_pay_close_card_disabled_last_card">Єдину картку закрити не можна</string>
-  <string name="tangem_pay_close_card_popup_description">Воно зникне з застосунку</string>
+  <string name="tangem_pay_close_card_popup_description">Вона зникне із застосунку</string>
   <string name="tangem_pay_close_card_popup_primary_button_title">Закрити картку</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">Назад</string>
   <string name="tangem_pay_close_card_popup_title">Закрити вашу картку?</string>
@@ -2428,7 +2428,7 @@
   <string name="tangempay_card_details_added_to_google_wallet_text">Картку додано до Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Скасувати %1$s, перейти на %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Щоб оплатити щомісячну вартість тарифу та почати використовувати нову картку</string>
-  <string name="tangempay_card_details_awaiting_deposit_title">Поповніть рахунок до %1$s</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">Поповніть рахунок на %1$s</string>
   <string name="tangempay_card_details_card_number">Номер картки</string>
   <string name="tangempay_card_details_change_pin">ПІН-код</string>
   <string name="tangempay_card_details_change_pin_success_description">Картка готова до оплат.</string>
@@ -2483,7 +2483,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">Встановити ліміт від %s</string>
   <string name="tangempay_card_limit_setup_error_message">Не вдалося встановити ліміт. Будь ласка, спробуйте ще раз.</string>
   <string name="tangempay_card_page_activating_banner_title">Активуємо вашу пластикову картку</string>
-  <string name="tangempay_card_page_closing_banner_description">Може зайняти до 5 хвилин</string>
+  <string name="tangempay_card_page_closing_banner_description">Зазвичай займає до 5 хвилин</string>
   <string name="tangempay_card_page_closing_banner_title">Закриття вашої картки</string>
   <string name="tangempay_card_page_daily_limit_change">Змінити</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Поточний ліміт</string>

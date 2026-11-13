@@ -1312,6 +1312,7 @@
   <string name="joint_account_confirm_address_everyone_title">Everyone must confirm</string>
   <string name="joint_account_confirm_address_label">Shared address</string>
   <string name="joint_account_confirm_address_mismatch_button">Address doesn\'t match</string>
+  <string name="joint_account_confirm_address_share_message">Please confirm shared address: %s</string>
   <string name="joint_account_confirm_shared_address">Confirm shared address</string>
   <string name="joint_account_invite_invalid_subtitle">Check that you opened the correct link, or ask the account creator to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
@@ -1474,6 +1475,8 @@
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
   <string name="joint_operation_banner_title">%1$s wants to send %2$s</string>
   <string name="joint_operation_banner_title_own">You want to send %1$s</string>
+  <string name="joint_operation_cancel_alert_title">Cancel this transaction?</string>
+  <string name="joint_operation_cancelled_snackbar">Transaction cancelled</string>
   <string name="joint_operation_completed_subtitle">It has already been executed or cancelled</string>
   <string name="joint_operation_completed_title">Operation completed</string>
   <string name="joint_operation_created_at">Created at %s</string>
@@ -3200,7 +3203,7 @@
   <string name="tangempay_card_details_added_to_google_wallet_text">Card added to Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancel %1$s, move to %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">To pay monthly fee for plan and start use new card</string>
-  <string name="tangempay_card_details_awaiting_deposit_title">Top-up your account on %1$s</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">Top up your account with %1$s</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
   <string name="tangempay_card_details_change_pin">PIN code</string>
   <string name="tangempay_card_details_change_pin_success_description">The card is fully ready for payments.</string>
@@ -3255,7 +3258,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">Set a limit from %s</string>
   <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again</string>
   <string name="tangempay_card_page_activating_banner_title">Activating your physical card</string>
-  <string name="tangempay_card_page_closing_banner_description">Can take up to 5 minutes</string>
+  <string name="tangempay_card_page_closing_banner_description">Usually takes up to 5 minutes</string>
   <string name="tangempay_card_page_closing_banner_title">Closing your card</string>
   <string name="tangempay_card_page_daily_limit_change">Change</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Current limit</string>

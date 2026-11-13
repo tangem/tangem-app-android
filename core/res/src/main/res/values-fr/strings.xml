@@ -2308,7 +2308,7 @@
   <string name="support_chat_share_logs_button">Joindre les logs de l\'app</string>
   <string name="support_chat_swap_prefilled_message">Données du SWAP :\nDepuis :%1$s%2$s\nVers :%3$s%4$s\nPar :%5$s-%6$s</string>
   <string name="support_selector_view_chat_button">Accéder au chat</string>
-  <string name="support_selector_view_email_button">Ouvrir un email</string>
+  <string name="support_selector_view_email_button">Ouvrir la messagerie</string>
   <string name="survey_demand_business_interest_question">Les services OTC pour votre entreprise vous intéressent-ils ?</string>
   <string name="survey_demand_button">Rejoindre la liste</string>
   <string name="survey_demand_current_solution_cash_exchange">Échange en espèces</string>
@@ -2415,10 +2415,10 @@
   <string name="tangem_pay_card_frozen">Carte gelée</string>
   <string name="tangem_pay_card_payment">Paiement par carte</string>
   <string name="tangem_pay_close_card_disabled_last_card">Vous ne pouvez pas clôturer la dernière carte</string>
-  <string name="tangem_pay_close_card_popup_description">Il disparaîtra de l’application</string>
+  <string name="tangem_pay_close_card_popup_description">Elle disparaîtra de l’application</string>
   <string name="tangem_pay_close_card_popup_primary_button_title">Clôturer la carte</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">Retour</string>
-  <string name="tangem_pay_close_card_popup_title">Fermer votre carte ?</string>
+  <string name="tangem_pay_close_card_popup_title">Clôturer votre carte ?</string>
   <string name="tangem_pay_deposit">Dépôt</string>
   <string name="tangem_pay_dispute">Litige</string>
   <string name="tangem_pay_explore_transaction">Explorer la transaction</string>
@@ -2540,7 +2540,7 @@
   <string name="tangempay_card_details_added_to_google_wallet_text">Carte ajoutée à Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Annuler %1$s, passer à %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Pour payer le forfait et activer la nouvelle carte</string>
-  <string name="tangempay_card_details_awaiting_deposit_title">Rechargez votre compte avant le %1$s</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">Rechargez votre compte de %1$s</string>
   <string name="tangempay_card_details_card_number">Numéro de carte</string>
   <string name="tangempay_card_details_change_pin">Code PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">La carte est totalement prête pour les paiements.</string>
@@ -2595,7 +2595,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">Définir une limite à partir de %s</string>
   <string name="tangempay_card_limit_setup_error_message">Impossible de définir la limite. Veuillez réessayer.</string>
   <string name="tangempay_card_page_activating_banner_title">Activation de votre carte physique</string>
-  <string name="tangempay_card_page_closing_banner_description">Peut prendre jusqu\'à 5 minutes</string>
+  <string name="tangempay_card_page_closing_banner_description">Prend généralement jusqu\'à 5 minutes</string>
   <string name="tangempay_card_page_closing_banner_title">Clôture de votre carte</string>
   <string name="tangempay_card_page_daily_limit_change">Modifier</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Limite actuelle</string>
@@ -2633,8 +2633,8 @@
   <string name="tangempay_cashback_details_tier">%1$s%% sur achats avec cartes %2$s, achat min. %3$s</string>
   <string name="tangempay_cashback_earned_title">%1$s gagné en %2$s</string>
   <string name="tangempay_cashback_empty_subtitle">Le montant accumulé s\'affichera ici</string>
-  <string name="tangempay_cashback_empty_title">Dépensez\\net gagnez du cashback</string>
-  <string name="tangempay_cashback_error_title">Échec du chargement.\\nAppuyez pour recharger</string>
+  <string name="tangempay_cashback_empty_title">Dépensez\net gagnez du cashback</string>
+  <string name="tangempay_cashback_error_title">Échec du chargement.\nAppuyez pour recharger</string>
   <string name="tangempay_cashback_menu_item_loading">Chargement...</string>
   <string name="tangempay_cashback_menu_item_title">Cashback en %s</string>
   <string name="tangempay_cashback_rate_subtitle">Avec votre forfait %1$s</string>
