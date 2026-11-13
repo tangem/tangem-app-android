@@ -41,6 +41,7 @@ internal class LendingEarnProduct @Inject constructor(
 ) : EarnProduct {
 
     private val stateMapper = LendingStateMapper(lendingProvider)
+    private val summaryConverter = LendingSummaryConverter(rateBadgeConverter)
 
     override val id: EarnProductId = ID
 
@@ -62,7 +63,7 @@ internal class LendingEarnProduct @Inject constructor(
 
     override fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>> {
         if (!isOffered) return flowOf(emptyMap())
-        return lendingSupplier(userWalletId).map { it.toSummaries(rateBadgeConverter) }
+        return lendingSupplier(userWalletId).map(summaryConverter::convert)
     }
 
     override fun state(params: EarnProduct.Params): Flow<EarnProductState> {
