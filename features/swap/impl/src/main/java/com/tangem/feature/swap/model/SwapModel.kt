@@ -81,6 +81,7 @@ import com.tangem.domain.tangempay.WithdrawalResult
 import com.tangem.domain.tangempay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.usecase.WithdrawFromCollectiblesVaultUseCase
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -1991,6 +1992,7 @@ internal class SwapModel @Inject constructor(
         ).fold(
             ifLeft = { error ->
                 TangemLogger.e("onTransferClick: collectibles withdrawal failed: $error")
+                if (error is CollectiblesAccountError.MaybeSent) updateWalletBalance()
                 startLoadingQuotesFromLastState()
                 CollectiblesWithdrawalErrorConverter(onDismiss = {})
                     .convert(error)
@@ -3361,18 +3363,23 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun updateWalletBalance() {
-        dataState.fromSwapCurrencyStatus?.let { fromSwapCurrencyStatus ->
+        val toAccount = dataState.toSwapCurrencyStatus?.account
+        val fromAccount = dataState.fromSwapCurrencyStatus?.account
+
+        val balanceStatus = if (fromAccount is Account.Collectibles) {
+            dataState.toSwapCurrencyStatus
+        } else {
+            dataState.fromSwapCurrencyStatus
+        }
+
+        balanceStatus?.let { status ->
             modelScope.launch {
                 withContext(NonCancellable) {
-                    updateForBalance(
-                        fromSwapCurrencyStatus.userWalletId,
-                        fromSwapCurrencyStatus.currency.network,
-                    )
+                    updateForBalance(status.userWalletId, status.currency.network)
                 }
             }
         }
-        val toAccount = dataState.toSwapCurrencyStatus?.account
-        val fromAccount = dataState.fromSwapCurrencyStatus?.account
+
         when {
             toAccount is Account.Collectibles || fromAccount is Account.Collectibles ->
                 refreshAccountWithDelay(accountName = "collectibles vault") {
