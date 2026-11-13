@@ -30,6 +30,7 @@ import com.tangem.core.ui.ds2.filter.TangemFilterGroup
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.pagination.TangemPagination
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
@@ -65,6 +66,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.filter.tangemFil
 import com.tangem.feature.tester.presentation.storybook.page.ds.footer.tangemFooterStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.tangemGlowRingStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.pagination.tangemPaginationStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.tangemMessageBannerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.menu.tangemMenuStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebubble.tangemMessageBubbleStoryFactory
@@ -98,6 +100,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem("☑️ TangemCheckbox", TangemCheckbox.version, tangemCheckboxV2StoryFactory),
     DsStoryItem("🎚️ TangemSwitch", TangemSwitch.version, tangemSwitchStoryFactory),
     DsStoryItem("⭕ TangemCheckmark", TangemCheckmark.version, tangemCheckmarkStoryFactory),
+    DsStoryItem("⚫ TangemPagination", TangemPagination.version, tangemPaginationStoryFactory),
     DsStoryItem("🎨 TangemTokenIcon", TangemTokenIcon.version, tangemTokenIconStoryFactory),
     DsStoryItem("📋 TangemRow", TangemRow.version, tangemRowStoryFactory),
     DsStoryItem("🪙 TangemTokenRow", TangemTokenRow.version, tangemTokenRowV2StoryFactory),
