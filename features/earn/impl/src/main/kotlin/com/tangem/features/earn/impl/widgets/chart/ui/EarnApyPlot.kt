@@ -69,12 +69,13 @@ import com.patrykandpatrick.vico.core.common.Dimensions
 import com.patrykandpatrick.vico.core.common.component.LineComponent
 import com.patrykandpatrick.vico.core.common.data.ExtraStore
 import com.patrykandpatrick.vico.core.common.shape.Shape
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.earn.impl.ui.EARN_CHART_DIMMED_ALPHA
-import com.tangem.features.earn.impl.widgets.chart.EarnApyChartTexts
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyAverageUM
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyBarUM
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyChartUM
@@ -132,7 +133,7 @@ internal fun EarnApyPlot(state: EarnApyChartUM, modifier: Modifier = Modifier) {
 private fun EmptyPlot(modifier: Modifier = Modifier) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
-            text = EarnApyChartTexts.noData.resolveReference(),
+            text = stringResourceSafe(R.string.market_chart_bubble_no_data),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
         )
@@ -196,11 +197,11 @@ private fun DataPlot(state: EarnApyChartUM, modifier: Modifier = Modifier) {
  */
 @Composable
 private fun rememberChartSemantics(state: EarnApyChartUM): SemanticsPropertyReceiver.() -> Unit {
-    val description = EarnApyChartTexts.historyChart.resolveReference()
+    val description = stringResourceSafe(R.string.earn_chart_history_accessibility)
     val selectedDescription = state.selectedBar?.let { bar -> state.bars.getOrNull(bar) }?.tooltip?.resolveReference()
-    val previousLabel = EarnApyChartTexts.previousBar.resolveReference()
-    val nextLabel = EarnApyChartTexts.nextBar.resolveReference()
-    val clearLabel = EarnApyChartTexts.clearSelection.resolveReference()
+    val previousLabel = stringResourceSafe(R.string.earn_chart_previous_bar_accessibility)
+    val nextLabel = stringResourceSafe(R.string.earn_chart_next_bar_accessibility)
+    val clearLabel = stringResourceSafe(R.string.earn_chart_clear_selection_accessibility)
 
     return {
         contentDescription = description
