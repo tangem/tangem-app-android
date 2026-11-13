@@ -86,6 +86,31 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
     }
 
     @Test
+    fun `GIVEN a ready key WHEN its readiness is forgotten THEN it is not ready and not refused`() = runTest {
+        // Arrange
+        store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Act
+        store.forgetReadyOnExchange(WALLET_A, KEY.uppercase().replace("0X", "0x"))
+
+        // Assert
+        assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isFalse()
+        assertThat(store.isRefused(WALLET_A, KEY)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN another key ready WHEN a key readiness is forgotten THEN the ready key is kept`() = runTest {
+        // Arrange
+        store.markReadyOnExchange(WALLET_A, OTHER_KEY, VALID_UNTIL)
+
+        // Act
+        store.forgetReadyOnExchange(WALLET_A, KEY)
+
+        // Assert
+        assertThat(store.isReadyOnExchange(WALLET_A, OTHER_KEY, VALID_UNTIL)).isTrue()
+    }
+
+    @Test
     fun `GIVEN a checked reconciliation WHEN isMissingOnExchange THEN true for the missing keys of that wallet`() {
         // Act
         store.setReconciliation(WALLET_A, checked(missing = setOf(KEY)))

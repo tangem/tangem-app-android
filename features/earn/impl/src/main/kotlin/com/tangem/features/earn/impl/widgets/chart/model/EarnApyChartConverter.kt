@@ -8,7 +8,6 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
-import com.tangem.features.earn.impl.formatEarnRate
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartTexts
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyAverageUM
@@ -17,6 +16,7 @@ import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyChartUM
 import com.tangem.features.earn.product.api.product.EarnApyHistory
 import com.tangem.features.earn.product.api.product.EarnApyPoint
 import com.tangem.features.earn.product.api.product.EarnPeriod
+import com.tangem.features.earn.product.api.rate.formatEarnRate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.datetime.TimeZone

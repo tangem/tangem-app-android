@@ -74,13 +74,20 @@ internal class DefaultPolymarketSessionKeyTradingStore(
     override suspend fun markRefused(userWalletId: UserWalletId, sessionKeyAddress: String) {
         val address = sessionKeyAddress.normalized()
         refused.update { it + (userWalletId to it[userWalletId].orEmpty() + address) }
+        dropReadiness(userWalletId, address)
+    }
 
+    override suspend fun forgetReadyOnExchange(userWalletId: UserWalletId, sessionKeyAddress: String) {
+        dropReadiness(userWalletId, sessionKeyAddress.normalized())
+    }
+
+    private suspend fun dropReadiness(userWalletId: UserWalletId, address: String) {
         runSuspendCatching {
             readinessDataStore.updateData { records ->
                 val key = userWalletId.stringValue
                 if (records[key]?.address == address) records - key else records
             }
-        }.onFailure { TangemLogger.e("Failed to drop the readiness of the refused session key of $userWalletId", it) }
+        }.onFailure { TangemLogger.e("Failed to drop the session key readiness of $userWalletId", it) }
     }
 
     override suspend fun clear(userWalletId: UserWalletId) {

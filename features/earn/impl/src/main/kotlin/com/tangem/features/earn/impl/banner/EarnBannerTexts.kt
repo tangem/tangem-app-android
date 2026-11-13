@@ -3,7 +3,7 @@ package com.tangem.features.earn.impl.banner
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.earn.api.overview.EarnProductRate
-import com.tangem.features.earn.impl.formatEarnRate
+import com.tangem.features.earn.product.api.rate.formatEarnRate
 
 // Temporary plain text: replace with localized string resources.
 internal object EarnBannerTexts {

@@ -47,7 +47,7 @@ internal class OrderPollerTest {
         coEvery { orderRepository.getOrder(USER_WALLET_ID, ORDER_ID) } returns completed.right()
 
         // Act
-        val states = createPoller().startPolling(ORDER_REF).toList()
+        val states = createPoller().startPolling(ORDER_REF, NEW_ORDER).toList()
 
         // Assert
         assertThat(states).containsExactly(OrderPollingState.Pending, OrderPollingState.Loaded(completed)).inOrder()
@@ -66,7 +66,7 @@ internal class OrderPollerTest {
         )
 
         // Act
-        val states = createPoller().startPolling(ORDER_REF).toList()
+        val states = createPoller().startPolling(ORDER_REF, NEW_ORDER).toList()
 
         // Assert
         assertThat(states).containsExactly(
@@ -87,7 +87,7 @@ internal class OrderPollerTest {
             )
 
             // Act
-            createPoller().startPolling(ORDER_REF).toList()
+            createPoller().startPolling(ORDER_REF, NEW_ORDER).toList()
 
             // Assert
             coVerify(exactly = 3) { paymentAccountStatusFetcher(USER_WALLET_ID) }
@@ -104,7 +104,7 @@ internal class OrderPollerTest {
             )
 
             // Act
-            createPoller().startPolling(ORDER_REF).toList()
+            createPoller().startPolling(ORDER_REF, NEW_ORDER).toList()
 
             // Assert
             coVerify(exactly = 2) { paymentAccountStatusFetcher(USER_WALLET_ID) }
@@ -121,7 +121,7 @@ internal class OrderPollerTest {
         )
 
         // Act
-        val states = createPoller().startPolling(ORDER_REF).toList()
+        val states = createPoller().startPolling(ORDER_REF, NEW_ORDER).toList()
 
         // Assert
         assertThat(states).containsExactly(
@@ -141,7 +141,7 @@ internal class OrderPollerTest {
         )
 
         // Act
-        val states = createPoller().startPolling(ORDER_REF).toList()
+        val states = createPoller().startPolling(ORDER_REF, NEW_ORDER).toList()
 
         // Assert
         assertThat(states.last()).isEqualTo(OrderPollingState.Loaded(completed))
@@ -157,7 +157,7 @@ internal class OrderPollerTest {
         } returns TangemPayApiError.OrderNotFound.left()
 
         // Act
-        val states = createPoller().startPolling(ORDER_REF).toList()
+        val states = createPoller().startPolling(ORDER_REF, NEW_ORDER).toList()
 
         // Assert
         assertThat(states.last()).isEqualTo(OrderPollingState.NotFound)
@@ -176,8 +176,8 @@ internal class OrderPollerTest {
         val poller = createPoller()
 
         // Act
-        val first = async { poller.startPolling(ORDER_REF).toList() }
-        val second = async { poller.startPolling(ORDER_REF).toList() }
+        val first = async { poller.startPolling(ORDER_REF, NEW_ORDER).toList() }
+        val second = async { poller.startPolling(ORDER_REF, NEW_ORDER).toList() }
 
         // Assert
         assertThat(first.await().last()).isEqualTo(OrderPollingState.Loaded(completed))
@@ -192,7 +192,7 @@ internal class OrderPollerTest {
             orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
         } returns order(status = TangemPayOrder.Status.PROCESSING).right()
         val poller = createPoller()
-        val states = async { poller.startPolling(ORDER_REF).toList() }
+        val states = async { poller.startPolling(ORDER_REF, NEW_ORDER).toList() }
         runCurrent()
 
         // Act
@@ -212,7 +212,7 @@ internal class OrderPollerTest {
             completed.right(),
         )
         val poller = createPoller()
-        val states = async { poller.startPolling(ORDER_REF).toList() }
+        val states = async { poller.startPolling(ORDER_REF, NEW_ORDER).toList() }
         runCurrent()
 
         // Act
@@ -237,7 +237,7 @@ internal class OrderPollerTest {
         )
 
         // Act
-        createPoller().startPolling(ORDER_REF).toList()
+        createPoller().startPolling(ORDER_REF, NEW_ORDER).toList()
 
         // Assert
         assertThat(registrySnapshots).containsExactly(listOf(active), emptyList<TangemPayOrder>()).inOrder()
@@ -250,7 +250,7 @@ internal class OrderPollerTest {
             orderRepository.getOrder(USER_WALLET_ID, ORDER_ID)
         } returns order(status = TangemPayOrder.Status.PROCESSING).right()
         val poller = createPoller()
-        val states = async { poller.startPolling(ORDER_REF).toList() }
+        val states = async { poller.startPolling(ORDER_REF, NEW_ORDER).toList() }
         runCurrent()
 
         // Act
@@ -269,7 +269,7 @@ internal class OrderPollerTest {
         } returns order(status = TangemPayOrder.Status.COMPLETED).right()
 
         // Act
-        createPoller().startPolling(ORDER_REF).toList()
+        createPoller().startPolling(ORDER_REF, NEW_ORDER).toList()
 
         // Assert
         coVerifyOrder {
@@ -311,12 +311,47 @@ internal class OrderPollerTest {
             poller.launchPolling(ORDER_REF)
 
             // Act
-            val states = poller.startPolling(ORDER_REF).toList()
+            val states = poller.startPolling(ORDER_REF, NEW_ORDER).toList()
 
             // Assert
             assertThat(states.last()).isEqualTo(OrderPollingState.Loaded(completed))
             coVerify(exactly = 2) { orderRepository.getOrder(USER_WALLET_ID, ORDER_ID) }
         }
+
+    @Test
+    fun `GIVEN active initial snapshot WHEN startPolling THEN the order is in the registry before the first request`() =
+        runTest {
+            // Arrange
+            val registryOnFirstRequest = mutableListOf<List<TangemPayOrder>>()
+            coEvery { orderRepository.getOrder(USER_WALLET_ID, ORDER_ID) } answers {
+                registryOnFirstRequest += activeOrdersRegistry.get(USER_WALLET_ID)
+                order(status = TangemPayOrder.Status.COMPLETED).right()
+            }
+
+            // Act
+            createPoller().startPolling(ORDER_REF, NEW_ORDER).toList()
+
+            // Assert
+            assertThat(registryOnFirstRequest).containsExactly(listOf(NEW_ORDER))
+            assertThat(activeOrdersRegistry.get(USER_WALLET_ID)).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN terminal initial snapshot WHEN startPolling THEN the order is not put in the registry`() = runTest {
+        // Arrange
+        val completed = order(status = TangemPayOrder.Status.COMPLETED)
+        val registryOnFirstRequest = mutableListOf<List<TangemPayOrder>>()
+        coEvery { orderRepository.getOrder(USER_WALLET_ID, ORDER_ID) } answers {
+            registryOnFirstRequest += activeOrdersRegistry.get(USER_WALLET_ID)
+            completed.right()
+        }
+
+        // Act
+        createPoller().startPolling(ORDER_REF, completed).toList()
+
+        // Assert
+        assertThat(registryOnFirstRequest).containsExactly(emptyList<TangemPayOrder>())
+    }
 
     private fun TestScope.createPoller() = OrderPoller(
         orderRepository = orderRepository,
@@ -337,5 +372,11 @@ internal class OrderPollerTest {
         val USER_WALLET_ID = UserWalletId("aabbcc")
         const val ORDER_ID = "order-1"
         val ORDER_REF = OrderRef(userWalletId = USER_WALLET_ID, id = ORDER_ID)
+        val NEW_ORDER = TangemPayOrder(
+            id = ORDER_ID,
+            status = TangemPayOrder.Status.NEW,
+            step = OrderStep.UNKNOWN,
+            details = OrderDetails.CardFreeze(productInstanceId = "pi-1"),
+        )
     }
 }

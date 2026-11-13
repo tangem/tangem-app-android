@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketNewAccountAllowance
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -70,7 +71,7 @@ internal class CheckNewPolymarketAccountAllowedInteractorTest {
     fun `GIVEN the status is unreadable WHEN invoked THEN the region is still asked`() = runTest {
         // Arrange
         coEvery { getWalletStatus.byWalletId(userWalletId) } returns PolymarketOnboardingError.Network.left()
-        coEvery { checkGeoblock() } returns false.right()
+        coEvery { checkGeoblock() } returns PolymarketGeoblock.ALLOWED.right()
 
         // Act
         interactor(userWalletId)
@@ -81,24 +82,39 @@ internal class CheckNewPolymarketAccountAllowedInteractorTest {
 
     internal data class AllowanceModel(
         val status: Either<PolymarketOnboardingError, PolymarketWalletState>,
-        val geoblock: Either<PolymarketOnboardingError, Boolean>,
+        val geoblock: Either<PolymarketOnboardingError, PolymarketGeoblock>,
         val expected: PolymarketNewAccountAllowance,
     )
 
     private fun provideTestModels() = listOf(
         AllowanceModel(
             status = state(PolymarketWalletStatus.NOT_CREATED),
-            geoblock = false.right(),
+            geoblock = PolymarketGeoblock.ALLOWED.right(),
             expected = PolymarketNewAccountAllowance.ALLOWED,
         ),
         AllowanceModel(
             status = state(PolymarketWalletStatus.NOT_CREATED),
-            geoblock = true.right(),
+            geoblock = PolymarketGeoblock.BLOCKED.right(),
             expected = PolymarketNewAccountAllowance.REGION_BLOCKED,
         ),
         AllowanceModel(
+            status = state(PolymarketWalletStatus.NOT_CREATED),
+            geoblock = PolymarketGeoblock.UNRECOGNIZED_RESPONSE.right(),
+            expected = PolymarketNewAccountAllowance.REGION_BLOCKED,
+        ),
+        AllowanceModel(
+            status = state(PolymarketWalletStatus.NOT_CREATED),
+            geoblock = PolymarketGeoblock.NO_RESPONSE.right(),
+            expected = PolymarketNewAccountAllowance.REGION_BLOCKED,
+        ),
+        AllowanceModel(
+            status = PolymarketOnboardingError.Network.left(),
+            geoblock = PolymarketGeoblock.NO_RESPONSE.right(),
+            expected = PolymarketNewAccountAllowance.UNDETERMINED,
+        ),
+        AllowanceModel(
             status = state(PolymarketWalletStatus.DEPLOYMENT_FAILED),
-            geoblock = true.right(),
+            geoblock = PolymarketGeoblock.BLOCKED.right(),
             expected = PolymarketNewAccountAllowance.REGION_BLOCKED,
         ),
         AllowanceModel(
@@ -108,32 +124,32 @@ internal class CheckNewPolymarketAccountAllowedInteractorTest {
         ),
         AllowanceModel(
             status = state(PolymarketWalletStatus.DEPLOYED),
-            geoblock = true.right(),
+            geoblock = PolymarketGeoblock.BLOCKED.right(),
             expected = PolymarketNewAccountAllowance.ALLOWED,
         ),
         AllowanceModel(
             status = state(PolymarketWalletStatus.APPROVALS_FAILED),
-            geoblock = true.right(),
+            geoblock = PolymarketGeoblock.BLOCKED.right(),
             expected = PolymarketNewAccountAllowance.ALLOWED,
         ),
         AllowanceModel(
             status = state(PolymarketWalletStatus.READY_TO_TRADE),
-            geoblock = true.right(),
+            geoblock = PolymarketGeoblock.BLOCKED.right(),
             expected = PolymarketNewAccountAllowance.ALLOWED,
         ),
         AllowanceModel(
             status = state(PolymarketWalletStatus.UNKNOWN),
-            geoblock = true.right(),
+            geoblock = PolymarketGeoblock.BLOCKED.right(),
             expected = PolymarketNewAccountAllowance.ALLOWED,
         ),
         AllowanceModel(
             status = PolymarketOnboardingError.Network.left(),
-            geoblock = true.right(),
+            geoblock = PolymarketGeoblock.BLOCKED.right(),
             expected = PolymarketNewAccountAllowance.REGION_BLOCKED,
         ),
         AllowanceModel(
             status = PolymarketOnboardingError.Network.left(),
-            geoblock = false.right(),
+            geoblock = PolymarketGeoblock.ALLOWED.right(),
             expected = PolymarketNewAccountAllowance.ALLOWED,
         ),
         AllowanceModel(

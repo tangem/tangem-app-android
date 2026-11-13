@@ -6,11 +6,15 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.VideoFrameSize
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.routing.AppRoute
 import com.tangem.domain.models.wallet.UserWalletId
@@ -27,6 +31,7 @@ import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContent
 import com.tangem.domain.stories.models.StoryContentIds
+import com.tangem.features.polymarket.impl.R as PolymarketR
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.test.core.ProvideTestModels
@@ -36,6 +41,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -52,6 +58,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 internal class PolymarketOnboardingModelTest {
 
@@ -64,6 +71,8 @@ internal class PolymarketOnboardingModelTest {
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
+    private val heroVideo: LoopingVideoController = mockk(relaxed = true)
+    private val videoFactory: LoopingVideoController.Factory = mockk()
 
     private val userWalletId = UserWalletId("011")
     private val params = PolymarketOnboardingParams(userWalletId = userWalletId)
@@ -80,7 +89,10 @@ internal class PolymarketOnboardingModelTest {
             router,
             urlOpener,
             messageSender,
+            heroVideo,
+            videoFactory,
         )
+        every { videoFactory.create(any(), any(), any(), any(), any()) } returns heroVideo
         allowsNewAccount(PolymarketNewAccountAllowance.ALLOWED)
         storyWasSeen()
         coEvery { getStoryContentUseCase.invokeSync(id = any(), refresh = any()) } returns null.right()
@@ -213,7 +225,7 @@ internal class PolymarketOnboardingModelTest {
         }
 
         @Test
-        fun `GIVEN start is pressed WHEN the card tap is cancelled THEN the button returns to idle AND reports`() =
+        fun `GIVEN start is pressed WHEN the card tap is cancelled THEN the button returns to idle AND nothing is reported`() =
             runTest {
                 // Arrange
                 gateResolves(PolymarketEntry.Undetermined)
@@ -234,9 +246,7 @@ internal class PolymarketOnboardingModelTest {
                 val state = model.welcome()
                 assertThat(state.isInProgress).isFalse()
                 assertThat(state.isRegionRestrictionsShown).isFalse()
-                verify(exactly = 1) {
-                    messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
-                }
+                verify(exactly = 0) { messageSender.send(any()) }
                 verify(exactly = 1) { runOnboardingUseCase(userWalletId) }
                 model.onDestroy()
             }
@@ -285,7 +295,7 @@ internal class PolymarketOnboardingModelTest {
             }
 
         @Test
-        fun `GIVEN the region cannot be read WHEN start is pressed THEN a snackbar is sent AND no sheet`() =
+        fun `GIVEN the region cannot be read WHEN start is pressed THEN a retry dialog is shown AND no sheet`() =
             runTest {
                 // Arrange
                 owesOnboarding()
@@ -302,9 +312,12 @@ internal class PolymarketOnboardingModelTest {
                 assertThat(state.isRegionRestrictionsShown).isFalse()
                 assertThat(state.isInProgress).isFalse()
                 coVerify(exactly = 0) { resolvePolymarketEntryInteractor(userWalletId) }
-                verify(exactly = 1) {
-                    messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
-                }
+                val dialog = sentDialog()
+                assertThat(dialog.title).isEqualTo(resourceReference(R.string.common_something_went_wrong))
+                assertThat(dialog.message)
+                    .isEqualTo(resourceReference(R.string.prediction_onboarding_error_region_unknown))
+                assertThat(dialog.firstAction.title).isEqualTo(resourceReference(R.string.alert_button_try_again))
+                assertThat(dialog.secondAction?.title).isEqualTo(resourceReference(R.string.common_cancel))
                 model.onDestroy()
             }
 
@@ -881,9 +894,9 @@ internal class PolymarketOnboardingModelTest {
 
         // Assert
         assertThat(model.welcome().isInProgress).isFalse()
-        verify(exactly = 1) {
-            messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
-        }
+        val dialog = sentDialog()
+        assertThat(dialog.title).isEqualTo(resourceReference(R.string.common_something_went_wrong))
+        assertThat(dialog.message).isEqualTo(resourceReference(R.string.common_unknown_error))
         model.onDestroy()
     }
 
@@ -995,6 +1008,81 @@ internal class PolymarketOnboardingModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN the Reconnect screen WHEN the region refuses THEN the button goes idle AND the restriction is shown`() =
+        runTest {
+            // Arrange
+            gateResolves(PolymarketEntry.Reconnect)
+            allowsNewAccount(PolymarketNewAccountAllowance.REGION_BLOCKED)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.reconnect().onActionClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.reconnect().isInProgress).isFalse()
+            val dialog = sentDialog()
+            assertThat(dialog.title).isEqualTo(resourceReference(R.string.prediction_region_restrictions_title))
+            assertThat(dialog.message).isEqualTo(resourceReference(R.string.prediction_region_restrictions_subtitle))
+            verify(exactly = 0) { runOnboardingUseCase(userWalletId) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the run fails for good WHEN collected THEN an OK dialog explains why`() = runTest {
+        // Arrange
+        owesOnboarding()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(
+            PolymarketOnboardingProgress.Failed(
+                error = PolymarketOnboardingError.AddressMismatch(expected = "0xA", actual = "0xB"),
+                isRetryable = false,
+            ),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Assert
+        val dialog = sentDialog()
+        assertThat(dialog.title).isNull()
+        assertThat(dialog.message).isEqualTo(resourceReference(R.string.prediction_onboarding_error_address_mismatch))
+        assertThat(dialog.firstAction.title).isEqualTo(resourceReference(R.string.common_ok))
+        assertThat(dialog.secondAction).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a retry dialog WHEN try again is tapped THEN the run starts again`() = runTest {
+        // Arrange
+        owesOnboarding()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(
+            PolymarketOnboardingProgress.Failed(error = PolymarketOnboardingError.Network, isRetryable = true),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Act
+        sentDialog().firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 2) { runOnboardingUseCase(userWalletId) }
+        model.onDestroy()
+    }
+
+    private fun sentDialog(): DialogMessage {
+        val sent = slot<UiMessage>()
+        verify(exactly = 1) { messageSender.send(capture(sent)) }
+        return sent.captured as DialogMessage
+    }
+
     private fun PolymarketOnboardingModel.welcome(): PolymarketOnboardingUM.Welcome =
         uiState.value as PolymarketOnboardingUM.Welcome
 
@@ -1030,6 +1118,59 @@ internal class PolymarketOnboardingModelTest {
         coEvery { shouldShowStoriesInteractor.invokeSync(STORY_ID) } returns false
     }
 
+    @Nested
+    inner class HeroVideo {
+
+        @Test
+        fun `GIVEN the gate WHEN model created THEN the hero clip is declared at its own size`() = runTest {
+            // Arrange
+            gateResolves(PolymarketEntry.Undetermined)
+
+            // Act
+            createModel(testScope = this)
+
+            // Assert
+            verify(exactly = 1) {
+                videoFactory.create(
+                    scope = any(),
+                    videoRes = PolymarketR.raw.polymarket_welcome_background,
+                    frameSize = VideoFrameSize(width = 1080, height = 1632),
+                    diagnosticsSubject = "Polymarket welcome video",
+                    onFailed = any(),
+                )
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN the gate WHEN the screen running state changes THEN the clip follows it`(isRunning: Boolean) =
+            runTest {
+                // Arrange
+                gateResolves(PolymarketEntry.Undetermined)
+                val model = createModel(testScope = this)
+
+                // Act
+                model.setHeroVideoRunning(isRunning = isRunning)
+
+                // Assert
+                verify(exactly = 1) { heroVideo.setRunning(isRunning = isRunning) }
+            }
+
+        @Test
+        fun `GIVEN an onboarded wallet WHEN model destroyed THEN the clip is released`() = runTest {
+            // Arrange
+            gateResolves(PolymarketEntry.Onboarded)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onDestroy()
+
+            // Assert
+            verify(exactly = 1) { heroVideo.release() }
+        }
+    }
+
     private fun allowsNewAccount(allowance: PolymarketNewAccountAllowance) {
         coEvery { checkNewAccountAllowed(userWalletId) } returns allowance
     }
@@ -1049,6 +1190,7 @@ internal class PolymarketOnboardingModelTest {
         shouldShowStoriesInteractor = shouldShowStoriesInteractor,
         getStoryContentUseCase = getStoryContentUseCase,
         imagePreloader = imagePreloader,
+        videoFactory = videoFactory,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
     )
 

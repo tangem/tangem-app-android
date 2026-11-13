@@ -39,6 +39,8 @@ import com.tangem.features.feed.rwa.ui.state.RwaIntervalUM
 import com.tangem.features.feed.rwa.ui.state.RwaListUM
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryFilter
+import com.tangem.features.feed.v2.FeedFilterSheet
+import com.tangem.features.feed.v2.awaitEntryHandled
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -102,6 +104,9 @@ internal class RwaFeedTabModel @Inject constructor(
 
     private val deeplinkCategory = DeeplinkCategoryFilter()
 
+    /** The selector opens on the applied selection, so a deeplink asking for it waits for the category tree. */
+    private var deeplinkSheetFilter: FeedEntryFilter? = null
+
     /**
      * Source of truth for the trend interval and the sort; conflation is what makes re-picking the current
      * value a no-op, so neither setter needs an equality guard.
@@ -111,6 +116,10 @@ internal class RwaFeedTabModel @Inject constructor(
 
     val uiState: StateFlow<RwaFeedTabUM>
         field = MutableStateFlow(initialState())
+
+    override val appliedSelection: StateFlow<CategorySelection> = uiState
+        .map { it.appliedSelection }
+        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = uiState.value.appliedSelection)
 
     private val listRequest = MutableStateFlow(RwaListRequest())
 
@@ -208,10 +217,24 @@ internal class RwaFeedTabModel @Inject constructor(
     private fun onDeeplinkFilter(filter: FeedEntryFilter) {
         feedEntryController.consumeFilter()
         deeplinkCategory.park(categoryId = filter.categoryId)
+        deeplinkSheetFilter = filter.takeIf { it.sheet == FeedFilterSheet.Category }
 
         // still loading: onCategoriesLoaded applies the parked id as soon as the tree arrives
         val categories = categoriesState.value.all
-        if (categories.isNotEmpty()) deeplinkCategory.take(categories)?.let(::applySelection)
+        if (categories.isNotEmpty()) {
+            deeplinkCategory.take(categories)?.let(::applySelection)
+            openDeeplinkCategorySheet()
+        }
+    }
+
+    private fun openDeeplinkCategorySheet() {
+        val filter = deeplinkSheetFilter ?: return
+        deeplinkSheetFilter = null
+
+        modelScope.launch {
+            feedEntryController.awaitEntryHandled()
+            if (feedEntryController.isLatest(filter)) openCategorySelector()
+        }
     }
 
     private fun initialState(): RwaFeedTabUM {
@@ -242,6 +265,7 @@ internal class RwaFeedTabModel @Inject constructor(
 
             getCoinCategoriesUseCase(country = country).fold(
                 ifLeft = { _ ->
+                    deeplinkSheetFilter = null
                     uiState.update { it.copy(featured = RwaFeaturedUM.Empty) }
                     categoriesState.update { it.copy(isFailed = true) }
                 },
@@ -266,6 +290,7 @@ internal class RwaFeedTabModel @Inject constructor(
         val umbrella = categories.firstOrNull { it.code == ReservedCategoryCodes.REAL_WORLD_ASSETS }
 
         if (umbrella == null) {
+            deeplinkSheetFilter = null
             categoriesState.update { it.copy(isFailed = true) }
             return
         }
@@ -284,6 +309,7 @@ internal class RwaFeedTabModel @Inject constructor(
             // asking for the umbrella is choosing too, though it leaves the selection itself empty
             categoriesState.update { it.copy(isDefaultApplied = true) }
             applySelection(deeplinkSelection)
+            openDeeplinkCategorySheet()
             return
         }
 
@@ -294,6 +320,8 @@ internal class RwaFeedTabModel @Inject constructor(
         } else {
             onCategorySelect(selection = default)
         }
+
+        openDeeplinkCategorySheet()
     }
 
     /** Applied once per model: a later reload must not overwrite whatever the user has picked since. */

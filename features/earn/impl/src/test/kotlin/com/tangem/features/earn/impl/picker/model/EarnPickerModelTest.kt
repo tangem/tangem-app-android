@@ -37,7 +37,7 @@ import com.tangem.features.earn.impl.overview.EarnHeadlineSelector
 import com.tangem.features.earn.impl.overview.EarnProductSummaries
 import com.tangem.features.earn.impl.overview.EarnProductSummarySupplier
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
-import com.tangem.features.earn.impl.overview.EarnRateBadgeConverter
+import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.features.earn.impl.overview.EarnSummaryOrder
 import com.tangem.features.earn.impl.overview.USER_WALLET_ID
 import com.tangem.features.earn.impl.overview.createRate
