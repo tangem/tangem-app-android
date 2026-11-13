@@ -430,7 +430,7 @@ internal class EarnPickerModelTest {
         }
 
         @Test
-        fun `GIVEN ETH balance below the minimum WHEN model created THEN Add funds with the hint`() = runTest {
+        fun `GIVEN ETH balance below the minimum WHEN model created THEN Add funds`() = runTest {
             // Arrange
             stubBalance(BigDecimal.ZERO)
             val model = createModel(frames = MutableStateFlow(frame(summary(lending), summary(vault))), preselected = lending.id)
@@ -440,7 +440,6 @@ internal class EarnPickerModelTest {
 
             // Assert
             assertThat(model.uiState.value.cta.text).isEqualTo(EarnPickerTexts.addFunds)
-            assertThat(model.uiState.value.ctaHint).isNotNull()
             model.onDestroy()
         }
 

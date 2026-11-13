@@ -53,8 +53,7 @@ internal class EarnPickerConverter @Inject constructor(
             barTitle = product.title,
             products = products(summaries, selectedId, intents),
             content = content(product, state, intents),
-            cta = button.button,
-            ctaHint = button.hint,
+            cta = button,
             onClose = intents::onCloseClick,
         )
     }
@@ -74,8 +73,7 @@ internal class EarnPickerConverter @Inject constructor(
             barTitle = EarnPickerTexts.title,
             products = persistentListOf(),
             content = content,
-            cta = button.button,
-            ctaHint = button.hint,
+            cta = button,
             onClose = intents::onCloseClick,
         )
     }
