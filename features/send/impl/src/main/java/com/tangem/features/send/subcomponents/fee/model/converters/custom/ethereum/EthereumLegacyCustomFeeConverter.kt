@@ -58,7 +58,10 @@ internal class EthereumLegacyCustomFeeConverter(
         val feeAmount = value[EthereumCustomFeeConverter.FEE_AMOUNT].value.parseToBigDecimal(
             value[EthereumCustomFeeConverter.FEE_AMOUNT].decimals,
         )
-        val gasPrice = value[GAS_PRICE].value.parseToBigDecimal(EthereumCustomFeeConverter.GAS_DECIMALS).toBigInteger()
+        val gasPriceDecimals = value[GAS_PRICE].decimals
+        val gasPrice = value[GAS_PRICE].value.parseToBigDecimal(gasPriceDecimals)
+            .movePointRight(gasPriceDecimals)
+            .toBigInteger()
         val gasLimit = value[GAS_LIMIT].value.parseToBigDecimal(EthereumCustomFeeConverter.GAS_DECIMALS).toBigInteger()
 
         return normalFee.copy(
