@@ -9,31 +9,31 @@ object E2eCatalog {
 
     // Junk placeholder — not a real wallet and NOT funded. The real funded seed is injected from qa-tools on CI
     // (see the header); this value only exists so the catalog compiles.
-    const val SEED_PHRASE: String = "test test test test test test test test test test test junk"
+    const val SEED_PHRASE: String = "get it from qa-tools"
 
     // Placeholder; the real wallet id (matching the qa-tools funded wallet) is injected on CI.
-    const val WALLET_ID: String = "46255D252ED3808AF7F3F7797D2F2C0E87D8BB80896D0D0366A6EB6E4898CC4B"
+    const val WALLET_ID: String = "F833DECD4F3547C13D5CEADAE8C05452B7B171B460F807D3B040A7BA054FA337"
 
     val network: E2eNetwork = E2eNetwork(
-        coinId = "polygon-ecosystem-token",
-        searchQuery = "POL",
-        tokenName = "POL (ex-MATIC)",
-        networkName = "Polygon",
-        mainScreenToken = "Polygon",
-        manageTokensNetworkLabel = "POLYGON",
-        sendAmount = "0.1",
+        coinId = "katana-ethereum",
+        searchQuery = "Katana",
+        tokenName = "Katana",
+        networkName = "Katana",
+        mainScreenToken = "Katana (ETH)",
+        manageTokensNetworkLabel = "KATANA",
+        sendAmount = "0.0001",
         accountAddresses = listOf(
-            "0x3A0078b8407bC5d7C72FAd47F03eb9D315CA252e",
-            "0x6c9578665c02Cc3FF16639A7C636f756B085Ce49",
+            "0x88c1f90210F67a5Db3812cD0481bA2A7F5C0A9d5",
+            "0x9D4df7e2Caa6AEA0cFb1348797d856d511dFf5D2",
         ),
         token = E2eToken(
-            coinId = "usd-coin",
-            searchQuery = "USDC",
-            tokenName = "USDC",
-            mainScreenToken = "USDC",
-            manageTokensNetworkLabel = "POLYGON",
-            contractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-            sendAmount = "0.01",
+            coinId = "katana-network-token",
+            searchQuery = "Kat",
+            tokenName = "Katana",
+            mainScreenToken = "Katana",
+            manageTokensNetworkLabel = "KATANA",
+            contractAddress = "0x7f1f4b4b29f5058fa32cc7a97141b8d7e5abdc2d",
+            sendAmount = "1",
         ),
     )
 
