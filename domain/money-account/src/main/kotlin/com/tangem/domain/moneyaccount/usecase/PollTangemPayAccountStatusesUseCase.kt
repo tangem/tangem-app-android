@@ -6,6 +6,7 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.model.*
 import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ class PollTangemPayAccountStatusesUseCase(
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val timeSource: TimeSource,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
     operator fun invoke(userWalletId: UserWalletId): Flow<TangemPayCustomerState> = flow {
         val startedAt = timeSource.markNow()
@@ -31,7 +33,12 @@ class PollTangemPayAccountStatusesUseCase(
 
                 val state = getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE)
                     .getOrNull()
-                    ?.let(TangemPayCustomerStateConverter::convert)
+                    ?.let { summary ->
+                        TangemPayCustomerStateConverter.convert(
+                            value = summary,
+                            isKycAdditionalInfoEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
+                        )
+                    }
 
                 if (state != null) {
                     emit(state)

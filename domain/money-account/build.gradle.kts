@@ -38,6 +38,10 @@ dependencies {
     api(projects.domain.tangempay.models)
     // endregion
 
+    // region Features
+    implementation(projects.features.tangempay.details.api)
+    // endregion
+
     // region Tests
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
