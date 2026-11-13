@@ -31,10 +31,6 @@ internal data class EarnHorizonItemUM(
     val onClick: () -> Unit,
 )
 
-/**
- * Layers from bottom to top as shares of the tallest bar: the deposited amount and the earned yield. The layers sit
- * one above the other, so the tallest bar is exactly 1.
- */
 @Immutable
 internal data class EarnProjectionBarUM(
     val deposited: Float,
