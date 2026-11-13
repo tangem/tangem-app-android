@@ -1,15 +1,16 @@
-package com.tangem.core.navigation.url
+package com.tangem.core.navigation.impl.url
 
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import androidx.core.net.toUri
+import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.utils.buildConfig.AppConfigurationProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-class DefaultAppStoreOpener @Inject constructor(
+internal class DefaultAppStoreOpener @Inject constructor(
     @ApplicationContext private val context: Context,
     private val appConfigurationProvider: AppConfigurationProvider,
 ) : AppStoreOpener {

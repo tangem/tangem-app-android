@@ -398,6 +398,7 @@ val unitTest by tasks.registering {
 val appOnlyModules = mapOf(
     ":core:datasource-impl" to "Depend on the contracts in :core:local / :core:remote instead.",
     ":core:analytics:impl" to "Depend on the contracts in :core:analytics / :core:analytics:models instead.",
+    ":core:navigation:impl" to "Depend on the contracts in :core:navigation instead.",
     ":spend:push-provisioning:impl" to "Depend on :spend:push-provisioning:api instead.",
     ":spend:push-provisioning:mock" to "Depend on :spend:push-provisioning:api instead.",
     ":spend:push-provisioning:no-op" to "Depend on :spend:push-provisioning:api instead.",

@@ -1,4 +1,4 @@
-package com.tangem.tap.core.navigation.email
+package com.tangem.core.navigation.impl.email
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity

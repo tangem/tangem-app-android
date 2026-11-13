@@ -1,4 +1,4 @@
-package com.tangem.tap.common.settings
+package com.tangem.core.navigation.impl.settings
 
 import android.content.Context
 import android.content.Intent

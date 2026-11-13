@@ -1,4 +1,4 @@
-package com.tangem.tap.common.share
+package com.tangem.core.navigation.impl.share
 
 import android.content.BroadcastReceiver
 import android.content.Context

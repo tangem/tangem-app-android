@@ -10,20 +10,7 @@ android {
 
 dependencies {
 
-    // region Core modules
-    implementation(projects.core.utils)
-    // endregion
-
     // region Kotlin
     api(deps.kotlin.coroutines)
-    // endregion
-
-    // region DI
-    implementation(deps.hilt.android)
-    // endregion
-
-    // region AndroidX
-    implementation(deps.androidx.core)
-    implementation(deps.androidx.core.ktx)
     // endregion
 }
