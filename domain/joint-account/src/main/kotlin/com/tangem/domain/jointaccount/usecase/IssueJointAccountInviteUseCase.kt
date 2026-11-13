@@ -1,6 +1,9 @@
 package com.tangem.domain.jointaccount.usecase
 
 import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.left
+import arrow.core.right
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccountInviteIssueError
 import com.tangem.domain.jointaccount.model.JointAccountIssuedInvite
@@ -13,6 +16,7 @@ import com.tangem.utils.logging.TangemLogger
 class IssueJointAccountInviteUseCase(
     private val repository: JointAccountRepository,
     private val fetcher: SingleJointAccountListFetcher,
+    private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) {
 
     suspend operator fun invoke(
@@ -28,7 +32,20 @@ class IssueJointAccountInviteUseCase(
 
         if (isSlotStateStale) refetch(userWalletId = accountId.userWalletId)
 
-        return result
+        return result.flatMap { invite -> validate(invite = invite, requestedSlot = slot) }
+    }
+
+    private fun validate(
+        invite: JointAccountIssuedInvite,
+        requestedSlot: Int,
+    ): Either<JointAccountInviteIssueError, JointAccountIssuedInvite> = when {
+        invite.slot != requestedSlot -> JointAccountInviteIssueError.Failed(
+            cause = IllegalStateException("Issued invite slot ${invite.slot} differs from requested $requestedSlot"),
+        ).left()
+        invite.expiresAtMillis <= currentTimeMillis() -> JointAccountInviteIssueError.Failed(
+            cause = IllegalStateException("Issued invite of slot $requestedSlot has already expired"),
+        ).left()
+        else -> invite.right()
     }
 
     private suspend fun refetch(userWalletId: UserWalletId) {
