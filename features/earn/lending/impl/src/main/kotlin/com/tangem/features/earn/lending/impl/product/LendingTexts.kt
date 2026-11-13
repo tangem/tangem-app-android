@@ -12,6 +12,8 @@ internal object LendingTexts {
 
     val gasLimitTooLow: TextReference = stringReference("The gas limit is too low for this transaction.")
 
+    val depositsPaused: TextReference = stringReference("Deposits are paused by the provider.")
+
     fun title(provider: EarnProvider): TextReference = combinedReference(stringReference("Lending on "), provider.title)
 
     fun updateRequired(provider: EarnProvider): TextReference = combinedReference(

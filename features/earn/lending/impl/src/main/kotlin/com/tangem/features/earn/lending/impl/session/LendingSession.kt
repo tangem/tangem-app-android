@@ -90,6 +90,7 @@ internal class LendingSession @AssistedInject constructor(
         val operation = ensureNotNull(action.toLendingOperation()) { EarnSessionError.Failed() }
         val state = ensureNotNull(currentState()) { EarnSessionError.Failed() }
         val value = ensureNotNull(amount.resolve(state, operation)) { EarnSessionError.Failed() }
+        if (operation == LendingOperation.Deposit) ensureAboveMinDeposit(state = state, amount = value)
         planFactory.plan(
             userWalletId = params.userWalletId,
             state = state,
@@ -184,17 +185,26 @@ internal class LendingSession @AssistedInject constructor(
         state: LendingAssetState,
         fee: Fee,
     ) {
+        val balance = ensureNotNull(state.balance) { EarnSessionError.Failed() }
+        val feeValue = ensureNotNull(fee.amount.value) { EarnSessionError.Failed() }
         when (operation) {
             LendingOperation.Deposit -> {
-                val balance = ensureNotNull(state.balance) { EarnSessionError.Failed() }
-                val feeValue = ensureNotNull(fee.amount.value) { EarnSessionError.Failed() }
+                ensure(state.market.isOpen) { EarnSessionError.Rejected(LendingTexts.depositsPaused) }
                 ensure(plan.amount + feeValue <= balance) { EarnSessionError.InsufficientBalance }
             }
             LendingOperation.Withdraw -> {
                 val maxWithdraw = ensureNotNull(state.market.maxWithdraw) { EarnSessionError.Failed() }
                 ensure(plan.amount <= maxWithdraw) { EarnSessionError.ExceedsLimit(maxWithdraw) }
+                // The withdrawn ETH arrives only with the transaction, so its gas is paid from the wallet balance
+                ensure(feeValue <= balance) { EarnSessionError.InsufficientBalance }
             }
         }
+    }
+
+    /** A minimum the provider could not compute does not block the deposit, the same as on the product screen */
+    private suspend fun Raise<EarnSessionError>.ensureAboveMinDeposit(state: LendingAssetState, amount: BigDecimal) {
+        val minDeposit = lendingProvider.minDeposit(params.userWalletId, state.asset).getOrNull() ?: return
+        ensure(amount >= minDeposit) { EarnSessionError.BelowMinimum(minDeposit) }
     }
 
     /** The plan's result follows the last transaction: the deposit or withdrawal, not the preparation */

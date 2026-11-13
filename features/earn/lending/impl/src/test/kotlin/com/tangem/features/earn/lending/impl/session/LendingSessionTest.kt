@@ -130,6 +130,7 @@ internal class LendingSessionTest {
     fun resetMocks() {
         clearMocks(lendingSupplier, transactions, getUserWalletUseCase, sendTransactionUseCase, transactionRepository)
         provider.refreshCalls.clear()
+        provider.minDepositResult = BigDecimal.ZERO.right()
         every { getUserWalletUseCase(userWalletId) } returns userWallet.right()
         arrangeState(assetState())
     }
@@ -285,6 +286,48 @@ internal class LendingSessionTest {
         }
 
         @Test
+        fun `GIVEN deposit below the min deposit WHEN prepare THEN returns below minimum without building`() =
+            runTest {
+                // Arrange
+                provider.minDepositResult = (DEPOSIT_AMOUNT + BigDecimal.ONE).right()
+
+                // Act
+                val actual = session.prepare(Deposit(), EarnAmount.Exact(DEPOSIT_AMOUNT), selection(TOTAL_GAS))
+
+                // Assert
+                assertThat(actual).isEqualTo(EarnSessionError.BelowMinimum(DEPOSIT_AMOUNT + BigDecimal.ONE).left())
+                coVerify(exactly = 0) {
+                    transactions.deposit(userWalletId = any(), asset = any(), amount = any(), state = any())
+                }
+            }
+
+        @Test
+        fun `GIVEN min deposit unavailable WHEN prepare deposit THEN builds the plan`() = runTest {
+            // Arrange
+            provider.minDepositResult = IllegalStateException("no fee").left()
+            arrangeDeposit(built = listOf(rawPreparation, rawDeposit))
+
+            // Act
+            val actual = session.prepare(Deposit(), EarnAmount.Exact(DEPOSIT_AMOUNT), selection(TOTAL_GAS))
+
+            // Assert
+            assertThat(actual).isEqualTo(depositPlan().right())
+        }
+
+        @Test
+        fun `GIVEN withdraw below the min deposit WHEN prepare THEN builds the plan`() = runTest {
+            // Arrange
+            provider.minDepositResult = (WITHDRAW_AMOUNT + BigDecimal.ONE).right()
+            arrangeWithdraw(amount = WITHDRAW_AMOUNT)
+
+            // Act
+            val actual = session.prepare(Withdraw(), EarnAmount.Exact(WITHDRAW_AMOUNT), selection(WITHDRAW_GAS))
+
+            // Assert
+            assertThat(actual).isEqualTo(withdrawPlan().right())
+        }
+
+        @Test
         fun `GIVEN entire withdraw WHEN prepare THEN uses the max withdraw`() = runTest {
             // Arrange
             arrangeWithdraw(amount = MAX_WITHDRAW)
@@ -408,6 +451,45 @@ internal class LendingSessionTest {
 
             // Assert
             assertThat(actual).isEqualTo(EarnVerification.Rejected(EarnSessionError.ExceedsLimit(MAX_WITHDRAW)))
+        }
+
+        @Test
+        fun `GIVEN closed market WHEN verify deposit THEN rejects with the paused text`() = runTest {
+            // Arrange
+            arrangeState(assetState(isOpen = false))
+
+            // Act
+            val actual = session.verify(depositPlan())
+
+            // Assert
+            val reason = stringReference("Deposits are paused by the provider.")
+            assertThat(actual).isEqualTo(EarnVerification.Rejected(EarnSessionError.Rejected(reason)))
+        }
+
+        @Test
+        fun `GIVEN closed market WHEN verify withdraw THEN verifies the plan`() = runTest {
+            // Arrange
+            arrangeState(assetState(isOpen = false))
+            arrangeWithdraw(amount = WITHDRAW_AMOUNT)
+            arrangeVerifier(Unit.right())
+
+            // Act
+            val actual = session.verify(withdrawPlan())
+
+            // Assert
+            assertThat(actual.verifiedPlan()).isEqualTo(withdrawPlan())
+        }
+
+        @Test
+        fun `GIVEN withdraw fee above the balance WHEN verify THEN rejects insufficient balance`() = runTest {
+            // Arrange
+            arrangeState(assetState(balance = BigDecimal.ZERO))
+
+            // Act
+            val actual = session.verify(withdrawPlan())
+
+            // Assert
+            assertThat(actual).isEqualTo(EarnVerification.Rejected(EarnSessionError.InsufficientBalance))
         }
 
         @Test
@@ -1000,6 +1082,7 @@ internal class LendingSessionTest {
         balance: BigDecimal? = BALANCE,
         address: String? = OWNER,
         hasPendingTx: Boolean = false,
+        isOpen: Boolean = true,
         position: BigDecimal? = POSITION,
         maxWithdraw: BigDecimal? = MAX_WITHDRAW,
         providerState: LendingProviderState? = TestProviderState(PLAN_KEY),
@@ -1010,7 +1093,7 @@ internal class LendingSessionTest {
         fiatRate = null,
         market = LendingMarket(
             rate = null,
-            isOpen = true,
+            isOpen = isOpen,
             deposit = LendingDepositGate.Open,
             position = position?.let(::LendingPosition),
             maxWithdraw = maxWithdraw,

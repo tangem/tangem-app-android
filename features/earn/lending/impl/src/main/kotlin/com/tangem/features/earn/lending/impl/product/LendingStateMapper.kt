@@ -152,7 +152,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
             ),
         )
         val PENDING_BLOCK = EarnBlock(reason = LendingTexts.pendingTransaction)
-        val CLOSED_BLOCK = EarnBlock(reason = stringReference("Deposits are paused by the provider."))
+        val CLOSED_BLOCK = EarnBlock(reason = LendingTexts.depositsPaused)
         val RETRY_BLOCK = EarnBlock(
             reason = stringReference("Position is not loaded"),
             action = EarnBlockAction.Retry,
