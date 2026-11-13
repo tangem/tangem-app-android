@@ -37,15 +37,18 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -95,6 +98,12 @@ internal class EarnInfoModel @Inject constructor(
 
     val calculatorSheetNavigation: SlotNavigation<EarnCalculatorSheetConfig> = SlotNavigation()
 
+    private val chartRate: StateFlow<EarnProductRate> by lazy {
+        val initial = requireNotNull(readyState.value) { "The chart is activated once the product is Ready" }.rate
+
+        readyState.filterNotNull().map { it.rate }.stateIn(modelScope, SharingStarted.Eagerly, initial)
+    }
+
     val projection: Flow<EarnProjection?> = readyState
         .map { it?.projection }
         .distinctUntilChanged()
@@ -129,7 +138,7 @@ internal class EarnInfoModel @Inject constructor(
             periods = periods,
             defaultPeriod = periods.last(),
             history = { period -> product.apyHistory(productParams, period) },
-            currentRate = ready.rate,
+            currentRate = chartRate,
             callback = this.takeIf { ready.projection != null },
         )
     }

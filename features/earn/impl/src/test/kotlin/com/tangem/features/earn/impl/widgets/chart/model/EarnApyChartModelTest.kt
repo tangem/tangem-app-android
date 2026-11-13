@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
+import com.tangem.features.earn.impl.widgets.chart.EarnApyChartTexts
 import com.tangem.features.earn.product.api.product.EarnApyHistory
 import com.tangem.features.earn.product.api.product.EarnApyPoint
 import com.tangem.features.earn.product.api.product.EarnPeriod
@@ -19,6 +20,8 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -344,9 +347,108 @@ internal class EarnApyChartModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN loaded chart WHEN current rate changes THEN header follows it and the bars and selection stay`() =
+        runTest {
+            // Arrange
+            val rate = MutableStateFlow(rate("0.055"))
+            val model = createModel(currentRate = rate) { historyOf(count = 3).right() }
+            advanceUntilIdle()
+            model.uiState.value.onBarSelected(1)
+            val before = model.uiState.value
+
+            // Act
+            rate.value = rate("0.0612")
+            advanceUntilIdle()
+
+            // Assert
+            val expected = before.copy(currentRate = stringReference("6.12%"))
+            assertThat(model.uiState.value).isEqualTo(expected)
+            assertThat(model.uiState.value.selectedBar).isEqualTo(1)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN loading chart WHEN current rate changes THEN it keeps loading with the new rate`() = runTest {
+        // Arrange
+        val rate = MutableStateFlow(rate("0.055"))
+        val answer = CompletableDeferred<Either<Throwable, EarnApyHistory>>()
+        val model = createModel(currentRate = rate) { answer.await() }
+        runCurrent()
+
+        // Act
+        rate.value = rate("0.0612")
+        runCurrent()
+
+        // Assert
+        val actual = model.uiState.value
+        assertThat(actual.isLoading).isTrue()
+        assertThat(actual.currentRate).isEqualTo(stringReference("6.12%"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN rate changed while history is pending WHEN history arrives THEN header shows the latest rate`() =
+        runTest {
+            // Arrange
+            val rate = MutableStateFlow(rate("0.055"))
+            val answer = CompletableDeferred<Either<Throwable, EarnApyHistory>>()
+            val model = createModel(currentRate = rate) { answer.await() }
+            runCurrent()
+            rate.value = rate("0.0612")
+            runCurrent()
+
+            // Act
+            answer.complete(historyOf(count = 3).right())
+            advanceUntilIdle()
+
+            // Assert
+            val actual = model.uiState.value
+            assertThat(actual.isLoading).isFalse()
+            assertThat(actual.currentRate).isEqualTo(stringReference("6.12%"))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN rate changed WHEN another period is requested THEN the new state keeps the latest rate`() = runTest {
+        // Arrange
+        val rate = MutableStateFlow(rate("0.055"))
+        val model = createModel(currentRate = rate) { historyOf(count = 3).right() }
+        advanceUntilIdle()
+        rate.value = rate("0.0612")
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.periods[1].onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.currentRate).isEqualTo(stringReference("6.12%"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN rate type changes WHEN collected THEN titles switch from APY to APR`() = runTest {
+        // Arrange
+        val rate = MutableStateFlow(rate("0.055", EarnRateType.APY))
+        val model = createModel(currentRate = rate) { historyOf(count = 3).right() }
+        advanceUntilIdle()
+
+        // Act
+        rate.value = rate("0.055", EarnRateType.APR)
+        advanceUntilIdle()
+
+        // Assert
+        val actual = model.uiState.value
+        assertThat(actual.rateTitle).isEqualTo(EarnApyChartTexts.currentApr)
+        assertThat(actual.average?.title).isEqualTo(EarnApyChartTexts.averageApr)
+        model.onDestroy()
+    }
+
     private fun TestScope.createModel(
         periods: List<EarnPeriod> = this@EarnApyChartModelTest.periods,
         defaultPeriod: EarnPeriod = periods.last(),
+        currentRate: StateFlow<EarnProductRate> = MutableStateFlow(rate("0.055")),
         history: suspend (EarnPeriod) -> Either<Throwable, EarnApyHistory>,
     ): EarnApyChartModel = EarnApyChartModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
@@ -355,11 +457,14 @@ internal class EarnApyChartModelTest {
                 periods = periods,
                 defaultPeriod = defaultPeriod,
                 history = history,
-                currentRate = EarnProductRate(fraction = BigDecimal("0.055"), type = EarnRateType.APY),
+                currentRate = currentRate,
             ),
         ),
         converter = EarnApyChartConverter(),
     )
+
+    private fun rate(fraction: String, type: EarnRateType = EarnRateType.APY) =
+        EarnProductRate(fraction = BigDecimal(fraction), type = type)
 
     private fun historyOf(count: Int) = EarnApyHistory(
         points = List(count) { index ->

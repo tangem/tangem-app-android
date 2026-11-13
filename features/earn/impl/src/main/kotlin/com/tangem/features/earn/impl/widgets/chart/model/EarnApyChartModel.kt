@@ -13,6 +13,8 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,6 +35,9 @@ internal class EarnApyChartModel @Inject constructor(
 
     init {
         requestHistory(params.defaultPeriod)
+        params.currentRate
+            .onEach { rate -> uiState.update { state -> converter.updateRate(state = state, rate = rate) } }
+            .launchIn(modelScope)
     }
 
     private fun onPeriodClick(period: EarnPeriod) {
