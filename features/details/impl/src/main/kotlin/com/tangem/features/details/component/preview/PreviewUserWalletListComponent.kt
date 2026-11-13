@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.details.component.UserWalletListComponent
+import com.tangem.features.introduction.AddWalletComponent
 import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.entity.WalletReorderUM
 import com.tangem.features.details.impl.R
@@ -61,6 +62,10 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
             addWalletBSConfig = TangemBottomSheetConfig.Empty,
         ),
     )
+
+    override val addWalletCallbacks = object : AddWalletComponent.ModelCallbacks {
+        override fun onAddCardClick() = Unit
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
