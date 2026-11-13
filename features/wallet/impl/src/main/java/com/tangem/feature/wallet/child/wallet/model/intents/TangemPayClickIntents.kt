@@ -25,6 +25,8 @@ import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
@@ -74,6 +76,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val tangemPayAnalyticsEventSender: WalletTangemPayAnalyticsEventSender,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
     override suspend fun onPullToRefresh() {
@@ -106,6 +109,10 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     }
 
     override fun openDetails(status: AccountStatus.Payment) {
+        tangemPayAnalyticsEventSender.onAccountOpened(
+            userWalletId = status.account.userWalletId,
+            accountType = AccountType.PAYMENT,
+        )
         router.openTangemPayDetails(status = status)
     }
 

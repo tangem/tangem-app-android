@@ -10,6 +10,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -71,28 +72,34 @@ internal class TangemPayMainBlockConverter(
                 balance = getBalanceText(statusValue.balance),
                 balanceSubtitle = balanceSubtitle,
                 shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
+                isActionRequired = false,
                 onClick = { tangemPayClickIntents.openDetails(value) },
             )
             is PaymentAccountStatusValue.Loaded -> {
                 if (statusValue.isPaymentAccountIssuing) {
                     return TangemPayMainUM.IssuingCard(onClick = { tangemPayClickIntents.openDetails(value) })
                 }
-                val cardsCount = statusValue.cards.count()
-                val subtitle = pluralReference(
-                    id = R.plurals.tangempay_cards_count,
-                    count = cardsCount,
-                    formatArgs = wrappedList(cardsCount),
-                )
                 TangemPayMainUM.Content(
-                    subtitle = subtitle,
+                    subtitle = getLoadedSubtitle(statusValue),
                     isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                     balance = getBalanceText(statusValue.balance),
                     balanceSubtitle = balanceSubtitle,
                     shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
+                    isActionRequired = statusValue.isKycAdditionalInfoActionRequired,
                     onClick = { tangemPayClickIntents.openDetails(value) },
                 )
             }
         }
+    }
+
+    private fun getLoadedSubtitle(statusValue: PaymentAccountStatusValue.Loaded): TextReference {
+        if (statusValue.isKycAdditionalInfoRequired) return TextReference.Res(R.string.tangempay_action_required_title)
+        val cardsCount = statusValue.cards.count()
+        return pluralReference(
+            id = R.plurals.tangempay_cards_count,
+            count = cardsCount,
+            formatArgs = wrappedList(cardsCount),
+        )
     }
 
     /** Balance figure, or a dash when the account exists but its balances are unavailable. */

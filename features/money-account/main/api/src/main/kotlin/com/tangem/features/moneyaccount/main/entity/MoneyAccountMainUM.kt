@@ -21,6 +21,7 @@ sealed interface MoneyAccountMainUM {
     data class Content(
         val subtitle: TextReference,
         val balance: BalanceUM?,
+        val isActionRequired: Boolean,
         val onClick: () -> Unit,
     ) : MoneyAccountMainUM
 
