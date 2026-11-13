@@ -119,5 +119,6 @@ class EarnDeepLinkHandlerTest {
         queryParams = queryParams,
         scope = mockk<CoroutineScope>(),
         isFromOnNewIntent = false,
+        router = mockk(),
     )
 }

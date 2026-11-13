@@ -1,6 +1,7 @@
 package com.tangem.common.routing.deeplink
 
 import android.net.Uri
+import com.tangem.core.decompose.navigation.Router
 import kotlinx.coroutines.CoroutineScope
 
 /**
@@ -10,10 +11,12 @@ import kotlinx.coroutines.CoroutineScope
  * @property queryParams validated query parameters of [uri]
  * @property scope scope of the screen that received the deep link
  * @property isFromOnNewIntent whether the deep link arrived to an already running activity
+ * @property router router of the root stack, ready to route when the request is dispatched
  */
 data class DeepLinkRequest(
     val uri: Uri,
     val queryParams: Map<String, String>,
     val scope: CoroutineScope,
     val isFromOnNewIntent: Boolean,
+    val router: Router,
 )

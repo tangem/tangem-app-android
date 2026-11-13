@@ -308,7 +308,13 @@ class YieldDeepLinkHandlerTest {
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             yieldSupplyGetAvailabilityUseCase = yieldSupplyGetAvailabilityUseCase,
         ).handle(
-            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = scope, isFromOnNewIntent = false),
+            DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = scope,
+                isFromOnNewIntent = false,
+                router = mockk(),
+            ),
         )
     }
 }

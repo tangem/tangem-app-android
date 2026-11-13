@@ -87,6 +87,7 @@ internal class DefaultOnrampDeepLinkHandlerTest {
                 queryParams = queryParams,
                 scope = backgroundScope,
                 isFromOnNewIntent = false,
+                router = mockk(),
             ),
         )
     }

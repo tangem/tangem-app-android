@@ -856,6 +856,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
                 queryParams = queryParams,
                 scope = scope,
                 isFromOnNewIntent = isFromOnNewIntent,
+                router = mockk(),
             ),
         )
     }
