@@ -26,6 +26,7 @@ import com.tangem.features.txhistory.converter.approximateMark
 import com.tangem.features.txhistory.converter.feeForAmount
 import com.tangem.features.txhistory.converter.feeForToken
 import com.tangem.features.txhistory.converter.isFeeOnlyOperation
+import com.tangem.features.txhistory.converter.isOutgoingFunds
 import com.tangem.features.txhistory.converter.readsFailed
 import com.tangem.features.txhistory.converter.showsFeeAsAmount
 import com.tangem.features.txhistory.converter.toSubtitle
@@ -66,7 +67,7 @@ internal class OnChainContentFields(
             tx.readsFailed(currency) -> ""
             value.isZero() -> ""
             tx.type is TransactionType.Staking.ClaimRewards -> ""
-            tx.isOutgoing -> StringsSigns.MINUS_SIGN
+            tx.isOutgoingFunds -> StringsSigns.MINUS_SIGN
             else -> StringsSigns.PLUS
         }
         val approximateMark = if (tx.showsFeeAsAmount(currency)) tx.approximateMark() else ""
@@ -101,6 +102,7 @@ internal class OnChainContentFields(
             is TransactionType.UnknownOperation,
             is TransactionType.IncentiveClaim,
             is TransactionType.YieldSupply.Send,
+            is TransactionType.Lending,
             // Pill types — see the class KDoc.
             is TransactionType.Approve,
             is TransactionType.Staking.Stake,
@@ -135,6 +137,11 @@ internal class OnChainContentFields(
                 direction = tx.subtitleDirection(),
                 name = resourceReference(R.string.yield_module_incentives_provider),
                 iconResId = R.drawable.img_merkl_22,
+            )
+            is TransactionType.Lending -> ContentSubtitle.Provider(
+                direction = tx.subtitleDirection(),
+                name = resourceReference(R.string.transaction_history_lending_provider),
+                iconResId = R.drawable.img_aave_22,
             )
             is TransactionType.GaslessFee,
             is TransactionType.NetworkFee,
@@ -267,14 +274,14 @@ internal class OnChainContentFields(
 
 // region Per-cell helpers
 
-private fun TxInfo.subtitleDirection(): ContentSubtitle.Direction = if (isOutgoing) {
+private fun TxInfo.subtitleDirection(): ContentSubtitle.Direction = if (isOutgoingFunds) {
     ContentSubtitle.Direction.TO
 } else {
     ContentSubtitle.Direction.FROM
 }
 
 private fun TxInfo.directionalIcon(): TxIcon =
-    TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
+    TxIcon.Vector(if (isOutgoingFunds) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
 
 private fun ResolvedOwner.isOwnPortfolio(): Boolean = when (this) {
     is ResolvedOwner.OwnAccount,
@@ -348,6 +355,7 @@ private fun TransactionType.feeSubtitleResId(): Int? = when (this) {
     TransactionType.UnknownOperation,
     is TransactionType.YieldSupply.Send,
     TransactionType.IncentiveClaim,
+    is TransactionType.Lending,
     -> null
 }
 

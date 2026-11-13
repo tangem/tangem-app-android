@@ -12,6 +12,7 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 
 internal class TxHistoryAnalyticsMappersTest : TxDetailsConverterTestBase() {
 
@@ -40,6 +41,19 @@ internal class TxHistoryAnalyticsMappersTest : TxDetailsConverterTestBase() {
             TypeModel(onChain(TransactionType.Staking.Stake), expected = "Staking"),
             TypeModel(onChain(TransactionType.Staking.Unstake), expected = "Staking"),
             TypeModel(onChain(TransactionType.YieldSupply.Topup), expected = "Yield Supply"),
+            TypeModel(onChain(TransactionType.Lending.Deposit), expected = "EnterProtocolByOwnerWithNative"),
+            TypeModel(
+                onChain(TransactionType.Lending.Withdraw(isEntire = false, requestedAmount = BigDecimal.ONE)),
+                expected = "WithdrawNative",
+            ),
+            TypeModel(
+                onChain(TransactionType.Lending.Withdraw(isEntire = false, requestedAmount = null)),
+                expected = "WithdrawNative",
+            ),
+            TypeModel(
+                onChain(TransactionType.Lending.Withdraw(isEntire = true, requestedAmount = null)),
+                expected = "WithdrawAndDeactivateNative",
+            ),
             TypeModel(onChain(TransactionType.IncentiveClaim), expected = "Incentive Claim"),
             TypeModel(onChain(TransactionType.GaslessFee), expected = "Gasless Fee"),
             TypeModel(onChain(TransactionType.Operation(name = "Mint")), expected = "Mint"),

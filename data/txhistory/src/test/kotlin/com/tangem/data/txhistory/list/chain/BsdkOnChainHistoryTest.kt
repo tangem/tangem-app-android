@@ -209,6 +209,28 @@ internal class BsdkOnChainHistoryTest {
     }
 
     @Test
+    fun `GIVEN a USD quote WHEN an incoming lending withdrawal is worth less than a cent THEN it is shown`() = runTest {
+        // Arrange
+        val withdrawal = createTxInfo(
+            txHash = "lending-withdrawal",
+            amount = BigDecimal.ZERO,
+            isOutgoing = false,
+            type = TxInfo.TransactionType.Lending.Withdraw(isEntire = true, requestedAmount = null),
+        )
+
+        // Act
+        val states = collect(
+            batchState = state(txs = listOf(withdrawal), status = PaginationStatus.EndOfPagination),
+            usdQuote = QUOTE,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val items = (states.last() as HistoryState.Content).items
+        assertThat(items).containsExactly(OnChainTx.BSDK(withdrawal))
+    }
+
+    @Test
     fun `GIVEN a USD quote WHEN an outgoing tx is worth less than a cent THEN it is shown`() = runTest {
         // Arrange
         val tiny = createTxInfo(txHash = "tiny-send", amount = BigDecimal("0.000001"), isOutgoing = true)

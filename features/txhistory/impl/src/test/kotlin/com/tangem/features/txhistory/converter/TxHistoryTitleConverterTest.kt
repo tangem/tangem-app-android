@@ -173,6 +173,30 @@ internal class TxHistoryTitleConverterTest {
             expected = TextReference.Str("Mint"),
         ),
         TitleModel(
+            tx = txInfo(TransactionType.Lending.Deposit, status = TransactionStatus.Unconfirmed, isOutgoing = true),
+            expected = resRef(R.string.common_depositing),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Lending.Deposit, isOutgoing = true),
+            expected = resRef(R.string.transaction_history_deposited),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Lending.Deposit, status = TransactionStatus.Failed, isOutgoing = true),
+            expected = resRef(R.string.transaction_history_status_deposit_failed),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Lending.Withdraw(isEntire = true, requestedAmount = null), status = TransactionStatus.Unconfirmed),
+            expected = resRef(R.string.common_withdrawing),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Lending.Withdraw(isEntire = false, requestedAmount = BigDecimal.ONE)),
+            expected = resRef(R.string.transaction_history_withdrawn),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Lending.Withdraw(isEntire = true, requestedAmount = null), status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_withdraw_failed),
+        ),
+        TitleModel(
             tx = txInfo(TransactionType.YieldSupply.Topup),
             expected = resRef(R.string.transaction_history_supplied),
         ),
