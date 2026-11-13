@@ -33,7 +33,6 @@ internal data class EarnHorizonItemUM(
 
 @Immutable
 internal data class EarnProjectionBarUM(
-    val deposited: Float,
     val earned: Float,
 )
 

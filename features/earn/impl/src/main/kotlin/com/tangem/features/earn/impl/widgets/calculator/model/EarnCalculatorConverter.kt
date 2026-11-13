@@ -73,33 +73,16 @@ internal class EarnCalculatorConverter @Inject constructor() {
 
     private fun bars(result: EarnProjectionResult): List<EarnProjectionBarUM> {
         val points = result.points.sampled()
-        val tallest = points.maxOf { point -> point.capital }
+        val tallest = points.maxOf { point -> point.income }
 
-        val bars = points.map { point ->
-            EarnProjectionBarUM(
-                deposited = (point.capital - point.income).visibleShareOf(tallest),
-                earned = point.income.visibleShareOf(tallest),
-            )
-        }
-        val tallestStack = bars.maxOf { it.deposited + it.earned }
-
-        return if (tallestStack > 1f) {
-            bars.map { bar ->
-                EarnProjectionBarUM(
-                    deposited = bar.deposited / tallestStack,
-                    earned = bar.earned / tallestStack,
-                )
-            }
-        } else {
-            bars
-        }
+        return points.map { point -> EarnProjectionBarUM(earned = point.income.visibleShareOf(tallest)) }
     }
 
-    /** A non-empty layer never gets thinner than [MIN_LAYER_SHARE], otherwise a small amount is not drawn at all. */
+    /** A non-empty bar never gets shorter than [MIN_BAR_SHARE], otherwise a small amount is not drawn at all. */
     private fun BigDecimal.visibleShareOf(max: BigDecimal): Float {
         val share = shareOf(max)
 
-        return if (share > 0f) maxOf(share, MIN_LAYER_SHARE) else 0f
+        return if (share > 0f) maxOf(share, MIN_BAR_SHARE) else 0f
     }
 
     private fun axisLabels(horizon: EarnHorizon): List<TextReference> = (1..AXIS_LABELS_COUNT).map { step ->
@@ -144,7 +127,7 @@ internal class EarnCalculatorConverter @Inject constructor() {
 
     private companion object {
         const val MAX_BARS = 24
-        const val MIN_LAYER_SHARE = 0.05f
+        const val MIN_BAR_SHARE = 0.05f
         const val AXIS_LABELS_COUNT = 3
         const val MONTHS_IN_YEAR = 12
     }
