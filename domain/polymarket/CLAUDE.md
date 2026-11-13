@@ -71,6 +71,8 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - A key the BFF stops listing while `REVOKING` counts as revoked only once Polymarket no longer lists the signer;
   otherwise the outcome is unsettled and the next refresh shows the truth.
 - The outcome stays in the runner until the host acknowledges it; nothing offers Activate while an operation runs.
+- A listed signer is ours only with scopes exactly `{CLOB}` and the record's `validUntil` to the second.
+  Readiness and reconciliation share it; the own key listed with other terms is foreign, missing and not traded.
 
 ## Claims
 
