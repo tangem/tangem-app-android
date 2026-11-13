@@ -54,6 +54,7 @@ internal class TangemPayDetailsStateFactoryTest {
         onBack = {},
         onOpenMenu = {},
         intents = intents,
+        isColdWallet = true,
     )
 
     @BeforeEach

@@ -12,12 +12,14 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.tangempay.usecase.GetCurrentTariffUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.tangempay.usecase.SubmitTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.openTrustedLink
@@ -43,10 +45,15 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
+    getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model(), TangemPaySelectPlanClickIntents {
 
     private val params = paramsContainer.require<TangemPaySelectPlanComponent.Params>()
-    private val umFactory = TangemPaySelectPlanUMFactory(mode = params.mode, clicks = this)
+    private val umFactory = TangemPaySelectPlanUMFactory(
+        mode = params.mode,
+        clicks = this,
+        isColdWallet = getUserWalletUseCase(params.userWalletId).getOrNull()?.isColdWallet == true,
+    )
     private var data = TangemPaySelectPlanData()
 
     private val analyticsProducts = (params.mode as? TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder)

@@ -32,6 +32,7 @@ internal class MoneyAccountDetailsStateFactory(
     private val onRenewSession: () -> Unit,
     private val isYieldModeEnabled: Boolean,
     private val onProvideKycInformationClick: () -> Unit,
+    private val isColdWallet: Boolean,
 ) {
     fun createInitialState(): MoneyAccountDetailsUM = MoneyAccountDetailsUM(
         title = resourceReference(R.string.virtual_account_title),
@@ -118,7 +119,7 @@ internal class MoneyAccountDetailsStateFactory(
             iconEnd = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_tangem_24,
                 tintReference = { TangemTheme.colors3.icon.primary },
-            ),
+            ).takeIf { isColdWallet },
         ),
     )
 

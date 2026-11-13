@@ -31,10 +31,7 @@ internal fun TangemPayCampaignLandingContent(state: TangemPayCampaignUM.Landing,
         topBar = { TangemPayCampaignTopBar(onCloseClick = state.onCloseClick.takeUnless { isNoWallet }) },
         card = { TangemPayCampaignCardArt(cardArtUrl = state.cardArtUrl) },
         footer = {
-            TangemPayCampaignFooter(
-                state = state,
-                showCtaIcon = !isNoWallet,
-            )
+            TangemPayCampaignFooter(state = state)
         },
         texts = { TangemPayCampaignTexts() },
     )
@@ -107,7 +104,6 @@ private fun TangemPayCampaignBullet(
 @Composable
 private fun TangemPayCampaignFooter(
     state: TangemPayCampaignUM.Landing,
-    showCtaIcon: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -121,7 +117,7 @@ private fun TangemPayCampaignFooter(
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_onboarding_get_card_button_text),
-            iconEnd = TangemIconUM.Icon(iconRes = R.drawable.ic_tangem_24).takeIf { showCtaIcon },
+            iconEnd = TangemIconUM.Icon(iconRes = R.drawable.ic_tangem_24).takeIf { state.isCtaIconShown },
             isLoading = state.isCtaLoading,
             onClick = state.onGetCardClick,
         )

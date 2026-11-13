@@ -19,6 +19,7 @@ internal fun TangemPayHotWalletOnboardingScreen(
         modifier = modifier,
         video = video,
         isGetStartedLoading = state.isLoading,
+        isGetStartedIconShown = false,
         onGetStartedClick = state.onGetCardClick,
         onTermsClick = state.onTermsClick,
         onCloseClick = null,

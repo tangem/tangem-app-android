@@ -63,6 +63,7 @@ import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
@@ -1294,6 +1295,9 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             findActiveBankOfframpOrderUseCase = findActiveBankOfframpOrderUseCase,
             cashbackControllerFactory = cashbackControllerFactory,
             dismissVirtualAccountOrderFailureUseCase = dismissVirtualAccountOrderFailureUseCase,
+            getUserWalletUseCase = mockk {
+                every { this@mockk(any()) } returns GetUserWalletError.UserWalletNotFound.left()
+            },
             tangemPayCurrencyFactory = mockk(relaxed = true),
             tangemPayFeatureToggles = tangemPayFeatureToggles,
         ).destroyAfterTest()

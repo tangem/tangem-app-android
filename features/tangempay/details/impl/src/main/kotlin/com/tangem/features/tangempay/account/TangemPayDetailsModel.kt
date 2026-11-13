@@ -28,6 +28,7 @@ import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
@@ -44,6 +45,7 @@ import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.account.cashback.withCashback
@@ -87,6 +89,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
     private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase,
     private val dismissVirtualAccountOrderFailureUseCase: DismissVirtualAccountOrderFailureUseCase,
+    getUserWalletUseCase: GetUserWalletUseCase,
     cashbackControllerFactory: TangemPayCashbackController.Factory,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     tangemPayFeatureToggles: TangemPayFeatureToggles,
@@ -109,6 +112,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
+        isColdWallet = getUserWalletUseCase(userWalletId).getOrNull()?.isColdWallet == true,
     )
 
     private val baseState = MutableStateFlow(

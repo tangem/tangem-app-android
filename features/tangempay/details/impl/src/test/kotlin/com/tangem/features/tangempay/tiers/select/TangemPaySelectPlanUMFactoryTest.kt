@@ -41,7 +41,8 @@ internal class TangemPaySelectPlanUMFactoryTest {
 
     private fun createFactory(
         mode: TangemPaySelectPlanComponent.Mode = TangemPaySelectPlanComponent.Mode.ChangePlan,
-    ) = TangemPaySelectPlanUMFactory(mode = mode, clicks = clickIntents)
+        isColdWallet: Boolean = true,
+    ) = TangemPaySelectPlanUMFactory(mode = mode, clicks = clickIntents, isColdWallet = isColdWallet)
 
     @Nested
     inner class Plans {
@@ -88,9 +89,13 @@ internal class TangemPaySelectPlanUMFactoryTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN mode WHEN create THEN select button icon matches money account activation`(model: IconModel) {
+        fun `GIVEN mode and wallet type WHEN create THEN select button icon shown only before a card tap`(
+            model: IconModel,
+        ) {
             // Act
-            val content = createFactory(mode = model.mode).create(data()).content as TangemPaySelectPlanUM.Content.Select
+            val content = createFactory(mode = model.mode, isColdWallet = model.isColdWallet)
+                .create(data())
+                .content as TangemPaySelectPlanUM.Content.Select
 
             // Assert
             assertThat(content.selectButtonIconEnd != null).isEqualTo(model.hasIcon)
@@ -122,6 +127,13 @@ internal class TangemPaySelectPlanUMFactoryTest {
                     availableProducts = setOf(TangemPayProduct.BANKING_ACCOUNT, TangemPayProduct.PAYMENT_ACCOUNT),
                 ),
                 hasIcon = true,
+            ),
+            IconModel(
+                mode = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
+                    availableProducts = setOf(TangemPayProduct.BANKING_ACCOUNT, TangemPayProduct.PAYMENT_ACCOUNT),
+                ),
+                isColdWallet = false,
+                hasIcon = false,
             ),
         )
     }
@@ -337,6 +349,7 @@ internal class TangemPaySelectPlanUMFactoryTest {
     data class IconModel(
         val mode: TangemPaySelectPlanComponent.Mode,
         val hasIcon: Boolean,
+        val isColdWallet: Boolean = true,
     )
 
     data class ConfirmModel(
