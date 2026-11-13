@@ -2,7 +2,9 @@ package com.tangem.features.earn.lending.impl.analytics
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -15,6 +17,7 @@ import com.tangem.features.earn.lending.impl.session.LendingPlannedOperation
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.Withdraw
 import com.tangem.features.earn.product.api.session.WithdrawMode
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -26,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -77,6 +81,36 @@ internal class LendingAnalyticsSenderTest {
                     analyticsEventHandler.send(expectedTransactionSent())
                 }
             }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN fee picked in the selector WHEN onSent THEN transaction sent reports its fee type`(
+            model: FeeTypeModel,
+        ) = runTest {
+            // Arrange
+            coEvery { getCurrencyUSDQuoteUseCase(eth.id.rawCurrencyId!!) } returns null
+
+            // Act
+            sender.onSent(
+                plan = depositPlan(feeType = model.feeType),
+                operation = LendingOperation.Deposit,
+                currency = eth,
+            )
+
+            // Assert
+            val sent = mutableListOf<AnalyticsEvent>()
+            verify { analyticsEventHandler.send(capture(sent)) }
+            val transactionSent = sent.filterIsInstance<Basic.TransactionSent>().single()
+            assertThat(transactionSent.params["Fee Type"]).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            FeeTypeModel(feeType = AnalyticsParam.FeeType.Fixed, expected = "Fixed"),
+            FeeTypeModel(feeType = AnalyticsParam.FeeType.Min, expected = "Min"),
+            FeeTypeModel(feeType = AnalyticsParam.FeeType.Normal, expected = "Normal"),
+            FeeTypeModel(feeType = AnalyticsParam.FeeType.Max, expected = "Max"),
+            FeeTypeModel(feeType = AnalyticsParam.FeeType.Custom, expected = "Custom"),
+        )
 
         @Test
         fun `GIVEN usd price unknown WHEN onSent THEN signed goes without amount bucket`() = runTest {
@@ -165,6 +199,8 @@ internal class LendingAnalyticsSenderTest {
         }
     }
 
+    data class FeeTypeModel(val feeType: AnalyticsParam.FeeType, val expected: String)
+
     private fun expectedTransactionSent() = Basic.TransactionSent(
         sentFrom = AnalyticsParam.TxSentFrom.Earning(
             blockchain = "Ethereum",
@@ -178,8 +214,13 @@ internal class LendingAnalyticsSenderTest {
         isCustomFeeToken = false,
     )
 
-    private fun depositPlan(amount: BigDecimal = BigDecimal.ONE, isWithUpgrade: Boolean = false) = LendingPlan(
+    private fun depositPlan(
+        amount: BigDecimal = BigDecimal.ONE,
+        isWithUpgrade: Boolean = false,
+        feeType: AnalyticsParam.FeeType = AnalyticsParam.FeeType.Normal,
+    ) = LendingPlan(
         fee = ethFee(BigInteger.ONE),
+        feeType = feeType,
         expectedAmount = amount,
         rows = emptyList(),
         withdrawMode = null,
@@ -193,6 +234,7 @@ internal class LendingAnalyticsSenderTest {
 
     private fun withdrawPlan() = LendingPlan(
         fee = ethFee(BigInteger.ONE),
+        feeType = AnalyticsParam.FeeType.Normal,
         expectedAmount = BigDecimal.ONE,
         rows = emptyList(),
         withdrawMode = WithdrawMode.Instant,

@@ -99,7 +99,7 @@ internal class LendingSession @AssistedInject constructor(
             state = state,
             action = action,
             amount = value,
-            fee = fee.fee,
+            fee = fee,
         ).bind()
     }
 
@@ -161,7 +161,7 @@ internal class LendingSession @AssistedInject constructor(
             state = state,
             action = plan.action,
             amount = plan.amount,
-            fee = plan.fee,
+            fee = EarnFeeSelection(fee = plan.fee, extended = null, feeType = plan.feeType),
         ).bind()
         val isRebuilt = newPlan.planKey != plan.planKey ||
             !newPlan.hasSameTransactionsAs(plan, params.currency.network.rawId)

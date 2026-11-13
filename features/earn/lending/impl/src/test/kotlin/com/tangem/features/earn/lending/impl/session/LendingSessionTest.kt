@@ -16,6 +16,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
@@ -297,6 +298,21 @@ internal class LendingSessionTest {
 
             // Assert
             assertThat(actual).isEqualTo(depositPlan(txs = listOf(estimatedDeposit), isWithUpgrade = true).right())
+        }
+
+        @Test
+        fun `GIVEN fast fee selected WHEN prepare THEN plan carries its fee type`() = runTest {
+            // Arrange
+            arrangeDeposit(built = listOf(rawDeposit))
+            val fastSelection = selection(TOTAL_GAS).copy(feeType = AnalyticsParam.FeeType.Max)
+
+            // Act
+            val actual = session.prepare(Deposit(), EarnAmount.Exact(DEPOSIT_AMOUNT), fastSelection)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                depositPlan(txs = listOf(estimatedDeposit), feeType = AnalyticsParam.FeeType.Max).right(),
+            )
         }
 
         @Test
@@ -1234,8 +1250,10 @@ internal class LendingSessionTest {
         fee: Fee = selectedFee(TOTAL_GAS),
         planKey: String = PLAN_KEY,
         isWithUpgrade: Boolean = false,
+        feeType: AnalyticsParam.FeeType = AnalyticsParam.FeeType.Normal,
     ) = LendingPlan(
         fee = fee,
+        feeType = feeType,
         expectedAmount = DEPOSIT_AMOUNT,
         rows = emptyList(),
         withdrawMode = null,
@@ -1249,6 +1267,7 @@ internal class LendingSessionTest {
 
     private fun withdrawPlan(amount: BigDecimal = WITHDRAW_AMOUNT, isEntire: Boolean = false) = LendingPlan(
         fee = selectedFee(WITHDRAW_GAS),
+        feeType = AnalyticsParam.FeeType.Normal,
         expectedAmount = amount,
         rows = emptyList(),
         withdrawMode = WithdrawMode.Instant,

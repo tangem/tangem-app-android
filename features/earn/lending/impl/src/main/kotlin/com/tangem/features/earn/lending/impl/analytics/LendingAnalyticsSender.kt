@@ -29,7 +29,7 @@ internal class LendingAnalyticsSender @Inject constructor(
         analyticsEventHandler.send(
             LendingAnalyticsEvent.TransactionSubmitted(operation = operation, isWithUpgrade = plan.isWithUpgrade),
         )
-        analyticsEventHandler.send(transactionSent(currency))
+        analyticsEventHandler.send(transactionSent(currency = currency, feeType = plan.feeType))
     }
 
     /** A refusal on the card is not a failed transaction */
@@ -46,11 +46,11 @@ internal class LendingAnalyticsSender @Inject constructor(
     }
 
     /** Lending is offered on network coins only, so the fee is paid in the lent currency itself */
-    private fun transactionSent(currency: CryptoCurrency) = Basic.TransactionSent(
+    private fun transactionSent(currency: CryptoCurrency, feeType: AnalyticsParam.FeeType) = Basic.TransactionSent(
         sentFrom = AnalyticsParam.TxSentFrom.Earning(
             blockchain = currency.network.name,
             token = currency.symbol,
-            feeType = AnalyticsParam.FeeType.Normal,
+            feeType = feeType,
             feeToken = currency.symbol,
             feeAssetType = AnalyticsParam.FeeAssetType.Coin,
         ),

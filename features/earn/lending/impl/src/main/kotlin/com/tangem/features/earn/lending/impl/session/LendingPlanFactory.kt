@@ -5,7 +5,6 @@ import arrow.core.getOrElse
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
@@ -16,6 +15,7 @@ import com.tangem.features.earn.lending.impl.provider.LendingTransactions
 import com.tangem.features.earn.lending.impl.provider.LendingTxError
 import com.tangem.features.earn.lending.impl.provider.LendingTxExpectation
 import com.tangem.features.earn.lending.impl.supplier.LendingAssetState
+import com.tangem.features.earn.product.api.session.EarnFeeSelection
 import com.tangem.features.earn.product.api.session.EarnFlowAction
 import com.tangem.features.earn.product.api.session.EarnSessionError
 import com.tangem.features.earn.product.api.session.WithdrawMode
@@ -45,7 +45,7 @@ internal class LendingPlanFactory @Inject constructor(
         state: LendingAssetState,
         action: EarnFlowAction,
         amount: BigDecimal,
-        fee: Fee,
+        fee: EarnFeeSelection,
     ): Either<EarnSessionError, LendingPlan> = either {
         val operation = ensureNotNull(action.toLendingOperation()) { EarnSessionError.Failed() }
         val userWallet = getUserWalletUseCase(userWalletId).getOrElse { raise(EarnSessionError.Failed()) }
@@ -62,7 +62,8 @@ internal class LendingPlanFactory @Inject constructor(
             }
         }
         LendingPlan(
-            fee = fee,
+            fee = fee.fee,
+            feeType = fee.feeType,
             expectedAmount = amount,
             rows = emptyList(),
             withdrawMode = WithdrawMode.Instant.takeIf { operation == LendingOperation.Withdraw },

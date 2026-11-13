@@ -5,10 +5,12 @@ import arrow.core.none
 import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -58,6 +60,7 @@ import com.tangem.features.earn.product.api.session.EarnTxStatus
 import com.tangem.features.earn.product.api.session.EarnVerification
 import com.tangem.features.earn.product.api.session.Withdraw
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -71,6 +74,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.verify
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -367,7 +371,7 @@ internal class EarnFlowModelTest {
                 // Assert
                 assertThat(model.initialStep).isEqualTo(EarnFlowStep.Confirm)
                 coVerify(exactly = 1) {
-                    session.prepare(action = TestClaim, amount = null, fee = EarnFeeSelection(testFee("0.00033"), null))
+                    session.prepare(action = TestClaim, amount = null, fee = testFeeSelection("0.00033"))
                 }
                 coVerify(exactly = 0) { session.maxAmount(action = any()) }
                 assertThat(model.confirm.value).isNotNull()
@@ -450,7 +454,7 @@ internal class EarnFlowModelTest {
                 session.prepare(
                     action = Deposit(),
                     amount = EarnAmount.Exact(BigDecimal(model.expected)),
-                    fee = EarnFeeSelection(testFee(model.fee), null),
+                    fee = testFeeSelection(model.fee),
                 )
             }
             assertThat(flow.state.value.enteredAmount).isEqualTo(BigDecimal(model.entered ?: "2.01"))
@@ -507,7 +511,7 @@ internal class EarnFlowModelTest {
                     session.prepare(
                         action = Deposit(),
                         amount = EarnAmount.Exact(BigDecimal("2.009")),
-                        fee = EarnFeeSelection(testFee("0.001"), null),
+                        fee = testFeeSelection("0.001"),
                     )
                 }
                 assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Confirm)
@@ -660,6 +664,28 @@ internal class EarnFlowModelTest {
             assertThat(model.amount.value?.notifications?.single())
                 .isInstanceOf(NotificationUM.Warning.NetworkFeeUnreachable::class.java)
             coVerify(exactly = 0) { session.prepare(action = any(), amount = any(), fee = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fast fee picked from choosable levels WHEN fee result THEN fee selection reports Max`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            val slow = testFee("0.0001")
+            val market = testFee("0.0002")
+            val fast = testFee("0.0003")
+            val content = testFeeContent("0.0003").copy(
+                fees = TransactionFee.Choosable(minimum = slow, normal = market, priority = fast),
+                feeItems = persistentListOf(FeeItem.Slow(slow), FeeItem.Market(market), FeeItem.Fast(fast)),
+                selectedFeeItem = FeeItem.Fast(fast),
+            )
+
+            // Act
+            model.onFeeResult(content)
+
+            // Assert
+            assertThat(model.state.value.feeSelection)
+                .isEqualTo(EarnFeeSelection(fee = fast, extended = null, feeType = AnalyticsParam.FeeType.Max))
             model.onDestroy()
         }
 
