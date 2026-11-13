@@ -421,22 +421,6 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideCheckTangemPayEligibilityByKycUseCase(
-            residencyRepository: TangemPayResidencyRepository,
-        ): CheckTangemPayEligibilityForCustomerUseCase {
-            return CheckTangemPayEligibilityForCustomerUseCase(residencyRepository)
-        }
-
-        @Provides
-        fun provideGetTangemPayProductsAvailabilityForCustomerUseCase(
-            checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
-        ): GetTangemPayProductsAvailabilityForCustomerUseCase {
-            return GetTangemPayProductsAvailabilityForCustomerUseCase(
-                checkTangemPayEligibilityForCustomerUseCase = checkTangemPayEligibilityForCustomerUseCase,
-            )
-        }
-
-        @Provides
         fun provideGetTangemPayProductsAvailabilityForCountryUseCase(
             checkTangemPayEligibilityUseCase: CheckTangemPayEligibilityUseCase,
         ): GetTangemPayProductsAvailabilityForCountryUseCase {

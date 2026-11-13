@@ -175,6 +175,37 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
             expected = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = CUSTOMER_ID),
         ),
         ResolveModel(
+            name = "deposit timeout returns to verified",
+            summary = summary(
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
+                paymentStep = PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
+                paymentFailureReason = PaymentAccount.Activation.FailureReason.DEPOSIT_TIMEOUT,
+            ),
+            expected = verified(),
+        ),
+        ResolveModel(
+            name = "deposit timeout with completed money account returns to verified",
+            summary = summary(
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
+                paymentStep = PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
+                paymentFailureReason = PaymentAccount.Activation.FailureReason.DEPOSIT_TIMEOUT,
+                banking = MoneyAccount.Activation.Status.COMPLETED,
+            ),
+            expected = verified(),
+        ),
+        ResolveModel(
+            name = "technical failure shows card issue failure",
+            summary = summary(
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
+                paymentStep = PaymentAccount.Activation.Step.ISSUING,
+                paymentFailureReason = PaymentAccount.Activation.FailureReason.TECHNICAL,
+            ),
+            expected = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = CUSTOMER_ID),
+        ),
+        ResolveModel(
             name = "closed with failed account requires full fetch",
             summary = summary(
                 customerStatus = CustomerStatus.FORMER,
