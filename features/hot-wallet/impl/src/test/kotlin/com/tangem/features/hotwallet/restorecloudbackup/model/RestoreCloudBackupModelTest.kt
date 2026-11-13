@@ -435,12 +435,42 @@ internal class RestoreCloudBackupModelTest {
             // Assert
             val dialog = slot<DialogMessage>()
             verify(exactly = 1) { uiMessageSender.send(capture(dialog)) }
+            assertThat(dialog.captured.title)
+                .isEqualTo(resourceReference(R.string.user_wallet_list_error_wallet_already_saved_title))
             assertThat(dialog.captured.message)
                 .isEqualTo(resourceReference(R.string.user_wallet_list_error_wallet_already_saved))
             assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
             verify(exactly = 0) { callbacks.onWalletImported(any()) }
             verify(exactly = 0) { analyticsEventHandler.send(ofType<NoticeMobileWalletLimit>()) }
             coVerify(exactly = 0) { setCloudBackupStateUseCase(any(), any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN toggle off AND wallet already added WHEN restore clicked THEN the untitled dialog shows as before`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
+                restoredBackup(mnemonic = "word1 word2").right()
+            every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
+            coEvery {
+                hotWalletImporter.import(any(), mnemonic, null, "My Wallet", isSeedPhraseBackedUp = false)
+            } returns HotWalletImportError.AlreadySaved.left()
+
+            val model = createModel(this, holderOf(backupInfo))
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+            advanceUntilIdle()
+
+            // Assert
+            val dialog = slot<DialogMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(dialog)) }
+            assertThat(dialog.captured.title).isNull()
+            assertThat(dialog.captured.firstAction.title).isEqualTo(resourceReference(R.string.common_ok))
             model.onDestroy()
         }
 

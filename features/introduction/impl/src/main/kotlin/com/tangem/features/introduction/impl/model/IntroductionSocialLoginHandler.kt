@@ -10,7 +10,6 @@ import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import androidx.annotation.StringRes
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.TextReference
@@ -63,6 +62,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     private val referral: IntroductionReferral,
     private val urlOpener: UrlOpener,
     private val router: Router,
+    private val errorMessages: SocialLoginErrorMessages,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) {
 
@@ -223,7 +223,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         // Leaving the previous wallet selected would open its portfolio, as if the sign-in went elsewhere.
         val userWallet = userWalletsListRepository.select(outcome.userWalletId).getOrElse { error ->
             TangemLogger.e("Failed to select the social login wallet: $error")
-            uiMessageSender.send(SnackbarMessage(resourceReference(CoreResR.string.common_unknown_error)))
+            uiMessageSender.send(errorMessages.walletNotSelected())
             return
         }
 
@@ -286,7 +286,8 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         val answer = CompletableDeferred<Boolean>()
         uiMessageSender.send(
             DialogMessage(
-                message = resourceReference(CoreResR.string.social_login_error_backup_not_saved),
+                title = errorMessages.backupNotSavedTitle,
+                message = errorMessages.backupNotSavedText,
                 isDismissable = false,
                 firstActionBuilder = {
                     EventMessageAction(
@@ -330,9 +331,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
                 ),
                 attemptId = attemptId,
             )
-            SocialLoginError.WalletAlreadySaved -> uiMessageSender.send(
-                DialogMessage(message = resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved)),
-            )
+            SocialLoginError.WalletAlreadySaved -> uiMessageSender.send(errorMessages.walletAlreadySaved())
             SocialLoginError.HotWalletsLimitReached -> {
                 analyticsEventHandler.send(
                     NoticeMobileWalletLimit(
@@ -342,7 +341,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
                 )
                 uiMessageSender.send(Dialogs.hotWalletsLimitReachedDialog())
             }
-            else -> uiMessageSender.send(SnackbarMessage(error.toMessage()))
+            else -> uiMessageSender.send(errorMessages.failure(error, provider))
         }
     }
 
@@ -371,17 +370,6 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             ),
         )
     }
-
-    // the spec (alternative flows of scenario 1) gives a linked account, a missing account and an unavailable
-    // provider no wording of their own: they read as any other failed sign-in
-    private fun SocialLoginError.toMessage(): TextReference = when (this) {
-        SocialLoginError.NetworkError -> resourceReference(CoreResR.string.hw_cloud_backup_error_network)
-        is SocialLoginError.BackupWriteFailed -> resourceReference(CoreResR.string.social_login_error_backup_not_saved)
-        else -> resourceReference(CoreResR.string.social_login_error_generic)
-    }
-
-    private fun providerReference(@StringRes id: Int, provider: SocialLoginProvider): TextReference =
-        resourceReference(id = id, formatArgs = wrappedList(provider.displayName))
 
     private fun SocialLoginError.toAnalyticsMessage(): String = when (this) {
         SocialLoginError.BackupNotFound,

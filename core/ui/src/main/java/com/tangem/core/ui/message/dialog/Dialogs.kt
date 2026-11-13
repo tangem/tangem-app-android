@@ -80,6 +80,17 @@ object Dialogs {
         )
     }
 
+    fun walletAlreadyAddedDialog(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.user_wallet_list_error_wallet_already_saved_title),
+            message = resourceReference(R.string.user_wallet_list_error_wallet_already_saved),
+            firstAction = EventMessageAction(
+                title = resourceReference(R.string.common_got_it),
+                onClick = {},
+            ),
+        )
+    }
+
     fun hotWalletsLimitReachedDialog(onDismiss: () -> Unit = {}): DialogMessage {
         return DialogMessage(
             title = resourceReference(R.string.hw_wallets_limit_alert_title),
