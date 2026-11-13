@@ -23,6 +23,7 @@ internal class AllOffersStateFactory(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val currentStateProvider: Provider<AllOffersStateUM>,
     private val allOffersIntents: AllOffersIntents,
+    private val isBuyEnabled: Provider<Boolean> = Provider { true },
 ) {
 
     fun getLoadedPaymentsState(methodGroups: List<OnrampPaymentMethodGroup>, currencyCode: String): AllOffersStateUM {
@@ -176,6 +177,7 @@ internal class AllOffersStateFactory(
                     onrampOfferAdvantagesUM = mapOfferAdvantagesDTOtoUM(offer.advantages),
                 )
             },
+            isBuyEnabled = isBuyEnabled(),
         )
     }
 

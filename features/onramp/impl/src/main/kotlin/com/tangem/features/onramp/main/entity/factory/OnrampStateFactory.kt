@@ -11,6 +11,9 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.message.TangemMessageIconPosition
 import com.tangem.core.ui.ds.message.TangemMessageUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -25,6 +28,7 @@ import com.tangem.features.onramp.main.entity.*
 import com.tangem.utils.Provider
 import java.math.BigDecimal
 import com.tangem.core.ui.R as CoreUiR
+import kotlinx.collections.immutable.toImmutableList
 
 internal class OnrampStateFactory(
     private val currentStateProvider: Provider<OnrampMainComponentUM>,
@@ -170,8 +174,37 @@ internal class OnrampStateFactory(
         return getBlockedState(state, buildBuyNotSupportedMessage())
     }
 
-    fun getCountryNotSupportedState(state: OnrampMainComponentUM = currentStateProvider()): OnrampMainComponentUM {
-        return getBlockedState(state, buildCountryNotSupportedMessage())
+    fun getRegionRestrictionState(
+        state: OnrampMainComponentUM,
+        regionName: String?,
+        isCountryBlocked: Boolean = false,
+        isBuyEnabled: Boolean = regionName == null && !isCountryBlocked,
+    ): OnrampMainComponentUM {
+        val message = regionName?.let(::buildRegionRestrictionMessage)
+        val buyNotSupportedMessage = state.buyNotSupportedMessage
+            ?.takeUnless { it.id == "country_not_supported" }
+            ?: buildCountryNotSupportedMessage().takeIf { isCountryBlocked && regionName == null }
+        return when (state) {
+            is OnrampMainComponentUM.Content -> state.copy(
+                regionRestrictionMessage = message,
+                buyNotSupportedMessage = buyNotSupportedMessage,
+                offersBlockState = state.offersBlockState.withBuyEnabled(isEnabled = isBuyEnabled),
+            )
+            is OnrampMainComponentUM.InitialLoading -> state.copy(
+                regionRestrictionMessage = message,
+                buyNotSupportedMessage = buyNotSupportedMessage,
+            )
+        }
+    }
+
+    private fun OnrampOffersBlockUM.withBuyEnabled(isEnabled: Boolean): OnrampOffersBlockUM = when (this) {
+        is OnrampOffersBlockUM.Content -> copy(
+            recentOffer = recentOffer?.copy(isBuyEnabled = isEnabled),
+            recommended = recommended.map { it.copy(isBuyEnabled = isEnabled) }.toImmutableList(),
+        )
+        OnrampOffersBlockUM.Empty,
+        OnrampOffersBlockUM.Loading,
+        -> this
     }
 
     private fun getBlockedState(state: OnrampMainComponentUM, message: TangemMessageUM): OnrampMainComponentUM {
@@ -204,6 +237,21 @@ internal class OnrampStateFactory(
         ),
         iconPosition = TangemMessageIconPosition.Leading,
     )
+
+    private fun buildRegionRestrictionMessage(regionName: String): TangemMessageBanner.State {
+        return TangemMessageBanner.State(
+            title = resourceReference(R.string.onramp_region_restriction_title),
+            description = resourceReference(
+                id = R.string.onramp_region_restriction_description_v2,
+                formatArgs = wrappedList(regionName),
+            ),
+            variant = TangemMessageBanner.Variant.Warning,
+            iconEnd = TangemIconUM.Icon(
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+        )
+    }
 
     private fun buildBuyNotSupportedMessage(): TangemMessageUM = TangemMessageUM(
         id = "buy_not_supported",

@@ -186,7 +186,8 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, 
                 size = TangemButtonSize.RoundedAction,
                 text = stringResourceSafe(R.string.common_buy),
                 onClick = onrampOfferUM.onBuyClicked,
-                enabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
+                enabled = onrampOfferUM.isBuyEnabled &&
+                    onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
                     onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted,
             )
         }

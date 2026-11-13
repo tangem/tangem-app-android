@@ -1,5 +1,7 @@
 package com.tangem.features.onramp.main.model
 
+import arrow.core.Either
+
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -55,6 +57,9 @@ import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -65,6 +70,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
+    private val getOnrampCountryByIpUseCase: GetOnrampCountryByIpUseCase,
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     private val clearOnrampCacheUseCase: ClearOnrampCacheUseCase,
     private val resetOnrampCountryUseCase: ResetOnrampCountryUseCase,
@@ -207,7 +213,15 @@ internal class OnrampMainComponentModel @Inject constructor(
     private var sentGeoRestrictionProviders: Set<String> = emptySet()
     private val conciergeWaitlistJobHolder = JobHolder()
     private val countrySubscriptionJobHolder = JobHolder()
+    private val availabilityCheckJobHolder = JobHolder()
     private var isCountryBlocked = false
+    private var ipRestrictedRegionName: String? = null
+    private var isIpCheckPending = isCountryByIpEnabled
+    private var hasStarted = false
+    val isBuyRestricted: Boolean get() = isCountryBlocked || isIpCheckPending || ipRestrictedRegionName != null
+
+    val isBuyEnabled: StateFlow<Boolean>
+        field = MutableStateFlow(!isCountryByIpEnabled)
 
     val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
     val demandSurveyNavigation: SlotNavigation<ConciergeDemandSurveyComponent.Params> = SlotNavigation()
@@ -223,12 +237,12 @@ internal class OnrampMainComponentModel @Inject constructor(
             modelScope.launch {
                 clearOnrampCacheUseCase()
                 resetOnrampCountryUseCase()
-                checkResidenceCountry()
+                launchAvailabilityCheck()
                 subscribeToCountryAndCurrencyUpdates()
             }
         } else {
             modelScope.launch { clearOnrampCacheUseCase() }
-            checkResidenceCountry()
+            launchAvailabilityCheck()
             subscribeToCountryAndCurrencyUpdates()
         }
     }
@@ -275,12 +289,9 @@ internal class OnrampMainComponentModel @Inject constructor(
         onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM,
         categoryUM: OnrampOfferCategoryUM,
     ) {
-        if (isCountryBlocked ||
-            onrampOfferAdvantagesUM is OnrampOfferAdvantagesUM.Unavailable ||
+        val isOfferUnavailable = onrampOfferAdvantagesUM is OnrampOfferAdvantagesUM.Unavailable ||
             onrampOfferAdvantagesUM == OnrampOfferAdvantagesUM.Restricted
-        ) {
-            return
-        }
+        if (isBuyRestricted || isOfferUnavailable) return
         val currentContentState = state.value as? OnrampMainComponentUM.Content ?: return
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.OnBuyClick(
@@ -295,6 +306,11 @@ internal class OnrampMainComponentModel @Inject constructor(
             categoryUM = categoryUM,
         )
         if (messageSender.showDemoModeWarningIfNeeded(userWallet, isDemoCardUseCase)) return
+        openRedirectPage(quote)
+    }
+
+    fun openRedirectPage(quote: OnrampProviderWithQuote.Data) {
+        if (isBuyRestricted) return
         params.openRedirectPage(quote)
     }
 
@@ -313,15 +329,18 @@ internal class OnrampMainComponentModel @Inject constructor(
                 isCountryByIpEnabled = isCountryByIpEnabled,
             )
         }
-        isCountryBlocked = false
         modelScope.launch {
-            clearOnrampCacheUseCase.invoke()
-            checkAvailability()
+            clearOnrampCacheUseCase()
+            launchAvailabilityCheck().join()
             handleOnrampAvailable()
         }
     }
 
     fun onStart() {
+        if (hasStarted && isCountryByIpEnabled) {
+            launchAvailabilityCheck()
+        }
+        hasStarted = true
         conciergeWaitlistListener.openWaitlistFlow
             .onEach { openDemandSurvey() }
             .launchIn(modelScope)
@@ -384,22 +403,53 @@ internal class OnrampMainComponentModel @Inject constructor(
         )
     }
 
-    private fun checkResidenceCountry() {
-        modelScope.launch { checkAvailability() }
+    private fun launchAvailabilityCheck(): Job {
+        availabilityCheckJobHolder.cancel()
+        return modelScope.launch {
+            checkAvailability()
+        }.saveIn(availabilityCheckJobHolder)
     }
 
     private suspend fun checkAvailability() {
-        checkOnrampAvailabilityUseCase(userWallet, isCountryByIpEnabled)
-            .onLeft(::handleOnrampError)
+        val detectedCountry = if (isCountryByIpEnabled) {
+            val result = checkIpRegionRestriction()
+            result.onLeft(::handleOnrampError).getOrNull() ?: return
+        } else {
+            null
+        }
+        val result = checkOnrampAvailabilityUseCase(userWallet, isCountryByIpEnabled, detectedCountry)
+        currentCoroutineContext().ensureActive()
+        result.onLeft(::handleOnrampError)
             .onRight { availability ->
-                if (isCountryByIpEnabled) {
-                    if (availability is OnrampAvailability.NotSupported) {
-                        showCountryNotSupported(availability.country)
-                    }
-                } else {
-                    handleOnrampAvailability(availability)
-                }
+                if (!isCountryByIpEnabled) handleOnrampAvailability(availability)
             }
+    }
+
+    private suspend fun checkIpRegionRestriction(): Either<OnrampError, OnrampCountry> {
+        isIpCheckPending = true
+        updateRegionRestriction()
+        val result = getOnrampCountryByIpUseCase(userWallet)
+        currentCoroutineContext().ensureActive()
+        result.onRight { ipCountry ->
+            ipRestrictedRegionName = ipCountry.name.takeIf { !ipCountry.isOnrampAvailable }
+        }
+        isIpCheckPending = false
+        updateRegionRestriction()
+        return result
+    }
+
+    private fun updateRegionRestriction() {
+        isBuyEnabled.value = !isBuyRestricted
+        state.update(::withRegionRestriction)
+    }
+
+    private fun withRegionRestriction(state: OnrampMainComponentUM): OnrampMainComponentUM {
+        return stateFactory.getRegionRestrictionState(
+            state = state,
+            regionName = ipRestrictedRegionName,
+            isCountryBlocked = isCountryBlocked,
+            isBuyEnabled = !isBuyRestricted,
+        )
     }
 
     private fun handleOnrampAvailability(availability: OnrampAvailability) {
@@ -425,7 +475,6 @@ internal class OnrampMainComponentModel @Inject constructor(
                 maybeOffers.fold(
                     ifLeft = ::handleOnrampError,
                     ifRight = { offers ->
-                        if (isCountryBlocked) return@fold
                         val currentState = state.value
                         if (currentState is OnrampMainComponentUM.Content) {
                             if (currentState.amountBlockState.amountFieldModel.fiatValue.isEmpty()) {
@@ -435,7 +484,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                                 return@fold
                             }
                             state.update {
-                                onrampOffersStateFactory.getOffersState(offers)
+                                withRegionRestriction(onrampOffersStateFactory.getOffersState(offers))
                             }
                         }
                     },
@@ -461,14 +510,8 @@ internal class OnrampMainComponentModel @Inject constructor(
                         if (isCountryByIpEnabled) {
                             state.update { stateFactory.getCountryFlagState(it, country.image, country.name) }
                         }
-                        if (isCountryByIpEnabled && !country.isOnrampAvailable) {
-                            showCountryNotSupported(country)
-                            return@onEach
-                        }
-                        if (isCountryBlocked) {
-                            onRefresh()
-                            return@onEach
-                        }
+                        isCountryBlocked = isCountryByIpEnabled && !country.isOnrampAvailable
+                        isBuyEnabled.value = !isBuyRestricted
                         // Resolve token-level buy support BEFORE emitting any Content state, so an
                         // unsupported token never briefly shows an enabled amount field — otherwise it
                         // would grab focus and flash the keyboard before being disabled.
@@ -495,10 +538,12 @@ internal class OnrampMainComponentModel @Inject constructor(
                 stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
         }
         return if (isCountryByIpEnabled) {
-            stateFactory.getCountryFlagState(
-                state = updatedState,
-                flagUrl = country.image,
-                countryName = country.name,
+            withRegionRestriction(
+                stateFactory.getCountryFlagState(
+                    state = updatedState,
+                    flagUrl = country.image,
+                    countryName = country.name,
+                ),
             )
         } else {
             updatedState
@@ -524,7 +569,6 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
-        if (isCountryBlocked) return
         sendOnrampQuotesErrorAnalytic(quotes)
         val hasAvailableOffer = quotes.any { it is OnrampQuote.Data && !it.isRestricted }
         val isRegionRestricted = !hasAvailableOffer && quotes.any(OnrampQuote::isRestricted)
@@ -606,16 +650,8 @@ internal class OnrampMainComponentModel @Inject constructor(
         state.update { stateFactory.getOnrampErrorState(onrampError) }
     }
 
-    private fun showCountryNotSupported(country: OnrampCountry) {
-        isCountryBlocked = true
-        quotesTaskScheduler.cancelTask()
-        state.update { prevState ->
-            stateFactory.getCountryNotSupportedState(getCountryUpdatedState(prevState, country))
-        }
-    }
-
     private fun showBuyNotSupported(country: OnrampCountry) {
-        if (state.value.buyNotSupportedMessage != null) return
+        if (state.value.buyNotSupportedMessage?.id == "buy_not_supported") return
 
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.NoticeBuyNotSupported(

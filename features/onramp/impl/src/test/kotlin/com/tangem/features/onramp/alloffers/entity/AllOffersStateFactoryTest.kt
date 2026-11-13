@@ -56,6 +56,34 @@ internal class AllOffersStateFactoryTest {
         assertThat(content.restrictedNotification).isEqualTo(model.expectedNotification)
     }
 
+    @Test
+    fun `GIVEN open provider list WHEN buy restriction changes THEN selected and listed offers update`() {
+        // Arrange
+        var isBuyEnabled = true
+        var currentState: AllOffersStateUM = AllOffersStateUM.Loading
+        val factory = AllOffersStateFactory(
+            analyticsEventHandler = analyticsEventHandler,
+            currentStateProvider = Provider { currentState },
+            allOffersIntents = allOffersIntents,
+            isBuyEnabled = Provider { isBuyEnabled },
+        )
+        val groups = listOf(createGroup(createOffer(isRestricted = false)))
+        val initial = factory.getLoadedPaymentsState(groups, CURRENCY_CODE) as AllOffersStateUM.Content
+        currentState = initial.copy(currentMethod = initial.methods.single())
+
+        // Act
+        isBuyEnabled = false
+        val restricted = factory.getLoadedPaymentsState(groups, CURRENCY_CODE) as AllOffersStateUM.Content
+
+        // Assert
+        assertThat(restricted.methods.single().offers.single().isBuyEnabled).isFalse()
+        assertThat(restricted.currentMethod?.offers?.single()?.isBuyEnabled).isFalse()
+        isBuyEnabled = true
+        val restored = factory.getLoadedPaymentsState(groups, CURRENCY_CODE) as AllOffersStateUM.Content
+        assertThat(restored.methods.single().offers.single().isBuyEnabled).isTrue()
+        assertThat(restored.currentMethod?.offers?.single()?.isBuyEnabled).isTrue()
+    }
+
     private fun provideTestModels() = listOf(
         RestrictedModel(
             name = "no restricted quotes - no notification",

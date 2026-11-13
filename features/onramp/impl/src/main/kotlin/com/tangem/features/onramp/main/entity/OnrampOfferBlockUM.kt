@@ -32,6 +32,7 @@ internal data class OnrampOfferUM(
     val diff: TextReference?,
     val onBuyClicked: () -> Unit,
     val recommendedSlot: MarketingBanner.RecommendedSlot? = null,
+    val isBuyEnabled: Boolean = true,
 )
 
 internal enum class OnrampOfferCategoryUM {
