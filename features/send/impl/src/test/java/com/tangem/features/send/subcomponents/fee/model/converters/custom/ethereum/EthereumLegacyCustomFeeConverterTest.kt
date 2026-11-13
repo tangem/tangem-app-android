@@ -73,11 +73,20 @@ internal class EthereumLegacyCustomFeeConverterTest {
             // Assert
             assertThat(actual.amount.value!!.compareTo(BigDecimal("0.00042"))).isEqualTo(0)
             assertThat(actual.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
-            // FIXME [AND-XXXXX]: convertBack does not convert gasPrice GWEI->wei (missing movePointRight(9)),
-            //  unlike EthereumEIPCustomFeeConverter. Correct value is 20_000_000_000.
-            //  Asserting current (buggy) behavior to keep the suite green until the converter is fixed.
-            //  BUT is it any case when we will use ethereum legacy network?
-            assertThat(actual.gasPrice).isEqualTo(BigInteger.valueOf(20))
+            assertThat(actual.gasPrice).isEqualTo(BigInteger.valueOf(20_000_000_000))
+        }
+
+        @Test
+        fun `GIVEN fractional custom gas price in GWEI WHEN convertBack THEN gas price is in wei`() {
+            // Arrange
+            val fee = legacyFee()
+            val fields = converter.onValueChange(fee, fullFields(fee), GAS_PRICE_INDEX, "0.000000007")
+
+            // Act
+            val actual = converter.convertBack(fee, fields)
+
+            // Assert
+            assertThat(actual.gasPrice).isEqualTo(BigInteger.valueOf(7))
         }
     }
 
