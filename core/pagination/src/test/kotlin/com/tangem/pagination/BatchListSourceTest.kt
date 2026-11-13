@@ -100,6 +100,60 @@ internal class BatchListSourceTest {
         assertThat(source.state.value).isEqualTo(BatchListState<Int, List<Int>>(emptyList(), PaginationStatus.None))
     }
 
+    @Test
+    fun `GIVEN an empty non-final page WHEN load more THEN the next page is fetched in the same load`() = runTest {
+        // Arrange
+        val requested = mutableListOf<Int>()
+        val (source, actions) = createSource { offset ->
+            requested += offset
+            when (offset) {
+                1 -> BatchFetchResult.Success(emptyList(), isEmpty = true, isLast = false)
+                else -> BatchFetchResult.Success(listOf(offset), isEmpty = false, isLast = offset == 2)
+            }
+        }
+        actions.emit(BatchAction.Reload("positions"))
+        runCurrent()
+
+        // Act
+        actions.emit(BatchAction.LoadMore())
+        runCurrent()
+
+        // Assert
+        assertThat(requested).containsExactly(0, 1, 2).inOrder()
+        assertThat(source.state.value).isEqualTo(
+            BatchListState(
+                data = listOf(Batch(0, listOf(0)), Batch(1, listOf(2))),
+                status = PaginationStatus.EndOfPagination,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN only empty non-final pages WHEN load more THEN it stops after a bounded number of pages`() =
+        runTest {
+            // Arrange
+            val requested = mutableListOf<Int>()
+            val (source, actions) = createSource { offset ->
+                requested += offset
+                if (offset == 0) {
+                    BatchFetchResult.Success(listOf(offset), isEmpty = false, isLast = false)
+                } else {
+                    BatchFetchResult.Success(emptyList(), isEmpty = true, isLast = false)
+                }
+            }
+            actions.emit(BatchAction.Reload("positions"))
+            runCurrent()
+
+            // Act
+            actions.emit(BatchAction.LoadMore())
+            runCurrent()
+
+            // Assert
+            assertThat(requested).containsExactly(0, 1, 2, 3, 4, 5, 6).inOrder()
+            assertThat(source.state.value.data).containsExactly(Batch(0, listOf(0)))
+            assertThat(source.state.value.status).isInstanceOf(PaginationStatus.Paginating::class.java)
+        }
+
     private fun TestScope.createSource(
         fetch: suspend (Int) -> BatchFetchResult<List<Int>>,
     ): Pair<BatchListSource<Int, List<Int>, Nothing>, MutableSharedFlow<BatchAction<Int, String, Nothing>>> {

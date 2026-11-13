@@ -559,6 +559,90 @@ internal class DefaultMarketsTokenRepositoryTest {
     inner class GetTokenListFlow {
 
         @Test
+        fun `GIVEN a token returned on two pages WHEN load more THEN the second batch drops it`() = runTest {
+            // Arrange
+            stubCoinsPage(offset = 0, ids = listOf("btc", "tcy"))
+            stubCoinsPage(offset = 2, ids = listOf("tcy", "eth"))
+            val actions = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>(
+                replay = 1,
+            )
+            val sourceScope = testSourceScope()
+            val batchFlow = repository.getTokenListFlow(
+                batchingContext = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                firstBatchSize = 2,
+                nextBatchSize = 2,
+            )
+
+            // Act
+            actions.emit(BatchAction.Reload(requestParams = listConfig()))
+            advanceUntilIdle()
+            actions.emit(BatchAction.LoadMore())
+            advanceUntilIdle()
+
+            // Assert
+            val ids = batchFlow.state.value.data.map { batch -> batch.data.map { it.id.value } }
+            assertThat(ids).containsExactly(listOf("btc", "tcy"), listOf("eth")).inOrder()
+            sourceScope.cancel()
+        }
+
+        @Test
+        fun `GIVEN loaded pages WHEN the list is reloaded THEN the first page is shown in full again`() = runTest {
+            // Arrange
+            stubCoinsPage(offset = 0, ids = listOf("btc", "tcy"))
+            stubCoinsPage(offset = 2, ids = listOf("eth", "sol"))
+            val actions = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>(
+                replay = 1,
+            )
+            val sourceScope = testSourceScope()
+            val batchFlow = repository.getTokenListFlow(
+                batchingContext = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                firstBatchSize = 2,
+                nextBatchSize = 2,
+            )
+            actions.emit(BatchAction.Reload(requestParams = listConfig()))
+            advanceUntilIdle()
+            actions.emit(BatchAction.LoadMore())
+            advanceUntilIdle()
+
+            // Act
+            actions.emit(BatchAction.Reload(requestParams = listConfig()))
+            advanceUntilIdle()
+
+            // Assert
+            val ids = batchFlow.state.value.data.map { batch -> batch.data.map { it.id.value } }
+            assertThat(ids).containsExactly(listOf("btc", "tcy")).inOrder()
+            sourceScope.cancel()
+        }
+
+        @Test
+        fun `GIVEN a full page of repeats WHEN load more THEN the next page is loaded in its place`() = runTest {
+            // Arrange
+            stubCoinsPage(offset = 0, ids = listOf("btc", "tcy"))
+            stubCoinsPage(offset = 2, ids = listOf("tcy", "btc"))
+            stubCoinsPage(offset = 4, ids = listOf("eth", "sol"))
+            val actions = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>(
+                replay = 1,
+            )
+            val sourceScope = testSourceScope()
+            val batchFlow = repository.getTokenListFlow(
+                batchingContext = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                firstBatchSize = 2,
+                nextBatchSize = 2,
+            )
+
+            // Act
+            actions.emit(BatchAction.Reload(requestParams = listConfig()))
+            advanceUntilIdle()
+            actions.emit(BatchAction.LoadMore())
+            advanceUntilIdle()
+
+            // Assert
+            val ids = batchFlow.state.value.data.map { batch -> batch.data.map { it.id.value } }
+            assertThat(ids).containsExactly(listOf("btc", "tcy"), listOf("eth", "sol")).inOrder()
+            sourceScope.cancel()
+        }
+
+        @Test
         fun `GIVEN a category filter WHEN the list is reloaded THEN its id reaches the api`() = runTest {
             // Arrange
             coEvery {
@@ -698,6 +782,43 @@ internal class DefaultMarketsTokenRepositoryTest {
         order = order,
         geckoCategoryId = geckoCategoryId,
         country = country,
+    )
+
+    private fun stubCoinsPage(offset: Int, ids: List<String>) {
+        coEvery {
+            marketsApi.getCoinsList(
+                currency = any(),
+                interval = any(),
+                order = any(),
+                search = any(),
+                offset = offset,
+                limit = any(),
+                timestamp = any(),
+                showNetworks = any(),
+                categoryId = any(),
+                sectorId = any(),
+                geckoCategoryId = any(),
+                country = any(),
+            )
+        } returns ApiResponse.Success(
+            tokenMarketListResponse(tokens = ids.map(::coinDto), limit = ids.size, offset = offset)
+                .copy(imageHost = "https://images/"),
+        )
+    }
+
+    private fun coinDto(id: String) = TokenMarketListResponse.Token(
+        id = id,
+        name = id,
+        symbol = id.uppercase(),
+        currentPrice = BigDecimal.ONE,
+        priceChangePercentage = null,
+        marketRating = null,
+        marketCap = null,
+        isUnderMarketCapLimit = null,
+        stakingOpportunities = null,
+        maxYieldApy = null,
+        networks = null,
+        isRestrictedForCountry = null,
     )
 
     private fun tokenMarketListResponse(
