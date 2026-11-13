@@ -294,6 +294,8 @@
   <string name="survey_demand_transaction_size_hint">Aproximadamente, em USD</string>
   <string name="survey_demand_transaction_size_question">Qual é o valor habitual por transação?</string>
   <string name="tangempay_cancel_kyc">Ocultar estado</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Cartão adicionado ao Google Wallet</string>
+  <string name="tangempay_card_page_closing_banner_description">Pode levar até 5 minutos</string>
   <string name="tangempay_cashback_accruals_pay_description">Até ao dia 11 do mês seguinte, após verificar se as transações cumprem as regras do programa de cashback</string>
   <string name="tangempay_kyc_rejected_button_text">Ocultar estado</string>
   <string name="tangempay_pay_support">Suporte</string>
