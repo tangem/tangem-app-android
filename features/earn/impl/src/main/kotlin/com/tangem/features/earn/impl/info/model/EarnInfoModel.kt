@@ -9,12 +9,14 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.message.modalMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.impl.InnerEarnNavigator
 import com.tangem.features.earn.impl.info.EarnInfoChartConfig
@@ -35,8 +37,12 @@ import com.tangem.features.earn.product.api.product.EarnProjection
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -49,6 +55,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -65,6 +72,7 @@ internal class EarnInfoModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
+    private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
 ) : Model(), EarnApyChartComponent.ModelCallback, EarnCalculatorSheetComponent.ModelCallback {
 
     private val params: EarnInfoComponent.Params = paramsContainer.require()
@@ -97,6 +105,12 @@ internal class EarnInfoModel @Inject constructor(
     val chartNavigation: SlotNavigation<EarnInfoChartConfig> = SlotNavigation()
 
     val calculatorSheetNavigation: SlotNavigation<EarnCalculatorSheetConfig> = SlotNavigation()
+
+    val pullToRefresh: StateFlow<PullToRefreshConfig>
+        field = MutableStateFlow(PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }))
+
+    val chartReloads: SharedFlow<Unit>
+        field = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     private val chartRate: StateFlow<EarnProductRate> by lazy {
         val initial = requireNotNull(readyState.value) { "The chart is activated once the product is Ready" }.rate
@@ -139,6 +153,7 @@ internal class EarnInfoModel @Inject constructor(
             defaultPeriod = periods.last(),
             history = { period -> product.apyHistory(productParams, period) },
             currentRate = chartRate,
+            reloads = chartReloads,
             callback = this.takeIf { ready.projection != null },
         )
     }
@@ -149,6 +164,41 @@ internal class EarnInfoModel @Inject constructor(
 
     override fun onDismiss() {
         calculatorSheetNavigation.dismiss()
+    }
+
+    private fun onRefresh() {
+        val product = product ?: return
+        if (pullToRefresh.value.isRefreshing) return
+
+        setRefreshing(isRefreshing = true)
+        modelScope.launch {
+            try {
+                refresh(product)
+            } finally {
+                setRefreshing(isRefreshing = false)
+            }
+        }
+    }
+
+    private suspend fun refresh(product: EarnProduct) = coroutineScope {
+        val quote = async { refreshQuote() }
+
+        product.refresh(productParams)
+            .onLeft { error -> TangemLogger.e("Earn info: refresh of ${product.id.value} failed", error) }
+            .onRight { chartReloads.tryEmit(Unit) }
+
+        quote.await()
+    }
+
+    private suspend fun refreshQuote() {
+        val rawCurrencyId = params.cryptoCurrency.id.rawCurrencyId ?: return
+
+        singleQuoteStatusFetcher(SingleQuoteStatusFetcher.Params(rawCurrencyId = rawCurrencyId, appCurrencyId = null))
+            .onLeft { error -> TangemLogger.e("Earn info: quote refresh failed", error) }
+    }
+
+    private fun setRefreshing(isRefreshing: Boolean) {
+        pullToRefresh.update { config -> config.copy(isRefreshing = isRefreshing) }
     }
 
     private fun observe(product: EarnProduct) {

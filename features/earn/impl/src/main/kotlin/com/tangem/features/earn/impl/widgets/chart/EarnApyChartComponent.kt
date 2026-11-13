@@ -16,7 +16,9 @@ import com.tangem.features.earn.product.api.product.EarnPeriod
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 
 internal class EarnApyChartComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -38,6 +40,7 @@ internal class EarnApyChartComponent @AssistedInject constructor(
         val defaultPeriod: EarnPeriod,
         val history: suspend (EarnPeriod) -> Either<Throwable, EarnApyHistory>,
         val currentRate: StateFlow<EarnProductRate>,
+        val reloads: Flow<Unit> = emptyFlow(),
         val callback: ModelCallback? = null,
     )
 

@@ -1,7 +1,9 @@
 package com.tangem.features.earn.impl.info.model
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.none
+import arrow.core.right
 import arrow.core.some
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
@@ -11,6 +13,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds2.modal.TangemModalContentUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -25,6 +28,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
@@ -58,6 +62,8 @@ import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.Called
 import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -66,6 +72,7 @@ import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,6 +80,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import org.junit.jupiter.api.AfterEach
@@ -93,6 +101,7 @@ internal class EarnInfoModelTest {
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val accountStatusList: AccountStatusList = mockk()
     private val getSelectedAppCurrency: GetSelectedAppCurrencyUseCase = mockk()
+    private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
     private val ethereum: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
     private val productParams = EarnProduct.Params(USER_WALLET_ID, ethereum)
     private val converter = EarnInfoConverter(actions = EarnInfoActions())
@@ -108,12 +117,14 @@ internal class EarnInfoModelTest {
             accountStatusListSupplier,
             accountStatusList,
             getSelectedAppCurrency,
+            singleQuoteStatusFetcher,
         )
         mockkObject(CryptoCurrencyStatusOperations)
         mockkObject(TangemLogger)
         product = InfoProduct(createFakeEarnProduct(FakeEarnProductPreset.Lending), knownState())
         every { accountStatusListSupplier(USER_WALLET_ID) } returns flowOf(accountStatusList)
         every { getSelectedAppCurrency.invokeOrDefault() } returns flowOf(AppCurrency.Default)
+        coEvery { singleQuoteStatusFetcher(any()) } returns Unit.right()
         stubStatus(status())
     }
 
@@ -713,15 +724,230 @@ internal class EarnInfoModelTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PullToRefresh {
+
+        @Test
+        fun `GIVEN Ready WHEN pulled THEN the product refreshes once with the screen params and the flag is true until the call returns`() =
+            runTest {
+                // Arrange
+                val gate = CompletableDeferred<Unit>()
+                product.refreshGate = gate
+                val model = createModel()
+                advanceUntilIdle()
+
+                // Act
+                model.pull()
+                runCurrent()
+                val whileRefreshing = model.pullToRefresh.value.isRefreshing
+                val callsWhileRefreshing = product.refreshCalls.toList()
+                gate.complete(Unit)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(whileRefreshing).isTrue()
+                assertThat(callsWhileRefreshing).containsExactly(productParams)
+                assertThat(model.pullToRefresh.value.isRefreshing).isFalse()
+                assertThat(product.refreshCalls).containsExactly(productParams)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a refresh in flight WHEN pulled again THEN refresh is not called twice`() = runTest {
+            // Arrange
+            val gate = CompletableDeferred<Unit>()
+            product.refreshGate = gate
+            val model = createModel()
+            advanceUntilIdle()
+            model.pull()
+            runCurrent()
+
+            // Act
+            model.pull()
+            runCurrent()
+
+            // Assert
+            assertThat(product.refreshCalls).hasSize(1)
+            gate.complete(Unit)
+            advanceUntilIdle()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a finished refresh WHEN pulled again THEN refresh is called twice`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+            model.pull()
+            advanceUntilIdle()
+
+            // Act
+            model.pull()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(product.refreshCalls).hasSize(2)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Ready WHEN pulled THEN the quote is fetched in parallel for the raw currency id of the screen currency`() =
+            runTest {
+                // Arrange
+                val gate = CompletableDeferred<Unit>()
+                product.refreshGate = gate
+                val model = createModel()
+                advanceUntilIdle()
+                val expected = SingleQuoteStatusFetcher.Params(
+                    rawCurrencyId = checkNotNull(ethereum.id.rawCurrencyId),
+                    appCurrencyId = null,
+                )
+
+                // Act
+                model.pull()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 1) { singleQuoteStatusFetcher(expected) }
+                gate.complete(Unit)
+                advanceUntilIdle()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a currency without a raw id WHEN pulled THEN no quote is fetched and the product still refreshes`() =
+            runTest {
+                // Arrange
+                val customToken = MockCryptoCurrencyFactory().ethereum.copy(
+                    id = CryptoCurrency.ID(
+                        prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
+                        body = CryptoCurrency.ID.Body.NetworkId("ethereum"),
+                        suffix = CryptoCurrency.ID.Suffix.ContractAddress("0xcontract"),
+                    ),
+                )
+                assertThat(customToken.id.rawCurrencyId).isNull()
+                val model = createModel(cryptoCurrency = customToken)
+                advanceUntilIdle()
+
+                // Act
+                model.pull()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 0) { singleQuoteStatusFetcher(any()) }
+                assertThat(product.refreshCalls).hasSize(1)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the product refresh returns Left WHEN pulled THEN the flag resets, uiState is unchanged, the router is untouched, the error is logged and the chart is not reloaded`() =
+            runTest {
+                // Arrange
+                product.refreshResult = IllegalStateException("offline").left()
+                val model = createModel()
+                val reloads = getEmittedValues(model.chartReloads)
+                advanceUntilIdle()
+                val before = model.uiState.value
+
+                // Act
+                model.pull()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.pullToRefresh.value.isRefreshing).isFalse()
+                assertThat(model.uiState.value).isSameInstanceAs(before)
+                verify(exactly = 1) { TangemLogger.e(any(), any(), any()) }
+                verify(exactly = 1) {
+                    TangemLogger.e("Earn info: refresh of ${product.id.value} failed", any(), any())
+                }
+                verify(exactly = 0) { router.replaceCurrent(any(), any()) }
+                verify(exactly = 0) { router.pop(any()) }
+                assertThat(reloads).isEmpty()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the product refresh returns Right WHEN pulled THEN the chart reload is emitted once`() = runTest {
+            // Arrange
+            val model = createModel()
+            val reloads = getEmittedValues(model.chartReloads)
+            advanceUntilIdle()
+
+            // Act
+            model.pull()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(reloads).containsExactly(Unit)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the quote fetch returns Left WHEN pulled THEN it is logged, the flag resets and the chart is still reloaded`() =
+            runTest {
+                // Arrange
+                coEvery { singleQuoteStatusFetcher(any()) } returns IllegalStateException("no quote").left()
+                val model = createModel()
+                val reloads = getEmittedValues(model.chartReloads)
+                advanceUntilIdle()
+
+                // Act
+                model.pull()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { TangemLogger.e(any(), any(), any()) }
+                verify(exactly = 1) { TangemLogger.e("Earn info: quote refresh failed", any(), any()) }
+                assertThat(model.pullToRefresh.value.isRefreshing).isFalse()
+                assertThat(reloads).containsExactly(Unit)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN an unknown product WHEN pulled THEN nothing is fetched and the flag stays false`() = runTest {
+            // Arrange
+            val model = createModel(products = emptyList(), productId = EarnProductId("unknown"))
+            advanceUntilIdle()
+
+            // Act
+            model.pull()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { singleQuoteStatusFetcher(any()) }
+            assertThat(product.refreshCalls).isEmpty()
+            assertThat(model.pullToRefresh.value.isRefreshing).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Ready WHEN chartParams is built THEN its reloads is the chartReloads of the model`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            val chartParams = model.chartParams()
+
+            // Assert
+            assertThat(chartParams.reloads).isSameInstanceAs(model.chartReloads)
+            model.onDestroy()
+        }
+    }
+
+    private fun EarnInfoModel.pull() = pullToRefresh.value.onRefresh(PullToRefreshConfig.ShowRefreshState())
+
     private fun TestScope.createModel(
         products: List<EarnProduct> = listOf(product),
         productId: EarnProductId = product.id,
+        cryptoCurrency: CryptoCurrency = ethereum,
     ): EarnInfoModel = EarnInfoModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(
             EarnInfoComponent.Params(
                 userWalletId = USER_WALLET_ID,
-                cryptoCurrency = ethereum,
+                cryptoCurrency = cryptoCurrency,
                 productId = productId,
             ),
         ),
@@ -732,6 +958,7 @@ internal class EarnInfoModelTest {
         router = router,
         uiMessageSender = uiMessageSender,
         urlOpener = urlOpener,
+        singleQuoteStatusFetcher = singleQuoteStatusFetcher,
     )
 
     private fun verifyRedirectedOnce() {
@@ -786,7 +1013,6 @@ internal class EarnInfoModelTest {
         return tracked
     }
 
-    /** A fake product with its state under the test's control, recording the handled actions and history requests. */
     internal class InfoProduct(
         private val delegate: EarnProduct,
         initialState: EarnProductState,
@@ -802,6 +1028,12 @@ internal class EarnInfoModelTest {
         var actionHandlerCalls: Int = 0
             private set
 
+        val refreshCalls = mutableListOf<EarnProduct.Params>()
+
+        var refreshResult: Either<Throwable, Unit> = Unit.right()
+
+        var refreshGate: CompletableDeferred<Unit>? = null
+
         fun readyState(): EarnProductState.Ready = stateFlow.value as EarnProductState.Ready
 
         override fun state(params: EarnProduct.Params): Flow<EarnProductState> = customState ?: stateFlow
@@ -809,6 +1041,12 @@ internal class EarnInfoModelTest {
         override suspend fun apyHistory(params: EarnProduct.Params, period: EarnPeriod): Either<Throwable, EarnApyHistory> {
             apyHistoryCalls += params to period
             return delegate.apyHistory(params, period)
+        }
+
+        override suspend fun refresh(params: EarnProduct.Params): Either<Throwable, Unit> {
+            refreshCalls += params
+            refreshGate?.await()
+            return refreshResult
         }
 
         override fun actionHandler(params: EarnProduct.Params, navigator: EarnNavigator): EarnActionHandler {
