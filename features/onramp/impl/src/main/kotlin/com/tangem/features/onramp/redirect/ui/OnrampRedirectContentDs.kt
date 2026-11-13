@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +37,7 @@ import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.surface.TangemSurface
@@ -59,24 +61,25 @@ import com.tangem.utils.annotations.RemoveWithToggle
     description = "Rename over the old file",
 )
 internal fun OnrampRedirectContentDs(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors3.bg.primary)
-            .imePadding(),
-    ) {
-        TangemTopNavigation(
-            title = state.topBarConfig.title,
-            contentAlign = TangemTopNavigation.ContentAlign.Start,
-            blurBackground = false,
-            fadeEnabled = false,
-            endButton = { RedirectCloseButton(onClick = state.topBarConfig.startButtonUM.onClicked) },
-        )
+    TangemTopBarScaffold(
+        modifier = modifier.fillMaxSize().imePadding(),
+        topBar = {
+            TangemTopNavigation(
+                title = state.topBarConfig.title,
+                contentAlign = TangemTopNavigation.ContentAlign.Start,
+                blurBackground = false,
+                fadeEnabled = false,
+                endButton = { RedirectCloseButton(onClick = state.topBarConfig.startButtonUM.onClicked) },
+            )
+        },
+    ) { contentPadding ->
         Content(
             state = state,
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.padding(
+                top = contentPadding.calculateTopPadding(),
+                start = 16.dp,
+                end = 16.dp,
+            ),
         )
     }
 }
@@ -146,6 +149,7 @@ private fun RedirectCloseButton(onClick: () -> Unit, modifier: Modifier = Modifi
 }
 
 @Composable
+@ReadOnlyComposable
 private fun redirectCloseBorderBrush(): Brush {
     val materialBorder = TangemTheme.colors3.material.border
     return Brush.linearGradient(
