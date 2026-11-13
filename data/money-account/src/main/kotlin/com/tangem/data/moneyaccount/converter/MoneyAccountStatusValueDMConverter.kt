@@ -59,6 +59,7 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
                     customerId = value.customerId,
                     productInstanceId = productInstanceId,
                     error = null,
+                    isKycAdditionalInfoRequired = false,
                 )
             } ?: MoneyAccountStatusValue.Error.Unavailable
             null -> MoneyAccountStatusValue.Error.Unavailable

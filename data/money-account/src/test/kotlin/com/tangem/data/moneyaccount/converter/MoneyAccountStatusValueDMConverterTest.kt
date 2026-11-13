@@ -40,6 +40,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
             productInstanceId = "instance-1",
             isBankOfframpAvailable = true,
             error = null,
+            isKycAdditionalInfoRequired = false,
         )
 
         // Act
@@ -70,6 +71,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
             customerId = "customer-1",
             productInstanceId = "instance-1",
             error = null,
+            isKycAdditionalInfoRequired = false,
         )
 
         // Act
@@ -138,6 +140,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
             customerId = "customer-1",
             productInstanceId = "instance-1",
             error = MoneyAccountStatusValue.Error.NotSynced,
+            isKycAdditionalInfoRequired = false,
         )
 
         // Act

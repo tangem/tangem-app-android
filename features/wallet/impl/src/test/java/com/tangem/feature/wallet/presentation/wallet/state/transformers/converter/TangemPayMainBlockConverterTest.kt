@@ -166,6 +166,7 @@ internal class TangemPayMainBlockConverterTest {
             isBankOfframpAvailable = null,
             tariffPlan = null,
             isPaymentAccountIssuing = isPaymentAccountIssuing,
+            isKycAdditionalInfoRequired = false,
         )
     }
 

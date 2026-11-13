@@ -193,6 +193,7 @@ internal class MoneyAccountStatusesStoreTest {
             customerId = CUSTOMER_ID,
             productInstanceId = PRODUCT_INSTANCE_ID,
             error = null,
+            isKycAdditionalInfoRequired = false,
         ),
     )
 
