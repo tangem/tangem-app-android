@@ -11,6 +11,7 @@ import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class EarnIncentiveSheetComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -28,7 +29,7 @@ internal class EarnIncentiveSheetComponent @AssistedInject constructor(
                 periods = request.periods,
                 defaultPeriod = request.periods.last(),
                 history = request.history,
-                currentRate = request.rate,
+                currentRate = MutableStateFlow(request.rate),
                 callback = null,
             ),
         )
