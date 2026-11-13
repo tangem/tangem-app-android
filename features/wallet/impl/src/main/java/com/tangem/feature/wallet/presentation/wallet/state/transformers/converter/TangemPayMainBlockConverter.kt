@@ -35,15 +35,6 @@ internal class TangemPayMainBlockConverter(
             is PaymentAccountStatusValue.Error.ExposedDevice -> TangemPayMainUM.ExposedDevice
             is PaymentAccountStatusValue.Error.NotSynced -> TangemPayMainUM.SyncNeeded
             is PaymentAccountStatusValue.Error.Unavailable -> TangemPayMainUM.TemporaryUnavailable
-            is PaymentAccountStatusValue.IssuingCard -> TangemPayMainUM.IssuingCard(
-                onClick = { tangemPayClickIntents.onIssuingCardClicked() },
-            )
-            is PaymentAccountStatusValue.AwaitingPlanSelection -> TangemPayMainUM.SelectPlan(
-                onClick = { tangemPayClickIntents.onSelectPlanClicked(value) },
-            )
-            is PaymentAccountStatusValue.Inactive -> TangemPayMainUM.IssuingCard(
-                onClick = { tangemPayClickIntents.openDetails(value) },
-            )
             is PaymentAccountStatusValue.KycRequired -> TangemPayMainUM.ActionRequired(
                 onClick = {
                     tangemPayClickIntents.onKycRequiredClicked(

@@ -17,7 +17,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.tangempay.TangemPayCardState
@@ -56,7 +55,6 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.tariffPlanState
-import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -225,12 +223,12 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             }
 
         @Test
-        fun `GIVEN cached widget on inactive account WHEN account becomes loaded THEN widget and impression shown`() =
+        fun `GIVEN cached widget on verified account WHEN account becomes loaded THEN widget and impression shown`() =
             runTest {
                 // Arrange
                 cachedSummary.value = enabledCashbackSummary()
-                val statusFlow = MutableStateFlow(paymentStatus(inactiveStatus()))
-                val model = createModel(testScope = this, statusValue = inactiveStatus(), statusFlow = statusFlow)
+                val statusFlow = MutableStateFlow(paymentStatus(verifiedStatus()))
+                val model = createModel(testScope = this, statusValue = verifiedStatus(), statusFlow = statusFlow)
                 advanceUntilIdle()
 
                 // Act
@@ -312,7 +310,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
         }
 
         private fun provideTestModels() = listOf(
-            NotLoadedStatusModel(name = "inactive", status = inactiveStatus()),
+            NotLoadedStatusModel(name = "verified", status = verifiedStatus()),
             NotLoadedStatusModel(name = "deactivated", status = deactivatedStatus(id = "customer-id")),
         )
     }
@@ -475,69 +473,6 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaDetailsErrorShowed>()) }
             model.onDestroy()
         }
-
-        @Test
-        fun `GIVEN plan is awaited WHEN screen started THEN plan selection replaces the stack`() = runTest {
-            // Arrange
-            val awaitingPlanSelection = awaitingPlanSelectionStatus()
-            val model = createModel(testScope = this, statusValue = awaitingPlanSelection)
-            advanceUntilIdle()
-
-            // Act
-            model.onStart()
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) { router.replaceAll(routes = selectPlanRoutes(), onComplete = any()) }
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN screen is stopped WHEN plan becomes awaited THEN stack is not replaced`() = runTest {
-            // Arrange
-            val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
-            val model = createModel(testScope = this, statusFlow = statusFlow)
-            model.onStart()
-            advanceUntilIdle()
-            // the plan flow is pushed on top of the details screen
-            model.onStop()
-
-            // Act
-            // canceling the Plus transition drops its order before the Basic one is created
-            statusFlow.value = paymentStatus(awaitingPlanSelectionStatus())
-            advanceUntilIdle()
-            // the Basic order is created, the account has a plan again
-            statusFlow.value = paymentStatus(loadedStatus())
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN plan stayed awaited while stopped WHEN screen started again THEN plan selection replaces the stack`() =
-            runTest {
-                // Arrange
-                val awaitingPlanSelection = awaitingPlanSelectionStatus()
-                val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
-                val model = createModel(testScope = this, statusFlow = statusFlow)
-                model.onStart()
-                advanceUntilIdle()
-                model.onStop()
-                statusFlow.value = paymentStatus(awaitingPlanSelection)
-                advanceUntilIdle()
-
-                // Act
-                model.onStart()
-                advanceUntilIdle()
-
-                // Assert
-                verify(exactly = 1) {
-                    router.replaceAll(routes = selectPlanRoutes(), onComplete = any())
-                }
-                model.onDestroy()
-            }
 
         @Test
         fun `GIVEN other networks sheet WHEN dismissed THEN choose network is reopened instead of closing the slot`() =
@@ -753,7 +688,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
         @Test
         fun `GIVEN a status without a customer id WHEN generic support clicked THEN no feedback is sent`() = runTest {
             // Arrange
-            val model = createModel(testScope = this, statusValue = awaitingPlanSelectionStatus())
+            val model = createModel(testScope = this, statusValue = verifiedStatus())
             advanceUntilIdle()
 
             // Act
@@ -977,23 +912,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
     private fun cardIssueFailedStatus(planState: TangemPayTariffPlanState? = tariffPlanState()) =
         PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "customer-id", tariffPlan = planState)
 
-    private fun inactiveStatus() = PaymentAccountStatusValue.Inactive(
-        source = StatusSource.ACTUAL,
-        fiatBalance = PaymentAccountStatusValue.FiatBalance(availableBalance = BigDecimal.ZERO, currency = "USD"),
-        tariffPlan = tariffPlanState(),
-    )
-
-    private fun awaitingPlanSelectionStatus() = PaymentAccountStatusValue.AwaitingPlanSelection(
-        source = StatusSource.ACTUAL,
-        tariffPlan = customerTariffPlan(
-            plan = tariffPlan(tierId = "BASIC", isBasicTier = true, fees = emptyList()),
-            source = TangemPayCustomerTariffPlan.Source.DEFAULT,
-        ),
-    )
-
-    private fun selectPlanRoutes() = arrayOf(
-        TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.TIERS_ONBOARDING),
-    )
+    private fun verifiedStatus() = PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL)
 
     private fun sentMessageInfoBlock(): MessageBottomSheetUM.InfoBlock {
         val message = slot<BottomSheetMessage>()
@@ -1431,9 +1350,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             ),
             DeepLinkRouteModel(
                 initialRoute = TangemPayDetailsInitialRoute.CHANGE_PLAN,
-                expectedRoute = TangemPayAccountDetailsInnerRoute.SelectPlan(
-                    source = TangemPaySelectPlanSource.CHANGE_PLAN,
-                ),
+                expectedRoute = TangemPayAccountDetailsInnerRoute.SelectPlan,
             ),
         )
 
@@ -1446,11 +1363,6 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             InitialAddFundsCase(
                 name = "default route -> sheet not opened",
                 initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
-                expectedAddFundsSheets = 0,
-            ),
-            InitialAddFundsCase(
-                name = "tiers route -> sheet not opened",
-                initialRoute = TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
                 expectedAddFundsSheets = 0,
             ),
         )

@@ -52,25 +52,6 @@ data class CustomerInfo(
         get() = productInstances.filter { it.specificationDataType == ProductInstance.SpecificationDataType.CARD }
 
     /**
-     * Card-level product instances the customer is enrolled with — the backend-side proof that the payment
-     * account exists, independent of balances and of the `cards[]` payload.
-     */
-    val activeCardProductInstances: List<ProductInstance>
-        get() = cardProductInstances.filter {
-            it.status == ProductInstance.Status.ACTIVE || it.status == ProductInstance.Status.BLOCKED
-        }
-
-    /**
-     * Backend-side proof that the payment account exists: an enrolled card instance, a payment account, or
-     * balances (only an existing account has them). Deliberately independent of the `cards[]` payload, which
-     * the backend can omit for an operational account.
-     */
-    val isEnrolled: Boolean
-        get() = activeCardProductInstances.isNotEmpty() ||
-            paymentAccount != null ||
-            fiatBalance != null
-
-    /**
      * Payment account attached to the customer, as delivered by `customer/me`.payment_account.
      *
      * @property id payment account identifier.

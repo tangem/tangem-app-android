@@ -37,7 +37,6 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 kycStatus = value.kycStatus,
                 customerId = value.customerId,
             )
-            is PaymentAccountStatusValue.IssuingCard -> PaymentAccountStatusValueDM.IssuingCard
             is PaymentAccountStatusValue.Loaded -> PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
                 currencyCode = value.balance?.fiatBalance?.currency,
@@ -81,8 +80,6 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
             is PaymentAccountStatusValue.Verified,
-            is PaymentAccountStatusValue.AwaitingPlanSelection,
-            is PaymentAccountStatusValue.Inactive,
             is PaymentAccountStatusValue.Error.ExposedDevice,
             is PaymentAccountStatusValue.Error.Unavailable,
             is PaymentAccountStatusValue.Error.NotSynced,
@@ -96,9 +93,6 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValueDM.Empty -> PaymentAccountStatusValue.Empty
             is PaymentAccountStatusValueDM.NotCreated -> PaymentAccountStatusValue.NotCreated
             is PaymentAccountStatusValueDM.CardIssueFailed -> value.toDomain()
-            is PaymentAccountStatusValueDM.IssuingCard -> PaymentAccountStatusValue.IssuingCard(
-                source = StatusSource.CACHE,
-            )
             is PaymentAccountStatusValueDM.ActiveAccount -> PaymentAccountStatusValue.Loaded(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,

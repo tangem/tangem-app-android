@@ -5,10 +5,8 @@ import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
 import com.tangem.domain.tangempay.model.CustomerInfo
 import com.tangem.spend.datasource.tangempay.models.response.BalanceResponse
 import com.tangem.spend.datasource.tangempay.models.response.CustomerMeResponse
-import com.tangem.spend.datasource.tangempay.models.response.FiatBalance
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.math.BigDecimal
 
 /**
  * Covers what proves an account exists: `payment_account`, the product instances and the `cards[]` payload
@@ -68,22 +66,6 @@ internal class CustomerInfoConverterAccountTest {
     }
 
     @Test
-    fun `GIVEN active card instance and no balances WHEN convert THEN customer is enrolled`() {
-        // Arrange
-        val result = result(
-            paymentAccount = null,
-            productInstances = listOf(productInstance(status = CustomerMeResponse.ProductInstance.Status.ACTIVE)),
-        )
-
-        // Act
-        val info = CustomerInfoConverter.convert(result)
-
-        // Assert
-        assertThat(info.isEnrolled).isTrue()
-        assertThat(info.activeCardProductInstances).hasSize(1)
-    }
-
-    @Test
     fun `GIVEN unknown status and specification type WHEN convert THEN instance is mapped as unknown`() {
         // Arrange
         val result = result(
@@ -115,39 +97,6 @@ internal class CustomerInfoConverterAccountTest {
         )
         assertThat(info.cardProductInstances).isEmpty()
         assertThat(info.moneyAccountProductInstance).isNull()
-    }
-
-    @Test
-    fun `GIVEN neither account nor instances nor balances WHEN convert THEN customer is not enrolled`() {
-        // Act
-        val info = CustomerInfoConverter.convert(result(paymentAccount = null))
-
-        // Assert
-        assertThat(info.isEnrolled).isFalse()
-    }
-
-    @Test
-    fun `GIVEN balances only WHEN convert THEN customer is enrolled`() {
-        // Arrange
-        val result = result(
-            paymentAccount = null,
-            balance = BalanceResponse(
-                fiat = FiatBalance(
-                    currency = "USD",
-                    availableBalance = BigDecimal.TEN,
-                    creditLimit = BigDecimal.ZERO,
-                    pendingCharges = BigDecimal.ZERO,
-                    postedCharges = BigDecimal.ZERO,
-                    balanceDue = BigDecimal.ZERO,
-                ),
-            ),
-        )
-
-        // Act
-        val info = CustomerInfoConverter.convert(result)
-
-        // Assert
-        assertThat(info.isEnrolled).isTrue()
     }
 
     private fun result(

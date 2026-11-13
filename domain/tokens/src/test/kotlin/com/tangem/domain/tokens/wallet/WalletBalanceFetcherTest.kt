@@ -31,7 +31,6 @@ import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -68,9 +67,6 @@ internal class WalletBalanceFetcherTest {
     private val tokensFeatureToggles: TokensFeatureToggles = mockk {
         every { isPluggableBalanceSourcesEnabled } returns true
     }
-    private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles = mockk {
-        every { isMoneyAccountsEnabled } returns false
-    }
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher = mockk()
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles = mockk {
@@ -93,7 +89,6 @@ internal class WalletBalanceFetcherTest {
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -1231,7 +1226,6 @@ internal class WalletBalanceFetcherTest {
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         collectiblesFeatureToggles = mockk {
             every { this@mockk.isCollectiblesEnabled } returns isCollectiblesEnabled
         },

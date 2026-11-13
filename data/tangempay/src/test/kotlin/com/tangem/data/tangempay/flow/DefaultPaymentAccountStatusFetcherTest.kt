@@ -26,7 +26,6 @@ import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
 import com.tangem.domain.models.tangempay.TangemPayCardState
 import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.domain.models.tangempay.TangemPayEligibilityType
-import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
 import com.tangem.domain.tangempay.TangemPayEligibilityManager
@@ -41,13 +40,11 @@ import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.OrderType
 import com.tangem.domain.tangempay.model.TangemPayOrderInfo
 import com.tangem.domain.tangempay.repository.*
-import com.tangem.domain.tangempay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayFiatRateUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.tangempay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.ProvideTestModels
@@ -64,7 +61,6 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
-import kotlin.reflect.KClass
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultPaymentAccountStatusFetcherTest {
@@ -82,9 +78,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk()
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
-    private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase = mockk()
     private val resolvePaymentAccountStatusFromSummaryUseCase: ResolvePaymentAccountStatusFromSummaryUseCase = mockk()
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
@@ -102,20 +96,13 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         cardDetailsRepository = cardDetailsRepository,
         issueCardRepository = issueCardRepository,
         getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
-        findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
         resolvePaymentAccountStatusFromSummaryUseCase = resolvePaymentAccountStatusFromSummaryUseCase,
-        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
         getCustomerSummaryUseCase = getCustomerSummaryUseCase,
         tangemPayFeatureToggles = tangemPayFeatureToggles,
     )
 
     private val userWalletId = UserWalletId("011")
     private val params = PaymentAccountStatusFetcher.Params(userWalletId)
-
-    private companion object {
-        const val STALE_ORDER_ID = "order-gone"
-        val RESIDENCY = TangemPayCustomerResidency(countryCode = "US", regionCode = "TX")
-    }
 
     private val cardProductInstance = CustomerInfo.ProductInstance(
         id = "pi_card",
@@ -257,9 +244,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             cardDetailsRepository,
             issueCardRepository,
             getTangemPayTariffPlanStateUseCase,
-            findMoneyAccountCreationOrderUseCase,
             resolvePaymentAccountStatusFromSummaryUseCase,
-            moneyAccountFeatureToggles,
             getCustomerSummaryUseCase,
             tangemPayFeatureToggles,
         )
@@ -267,8 +252,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         // are relaxed and consistent with their relaxed defaults (false, empty, etc.)
         clearMocks(paymentAccountStatusesStore, answers = false)
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
-        coEvery { findMoneyAccountCreationOrderUseCase(userWalletId) } returns null.right()
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
+        coEvery { getCustomerSummaryUseCase(userWalletId, any()) } returns null.right()
         every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
     }
 
@@ -282,7 +266,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
         coEvery { onboardingRepository.hasTangemPayInWallet(userWalletId) } returns Either.Right(true)
         coEvery { onboardingRepository.isTangemPayInitialDataProduced(userWalletId) } returns true
-        coEvery { onboardingRepository.getOrderId(userWalletId) } returns null
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns Either.Right(customerInfo)
         coEvery { onboardingRepository.getCustomerResidency(userWalletId) } returns null
 
@@ -689,92 +672,14 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ResidencyStepNotPassed {
-
-        @Test
-        fun `GIVEN KYC required AND customer residency WHEN invoke THEN KycRequired with it stored`() = runTest {
-            // Arrange
-            stubHappyPath(buildCustomerInfo(customerId = "cust_1").copy(kycStatus = KycStatus.REQUIRED))
-            coEvery { onboardingRepository.getCustomerResidency(userWalletId) } returns RESIDENCY
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            assertThat(storedStatuses.map { it.value }.last()).isEqualTo(
-                PaymentAccountStatusValue.KycRequired(
-                    source = StatusSource.ACTUAL,
-                    customerId = "cust_1",
-                    customerResidency = RESIDENCY,
-                ),
-            )
-        }
-
-        @Test
-        fun `GIVEN KYC required AND active money account order WHEN invoke THEN NotCreated stored`() = runTest {
-            // Arrange
-            stubHappyPath(buildCustomerInfo(customerId = "cust_1").copy(kycStatus = KycStatus.REQUIRED))
-            coEvery {
-                findMoneyAccountCreationOrderUseCase(userWalletId)
-            } returns activeOrder(id = "ma_order", type = OrderType.ACCOUNT_ISSUE_BANKING_RAIN).right()
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            assertThat(storedStatuses.map { it.value }.last()).isEqualTo(PaymentAccountStatusValue.NotCreated)
-        }
-
-        @Test
-        fun `GIVEN KYC required AND money account order lookup fails WHEN invoke THEN Unavailable stored`() =
-            runTest {
-                // Arrange
-                stubHappyPath(buildCustomerInfo(customerId = "cust_1").copy(kycStatus = KycStatus.REQUIRED))
-                coEvery {
-                    findMoneyAccountCreationOrderUseCase(userWalletId)
-                } returns TangemPayApiError.Unspecified.left()
-                val storedStatuses = captureStoredStatuses()
-
-                // Act
-                fetcher.invoke(params)
-
-                // Assert
-                assertThat(storedStatuses.map { it.value }.last()).isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
-            }
-
-        @Test
-        fun `GIVEN KYC approved WHEN invoke THEN money account order is not looked up`() = runTest {
-            // Arrange
-            stubHappyPath(buildCustomerInfo(customerId = "cust_1"))
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            coVerify(exactly = 0) { findMoneyAccountCreationOrderUseCase(any()) }
-        }
-    }
-
-    /**
-     * A locally persisted `orderId` can go stale (the order is removed on the backend) while the wallet is still a
-     * valid Paera customer. Before the fix, the resulting 404 was read as "not a Paera customer" and collapsed the
-     * whole Tangem Pay block to [PaymentAccountStatusValue.Empty] on every refresh, with the stale id never
-     * cleared — so the card stayed invisible until app reinstall.
-     */
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class StatusFromCustomerSummary {
 
         private val summary: CustomerSummary = mockk()
 
         @BeforeEach
         fun setUpSummary() {
-            every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
             coEvery { onboardingRepository.hasTangemPayInWallet(userWalletId) } returns Either.Right(true)
             coEvery { onboardingRepository.isTangemPayInitialDataProduced(userWalletId) } returns true
-            coEvery { onboardingRepository.getOrderId(userWalletId) } returns null
             coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns TangemPayApiError.Unspecified.left()
         }
 
@@ -860,65 +765,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     ),
                 )
             }
-
-        @Test
-        fun `GIVEN money accounts disabled WHEN invoke THEN summary not requested`() = runTest {
-            // Arrange
-            every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            coVerify(exactly = 0) { getCustomerSummaryUseCase(any(), any()) }
-            coVerify(exactly = 1) { onboardingRepository.getCustomerInfo(userWalletId) }
-        }
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class StaleOrderIdRecovery {
-
-        @Test
-        fun `GIVEN persisted order is gone on backend WHEN invoke THEN id cleared and status rebuilt from customer info`() =
-            runTest {
-                // Arrange
-                val customerInfo = buildCustomerInfo(productInstances = emptyList())
-                stubHappyPath(customerInfo)
-                coEvery { onboardingRepository.getOrderId(userWalletId) } returns STALE_ORDER_ID
-                coEvery {
-                    customerOrderRepository.getOrderData(userWalletId, STALE_ORDER_ID)
-                } returns TangemPayApiError.OrderNotFound.left()
-                coEvery { onboardingRepository.clearOrderId(userWalletId) } just Runs
-                val storedStatuses = captureStoredStatuses()
-
-                // Act
-                fetcher.invoke(params)
-
-                // Assert
-                coVerify(exactly = 1) { onboardingRepository.clearOrderId(userWalletId) }
-                assertThat(storedStatuses.lastLoaded().cards).isEmpty()
-            }
-
-        @Test
-        fun `GIVEN order lookup fails transiently WHEN invoke THEN id kept and status is Unavailable`() = runTest {
-            // Arrange
-            val customerInfo = buildCustomerInfo(productInstances = emptyList())
-            stubHappyPath(customerInfo)
-            coEvery { onboardingRepository.getOrderId(userWalletId) } returns STALE_ORDER_ID
-            coEvery {
-                customerOrderRepository.getOrderData(userWalletId, STALE_ORDER_ID)
-            } returns TangemPayApiError.ServerUnavailable.left()
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            coVerify(exactly = 0) { onboardingRepository.clearOrderId(userWalletId) }
-            assertThat(storedStatuses.map { it.value }.last())
-                .isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
-        }
     }
 
     /**
@@ -960,9 +806,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             cardDetailsRepository = cardDetailsRepository,
             issueCardRepository = issueCardRepository,
             getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
-            findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
             resolvePaymentAccountStatusFromSummaryUseCase = resolvePaymentAccountStatusFromSummaryUseCase,
-            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             getCustomerSummaryUseCase = getCustomerSummaryUseCase,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
         )
@@ -995,14 +839,14 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         @Test
         fun `GIVEN cached non-Loaded value WHEN mark THEN value stays unchanged`() = runTest {
             // Arrange
-            val issuingCard = PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
-            realStore.store(userWalletId, AccountStatus.Payment(account = account, value = issuingCard))
+            val verified = PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL)
+            realStore.store(userWalletId, AccountStatus.Payment(account = account, value = verified))
 
             // Act
             realFetcher.markVirtualAccountProcessing(userWalletId)
 
             // Assert
-            assertThat(realStore.getSyncOrNull(userWalletId)?.value).isEqualTo(issuingCard)
+            assertThat(realStore.getSyncOrNull(userWalletId)?.value).isEqualTo(verified)
         }
 
         @Test
@@ -1038,251 +882,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class TiersPlanSelection {
-
-        @Test
-        fun `GIVEN KYC approved and no plan order WHEN invoke THEN stores AwaitingPlanSelection`() =
-            runTest {
-                // Arrange
-                val customerInfo = buildCustomerInfo(
-                    productInstances = emptyList(),
-                    fiatBalance = null,
-                    tariffPlan = customerTariffPlan,
-                )
-                stubHappyPath(customerInfo)
-                coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns emptyList()
-                val storedStatuses = captureStoredStatuses()
-
-                // Act
-                fetcher.invoke(params)
-
-                // Assert
-                assertThat(storedStatuses.last().value)
-                    .isInstanceOf(PaymentAccountStatusValue.AwaitingPlanSelection::class.java)
-            }
-
-        @Test
-        fun `GIVEN fallback plan is missing WHEN invoke THEN stores IssuingCard without order`() =
-            runTest {
-                // Arrange
-                val customerInfo = buildCustomerInfo(
-                    productInstances = emptyList(),
-                    fiatBalance = null,
-                    tariffPlan = null,
-                )
-                stubHappyPath(customerInfo)
-                val storedStatuses = captureStoredStatuses()
-
-                // Act
-                fetcher.invoke(params)
-
-                // Assert
-                assertThat(storedStatuses.last().value)
-                    .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
-            }
-
-        @Test
-        fun `GIVEN plan selected but no balance yet WHEN invoke THEN stores Inactive`() = runTest {
-            // Arrange
-            val customerInfo = buildCustomerInfo(
-                productInstances = emptyList(),
-                fiatBalance = null,
-                tariffPlan = customerTariffPlan,
-            )
-            stubHappyPath(customerInfo)
-            coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
-                listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
-            )
-            coEvery {
-                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
-            } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            assertThat(storedStatuses.last().value)
-                .isInstanceOf(PaymentAccountStatusValue.Inactive::class.java)
-        }
-
-        @Test
-        fun `GIVEN latest issuance order canceled WHEN invoke THEN stores CardIssueFailed`() = runTest {
-            // Arrange
-            val planState = TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
-            stubPlanSelectionCustomer()
-            coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
-                listOf(order(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION, status = OrderStatus.CANCELED)),
-            )
-            coEvery {
-                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
-            } returns planState
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            assertThat(storedStatuses.last().value).isEqualTo(
-                PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "cust_1", tariffPlan = planState),
-            )
-            coVerify(exactly = 1) {
-                customerOrderRepository.findOrders(
-                    userWalletId = userWalletId,
-                    types = OrderType.issueCardTypes + OrderType.TARIFF_PLAN_TRANSITION,
-                    statuses = emptySet(),
-                )
-            }
-        }
-
-        @Test
-        fun `GIVEN cached failure and findOrders fails WHEN invoke THEN keeps CardIssueFailed`() = runTest {
-            // Arrange
-            val planState = TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
-            val cachedFailure = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "cust_1")
-            stubPlanSelectionCustomer()
-            coEvery {
-                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
-            } returns planState
-            coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns AccountStatus.Payment(
-                account = Account.Payment(userWalletId = userWalletId),
-                value = cachedFailure,
-            )
-            coEvery {
-                customerOrderRepository.findOrders(any(), any(), any())
-            } returns TangemPayApiError.UnknownWithoutCode.left()
-            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns emptyList()
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            assertThat(storedStatuses.last().value).isEqualTo(
-                PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "cust_1", tariffPlan = planState),
-            )
-        }
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN issuance orders WHEN invoke THEN the stored status follows the latest order`(
-            model: OrderStateModel,
-        ) = runTest {
-            // Arrange
-            stubPlanSelectionCustomer(customerId = model.customerId)
-            coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns model.orders
-            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns model.localIssueOrderIds
-            coEvery {
-                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
-            } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            assertThat(storedStatuses.last().value).isInstanceOf(model.expected.java)
-        }
-
-        private fun provideTestModels() = listOf(
-            OrderStateModel(
-                name = "canceled, but a newer order is still active -> Inactive",
-                orders = Either.Right(
-                    listOf(
-                        canceledOrder(id = "order_1", updatedAt = "2026-08-01T00:00:00Z"),
-                        activeOrderAt(id = "order_2", updatedAt = "2026-08-02T00:00:00Z"),
-                    ),
-                ),
-                expected = PaymentAccountStatusValue.Inactive::class,
-            ),
-            OrderStateModel(
-                name = "canceled is newer, but an order is still active -> Inactive",
-                orders = Either.Right(
-                    listOf(
-                        canceledOrder(id = "order_1", updatedAt = "2026-08-02T00:00:00Z"),
-                        activeOrderAt(id = "order_2", updatedAt = "2026-08-01T00:00:00Z"),
-                    ),
-                ),
-                expected = PaymentAccountStatusValue.Inactive::class,
-            ),
-            OrderStateModel(
-                name = "canceled is the latest -> CardIssueFailed",
-                orders = Either.Right(
-                    listOf(
-                        completedOrder(id = "order_1", updatedAt = "2026-08-01T00:00:00Z"),
-                        canceledOrder(id = "order_2", updatedAt = "2026-08-02T00:00:00Z"),
-                    ),
-                ),
-                expected = PaymentAccountStatusValue.Error.CardIssueFailed::class,
-            ),
-            OrderStateModel(
-                name = "completed is the latest -> AwaitingPlanSelection",
-                orders = Either.Right(
-                    listOf(
-                        canceledOrder(id = "order_1", updatedAt = "2026-08-01T00:00:00Z"),
-                        completedOrder(id = "order_2", updatedAt = "2026-08-02T00:00:00Z"),
-                    ),
-                ),
-                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
-            ),
-            OrderStateModel(
-                name = "canceled without updatedAt loses to a completed one -> AwaitingPlanSelection",
-                orders = Either.Right(
-                    listOf(
-                        canceledOrder(id = "order_1", updatedAt = null),
-                        completedOrder(id = "order_2", updatedAt = "2026-08-02T00:00:00Z"),
-                    ),
-                ),
-                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
-            ),
-            OrderStateModel(
-                name = "canceled but the customer id is blank -> AwaitingPlanSelection",
-                orders = Either.Right(listOf(canceledOrder(id = "order_1", updatedAt = null))),
-                customerId = "",
-                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
-            ),
-            OrderStateModel(
-                name = "lookup failed, a local issue order remains -> Inactive",
-                orders = TangemPayApiError.UnknownWithoutCode.left(),
-                localIssueOrderIds = listOf("order_1"),
-                expected = PaymentAccountStatusValue.Inactive::class,
-            ),
-            OrderStateModel(
-                name = "lookup failed with nothing local or cached -> AwaitingPlanSelection",
-                orders = TangemPayApiError.UnknownWithoutCode.left(),
-                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
-            ),
-        )
-
-        private fun canceledOrder(id: String, updatedAt: String?) = order(
-            id = id,
-            type = OrderType.TARIFF_PLAN_TRANSITION,
-            status = OrderStatus.CANCELED,
-            updatedAt = updatedAt,
-        )
-
-        private fun completedOrder(id: String, updatedAt: String?) = order(
-            id = id,
-            type = OrderType.CARD_ISSUE_VIRTUAL_RAIN,
-            status = OrderStatus.COMPLETED,
-            updatedAt = updatedAt,
-        )
-
-        private fun activeOrderAt(id: String, updatedAt: String?) = order(
-            id = id,
-            type = OrderType.TARIFF_PLAN_TRANSITION,
-            status = OrderStatus.PROCESSING,
-            updatedAt = updatedAt,
-        )
-
-        private suspend fun stubPlanSelectionCustomer(customerId: String = "cust_1") {
-            val customerInfo = buildCustomerInfo(
-                customerId = customerId,
-                productInstances = emptyList(),
-                fiatBalance = null,
-                tariffPlan = customerTariffPlan,
-            )
-            stubHappyPath(customerInfo)
-        }
 
         @Test
         fun `GIVEN balance without instances but local issue order WHEN invoke THEN stores Loaded with placeholder`() =
@@ -1432,57 +1031,16 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
         @BeforeEach
         fun setUpSummary() {
-            every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
             coEvery { resolvePaymentAccountStatusFromSummaryUseCase(userWalletId, any()) } returns null
             coEvery {
                 getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
             } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
         }
 
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN plan transition completed and no account yet WHEN invoke THEN status follows summary activation`(
-            model: SummaryActivationModel,
-        ) = runTest {
-            // Arrange
-            stubNotEnrolledCustomerWithCompletedTransition()
-            val summary = paymentSummary(status = model.status, step = model.step)
-            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns summary.right()
-            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE) } returns summary.right()
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            assertThat(storedStatuses.last().value).isInstanceOf(model.expected.java)
-        }
-
-        private fun provideTestModels() = listOf(
-            SummaryActivationModel(
-                name = "payment account issuing -> Loaded",
-                status = CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
-                step = CustomerSummary.PaymentAccount.Activation.Step.ISSUING,
-                expected = PaymentAccountStatusValue.Loaded::class,
-            ),
-            SummaryActivationModel(
-                name = "payment account awaiting deposit -> AwaitingPlanSelection",
-                status = CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
-                step = CustomerSummary.PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
-                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
-            ),
-            SummaryActivationModel(
-                name = "payment account not started -> AwaitingPlanSelection",
-                status = CustomerSummary.PaymentAccount.Activation.Status.NOT_STARTED,
-                step = null,
-                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
-            ),
-        )
-
         @Test
         fun `GIVEN payment account issuing WHEN invoke THEN Loaded is marked as issuing`() = runTest {
             // Arrange
-            stubNotEnrolledCustomerWithCompletedTransition()
+            stubNotEnrolledCustomer()
             val summary = paymentSummary(
                 status = CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
                 step = CustomerSummary.PaymentAccount.Activation.Step.ISSUING,
@@ -1502,39 +1060,27 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         }
 
         @Test
-        fun `GIVEN plan transition completed and no cached summary WHEN invoke THEN stores AwaitingPlanSelection`() =
-            runTest {
-                // Arrange
-                stubNotEnrolledCustomerWithCompletedTransition()
-                val summary = paymentSummary(
-                    status = CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
-                    step = CustomerSummary.PaymentAccount.Activation.Step.ISSUING,
-                )
-                coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns summary.right()
-                coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE) } returns null.right()
-                val storedStatuses = captureStoredStatuses()
+        fun `GIVEN no cached summary WHEN invoke THEN Loaded is not marked as issuing`() = runTest {
+            // Arrange
+            stubNotEnrolledCustomer()
+            val summary = paymentSummary(
+                status = CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
+                step = CustomerSummary.PaymentAccount.Activation.Step.ISSUING,
+            )
+            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns summary.right()
+            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE) } returns null.right()
+            val storedStatuses = captureStoredStatuses()
 
-                // Act
-                fetcher.invoke(params)
+            // Act
+            fetcher.invoke(params)
 
-                // Assert
-                assertThat(storedStatuses.last().value)
-                    .isInstanceOf(PaymentAccountStatusValue.AwaitingPlanSelection::class.java)
-            }
+            // Assert
+            assertThat(storedStatuses.lastLoaded().isPaymentAccountIssuing).isFalse()
+        }
 
-        private suspend fun stubNotEnrolledCustomerWithCompletedTransition() {
+        private suspend fun stubNotEnrolledCustomer() {
             stubHappyPath(
                 buildCustomerInfo(productInstances = emptyList(), fiatBalance = null, tariffPlan = customerTariffPlan),
-            )
-            coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
-                listOf(
-                    order(
-                        id = "order_1",
-                        type = OrderType.TARIFF_PLAN_TRANSITION,
-                        status = OrderStatus.COMPLETED,
-                        updatedAt = "2026-10-26T00:00:00Z",
-                    ),
-                ),
             )
         }
 
@@ -1571,7 +1117,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     inner class CardlessEnrolledAccount {
 
         @Test
-        fun `GIVEN enrolled account without cards and canceled order WHEN invoke THEN keeps the account balance`() =
+        fun `GIVEN enrolled account without cards WHEN invoke THEN stores Loaded without cards`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(
@@ -1580,42 +1126,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
-                coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
-                    listOf(
-                        order(
-                            id = "order_1",
-                            type = OrderType.TARIFF_PLAN_TRANSITION,
-                            status = OrderStatus.CANCELED,
-                        ),
-                    ),
-                )
-                coEvery {
-                    getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
-                } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
-                val storedStatuses = captureStoredStatuses()
-
-                // Act
-                fetcher.invoke(params)
-
-                // Assert
-                val stored = storedStatuses.last().value
-                assertThat(stored).isInstanceOf(PaymentAccountStatusValue.Error.CardIssueFailed::class.java)
-                assertThat((stored as PaymentAccountStatusValue.Error.CardIssueFailed).balance).isNotNull()
-            }
-
-        @Test
-        fun `GIVEN enrolled account without cards and active order WHEN invoke THEN stores Loaded without cards`() =
-            runTest {
-                // Arrange
-                val customerInfo = buildCustomerInfo(
-                    productInstances = emptyList(),
-                    cards = emptyList(),
-                    tariffPlan = customerTariffPlan,
-                )
-                stubHappyPath(customerInfo)
-                coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
-                    listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
-                )
                 coEvery {
                     getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
                 } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
@@ -2118,59 +1628,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 assertThat(deactivated).isInstanceOf(PaymentAccountStatusValue.Deactivated::class.java)
                 assertThat((deactivated as PaymentAccountStatusValue.Deactivated).balance).isNull()
             }
-
-        @Test
-        fun `GIVEN no account data and active transition order on backend WHEN invoke THEN stores Inactive`() =
-            runTest {
-                // Arrange
-                val customerInfo = buildCustomerInfo(
-                    productInstances = emptyList(),
-                    cards = emptyList(),
-                    fiatBalance = null,
-                    tariffPlan = customerTariffPlan,
-                )
-                stubHappyPath(customerInfo)
-                coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
-                    listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
-                )
-                coEvery {
-                    getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
-                } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
-                val storedStatuses = captureStoredStatuses()
-
-                // Act
-                fetcher.invoke(params)
-
-                // Assert — a local order id is no longer required to recognise an in-flight transition
-                assertThat(storedStatuses.last().value).isInstanceOf(PaymentAccountStatusValue.Inactive::class.java)
-                coVerify(exactly = 0) { issueCardRepository.getIssueOrderIds(userWalletId) }
-            }
-
-        @Test
-        fun `GIVEN findOrders fails and local order stored WHEN invoke THEN falls back to local hint`() = runTest {
-            // Arrange
-            val customerInfo = buildCustomerInfo(
-                productInstances = emptyList(),
-                cards = emptyList(),
-                fiatBalance = null,
-                tariffPlan = customerTariffPlan,
-            )
-            stubHappyPath(customerInfo)
-            coEvery {
-                customerOrderRepository.findOrders(any(), any(), any())
-            } returns TangemPayApiError.UnknownWithoutCode.left()
-            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_1")
-            coEvery {
-                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
-            } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            assertThat(storedStatuses.last().value).isInstanceOf(PaymentAccountStatusValue.Inactive::class.java)
-        }
     }
 
     @Nested
@@ -2221,15 +1678,12 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             assertThat(storedStatuses.last().value).isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
         }
 
-        @ParameterizedTest
-        @MethodSource("provideCustomerInfoRequests")
-        fun `GIVEN cached KYC status WHEN customer info session expired THEN NotSynced stored`(
-            failingRequest: FailingRequest,
-        ) = runTest {
+        @Test
+        fun `GIVEN cached KYC status WHEN customer info session expired THEN NotSynced stored`() = runTest {
             // Arrange
             stubFailedRefresh(
                 cached = cachedKycInProgress,
-                failingRequest = failingRequest,
+                failingRequest = FailingRequest.CUSTOMER_INFO,
                 error = TangemPayApiError.RefreshTokenExpired,
             )
             val storedStatuses = captureStoredStatuses()
@@ -2257,10 +1711,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 FailingRequest.CUSTOMER_INFO -> {
                     coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns error.left()
                 }
-                FailingRequest.CUSTOMER_INFO_WITH_ORDER -> {
-                    coEvery { onboardingRepository.getOrderId(userWalletId) } returns "order_1"
-                    coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns error.left()
-                }
             }
         }
 
@@ -2280,13 +1730,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 expected = cachedKycRejected.copy(source = StatusSource.ONLY_CACHE),
             ),
             CachedStatusModel(
-                name = "KYC in progress with a stored order, customer/me unavailable",
-                cached = cachedKycInProgress,
-                failingRequest = FailingRequest.CUSTOMER_INFO_WITH_ORDER,
-                error = TangemPayApiError.ServerUnavailable,
-                expected = cachedKycInProgress.copy(source = StatusSource.ONLY_CACHE),
-            ),
-            CachedStatusModel(
                 name = "KYC in progress, wallet check unavailable",
                 cached = cachedKycInProgress,
                 failingRequest = FailingRequest.WALLET_CHECK,
@@ -2297,16 +1740,11 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
         private fun provideNotKeptCaches() = listOf(
             null,
-            PaymentAccountStatusValue.IssuingCard(source = StatusSource.CACHE),
-        )
-
-        private fun provideCustomerInfoRequests() = listOf(
-            FailingRequest.CUSTOMER_INFO,
-            FailingRequest.CUSTOMER_INFO_WITH_ORDER,
+            PaymentAccountStatusValue.Verified(source = StatusSource.CACHE),
         )
     }
 
-    internal enum class FailingRequest { WALLET_CHECK, CUSTOMER_INFO, CUSTOMER_INFO_WITH_ORDER }
+    internal enum class FailingRequest { WALLET_CHECK, CUSTOMER_INFO }
 
     internal data class CachedStatusModel(
         val name: String,
@@ -2314,25 +1752,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         val failingRequest: FailingRequest,
         val error: TangemPayApiError,
         val expected: PaymentAccountStatusValue,
-    ) {
-        override fun toString(): String = name
-    }
-
-    internal data class SummaryActivationModel(
-        val name: String,
-        val status: CustomerSummary.PaymentAccount.Activation.Status,
-        val step: CustomerSummary.PaymentAccount.Activation.Step?,
-        val expected: KClass<out PaymentAccountStatusValue>,
-    ) {
-        override fun toString(): String = name
-    }
-
-    internal data class OrderStateModel(
-        val name: String,
-        val orders: Either<TangemPayApiError, List<Order>>,
-        val localIssueOrderIds: List<String> = emptyList(),
-        val customerId: String = "cust_1",
-        val expected: KClass<out PaymentAccountStatusValue>,
     ) {
         override fun toString(): String = name
     }

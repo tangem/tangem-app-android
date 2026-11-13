@@ -106,9 +106,6 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     override suspend fun storeCashbackDeactivationDismissed(customerWalletAddress: String, isDismissed: Boolean) =
         real.storeCashbackDeactivationDismissed(customerWalletAddress, isDismissed)
 
-    override suspend fun clearOrderId(customerWalletAddress: String) =
-        real.clearOrderId(customerWalletAddress)
-
     override suspend fun storeVirtualAccountOrderId(customerWalletAddress: String, vaOrderId: String) =
         real.storeVirtualAccountOrderId(customerWalletAddress, vaOrderId)
 

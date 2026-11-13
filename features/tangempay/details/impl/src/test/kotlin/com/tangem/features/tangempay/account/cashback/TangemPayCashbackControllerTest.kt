@@ -300,7 +300,7 @@ internal class TangemPayCashbackControllerTest {
         }
 
         private fun provideTestModels(): List<NotLoadedStatusModel> = listOf(
-            NotLoadedStatusModel(name = "inactive", status = inactiveStatus()),
+            NotLoadedStatusModel(name = "verified", status = verifiedStatus()),
             NotLoadedStatusModel(name = "deactivated", status = deactivatedStatus()),
         )
     }
@@ -574,9 +574,9 @@ internal class TangemPayCashbackControllerTest {
         }
 
         @Test
-        fun `GIVEN inactive account WHEN summary cached THEN no impression sent`() = runTest {
+        fun `GIVEN verified account WHEN summary cached THEN no impression sent`() = runTest {
             // Arrange
-            accountStatus.value = paymentStatus(inactiveStatus())
+            accountStatus.value = paymentStatus(verifiedStatus())
             createController(scope = backgroundScope)
             runCurrent()
 
@@ -597,7 +597,7 @@ internal class TangemPayCashbackControllerTest {
                 runCurrent()
 
                 // Act
-                accountStatus.value = paymentStatus(inactiveStatus())
+                accountStatus.value = paymentStatus(verifiedStatus())
                 runCurrent()
                 accountStatus.value = paymentStatus(loadedStatus())
                 runCurrent()
@@ -607,11 +607,11 @@ internal class TangemPayCashbackControllerTest {
             }
 
         @Test
-        fun `GIVEN widget cached on inactive account WHEN account becomes loaded THEN banner impression sent`() =
+        fun `GIVEN widget cached on verified account WHEN account becomes loaded THEN banner impression sent`() =
             runTest {
                 // Arrange
                 cachedSummary.value = enabledSummary(CashbackDisplayMode.FULL)
-                accountStatus.value = paymentStatus(inactiveStatus())
+                accountStatus.value = paymentStatus(verifiedStatus())
                 createController(scope = backgroundScope)
                 runCurrent()
 
@@ -733,7 +733,7 @@ internal class TangemPayCashbackControllerTest {
 
     private fun loadedStatus(): PaymentAccountStatusValue.Loaded = mockk()
 
-    private fun inactiveStatus(): PaymentAccountStatusValue.Inactive = mockk()
+    private fun verifiedStatus(): PaymentAccountStatusValue.Verified = mockk()
 
     private fun deactivatedStatus(): PaymentAccountStatusValue.Deactivated = mockk()
 

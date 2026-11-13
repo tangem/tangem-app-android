@@ -214,11 +214,6 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
                 expectedContext = TangemPayAnalyticsEvents.Tiers.PlanContext.CHANGE_PLAN,
             ),
             AnalyticsModel(
-                mode = TangemPaySelectPlanComponent.Mode.TiersOnboarding,
-                expectedProducts = null,
-                expectedContext = TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING,
-            ),
-            AnalyticsModel(
                 mode = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
                     availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT, TangemPayProduct.BANKING_ACCOUNT),
                 ),
@@ -318,20 +313,6 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
             verify(exactly = 1) {
                 analytics.send(ofType<TangemPayAnalyticsEvents.Tiers.PlanChangeConfirmationScreenShowed>())
             }
-        }
-
-        @Test
-        fun `GIVEN onboarding mode AND submit succeeds WHEN onSelectClick THEN replaces to account details`() {
-            // Arrange
-            coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } returns Unit.right()
-            val model = createModel(mode = TangemPaySelectPlanComponent.Mode.TiersOnboarding)
-
-            // Act
-            selectContent(model).onSelectClick()
-
-            // Assert
-            coVerify(exactly = 1) { submitTariffTransitionUseCase(USER_WALLET_ID, UPGRADE_TRANSITION) }
-            verify(exactly = 1) { router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails) }
         }
 
         @Test
@@ -623,8 +604,9 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
             // Arrange
             val pending = CompletableDeferred<arrow.core.Either<TangemPayApiError, Unit>>()
             coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } coAnswers { pending.await() }
-            val model = createModel(mode = TangemPaySelectPlanComponent.Mode.TiersOnboarding)
+            val model = createModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan)
             selectContent(model).onSelectClick()
+            confirmContent(model).onConfirmClick()
 
             // Act
             model.state.value.onCloseClick()

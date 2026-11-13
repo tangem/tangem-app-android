@@ -49,7 +49,6 @@ import com.tangem.features.tangempay.components.TangemPayDetailsContainerCompone
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
 import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
-import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUiActions
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUpdateListener
 import com.tangem.features.tangempay.withdraw.buildWithdrawSwapRoute
@@ -128,7 +127,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }.stateIn(modelScope, SharingStarted.Eagerly, baseState.value)
 
     private val refreshStateJobHolder = JobHolder()
-    private val planSelectionJobHolder = JobHolder()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
@@ -159,9 +157,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                         sendDeliveryBannerAnalytics()
                         handleInitialRoute()
                     }
-                    is PaymentAccountStatusValue.Inactive -> baseState.update {
-                        stateFactory.getInactiveState(state)
-                    }
                     is PaymentAccountStatusValue.Error.CardIssueFailed -> baseState.update {
                         stateFactory.getCardIssueFailedState(
                             status = state,
@@ -180,9 +175,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         isInitialRouteHandled.update { true }
 
         when (params.initialRoute) {
-            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
-            TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
-            -> Unit
+            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS -> Unit
             TangemPayDetailsInitialRoute.ADD_FUNDS -> openAddFunds()
             TangemPayDetailsInitialRoute.VA_ONRAMP,
             TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
@@ -195,25 +188,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     fun onStart() {
-        observeAwaitingPlanSelection()
         onRefreshSwipe(refreshState = ShowRefreshState(false))
-    }
-
-    fun onStop() {
-        planSelectionJobHolder.cancel()
-    }
-
-    private fun observeAwaitingPlanSelection() {
-        currentStatus
-            .map { it.value }
-            .filterIsInstance<PaymentAccountStatusValue.AwaitingPlanSelection>()
-            .onEach { status ->
-                router.replaceAll(
-                    TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.TIERS_ONBOARDING),
-                )
-            }
-            .launchIn(modelScope)
-            .saveIn(planSelectionJobHolder)
     }
 
     override fun onClickAddFunds() {
@@ -509,7 +484,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun openChangePlan() {
         if (currentStatus.value.tariffPlan == null) return
-        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.CHANGE_PLAN))
+        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan)
     }
 
     private fun openCashback() {
@@ -616,7 +591,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun sendTiersAnalytics(state: PaymentAccountStatusValue) {
         val tariffPlan = when (state) {
             is PaymentAccountStatusValue.Loaded -> state.tariffPlan
-            is PaymentAccountStatusValue.Inactive -> state.tariffPlan
             else -> null
         }
         val banner = tariffPlan?.let { TangemPayTiersBannerType.fromPlan(it) }

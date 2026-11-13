@@ -18,12 +18,10 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.wallets.models.CreateHotWalletError
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.features.tangempay.TangemPayConstants
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.onboarding.impl.R
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
-import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,7 +31,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
@@ -47,7 +44,6 @@ internal class TangemPayHotWalletOnboardingModelTest {
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val video: LoopingVideoController = mockk(relaxed = true)
     private val videoFactory: LoopingVideoController.Factory = mockk {
@@ -60,53 +56,27 @@ internal class TangemPayHotWalletOnboardingModelTest {
     }
 
     @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class OnLegalLinkClick {
+    inner class OnTermsClick {
 
         @BeforeEach
         fun resetMocks() {
             clearMocks(urlOpener)
         }
 
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN legal link WHEN clicked THEN its url opened`(testModel: LegalLinkTestModel) = runTest {
+        @Test
+        fun `GIVEN model WHEN terms clicked THEN terms and limits url opened`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
 
             // Act
-            testModel.click(model.uiState.value)
+            model.uiState.value.onTermsClick()
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(testModel.expectedUrl) }) }
+            verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(TangemPayConstants.TERMS_AND_LIMITS_URL) }) }
             model.onDestroy()
         }
-
-        private fun provideTestModels() = listOf(
-            LegalLinkTestModel(
-                link = "terms, fees and limits",
-                click = { it.onTermsClick() },
-                expectedUrl = TangemPayConstants.TERMS_AND_LIMITS_URL,
-            ),
-            LegalLinkTestModel(
-                link = "terms of service",
-                click = { it.onTermsOfServiceClick() },
-                expectedUrl = "https://www.paera.com/tangempay",
-            ),
-            LegalLinkTestModel(
-                link = "privacy policy",
-                click = { it.onPrivacyPolicyClick() },
-                expectedUrl = "https://tangem.com/docs/en/pay-privacy-policy.pdf",
-            ),
-        )
     }
-
-    data class LegalLinkTestModel(
-        val link: String,
-        val click: (TangemPayHotWalletOnboardingUM) -> Unit,
-        val expectedUrl: String,
-    )
 
     @Nested
     inner class OnGetCardClick {
@@ -238,20 +208,6 @@ internal class TangemPayHotWalletOnboardingModelTest {
             verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked()) }
             model.onDestroy()
         }
-
-        @Test
-        fun `GIVEN bundle screen WHEN legal links clicked THEN no event sent`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-
-            // Act
-            model.uiState.value.onTermsOfServiceClick()
-            model.uiState.value.onPrivacyPolicyClick()
-
-            // Assert
-            verify(exactly = 1) { analytics.send(any()) }
-            model.onDestroy()
-        }
     }
 
     @Nested
@@ -303,25 +259,6 @@ internal class TangemPayHotWalletOnboardingModelTest {
         }
     }
 
-    @Nested
-    inner class UnifiedOnboarding {
-
-        @ParameterizedTest
-        @ValueSource(booleans = [true, false])
-        fun `GIVEN money accounts toggle WHEN model created THEN unified onboarding follows it`(isEnabled: Boolean) =
-            runTest {
-                // Arrange
-                every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns isEnabled
-
-                // Act
-                val model = createModel(testScope = this)
-
-                // Assert
-                assertThat(model.uiState.value.isUnifiedOnboarding).isEqualTo(isEnabled)
-                model.onDestroy()
-            }
-    }
-
     private fun createModel(testScope: TestScope): TangemPayHotWalletOnboardingModel {
         return TangemPayHotWalletOnboardingModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
@@ -338,7 +275,6 @@ internal class TangemPayHotWalletOnboardingModelTest {
                 analyticsEventHandler = mockk(relaxed = true),
             ),
             analytics = analytics,
-            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             videoFactory = videoFactory,
         )
     }

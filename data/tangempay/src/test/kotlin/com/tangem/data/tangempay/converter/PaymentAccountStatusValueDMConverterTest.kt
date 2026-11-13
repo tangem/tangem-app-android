@@ -130,18 +130,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
 
         private fun provideTransientStatuses() = listOf(
             PaymentAccountStatusValue.Loading,
-            PaymentAccountStatusValue.AwaitingPlanSelection(
-                source = StatusSource.ACTUAL,
-                tariffPlan = mockk(),
-            ),
-            PaymentAccountStatusValue.Inactive(
-                source = StatusSource.ACTUAL,
-                fiatBalance = PaymentAccountStatusValue.FiatBalance(
-                    availableBalance = BigDecimal("100"),
-                    currency = "USD",
-                ),
-                tariffPlan = mockk(),
-            ),
             PaymentAccountStatusValue.Error.Unavailable,
         )
     }

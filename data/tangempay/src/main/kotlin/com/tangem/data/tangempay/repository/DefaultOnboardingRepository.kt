@@ -214,20 +214,6 @@ internal class DefaultOnboardingRepository @Inject constructor(
         tangemPayStorage.clearCustomerResidency(userWalletId)
     }
 
-    override suspend fun clearOrderId(userWalletId: UserWalletId) {
-        withContext(dispatcherProvider.io) {
-            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-            tangemPayStorage.clearOrderId(customerWalletAddress = customerWalletAddress)
-        }
-    }
-
-    override suspend fun getOrderId(userWalletId: UserWalletId): String? {
-        return withContext(dispatcherProvider.io) {
-            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-            tangemPayStorage.getOrderId(customerWalletAddress)
-        }
-    }
-
     override fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo? {
         return customerInfoStore.get().value[userWalletId]
     }

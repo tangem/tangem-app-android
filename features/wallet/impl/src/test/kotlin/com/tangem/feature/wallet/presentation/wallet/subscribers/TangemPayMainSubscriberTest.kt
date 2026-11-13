@@ -67,7 +67,7 @@ internal class TangemPayMainSubscriberTest {
         advanceUntilIdle()
 
         // Act
-        statuses.emit(status(PaymentAccountStatusValue.IssuingCard(StatusSource.ACTUAL)))
+        statuses.emit(status(PaymentAccountStatusValue.Empty))
         advanceUntilIdle()
 
         // Assert
@@ -144,9 +144,7 @@ internal class TangemPayMainSubscriberTest {
             restoreOrdersUseCase = restoreOrdersUseCase,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
             pollTangemPayAccountStatusesUseCase = mockk(relaxed = true),
-            moneyAccountFeatureToggles = mockk(relaxed = true),
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
-            analytics = mockk(relaxed = true),
         ).subscribe(
             coroutineScope = backgroundScope + UnconfinedTestDispatcher(testScheduler),
             dispatchers = UnconfinedTestDispatcher(testScheduler),

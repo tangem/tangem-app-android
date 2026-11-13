@@ -12,7 +12,6 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -47,9 +46,6 @@ class DefaultSingleAccountListProducerTest {
     private val userWalletsListRepository = mockk<UserWalletsListRepository> {
         every { userWallets } returns MutableStateFlow<List<UserWallet>?>(value = listOf(userWallet))
     }
-    private val moneyAccountsFeatureToggles = mockk<MoneyAccountFeatureToggles> {
-        every { isMoneyAccountsEnabled } returns false
-    }
     private val polymarketOnboardedStore = mockk<PolymarketOnboardedStore> {
         every { isOnboarded(any()) } returns flowOf(false)
     }
@@ -59,7 +55,6 @@ class DefaultSingleAccountListProducerTest {
         walletAccountListFlowFactory = walletAccountListFlowFactory,
         flowProducerTools = flowProducerTools,
         userWalletsListRepository = userWalletsListRepository,
-        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketOnboardedStore = polymarketOnboardedStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -79,52 +74,12 @@ class DefaultSingleAccountListProducerTest {
         val actual = producer.produce().let(::getEmittedValues)
 
         // Assert
-        val expected = accountList.withPaymentAccount()
+        val expected = accountList.withPaymentAndMoneyAccounts()
         Truth.assertThat(actual).containsExactly(expected)
 
         coVerify(ordering = Ordering.SEQUENCE) {
             walletAccountListFlowFactory.create(userWalletId)
         }
-    }
-
-    @Test
-    fun `GIVEN money accounts enabled WHEN produce THEN account list contains money account`() = runTest {
-        // Arrange
-        val supportedWallet = mockk<UserWallet.Hot> {
-            every { walletId } returns userWalletId
-            every { hotWalletId } returns mockk {
-                every { authType } returns HotWalletId.AuthType.Password
-            }
-        }
-        val userWalletsListRepository = mockk<UserWalletsListRepository> {
-            every { userWallets } returns MutableStateFlow<List<UserWallet>?>(value = listOf(supportedWallet))
-        }
-        val moneyAccountsFeatureToggles = mockk<MoneyAccountFeatureToggles> {
-            every { isMoneyAccountsEnabled } returns true
-        }
-        val producer = DefaultSingleAccountListProducer(
-            params = SingleAccountListProducer.Params(userWalletId = userWalletId),
-            walletAccountListFlowFactory = walletAccountListFlowFactory,
-            flowProducerTools = flowProducerTools,
-            userWalletsListRepository = userWalletsListRepository,
-            moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
-            polymarketOnboardedStore = polymarketOnboardedStore,
-            dispatchers = TestingCoroutineDispatcherProvider(),
-        )
-
-        val accountList = AccountList.empty(userWalletId)
-        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
-
-        // Act
-        val actual = producer.produce().let(::getEmittedValues)
-
-        // Assert
-        val expected = accountList
-            .plus(Account.Payment(userWalletId))
-            .getOrElse { error("Unable to add payment account: $it") }
-            .plus(Account.Money(userWalletId))
-            .getOrElse { error("Unable to add money account: $it") }
-        Truth.assertThat(actual).containsExactly(expected)
     }
 
     @Test
@@ -139,7 +94,7 @@ class DefaultSingleAccountListProducerTest {
         val actual = producer.produce().let(::getEmittedValues)
 
         // Assert
-        Truth.assertThat(actual).containsExactly(accountList.withPaymentAccount().withPredictionAccount())
+        Truth.assertThat(actual).containsExactly(accountList.withPaymentAndMoneyAccounts().withPredictionAccount())
     }
 
     @Test
@@ -177,14 +132,14 @@ class DefaultSingleAccountListProducerTest {
         val firstEmission = producer.produce().let(::getEmittedValues)
 
         // Assert (first emission)
-        Truth.assertThat(firstEmission).containsExactly(accountList.withPaymentAccount())
+        Truth.assertThat(firstEmission).containsExactly(accountList.withPaymentAndMoneyAccounts())
 
         // Act (second emission)
         factoryFlow.value = updatedAccountList
         val secondEmission = producer.produce().let(::getEmittedValues)
 
         // Assert (second emission)
-        Truth.assertThat(secondEmission).containsExactly(updatedAccountList.withPaymentAccount())
+        Truth.assertThat(secondEmission).containsExactly(updatedAccountList.withPaymentAndMoneyAccounts())
 
         coVerifyOrder {
             walletAccountListFlowFactory.create(userWalletId)
@@ -205,14 +160,14 @@ class DefaultSingleAccountListProducerTest {
         val firstEmission = producer.produce().let(::getEmittedValues)
 
         // Assert (first emission)
-        Truth.assertThat(firstEmission).containsExactly(accountList.withPaymentAccount())
+        Truth.assertThat(firstEmission).containsExactly(accountList.withPaymentAndMoneyAccounts())
 
         // Act (second emission) - the same status
         factoryFlow.value = accountList
         val secondEmission = producer.produce().let(::getEmittedValues)
 
         // Assert (second emission)
-        Truth.assertThat(secondEmission).containsExactly(accountList.withPaymentAccount())
+        Truth.assertThat(secondEmission).containsExactly(accountList.withPaymentAndMoneyAccounts())
 
         coVerify(ordering = Ordering.SEQUENCE) {
             walletAccountListFlowFactory.create(userWalletId)
@@ -232,7 +187,7 @@ class DefaultSingleAccountListProducerTest {
         val actual = producer.produce().let(::getEmittedValues)
 
         // Assert
-        Truth.assertThat(actual).containsExactly(accountList.withPaymentAccount())
+        Truth.assertThat(actual).containsExactly(accountList.withPaymentAndMoneyAccounts())
     }
 
     @Test
@@ -246,16 +201,18 @@ class DefaultSingleAccountListProducerTest {
 
         // Act & Assert
         producer.produce().test {
-            Truth.assertThat(awaitItem()).isEqualTo(accountList.withPaymentAccount())
+            Truth.assertThat(awaitItem()).isEqualTo(accountList.withPaymentAndMoneyAccounts())
 
             record.value = true
 
-            Truth.assertThat(awaitItem()).isEqualTo(accountList.withPaymentAccount().withPredictionAccount())
+            Truth.assertThat(awaitItem()).isEqualTo(accountList.withPaymentAndMoneyAccounts().withPredictionAccount())
         }
     }
 
-    private fun AccountList.withPaymentAccount(): AccountList = plus(Account.Payment(userWalletId))
+    private fun AccountList.withPaymentAndMoneyAccounts(): AccountList = plus(Account.Payment(userWalletId))
         .getOrElse { error("Unable to add payment account: $it") }
+        .plus(Account.Money(userWalletId))
+        .getOrElse { error("Unable to add money account: $it") }
 
     private fun AccountList.withPredictionAccount(): AccountList = plus(Account.Prediction(userWalletId))
         .getOrElse { error("Unable to add prediction account: $it") }
@@ -272,7 +229,6 @@ class DefaultSingleAccountListProducerTest {
             walletAccountListFlowFactory = walletAccountListFlowFactory,
             flowProducerTools = flowProducerTools,
             userWalletsListRepository = walletsRepository,
-            moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
             polymarketOnboardedStore = onboardedStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )

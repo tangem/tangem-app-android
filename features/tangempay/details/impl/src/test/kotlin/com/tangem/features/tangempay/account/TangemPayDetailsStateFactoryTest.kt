@@ -410,7 +410,6 @@ internal class TangemPayDetailsStateFactoryTest {
         // Assert
         assertThat(balanceBlock).isInstanceOf(TangemPayDetailsBalanceBlockState.Content::class.java)
         val content = balanceBlock as TangemPayDetailsBalanceBlockState.Content
-        assertThat(content.isInactive).isFalse()
         assertThat(content.fiatBalance).isEqualTo(zeroBalanceText(currency = "EUR"))
     }
 
@@ -427,7 +426,7 @@ internal class TangemPayDetailsStateFactoryTest {
             .isEqualTo(zeroBalanceText(currency = "USD"))
     }
 
-    private fun zeroBalanceText(currency: String) = DetailsBalanceTransformer.getFiatBalanceText(
+    private fun zeroBalanceText(currency: String) = getFiatBalanceText(
         PaymentAccountStatusValue.FiatBalance(availableBalance = BigDecimal.ZERO, currency = currency),
     )
 
@@ -557,6 +556,66 @@ internal class TangemPayDetailsStateFactoryTest {
         assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
         assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(false, false)
     }
+
+    @ParameterizedTest
+    @MethodSource("provideInactiveBadgeCases")
+    fun `GIVEN loaded status WHEN getLoadedState THEN inactive badge follows the top up banner`(case: InactiveBadgeCase) {
+        // Arrange
+        val status = loadedStatus(
+            statusTariffPlan = case.tariffPlan,
+            statusError = case.error,
+            statusBalance = case.balance,
+        )
+
+        // Act
+        val balanceBlock = factory.getLoadedState(status).balanceBlockState
+
+        // Assert
+        val isInactive = when (balanceBlock) {
+            is TangemPayDetailsBalanceBlockState.Content -> balanceBlock.isInactive
+            is TangemPayDetailsBalanceBlockState.Error -> balanceBlock.isInactive
+            is TangemPayDetailsBalanceBlockState.Loading -> false
+        }
+        assertThat(isInactive).isEqualTo(case.isInactive)
+    }
+
+    private fun provideInactiveBadgeCases() = listOf(
+        InactiveBadgeCase(
+            name = "awaiting deposit with balance",
+            tariffPlan = tariffPlanState(order = awaitingDepositOrder()),
+            error = null,
+            balance = balance(),
+            isInactive = true,
+        ),
+        InactiveBadgeCase(
+            name = "awaiting deposit without balance",
+            tariffPlan = tariffPlanState(order = awaitingDepositOrder()),
+            error = null,
+            balance = null,
+            isInactive = true,
+        ),
+        InactiveBadgeCase(
+            name = "awaiting deposit hidden by error banner",
+            tariffPlan = tariffPlanState(order = awaitingDepositOrder()),
+            error = PaymentAccountStatusValue.Error.Unavailable,
+            balance = balance(),
+            isInactive = false,
+        ),
+        InactiveBadgeCase(
+            name = "awaiting deposit without recurring fee",
+            tariffPlan = tariffPlanState(order = awaitingDepositOrder(toPlan = tariffPlan(fees = emptyList()))),
+            error = null,
+            balance = balance(),
+            isInactive = false,
+        ),
+        InactiveBadgeCase(
+            name = "no plan transition without balance",
+            tariffPlan = tariffPlanState(),
+            error = null,
+            balance = null,
+            isInactive = false,
+        ),
+    )
 
     @ParameterizedTest
     @MethodSource("provideProgressBannerCases")
@@ -733,6 +792,16 @@ internal class TangemPayDetailsStateFactoryTest {
         ActionButtonsConfigCase(isAddFundsEnabled = true, isWithdrawEnabled = false),
         ActionButtonsConfigCase(isAddFundsEnabled = true, isWithdrawEnabled = true),
     )
+
+    internal data class InactiveBadgeCase(
+        val name: String,
+        val tariffPlan: TangemPayTariffPlanState,
+        val error: PaymentAccountStatusValue.Error?,
+        val balance: PaymentAccountStatusValue.Balance?,
+        val isInactive: Boolean,
+    ) {
+        override fun toString(): String = name
+    }
 
     internal data class DeactivatedButtonsCase(
         val name: String,

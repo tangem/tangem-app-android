@@ -46,7 +46,6 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.store.entity.CashbackSummaryDM
@@ -213,9 +212,10 @@ internal interface TangemPayDataModule {
                         serializer = MapSerializer(String.serializer(), PaymentAccountStatusValueDM.serializer()),
                         json = KotlinxDataStoreSerializer.jsonBuilder { classDiscriminator = "__type" },
                     ),
-                    produceFile = { context.dataStoreFile(fileName = "payment_account_statuses_v2") },
+                    produceFile = { context.dataStoreFile(fileName = "payment_account_statuses_v3") },
                     migrations = listOf(
                         DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "payment_account_statuses") },
+                        DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "payment_account_statuses_v2") },
                     ),
                     scope = scope,
                 ),
@@ -430,22 +430,18 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideGetTangemPayProductsAvailabilityForCustomerUseCase(
             checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
-            moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
         ): GetTangemPayProductsAvailabilityForCustomerUseCase {
             return GetTangemPayProductsAvailabilityForCustomerUseCase(
                 checkTangemPayEligibilityForCustomerUseCase = checkTangemPayEligibilityForCustomerUseCase,
-                moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             )
         }
 
         @Provides
         fun provideGetTangemPayProductsAvailabilityForCountryUseCase(
             checkTangemPayEligibilityUseCase: CheckTangemPayEligibilityUseCase,
-            moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
         ): GetTangemPayProductsAvailabilityForCountryUseCase {
             return GetTangemPayProductsAvailabilityForCountryUseCase(
                 checkTangemPayEligibilityUseCase = checkTangemPayEligibilityUseCase,
-                moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             )
         }
 
@@ -745,21 +741,6 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideCancelTariffTransitionUseCase(
-            cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
-            getTariffTransitionUseCase: GetTangemPayTariffPlanTransitionsUseCase,
-            submitTariffTransitionUseCase: SubmitTariffTransitionUseCase,
-            getCurrentTariffUseCase: GetCurrentTariffUseCase,
-        ): CancelTariffTransitionUseCase {
-            return CancelTariffTransitionUseCase(
-                cancelTangemPayOrderUseCase = cancelTangemPayOrderUseCase,
-                getTariffTransitionUseCase = getTariffTransitionUseCase,
-                submitTariffTransitionUseCase = submitTariffTransitionUseCase,
-                getCurrentTariffUseCase = getCurrentTariffUseCase,
-            )
-        }
-
-        @Provides
         fun provideGetCurrentTariffUseCase(onboardingRepository: OnboardingRepository): GetCurrentTariffUseCase {
             return GetCurrentTariffUseCase(onboardingRepository = onboardingRepository)
         }
@@ -894,18 +875,6 @@ internal interface TangemPayDataModule {
             repository: CustomerOrderRepository,
         ): FindActiveBankOfframpOrderUseCase {
             return FindActiveBankOfframpOrderUseCase(repository = repository)
-        }
-
-        @Provides
-        fun provideFindOrdersUseCase(customerOrderRepository: CustomerOrderRepository): FindOrdersUseCase {
-            return FindOrdersUseCase(customerOrderRepository = customerOrderRepository)
-        }
-
-        @Provides
-        fun provideFindMoneyAccountCreationOrderUseCase(
-            findOrdersUseCase: FindOrdersUseCase,
-        ): FindMoneyAccountCreationOrderUseCase {
-            return FindMoneyAccountCreationOrderUseCase(findOrdersUseCase = findOrdersUseCase)
         }
     }
 }

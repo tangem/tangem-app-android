@@ -46,7 +46,6 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     private val tangemPayStorage: TangemPayStorage,
 ) : OnboardingRepository {
 
-    private val mockOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
     private val mockVaOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
     private val mockFailedVaOrders: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
 
@@ -122,24 +121,8 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         request: CustomerOrderRequest.CardIssue,
         idempotencyKey: String,
     ): Either<TangemPayApiError, String> {
-        if (isOrderMockMode) {
-            mockOrderIds.add(userWalletId)
-            return MOCK_ORDER_ID.right()
-        }
+        if (isOrderMockMode) return MOCK_ORDER_ID.right()
         return real.createOrder(userWalletId = userWalletId, request = request, idempotencyKey = idempotencyKey)
-    }
-
-    override suspend fun clearOrderId(userWalletId: UserWalletId) {
-        if (isOrderMockMode) {
-            mockOrderIds.remove(userWalletId)
-            return
-        }
-        real.clearOrderId(userWalletId)
-    }
-
-    override suspend fun getOrderId(userWalletId: UserWalletId): String? {
-        if (isOrderMockMode) return MOCK_ORDER_ID.takeIf { userWalletId in mockOrderIds }
-        return real.getOrderId(userWalletId)
     }
 
     override suspend fun createVirtualAccountOrder(
@@ -224,7 +207,6 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     // with it — otherwise a later refresh would keep replaying the removed account's enrollment.
     override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<TangemPayApiError, Unit> =
         real.disableTangemPay(userWalletId).onRight {
-            mockOrderIds.remove(userWalletId)
             mockVaOrderIds.remove(userWalletId)
         }
 

@@ -7,7 +7,6 @@ import com.tangem.data.tangempay.util.PlasticCardStateResolver
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.*
-import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.tangempay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
@@ -15,32 +14,25 @@ import com.tangem.domain.tangempay.TangemPayEligibilityManager
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.model.CachePolicy
 import com.tangem.domain.tangempay.model.CustomerInfo
-import com.tangem.domain.tangempay.model.OrderData
 import com.tangem.domain.tangempay.model.OrderStatus
 import com.tangem.domain.tangempay.model.OrderType
 import com.tangem.domain.tangempay.model.PaymentAccountActivationState
 import com.tangem.domain.tangempay.model.TangemPayCustomerState
 import com.tangem.domain.tangempay.model.TangemPayEntryPoint
 import com.tangem.domain.tangempay.repository.*
-import com.tangem.domain.tangempay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayFiatRateUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.tangempay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import java.math.BigDecimal
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.minutes
 
 private const val TAG = "PaymentAccountStatusFetcher"
 
@@ -71,9 +63,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
-    private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase,
     private val resolvePaymentAccountStatusFromSummaryUseCase: ResolvePaymentAccountStatusFromSummaryUseCase,
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : PaymentAccountStatusFetcher {
@@ -106,7 +96,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                         error.toStatusValueWhenTangemPayStatusUnknown(params.userWalletId)
                     },
                     ifRight = { hasTangemPay ->
-                        proceedHasTangemPayResult(account = account, hasTangemPay = hasTangemPay)
+                        logger.i("proceedHasTangemPayResult for ${account.userWalletId} hasTangemPay: $hasTangemPay")
+                        if (hasTangemPay) {
+                            fetchTangemPayAccountStatus(account)
+                        } else {
+                            constructNotCreatedOrEmptyStatus(account.userWalletId)
+                        }
                     },
                 )
             logger.i("invoke status ${params.userWalletId}: $status")
@@ -136,18 +131,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         paymentAccountStatusesStore.markCardActivating(userWalletId, productInstanceId)
     }
 
-    private suspend fun proceedHasTangemPayResult(
-        account: Account.Payment,
-        hasTangemPay: Boolean,
-    ): PaymentAccountStatusValue {
-        logger.i("proceedHasTangemPayResult for ${account.userWalletId} hasTangemPay: $hasTangemPay")
-        return if (hasTangemPay) {
-            fetchTangemPayAccountStatus(account)
-        } else {
-            constructNotCreatedOrEmptyStatus(account.userWalletId)
-        }
-    }
-
     private suspend fun fetchTangemPayAccountStatus(account: Account.Payment): PaymentAccountStatusValue {
         val prevResult = paymentAccountStatusesStore.getSyncOrNull(account.userWalletId)
         logger.i(
@@ -167,308 +150,45 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
 
     private suspend fun proceed(account: Account.Payment): PaymentAccountStatusValue {
         val isInitial = onboardingRepository.isTangemPayInitialDataProduced(account.userWalletId)
-        logger.i("proceedWithOrderId ${account.userWalletId}: isTangemPayInitialDataProduced=$isInitial")
-        if (!isInitial) return PaymentAccountStatusValue.Error.NotSynced
-
-        resolveStatusFromSummary(account.userWalletId)?.let { return it }
-
-        val orderId = onboardingRepository.getOrderId(account.userWalletId)
-        logger.i("proceedWithOrderId ${account.userWalletId}: orderIdPresent=${orderId != null}")
-        return if (orderId != null) {
-            proceedWithOrderId(account = account, orderId = orderId)
+        logger.i("proceed ${account.userWalletId}: isTangemPayInitialDataProduced=$isInitial")
+        if (!isInitial) {
+            return PaymentAccountStatusValue.Error.NotSynced
         } else {
-            proceedWithoutOrder(account = account)
+            val userWalletId = account.userWalletId
+            val summary = getCustomerSummaryUseCase.invoke(userWalletId, CachePolicy.REFRESH).fold(
+                ifLeft = { error ->
+                    error.toCachedStatusOrNull(userWalletId) ?: error.toStatusValueWhenHasTangemPay(userWalletId)
+                },
+                ifRight = { summary ->
+                    summary?.let { resolvePaymentAccountStatusFromSummaryUseCase(userWalletId, it) }
+                },
+            )
+            return summary ?: proceedWithCustomerInfo(account = account)
         }
     }
 
-    private suspend fun resolveStatusFromSummary(userWalletId: UserWalletId): PaymentAccountStatusValue? {
-        if (!moneyAccountFeatureToggles.isMoneyAccountsEnabled) return null
-
-        return getCustomerSummaryUseCase.invoke(userWalletId, CachePolicy.REFRESH).fold(
-            ifLeft = { error ->
-                error.toCachedStatusOrNull(userWalletId) ?: error.toStatusValueWhenHasTangemPay(userWalletId)
-            },
-            ifRight = { summary -> summary?.let { resolvePaymentAccountStatusFromSummaryUseCase(userWalletId, it) } },
-        )
-    }
-
-    private suspend fun proceedWithoutOrder(account: Account.Payment): PaymentAccountStatusValue {
+    private suspend fun proceedWithCustomerInfo(account: Account.Payment): PaymentAccountStatusValue {
         return onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
-                logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
+                logger.e("proceedWithCustomerInfo ${account.userWalletId} error: $error")
                 error.toCachedStatusOrNull(account.userWalletId)
                     ?: error.toStatusValueWhenHasTangemPay(account.userWalletId)
             },
             ifRight = { customerInfo ->
-                logger.i("proceedWithoutOrder data customerInfo ${account.userWalletId}")
-                resolveFinalStatus(
-                    account = account,
-                    customerInfo = customerInfo,
-                    status = customerInfo.mapToPaymentAccountStatus(account.userWalletId),
-                )
+                logger.i("proceedWithCustomerInfo data customerInfo ${account.userWalletId}")
+                customerInfo.mapToPaymentAccountStatus(account.userWalletId)
             },
         )
-    }
-
-    private suspend fun resolveFinalStatus(
-        account: Account.Payment,
-        customerInfo: CustomerInfo,
-        status: PaymentAccountStatusValue,
-    ): PaymentAccountStatusValue {
-        val isIssuing = status is PaymentAccountStatusValue.IssuingCard
-        val isApproved = customerInfo.kycStatus == KycStatus.APPROVED
-        val userWalletId = account.userWalletId
-        val tariffPlan = customerInfo.tariffPlan
-
-        if (!isIssuing || !isApproved) {
-            return status
-        }
-
-        if (tariffPlan == null) {
-            return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
-        }
-
-        // Plan selection is an onboarding state: never surface it to a customer whose account already exists,
-        // even when the response carries no cards and no balances.
-        if (customerInfo.isEnrolled) {
-            logger.i("resolveFinalStatus $userWalletId: enrolled customer, keeping $status")
-            return status
-        }
-
-        return resolveIssuanceStatus(
-            userWalletId = userWalletId,
-            customerId = customerInfo.customerId,
-            tariffPlan = tariffPlan,
-        )
-    }
-
-    private suspend fun resolveIssuanceStatus(
-        userWalletId: UserWalletId,
-        customerId: String?,
-        tariffPlan: TangemPayCustomerTariffPlan,
-    ): PaymentAccountStatusValue {
-        return when (resolveIssuanceOrderStatus(userWalletId)) {
-            OrderStatus.NEW,
-            OrderStatus.PROCESSING,
-            -> PaymentAccountStatusValue.Inactive(
-                source = StatusSource.ACTUAL,
-                tariffPlan = getTangemPayTariffPlanStateUseCase(
-                    userWalletId = userWalletId,
-                    tariff = tariffPlan,
-                ),
-                fiatBalance = PaymentAccountStatusValue.FiatBalance(
-                    availableBalance = BigDecimal.ZERO,
-                    currency = tariffPlan.plan.feeCurrencyOrDefault(),
-                ),
-            )
-            OrderStatus.CANCELED -> if (customerId.isNullOrEmpty()) {
-                logger.e("resolveIssuanceStatus $userWalletId: canceled issuance order without a customer id")
-                awaitingPlanSelection(tariffPlan)
-            } else {
-                cardIssueFailed(userWalletId = userWalletId, customerId = customerId, tariff = tariffPlan)
-            }
-            OrderStatus.COMPLETED, null -> awaitingPlanSelection(tariffPlan)
-        }
-    }
-
-    private fun awaitingPlanSelection(tariffPlan: TangemPayCustomerTariffPlan) =
-        PaymentAccountStatusValue.AwaitingPlanSelection(source = StatusSource.ACTUAL, tariffPlan = tariffPlan)
-
-    private suspend fun cardIssueFailed(
-        userWalletId: UserWalletId,
-        customerId: String,
-        tariff: TangemPayCustomerTariffPlan?,
-        balance: PaymentAccountStatusValue.Balance? = null,
-        networks: List<PaymentNetworkStatus> = emptyList(),
-        fiatRate: BigDecimal? = null,
-    ) = PaymentAccountStatusValue.Error.CardIssueFailed(
-        customerId = customerId,
-        tariffPlan = tariff?.let { getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = it) },
-        balance = balance,
-        networks = networks,
-        fiatRate = fiatRate,
-    )
-
-    /**
-     * Status of the issuance / tariff-plan transition order to act on: an in-flight order wins over a
-     * newer canceled one, otherwise the most recent order decides. `null` when there is none.
-     *
-     * `findOrders` is the source of truth: a locally stored order id does not survive a fresh install or an
-
-     * selection. A successful lookup is therefore trusted as-is — it is what lets a new order clear a past
-     * failure. Only a failed lookup falls back, first to the locally tracked order ids, then to the last
-     * persisted status.
-     */
-    private suspend fun resolveIssuanceOrderStatus(userWalletId: UserWalletId): OrderStatus? {
-        return customerOrderRepository.findOrders(
-            userWalletId = userWalletId,
-            types = OrderType.issueCardTypes + OrderType.TARIFF_PLAN_TRANSITION,
-            statuses = emptySet(),
-        ).fold(
-            ifLeft = { error ->
-                logger.e("resolveIssuanceOrderStatus $userWalletId failed: $error")
-                when {
-                    issueCardRepository.getIssueOrderIds(userWalletId).isNotEmpty() -> OrderStatus.PROCESSING
-                    hasCachedCardIssueFailure(userWalletId) -> OrderStatus.CANCELED
-                    else -> null
-                }
-            },
-            ifRight = { orders ->
-                orders.firstOrNull { it.status.isActive }?.status
-                    ?: orders.maxByOrNull { it.updatedAt.orEmpty() }?.status
-            },
-        ).also { logger.i("resolveIssuanceOrderStatus $userWalletId: $it") }
-    }
-
-    private suspend fun hasCachedCardIssueFailure(userWalletId: UserWalletId): Boolean {
-        return paymentAccountStatusesStore.getSyncOrNull(userWalletId)
-            ?.value is PaymentAccountStatusValue.Error.CardIssueFailed
-    }
-
-    private suspend fun proceedWithOrderId(account: Account.Payment, orderId: String): PaymentAccountStatusValue {
-        // Step 1: Check KYC status first
-        val customerInfo = onboardingRepository.getCustomerInfo(account.userWalletId).fold(
-            ifLeft = { error ->
-                logger.e("proceedWithOrderId KYC check ${account.userWalletId} error: $error")
-                return error.toCachedStatusOrNull(account.userWalletId)
-                    ?: error.toStatusValueWhenHasTangemPay(account.userWalletId)
-            },
-            ifRight = { it },
-        )
-
-        logger.i("proceedWithOrderId ${account.userWalletId} kycStatus: ${customerInfo.kycStatus}")
-
-        when (customerInfo.kycStatus) {
-            KycStatus.UNKNOWN,
-            KycStatus.REQUIRED,
-            KycStatus.PENDING,
-            KycStatus.INIT,
-            KycStatus.REJECTED,
-            -> return customerInfo.mapToPaymentAccountStatus(account.userWalletId)
-            KycStatus.APPROVED -> Unit // proceed to order check
-        }
-
-        // Step 2: Check order status
-        return customerOrderRepository.getOrderData(userWalletId = account.userWalletId, orderId = orderId).fold(
-            ifLeft = { error ->
-                logger.e("proceedWithOrderId ${account.userWalletId} orderId: $orderId error: $error")
-                if (error is TangemPayApiError.OrderNotFound) {
-                    handleOrderNotFound(account = account)
-                } else {
-                    error.toStatusValueWhenHasTangemPay(account.userWalletId)
-                }
-            },
-            ifRight = { orderData ->
-                logger.i("proceedWithOrderId ${account.userWalletId}: $orderId status: ${orderData.status}")
-                when (orderData.status) {
-                    OrderStatus.CANCELED -> handleCanceledOrder(account, orderData)
-                    OrderStatus.COMPLETED -> handleCompletedOrder(account)
-                    OrderStatus.NEW,
-                    OrderStatus.PROCESSING,
-                    -> {
-                        paymentAccountStatusesStore.store(
-                            userWalletId = account.userWalletId,
-                            status = AccountStatus.Payment(
-                                account = account,
-                                value = PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL),
-                            ),
-                        )
-                        // Start polling for terminal state
-                        pollOrderStatus(account = account, orderId = orderId)
-                    }
-                }
-            },
-        )
-    }
-
-    private suspend fun pollOrderStatus(account: Account.Payment, orderId: String): PaymentAccountStatusValue {
-        while (currentCoroutineContext().isActive) {
-            delay(1.minutes)
-
-            val result = customerOrderRepository.getOrderData(
-                userWalletId = account.userWalletId,
-                orderId = orderId,
-            )
-
-            result.fold(
-                ifLeft = { error ->
-                    logger.e("pollOrderStatus ${account.userWalletId} orderId: $orderId error: $error")
-                    if (error is TangemPayApiError.OrderNotFound) {
-                        return handleOrderNotFound(account = account)
-                    }
-                    // Continue polling on transient errors
-                },
-                ifRight = { orderData ->
-                    logger.i("pollOrderStatus ${account.userWalletId}: $orderId status: ${orderData.status}")
-                    when (orderData.status) {
-                        OrderStatus.CANCELED -> return handleCanceledOrder(account, orderData)
-                        OrderStatus.COMPLETED -> return handleCompletedOrder(account)
-                        OrderStatus.NEW,
-                        OrderStatus.PROCESSING,
-                        -> Unit // Continue polling
-                    }
-                },
-            )
-        }
-
-        return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
-    }
-
-    private suspend fun handleOrderNotFound(account: Account.Payment): PaymentAccountStatusValue {
-        onboardingRepository.clearOrderId(account.userWalletId)
-        return proceedWithoutOrder(account = account)
-    }
-
-    private suspend fun handleCanceledOrder(
-        account: Account.Payment,
-        orderData: OrderData,
-    ): PaymentAccountStatusValue {
-        onboardingRepository.clearOrderId(account.userWalletId)
-        return PaymentAccountStatusValue.Error.CardIssueFailed(orderData.customerId)
-    }
-
-    private suspend fun handleCompletedOrder(account: Account.Payment): PaymentAccountStatusValue {
-        onboardingRepository.clearOrderId(account.userWalletId)
-        return onboardingRepository.getCustomerInfo(userWalletId = account.userWalletId)
-            .fold(
-                ifLeft = { it.toStatusValueWhenHasTangemPay(account.userWalletId) },
-                ifRight = { customerInfo -> customerInfo.mapToPaymentAccountStatus(account.userWalletId) },
-            )
     }
 
     private suspend fun CustomerInfo.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
         val fiatRate = getTangemPayFiatRateUseCase()
-
-        val customerId = customerId
         val isDeactivated = paymentAccountProductInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
-        val multichainNetworkStatuses by lazy {
-            tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, fiatRate)
-        }
-
+        val multichainNetworkStatuses = tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, fiatRate)
+        val resolved = resolveBalance(userWalletId)
         return when {
-            kycStatus == KycStatus.REQUIRED -> {
-                // TODO v_rodionov: #[REDACTED_TASK_KEY] find another way to check if payment account creating is not started
-                val moneyAccountOrder = findMoneyAccountCreationOrderUseCase.invoke(userWalletId).getOrElse {
-                    return PaymentAccountStatusValue.Error.Unavailable
-                }
-                if (moneyAccountOrder != null) {
-                    PaymentAccountStatusValue.NotCreated
-                } else {
-                    PaymentAccountStatusValue.KycRequired(
-                        source = StatusSource.ACTUAL,
-                        customerId = customerId,
-                        customerResidency = onboardingRepository.getCustomerResidency(userWalletId),
-                    )
-                }
-            }
-            kycStatus != KycStatus.APPROVED -> PaymentAccountStatusValue.UnderReview(
-                source = StatusSource.ACTUAL,
-                kycStatus = kycStatus,
-                customerId = customerId,
-            )
             isDeactivated || isFormer -> {
-                val resolved = resolveBalance(userWalletId)
                 PaymentAccountStatusValue.Deactivated(
                     source = resolved.source,
                     customerId = customerId,
@@ -479,55 +199,24 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     error = null,
                 )
             }
-            else -> {
-                val isPaymentAccountIssuing = isPaymentAccountIssuing(userWalletId)
-                if (isEnrolled || isPaymentAccountIssuing) {
-                    val resolved = resolveBalance(userWalletId)
-                    convertToContentState(
-                        userWalletId = userWalletId,
-                        balance = resolved.balance,
-                        source = resolved.source,
-                        fiatRate = fiatRate,
-                        customerId = customerId,
-                        networks = multichainNetworkStatuses,
-                        isPaymentAccountIssuing = isPaymentAccountIssuing,
-                    )
-                } else {
-                    PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
-                }
-            }
+            else -> buildLoadedState(
+                userWalletId = userWalletId,
+                balance = resolved.balance,
+                source = resolved.source,
+                fiatRate = fiatRate,
+                customerId = customerId,
+                networks = multichainNetworkStatuses,
+                isPaymentAccountIssuing = isPaymentAccountIssuing(userWalletId),
+            )
         }
     }
 
     private suspend fun isPaymentAccountIssuing(userWalletId: UserWalletId): Boolean {
-        if (!moneyAccountFeatureToggles.isMoneyAccountsEnabled) return false
-
         val summary = getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE).getOrNull() ?: return false
         val state = TangemPayCustomerStateConverter.convert(summary) as? TangemPayCustomerState.Accounts
         return state?.paymentAccount == PaymentAccountActivationState.Issuing(
             step = PaymentAccountActivationState.Issuing.Step.ISSUING,
         )
-    }
-
-    private suspend fun CustomerInfo.resolveCardlessAccountStatus(
-        userWalletId: UserWalletId,
-        customerId: String,
-        balance: PaymentAccountStatusValue.Balance?,
-        networks: List<PaymentNetworkStatus>,
-        fiatRate: BigDecimal?,
-    ): PaymentAccountStatusValue? {
-        return if (resolveIssuanceOrderStatus(userWalletId) == OrderStatus.CANCELED) {
-            cardIssueFailed(
-                userWalletId = userWalletId,
-                customerId = customerId,
-                tariff = tariffPlan,
-                balance = balance,
-                networks = networks,
-                fiatRate = fiatRate,
-            )
-        } else {
-            null
-        }
     }
 
     private suspend fun CustomerInfo.resolveBalance(userWalletId: UserWalletId): ResolvedBalance {
@@ -596,13 +285,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return if (isChanging) TangemPayCardFrozenState.Pending else productInstance.frozenState
     }
 
-    /**
-     * Builds the [PaymentAccountStatusValue.Loaded] content state with the full list of cards.
-     * A card is driven by its product instance; the `cards[]` payload only enriches it (last digits, PIN flag,
-     * artwork), because the backend can omit it for an operational account. Balances are
-     * payment-account-level (shared across cards) and may be absent — see [resolveBalance].
-     */
-    private suspend fun CustomerInfo.convertToContentState(
+    private suspend fun CustomerInfo.buildLoadedState(
         userWalletId: UserWalletId,
         balance: PaymentAccountStatusValue.Balance?,
         source: StatusSource,
@@ -611,32 +294,14 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         networks: List<PaymentNetworkStatus>,
         isPaymentAccountIssuing: Boolean,
     ): PaymentAccountStatusValue {
-        val tangemPayCards = resolveCards(userWalletId)
+        val cards = resolveCards(userWalletId)
 
-        // Additional-card issuance: the backend omits the new card until it is provisioned, so surface a
-        // placeholder for every locally tracked in-flight issuance order alongside the real cards.
         val issuingCards = buildIssuingCards(
             userWalletId = userWalletId,
-            surfacedProductInstanceIds = tangemPayCards.mapTo(mutableSetOf()) { it.productInstanceId },
+            surfacedProductInstanceIds = cards.mapTo(mutableSetOf()) { it.productInstanceId },
         )
 
-        // Keep the card order stable across refetches: the backend orders `productInstances` by a mutable
-        // field (a rename bumps `updated_at`), which would otherwise make the renamed card jump. Anchor on
-        // the previously shown order and append newly seen cards at the end.
-        val orderedCards = tangemPayCards.stableOrder(previousRealCardOrder(userWalletId))
-
-        val allCards = orderedCards + issuingCards
-
-        if (allCards.isEmpty()) {
-            val cardlessAccountStatus = resolveCardlessAccountStatus(
-                userWalletId = userWalletId,
-                customerId = customerId,
-                balance = balance,
-                networks = networks,
-                fiatRate = fiatRate,
-            )
-            if (cardlessAccountStatus != null) return cardlessAccountStatus
-        }
+        val orderedCards = cards.stableOrder(previousRealCardOrder(userWalletId))
 
         val tariffPlanState = tariffPlan?.let { tariff ->
             getTangemPayTariffPlanStateUseCase(
@@ -644,9 +309,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 tariff = tariff,
             )
         }
-        val channels = fetchEligibilityChannels(userWalletId)
-        val virtualAccount = resolveVirtualAccountOnramp(userWalletId = userWalletId, channels = channels)
-
+        val channels = onboardingRepository.fetchCustomerEligibility(userWalletId).getOrElse { error ->
+            logger.e("fetchCustomerEligibility failed for $userWalletId: $error")
+            null
+        }
         return PaymentAccountStatusValue.Loaded(
             source = source,
             customerId = customerId,
@@ -654,10 +320,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
             networks = networks,
             fiatRate = fiatRate,
-            cards = allCards,
+            cards = orderedCards + issuingCards,
             balance = balance,
             error = null,
-            virtualAccount = virtualAccount,
+            virtualAccount = resolveVirtualAccountOnramp(userWalletId = userWalletId, channels = channels),
             isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
             tariffPlan = tariffPlanState,
             isPaymentAccountIssuing = isPaymentAccountIssuing || tariffPlanState?.isPlanTransitioningState == true,
@@ -743,18 +409,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         CustomerInfo.ProductInstance.Status.CANCELED,
         CustomerInfo.ProductInstance.Status.UNKNOWN,
         -> false
-    }
-
-    /**
-     * The customer's eligibility channels, or `null` when the lookup fails. Fetched once per status build: both
-     * the VA on-ramp and the bank off-ramp are decided from the same list, and the channels are read with the
-     * user token rather than from a cache.
-     */
-    private suspend fun fetchEligibilityChannels(userWalletId: UserWalletId): List<TangemPayEligibilityType>? {
-        return onboardingRepository.fetchCustomerEligibility(userWalletId).getOrElse { error ->
-            logger.e("fetchCustomerEligibility failed for $userWalletId: $error")
-            null
-        }
     }
 
     private fun List<TangemPayEligibilityType>?.toVirtualAccountOnramp(isOrderFailed: Boolean): VirtualAccountOnramp? {
