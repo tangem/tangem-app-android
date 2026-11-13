@@ -20,6 +20,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 import java.io.InterruptedIOException
 
 /**
@@ -59,7 +60,7 @@ class DiskRemoteClipCache(
         )
 
         withContext(dispatchers.io) {
-            // invokeOnCompletion fires only once the blocking cache() has returned, i.e. after the whole download.
+            // cache() blocks its thread, so a child coroutine cancels the writer when the caller is cancelled.
             // UNDISPATCHED: a cancellation right after the launch must not skip the child's body.
             val canceller = launch(start = CoroutineStart.UNDISPATCHED) {
                 try {
@@ -77,6 +78,8 @@ class DiskRemoteClipCache(
             } finally {
                 canceller.cancel()
             }
+            // The eviction can drop the clip's own first spans while the rest is still being written.
+            if (!isFullyCached(url)) throw IOException("The clip does not fit into the cache: $url")
         }
     }
 

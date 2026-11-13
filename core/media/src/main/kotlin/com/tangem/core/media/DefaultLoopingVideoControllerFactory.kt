@@ -11,6 +11,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.plus
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @OptIn(UnstableApi::class)
@@ -50,12 +51,12 @@ internal class DefaultLoopingVideoControllerFactory @Inject constructor(
         diagnosticsSubject: String,
         onFailed: (error: Throwable, hasRenderedFrame: Boolean) -> Unit,
     ): LoopingVideoController = LoopingVideoController(
-        // The player only takes calls on the main thread.
         scope = scope + dispatchers.mainImmediate,
         frameSize = frameSize,
         diagnosticsSubject = diagnosticsSubject,
         onFailed = onFailed,
-        loadSource = { cache.downloadIfMissing(url) },
+        // The cache check waits for a still initializing cache.
+        loadSource = { withContext(dispatchers.io) { cache.downloadIfMissing(url) } },
         createPlayer = { listener ->
             createPlayer(
                 videoItem = MediaItem.fromUri(url),

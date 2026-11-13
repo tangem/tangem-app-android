@@ -157,14 +157,12 @@ class LoopingVideoController internal constructor(
         ): LoopingVideoController
 
         /**
-         * @param cache              downloads [url] in full before the clip is prepared; a failed download fails the
-         *                           clip as a load failure
-         * @param frameSize          declared rather than read from the file: resizing the surface under a playing
-         *                           decoder can get its output stuck
-         * @param diagnosticsSubject what the log entries are about, e.g. "Earn hero video"
-         * @param onFailed           given up for good; `hasRenderedFrame` tells a playback failure from a load one.
-         *                           A load that fails at once calls it before [createRemote] returns, so it must not
-         *                           touch the returned controller
+         * Like [create], for a clip at [url].
+         *
+         * @param cache    downloads [url] in full before the clip is prepared; a failed download fails the clip
+         *                 as a load failure
+         * @param onFailed a load that fails at once calls it before [createRemote] returns, so it must not touch
+         *                 the returned controller
          */
         fun createRemote(
             scope: CoroutineScope,
