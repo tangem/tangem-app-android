@@ -68,7 +68,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
             onRouteSelected = ::onRouteSelected,
             onSheetDismiss = ::closeSheet,
             onContinueClick = ::onContinueClick,
-            onRetryFeeClick = ::loadNetworkFee,
+            onRetryClick = ::onRetryClick,
         ),
     )
 
@@ -85,6 +85,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
                 selection = currentSelection(),
                 sheet = state.value.sheet,
                 networkFee = state.value.networkFee,
+                customerName = params.customerName.value,
                 isBalanceHidden = true,
             ),
         )
@@ -97,7 +98,8 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
             flow2 = params.options,
             flow3 = state,
             flow4 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
-        ) { draft, options, amountState, isBalanceHidden ->
+            flow5 = params.customerName,
+        ) { draft, options, amountState, isBalanceHidden, customerName ->
             val selection = amountState.resolve(draft = draft, options = options, isEditing = isEditing)
             trackInsufficientFunds(selection.validation)
             umFactory.create(
@@ -105,11 +107,17 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
                 selection = selection,
                 sheet = amountState.sheet,
                 networkFee = amountState.networkFee,
+                customerName = customerName,
                 isBalanceHidden = isBalanceHidden,
             )
         }
             .onEach { uiState.value = it }
             .launchIn(modelScope)
+    }
+
+    private fun onRetryClick() {
+        if (state.value.networkFee == NetworkFeeState.Unreachable) loadNetworkFee()
+        params.onRetryCustomerName()
     }
 
     private fun loadNetworkFee() {

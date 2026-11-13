@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.amount.state
 
+import androidx.annotation.StringRes
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
@@ -21,7 +22,9 @@ import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWit
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
+import com.tangem.features.tangempay.withdraw.bank.model.CustomerNameState
 import com.tangem.features.tangempay.withdraw.bank.model.isRailLocked
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import kotlinx.collections.immutable.toImmutableList
@@ -47,26 +50,28 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         is BankWithdrawSourceAccount.Money -> true
     }
 
+    @Suppress("LongParameterList")
     fun create(
         draft: BankWithdrawDraft,
         selection: AmountSelection,
         sheet: AmountSheet?,
         networkFee: NetworkFeeState,
+        customerName: CustomerNameState,
         isBalanceHidden: Boolean,
     ): TangemPayBankWithdrawAmountUM {
         val header = BankWithdrawHeaderFactory.create(draft = draft, step = step, onCloseClick = callbacks.onCloseClick)
+        // Only a SPEI payout carries the customer's name, so the other rails never wait for it.
+        val railCustomerName = customerName.takeIf { selection.destination.rail == BankRail.SPEI }
+        if (railCustomerName == CustomerNameState.Unreachable) {
+            return unreachable(header = header, messageRes = R.string.tangempay_withdraw_bank_data_unreachable)
+        }
+        if (railCustomerName == CustomerNameState.Loading && networkFee != NetworkFeeState.Unreachable) {
+            return loading(header = header, selection = selection)
+        }
         return when (networkFee) {
-            NetworkFeeState.Loading -> TangemPayBankWithdrawAmountUM.Loading(
-                header = header,
-                from = from,
-                currencySymbol = selection.currency.symbol,
-                onBackClick = callbacks.onBackClick,
-            )
-            NetworkFeeState.Unreachable -> TangemPayBankWithdrawAmountUM.FeeUnreachable(
-                header = header,
-                onRetryClick = callbacks.onRetryFeeClick,
-                onBackClick = callbacks.onBackClick,
-            )
+            NetworkFeeState.Loading -> loading(header = header, selection = selection)
+            NetworkFeeState.Unreachable ->
+                unreachable(header = header, messageRes = R.string.tangempay_withdraw_bank_network_fee_unreachable)
             NetworkFeeState.NotEnoughFunds,
             is NetworkFeeState.Loaded,
             -> TangemPayBankWithdrawAmountUM.Content(
@@ -86,6 +91,22 @@ internal class TangemPayBankWithdrawAmountUMFactory(
             )
         }
     }
+
+    private fun loading(header: BankWithdrawHeaderUM, selection: AmountSelection) =
+        TangemPayBankWithdrawAmountUM.Loading(
+            header = header,
+            from = from,
+            currencySymbol = selection.currency.symbol,
+            onBackClick = callbacks.onBackClick,
+        )
+
+    private fun unreachable(header: BankWithdrawHeaderUM, @StringRes messageRes: Int) =
+        TangemPayBankWithdrawAmountUM.Unreachable(
+            header = header,
+            message = resourceReference(messageRes),
+            onRetryClick = callbacks.onRetryClick,
+            onBackClick = callbacks.onBackClick,
+        )
 
     private fun createAmountField(selection: AmountSelection): AmountFieldUM = AmountFieldUM(
         value = selection.displayValue,
@@ -210,6 +231,6 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         val onRouteSelected: (BankRail) -> Unit,
         val onSheetDismiss: () -> Unit,
         val onContinueClick: () -> Unit,
-        val onRetryFeeClick: () -> Unit,
+        val onRetryClick: () -> Unit,
     )
 }

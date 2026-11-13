@@ -11,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.AmountLimits
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
@@ -27,6 +28,7 @@ import com.tangem.test.mock.MockAccounts
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.toImmutableList
+import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -150,6 +152,36 @@ internal fun offrampDestination(
     ),
     eta = OfframpEta(minDays = minDays, maxDays = maxDays),
     amountLimits = amountLimits,
+)
+
+internal fun speiDestination(): OfframpDestination = offrampDestination(
+    rail = BankRail.SPEI,
+    fee = BigDecimal("1"),
+    calculationType = FeeCalculationType.PERCENTAGE,
+    fixedFeeAmount = BigDecimal("0.50"),
+    minDays = 0,
+    maxDays = 0,
+)
+
+internal fun bankOfframpQuote(
+    quoteId: String = "quote-1",
+    bankAccountId: String = "acc-1",
+    feeAmount: BigDecimal? = BigDecimal("5.50"),
+    sourceAmount: BigDecimal = BigDecimal("500.00"),
+    destinationAmount: BigDecimal = BigDecimal("9247.15"),
+    exchangeRate: BigDecimal = BigDecimal("18.70"),
+    expiresAt: DateTime = DateTime.parse("2099-01-01T00:00:00Z"),
+): BankOfframpQuote = BankOfframpQuote(
+    quoteId = quoteId,
+    bankAccountId = bankAccountId,
+    feeAmount = feeAmount,
+    sourceAmount = sourceAmount,
+    destinationAmount = destinationAmount,
+    destinationCurrency = "MXN",
+    exchangeRate = exchangeRate,
+    fee = speiDestination().fee,
+    eta = speiDestination().eta,
+    expiresAt = expiresAt,
 )
 
 internal fun offrampOptions(
