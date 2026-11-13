@@ -55,8 +55,6 @@ internal class LendingEarnProduct @Inject constructor(
 
     override val analytics: EarnProductAnalytics = EarnProductAnalytics(category = "Earn", product = "Lending")
 
-    override val hasLegacyBlock: Boolean = false
-
     /** The registry feeds the overview headline even with Earn off, so a switched-off product must stay silent */
     private val isOffered: Boolean
         get() = toggles.isEarnEnabled && lendingProvider.isAvailable

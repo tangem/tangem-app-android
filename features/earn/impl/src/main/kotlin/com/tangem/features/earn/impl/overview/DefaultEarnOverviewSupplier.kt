@@ -7,6 +7,7 @@ import com.tangem.features.earn.api.overview.EarnOverview
 import com.tangem.features.earn.api.overview.EarnOverviewSupplier
 import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.features.earn.product.api.product.EarnProductSummary
+import com.tangem.features.earn.product.api.product.ProductAvailability
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -56,17 +57,18 @@ internal class DefaultEarnOverviewSupplier @Inject constructor(
     )
 
     /**
-     * The banner counts products without a legacy block on the token page: staking with its old block and rate
-     * sources stay out of it. It is Earn UI, so the Earn toggle switches it off, while the headline does not depend
-     * on the toggle: the Staking and Yield Mode badges stay.
+     * The banner counts every registered product, pooled staking included, and shows the best rate among them; rate
+     * sources stay out of it. It is Earn UI, so the Earn toggle switches it off, while the headline does not depend on
+     * the toggle: the Staking and Yield Mode badges stay. When every product is closed for deposits and holds no
+     * position, there is nothing to enable, so there is no banner.
      */
     private fun bannerOf(products: List<EarnProductSummary>): EarnBannerOverview? {
         if (!toggles.isEarnEnabled) return null
 
-        val counted = products.filter { registry.find(it.productId)?.hasLegacyBlock == false }
-        if (counted.isEmpty()) return null
-
+        val counted = products.filter { registry.find(it.productId) != null }
         val positions = counted.mapNotNull { it.position }
+        if (positions.isEmpty() && counted.none { it.availability == ProductAvailability.Available }) return null
+
         val amounts = positions.mapNotNull { it.cryptoAmount }
         val best = selector.winnerOf(counted)
 
