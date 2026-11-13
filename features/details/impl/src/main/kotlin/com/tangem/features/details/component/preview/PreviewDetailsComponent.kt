@@ -28,6 +28,7 @@ internal class PreviewDetailsComponent : DetailsComponent {
             },
             mcpFeatureToggles = object : McpFeatureToggles {
                 override val isMcpEnabled: Boolean = true
+                override val isIntentsHistoryEnabled: Boolean = false
             },
             analyticsEventHandler = DummyAnalyticsEventHandler(),
         ).buildAll(

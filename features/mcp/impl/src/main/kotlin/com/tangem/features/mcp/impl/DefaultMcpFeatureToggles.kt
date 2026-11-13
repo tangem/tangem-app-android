@@ -10,4 +10,7 @@ internal class DefaultMcpFeatureToggles(
 
     override val isMcpEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1721_MCP_ENABLED)
+
+    override val isIntentsHistoryEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_19454_MCP_INTENTS_HISTORY_ENABLED)
 }

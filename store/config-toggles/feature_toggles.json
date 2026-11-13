@@ -32,6 +32,10 @@
         "version": "6.8"
     },
     {
+        "name": "AND_19454_MCP_INTENTS_HISTORY_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED",
         "version": "undefined"
     },
