@@ -7,6 +7,10 @@ import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
+import com.tangem.data.onramp.converters.CountryConverter
+import com.tangem.data.onramp.converters.CurrencyConverter
+import com.tangem.domain.onramp.GetOnrampCountryByIpUseCase
+import com.tangem.grow.datasource.onramp.models.response.model.OnrampCountryDTO
 import com.tangem.datasource.api.common.response.map
 import com.tangem.datasource.local.onramp.countries.DefaultOnrampCountriesStore
 import com.tangem.datasource.local.onramp.country.DefaultOnrampCurrentCountryByIPStore
@@ -51,13 +55,19 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultOnrampRepositoryTest {
 
     private val api = mockk<OnrampApi>()
@@ -178,6 +188,63 @@ internal class DefaultOnrampRepositoryTest {
         assertThat(error).isSameInstanceAs(failure)
         assertThat(currencies.getSyncOrNull("onramp_currencies")).isNull()
         coVerify(exactly = 2) { api.getCurrencies("0011", null) }
+    }
+
+    @Test
+    fun `GIVEN overlapping IP requests WHEN next lookup fails THEN fallback retains newer restriction`() = runTest {
+        // Arrange
+        val converter = CountryConverter(CurrencyConverter())
+        val restricted = country.copy(isOnrampAvailable = false)
+        val olderResponse = CompletableDeferred<ApiResponse<OnrampCountryDTO>>()
+        val newerResponse = CompletableDeferred<ApiResponse<OnrampCountryDTO>>()
+        var requests = 0
+        coEvery { api.getCountryByIp("0011", null) } coAnswers {
+            if (++requests == 1) olderResponse.await() else newerResponse.await()
+        }
+        val useCase = GetOnrampCountryByIpUseCase(repository, mockk())
+        val older = async { useCase(wallet) }
+        runCurrent()
+        val newer = async { useCase(wallet) }
+        runCurrent()
+
+        // Act
+        newerResponse.complete(ApiResponse.Success(converter.convertBack(restricted)))
+        runCurrent()
+        olderResponse.complete(ApiResponse.Success(converter.convertBack(country)))
+        older.await()
+        newer.await()
+        coEvery { api.getCountryByIp("0011", null) } throws IllegalStateException("Offline")
+        val fallback = useCase(wallet)
+
+        // Assert
+        assertThat(fallback.getOrNull()).isEqualTo(restricted)
+        assertThat(countryByIp.getSyncOrNull()).isEqualTo(restricted)
+        coVerify(exactly = 3) { api.getCountryByIp("0011", null) }
+    }
+
+    @Test
+    fun `GIVEN pending IP lookup WHEN caller cancelled THEN next request completes and caches country`() = runTest {
+        // Arrange
+        val pendingResponse = CompletableDeferred<ApiResponse<OnrampCountryDTO>>()
+        val restricted = country.copy(isOnrampAvailable = false)
+        val response = ApiResponse.Success(CountryConverter(CurrencyConverter()).convertBack(restricted))
+        var requests = 0
+        coEvery { api.getCountryByIp("0011", null) } coAnswers {
+            if (++requests == 1) pendingResponse.await() else response
+        }
+        val cancelled = async { repository.getCountryByIp(wallet, fromCache = false) }
+        runCurrent()
+        val next = async { repository.getCountryByIp(wallet, fromCache = false) }
+        runCurrent()
+
+        // Act
+        cancelled.cancelAndJoin()
+        val actual = next.await()
+
+        // Assert
+        assertThat(actual).isEqualTo(restricted)
+        assertThat(countryByIp.getSyncOrNull()).isEqualTo(restricted)
+        coVerify(exactly = 2) { api.getCountryByIp("0011", null) }
     }
 
     @Test

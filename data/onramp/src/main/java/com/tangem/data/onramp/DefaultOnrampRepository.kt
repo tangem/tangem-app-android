@@ -57,6 +57,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.joda.time.DateTime
 import java.util.UUID
@@ -82,6 +84,7 @@ internal class DefaultOnrampRepository(
     moshi: Moshi,
 ) : OnrampRepository {
 
+    private val countryByIpMutex = Mutex()
     private val currencyConverter = CurrencyConverter()
     private val countryConverter = CountryConverter(currencyConverter)
     private val statusConverter = StatusConverter(moshi)
@@ -130,25 +133,27 @@ internal class DefaultOnrampRepository(
 
     override suspend fun getCountryByIp(userWallet: UserWallet, fromCache: Boolean): OnrampCountry =
         withContext(dispatchers.io) {
-            if (fromCache) {
-                val country = onrampCurrentCountryByIPStore.getSyncOrNull()
+            countryByIpMutex.withLock {
+                if (fromCache) {
+                    val country = onrampCurrentCountryByIPStore.getSyncOrNull()
 
-                if (country != null) {
-                    return@withContext country
+                    if (country != null) {
+                        return@withLock country
+                    }
                 }
+
+                val response = onrampApi.getCountryByIp(
+                    userWalletId = userWallet.walletId.stringValue,
+                    refCode = expressUtils.getRefCode(userWallet = userWallet),
+                )
+                    .getOrThrow()
+
+                val country = countryConverter.convert(response)
+
+                onrampCurrentCountryByIPStore.store(country)
+
+                country
             }
-
-            val response = onrampApi.getCountryByIp(
-                userWalletId = userWallet.walletId.stringValue,
-                refCode = expressUtils.getRefCode(userWallet = userWallet),
-            )
-                .getOrThrow()
-
-            val country = countryConverter.convert(response)
-
-            onrampCurrentCountryByIPStore.store(country)
-
-            country
         }
 
     override suspend fun getStatus(userWallet: UserWallet, txId: String): OnrampStatus = withContext(dispatchers.io) {

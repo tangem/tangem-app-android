@@ -207,6 +207,38 @@ internal class CheckOnrampAvailabilityUseCaseTest {
         assertThat(actual.getOrNull()).isEqualTo(OnrampAvailability.NotSupported(listed))
     }
 
+    @Test
+    fun `GIVEN detected restricted country WHEN availability checked THEN no competing IP lookup is made`() = runTest {
+        // Arrange
+        val detected = createCountry(isOnrampAvailable = false, currency = EUR)
+        coEvery { repository.fetchCountries(userWallet) } returns listOf(detected)
+
+        // Act
+        val actual = useCase(userWallet, isCountryByIpEnabled = true, detectedCountry = detected)
+
+        // Assert
+        assertThat(actual.getOrNull()).isEqualTo(OnrampAvailability.NotSupported(detected))
+        coVerify(exactly = 0) { repository.getCountryByIp(any(), any()) }
+        coVerify { repository.saveDefaultCountry(detected) }
+    }
+
+    @Test
+    fun `GIVEN selected country and detected IP WHEN availability checked THEN selection and currency are preserved`() =
+        runTest {
+            // Arrange
+            val detected = createCountry(id = "ip", isOnrampAvailable = false, currency = EUR)
+            val selected = createCountry(id = "selected", isOnrampAvailable = true, currency = USD)
+            coEvery { repository.getDefaultCountrySync() } returns selected
+            coEvery { repository.fetchCountries(userWallet) } returns listOf(detected, selected)
+
+            // Act
+            val actual = useCase(userWallet, isCountryByIpEnabled = true, detectedCountry = detected)
+
+            // Assert
+            assertThat(actual.getOrNull()).isEqualTo(OnrampAvailability.Available(selected, USD))
+            coVerify(exactly = 0) { repository.getCountryByIp(any(), any()) }
+        }
+
     private fun createCountry(
         id: String = "ip",
         isOnrampAvailable: Boolean,
