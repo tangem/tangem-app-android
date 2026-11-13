@@ -76,6 +76,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -202,6 +203,75 @@ internal class EarnInfoModelTest {
                 assertThat(shown).isNotEqualTo(stringReference("***"))
                 assertThat(masked).isEqualTo(stringReference("***"))
                 assertThat(shownAgain).isEqualTo(shown)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN shown position WHEN the product turns Loading and balance hiding is switched THEN the balance follows`() =
+            runTest {
+                // Arrange
+                val model = createModel()
+                advanceUntilIdle()
+                val shown = requireNotNull(model.uiState.value).balanceFiat
+                product.stateFlow.value = EarnProductState.Loading
+                advanceUntilIdle()
+
+                // Act
+                isBalanceHidden.value = true
+                advanceUntilIdle()
+                val masked = requireNotNull(model.uiState.value).balanceFiat
+                isBalanceHidden.value = false
+                advanceUntilIdle()
+                val shownAgain = requireNotNull(model.uiState.value).balanceFiat
+
+                // Assert
+                assertThat(masked).isEqualTo(stringReference("***"))
+                assertThat(shownAgain).isEqualTo(shown)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN shown position WHEN the currency status disappears and balance hiding is switched THEN the balance follows`() =
+            runTest {
+                // Arrange
+                val accountStatusLists = MutableSharedFlow<AccountStatusList>(replay = 1)
+                every { accountStatusListSupplier(USER_WALLET_ID) } returns accountStatusLists
+                accountStatusLists.emit(accountStatusList)
+                val model = createModel()
+                advanceUntilIdle()
+                val shown = requireNotNull(model.uiState.value).balanceFiat
+                stubStatus(null)
+                accountStatusLists.emit(accountStatusList)
+                advanceUntilIdle()
+
+                // Act
+                isBalanceHidden.value = true
+                advanceUntilIdle()
+                val masked = requireNotNull(model.uiState.value).balanceFiat
+                isBalanceHidden.value = false
+                advanceUntilIdle()
+                val shownAgain = requireNotNull(model.uiState.value).balanceFiat
+
+                // Assert
+                assertThat(masked).isEqualTo(stringReference("***"))
+                assertThat(shownAgain).isEqualTo(shown)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN shown position WHEN the product turns Loading and hiding is unchanged THEN uiState is not rebuilt`() =
+            runTest {
+                // Arrange
+                val model = createModel()
+                advanceUntilIdle()
+                val shown = model.uiState.value
+
+                // Act
+                product.stateFlow.value = EarnProductState.Loading
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value).isSameInstanceAs(shown)
                 model.onDestroy()
             }
 
