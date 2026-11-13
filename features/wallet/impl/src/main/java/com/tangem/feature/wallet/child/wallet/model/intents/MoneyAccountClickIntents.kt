@@ -18,6 +18,8 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,6 +37,7 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val tangemPayAnalyticsEventSender: WalletTangemPayAnalyticsEventSender,
 ) : BaseWalletClickIntents(), MoneyAccountIntents {
 
     override fun onMoneyAccountActivatingClicked() {
@@ -89,6 +92,7 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMoneyAccountClicked(userWalletId: UserWalletId) {
+        tangemPayAnalyticsEventSender.onAccountOpened(userWalletId = userWalletId, accountType = AccountType.MONEY)
         router.openMoneyAccountDetails(userWalletId = userWalletId)
     }
 }

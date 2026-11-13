@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.features.earn.product.api)
 
     /** Core */
+    implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
@@ -28,6 +29,7 @@ dependencies {
     implementation(projects.domain.quotes)
     implementation(projects.domain.transaction)
     implementation(projects.domain.transaction.models)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.yieldSupply.models)
 

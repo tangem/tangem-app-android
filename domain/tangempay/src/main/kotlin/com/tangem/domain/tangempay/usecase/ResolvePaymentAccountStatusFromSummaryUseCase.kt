@@ -13,6 +13,7 @@ import com.tangem.domain.tangempay.model.PaymentAccountActivationState
 import com.tangem.domain.tangempay.model.TangemPayCustomerState
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 
 class ResolvePaymentAccountStatusFromSummaryUseCase(
     private val onboardingRepository: OnboardingRepository,
@@ -20,9 +21,14 @@ class ResolvePaymentAccountStatusFromSummaryUseCase(
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     private val getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase,
     private val paymentAccountStatusCache: PaymentAccountStatusCache,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
     suspend operator fun invoke(userWalletId: UserWalletId, summary: CustomerSummary): PaymentAccountStatusValue? {
-        return when (val state = TangemPayCustomerStateConverter.convert(summary)) {
+        val state = TangemPayCustomerStateConverter.convert(
+            value = summary,
+            isKycAdditionalInfoEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
+        )
+        return when (state) {
             TangemPayCustomerState.Blocked -> {
                 PaymentAccountStatusValue.Empty
             }

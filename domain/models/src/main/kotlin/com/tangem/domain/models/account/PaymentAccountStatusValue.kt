@@ -187,6 +187,8 @@ sealed class PaymentAccountStatusValue {
      *                      Transient: not persisted in the local cache.
      * @property isPaymentAccountIssuing Whether the payment account is still being issued.
      *                                   Transient: not persisted in the local cache.
+     * @property isKycAdditionalInfoRequired CDD/EDD: compliance requested additional KYC information from an
+     *                                       existing cardholder; the account stays accessible.
      */
     @Serializable
     data class Loaded(
@@ -203,6 +205,7 @@ sealed class PaymentAccountStatusValue {
         val isBankOfframpAvailable: Boolean?,
         val tariffPlan: TangemPayTariffPlanState?,
         val isPaymentAccountIssuing: Boolean,
+        val isKycAdditionalInfoRequired: Boolean,
     ) : PaymentAccountStatusValue() {
 
         /**

@@ -108,6 +108,7 @@ sealed class MoneyAccountStatusValue {
             @SerialName("product_instance_id") val productInstanceId: String,
             @SerialName("error") override val error: Error?,
             @SerialName("is_bank_offramp_available") val isBankOfframpAvailable: Boolean? = null,
+            @SerialName("is_kyc_additional_info_required") val isKycAdditionalInfoRequired: Boolean,
         ) : Account()
     }
 

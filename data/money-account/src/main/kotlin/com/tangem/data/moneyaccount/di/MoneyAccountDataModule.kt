@@ -44,6 +44,7 @@ import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCas
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.tangempay.usecase.CreateOnboardingOrderUseCase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
 import dagger.Module
@@ -185,12 +186,14 @@ internal interface MoneyAccountDataModule {
             getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
             paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
             moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+            tangemPayFeatureToggles: TangemPayFeatureToggles,
         ): PollTangemPayAccountStatusesUseCase {
             return PollTangemPayAccountStatusesUseCase(
                 getCustomerSummaryUseCase = getCustomerSummaryUseCase,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 moneyAccountStatusFetcher = moneyAccountStatusFetcher,
                 timeSource = TimeSource.Monotonic,
+                tangemPayFeatureToggles = tangemPayFeatureToggles,
             )
         }
 

@@ -106,6 +106,7 @@ internal fun activeMoneyAccount(
     productInstanceId = "instance-1",
     isBankOfframpAvailable = isBankOfframpAvailable,
     error = null,
+    isKycAdditionalInfoRequired = false,
 )
 
 internal fun moneyAccountBalance(

@@ -80,8 +80,8 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
             paymentAccountStatusSupplier,
         )
         every { paymentAccountStatusSupplier(USER_WALLET_ID) } returns emptyFlow()
-        coEvery { paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(USER_WALLET_ID)) } returns Unit.right()
-        coEvery { moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(USER_WALLET_ID)) } returns Unit.right()
+        coEvery { paymentAccountStatusFetcher(USER_WALLET_ID) } returns Unit.right()
+        coEvery { moneyAccountStatusFetcher(USER_WALLET_ID) } returns Unit.right()
         // DateTimeFormatters.dateMMMd resolves the locale pattern through the Android framework,
         // which is unavailable on the JVM — pin it to a fixed joda pattern instead.
         mockkObject(DateTimeFormatters)
@@ -231,11 +231,11 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
         // Assert
         coVerify(exactly = 1) { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) }
         coVerifyOrder {
-            paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(USER_WALLET_ID))
+            paymentAccountStatusFetcher(USER_WALLET_ID)
             getProductsAvailability(USER_WALLET_ID)
         }
         coVerifyOrder {
-            moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+            moneyAccountStatusFetcher(USER_WALLET_ID)
             getProductsAvailability(USER_WALLET_ID)
         }
         verify(exactly = 1) {
@@ -283,8 +283,8 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
 
         // Assert
         coVerify(exactly = 1) { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) }
-        coVerify(exactly = 0) { paymentAccountStatusFetcher(any<PaymentAccountStatusFetcher.Params>()) }
-        coVerify(exactly = 0) { moneyAccountStatusFetcher(any<MoneyAccountStatusFetcher.Params>()) }
+        coVerify(exactly = 0) { paymentAccountStatusFetcher(any<UserWalletId>()) }
+        coVerify(exactly = 0) { moneyAccountStatusFetcher(any<UserWalletId>()) }
         verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
         assertThat(model.state.value.notification?.button?.isProcessing).isFalse()
     }

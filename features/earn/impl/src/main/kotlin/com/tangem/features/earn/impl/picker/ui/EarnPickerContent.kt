@@ -1,6 +1,9 @@
 package com.tangem.features.earn.impl.picker.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,10 +13,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -47,10 +48,13 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -122,7 +126,8 @@ internal fun EarnPickerContent(state: EarnPickerUM, modifier: Modifier = Modifie
             state = listState,
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSourceTangem(),
+                .hazeSourceTangem()
+                .background(TangemTheme.colors3.bg.primary),
             contentPadding = PaddingValues(bottom = with(LocalDensity.current) { footerHeightPx.toDp() }),
         ) {
             item(key = "hero") { EarnPickerHero(modifier = Modifier.onSizeChanged { heroHeightPx = it.height }) }
@@ -243,73 +248,60 @@ private fun PinnedHeader(
     modifier: Modifier = Modifier,
 ) {
     val titleAlpha = ((barProgress - TITLE_FADE_START) / (1f - TITLE_FADE_START)).coerceIn(0f, 1f)
-    val pageColor = TangemTheme.colors3.bg.primary
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .drawBehind {
-                drawHeaderFade(
-                    color = pageColor,
-                    alpha = barProgress,
-                    overshoot = if (tabs != null) FADE_OVERSHOOT else 0.dp,
-                )
-            },
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .onSizeChanged { onBarHeightChange(it.height) }
-                .statusBarsPadding()
-                .padding(bottom = BAR_BOTTOM_PADDING)
-                .heightIn(min = BAR_HEIGHT),
-        ) {
-            Text(
-                text = barTitle.resolveReference(),
-                style = TangemTheme.typography3.body.medium,
-                color = TangemTheme.colors3.text.primary,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .graphicsLayer {
-                        alpha = titleAlpha
-                        translationY = (1f - titleAlpha) * TITLE_SHIFT.toPx()
-                    },
+    Box(modifier = modifier.fillMaxWidth()) {
+        PinnedFade(isPinned = tabs != null, modifier = Modifier.matchParentSize())
+        Column {
+            TangemTopNavigation(
+                modifier = Modifier.onSizeChanged { onBarHeightChange(it.height) },
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                fadeEnabled = barProgress > 0f && tabs == null,
+                endButton = { TangemButton.Close(onClick = onClose) },
+                contentColumn = {
+                    TangemNavigationText(
+                        text = barTitle,
+                        role = TangemNavigationText.Role.Title,
+                        modifier = Modifier.graphicsLayer {
+                            alpha = titleAlpha
+                            translationY = (1f - titleAlpha) * TITLE_SHIFT.toPx()
+                        },
+                    )
+                },
             )
-            TangemButton.Close(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 16.dp),
-                onClick = onClose,
-            )
-        }
-        if (tabs != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onSizeChanged { onTabsHeightChange(it.height) }
-                    .padding(vertical = TABS_VERTICAL_PADDING),
-            ) {
-                TangemTabNavigation(tabs = tabs, contentPadding = PaddingValues(horizontal = PAGE_MARGIN))
+            if (tabs != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onSizeChanged { onTabsHeightChange(it.height) }
+                        .padding(vertical = TABS_VERTICAL_PADDING),
+                ) {
+                    TangemTabNavigation(tabs = tabs, contentPadding = PaddingValues(horizontal = PAGE_MARGIN))
+                }
             }
         }
     }
 }
 
-private fun DrawScope.drawHeaderFade(color: Color, alpha: Float, overshoot: Dp) {
-    val total = size.height + overshoot.toPx()
-    val solid = color.copy(alpha = FADE_ALPHA * alpha)
-    drawRect(
-        brush = Brush.verticalGradient(
-            colorStops = arrayOf(
-                0f to solid,
-                (total - FADE_GRADIENT_HEIGHT.toPx()) / total to solid,
-                1f to Color.Transparent,
-            ),
-            startY = 0f,
-            endY = total,
-        ),
-        size = Size(width = size.width, height = total),
+/** A haze source above the list's: the glass buttons and the pill sample the fade instead of punching holes in it. */
+@Composable
+private fun PinnedFade(isPinned: Boolean, modifier: Modifier = Modifier) {
+    val fadeOutAlpha by animateFloatAsState(
+        targetValue = if (isPinned) 1f else 0f,
+        animationSpec = if (isPinned) snap() else spring(),
+        label = "EarnPicker.pinnedFadeAlpha",
     )
+    val isBlurred by remember(isPinned) { derivedStateOf { isPinned || fadeOutAlpha > 0f } }
+
+    Box(modifier = modifier.hazeSourceTangem(zIndex = 1f)) {
+        TangemFade(
+            position = TangemFade.Position.Top,
+            variant = TangemFade.Variant.Hard,
+            blur = isBlurred,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = if (isPinned) 1f else fadeOutAlpha },
+        )
+    }
 }
 
 /** 0 while the hero fills the top, 1 once it is under the bar. */
@@ -502,12 +494,7 @@ private fun DrawScope.drawFooterFade(color: Color) {
 
 private val LOADING_BODY_HEIGHT = 240.dp
 
-private val BAR_HEIGHT = 44.dp
-private val BAR_BOTTOM_PADDING = 16.dp
-
 private const val FADE_ALPHA = 0.95f
-private val FADE_GRADIENT_HEIGHT = 40.dp
-private val FADE_OVERSHOOT = 2.dp
 private val FOOTER_FADE_OVERSHOOT = 16.dp
 private val FOOTER_RAMP_HEIGHT = 24.dp
 private const val FOOTER_RAMP_STOP_1 = 0.3f

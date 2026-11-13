@@ -51,10 +51,16 @@ internal class MoneyAccountMainBlockConverter(
         }
     }
 
-    private fun MoneyAccountStatusValue.Account.toUM(userWalletId: UserWalletId): MoneyAccountMainUM {
+    private fun MoneyAccountStatusValue.Account.Active.toUM(userWalletId: UserWalletId): MoneyAccountMainUM {
+        val subtitleRes = if (isKycAdditionalInfoRequired) {
+            R.string.tangempay_action_required_title
+        } else {
+            R.string.money_account_main_status_active_v2
+        }
         return MoneyAccountMainUM.Content(
-            subtitle = resourceReference(R.string.money_account_main_status_active_v2),
+            subtitle = resourceReference(subtitleRes),
             balance = balance?.toUM(source),
+            isActionRequired = isKycAdditionalInfoRequired,
             onClick = { moneyAccountIntents.onMoneyAccountClicked(userWalletId) },
         )
     }

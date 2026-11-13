@@ -262,6 +262,7 @@ internal class MoneyAccountCurrenciesProviderTest {
             customerId = CUSTOMER_ID,
             productInstanceId = "instance",
             error = null,
+            isKycAdditionalInfoRequired = false,
         )
 
     private companion object {

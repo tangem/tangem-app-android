@@ -15,8 +15,10 @@ import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MoneyAccountMainBlockConverterTest {
@@ -54,6 +56,42 @@ internal class MoneyAccountMainBlockConverterTest {
         verify(exactly = 1) { moneyAccountIntents.onMoneyAccountActivatingClicked() }
     }
 
+    @Test
+    fun `GIVEN active account with kyc additional info WHEN convert THEN content with action required subtitle`() {
+        // Act
+        val result = converter.convert(moneyAccount(activeValue(isKycAdditionalInfoRequired = true)))
+
+        // Assert
+        assertThat(result).isInstanceOf(MoneyAccountMainUM.Content::class.java)
+        val content = result as MoneyAccountMainUM.Content
+        assertThat(content.subtitle).isEqualTo(resourceReference(R.string.tangempay_action_required_title))
+        assertThat(content.isActionRequired).isTrue()
+        assertThat(content.balance).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN active account without flag WHEN convert THEN content with active subtitle`() {
+        // Act
+        val result = converter.convert(moneyAccount(activeValue(isKycAdditionalInfoRequired = false)))
+
+        // Assert
+        val content = result as MoneyAccountMainUM.Content
+        assertThat(content.subtitle).isEqualTo(resourceReference(R.string.money_account_main_status_active_v2))
+        assertThat(content.isActionRequired).isFalse()
+    }
+
+    @Test
+    fun `GIVEN active account WHEN content clicked THEN money account opened`() {
+        // Arrange
+        val content = converter.convert(moneyAccount(activeValue())) as MoneyAccountMainUM.Content
+
+        // Act
+        content.onClick()
+
+        // Assert
+        verify(exactly = 1) { moneyAccountIntents.onMoneyAccountClicked(USER_WALLET_ID) }
+    }
+
     data class ActivatingModel(
         val step: MoneyAccountStatusValue.Onboarding.Activating.Step,
         val expectedSubtitleRes: Int,
@@ -69,4 +107,30 @@ internal class MoneyAccountMainBlockConverterTest {
             expectedSubtitleRes = R.string.money_account_main_status_awaiting_deposit,
         ),
     )
+
+    private fun moneyAccount(value: MoneyAccountStatusValue): AccountStatus.Money {
+        return AccountStatus.Money(account = Account.Money(USER_WALLET_ID), value = value)
+    }
+
+    private fun activeValue(isKycAdditionalInfoRequired: Boolean = false): MoneyAccountStatusValue.Account.Active {
+        return MoneyAccountStatusValue.Account.Active(
+            source = StatusSource.ACTUAL,
+            cryptoCurrency = mockk(relaxed = true),
+            balance = MoneyAccountStatusValue.Balance(
+                cryptoAmount = BigDecimal.TEN,
+                depositAddress = "0xdeposit",
+                currencyCode = "USD",
+                fiatRate = BigDecimal.ONE,
+            ),
+            customerId = "customer",
+            productInstanceId = "instance",
+            error = null,
+            isBankOfframpAvailable = null,
+            isKycAdditionalInfoRequired = isKycAdditionalInfoRequired,
+        )
+    }
+
+    private companion object {
+        val USER_WALLET_ID = UserWalletId("0011")
+    }
 }

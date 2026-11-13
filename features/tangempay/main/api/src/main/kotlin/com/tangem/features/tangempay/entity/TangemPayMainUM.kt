@@ -19,6 +19,7 @@ sealed class TangemPayMainUM {
         val balanceSubtitle: TextReference,
         val onClick: () -> Unit,
         val shouldShowOnlyCacheWarning: Boolean,
+        val isActionRequired: Boolean,
     ) : TangemPayMainUM()
 
     data object TemporaryUnavailable : TangemPayMainUM()
