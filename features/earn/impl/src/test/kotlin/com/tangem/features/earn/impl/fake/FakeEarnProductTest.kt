@@ -2,10 +2,13 @@ package com.tangem.features.earn.impl.fake
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.core.res.R as CoreR
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
@@ -146,7 +149,8 @@ internal class FakeEarnProductTest {
                 val summary = product.summary()
 
                 // Assert
-                assertThat(summary.rateText to summary.rate).isEqualTo(stringReference("5.5% APY") to fakeRate)
+                assertThat(summary.rateText to summary.rate)
+                    .isEqualTo(resourceReference(CoreR.string.earn_apy_value, wrappedList("5.5%")) to fakeRate)
             }
 
         @ParameterizedTest
@@ -241,7 +245,7 @@ internal class FakeEarnProductTest {
                 val expectedPrimary = EarnActionItem(
                     action = Deposit(),
                     block = null,
-                    label = stringReference("Start earning"),
+                    label = resourceReference(CoreR.string.eth_yield_start_earning),
                 )
                 assertThat(state.position).isEqualTo(EarnPositionState.None)
                 assertThat(state.primary).isEqualTo(expectedPrimary)
@@ -260,7 +264,7 @@ internal class FakeEarnProductTest {
             val expectedPrimary = EarnActionItem(
                 action = Deposit(),
                 block = null,
-                label = stringReference("Add funds"),
+                label = resourceReference(CoreR.string.common_add_funds),
             )
             val position = state.position
             assertThat(position).isInstanceOf(EarnPositionState.Known::class.java)
@@ -286,7 +290,7 @@ internal class FakeEarnProductTest {
                         reason = stringReference("Position is not loaded"),
                         action = EarnBlockAction.Retry,
                     ),
-                    label = stringReference("Start earning"),
+                    label = resourceReference(CoreR.string.eth_yield_start_earning),
                 )
                 assertThat(state.position).isEqualTo(EarnPositionState.Unknown)
                 assertThat(state.primary).isEqualTo(expectedPrimary)
