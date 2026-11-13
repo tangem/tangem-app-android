@@ -8,9 +8,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
@@ -61,24 +64,12 @@ internal fun isOverflowItem(index: Int, windowStart: Int, pageCount: Int): Boole
     return isClippedStart || isClippedEnd
 }
 
-/**
- * Keeps the window between recompositions: where it lands depends on where it was, not only on
- * the active page. Updating it is idempotent for the same page, so a discarded composition is harmless.
- */
-private class PaginationWindow(private val pageCount: Int) {
-
-    private var start = 0
-
-    fun moveTo(currentPage: Int): Int {
-        start = nextWindowStart(start, currentPage, pageCount)
-        return start
-    }
-}
-
 @Composable
 internal fun PaginationItems(pageCount: Int, currentPage: Int, modifier: Modifier = Modifier) {
-    val window = remember(pageCount) { PaginationWindow(pageCount) }
-    val windowStart = window.moveTo(currentPage)
+    var committedWindowStart by remember(pageCount) { mutableIntStateOf(0) }
+    val windowStart = nextWindowStart(committedWindowStart, currentPage, pageCount)
+    SideEffect { committedWindowStart = windowStart }
+
     val windowEnd = windowStart + PAGINATION_WINDOW_SIZE - 1
     val visibleSlots = pageCount.coerceIn(0, PAGINATION_WINDOW_SIZE)
     val width = (visibleSlots * ITEM_SIZE_DP + (visibleSlots - 1).coerceAtLeast(0) * ITEM_SPACING_DP).dp
