@@ -10,7 +10,6 @@ import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResp
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.collectibles.account.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
@@ -77,22 +76,21 @@ internal class DefaultCollectiblesOwnerKeysRepositoryTest {
         }
 
     @Test
-    fun `GIVEN collectibles disabled WHEN findMissingOwnerKeyDerivation THEN nothing is missing`() =
-        runTest {
-            // Arrange
-            every { collectiblesFeatureToggles.isCollectiblesEnabled } returns false
-            coEvery { accountRepository.getStatusSync(userWalletId) } returns null
-            coEvery { walletAccountsFetcher.getSaved(userWalletId) } returns mockk<GetWalletAccountsResponse> {
-                every { accounts } returns listOf(COLLECTIBLES_RECORD)
-            }
-
-            // Act
-            val actual = repository.findMissingOwnerKeyDerivation(userWalletId)
-
-            // Assert
-            assertThat(actual).isEmpty()
-            coVerify(exactly = 0) { derivationsRepository.getExistingDerivedKeys(any<UserWallet>(), any()) }
+    fun `GIVEN collectibles disabled WHEN findMissingOwnerKeyDerivation THEN nothing is missing`() = runTest {
+        // Arrange
+        every { collectiblesFeatureToggles.isCollectiblesEnabled } returns false
+        coEvery { accountRepository.getStatusSync(userWalletId) } returns null
+        coEvery { walletAccountsFetcher.getSaved(userWalletId) } returns mockk<GetWalletAccountsResponse> {
+            every { accounts } returns listOf(COLLECTIBLES_RECORD)
         }
+
+        // Act
+        val actual = repository.findMissingOwnerKeyDerivation(userWalletId)
+
+        // Assert
+        assertThat(actual).isEmpty()
+        coVerify(exactly = 0) { derivationsRepository.getExistingDerivedKeys(any<UserWallet>(), any()) }
+    }
 
     /** A re-added wallet: the record went with it, the backend still lists the account */
     @Test
