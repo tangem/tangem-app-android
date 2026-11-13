@@ -23,6 +23,7 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
     implementation(projects.core.pagination)
 
     /** Domain */
@@ -33,6 +34,8 @@ dependencies {
     api(projects.domain.manageTokens)
     api(projects.domain.markets)
     implementation(projects.domain.jointAccount)
+    implementation(projects.domain.onramp)
+    implementation(projects.domain.onramp.models)
     api(projects.domain.markets.models)
     api(projects.domain.models)
     api(projects.domain.transaction)

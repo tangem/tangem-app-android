@@ -17,6 +17,7 @@ import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.TokenAction
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,6 +33,7 @@ internal class TokenActionsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val uiBuilder: TokenActionsUiBuilder,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
+    private val onrampRegionRestrictionResolver: OnrampRegionRestrictionResolver,
 ) : Model() {
 
     private val params = paramsContainer.require<TokenActionsComponent.Params>()
@@ -53,22 +55,41 @@ internal class TokenActionsModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
 
+    private val regionRefreshRequests = MutableSharedFlow<Unit>(
+        replay = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    ).apply { tryEmit(Unit) }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val onrampRestrictedRegionName: StateFlow<String?> = combine(
+        params.data.distinctUntilChangedBy { it.userWallet.walletId to it.status.currency.id },
+        regionRefreshRequests,
+    ) { data, _ -> data.userWallet }
+        .mapLatest { onrampRegionRestrictionResolver.resolveRestrictedRegionName(it) }
+        .flowOn(dispatchers.io)
+        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = null)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<TokenActionsUM?> =
         combine(
-            params.data,
-            getBalanceHidingSettingsUseCase.isBalanceHidden(),
-            params.bottomAction,
-        ) { cryptoCurrencyData, isBalanceHidden, bottomAction ->
-            Triple(cryptoCurrencyData, isBalanceHidden, bottomAction)
-        }
-            .mapLatest { (cryptoCurrencyData, isBalanceHidden, bottomAction) ->
-                uiBuilder.build(
+            flow = params.data,
+            flow2 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
+            flow3 = params.bottomAction,
+            flow4 = onrampRestrictedRegionName,
+            transform = { cryptoCurrencyData, isBalanceHidden, bottomAction, restrictedRegionName ->
+                TokenActionsBuildInput(
                     cryptoCurrencyData = cryptoCurrencyData,
-                    tokenActionsHandler = tokenActionsHandler,
-                    appCurrency = currentAppCurrency.value,
                     isBalanceHidden = isBalanceHidden,
                     bottomAction = bottomAction,
+                    onrampRestrictedRegionName = restrictedRegionName,
+                )
+            },
+        )
+            .mapLatest { input ->
+                uiBuilder.build(
+                    input = input,
+                    tokenActionsHandler = tokenActionsHandler,
+                    appCurrency = currentAppCurrency.value,
                 )
             }
             .flowOn(dispatchers.default)
@@ -77,6 +98,10 @@ internal class TokenActionsModel @Inject constructor(
                 started = SharingStarted.Eagerly,
                 initialValue = null,
             )
+
+    fun onStart() {
+        regionRefreshRequests.tryEmit(Unit)
+    }
 
     private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction, shouldDismiss: Boolean) =
         modelScope.launch {

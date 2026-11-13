@@ -53,28 +53,13 @@ internal class TokenActionsUiBuilder @Inject constructor(
     private val params = paramsContainer.require<TokenActionsComponent.Params>()
 
     fun build(
-        cryptoCurrencyData: CryptoCurrencyData,
+        input: TokenActionsBuildInput,
         tokenActionsHandler: TokenActionsHandler,
         appCurrency: AppCurrency,
-        isBalanceHidden: Boolean,
-        bottomAction: BottomAction,
     ): TokenActionsUM {
-        return buildV2(
-            cryptoCurrencyData = cryptoCurrencyData,
-            tokenActionsHandler = tokenActionsHandler,
-            appCurrency = appCurrency,
-            isBalanceHidden = isBalanceHidden,
-            bottomAction = bottomAction,
-        )
-    }
-
-    private fun buildV2(
-        cryptoCurrencyData: CryptoCurrencyData,
-        tokenActionsHandler: TokenActionsHandler,
-        appCurrency: AppCurrency,
-        isBalanceHidden: Boolean,
-        bottomAction: BottomAction,
-    ): TokenActionsUM {
+        val cryptoCurrencyData = input.cryptoCurrencyData
+        val bottomAction = input.bottomAction
+        val onrampRestrictedRegionName = input.onrampRestrictedRegionName
         val status = cryptoCurrencyData.status
         val tokenUM = TokenItemState.Content(
             id = status.currency.id.value,
@@ -94,15 +79,17 @@ internal class TokenActionsUiBuilder @Inject constructor(
 
         return TokenActionsUM(
             token = tokenUM,
-            quickActions = actions.withRegionRestriction(),
+            quickActions = actions.withRegionRestriction().withOnrampRestriction(onrampRestrictedRegionName),
             bottomActionText = bottomActionText(bottomAction),
             onBottomActionClick = {
                 params.callbacks.onBottomActionClick(bottomAction)
             },
-            isBalancesHidden = isBalanceHidden,
+            isBalancesHidden = input.isBalanceHidden,
             portfolioBadge = createPortfolioBadge(cryptoCurrencyData = cryptoCurrencyData),
             isCompact = params.isCompact,
-            regionRestriction = regionRestrictionBanner(),
+            regionRestriction = regionRestrictionBanner() ?: onrampRestrictedRegionName?.let {
+                TokenActionsRegionRestriction.onrampBanner(regionName = it)
+            },
         )
     }
 
@@ -111,6 +98,15 @@ internal class TokenActionsUiBuilder @Inject constructor(
         if (!params.isRegionRestricted) return this
 
         val blocked = actions.filter { it.isTrading() }
+
+        return copy(disabledActions = (disabledActions + blocked).toImmutableSet())
+    }
+
+    /** A region without onramp closes only buying: swapping, receiving and holding the asset stay untouched. */
+    private fun QuickActions.withOnrampRestriction(restrictedRegionName: String?): QuickActions {
+        if (restrictedRegionName == null) return this
+
+        val blocked = actions.filter { it is QuickActionUM.V1.Buy || it is QuickActionUM.V2.Buy }
 
         return copy(disabledActions = (disabledActions + blocked).toImmutableSet())
     }
@@ -233,6 +229,13 @@ internal class TokenActionsUiBuilder @Inject constructor(
         }
     }
 }
+
+internal data class TokenActionsBuildInput(
+    val cryptoCurrencyData: CryptoCurrencyData,
+    val isBalanceHidden: Boolean,
+    val bottomAction: BottomAction,
+    val onrampRestrictedRegionName: String?,
+)
 
 /** Rows that trade the asset, as opposed to receiving or holding it. */
 private fun QuickActionUM.isTrading(): Boolean = when (this) {
