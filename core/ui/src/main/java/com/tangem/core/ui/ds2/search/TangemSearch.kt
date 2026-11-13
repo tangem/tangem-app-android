@@ -38,7 +38,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
+import com.tangem.core.ui.test.BaseSearchBarTestTags
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -65,7 +67,7 @@ import com.tangem.core.ui.res.generated.icons.ic_search_20
 /**
  * Search component (DS V3)
  *
- * Version: 1.0.1
+ * Version: 1.0.2
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=3953-249&m=dev)
  *
@@ -117,7 +119,7 @@ fun TangemSearch(
 
 object TangemSearch {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 1)
+    val version = DsVersion(major = 1, minor = 0, patch = 2)
 
     @Immutable
     data class State(
@@ -196,6 +198,7 @@ private fun QueryTextField(state: TangemSearch.State, focusRequester: FocusReque
             .fillMaxWidth()
             .focusRequester(focusRequester)
             .semantics { contentDescription = placeholder }
+            .testTag(BaseSearchBarTestTags.SEARCH_BAR)
             .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused
                 if (!isInitialComposition) {
