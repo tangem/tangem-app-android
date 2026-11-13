@@ -11,6 +11,11 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.LoopingVideoState
+import com.tangem.core.media.RemoteClipCache
+import com.tangem.core.media.VideoFrameSize
+import com.tangem.core.media.VideoSurfaceState
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -42,6 +47,7 @@ import com.tangem.features.earn.impl.overview.EarnSummaryOrder
 import com.tangem.features.earn.impl.overview.USER_WALLET_ID
 import com.tangem.features.earn.impl.overview.createRate
 import com.tangem.features.earn.impl.overview.createSummary
+import com.tangem.features.earn.impl.picker.EarnPickerHeroVideo
 import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.impl.picker.EarnYieldPickerComponent
 import com.tangem.features.earn.impl.picker.ui.state.EarnProductCardUM
@@ -92,6 +98,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -101,6 +108,9 @@ internal class EarnPickerModelTest {
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val videoFactory: LoopingVideoController.Factory = mockk()
+    private val heroVideo: LoopingVideoController = mockk(relaxed = true)
+    private val heroClipCache: RemoteClipCache = mockk()
     private val overviewFetcher: EarnOverviewFetcher = mockk()
     private val summarySupplier: EarnProductSummarySupplier = mockk()
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
@@ -114,12 +124,14 @@ internal class EarnPickerModelTest {
     @BeforeEach
     fun setUp() {
         clearMocks(router, uiMessageSender, urlOpener, overviewFetcher, summarySupplier, accountStatusListSupplier, accountStatusList)
+        clearMocks(videoFactory, heroVideo)
         mockkObject(CryptoCurrencyStatusOperations)
         mockkObject(TangemLogger)
         lending = PickerProduct(createFakeEarnProduct(FakeEarnProductPreset.Lending), readyState(FakeEarnProductPreset.Lending))
         staking = PickerProduct(createFakeEarnProduct(FakeEarnProductPreset.Staking), readyState(FakeEarnProductPreset.Staking))
         vault = PickerProduct(createFakeEarnProduct(FakeEarnProductPreset.Vault), readyState(FakeEarnProductPreset.Vault))
         every { accountStatusListSupplier(USER_WALLET_ID) } returns flowOf(accountStatusList)
+        every { videoFactory.createRemote(any(), any(), any(), any(), any(), any()) } returns heroVideo
         stubBalance(BigDecimal.ONE)
     }
 
@@ -966,6 +978,74 @@ internal class EarnPickerModelTest {
             }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class HeroVideo {
+
+        @Test
+        fun `GIVEN a picker WHEN the model is created THEN the hero clip is requested from the earn cache at its own size`() =
+            runTest {
+                // Act
+                val model = createModel(frames = MutableStateFlow(frame()))
+
+                // Assert
+                verify(exactly = 1) {
+                    videoFactory.createRemote(
+                        scope = any(),
+                        url = EarnPickerHeroVideo.URL,
+                        cache = heroClipCache,
+                        frameSize = VideoFrameSize(width = 720, height = 1280),
+                        diagnosticsSubject = "Earn picker hero video",
+                        onFailed = any(),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the hero clip WHEN the state is read THEN it is the controller state`() = runTest {
+            // Arrange
+            val state = MutableStateFlow(LOOPING_STATE)
+            every { heroVideo.state } returns state
+            val model = createModel(frames = MutableStateFlow(frame()))
+
+            // Act
+            val actual = model.heroVideoState
+
+            // Assert
+            assertThat(actual).isSameInstanceAs(state)
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN a model WHEN the screen running state changes THEN the clip follows it`(isRunning: Boolean) =
+            runTest {
+                // Arrange
+                val model = createModel(frames = MutableStateFlow(frame()))
+
+                // Act
+                model.setHeroVideoRunning(isRunning = isRunning)
+
+                // Assert
+                verify(exactly = 1) { heroVideo.setRunning(isRunning = isRunning) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a model destroyed in the frame it was created WHEN destroyed THEN the clip is released once`() =
+            runTest {
+                // Arrange
+                val model = createModel(frames = MutableStateFlow(frame()))
+
+                // Act
+                model.onDestroy()
+
+                // Assert
+                verify(exactly = 1) { heroVideo.release() }
+            }
+    }
+
     private fun TestScope.createModel(
         frames: Flow<EarnProductSummaries>,
         products: List<EarnProduct> = listOf(lending, vault),
@@ -998,6 +1078,8 @@ internal class EarnPickerModelTest {
             router = router,
             uiMessageSender = uiMessageSender,
             urlOpener = urlOpener,
+            videoFactory = videoFactory,
+            heroClipCache = heroClipCache,
         )
     }
 
@@ -1082,5 +1164,21 @@ internal class EarnPickerModelTest {
         override fun onActionClick(action: EarnAction) {
             actions += action
         }
+    }
+
+    private companion object {
+
+        val LOOPING_STATE = LoopingVideoState(
+            surface = VideoSurfaceState(
+                frameSize = VideoFrameSize(width = 720, height = 1280),
+                key = 0,
+                isFirstFrameShown = false,
+                onAvailable = {},
+                onRelease = {},
+            ),
+            isRunning = false,
+            isMotionEnabled = true,
+            isFailed = false,
+        )
     }
 }
