@@ -34,10 +34,7 @@ internal class EarnApyChartComponent @AssistedInject constructor(
         EarnApyChartContent(state = state, modifier = modifier)
     }
 
-    /**
-     * @property currentRate the rate the header shows; the header follows it, a fixed rate is a constant flow
-     * @property reloads every signal re-requests the selected period silently, the bars stay until the answer
-     */
+    /** @property currentRate the rate the header shows; the header follows it, a fixed rate is a constant flow */
     data class Params(
         val periods: List<EarnPeriod>,
         val defaultPeriod: EarnPeriod,

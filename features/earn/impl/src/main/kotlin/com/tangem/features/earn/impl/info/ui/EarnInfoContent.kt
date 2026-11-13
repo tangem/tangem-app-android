@@ -79,11 +79,6 @@ internal fun EarnInfoContent(
     }
 }
 
-/**
- * The chips float over the list: a sticky header would stick behind the navigation (Foundation's StickToTopPlacement
- * places it at -beforeContentPadding). They sit inside the pull-to-refresh container, which moves its content by an
- * offset, not through the list state.
- */
 @Composable
 private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?, pullToRefresh: PullToRefreshConfig) {
     val listState = rememberLazyListState()
@@ -171,7 +166,6 @@ private fun Navigation(state: EarnInfoUM, isChipsPinned: Boolean, modifier: Modi
     )
 }
 
-/** Stays under the navigation while the pulled content slides away, so the glass keeps a backdrop. */
 @Composable
 private fun HazeBackdrop() {
     Box(

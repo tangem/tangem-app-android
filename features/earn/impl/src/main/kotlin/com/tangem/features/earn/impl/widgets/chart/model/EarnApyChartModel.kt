@@ -84,7 +84,6 @@ internal class EarnApyChartModel @Inject constructor(
         }.saveIn(loadJobHolder)
     }
 
-    /** A load in flight brings fresh data, and a failed reload would leave a loading chart loading forever. */
     private fun reloadHistory() {
         if (uiState.value.isLoading) return
 
