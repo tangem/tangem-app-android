@@ -17,13 +17,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.res.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetTexts
 import com.tangem.features.earn.impl.incentive.ui.state.EarnIncentiveSheetUM
 
 @Composable
@@ -97,9 +98,9 @@ private fun EarnIncentiveSheetContentPreview() {
         ) {
             EarnIncentiveSheetContent(
                 state = EarnIncentiveSheetUM(
-                    title = EarnIncentiveSheetTexts.title,
-                    footerTitle = EarnIncentiveSheetTexts.poweredByTitle,
-                    footerDescription = EarnIncentiveSheetTexts.poweredByDescription,
+                    title = resourceReference(R.string.yield_module_incentive_chart_sheet_title),
+                    footerTitle = resourceReference(R.string.yield_module_incentive_chart_powered_by_title),
+                    footerDescription = resourceReference(R.string.yield_module_incentive_chart_powered_by_description),
                     onDismiss = {},
                 ),
                 chart = {
