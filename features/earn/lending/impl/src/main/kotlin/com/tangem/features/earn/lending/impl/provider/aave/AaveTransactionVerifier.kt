@@ -145,6 +145,17 @@ internal class AaveTransactionVerifier @Inject constructor() {
         addresses: AaveVerifiedAddresses,
         read: AaveModuleRead,
     ) {
+        when (read.toState()) {
+            AaveModuleState.ReadFailed,
+            AaveModuleState.UpgradeUnavailable,
+            -> raise(unverified("Module is not ready for a withdrawal"))
+            AaveModuleState.NotDeployed,
+            is AaveModuleState.StatusUnknown,
+            is AaveModuleState.NeedsInit,
+            is AaveModuleState.NeedsReactivation,
+            is AaveModuleState.Ready,
+            -> Unit
+        }
         ensure(txs.size == 1) { unverified("Unexpected number of transactions: ${txs.size}") }
         val tx = txs.single()
         ensure(tx.isSentTo(addresses.moduleAddress, addresses.networkId)) {

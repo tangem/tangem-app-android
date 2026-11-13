@@ -363,6 +363,20 @@ internal class AaveTransactionVerifierTest {
             read = outdated,
             reason = "Module upgrade is missing",
         ),
+        invalid(
+            name = "withdraw when the module cannot be upgraded",
+            txs = listOf(withdraw(exit)),
+            expected = withdrawOf(isEntire = true),
+            read = read(YieldModuleVersionStatus.UpgradeUnavailable(OLD), readyStatus),
+            reason = "Module is not ready for a withdrawal",
+        ),
+        invalid(
+            name = "withdraw when the module version is unknown",
+            txs = listOf(withdraw(withdrawNative(WITHDRAW))),
+            expected = withdrawOf(isEntire = false),
+            read = read(YieldModuleVersionStatus.Indeterminate(reason = "rpc"), readyStatus),
+            reason = "Module is not ready for a withdrawal",
+        ),
     )
 
     private companion object {
