@@ -35,9 +35,9 @@ import javax.inject.Inject
 private const val AGENT_LOOKUP_TIMEOUT_MILLIS = 3_000L
 
 /**
- * Reads the exchange intent as the selected wallet, offers it to the owner and hands it over to the Swap screen that
+ * Reads the exchange intent as the requested wallet, offers it to the owner and hands it over to the Swap screen that
  * carries it out. Processed and unavailable intents keep a status sheet open until dismissed; only network failures
- * and timeouts offer retry. Without a selected wallet, the queue slot is released without showing a sheet.
+ * and timeouts offer retry. Without a requested or selected wallet, the queue slot is released without showing a sheet.
  */
 @Suppress("LongParameterList")
 @ModelScoped
@@ -90,7 +90,7 @@ internal class ExchangeIntentModel @Inject constructor(
     }
 
     private suspend fun loadIntent() {
-        val walletId = userWalletsListRepository.selectedUserWalletSync()?.walletId
+        val walletId = params.walletId ?: userWalletsListRepository.selectedUserWalletSync()?.walletId
             ?: return closeWithoutSheet(reason = "no wallet is selected")
 
         val intent = getExchangeIntentUseCase(userWalletId = walletId, intentId = params.intentId)

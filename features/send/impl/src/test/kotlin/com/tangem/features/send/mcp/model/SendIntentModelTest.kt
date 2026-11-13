@@ -125,6 +125,29 @@ internal class SendIntentModelTest {
     }
 
     @Test
+    fun `GIVEN history wallet differs from selected WHEN proceeding THEN send uses the history wallet`() = runTest {
+        // Arrange
+        val historyWalletId = UserWalletId("aabbcc")
+        coEvery { sourceResolver.resolve(historyWalletId, any()) } returns
+            SendIntentSource.Found(accountId = mockk<AccountId>(), status = usdtStatus)
+        val model = createModel(testScope = this, requestedWalletId = historyWalletId)
+        advanceUntilIdle()
+
+        // Act
+        model.shownOffer().primaryButton.onClick()
+
+        // Assert
+        val expected = sendRouteConverter.convert(
+            SendIntentSendRouteConverter.Input(intent = intent, userWalletId = historyWalletId, currency = usdt),
+        ).getOrNull()
+        assertThat(expected).isNotNull()
+        assertThat(rootStack).containsExactly(expected)
+        coVerify(exactly = 1) { sourceResolver.resolve(historyWalletId, intent) }
+        coVerify(exactly = 0) { userWalletsListRepository.selectedUserWalletSync() }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN source resolution in flight WHEN model created THEN nothing is shown yet`() = runTest {
         // Arrange
         val response = CompletableDeferred<SendIntentSource?>()
@@ -810,7 +833,10 @@ internal class SendIntentModelTest {
         SendIntentSendRouteConverter.Input(intent = intent, userWalletId = walletId, currency = usdt),
     ).getOrNull() ?: error("Expected a valid send route")
 
-    private fun createModel(testScope: TestScope): SendIntentModel = SendIntentModel(
+    private fun createModel(
+        testScope: TestScope,
+        requestedWalletId: UserWalletId? = null,
+    ): SendIntentModel = SendIntentModel(
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
         getSendIntentUseCase = getSendIntentUseCase,
@@ -822,7 +848,9 @@ internal class SendIntentModelTest {
         cantReachConverter = cantReachConverter,
         sendRouteConverter = sendRouteConverter,
         analyticsEventHandler = analyticsEventHandler,
-        paramsContainer = MutableParamsContainer(value = SendIntentComponent.Params(intentId = INTENT_ID)),
+        paramsContainer = MutableParamsContainer(
+            value = SendIntentComponent.Params(intentId = INTENT_ID, walletId = requestedWalletId),
+        ),
     )
 
     private companion object {
