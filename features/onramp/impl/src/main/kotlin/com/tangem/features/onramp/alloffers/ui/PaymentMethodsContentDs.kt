@@ -26,6 +26,7 @@ import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -131,11 +132,16 @@ private fun PaymentMethodBodyDs(methodUM: AllOffersPaymentMethodUM, modifier: Mo
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 @Composable
 private fun PaymentMethodIconDs(method: OnrampPaymentMethod, modifier: Modifier = Modifier) {
+    val tileColor = if (method.hasThemedImages) {
+        TangemTheme.colors3.bg.transparent.primary
+    } else {
+        TangemColorPalette.Light1
+    }
     SubcomposeAsyncImage(
         modifier = modifier
             .size(40.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(TangemTheme.colors3.bg.transparent.primary)
+            .background(tileColor)
             .padding(10.dp)
             .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_ICON),
         model = ImageRequest.Builder(context = LocalContext.current)
