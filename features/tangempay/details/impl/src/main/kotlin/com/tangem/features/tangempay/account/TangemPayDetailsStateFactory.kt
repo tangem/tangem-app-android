@@ -24,6 +24,7 @@ import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.domain.models.tangempay.isAwaitingActivation
 import com.tangem.domain.models.tangempay.isFrozen
 import com.tangem.domain.models.tangempay.thumbnailUrl
+import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.common.canAddFunds
 import com.tangem.features.tangempay.common.hasWithdrawableAmount
@@ -134,6 +135,8 @@ internal class TangemPayDetailsStateFactory(
             messageBanner = (errorNotification ?: tiersNotification)?.let(::MessageBannerUM),
             cashbackBlockState = null,
             bankTransferOnrampBanner = createBankTransferOnrampBanner(status.virtualAccount),
+            kycAdditionalInfoBanner = MessageBannerUM(notificationFactory.createKycAdditionalInfoBannerState())
+                .takeIf { status.isKycAdditionalInfoActionRequired },
         )
     }
 

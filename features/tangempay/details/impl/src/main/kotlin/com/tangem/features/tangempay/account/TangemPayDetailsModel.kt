@@ -38,13 +38,18 @@ import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.tangempay.usecase.*
 import com.tangem.domain.tangempay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.account.cashback.withCashback
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.common.*
+import com.tangem.features.tangempay.common.kyc.KycAdditionalInfoNotice
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
@@ -84,6 +89,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val dismissVirtualAccountOrderFailureUseCase: DismissVirtualAccountOrderFailureUseCase,
     cashbackControllerFactory: TangemPayCashbackController.Factory,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model(),
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
@@ -136,8 +142,23 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val isInitialRouteHandled = MutableStateFlow(false)
 
+    private val kycAdditionalInfoNotice = KycAdditionalInfoNotice(
+        accountType = AccountType.PAYMENT,
+        analytics = analytics,
+        uiMessageSender = uiMessageSender,
+        onProvideInformation = ::openKyc,
+        onContactSupport = ::sendFeatureIsBetaSupportEmail,
+    )
+
     init {
-        analytics.send(TangemPayAnalyticsEvents.MainScreenOpened())
+        analytics.send(
+            TangemPayAnalyticsEvents.MainScreenOpened(
+                additionalVerificationNotice = NoticeState.of(
+                    isEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
+                    isRequired = isInitialKycAdditionalInfoRequired(),
+                ),
+            ),
+        )
 
         paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { status -> currentStatus.update { status } }
@@ -165,8 +186,26 @@ internal class TangemPayDetailsModel @Inject constructor(
                     }
                     else -> baseState.update { stateFactory.getLoadingState() }
                 }
+                handleKycAdditionalInfo(state)
             }
             .launchIn(modelScope)
+    }
+
+    private fun isInitialKycAdditionalInfoRequired(): Boolean =
+        (params.initialStatus.value as? PaymentAccountStatusValue.Loaded)?.isKycAdditionalInfoActionRequired == true
+
+    private fun handleKycAdditionalInfo(state: PaymentAccountStatusValue) {
+        val isRequired = when (state) {
+            is PaymentAccountStatusValue.Loaded -> state.isKycAdditionalInfoActionRequired
+            is PaymentAccountStatusValue.Deactivated,
+            is PaymentAccountStatusValue.Error.CardIssueFailed,
+            -> false
+            else -> return
+        }
+        kycAdditionalInfoNotice.onStatus(
+            isRequired = isRequired,
+            isPopupAllowed = params.initialRoute == TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+        )
     }
 
     private fun handleInitialRoute() {
@@ -282,6 +321,10 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onContactSupportClicked() {
         analytics.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
+        sendFeatureIsBetaSupportEmail()
+    }
+
+    private fun sendFeatureIsBetaSupportEmail() {
         val customerId = currentStatus.value.customerId ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase.invoke(
@@ -303,6 +346,14 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onBankTransferOnrampFailedBannerDismissed() {
         modelScope.launch { dismissVirtualAccountOrderFailureUseCase(userWalletId) }
+    }
+
+    override fun onProvideKycInformationClick() {
+        kycAdditionalInfoNotice.onBannerProvideInformationClick()
+    }
+
+    private fun openKyc() {
+        router.push(AppRoute.Kyc(userWalletId = userWalletId))
     }
 
     override fun onCardIssueFailedSupportClick() {

@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import kotlin.time.Duration
@@ -61,9 +62,12 @@ sealed class TangemPayAnalyticsEvents(
         params = entryParams(EntryChannel.DETAILS),
     )
 
-    class MainScreenOpened : TangemPayAnalyticsEvents(
+    class MainScreenOpened(additionalVerificationNotice: NoticeState?) : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Visa Main Screen Opened",
+        params = buildMap {
+            additionalVerificationNotice?.let { put("additional_verification_notice", it.value) }
+        },
     )
 
     class ReceiveFundsClicked : TangemPayAnalyticsEvents(

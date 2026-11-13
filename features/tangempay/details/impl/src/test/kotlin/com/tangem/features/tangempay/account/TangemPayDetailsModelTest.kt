@@ -6,10 +6,15 @@ import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.modal.TangemModalActionScope
 import com.tangem.core.ui.message.BottomSheetMessage
+import com.tangem.core.ui.message.ModalMessage
+import com.tangem.core.ui.message.modal.MessageModalUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -25,6 +30,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.model.CashbackDisplayMode
 import com.tangem.domain.tangempay.model.CashbackSummary
@@ -37,6 +43,16 @@ import com.tangem.domain.tangempay.usecase.GetCashbackSummaryUseCase
 import com.tangem.domain.tangempay.usecase.ObserveCashbackSummaryUseCase
 import com.tangem.domain.tangempay.usecase.SetCashbackDeactivationDismissedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.ContactSupportClicked
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.EntryPoint
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeShown
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.Placement
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.PopupShown
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.ProvideInformationClicked
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.Source
 import com.tangem.domain.tangempay.model.CardIssueOffers
 import com.tangem.domain.tangempay.model.Offer
 import com.tangem.domain.tangempay.model.Order
@@ -47,6 +63,7 @@ import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
@@ -104,6 +121,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
     private val getCustomerOffers: GetCustomerOffersUseCase = mockk(relaxed = true)
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository = mockk(relaxed = true)
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
     private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase = mockk()
     private val cashbackBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val cashbackControllerFactory = object : TangemPayCashbackController.Factory {
@@ -141,6 +159,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             findActiveBankOfframpOrderUseCase,
             cashbackBalanceHidingSettingsUseCase,
             dismissVirtualAccountOrderFailureUseCase,
+            paymentAccountStatusFetcher,
         )
         coEvery { findActiveBankOfframpOrderUseCase(any()) } returns null.right()
         cachedSummary.value = null
@@ -940,6 +959,289 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
         data = Offer.Data(specificationName = "spec", orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN),
     )
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class KycAdditionalInfo {
+
+        @ParameterizedTest
+        @MethodSource("provideMainScreenOpenedModels")
+        fun `GIVEN toggle and flag WHEN model created THEN main screen opened with matching notice param`(
+            model: MainScreenOpenedModel,
+        ) = runTest {
+            // Act
+            val detailsModel = createModel(
+                testScope = this,
+                statusValue = loadedStatus(isKycAdditionalInfoRequired = model.isKycAdditionalInfoRequired),
+                tangemPayFeatureToggles = featureToggles(isKycAdditionalInfoEnabled = model.isToggleEnabled),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(
+                    TangemPayAnalyticsEvents.MainScreenOpened(additionalVerificationNotice = model.expectedNotice),
+                )
+            }
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.MainScreenOpened>()) }
+            detailsModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN loaded status with flag WHEN model created THEN popup shown once and modal sent once`() = runTest {
+            // Act
+            val model = createModel(
+                testScope = this,
+                statusValue = loadedStatus(isKycAdditionalInfoRequired = true),
+                statusEmissions = 2,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(NoticeShown(AccountType.PAYMENT, Placement.ACCOUNT_BLOCK)) }
+            verify(exactly = 1) { analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY)) }
+            verify(exactly = 1) { uiMessageSender.send(ofType<ModalMessage>()) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @EnumSource(
+            value = TangemPayDetailsInitialRoute::class,
+            names = ["ACCOUNT_DETAILS"],
+            mode = EnumSource.Mode.EXCLUDE,
+        )
+        fun `GIVEN non-default initial route AND flag WHEN model created THEN notice shown but no popup`(
+            initialRoute: TangemPayDetailsInitialRoute,
+        ) = runTest {
+            // Act
+            val model = createModel(
+                testScope = this,
+                statusValue = loadedStatus(isKycAdditionalInfoRequired = true),
+                initialRoute = initialRoute,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(NoticeShown(AccountType.PAYMENT, Placement.ACCOUNT_BLOCK)) }
+            verify(exactly = 0) { analytics.send(ofType<PopupShown>()) }
+            verify(exactly = 0) { uiMessageSender.send(ofType<ModalMessage>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN flag while payment account issuing WHEN model created THEN no cdd notice popup or banner`() =
+            runTest {
+                // Act
+                val model = createModel(
+                    testScope = this,
+                    statusValue = loadedStatus(isKycAdditionalInfoRequired = true, isPaymentAccountIssuing = true),
+                )
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analytics.send(
+                        TangemPayAnalyticsEvents.MainScreenOpened(additionalVerificationNotice = NoticeState.NOT_SHOWN),
+                    )
+                }
+                verify(exactly = 0) { analytics.send(ofType<TangemPayKycAdditionalInfoAnalyticsEvents>()) }
+                verify(exactly = 0) { uiMessageSender.send(ofType<ModalMessage>()) }
+                assertThat(model.uiState.value.kycAdditionalInfoBanner).isNull()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN loaded status without flag WHEN model created THEN no cdd events`() = runTest {
+            // Act
+            val model = createModel(testScope = this, statusValue = loadedStatus(isKycAdditionalInfoRequired = false))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analytics.send(ofType<TangemPayKycAdditionalInfoAnalyticsEvents>()) }
+            verify(exactly = 0) { uiMessageSender.send(ofType<ModalMessage>()) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN flag shown WHEN intermediate status and flag again THEN popup reshown only after content status`(
+            model: IntermediateStatusModel,
+        ) = runTest {
+            // Arrange
+            val flagged = paymentStatus(loadedStatus(isKycAdditionalInfoRequired = true))
+            val statusFlow = MutableStateFlow(flagged)
+            val detailsModel = createModel(testScope = this, statusFlow = statusFlow)
+            advanceUntilIdle()
+
+            // Act
+            statusFlow.value = paymentStatus(model.intermediate)
+            advanceUntilIdle()
+            statusFlow.value = paymentStatus(loadedStatus(isKycAdditionalInfoRequired = true))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = model.expectedPopups) {
+                analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY))
+            }
+            verify(exactly = model.expectedPopups) { uiMessageSender.send(ofType<ModalMessage>()) }
+            detailsModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN flag WHEN banner provide information clicked THEN event sent and kyc route pushed`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this, statusValue = loadedStatus(isKycAdditionalInfoRequired = true))
+            advanceUntilIdle()
+            clearMocks(uiMessageSender)
+
+            // Act
+            model.onProvideKycInformationClick()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(
+                    ProvideInformationClicked(AccountType.PAYMENT, Source.ACCOUNT_BLOCK, EntryPoint.ACCOUNT_BLOCK),
+                )
+            }
+            verify(exactly = 1) { router.push(AppRoute.Kyc(userWalletId), any()) }
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN popup shown WHEN provide information clicked THEN kyc route pushed`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this, statusValue = loadedStatus(isKycAdditionalInfoRequired = true))
+            advanceUntilIdle()
+            val popup = capturePopup()
+
+            // Act
+            popup.buttons.single { it.variant == TangemButton.Variant.Primary }.onClick(TangemModalActionScope {})
+
+            // Assert
+            verify(exactly = 1) { router.push(AppRoute.Kyc(userWalletId), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN popup shown WHEN contact support clicked THEN only cdd event sent and beta feedback email sent`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    testScope = this,
+                    statusValue = loadedStatus(isKycAdditionalInfoRequired = true),
+                )
+                advanceUntilIdle()
+                val popup = capturePopup()
+
+                // Act
+                popup.buttons.single { it.variant == TangemButton.Variant.Secondary }
+                    .onClick(TangemModalActionScope {})
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    sendFeedbackEmailUseCase.invoke(
+                        type = FeedbackEmailType.TangemPay.FeatureIsBeta(
+                            walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
+                            customerId = "customer-id",
+                        ),
+                    )
+                }
+                verify(exactly = 0) { analytics.send(ofType<Basic.ButtonSupport>()) }
+                verify(exactly = 1) {
+                    analytics.send(ContactSupportClicked(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY))
+                }
+                verify(exactly = 0) { router.push(ofType<AppRoute.Kyc>(), any()) }
+                model.onDestroy()
+            }
+
+        private fun capturePopup(): MessageModalUM {
+            val message = slot<ModalMessage>()
+            verify { uiMessageSender.send(capture(message)) }
+            return message.captured.messageModalUM
+        }
+
+        private fun provideMainScreenOpenedModels() = listOf(
+            MainScreenOpenedModel(
+                isToggleEnabled = true,
+                isKycAdditionalInfoRequired = true,
+                expectedNotice = NoticeState.SHOWN,
+            ),
+            MainScreenOpenedModel(
+                isToggleEnabled = true,
+                isKycAdditionalInfoRequired = false,
+                expectedNotice = NoticeState.NOT_SHOWN,
+            ),
+            MainScreenOpenedModel(
+                isToggleEnabled = false,
+                isKycAdditionalInfoRequired = false,
+                expectedNotice = null,
+            ),
+        )
+
+        private fun provideTestModels() = listOf(
+            IntermediateStatusModel(
+                name = "loading keeps the flag",
+                intermediate = PaymentAccountStatusValue.Loading,
+                expectedPopups = 1,
+            ),
+            IntermediateStatusModel(
+                name = "unavailable keeps the flag",
+                intermediate = PaymentAccountStatusValue.Error.Unavailable,
+                expectedPopups = 1,
+            ),
+            IntermediateStatusModel(
+                name = "not synced keeps the flag",
+                intermediate = PaymentAccountStatusValue.Error.NotSynced,
+                expectedPopups = 1,
+            ),
+            IntermediateStatusModel(
+                name = "loaded without flag resets it",
+                intermediate = loadedStatus(isKycAdditionalInfoRequired = false),
+                expectedPopups = 2,
+            ),
+            IntermediateStatusModel(
+                name = "deactivated resets the flag",
+                intermediate = deactivatedStatus(id = "customer-id"),
+                expectedPopups = 2,
+            ),
+            IntermediateStatusModel(
+                name = "card issue failed resets the flag",
+                intermediate = cardIssueFailedStatus(),
+                expectedPopups = 2,
+            ),
+        )
+    }
+
+    internal data class MainScreenOpenedModel(
+        val isToggleEnabled: Boolean,
+        val isKycAdditionalInfoRequired: Boolean,
+        val expectedNotice: NoticeState?,
+    )
+
+    internal data class IntermediateStatusModel(
+        val name: String,
+        val intermediate: PaymentAccountStatusValue,
+        val expectedPopups: Int,
+    ) {
+        override fun toString(): String = name
+    }
+
+    @Test
+    fun `GIVEN model WHEN onStart THEN payment account status refreshed`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onStart()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(userWalletId) }
+        model.onDestroy()
+    }
+
     private fun createModel(
         testScope: TestScope,
         statusSource: StatusSource = StatusSource.ACTUAL,
@@ -953,6 +1255,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
         statusEmissions: Int = 1,
         statusFlow: Flow<AccountStatus.Payment>? = null,
         isBalanceHidden: Boolean = false,
+        tangemPayFeatureToggles: TangemPayFeatureToggles = featureToggles(isKycAdditionalInfoEnabled = true),
     ): TangemPayDetailsModel {
         val initialStatus = paymentStatus(
             value = statusValue ?: loadedStatus(
@@ -983,7 +1286,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             txHistoryUpdateListener = mockk(relaxed = true),
             tangemPayWithdrawRepository = tangemPayWithdrawRepository,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
-            paymentAccountStatusFetcher = mockk(relaxed = true),
+            paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             renewTangemPaySessionUseCase = mockk(relaxed = true),
             onboardingRepository = mockk(relaxed = true),
             getCustomerOffers = getCustomerOffers,
@@ -992,7 +1295,12 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             cashbackControllerFactory = cashbackControllerFactory,
             dismissVirtualAccountOrderFailureUseCase = dismissVirtualAccountOrderFailureUseCase,
             tangemPayCurrencyFactory = mockk(relaxed = true),
+            tangemPayFeatureToggles = tangemPayFeatureToggles,
         ).destroyAfterTest()
+    }
+
+    private fun featureToggles(isKycAdditionalInfoEnabled: Boolean): TangemPayFeatureToggles = mockk {
+        every { this@mockk.isKycAdditionalInfoEnabled } returns isKycAdditionalInfoEnabled
     }
 
     private fun bankOfframpOrder(id: String = "order-1"): Order = Order(
@@ -1053,8 +1361,12 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
         cardState: TangemPayCardState = TangemPayCardState.Active,
         planState: TangemPayTariffPlanState? = null,
         statusNetworks: List<PaymentNetworkStatus> = listOf(availableNetwork()),
+        isKycAdditionalInfoRequired: Boolean = false,
+        isPaymentAccountIssuing: Boolean = false,
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
         if (planState != null) every { tariffPlan } returns planState
+        every { this@mockk.isKycAdditionalInfoRequired } returns isKycAdditionalInfoRequired
+        every { this@mockk.isPaymentAccountIssuing } returns isPaymentAccountIssuing
         every { source } returns statusSource
         every { error } returns accountError
         every { customerId } returns "customer-id"
