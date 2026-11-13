@@ -10,6 +10,7 @@ import com.tangem.features.earn.impl.fake.FakeEarnSessionPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnSession
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
+import com.tangem.features.earn.product.api.product.EarnProductKey
 import com.tangem.features.earn.product.api.product.EarnProvider
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.session.EarnSession
@@ -18,7 +19,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import dagger.multibindings.StringKey
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.tangem.core.ui.R as CoreUiR
@@ -41,13 +41,13 @@ internal object TesterEarnSessionsModule {
 
     @Provides
     @IntoMap
-    @StringKey(TesterEarnProducts.LENDING_ID)
+    @EarnProductKey(TesterEarnProducts.LENDING_ID)
     fun provideLendingSession(settings: TesterEarnSessionSettings): EarnSession.Factory =
         EarnSession.Factory { createFakeEarnSession(FakeEarnSessionPreset.Lending, settings.behavior) }
 
     @Provides
     @IntoMap
-    @StringKey(TesterEarnProducts.VAULT_ID)
+    @EarnProductKey(TesterEarnProducts.VAULT_ID)
     fun provideVaultSession(settings: TesterEarnSessionSettings): EarnSession.Factory =
         EarnSession.Factory { createFakeEarnSession(FakeEarnSessionPreset.Vault, settings.behavior) }
 }

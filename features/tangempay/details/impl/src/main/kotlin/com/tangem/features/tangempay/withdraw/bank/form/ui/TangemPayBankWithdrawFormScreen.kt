@@ -121,6 +121,13 @@ private fun FormField(state: FieldUM) {
     when (state) {
         is FieldUM.Text -> TextField(state = state, modifier = modifier)
         is FieldUM.Selector -> SelectorField(state = state, modifier = modifier)
+        is FieldUM.Locked -> TextInput(
+            label = state.field.label,
+            value = state.value,
+            onValueChange = {},
+            modifier = modifier,
+            state = TextInputState.Disabled,
+        )
     }
 }
 
@@ -134,6 +141,7 @@ private fun TextField(state: FieldUM.Text, modifier: Modifier = Modifier) {
         modifier = modifier,
         state = inputState(error = state.error),
         placeholder = state.placeholder,
+        hint = state.helperText,
         keyboardOptions = state.keyboardOptions,
         keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         contentType = state.contentType,
@@ -194,6 +202,7 @@ private class FormPreviewProvider : PreviewParameterProvider<TangemPayBankWithdr
         TangemPayBankWithdrawFormPreviewData.personalWithError,
         TangemPayBankWithdrawFormPreviewData.personalFreeTextRegion,
         TangemPayBankWithdrawFormPreviewData.personalUsRegion,
+        TangemPayBankWithdrawFormPreviewData.speiWithProfileNames,
         TangemPayBankWithdrawFormPreviewData.businessBank,
     )
 }

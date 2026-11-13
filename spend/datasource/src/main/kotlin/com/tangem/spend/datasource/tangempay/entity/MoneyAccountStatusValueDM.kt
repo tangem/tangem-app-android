@@ -40,6 +40,7 @@ sealed interface MoneyAccountStatusValueDM {
         @SerialName("customer_id") val customerId: String,
         @SerialName("product_instance_id") val productInstanceId: String? = null,
         @SerialName("balance") val balance: BalanceDM?,
+        @SerialName("is_kyc_additional_info_required") val isKycAdditionalInfoRequired: Boolean = false,
     ) : MoneyAccountStatusValueDM
 
     @Serializable

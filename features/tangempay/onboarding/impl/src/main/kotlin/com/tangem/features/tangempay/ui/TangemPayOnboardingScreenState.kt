@@ -13,7 +13,6 @@ internal sealed class TangemPayOnboardingScreenState {
         override val onBack: () -> Unit,
         val onTermsClick: () -> Unit,
         val buttonConfig: ButtonConfig,
-        val isUnifiedOnboarding: Boolean,
     ) : TangemPayOnboardingScreenState() {
         data class ButtonConfig(val isLoading: Boolean, val onClick: () -> Unit)
     }

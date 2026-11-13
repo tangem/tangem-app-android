@@ -17,4 +17,5 @@ internal interface TangemPayDetailIntents {
     fun onCardIssueFailedBannerDismissed()
     fun onBankTransferOnrampFailedBannerDismissed()
     fun onRemoveAccount()
+    fun onProvideKycInformationClick()
 }

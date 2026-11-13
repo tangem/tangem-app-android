@@ -35,10 +35,6 @@ sealed interface PaymentAccountStatusValueDM {
     ) : PaymentAccountStatusValueDM
 
     @Serializable
-    @SerialName("issuing_card")
-    data object IssuingCard : PaymentAccountStatusValueDM
-
-    @Serializable
     @SerialName("active_account")
     data class ActiveAccount(
         @SerialName("customer_id") val customerId: String,
@@ -47,6 +43,7 @@ sealed interface PaymentAccountStatusValueDM {
         @SerialName("fiat_balance") val fiatBalance: FiatBalanceDM?,
         @SerialName("fiat_rate") val fiatRate: SerializedBigDecimal?,
         @SerialName("cards") val cards: List<TangemPayCard>,
+        @SerialName("is_kyc_additional_info_required") val isKycAdditionalInfoRequired: Boolean = false,
     ) : PaymentAccountStatusValueDM
 
     @Serializable

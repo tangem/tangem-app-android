@@ -77,7 +77,6 @@ internal fun TangemPayBankTransferOnrampDetailsScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             RequisitesCard(requisites = state.requisites)
-            state.referenceWarning?.let { warning -> SectionCaption(text = warning) }
             if (!state.fees.isEmpty) {
                 FeesSection(fees = state.fees)
             }
@@ -294,20 +293,13 @@ private fun previewState(
     minimumDeposit = minimumDeposit,
     dailyDepositLimit = dailyDepositLimit,
     tabs = tabs,
-    referenceWarning = null,
     onShareClick = {},
     onCloseClick = {},
 )
 
 private fun previewSpeiState() = TangemPayBankTransferOnrampDetailsScreenUM(
     tabs = previewTabs(selectedId = "MXN"),
-    requisites = persistentListOf(
-        previewRequisite(key = "CLABE", value = "646180157000000004"),
-        previewRequisite(key = "Reference", value = "TNG7K2Q9"),
-    ),
-    referenceWarning = stringReference(
-        "Include the reference in the transfer. Without it, the deposit may not be credited",
-    ),
+    requisites = persistentListOf(previewRequisite(key = "CLABE", value = "646180157000000004")),
     fees = TangemPayOnrampFeesUM.Content(
         rows = persistentListOf(
             TangemPayOnrampFeesUM.FeeRow(type = "SPEI", title = stringReference("SPEI"), value = "MX$10 + 1%"),
@@ -322,7 +314,7 @@ private fun previewSpeiState() = TangemPayBankTransferOnrampDetailsScreenUM(
             stringReference("Indicative rate. A deposit is credited at the rate on the day it arrives"),
         ),
     ),
-    minimumDeposit = stringReference("$2"),
+    minimumDeposit = stringReference("MX$38"),
     dailyDepositLimit = null,
     onShareClick = {},
     onCloseClick = {},

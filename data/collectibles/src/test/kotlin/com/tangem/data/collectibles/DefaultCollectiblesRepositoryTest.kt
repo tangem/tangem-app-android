@@ -489,7 +489,11 @@ internal class DefaultCollectiblesRepositoryTest {
                 httpError(code = model.httpCode, body = model.body)
 
             // Act
-            val actual = runCatching { repository.openPack(userWalletId, txId = "tx-id", includeAutoBuyback = false) }.exceptionOrNull()
+            val actual = runCatching { repository.openPack(
+                userWalletId,
+                txId = "tx-id",
+                includeAutoBuyback = false,
+            ) }.exceptionOrNull()
 
             // Assert
             assertThat(actual).isInstanceOf(model.expected)

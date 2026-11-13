@@ -87,6 +87,7 @@ internal fun TextInput(
     state: TextInputState = TextInputState.Default,
     isOptional: Boolean = false,
     placeholder: TextReference? = null,
+    hint: TextReference? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -103,6 +104,7 @@ internal fun TextInput(
         isOptional = isOptional,
         isDisabled = isDisabled,
         errorText = errorText,
+        hintText = hint?.resolveReference(),
         dividerColor = dividerColor(errorText = errorText, isFocused = isFocused),
         modifier = modifier,
     ) {
@@ -157,6 +159,7 @@ internal fun SelectorInput(
         isOptional = false,
         isDisabled = isDisabled,
         errorText = errorText,
+        hintText = null,
         dividerColor = dividerColor(errorText = errorText, isFocused = false),
         modifier = modifier
             .semantics {
@@ -196,6 +199,7 @@ private fun InputContainer(
     isOptional: Boolean,
     isDisabled: Boolean,
     errorText: String?,
+    hintText: String?,
     dividerColor: Color,
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
@@ -227,6 +231,13 @@ private fun InputContainer(
                 text = errorText,
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.status.error,
+            )
+        } else if (hintText != null) {
+            SpacerH(4.dp)
+            Text(
+                text = hintText,
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.tertiary,
             )
         }
     }
@@ -333,6 +344,14 @@ private fun TextInputPreview() {
                 onValueChange = {},
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = stringReference("Placeholder"),
+            )
+            TextInput(
+                label = stringReference("CLABE"),
+                value = "",
+                onValueChange = {},
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = stringReference("000000000000000000"),
+                hint = stringReference("18-digit account number of the recipient's bank in Mexico"),
             )
             TextInput(
                 label = stringReference("Address line 2"),

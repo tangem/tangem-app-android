@@ -11,9 +11,11 @@ import com.tangem.domain.tangempay.model.CustomerSummary.KycStatus
 import com.tangem.domain.tangempay.model.CustomerSummary.MoneyAccount
 import com.tangem.domain.tangempay.model.CustomerSummary.PaymentAccount
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -25,12 +27,17 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class IsTangemPayCustomerVerifiedUseCaseTest {
 
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
-    private val useCase = IsTangemPayCustomerVerifiedUseCase(getCustomerSummaryUseCase = getCustomerSummaryUseCase)
+    private val useCase = IsTangemPayCustomerVerifiedUseCase(
+        getCustomerSummaryUseCase = getCustomerSummaryUseCase,
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
+    )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getCustomerSummaryUseCase)
+        clearMocks(getCustomerSummaryUseCase, tangemPayFeatureToggles)
+        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
     }
 
     @ParameterizedTest

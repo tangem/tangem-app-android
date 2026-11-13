@@ -41,9 +41,11 @@ import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
 import com.tangem.features.onramp.main.entity.OnrampOfferUM
 import com.tangem.features.onramp.main.ui.TimingBlock
 import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 @Composable
 internal fun PaymentMethodsContent(methods: ImmutableList<AllOffersPaymentMethodUM>, notification: NotificationUM?) {
     Column(

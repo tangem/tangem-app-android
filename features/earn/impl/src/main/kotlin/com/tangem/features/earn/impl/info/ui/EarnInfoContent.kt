@@ -39,6 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
@@ -59,26 +61,26 @@ import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.picker.ui.PAGE_MARGIN
 import kotlinx.collections.immutable.ImmutableList
 
-/** The list is the haze source: the glass buttons of the overlays and the calculator's sheet blur it. */
 @Composable
-internal fun EarnInfoContent(state: EarnInfoUM?, chart: (@Composable () -> Unit)?, modifier: Modifier = Modifier) {
+internal fun EarnInfoContent(
+    state: EarnInfoUM?,
+    chart: (@Composable () -> Unit)?,
+    pullToRefresh: PullToRefreshConfig,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(TangemTheme.colors3.bg.primary),
     ) {
         if (state != null) {
-            EarnInfoPage(state = state, chart = chart)
+            EarnInfoPage(state = state, chart = chart, pullToRefresh = pullToRefresh)
         }
     }
 }
 
-/**
- * The chips float over the list, outside its haze source, so their glass pill has something to blur; a sticky header
- * would stick behind the navigation (Foundation's StickToTopPlacement places it at -beforeContentPadding).
- */
 @Composable
-private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?) {
+private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?, pullToRefresh: PullToRefreshConfig) {
     val listState = rememberLazyListState()
     var navigationHeightPx by remember { mutableIntStateOf(0) }
     var chipsHeightPx by remember { mutableIntStateOf(0) }
@@ -98,47 +100,43 @@ private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?) {
     val density = LocalDensity.current
 
     Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .hazeSourceTangem()
-                .background(TangemTheme.colors3.bg.primary),
-            contentPadding = with(density) {
-                PaddingValues(top = navigationHeightPx.toDp(), bottom = footerHeightPx.toDp())
-            },
+        HazeBackdrop()
+        TangemPullToRefreshSlidingContainer(
+            config = pullToRefresh,
+            indicatorOffset = with(density) { navigationHeightPx.toDp() },
         ) {
-            pageContent(
-                items = items,
-                state = state,
-                chart = chart,
-                chipsSpace = { ChipsSpace(heightPx = chipsHeightPx) },
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .hazeSourceTangem()
+                    .background(TangemTheme.colors3.bg.primary),
+                contentPadding = with(density) {
+                    PaddingValues(top = navigationHeightPx.toDp(), bottom = footerHeightPx.toDp())
+                },
+            ) {
+                pageContent(
+                    items = items,
+                    state = state,
+                    chart = chart,
+                    chipsSpace = { ChipsSpace(heightPx = chipsHeightPx) },
+                )
+            }
+            PinnedFade(isPinned = isChipsPinned, heightPx = navigationHeightPx + chipsHeightPx)
+            FloatingChips(
+                chips = chips,
+                listState = listState,
+                chipsIndex = chipsIndex,
+                navigationHeightPx = { navigationHeightPx },
+                onHeightChange = { chipsHeightPx = it },
             )
         }
-        PinnedFade(isPinned = isChipsPinned, heightPx = navigationHeightPx + chipsHeightPx)
-        FloatingChips(
-            chips = chips,
-            listState = listState,
-            chipsIndex = chipsIndex,
-            navigationHeightPx = { navigationHeightPx },
-            onHeightChange = { chipsHeightPx = it },
-        )
-        TangemTopNavigation(
-            title = state.title,
-            subtitle = state.subtitle,
-            contentAlign = TangemTopNavigation.ContentAlign.Center,
-            fadeEnabled = !isChipsPinned,
-            onBack = state.onClose,
-            onClose = state.onClose,
+        Navigation(
+            state = state,
+            isChipsPinned = isChipsPinned,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .onSizeChanged { navigationHeightPx = it.height }
-                .semantics {
-                    // The overlays follow the list in the tree: without this TalkBack reads them after the page
-                    isTraversalGroup = true
-                    @Suppress("MagicNumber")
-                    traversalIndex = -2f
-                },
+                .onSizeChanged { navigationHeightPx = it.height },
         )
         Footer(
             secondary = state.secondary,
@@ -148,6 +146,34 @@ private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?) {
                 .onSizeChanged { footerHeightPx = it.height },
         )
     }
+}
+
+@Composable
+private fun Navigation(state: EarnInfoUM, isChipsPinned: Boolean, modifier: Modifier = Modifier) {
+    TangemTopNavigation(
+        title = state.title,
+        subtitle = state.subtitle,
+        contentAlign = TangemTopNavigation.ContentAlign.Center,
+        fadeEnabled = !isChipsPinned,
+        onBack = state.onClose,
+        onClose = state.onClose,
+        modifier = modifier.semantics {
+            // The overlays follow the list in the tree: without this TalkBack reads them after the page
+            isTraversalGroup = true
+            @Suppress("MagicNumber")
+            traversalIndex = -2f
+        },
+    )
+}
+
+@Composable
+private fun HazeBackdrop() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .hazeSourceTangem(zIndex = -1f)
+            .background(TangemTheme.colors3.bg.primary),
+    )
 }
 
 private fun LazyListScope.pageContent(

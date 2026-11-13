@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.account
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.features.tangempay.awaitingDepositOrder
@@ -43,6 +44,25 @@ internal class TangemPayDetailsNotificationFactoryTest {
         button?.onClick?.invoke()
         verify(exactly = 1) { intents.onClickAddFunds() }
         verify(exactly = 0) { intents.onRenewSession() }
+    }
+
+    @Test
+    fun `GIVEN factory WHEN createKycAdditionalInfoBannerState THEN warning banner whose button opens kyc`() {
+        // Act
+        val state = factory.createKycAdditionalInfoBannerState()
+
+        // Assert
+        assertThat(state.copy(secondaryButton = null)).isEqualTo(
+            TangemMessageBanner.State(
+                title = resourceReference(R.string.tangempay_kyc_additional_info_title),
+                variant = TangemMessageBanner.Variant.Warning,
+                description = resourceReference(R.string.tangempay_kyc_additional_info_banner_description),
+            ),
+        )
+        val button = requireNotNull(state.secondaryButton)
+        assertThat(button.text).isEqualTo(resourceReference(R.string.tangempay_kyc_additional_info_button))
+        button.onClick()
+        verify(exactly = 1) { intents.onProvideKycInformationClick() }
     }
 
     @ParameterizedTest

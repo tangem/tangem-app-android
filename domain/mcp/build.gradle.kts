@@ -11,5 +11,7 @@ dependencies {
     api(deps.arrow.core)
     api(deps.kotlin.coroutines)
 
+    implementation(deps.hilt.core)
+
     testImplementation(projects.test.core)
 }

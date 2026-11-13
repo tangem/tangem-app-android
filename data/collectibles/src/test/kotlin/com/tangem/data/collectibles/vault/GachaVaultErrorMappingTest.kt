@@ -181,7 +181,10 @@ internal class GachaVaultErrorMappingTest {
                 ),
                 TangemErrorModel(
                     error = cardError,
-                    expected = CollectiblesAccountError.CardError(code = cardError.code, message = cardError.customMessage),
+                    expected = CollectiblesAccountError.CardError(
+                        code = cardError.code,
+                        message = cardError.customMessage,
+                    ),
                 ),
             )
         }

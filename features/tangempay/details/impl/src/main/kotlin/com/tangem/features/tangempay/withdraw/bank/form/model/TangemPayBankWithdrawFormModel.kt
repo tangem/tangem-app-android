@@ -60,7 +60,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         ),
     )
 
-    private val state = MutableStateFlow(FormState())
+    private val state = MutableStateFlow(FormState(locked = form.lockedValues))
 
     private val fieldsReportedAsFilled = mutableSetOf<BankWithdrawFormField>()
 
@@ -185,7 +185,10 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         // The field being typed in never blurs before Continue, so its fill is reported here instead.
         state.value.focusedField?.let(::reportFieldFilled)
         val values = currentValues()
-        val errors = BankWithdrawFormValidator.validateAll(fields = form.fields, values = values)
+        val errors = BankWithdrawFormValidator.validateAll(
+            fields = form.fields.filterNot(form.lockedValues::containsKey),
+            values = values,
+        )
         if (errors.isNotEmpty()) {
             state.update { it.copy(errors = errors, focusedField = null) }
         } else {

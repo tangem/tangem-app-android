@@ -30,7 +30,6 @@ interface TangemPayBankTransferOnrampDetailsComponent : ComposableContentCompone
         ACCOUNT_NUMBER,
         ROUTING_NUMBER,
         CLABE,
-        REFERENCE,
         BENEFICIARY_NAME,
         BENEFICIARY_ADDRESS,
         BANK_NAME,

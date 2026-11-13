@@ -60,7 +60,6 @@ dependencies {
     // endregion
 
     // region Project - Features
-    implementation(projects.domain.moneyAccount.models)
     // endregion
 
     // region Project - Common

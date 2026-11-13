@@ -201,7 +201,7 @@ internal class TangemPayBlockModelTest {
         assertThat(model.isVisible.value).isTrue()
 
         // Act
-        status.value = paymentStatus(mockk<PaymentAccountStatusValue.IssuingCard>())
+        status.value = paymentStatus(mockk<PaymentAccountStatusValue.Verified>())
         advanceUntilIdle()
 
         // Assert

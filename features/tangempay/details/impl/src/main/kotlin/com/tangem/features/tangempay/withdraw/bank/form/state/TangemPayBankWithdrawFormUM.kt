@@ -41,6 +41,7 @@ internal data class TangemPayBankWithdrawFormUM(
             override val value: String,
             override val placeholder: TextReference,
             override val error: TextReference?,
+            val helperText: TextReference?,
             val keyboardOptions: KeyboardOptions,
             val contentType: ContentType?,
             val onValueChange: (String) -> Unit,
@@ -54,5 +55,14 @@ internal data class TangemPayBankWithdrawFormUM(
             override val error: TextReference?,
             val onClick: () -> Unit,
         ) : FieldUM
+
+        data class Locked(
+            override val field: BankWithdrawFormField,
+            override val value: String,
+            override val placeholder: TextReference,
+        ) : FieldUM {
+
+            override val error: TextReference? get() = null
+        }
     }
 }

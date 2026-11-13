@@ -116,10 +116,10 @@ class IsAccountsModeEnabledUseCaseTest {
         }
 
         @Test
-        fun `returns true when payment account is IssuingCard`() = runTest {
+        fun `returns true when payment account is Verified`() = runTest {
             val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
             every { multiAccountListSupplier.invoke() } returns MutableStateFlow(listOf(list))
-            mockPaymentStatus(WALLET_ID_1, mockk<PaymentAccountStatusValue.IssuingCard>())
+            mockPaymentStatus(WALLET_ID_1, mockk<PaymentAccountStatusValue.Verified>())
 
             val actual = settledValue(createUseCase())
 

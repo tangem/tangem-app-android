@@ -33,7 +33,6 @@ import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -70,7 +69,6 @@ class WalletBalanceFetcher internal constructor(
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
-    private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : FlowFetcher<WalletBalanceFetcher.Params> {
@@ -94,7 +92,6 @@ class WalletBalanceFetcher internal constructor(
         moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
-        moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         collectiblesFeatureToggles: CollectiblesFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
@@ -115,7 +112,6 @@ class WalletBalanceFetcher internal constructor(
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = dispatchers,
     )
@@ -139,7 +135,6 @@ class WalletBalanceFetcher internal constructor(
         moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
-        moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         collectiblesFeatureToggles: CollectiblesFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
@@ -167,7 +162,6 @@ class WalletBalanceFetcher internal constructor(
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = dispatchers,
     )
@@ -252,10 +246,7 @@ class WalletBalanceFetcher internal constructor(
             }
 
             // Fetch Money account separately for the same reason as TangemPay
-            if (
-                fetchingSources.any { it is WalletFetchingSource.Money } &&
-                moneyAccountsFeatureToggles.isMoneyAccountsEnabled
-            ) {
+            if (fetchingSources.any { it is WalletFetchingSource.Money }) {
                 moneyAccountStatusFetcher.invoke(MoneyAccountStatusFetcher.Params(userWalletId))
             }
         }

@@ -12,10 +12,14 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.modal.TangemModalActionScope
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.ModalMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.modal.MessageModalUM
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -36,6 +40,16 @@ import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.ContactSupportClicked
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.EntryPoint
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeShown
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.Placement
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.PopupShown
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.ProvideInformationClicked
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.Source
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
@@ -46,6 +60,8 @@ import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
+import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.common.kyc.createKycAdditionalInfoBannerState
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -55,6 +71,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -98,6 +115,7 @@ internal class MoneyAccountDetailsModelTest {
     private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val isBalanceHiddenFlow = MutableStateFlow(false)
 
     @BeforeEach
@@ -105,9 +123,10 @@ internal class MoneyAccountDetailsModelTest {
         clearMocks(moneyAccountStatusSupplier, router, sendFeedbackEmailUseCase, urlOpener, analytics)
         clearMocks(getMoneyAccountBankCredentialsUseCase, moneyAccountStatusFetcher, txHistoryContentUpdateEmitter)
         clearMocks(renewTangemPaySessionUseCase, uiMessageSender, getBalanceHidingSettingsUseCase)
-        clearMocks(moneyAccountFeatureToggles, getExploreUrlUseCase)
+        clearMocks(moneyAccountFeatureToggles, getExploreUrlUseCase, tangemPayFeatureToggles)
         every { moneyAccountFeatureToggles.isMxnEnabled } returns false
         every { moneyAccountFeatureToggles.isYieldModeEnabled } returns false
+        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
         isBalanceHiddenFlow.value = false
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
         coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
@@ -493,6 +512,7 @@ internal class MoneyAccountDetailsModelTest {
                     accountState = MoneyAccountAnalyticsEvents.AccountState.ACTIVE,
                     balanceBand = null,
                     currency = null,
+                    additionalVerificationNotice = NoticeState.NOT_SHOWN,
                 ),
             ),
         )
@@ -596,6 +616,241 @@ internal class MoneyAccountDetailsModelTest {
                 expectedStatus = "unknown",
             ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class KycAdditionalInfo {
+
+        @ParameterizedTest
+        @MethodSource("provideScreenOpenedNoticeModels")
+        fun `GIVEN toggle and flag WHEN first loaded THEN screen opened with matching notice param`(
+            model: ScreenOpenedNoticeModel,
+        ) = runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns model.isToggleEnabled
+
+            // Act
+            val detailsModel = createModel(
+                activeAccount(balance = balance(), isKycAdditionalInfoRequired = model.isKycAdditionalInfoRequired),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(
+                    MoneyAccountAnalyticsEvents.AccountScreenOpened(
+                        accountState = MoneyAccountAnalyticsEvents.AccountState.ACTIVE,
+                        balanceBand = BalanceBand.OVER_10K,
+                        currency = "USD",
+                        additionalVerificationNotice = model.expectedNotice,
+                    ),
+                )
+            }
+            detailsModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN active account with flag WHEN loaded THEN banner state set, notice shown and popup shown once`() =
+            runTest {
+                // Arrange
+                val flagged = activeAccount(balance = balance(), isKycAdditionalInfoRequired = true)
+
+                // Act
+                val model = createModel(listOf(flagged, flagged).asFlow())
+                advanceUntilIdle()
+
+                // Assert
+                val expectedBanner = createKycAdditionalInfoBannerState {}
+                val actualBanner = model.uiState.value.kycAdditionalInfoBanner
+                assertThat(actualBanner?.copy(secondaryButton = null))
+                    .isEqualTo(expectedBanner.copy(secondaryButton = null))
+                assertThat(actualBanner?.secondaryButton?.text).isEqualTo(expectedBanner.secondaryButton?.text)
+                verify(exactly = 1) { analytics.send(PopupShown(AccountType.MONEY, EntryPoint.ACCOUNT_ENTRY)) }
+                verify(exactly = 1) { analytics.send(NoticeShown(AccountType.MONEY, Placement.ACCOUNT_BLOCK)) }
+                verify(exactly = 1) { uiMessageSender.send(ofType<ModalMessage>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN active account without flag WHEN loaded THEN no banner and no cdd events`() = runTest {
+            // Act
+            val model = createModel(activeAccount(balance = balance(), isKycAdditionalInfoRequired = false))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.kycAdditionalInfoBanner).isNull()
+            verify(exactly = 0) { analytics.send(ofType<TangemPayKycAdditionalInfoAnalyticsEvents>()) }
+            verify(exactly = 0) { uiMessageSender.send(ofType<ModalMessage>()) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideIntermediateStatusModels")
+        fun `GIVEN flag shown WHEN intermediate status and flag again THEN popup reshown only after account without flag`(
+            model: IntermediateStatusModel,
+        ) = runTest {
+            // Arrange
+            val statuses = MutableStateFlow<MoneyAccountStatusValue>(
+                activeAccount(balance = balance(), isKycAdditionalInfoRequired = true),
+            )
+            val detailsModel = createModel(statuses)
+            advanceUntilIdle()
+
+            // Act
+            statuses.value = model.intermediate
+            advanceUntilIdle()
+            statuses.value = activeAccount(balance = balance(), isKycAdditionalInfoRequired = true)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = model.expectedPopups) {
+                analytics.send(PopupShown(AccountType.MONEY, EntryPoint.ACCOUNT_ENTRY))
+            }
+            verify(exactly = model.expectedPopups) { uiMessageSender.send(ofType<ModalMessage>()) }
+            detailsModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN flag shown WHEN account without flag arrives THEN banner removed`() = runTest {
+            // Arrange
+            val statuses = MutableStateFlow<MoneyAccountStatusValue>(
+                activeAccount(balance = balance(), isKycAdditionalInfoRequired = true),
+            )
+            val model = createModel(statuses)
+            advanceUntilIdle()
+
+            // Act
+            statuses.value = activeAccount(balance = balance(), isKycAdditionalInfoRequired = false)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.kycAdditionalInfoBanner).isNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN flag WHEN banner provide information clicked THEN event sent and kyc route pushed`() = runTest {
+            // Arrange
+            val model = createModel(activeAccount(balance = balance(), isKycAdditionalInfoRequired = true))
+            advanceUntilIdle()
+            clearMocks(uiMessageSender)
+
+            // Act
+            requireNotNull(model.uiState.value.kycAdditionalInfoBanner?.secondaryButton).onClick()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(
+                    ProvideInformationClicked(AccountType.MONEY, Source.ACCOUNT_BLOCK, EntryPoint.ACCOUNT_BLOCK),
+                )
+            }
+            verify(exactly = 1) { router.push(AppRoute.Kyc(userWalletId), any()) }
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN popup shown WHEN provide information clicked THEN event sent and kyc route pushed`() = runTest {
+            // Arrange
+            val model = createModel(activeAccount(balance = balance(), isKycAdditionalInfoRequired = true))
+            advanceUntilIdle()
+            val popup = capturePopup()
+
+            // Act
+            popup.buttons.single { it.variant == TangemButton.Variant.Primary }.onClick(TangemModalActionScope {})
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(ProvideInformationClicked(AccountType.MONEY, Source.POPUP, EntryPoint.ACCOUNT_ENTRY))
+            }
+            verify(exactly = 1) { router.push(AppRoute.Kyc(userWalletId), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN popup shown WHEN contact support clicked THEN event sent and money account support email sent`() =
+            runTest {
+                // Arrange
+                val model = createModel(activeAccount(balance = balance(), isKycAdditionalInfoRequired = true))
+                advanceUntilIdle()
+                val popup = capturePopup()
+
+                // Act
+                popup.buttons.single { it.variant == TangemButton.Variant.Secondary }
+                    .onClick(TangemModalActionScope {})
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analytics.send(ContactSupportClicked(AccountType.MONEY, EntryPoint.ACCOUNT_ENTRY))
+                }
+                coVerify(exactly = 1) { sendFeedbackEmailUseCase(supportEmailType()) }
+                verify(exactly = 0) { router.push(ofType<AppRoute.Kyc>(), any()) }
+                model.onDestroy()
+            }
+
+        private fun capturePopup(): MessageModalUM {
+            val message = slot<ModalMessage>()
+            verify { uiMessageSender.send(capture(message)) }
+            return message.captured.messageModalUM
+        }
+
+        private fun provideScreenOpenedNoticeModels() = listOf(
+            ScreenOpenedNoticeModel(
+                name = "active account with flag -> notice shown",
+                isToggleEnabled = true,
+                isKycAdditionalInfoRequired = true,
+                expectedNotice = NoticeState.SHOWN,
+            ),
+            ScreenOpenedNoticeModel(
+                name = "active account without flag -> notice not shown",
+                isToggleEnabled = true,
+                isKycAdditionalInfoRequired = false,
+                expectedNotice = NoticeState.NOT_SHOWN,
+            ),
+            ScreenOpenedNoticeModel(
+                name = "toggle off -> no notice param",
+                isToggleEnabled = false,
+                isKycAdditionalInfoRequired = false,
+                expectedNotice = null,
+            ),
+        )
+
+        private fun provideIntermediateStatusModels() = listOf(
+            IntermediateStatusModel(
+                name = "account without flag resets it",
+                intermediate = activeAccount(balance = balance(), isKycAdditionalInfoRequired = false),
+                expectedPopups = 2,
+            ),
+            IntermediateStatusModel(
+                name = "unavailable keeps the flag",
+                intermediate = MoneyAccountStatusValue.Error.Unavailable,
+                expectedPopups = 1,
+            ),
+            IntermediateStatusModel(
+                name = "exposed device keeps the flag",
+                intermediate = MoneyAccountStatusValue.Error.ExposedDevice,
+                expectedPopups = 1,
+            ),
+        )
+    }
+
+    data class ScreenOpenedNoticeModel(
+        val name: String,
+        val isToggleEnabled: Boolean,
+        val isKycAdditionalInfoRequired: Boolean,
+        val expectedNotice: NoticeState?,
+    ) {
+        override fun toString(): String = name
+    }
+
+    data class IntermediateStatusModel(
+        val name: String,
+        val intermediate: MoneyAccountStatusValue,
+        val expectedPopups: Int,
+    ) {
+        override fun toString(): String = name
     }
 
     @Nested
@@ -866,6 +1121,54 @@ internal class MoneyAccountDetailsModelTest {
         }
 
         @Test
+        fun `GIVEN model created WHEN onStart THEN status refreshed once more after init refresh completes`() = runTest {
+            // Arrange
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+
+            // Act
+            model.onStart()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 2) { moneyAccountStatusFetcher(userWalletId) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN refresh in flight WHEN onStart THEN no second refresh`() = runTest {
+            // Arrange
+            coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Act
+            model.onStart()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN toggle off WHEN onStart THEN no extra refresh`() = runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns false
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Act
+            model.onStart()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN account not loaded WHEN pulled to refresh THEN status fetched without tx history reload`() = runTest {
             // Arrange
             val model = createModel(emptyFlow())
@@ -1113,6 +1416,7 @@ internal class MoneyAccountDetailsModelTest {
             txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
             renewTangemPaySessionUseCase = renewTangemPaySessionUseCase,
             uiMessageSender = uiMessageSender,
+            tangemPayFeatureToggles = tangemPayFeatureToggles,
         )
     }
 
@@ -1149,6 +1453,7 @@ internal class MoneyAccountDetailsModelTest {
             accountState = MoneyAccountAnalyticsEvents.AccountState.ACTIVE,
             balanceBand = expectedBand,
             currency = "USD",
+            additionalVerificationNotice = NoticeState.NOT_SHOWN,
         ),
     )
 
@@ -1173,6 +1478,7 @@ internal class MoneyAccountDetailsModelTest {
         balance: MoneyAccountStatusValue.Balance?,
         isBankOfframpAvailable: Boolean? = null,
         error: MoneyAccountStatusValue.Error? = null,
+        isKycAdditionalInfoRequired: Boolean = false,
     ) = MoneyAccountStatusValue.Account.Active(
         source = StatusSource.ACTUAL,
         cryptoCurrency = token,
@@ -1181,6 +1487,7 @@ internal class MoneyAccountDetailsModelTest {
         productInstanceId = PRODUCT_INSTANCE_ID,
         isBankOfframpAvailable = isBankOfframpAvailable,
         error = error,
+        isKycAdditionalInfoRequired = isKycAdditionalInfoRequired,
     )
 
     private fun balance(amount: BigDecimal = BigDecimal("25250.50")) = MoneyAccountStatusValue.Balance(

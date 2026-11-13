@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.amount.state.formatFiat
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
@@ -21,6 +22,7 @@ internal object TangemPayBankWithdrawSuccessUMFactory {
     fun create(draft: BankWithdrawDraft, shownAt: Long, onCloseClick: () -> Unit): TangemPayBankWithdrawSuccessUM {
         val details = draft.recipientDetails()
         val amount = draft.sentAmount()
+        val isSpei = details?.rail == BankRail.SPEI
         return TangemPayBankWithdrawSuccessUM(
             title = if (amount == null) {
                 resourceReference(R.string.common_sending)
@@ -32,11 +34,18 @@ internal object TangemPayBankWithdrawSuccessUMFactory {
             ),
             rows = listOfNotNull(
                 row(R.string.send_recipient, details?.beneficiary?.toFullName()),
-                row(R.string.tangempay_withdraw_bank_field_bank_name, details?.bankName),
-                row(R.string.tangempay_withdraw_bank_field_account_number, details?.accountNumber),
+                row(R.string.tangempay_withdraw_bank_field_bank_name, details?.bankName?.takeIf { !isSpei }),
+                row(accountNumberLabelRes(isSpei), details?.accountNumber),
             ).toImmutableList(),
             onCloseClick = onCloseClick,
         )
+    }
+
+    @StringRes
+    private fun accountNumberLabelRes(isSpei: Boolean): Int = if (isSpei) {
+        R.string.virtual_account_requisites_clabe
+    } else {
+        R.string.tangempay_withdraw_bank_field_account_number
     }
 
     private fun row(@StringRes labelRes: Int, value: String?): RowUM? = value

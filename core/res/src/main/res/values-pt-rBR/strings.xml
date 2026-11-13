@@ -483,6 +483,7 @@
   <string name="common_decline">Recusar</string>
   <string name="common_default">Padrão</string>
   <string name="common_delete">Excluir</string>
+  <string name="common_depositing">Depositando</string>
   <string name="common_disable">Desativar</string>
   <string name="common_disabled">Desabilitado</string>
   <string name="common_disabling">Desativar</string>
@@ -1641,6 +1642,10 @@
   <string name="mcp_intent_proceed">Continuar</string>
   <string name="mcp_intent_processed_title">Esta solicitação já foi processada</string>
   <string name="mcp_intent_unknown_agent_name">IA</string>
+  <string name="mcp_intents_history_status_new">Novo</string>
+  <string name="mcp_intents_history_status_viewed">Visualizado</string>
+  <string name="mcp_intents_history_title">Histórico de intenções</string>
+  <string name="mcp_intents_history_yesterday">Ontem</string>
   <string name="mcp_send_intent_cant_reach_title">Não foi possível acessar a solicitação</string>
   <string name="mcp_send_intent_offer_description">O agente está solicitando o envio de fundos da sua conta. Você poderá revisar os detalhes na próxima etapa.</string>
   <string name="mcp_send_intent_offer_title">O agente %1$s quer enviar %2$s</string>
@@ -2079,6 +2084,7 @@
   <string name="prediction_main_total_balance">Saldo Total</string>
   <string name="prediction_main_withdraw">Sacar</string>
   <string name="prediction_match_card_exact_score">Placar exato</string>
+  <string name="prediction_match_card_first_to_score">Primeira equipe a marcar</string>
   <string name="prediction_match_card_team_totals">Totais de %s</string>
   <string name="prediction_match_next_line">Próxima opção</string>
   <string name="prediction_match_over_short">O</string>
@@ -2232,6 +2238,16 @@
   <string name="prediction_search_initial_subtitle">Pesquise eventos ou suas previsões</string>
   <string name="prediction_search_initial_title">Comece a digitar para pesquisar</string>
   <string name="prediction_search_results_title">Resultados da pesquisa</string>
+  <string name="prediction_session_key_activate_session_key">Ativar chave de sessão</string>
+  <string name="prediction_session_key_faq_can_text">Envie ordens de compra e venda instantaneamente, sem precisar aproximar seu cartão ou Anel Tangem. Isso é ideal para esportes ao vivo, e-sports e mercados de criptomoedas com negociações rápidas, nos quais você precisa de agilidade para enviar uma ordem.</string>
+  <string name="prediction_session_key_faq_cant_text">Movimente seu dinheiro. Os depósitos e saques sempre exigem uma aproximação do seu cartão Tangem ou Anel Tangem.</string>
+  <string name="prediction_session_key_faq_cant_title">O que ele não pode fazer?</string>
+  <string name="prediction_session_key_faq_control_text">Consulte todas as chaves de sessão ativas (uma por dispositivo) e revogue qualquer uma delas aproximando seu cartão Tangem. Desative o recurso neste celular e todas as ordens voltarão a exigir uma aproximação do cartão.</string>
+  <string name="prediction_session_key_faq_control_title">Você está no controle</string>
+  <string name="prediction_session_key_onboarding_failed_text">Sua conta foi criada, mas não foi possível criar sua chave de sessão. Por favor, tente ativá-la novamente de forma manual.</string>
+  <string name="prediction_session_key_onboarding_failed_title">Falha na ativação do trading rápido</string>
+  <string name="prediction_session_key_onboarding_toggle">Ative o trading rápido por até 180 dias.</string>
+  <string name="prediction_session_key_review">Revisar</string>
   <string name="prediction_session_key_revoke_confirm_text">As ordens assinadas no dispositivo %s deixam de funcionar imediatamente. Você poderá ativar novamente o trading rápido nesse dispositivo mais tarde.</string>
   <string name="prediction_session_key_revoke_confirm_title">Revogar o trading rápido?</string>
   <string name="prediction_session_key_revoke_confirm_unknown_signer_text">As ordens assinadas por %s deixam de funcionar imediatamente</string>
@@ -2735,7 +2751,7 @@
   <string name="support_chat_share_logs_button">Anexar logs do aplicativo</string>
   <string name="support_chat_swap_prefilled_message">Dados da operação SWAP:\nDe: %1$s %2$s\nPara: %3$s %4$s\nPor %5$s - %6$s</string>
   <string name="support_selector_view_chat_button">Abra o chat</string>
-  <string name="support_selector_view_email_button">Abra o e-mail</string>
+  <string name="support_selector_view_email_button">Abrir e-mail</string>
   <string name="survey_demand_business_interest_question">Você tem interesse em serviços OTC para sua empresa?</string>
   <string name="survey_demand_button">Entre na lista de espera</string>
   <string name="survey_demand_current_solution_cash_exchange">Câmbio em dinheiro</string>
@@ -2955,7 +2971,7 @@
   <string name="tangempay_card_activation_attempts_exceeded_title">Você excedeu o número de tentativas de ativação</string>
   <string name="tangempay_card_activation_description">Digite os 4 últimos dígitos do número do seu cartão</string>
   <string name="tangempay_card_activation_error">Últimos dígitos inválidos. Tente novamente</string>
-  <string name="tangempay_card_activation_error_already_active">Este cartão já está ativo.</string>
+  <string name="tangempay_card_activation_error_already_active">Este cartão já está ativo</string>
   <string name="tangempay_card_activation_error_in_progress">A ativação já está em andamento. Por favor, aguarde.</string>
   <string name="tangempay_card_activation_error_not_physical">Este não é um cartão físico</string>
   <string name="tangempay_card_activation_error_not_ready">Este cartão ainda não está pronto para ser ativado. Tente novamente depois de recebê-lo.</string>
@@ -2964,13 +2980,13 @@
   <string name="tangempay_card_close_error_message">Tente novamente mais tarde ou entre em contato com o suporte</string>
   <string name="tangempay_card_close_error_title">Não foi possível encerrar o cartão</string>
   <string name="tangempay_card_close_last_card_disabled">Você não pode encerrar seu último cartão</string>
-  <string name="tangempay_card_closed_toast">Cartão ••%s encerrado</string>
-  <string name="tangempay_card_closed_toast_named">Cartão %s encerrado</string>
+  <string name="tangempay_card_closed_toast">O cartão %s foi encerrado</string>
+  <string name="tangempay_card_closed_toast_named">O cartão “%s” foi encerrado</string>
   <string name="tangempay_card_default_name">Cartão Tangem Pay 1</string>
   <string name="tangempay_card_delivery_activate_after_delivery_toast">Você poderá ativar seu cartão após a entrega</string>
   <string name="tangempay_card_delivery_banner_description">Ative-o quando chegar</string>
   <string name="tangempay_card_delivery_banner_description_many">Ative-os quando chegarem</string>
-  <string name="tangempay_card_delivery_banner_title">Seu cartão está a caminho para a entrega</string>
+  <string name="tangempay_card_delivery_banner_title">Seu cartão está a caminho</string>
   <string name="tangempay_card_delivery_banner_title_many">Seus cartões estão a caminho</string>
   <string name="tangempay_card_delivery_email_note">Você receberá as atualizações de entrega da transportadora por e-mail em %s</string>
   <string name="tangempay_card_delivery_got_card_button">Recebi meu cartão</string>
@@ -2982,6 +2998,7 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Tentativas demais. Tente novamente em 24 horas</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Não foi possível adicionar o cartão</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">O Google Wallet não está disponível. Verifique as configurações do sistema</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Cartão adicionado ao Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancele %1$s, mude para %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Para pagar a mensalidade do plano e começar a usar o novo cartão</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Recarregue sua conta no valor de %1$s</string>
@@ -2999,7 +3016,7 @@
   <string name="tangempay_card_details_name_on_card">Nome do titular do cartão</string>
   <string name="tangempay_card_details_open_wallet_button">Abra a Carteira do Google</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Configure o Tangem Pay em poucos toques e comece a pagar com o Google Pay.</string>
-  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Configure o Tangem Pay em poucos toques e comece a pagar com o Apple Pay.</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Configure o Tangem Pay em poucos toques e comece a pagar com o Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Adicione seu cartão ao Google Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title_apple">Adicione seu cartão ao Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_step_1">Abra a Carteira do Google</string>
@@ -3039,8 +3056,8 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">Definir um limite a partir de %s</string>
   <string name="tangempay_card_limit_setup_error_message">Não foi possível definir o limite. Tente novamente.</string>
   <string name="tangempay_card_page_activating_banner_title">Ativando seu cartão físico</string>
-  <string name="tangempay_card_page_closing_banner_description">Geralmente leva até 5 minutos</string>
-  <string name="tangempay_card_page_closing_banner_title">Fechando seu cartão</string>
+  <string name="tangempay_card_page_closing_banner_description">Pode levar até 5 minutos</string>
+  <string name="tangempay_card_page_closing_banner_title">Encerrando seu cartão</string>
   <string name="tangempay_card_page_daily_limit_change">Mudar</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Limite atual</string>
   <string name="tangempay_card_page_daily_limit_error_description">Não foi possível carregar seu limite diário. Tente novamente.</string>
@@ -3172,8 +3189,8 @@
   <string name="tangempay_kyc_in_progress_popup_description">Os documentos geralmente são verificados automaticamente em até 5 minutos. Em casos raros, se for necessária uma revisão manual, esse processo pode levar até 48 horas.</string>
   <string name="tangempay_kyc_rejected">Rejeitado</string>
   <string name="tangempay_kyc_rejected_button_text">Ocultar status</string>
-  <string name="tangempay_kyc_rejected_description">Desculpe, não foi possível verificar.</string>
-  <string name="tangempay_kyc_rejected_description_span">Seu perfil.</string>
+  <string name="tangempay_kyc_rejected_description">Desculpe, não foi possível verificar</string>
+  <string name="tangempay_kyc_rejected_description_span">seu perfil</string>
   <string name="tangempay_main_select_plan">Selecionar plano</string>
   <string name="tangempay_maximum_cards_issued_description">Encerre um cartão para adicionar um novo</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Atualize seu plano para ter mais cartões</string>
@@ -3534,6 +3551,7 @@
   <string name="transaction_history_claiming_incentive_rewards">Reivindicando recompensas de incentivo</string>
   <string name="transaction_history_claiming_reward">Reivindicar recompensa</string>
   <string name="transaction_history_contract_address">contrato: %s</string>
+  <string name="transaction_history_deposited">Depósito realizado</string>
   <string name="transaction_history_detail_page_amount_signed_value">%1$s %2$s %3$s</string>
   <string name="transaction_history_detail_page_amount_value">%1$s %2$s</string>
   <string name="transaction_history_disabling_yield_mode">Desativar o modo Yield</string>
@@ -3553,6 +3571,7 @@
   <string name="transaction_history_fee_sending_asset">Enviar %%image%%%s</string>
   <string name="transaction_history_from_inline_address">de: %%image%% %s</string>
   <string name="transaction_history_incentive_rewards_claimed">Recompensas de incentivo reivindicadas</string>
+  <string name="transaction_history_lending_provider">Empréstimo na Aave</string>
   <string name="transaction_history_multiple_addresses">Vários endereços</string>
   <string name="transaction_history_not_supported_description">O histórico de transações ainda não é suportado nesta blockchain. Mas não se preocupe, estamos trabalhando nisso! Enquanto isso, você pode conferir no explorador.</string>
   <string name="transaction_history_operation">Operação</string>
@@ -3562,6 +3581,7 @@
   <string name="transaction_history_staking_reward">Recompensa de staking</string>
   <string name="transaction_history_status_approve_failed">Falha na aprovação</string>
   <string name="transaction_history_status_claiming_rewards">Resgatando as recompensas</string>
+  <string name="transaction_history_status_deposit_failed">Falha no depósito</string>
   <string name="transaction_history_status_disabling_yield_mode_failed">Não foi possível desativar o modo de rendimento</string>
   <string name="transaction_history_status_enabling_yield_mode_failed">Não foi possível ativar o modo de rendimento</string>
   <string name="transaction_history_status_incentive_rewards_claim_failed">Não foi possível reivindicar as recompensas de incentivo</string>

@@ -10,6 +10,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.tangempay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,6 +26,7 @@ import javax.inject.Singleton
 @Singleton
 internal class PaymentAccountStatusValueDMConverter @Inject constructor(
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Converter<PaymentAccountStatusValue, PaymentAccountStatusValueDM?> {
 
     override fun convert(value: PaymentAccountStatusValue): PaymentAccountStatusValueDM? {
@@ -37,7 +39,6 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 kycStatus = value.kycStatus,
                 customerId = value.customerId,
             )
-            is PaymentAccountStatusValue.IssuingCard -> PaymentAccountStatusValueDM.IssuingCard
             is PaymentAccountStatusValue.Loaded -> PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
                 currencyCode = value.balance?.fiatBalance?.currency,
@@ -66,6 +67,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         cardType = card.cardType.name,
                     )
                 },
+                isKycAdditionalInfoRequired = value.isKycAdditionalInfoRequired,
             )
             is PaymentAccountStatusValue.Error.CardIssueFailed -> PaymentAccountStatusValueDM.CardIssueFailed(
                 customerId = value.customerId,
@@ -81,8 +83,6 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
             is PaymentAccountStatusValue.Verified,
-            is PaymentAccountStatusValue.AwaitingPlanSelection,
-            is PaymentAccountStatusValue.Inactive,
             is PaymentAccountStatusValue.Error.ExposedDevice,
             is PaymentAccountStatusValue.Error.Unavailable,
             is PaymentAccountStatusValue.Error.NotSynced,
@@ -96,9 +96,6 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValueDM.Empty -> PaymentAccountStatusValue.Empty
             is PaymentAccountStatusValueDM.NotCreated -> PaymentAccountStatusValue.NotCreated
             is PaymentAccountStatusValueDM.CardIssueFailed -> value.toDomain()
-            is PaymentAccountStatusValueDM.IssuingCard -> PaymentAccountStatusValue.IssuingCard(
-                source = StatusSource.CACHE,
-            )
             is PaymentAccountStatusValueDM.ActiveAccount -> PaymentAccountStatusValue.Loaded(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
@@ -135,6 +132,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 isBankOfframpAvailable = null,
                 tariffPlan = null,
                 isPaymentAccountIssuing = false,
+                isKycAdditionalInfoRequired = value.isKycAdditionalInfoRequiredWhenEnabled(),
             )
             is PaymentAccountStatusValueDM.KycRequired -> PaymentAccountStatusValue.KycRequired(
                 source = StatusSource.CACHE,
@@ -176,6 +174,9 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
 
     private fun PaymentAccountStatusValueDM.ActiveAccount.getBalance(): PaymentAccountStatusValue.Balance? =
         fiatBalance?.toDomain()?.let(PaymentAccountStatusValue::Balance)
+
+    private fun PaymentAccountStatusValueDM.ActiveAccount.isKycAdditionalInfoRequiredWhenEnabled(): Boolean =
+        isKycAdditionalInfoRequired && tangemPayFeatureToggles.isKycAdditionalInfoEnabled
 
     private fun PaymentAccountStatusValueDM.CardIssueFailed.toDomain() =
         PaymentAccountStatusValue.Error.CardIssueFailed(

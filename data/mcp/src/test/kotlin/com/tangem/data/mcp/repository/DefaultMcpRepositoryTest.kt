@@ -10,12 +10,19 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
+import com.tangem.domain.mcp.models.McpIntentHistoryItem
+import com.tangem.domain.mcp.models.McpIntentHistoryPage
+import com.tangem.domain.mcp.models.McpIntentStatus
+import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.data.mcp.api.McpApi
 import com.tangem.data.mcp.converter.McpClientConverter
 import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
+import com.tangem.data.mcp.api.models.response.McpIntentHistoryItemResponse
+import com.tangem.data.mcp.api.models.response.McpIntentHistoryMetaResponse
+import com.tangem.data.mcp.api.models.response.McpIntentHistoryResponse
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -463,6 +470,63 @@ internal class DefaultMcpRepositoryTest {
 
     private fun httpError(code: ApiResponseError.HttpException.Code) =
         ApiResponseError.HttpException(code = code, message = null, errorBody = null)
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetIntentHistory {
+
+        @Test
+        fun `GIVEN history page WHEN getIntentHistory THEN hex wallet id and one-based page are sent`() = runTest {
+            // Arrange
+            val walletId = UserWalletId("9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08")
+            coEvery { mcpApi.getIntentHistory(walletId.stringValue, page = 2, limit = 20) } returns ApiResponse.Success(
+                McpIntentHistoryResponse(
+                    items = listOf(
+                        McpIntentHistoryItemResponse(
+                            intentId = "intent-1",
+                            source = "transaction",
+                            type = "send",
+                            status = "CREATED",
+                            sessionId = SESSION_ID,
+                            createdAt = "2026-09-30T08:15:42.317Z",
+                        ),
+                    ),
+                    meta = McpIntentHistoryMetaResponse(total = 21, page = 2, limit = 20, hasNext = false),
+                ),
+            )
+
+            // Act
+            val actual = repository.getIntentHistory(walletId = walletId, page = 2, limit = 20)
+
+            // Assert
+            val expected = McpIntentHistoryPage(
+                items = listOf(
+                    McpIntentHistoryItem(
+                        intentId = "intent-1",
+                        source = McpRequest.Intent.Source.Transaction(McpRequest.Intent.Source.Transaction.Type.SEND),
+                        status = McpIntentStatus.Created,
+                        sessionId = SESSION_ID,
+                        createdAtMillis = 1_790_756_142_317L,
+                    ),
+                ),
+                nextPage = null,
+            )
+            assertThat(actual).isEqualTo(Either.Right(expected))
+            coVerify(exactly = 1) { mcpApi.getIntentHistory(walletId.stringValue, page = 2, limit = 20) }
+        }
+
+        @Test
+        fun `GIVEN api error WHEN getIntentHistory THEN the cause is passed through`() = runTest {
+            // Arrange
+            coEvery { mcpApi.getIntentHistory(any(), any(), any()) } returns apiError(NETWORK_ERROR)
+
+            // Act
+            val actual = repository.getIntentHistory(walletId = WALLET_ID, page = 1, limit = 20)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Left(NETWORK_ERROR))
+        }
+    }
 
     private companion object {
         const val USER_CODE = "WDJB-MJHT"

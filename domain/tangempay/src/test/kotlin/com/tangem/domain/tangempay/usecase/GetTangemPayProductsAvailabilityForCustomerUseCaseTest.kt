@@ -7,11 +7,9 @@ import com.tangem.domain.models.tangempay.TangemPayEligibility
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -20,17 +18,14 @@ import org.junit.jupiter.api.Test
 internal class GetTangemPayProductsAvailabilityForCustomerUseCaseTest {
 
     private val checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase = mockk()
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
 
     private val useCase = GetTangemPayProductsAvailabilityForCustomerUseCase(
         checkTangemPayEligibilityForCustomerUseCase = checkTangemPayEligibilityForCustomerUseCase,
-        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(checkTangemPayEligibilityForCustomerUseCase, moneyAccountFeatureToggles)
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
+        clearMocks(checkTangemPayEligibilityForCustomerUseCase)
     }
 
     @Test
@@ -69,24 +64,6 @@ internal class GetTangemPayProductsAvailabilityForCustomerUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(TangemPayApiError.Unspecified.left())
-    }
-
-    @Test
-    fun `GIVEN money accounts disabled WHEN invoke THEN banking account not checked`() = runTest {
-        // Arrange
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
-        coEvery {
-            checkTangemPayEligibilityForCustomerUseCase(USER_WALLET_ID, TangemPayProduct.PAYMENT_ACCOUNT)
-        } returns eligibility(isAvailable = true).right()
-
-        // Act
-        val actual = useCase(userWalletId = USER_WALLET_ID)
-
-        // Assert
-        assertThat(actual).isEqualTo(setOf(TangemPayProduct.PAYMENT_ACCOUNT).right())
-        coVerify(exactly = 0) {
-            checkTangemPayEligibilityForCustomerUseCase(USER_WALLET_ID, TangemPayProduct.BANKING_ACCOUNT)
-        }
     }
 
     private fun eligibility(isAvailable: Boolean) = TangemPayEligibility(

@@ -31,6 +31,7 @@ internal class MoneyAccountStatusValueTest {
         customerId = "customer",
         productInstanceId = "instance",
         error = null,
+        isKycAdditionalInfoRequired = false,
     )
 
     @Test

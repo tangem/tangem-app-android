@@ -118,6 +118,7 @@ object PolymarketSessionKeyAssessor {
             .values
             .filter { it.isSettledActiveAt(snapshot.now) }
             .mapTo(mutableSetOf()) { it.address }
+            .plus(listOfNotNull(snapshot.ownRecordListedWithOtherTerms(signers)?.address))
         return PolymarketSessionKeyReconciliation.Checked(
             foreignSigners = signers.filter { signer ->
                 isForeign(signer, newestRecords[signer.address.lowercase()], snapshot)
@@ -138,7 +139,7 @@ object PolymarketSessionKeyAssessor {
             PolymarketSessionKeyStatus.REVOKING,
             -> false
             PolymarketSessionKeyStatus.ACTIVE ->
-                record.isPastReadinessGraceAt(snapshot.now) && !signer.hasTermsOf(record)
+                record.isPastReadinessGraceAt(snapshot.now) && !signer.carriesTermsOf(record)
             PolymarketSessionKeyStatus.FAILED -> !record.address.equals(snapshot.localKeyAddress, ignoreCase = true)
             PolymarketSessionKeyStatus.REVOKED,
             PolymarketSessionKeyStatus.EXPIRED,
@@ -147,11 +148,13 @@ object PolymarketSessionKeyAssessor {
         }
     }
 
-    private fun PolymarketSessionSigner.hasTermsOf(record: PolymarketSessionKey): Boolean {
-        return scopes.normalized() == record.scopes.normalized() && validUntil == record.validUntil
+    private fun PolymarketSessionKeySnapshot.ownRecordListedWithOtherTerms(
+        signers: List<PolymarketSessionSigner>,
+    ): PolymarketSessionKey? {
+        val own = ownRecord()?.takeIf { it.isSettledActiveAt(now) } ?: return null
+        val listings = signers.filter { signer -> signer.address.equals(own.address, ignoreCase = true) }
+        return own.takeIf { listings.isNotEmpty() && listings.none { listing -> listing.carriesTermsOf(own) } }
     }
-
-    private fun List<String>.normalized(): Set<String> = mapTo(mutableSetOf()) { it.uppercase() }
 
     private fun PolymarketSessionKey.isSettledActiveAt(now: Instant): Boolean =
         status == PolymarketSessionKeyStatus.ACTIVE && !isExpiredAt(now) && isPastReadinessGraceAt(now)

@@ -19,4 +19,7 @@ internal class DefaultTangemPayFeatureToggles(
 
     override val isOrderFrameworkEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15342_ORDER_FRAMEWORK_ENABLED)
+
+    override val isKycAdditionalInfoEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1329_KYC_ADDITIONAL_INFO_ENABLED)
 }

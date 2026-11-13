@@ -80,6 +80,7 @@ internal class EarnInfoComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val pullToRefresh by model.pullToRefresh.collectAsStateWithLifecycle()
         val chart = chartSlot.subscribeAsState().value.child?.instance
         val calculatorSheet = calculatorSheetSlot.subscribeAsState().value.child?.instance
 
@@ -87,6 +88,7 @@ internal class EarnInfoComponent @AssistedInject constructor(
             EarnInfoContent(
                 state = state,
                 chart = chart?.let { component -> { component.Content(modifier = Modifier) } },
+                pullToRefresh = pullToRefresh,
                 modifier = Modifier.fillMaxSize(),
             )
 

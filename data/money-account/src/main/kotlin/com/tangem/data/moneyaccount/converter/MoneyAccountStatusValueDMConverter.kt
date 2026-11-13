@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue.Onboarding.Activ
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
 import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM.Activating.StepDM as ActivatingStepDM
 import com.tangem.utils.converter.Converter
@@ -15,6 +16,7 @@ import javax.inject.Singleton
 @Singleton
 internal class MoneyAccountStatusValueDMConverter @Inject constructor(
     private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Converter<MoneyAccountStatusValue, MoneyAccountStatusValueDM?> {
 
     override fun convert(value: MoneyAccountStatusValue): MoneyAccountStatusValueDM? {
@@ -31,6 +33,7 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
                 customerId = value.customerId,
                 productInstanceId = value.productInstanceId,
                 balance = value.balance?.toDM(),
+                isKycAdditionalInfoRequired = value.isKycAdditionalInfoRequired,
             )
             is MoneyAccountStatusValue.Error.ExposedDevice,
             is MoneyAccountStatusValue.Error.Unavailable,
@@ -59,11 +62,15 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
                     customerId = value.customerId,
                     productInstanceId = productInstanceId,
                     error = null,
+                    isKycAdditionalInfoRequired = value.isKycAdditionalInfoRequiredWhenEnabled(),
                 )
             } ?: MoneyAccountStatusValue.Error.Unavailable
             null -> MoneyAccountStatusValue.Error.Unavailable
         }
     }
+
+    private fun MoneyAccountStatusValueDM.ActiveAccount.isKycAdditionalInfoRequiredWhenEnabled(): Boolean =
+        isKycAdditionalInfoRequired && tangemPayFeatureToggles.isKycAdditionalInfoEnabled
 
     private fun ActivatingStep.toDM(): ActivatingStepDM {
         return when (this) {

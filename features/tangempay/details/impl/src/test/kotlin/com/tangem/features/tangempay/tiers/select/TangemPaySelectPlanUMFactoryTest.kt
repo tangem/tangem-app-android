@@ -111,7 +111,6 @@ internal class TangemPaySelectPlanUMFactoryTest {
 
         private fun provideTestModels() = listOf(
             IconModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan, hasIcon = false),
-            IconModel(mode = TangemPaySelectPlanComponent.Mode.TiersOnboarding, hasIcon = false),
             IconModel(
                 mode = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
                     availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT),

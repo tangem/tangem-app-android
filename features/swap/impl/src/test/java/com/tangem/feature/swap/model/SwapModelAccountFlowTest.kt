@@ -2455,6 +2455,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             customerId = "customer",
             productInstanceId = "instance",
             error = null,
+            isKycAdditionalInfoRequired = false,
         )
 
     private fun stubResolvedAccountPair(

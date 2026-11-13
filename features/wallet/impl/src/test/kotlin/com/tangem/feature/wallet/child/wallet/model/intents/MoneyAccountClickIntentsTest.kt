@@ -10,11 +10,15 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
+import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import io.mockk.clearMocks
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -28,12 +32,20 @@ internal class MoneyAccountClickIntentsTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxUnitFun = true)
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
+    private val tangemPayAnalyticsEventSender: WalletTangemPayAnalyticsEventSender = mockk(relaxUnitFun = true)
+    private val router: InnerWalletRouter = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId(stringValue = "0123456789ABCDEF")
 
     @BeforeEach
     fun setUp() {
-        clearMocks(uiMessageSender, sendFeedbackEmailUseCase, analyticsEventHandler)
+        clearMocks(
+            uiMessageSender,
+            sendFeedbackEmailUseCase,
+            analyticsEventHandler,
+            tangemPayAnalyticsEventSender,
+            router,
+        )
     }
 
     @Test
@@ -89,13 +101,26 @@ internal class MoneyAccountClickIntentsTest {
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
+    @Test
+    fun `GIVEN money account row WHEN clicked THEN account opening reported and details opened`() = runTest {
+        // Act
+        createImplementor(scope = this).onMoneyAccountClicked(userWalletId = userWalletId)
+
+        // Assert
+        verifyOrder {
+            tangemPayAnalyticsEventSender.onAccountOpened(userWalletId = userWalletId, accountType = AccountType.MONEY)
+            router.openMoneyAccountDetails(userWalletId = userWalletId)
+        }
+    }
+
     private fun createImplementor(scope: TestScope): MoneyAccountClickIntentsImplementor {
         val implementor = MoneyAccountClickIntentsImplementor(
             uiMessageSender = uiMessageSender,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             analyticsEventHandler = analyticsEventHandler,
+            tangemPayAnalyticsEventSender = tangemPayAnalyticsEventSender,
         )
-        implementor.initialize(router = mockk(relaxed = true), coroutineScope = scope)
+        implementor.initialize(router = router, coroutineScope = scope)
 
         return implementor
     }

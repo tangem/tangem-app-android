@@ -30,10 +30,7 @@ sealed class PaymentAccountStatusValue {
                 TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
             }
             is Error,
-            is IssuingCard,
             is Verified,
-            is AwaitingPlanSelection,
-            is Inactive,
             is Empty,
             is NotCreated,
             is KycRequired,
@@ -52,15 +49,12 @@ sealed class PaymentAccountStatusValue {
     fun copySealed(source: StatusSource, error: Error? = null): PaymentAccountStatusValue {
         return when (this) {
             is Error.CardIssueFailed -> copy(source = source)
-            is IssuingCard -> copy(source = source)
             is Verified -> copy(source = source)
             is Loaded -> copy(source = source, error = error ?: this.error)
             is KycRequired -> copy(source = source)
             is UnderReview -> copy(source = source)
             is Deactivated -> copy(source = source, error = error ?: this.error)
             is Loading,
-            is AwaitingPlanSelection,
-            is Inactive,
             is Empty,
             is NotCreated,
             is Error,
@@ -115,46 +109,12 @@ sealed class PaymentAccountStatusValue {
     ) : PaymentAccountStatusValue()
 
     /**
-     * Represents a state where the card for the payment account is being issued.
-     *
-     * @property source The source of the status information.
-     */
-    @Serializable
-    data class IssuingCard(override val source: StatusSource) : PaymentAccountStatusValue()
-
-    /**
      * Represents a state where KYC is approved and the customer has not chosen a product yet.
      *
      * @property source The source of the status information.
      */
     @Serializable
     data class Verified(@SerialName("source") override val source: StatusSource) : PaymentAccountStatusValue()
-
-    /**
-     * Represents a state where KYC is approved but no tariff plan has been selected yet
-     *
-     * @property source The source of the status information.
-     * @property tariffPlan Current tariff plan
-     */
-    @Serializable
-    data class AwaitingPlanSelection(
-        override val source: StatusSource,
-        val tariffPlan: TangemPayCustomerTariffPlan,
-    ) : PaymentAccountStatusValue()
-
-    /**
-     * Represents a state where a tariff plan has been selected and the card is being issued
-     *
-     * @property source The source of the status information.
-     * @property fiatBalance The fiat balance of state.
-     * @property tariffPlan Current tariff plan
-     */
-    @Serializable
-    data class Inactive(
-        override val source: StatusSource,
-        val fiatBalance: FiatBalance,
-        val tariffPlan: TangemPayTariffPlanState,
-    ) : PaymentAccountStatusValue()
 
     /**
      * Represents a state where the account is deactivated.
@@ -227,6 +187,8 @@ sealed class PaymentAccountStatusValue {
      *                      Transient: not persisted in the local cache.
      * @property isPaymentAccountIssuing Whether the payment account is still being issued.
      *                                   Transient: not persisted in the local cache.
+     * @property isKycAdditionalInfoRequired CDD/EDD: compliance requested additional KYC information from an
+     *                                       existing cardholder; the account stays accessible.
      */
     @Serializable
     data class Loaded(
@@ -243,6 +205,7 @@ sealed class PaymentAccountStatusValue {
         val isBankOfframpAvailable: Boolean?,
         val tariffPlan: TangemPayTariffPlanState?,
         val isPaymentAccountIssuing: Boolean,
+        val isKycAdditionalInfoRequired: Boolean,
     ) : PaymentAccountStatusValue() {
 
         /**
@@ -333,7 +296,6 @@ val PaymentAccountStatusValue.tariffPlan: TangemPayCustomerTariffPlan?
     get() = when (val value = this) {
         is PaymentAccountStatusValue.Error.CardIssueFailed -> value.tariffPlan?.tariff
         is PaymentAccountStatusValue.Error,
-        is PaymentAccountStatusValue.IssuingCard,
         is PaymentAccountStatusValue.Verified,
         is PaymentAccountStatusValue.Empty,
         is PaymentAccountStatusValue.NotCreated,
@@ -342,8 +304,6 @@ val PaymentAccountStatusValue.tariffPlan: TangemPayCustomerTariffPlan?
         is PaymentAccountStatusValue.Loading,
         is PaymentAccountStatusValue.Deactivated,
         -> null
-        is PaymentAccountStatusValue.Inactive -> value.tariffPlan.tariff
-        is PaymentAccountStatusValue.AwaitingPlanSelection -> value.tariffPlan
         is PaymentAccountStatusValue.Loaded -> value.tariffPlan?.tariff
     }
 
@@ -363,10 +323,7 @@ val PaymentAccountStatusValue.isCreated: Boolean
         is PaymentAccountStatusValue.NotCreated,
         -> false
         is PaymentAccountStatusValue.Error,
-        is PaymentAccountStatusValue.IssuingCard,
         is PaymentAccountStatusValue.Verified,
-        is PaymentAccountStatusValue.AwaitingPlanSelection,
-        is PaymentAccountStatusValue.Inactive,
         is PaymentAccountStatusValue.Loaded,
         is PaymentAccountStatusValue.Loading,
         is PaymentAccountStatusValue.KycRequired,

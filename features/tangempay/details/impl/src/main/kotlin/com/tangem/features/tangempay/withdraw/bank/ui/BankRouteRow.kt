@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
@@ -35,7 +36,7 @@ internal fun BankRouteRow(
     rail: BankRail,
     title: TextReference,
     eta: TextReference,
-    fee: String,
+    fee: String?,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
@@ -70,15 +71,25 @@ internal fun BankRouteRow(
         ) {
             TangemBadge(text = eta, size = TangemBadge.Size.X6, maxLines = Int.MAX_VALUE)
         }
-        Text(
-            text = fee,
-            style = TangemTheme.typography3.body.medium,
-            color = TangemTheme.colors3.text.primary,
-        )
+        if (fee == null) {
+            BankWithdrawValueShimmer()
+        } else {
+            Text(
+                text = fee,
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.primary,
+            )
+        }
         if (onClick != null) {
             ChevronDownIcon()
         }
     }
+}
+
+/** A text-style shimmer fills the width it is given, and a hugging slot gives it none, so the size is fixed. */
+@Composable
+internal fun BankWithdrawValueShimmer(modifier: Modifier = Modifier) {
+    TangemShimmer(modifier = modifier.size(width = 56.dp, height = 16.dp), radius = 16.dp)
 }
 
 @Composable

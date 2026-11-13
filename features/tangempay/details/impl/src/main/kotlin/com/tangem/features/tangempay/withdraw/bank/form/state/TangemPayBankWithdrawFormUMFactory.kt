@@ -36,6 +36,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
         val isFilled = fields.all { field -> !values[field].isNullOrBlank() }
         // A saved account's address may have changed, so Continue next to its suggestion opens the fields to fill.
         val isRevealingFields = !isFilled && suggestions.isNotEmpty()
+        val lastEditableField = fields.lastOrNull { field -> field !in state.locked }
         return TangemPayBankWithdrawFormUM(
             header = BankWithdrawHeaderFactory.create(
                 draft = draft,
@@ -43,14 +44,18 @@ internal class TangemPayBankWithdrawFormUMFactory(
                 onCloseClick = callbacks.onCloseClick,
             ),
             fields = fields
-                .mapIndexed { index, field ->
-                    createField(
-                        field = field,
-                        values = values,
-                        displayNames = displayNames,
-                        error = state.errors[field]?.toText(),
-                        isLast = index == fields.lastIndex,
-                    )
+                .map { field ->
+                    if (field in state.locked) {
+                        FieldUM.Locked(field = field, value = values[field].orEmpty(), placeholder = field.placeholder)
+                    } else {
+                        createField(
+                            field = field,
+                            values = values,
+                            displayNames = displayNames,
+                            error = state.errors[field]?.toText(),
+                            isLast = field == lastEditableField,
+                        )
+                    }
                 }
                 .toImmutableList(),
             suggestions = suggestions,
@@ -93,6 +98,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
             value = values[field].orEmpty(),
             placeholder = field.placeholderIn(values),
             error = error,
+            helperText = field.helperText,
             keyboardOptions = KeyboardOptions(
                 capitalization = kind.capitalization,
                 keyboardType = kind.keyboardType,
@@ -118,6 +124,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
             resourceReference(R.string.tangempay_withdraw_bank_field_error_invalid_format)
         BankWithdrawFieldError.InvalidRoutingNumber ->
             resourceReference(R.string.tangempay_withdraw_bank_field_error_routing_number)
+        BankWithdrawFieldError.InvalidClabe -> resourceReference(R.string.tangempay_withdraw_bank_field_error_clabe)
         BankWithdrawFieldError.NonLatin -> resourceReference(R.string.tangempay_order_data_field_latin_only)
     }
 

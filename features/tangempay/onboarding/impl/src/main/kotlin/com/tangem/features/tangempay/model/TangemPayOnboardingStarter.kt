@@ -12,7 +12,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.CustomerOrderRequest
@@ -169,10 +168,7 @@ internal class TangemPayOnboardingStarter @Inject constructor(
             val isOrderCreated = createCampaignOrder(userWalletId, campaignKey, callbacks)
             if (!isOrderCreated) return
         }
-        val eligibility = AppRoute.TangemPayEligibility(
-            product = TangemPayProduct.PAYMENT_ACCOUNT,
-            userWalletId = userWalletId,
-        )
+        val eligibility = AppRoute.TangemPayEligibility(userWalletId = userWalletId)
         if (callbacks.shouldKeepBackStack) {
             router.replaceCurrent(eligibility)
         } else {

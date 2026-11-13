@@ -32,9 +32,8 @@ internal fun EarnProjectionBars(
     axisLabels: ImmutableList<TextReference>,
     modifier: Modifier = Modifier,
 ) {
-    val initialColor = TangemTheme.colors3.icon.tertiary
-    val totalColor = TangemTheme.colors3.icon.brand
-    val topUpColor = totalColor.copy(alpha = TOP_UP_ALPHA)
+    val depositedColor = TangemTheme.colors3.icon.tertiary
+    val earnedColor = TangemTheme.colors3.icon.brand
 
     Column(modifier = modifier.fillMaxWidth()) {
         Canvas(
@@ -52,7 +51,7 @@ internal fun EarnProjectionBars(
 
             bars.forEachIndexed { index, bar ->
                 var bottom = size.height
-                val layers = listOf(bar.initial to initialColor, bar.total to totalColor, bar.topUp to topUpColor)
+                val layers = listOf(bar.deposited to depositedColor, bar.earned to earnedColor)
 
                 layers.forEach { (share, color) ->
                     val layerHeight = share * layersHeight
@@ -86,8 +85,7 @@ internal fun EarnProjectionBars(
     }
 }
 
-private const val TOP_UP_ALPHA = 0.3f
-private const val LAYERS_COUNT = 3
+private const val LAYERS_COUNT = 2
 private val CHART_HEIGHT = 120.dp
 private val MAX_BAR_WIDTH = 6.dp
 private val LAYER_GAP = 2.dp
@@ -100,7 +98,7 @@ private fun EarnProjectionBarsPreview() {
         EarnProjectionBars(
             bars = List(PREVIEW_BARS) { index ->
                 val step = (index + 1).toFloat() / PREVIEW_BARS
-                EarnProjectionBarUM(initial = 0.1f, total = 0.8f * step, topUp = 0.1f)
+                EarnProjectionBarUM(deposited = 0.7f * step, earned = 0.2f * step)
             }.toImmutableList(),
             axisLabels = listOf(stringReference("1Y"), stringReference("2Y"), stringReference("3Y")).toImmutableList(),
             modifier = Modifier

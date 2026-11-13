@@ -9,6 +9,7 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
  * instead of a stale snapshot from construction time.
  */
 internal data class FormState(
+    val locked: Map<BankWithdrawFormField, String> = emptyMap(),
     val edits: Map<BankWithdrawFormField, String> = emptyMap(),
     val displayNameEdits: Map<BankWithdrawFormField, String> = emptyMap(),
     val errors: Map<BankWithdrawFormField, BankWithdrawFieldError> = emptyMap(),
@@ -17,7 +18,7 @@ internal data class FormState(
 
     /** The value shown for [field]: the user's own typing on this screen, or the draft's current value. */
     fun value(field: BankWithdrawFormField, draft: BankWithdrawDraft): String =
-        edits[field] ?: draft.newRecipient.fields[field].orEmpty()
+        locked[field] ?: edits[field] ?: draft.newRecipient.fields[field].orEmpty()
 
     /** [fields] resolved the same way as [value] — what Continue or Back would commit. */
     fun values(fields: List<BankWithdrawFormField>, draft: BankWithdrawDraft): Map<BankWithdrawFormField, String> =

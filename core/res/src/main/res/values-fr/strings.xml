@@ -2510,7 +2510,7 @@
   <string name="tangempay_card_activation_attempts_exceeded_title">Vous avez dépassé le nombre de tentatives d\'activation</string>
   <string name="tangempay_card_activation_description">Saisissez les 4 derniers chiffres du numéro de votre carte</string>
   <string name="tangempay_card_activation_error">Chiffres incorrects. Réessayez</string>
-  <string name="tangempay_card_activation_error_already_active">Cette carte est déjà active.</string>
+  <string name="tangempay_card_activation_error_already_active">Cette carte est déjà active</string>
   <string name="tangempay_card_activation_error_in_progress">L\'activation est déjà en cours. Veuillez patienter.</string>
   <string name="tangempay_card_activation_error_not_physical">Ce n\'est pas une carte physique</string>
   <string name="tangempay_card_activation_error_not_ready">Cette carte n\'est pas encore prête à être activée. Réessayez après l\'avoir reçue.</string>
@@ -2519,8 +2519,8 @@
   <string name="tangempay_card_close_error_message">Réessayez plus tard ou contactez l’assistance</string>
   <string name="tangempay_card_close_error_title">Impossible de clôturer la carte</string>
   <string name="tangempay_card_close_last_card_disabled">Vous ne pouvez pas clôturer votre dernière carte</string>
-  <string name="tangempay_card_closed_toast">Carte ••%s clôturée</string>
-  <string name="tangempay_card_closed_toast_named">Carte %s clôturée</string>
+  <string name="tangempay_card_closed_toast">La carte %s a été clôturée</string>
+  <string name="tangempay_card_closed_toast_named">La carte « %s » a été clôturée</string>
   <string name="tangempay_card_default_name">Carte Tangem Pay 1</string>
   <string name="tangempay_card_delivery_activate_after_delivery_toast">Vous pourrez activer votre carte après sa livraison</string>
   <string name="tangempay_card_delivery_banner_description">Activez-la à sa réception</string>
@@ -2537,6 +2537,7 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Trop de tentatives. Réessayez dans 24 heures</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Impossible d’ajouter la carte</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Google Wallet est indisponible. Vérifiez les paramètres système</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Carte ajoutée à Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Annuler %1$s, passer à %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Pour payer le forfait et activer la nouvelle carte</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Rechargez votre compte avant le %1$s</string>
@@ -2594,7 +2595,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">Définir une limite à partir de %s</string>
   <string name="tangempay_card_limit_setup_error_message">Impossible de définir la limite. Veuillez réessayer.</string>
   <string name="tangempay_card_page_activating_banner_title">Activation de votre carte physique</string>
-  <string name="tangempay_card_page_closing_banner_description">Prend généralement jusqu\'à 5 minutes</string>
+  <string name="tangempay_card_page_closing_banner_description">Peut prendre jusqu\'à 5 minutes</string>
   <string name="tangempay_card_page_closing_banner_title">Clôture de votre carte</string>
   <string name="tangempay_card_page_daily_limit_change">Modifier</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Limite actuelle</string>
@@ -2728,7 +2729,7 @@
   <string name="tangempay_kyc_rejected">Refusé</string>
   <string name="tangempay_kyc_rejected_button_text">Masquer le statut</string>
   <string name="tangempay_kyc_rejected_description">Désolé, nous n\'avons pas pu vérifier</string>
-  <string name="tangempay_kyc_rejected_description_span">votre identité.</string>
+  <string name="tangempay_kyc_rejected_description_span">votre identité</string>
   <string name="tangempay_main_select_plan">Sélectionner un forfait</string>
   <string name="tangempay_maximum_cards_issued_description">Clôturez une carte pour en ajouter une nouvelle</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Passez à un forfait supérieur pour plus de cartes</string>

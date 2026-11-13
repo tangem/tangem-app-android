@@ -15,6 +15,7 @@ import com.tangem.domain.tangempay.model.CustomerSummary.MoneyAccount.Activation
 import com.tangem.domain.tangempay.model.CustomerSummary.PaymentAccount.Activation.Status as PaymentStatus
 import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -43,6 +44,7 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     private val TestScope.useCase: PollTangemPayAccountStatusesUseCase
         get() = PollTangemPayAccountStatusesUseCase(
@@ -50,11 +52,18 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             timeSource = testTimeSource,
+            tangemPayFeatureToggles = tangemPayFeatureToggles,
         )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getCustomerSummaryUseCase, paymentAccountStatusFetcher, moneyAccountStatusFetcher)
+        clearMocks(
+            getCustomerSummaryUseCase,
+            paymentAccountStatusFetcher,
+            moneyAccountStatusFetcher,
+            tangemPayFeatureToggles,
+        )
+        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
         coEvery { paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(USER_WALLET_ID)) } returns
             Unit.right()
         coEvery { moneyAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
@@ -88,8 +97,8 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
 
             // Assert
             assertThat(actual).containsExactly(
-                TangemPayCustomerStateConverter.convert(inProgressSummary()),
-                TangemPayCustomerStateConverter.convert(terminalSummary()),
+                TangemPayCustomerStateConverter.convert(inProgressSummary(), isKycAdditionalInfoEnabled = true),
+                TangemPayCustomerStateConverter.convert(terminalSummary(), isKycAdditionalInfoEnabled = true),
             ).inOrder()
         }
 
@@ -194,6 +203,7 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
     fun `GIVEN summary state WHEN invoke THEN polling stops only on terminal state`(model: StateModel) =
         runTest {
             // Arrange
+            every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns model.isKycAdditionalInfoEnabled
             coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returnsMany listOf(
                 model.summary.right(),
                 terminalSummary().right(),
@@ -206,7 +216,12 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
             verifyFetched(times = if (model.isTerminal) 1 else 2)
         }
 
-    data class StateModel(val name: String, val summary: CustomerSummary, val isTerminal: Boolean) {
+    data class StateModel(
+        val name: String,
+        val summary: CustomerSummary,
+        val isKycAdditionalInfoEnabled: Boolean = true,
+        val isTerminal: Boolean,
+    ) {
         override fun toString(): String = name
     }
 
@@ -285,6 +300,24 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
             ),
             isTerminal = true,
         ),
+        StateModel(
+            name = "cdd customer with money account completed and payment account not started",
+            summary = cddSummaryWithMoneyAccountCompleted(),
+            isTerminal = true,
+        ),
+        StateModel(
+            name = "cdd customer with money account completed and payment account not started, toggle off",
+            summary = cddSummaryWithMoneyAccountCompleted(),
+            isKycAdditionalInfoEnabled = false,
+            isTerminal = false,
+        ),
+    )
+
+    private fun cddSummaryWithMoneyAccountCompleted() = summary(
+        customerStatus = CustomerStatus.ACTIVE,
+        kycStatus = KycStatus.IN_PROGRESS,
+        paymentStatus = PaymentStatus.NOT_STARTED,
+        moneyStatus = MoneyStatus.COMPLETED,
     )
 
     private fun verifyFetched(times: Int) {

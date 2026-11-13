@@ -63,6 +63,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
@@ -160,6 +161,7 @@ internal class WalletModel @Inject constructor(
     private val warmUpMarketingCampaignsUseCase: WarmUpMarketingCampaignsUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
+    private val walletTangemPayAnalyticsEventSender: WalletTangemPayAnalyticsEventSender,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -201,6 +203,7 @@ internal class WalletModel @Inject constructor(
         restoreTrackingContextOnResume()
         subscribeOnPushNotificationsPermission()
         subscribeTangemPayOnWalletState()
+        walletTangemPayAnalyticsEventSender.observeSelectedWallet(modelScope)
         subscribeJointAccountPolling()
         subscribeToTangemPayTransactionDeepLink()
         subscribeToMainScreenQrScanning()
@@ -219,6 +222,7 @@ internal class WalletModel @Inject constructor(
     fun onResume() {
         suggestToEnableBiometrics()
         suggestToOpenMarketsOnResume()
+        walletTangemPayAnalyticsEventSender.onResume()
     }
 
     fun onDialogShown() {

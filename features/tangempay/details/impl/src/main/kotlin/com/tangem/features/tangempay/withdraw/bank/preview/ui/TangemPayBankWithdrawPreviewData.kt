@@ -12,7 +12,10 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.AmountCardUM
+import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.ConversionUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.DetailRowUM
+import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.FeeRowUM
+import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.RateLockUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.RecipientCardUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.RouteUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.TransferUM
@@ -45,6 +48,7 @@ internal object TangemPayBankWithdrawPreviewData {
             eta = stringReference("1–3 business days"),
             fee = "$1",
         ),
+        conversion = null,
         sendingSummary = stringReference("You are sending $501 including a ACH fee of $1"),
     )
 
@@ -125,6 +129,72 @@ internal object TangemPayBankWithdrawPreviewData {
             sendingSummary = stringReference("Fees include ACH service charge and estimated network fee"),
         ),
         sendText = stringReference("Pay $501.03"),
+    )
+
+    private val speiConversion = ConversionUM(
+        rate = "1 USD = 18.7 MXN",
+        recipientGets = "MX$9,247.15",
+        rateLock = RateLockUM.Countdown(text = stringReference("Rate lock for 14:28")),
+        fees = persistentListOf(
+            FeeRowUM(label = stringReference("SPEI $0.50 + 1%"), value = "$5.50"),
+            FeeRowUM(label = stringReference("Polygon network"), value = "~$0.01"),
+        ),
+        total = "$5.51",
+    )
+
+    val summarySpeiQuoted = summaryMoneyAccount.copy(
+        transfer = requireNotNull(summaryMoneyAccount.transfer).copy(
+            route = RouteUM(
+                rail = BankRail.SPEI,
+                title = stringReference("SPEI"),
+                eta = resourceReference(R.string.tangempay_withdraw_bank_eta_within_minutes),
+                fee = "$5.51",
+            ),
+            conversion = speiConversion,
+            sendingSummary = stringReference("Fees include SPEI service charge and estimated network fee"),
+        ),
+        recipientCards = persistentListOf(
+            RecipientCardUM(
+                rows = persistentListOf(
+                    DetailRowUM(label = BankWithdrawFormField.Clabe.label, value = "646180110400000007"),
+                ),
+                onClick = {},
+            ),
+            RecipientCardUM(
+                rows = persistentListOf(
+                    DetailRowUM(label = BankWithdrawFormField.FirstName.label, value = "Juan Martin"),
+                    DetailRowUM(label = BankWithdrawFormField.LastName.label, value = "Pérez Lopes"),
+                ),
+                onClick = {},
+            ),
+        ),
+        sendText = stringReference("Pay $500.01"),
+    )
+
+    val summarySpeiQuoteLoading = summarySpeiQuoted.copy(
+        transfer = requireNotNull(summarySpeiQuoted.transfer).let { transfer ->
+            transfer.copy(
+                route = transfer.route.copy(fee = null),
+                conversion = speiConversion.copy(
+                    rate = null,
+                    recipientGets = null,
+                    rateLock = RateLockUM.Loading,
+                    fees = persistentListOf(
+                        FeeRowUM(label = stringReference("SPEI $0.50 + 1%"), value = null),
+                        FeeRowUM(label = stringReference("Polygon network"), value = "~$0.01"),
+                    ),
+                    total = null,
+                ),
+            )
+        },
+        isSendEnabled = false,
+    )
+
+    /** A device clock running ahead cannot time the lock, so the quote shows without a countdown. */
+    val summarySpeiUntimed = summarySpeiQuoted.copy(
+        transfer = requireNotNull(summarySpeiQuoted.transfer).copy(
+            conversion = speiConversion.copy(rateLock = RateLockUM.Hidden),
+        ),
     )
 
     val sending = summary.copy(isSending = true)

@@ -14,6 +14,7 @@ dependencies {
     /** Feature */
     api(projects.features.earn.api)
     api(projects.features.earn.product.api)
+    implementation(projects.features.earn.flow.api)
 
     /** Common */
     implementation(projects.common.routing)
@@ -35,6 +36,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.common)
     implementation(projects.domain.models)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.transaction)
     implementation(projects.domain.transaction.models)
 
