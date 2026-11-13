@@ -15,6 +15,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
@@ -68,6 +69,7 @@ internal class EarnInfoModel @Inject constructor(
     registry: EarnProductsRegistry,
     singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     getSelectedAppCurrency: GetSelectedAppCurrencyUseCase,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val converter: EarnInfoConverter,
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
@@ -87,6 +89,9 @@ internal class EarnInfoModel @Inject constructor(
 
     private val chartActivated = AtomicBoolean(false)
 
+    /** Kept to re-render the amounts under a changed hiding setting when a frame brings no data to render. */
+    private var shown: ShownPosition? = null
+
     private val readyState = MutableStateFlow<EarnProductState.Ready?>(null)
 
     private val currencyStatus: Flow<CryptoCurrencyStatus?> = singleAccountStatusListSupplier(params.userWalletId)
@@ -95,6 +100,8 @@ internal class EarnInfoModel @Inject constructor(
         .distinctUntilChanged()
 
     private val appCurrency: Flow<AppCurrency> = getSelectedAppCurrency.invokeOrDefault()
+
+    private val isBalanceHidden: Flow<Boolean> = getBalanceHidingSettingsUseCase.isBalanceHidden()
 
     val uiState: StateFlow<EarnInfoUM?>
         field = MutableStateFlow<EarnInfoUM?>(null)
@@ -206,6 +213,7 @@ internal class EarnInfoModel @Inject constructor(
             flow = productState(product),
             flow2 = currencyStatus,
             flow3 = appCurrency,
+            flow4 = isBalanceHidden,
             transform = ::Frame,
         )
             .flowOn(dispatchers.default)
@@ -221,7 +229,7 @@ internal class EarnInfoModel @Inject constructor(
 
     private fun onFrame(product: EarnProduct, frame: Frame) {
         when (val state = frame.state) {
-            EarnProductState.Loading -> Unit
+            EarnProductState.Loading -> applyBalanceHidingToShown(frame.isBalanceHidden)
             EarnProductState.Unavailable -> redirectToPicker()
             is EarnProductState.Ready -> onReady(product, state, frame)
         }
@@ -233,22 +241,36 @@ internal class EarnInfoModel @Inject constructor(
             return
         }
 
-        frame.status?.let { status ->
-            showPosition(product = product, ready = ready, status = status, appCurrency = frame.appCurrency)
+        val status = frame.status
+        if (status == null) {
+            applyBalanceHidingToShown(frame.isBalanceHidden)
+        } else {
+            showPosition(
+                ShownPosition(
+                    product = product,
+                    ready = ready,
+                    status = status,
+                    appCurrency = frame.appCurrency,
+                    isBalanceHidden = frame.isBalanceHidden,
+                ),
+            )
         }
     }
 
-    private fun showPosition(
-        product: EarnProduct,
-        ready: EarnProductState.Ready,
-        status: CryptoCurrencyStatus,
-        appCurrency: AppCurrency,
-    ) {
+    private fun applyBalanceHidingToShown(isBalanceHidden: Boolean) {
+        val current = shown ?: return
+        if (current.isBalanceHidden != isBalanceHidden) {
+            showPosition(current.copy(isBalanceHidden = isBalanceHidden))
+        }
+    }
+
+    private fun showPosition(position: ShownPosition) {
         val info = converter.convert(
-            product = product,
-            status = status,
-            appCurrency = appCurrency,
-            ready = ready,
+            product = position.product,
+            status = position.status,
+            appCurrency = position.appCurrency,
+            isBalanceHidden = position.isBalanceHidden,
+            ready = position.ready,
             callbacks = callbacks,
         )
 
@@ -257,9 +279,10 @@ internal class EarnInfoModel @Inject constructor(
             return
         }
 
-        readyState.value = ready
+        shown = position
+        readyState.value = position.ready
         uiState.value = info
-        activateChartOnce(ready)
+        activateChartOnce(position.ready)
     }
 
     private fun activateChartOnce(ready: EarnProductState.Ready) {
@@ -306,5 +329,14 @@ internal class EarnInfoModel @Inject constructor(
         val state: EarnProductState,
         val status: CryptoCurrencyStatus?,
         val appCurrency: AppCurrency,
+        val isBalanceHidden: Boolean,
+    )
+
+    private data class ShownPosition(
+        val product: EarnProduct,
+        val ready: EarnProductState.Ready,
+        val status: CryptoCurrencyStatus,
+        val appCurrency: AppCurrency,
+        val isBalanceHidden: Boolean,
     )
 }
