@@ -159,17 +159,17 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     /**
      * Switches to the previous/next wallet in the pager. A horizontal swipe is a silent no-op unless
      * the collapsing balance header is fully expanded and pinned to the top, so we retry: swipe, and
-     * whenever the wallet identity doesn't change, expand the header and try again.
+     * whenever the on-screen page doesn't change, expand the header and try again.
      */
     fun swipeToAdjacentWallet(toPrevious: Boolean) {
-        val before = displayedWalletIdentity()
+        val before = onScreenPageId()
         repeat(times = WALLET_SWITCH_ATTEMPTS) {
             swipeCurrentPage(toPrevious)
-            val now = displayedWalletIdentity()
+            val now = onScreenPageId()
             if (now != null && now != before) return
             expandCollapsingHeader()
         }
-        error("Wallet did not switch from '$before' after $WALLET_SWITCH_ATTEMPTS attempts")
+        error("Wallet page did not switch from node $before after $WALLET_SWITCH_ATTEMPTS attempts")
     }
 
     // The identity flips mid-animation, and a tap while the pager is still settling only stops the scroll.
@@ -249,12 +249,8 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         onScreenPage()?.performTouchInput { if (toPrevious) swipeRight() else swipeLeft() }
     }
 
-    // Identity = title + balance: a still-restoring wallet has no CARD_TITLE but always a WALLET_BALANCE.
-    private fun displayedWalletIdentity(): String? {
-        val title = onScreenPageChild(withTestTag(MainScreenTestTags.CARD_TITLE))?.firstText()
-        val balance = onScreenPageChild(withTestTag(MainScreenTestTags.WALLET_BALANCE))?.firstText()
-        return listOfNotNull(title, balance).joinToString(separator = "|").ifBlank { null }
-    }
+    // The page node, not its content: title and balance can change while the pager stays on the same page.
+    private fun onScreenPageId(): Int? = onScreenPage()?.fetchSemanticsNode()?.id
 
     /**
      * The full-width pager-page container currently on-screen. The pager keeps adjacent pages composed
@@ -273,8 +269,6 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
             it.width > 0f && it.height > 0f && it.center.x >= page.left && it.center.x < page.right
         }
     }
-
-    private fun SemanticsNodeInteraction.firstText(): String? = fetchSemanticsNode().firstTextOrNull()
 
     // Single geometry primitive behind the pager helpers: the first node matching [matcher] whose
     // bounds satisfy [predicate]. Replaces the per-caller onAllNodes(...)[i] loops.

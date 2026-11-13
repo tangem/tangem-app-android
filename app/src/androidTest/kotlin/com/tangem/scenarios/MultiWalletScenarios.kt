@@ -11,12 +11,20 @@ import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.qameta.allure.kotlin.Allure.step
 
-/** The details 'Add Wallet' opens a hardware/mobile chooser sheet; pick hardware when it appears. */
-private fun BaseTestCase.chooseAddHardwareWalletIfSheetShown() {
-    step("Choose 'Add hardware wallet' when the add-wallet sheet is shown") {
+private fun BaseTestCase.chooseHardwareWalletInAddWalletSheet() {
+    step("Assert 'Add wallet' sheet is displayed") {
+        awaitSuccess {
+            onAddWalletBottomSheet {
+                if (!cardOrRingRow.isDisplayedSafely()) legacyAddHardwareWalletButton.assertIsDisplayed()
+            }
+        }
+    }
+    step("Click on the hardware wallet option") {
         onAddWalletBottomSheet {
-            if (addHardwareWalletButton.isDisplayedSafely()) {
-                addHardwareWalletButton.performClick()
+            if (cardOrRingRow.isDisplayedSafely()) {
+                cardOrRingRow.performClick()
+            } else {
+                legacyAddHardwareWalletButton.performClick()
             }
         }
     }
@@ -31,7 +39,7 @@ fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
     step("Click on 'Add Wallet' button") {
         onDetailsScreen { addWalletButton.clickWithAssertion() }
     }
-    chooseAddHardwareWalletIfSheetShown()
+    chooseHardwareWalletInAddWalletSheet()
     // Gate on the top-bar More button, not the container — the bottom Markets sheet can leave the container un-"displayed".
     step("Assert 'Main' screen is displayed with the new wallet") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
@@ -66,7 +74,7 @@ fun BaseTestCase.addNewCardWalletWithoutSync(mockContent: MockContent) {
     step("Click on 'Add Wallet' button") {
         onDetailsScreen { addWalletButton.clickWithAssertion() }
     }
-    chooseAddHardwareWalletIfSheetShown()
+    chooseHardwareWalletInAddWalletSheet()
     step("Assert 'Main' screen is displayed with the new wallet") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
             runCatching { onMainScreenTopBar { moreButton.assertIsDisplayed() } }.isSuccess
