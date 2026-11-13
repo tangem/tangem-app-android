@@ -49,6 +49,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketSoccerEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
@@ -165,6 +166,14 @@ internal object PolymarketDomainModule {
     @Singleton
     fun provideGetPolymarketEventUseCase(polymarketRepository: PolymarketRepository): GetPolymarketEventUseCase {
         return GetPolymarketEventUseCase(polymarketRepository = polymarketRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPolymarketSoccerEventUseCase(
+        polymarketRepository: PolymarketRepository,
+    ): GetPolymarketSoccerEventUseCase {
+        return GetPolymarketSoccerEventUseCase(polymarketRepository = polymarketRepository)
     }
 
     @Provides

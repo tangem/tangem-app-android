@@ -10,6 +10,7 @@ import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.polymarket.converter.PolymarketApiKeyConverter
 import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
+import com.tangem.data.polymarket.converter.PolymarketSoccerEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.builder.PolymarketOrderTypedDataBuilder
 import com.tangem.data.polymarket.builder.PolymarketPlaceOrderBodyBuilder
@@ -47,6 +48,7 @@ import com.tangem.data.polymarket.converter.PolymarketCategoryConverter
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
@@ -89,7 +91,7 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 internal class DefaultPolymarketRepository @Inject constructor(
     private val polymarketApi: PolymarketApi,
     private val geoApi: PolymarketGeoApi,
@@ -212,6 +214,26 @@ internal class DefaultPolymarketRepository @Inject constructor(
             call = {
                 val response = polymarketApi.getEvent(walletId = userWalletId.stringValue, eventId = eventId).bind()
                 PolymarketEventConverter.convert(response.event).right()
+            },
+            onError = { eventErrorResolver.resolve(it).left() },
+        )
+    }
+
+    override suspend fun getSoccerEvent(
+        userWalletId: UserWalletId,
+        eventId: String,
+    ): Either<PolymarketEventError, PolymarketSoccerEvent> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                val response = polymarketApi.getSoccerEvent(
+                    walletId = userWalletId.stringValue,
+                    eventId = eventId,
+                ).bind()
+                Either.catch { PolymarketSoccerEventConverter.convert(response.event) }
+                    .mapLeft { error ->
+                        TangemLogger.e("Unable to convert soccer event", error)
+                        PolymarketEventError.Unknown(httpCode = null, detail = error.message)
+                    }
             },
             onError = { eventErrorResolver.resolve(it).left() },
         )

@@ -1,24 +1,13 @@
 package com.tangem.data.polymarket.converter
 
 import com.tangem.grow.datasource.polymarket.models.PolymarketEventDto
-import com.tangem.grow.datasource.polymarket.models.PolymarketMarketDto
-import com.tangem.grow.datasource.polymarket.models.PolymarketOutcomeDto
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
-import com.tangem.domain.polymarket.model.PolymarketMarket
-import com.tangem.domain.polymarket.model.PolymarketOutcome
-import com.tangem.domain.polymarket.model.PolymarketStatus
-import com.tangem.domain.polymarket.model.PolymarketTeam
-import com.tangem.grow.datasource.polymarket.models.PolymarketTeamDto
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 import java.time.Instant
 
 internal object PolymarketEventConverter : Converter<PolymarketEventDto, PolymarketEvent> {
-
-    private const val STATUS_ACTIVE = "active"
-    private const val STATUS_CLOSED = "closed"
-    private const val STATUS_ARCHIVED = "archived"
 
     private const val DISPLAY_MODE_GROUPED_OUTCOMES = "grouped_outcomes"
     private const val DISPLAY_MODE_PLAIN_MARKETS = "plain_markets"
@@ -33,7 +22,7 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
             resolutionSource = value.resolutionSource,
             iconUrl = value.icon,
             imageUrl = value.image,
-            status = convertStatus(status = value.status),
+            status = PolymarketStatusConverter.convert(value.status),
             startDate = value.startDate,
             endDate = value.endDate,
             volume = value.volume?.let(BigDecimal::valueOf),
@@ -43,67 +32,14 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
             isNegRisk = value.isNegRisk,
             isLive = value.isLive,
             displayMode = convertDisplayMode(displayMode = value.displayMode, isNegRisk = value.isNegRisk),
-            markets = value.markets.map(::convertMarket),
+            markets = value.markets.map(PolymarketMarketConverter::convert),
             gameId = value.gameId,
             score = value.score,
             period = value.period,
             isEnded = value.isEnded,
             dataFetchedAt = value.dataFetchedAt?.let(Instant::parse),
-            teams = value.teams?.map(::convertTeam),
+            teams = value.teams?.map(PolymarketTeamConverter::convert),
         )
-    }
-
-    private fun convertTeam(dto: PolymarketTeamDto): PolymarketTeam = PolymarketTeam(
-        name = dto.name,
-        abbreviation = dto.abbreviation,
-        alias = dto.alias,
-        logoUrl = dto.logo,
-        ordering = dto.ordering,
-    )
-
-    private fun convertMarket(dto: PolymarketMarketDto): PolymarketMarket {
-        return PolymarketMarket(
-            id = dto.id,
-            conditionId = dto.conditionId,
-            eventId = dto.eventId,
-            title = dto.question,
-            slug = dto.slug,
-            description = dto.description,
-            groupItemTitle = dto.groupItemTitle,
-            iconUrl = dto.icon,
-            imageUrl = dto.image,
-            status = convertStatus(status = dto.status),
-            isNegRisk = dto.isNegRisk,
-            isAcceptingOrders = dto.isAcceptingOrders == true,
-            startDate = dto.startDate,
-            endDate = dto.endDate,
-            startDateIso = dto.startDateIso,
-            endDateIso = dto.endDateIso,
-            volume = dto.volume?.let(BigDecimal::valueOf),
-            volume24h = dto.volume24hr?.let(BigDecimal::valueOf),
-            liquidity = dto.liquidity?.let(BigDecimal::valueOf),
-            orderIndex = dto.orderIndex,
-            outcomes = dto.outcomes.map(::convertOutcome),
-            version = PolymarketMarketVersionConverter.convert(dto.version),
-        )
-    }
-
-    private fun convertOutcome(dto: PolymarketOutcomeDto): PolymarketOutcome {
-        return PolymarketOutcome(
-            assetId = dto.assetId,
-            title = dto.label,
-            probability = dto.probability?.let(BigDecimal::valueOf),
-            legacyAssetId = dto.legacyAssetId,
-        )
-    }
-
-    private fun convertStatus(status: String): PolymarketStatus {
-        return when (status) {
-            STATUS_ACTIVE -> PolymarketStatus.ACTIVE
-            STATUS_CLOSED -> PolymarketStatus.CLOSED
-            STATUS_ARCHIVED -> PolymarketStatus.ARCHIVED
-            else -> PolymarketStatus.UNKNOWN
-        }
     }
 
     /** The BFF derives the display mode from `isNegRisk`, so the same rule backs an unrecognized [displayMode]. */
