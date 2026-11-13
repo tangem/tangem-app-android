@@ -102,10 +102,7 @@ private fun TangemPayCampaignBullet(
 }
 
 @Composable
-private fun TangemPayCampaignFooter(
-    state: TangemPayCampaignUM.Landing,
-    modifier: Modifier = Modifier,
-) {
+private fun TangemPayCampaignFooter(state: TangemPayCampaignUM.Landing, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()

@@ -52,6 +52,7 @@ private const val VIDEO_FADE_TOP = 294f
 private const val VIDEO_FADE_BOTTOM = 555f
 private const val VIDEO_CONTENT_TOP = 442f
 
+@Suppress("LongParameterList")
 @Composable
 internal fun TangemPayUnifiedOnboardingLayout(
     video: VideoSurfaceState?,
