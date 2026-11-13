@@ -55,6 +55,30 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
     }
 
     @Test
+    fun `GIVEN active_account JSON without is_kyc_additional_info_required WHEN decode THEN flag is false`() {
+        // Arrange
+        val storedBeforeFlag = """{"__type":"active_account","customer_id":"cust-1","currency_code":"USD",""" +
+            """"payment_account_address":"0xpay","fiat_balance":$FIAT_BALANCE_JSON,"fiat_rate":"0.99",""" +
+            """"cards":[$CARD_JSON]}"""
+
+        // Act
+        val actual = json.decodeFromString(PaymentAccountStatusValueDM.serializer(), storedBeforeFlag)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            PaymentAccountStatusValueDM.ActiveAccount(
+                customerId = "cust-1",
+                currencyCode = "USD",
+                paymentAccountAddress = "0xpay",
+                fiatBalance = FIAT_BALANCE,
+                fiatRate = BigDecimal("0.99"),
+                cards = listOf(CARD),
+                isKycAdditionalInfoRequired = false,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN status in the previous Moshi format WHEN decode THEN it fails`() {
         // Act
         val error = runCatching {
@@ -83,7 +107,21 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
             ),
             json = """{"__type":"active_account","customer_id":"cust-1","currency_code":"USD",""" +
                 """"payment_account_address":"0xpay","fiat_balance":$FIAT_BALANCE_JSON,"fiat_rate":"0.99",""" +
-                """"cards":[$CARD_JSON]}""",
+                """"cards":[$CARD_JSON],"is_kyc_additional_info_required":false}""",
+        ),
+        FormatModel(
+            status = PaymentAccountStatusValueDM.ActiveAccount(
+                customerId = "cust-3",
+                currencyCode = "USD",
+                paymentAccountAddress = null,
+                fiatBalance = FIAT_BALANCE,
+                fiatRate = null,
+                cards = emptyList(),
+                isKycAdditionalInfoRequired = true,
+            ),
+            json = """{"__type":"active_account","customer_id":"cust-3","currency_code":"USD",""" +
+                """"payment_account_address":null,"fiat_balance":$FIAT_BALANCE_JSON,"fiat_rate":null,""" +
+                """"cards":[],"is_kyc_additional_info_required":true}""",
         ),
         FormatModel(
             status = PaymentAccountStatusValueDM.ActiveAccount(
@@ -95,7 +133,8 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
                 cards = emptyList(),
             ),
             json = """{"__type":"active_account","customer_id":"cust-2","currency_code":null,""" +
-                """"payment_account_address":null,"fiat_balance":null,"fiat_rate":null,"cards":[]}""",
+                """"payment_account_address":null,"fiat_balance":null,"fiat_rate":null,"cards":[],""" +
+                """"is_kyc_additional_info_required":false}""",
         ),
         FormatModel(
             status = PaymentAccountStatusValueDM.CardIssueFailed(customerId = "cust-1"),
