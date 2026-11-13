@@ -130,18 +130,17 @@ internal class TangemPayOnboardingModel @Inject constructor(
     }
 
     private suspend fun showOnboarding() {
-        val isTangemIconShown = hasCompatibleColdWallet(
-            eligibilityManager = eligibilityManager,
-            userWalletsListRepository = userWalletsListRepository,
-            shouldExcludePaeraCustomers = shouldExcludePaeraCustomers,
-        )
         uiState.update { state ->
             TangemPayOnboardingScreenState.Content(
                 onBack = state.onBack,
                 onTermsClick = ::onTermsClick,
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
                     isLoading = false,
-                    isTangemIconShown = isTangemIconShown,
+                    isTangemIconShown = hasCompatibleColdWallet(
+                        eligibilityManager = eligibilityManager,
+                        userWalletsListRepository = userWalletsListRepository,
+                        shouldExcludePaeraCustomers = shouldExcludePaeraCustomers,
+                    ),
                     onClick = ::onGetCardClick,
                 ),
             )
