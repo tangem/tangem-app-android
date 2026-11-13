@@ -18,8 +18,13 @@ interface RemoteClipCache {
     suspend fun download(url: String)
 }
 
+/** Throws on any failure. */
+internal suspend fun RemoteClipCache.downloadIfMissing(url: String) {
+    if (!isFullyCached(url)) download(url)
+}
+
 /** `false` on a failure, which is logged. */
 internal suspend fun RemoteClipCache.ensureCached(url: String, diagnosticsSubject: String): Boolean =
-    runSuspendCatching { if (!isFullyCached(url)) download(url) }
+    runSuspendCatching { downloadIfMissing(url) }
         .onFailure { error -> TangemLogger.e("$diagnosticsSubject failed to download", error) }
         .isSuccess

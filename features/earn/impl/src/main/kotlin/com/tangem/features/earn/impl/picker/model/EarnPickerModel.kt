@@ -5,6 +5,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.LoopingVideoState
+import com.tangem.core.media.RemoteClipCache
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.message.modalMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -14,11 +17,13 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.overview.EarnOverviewFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.impl.InnerEarnNavigator
+import com.tangem.features.earn.impl.di.EarnHeroClip
 import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetRequest
 import com.tangem.features.earn.impl.overview.EarnHeadlineSelector
 import com.tangem.features.earn.impl.overview.EarnProductSummaries
 import com.tangem.features.earn.impl.overview.EarnProductSummarySupplier
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
+import com.tangem.features.earn.impl.picker.EarnPickerHeroVideo
 import com.tangem.features.earn.impl.picker.EarnYieldPickerComponent
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.showReason
@@ -73,6 +78,8 @@ internal class EarnPickerModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
+    videoFactory: LoopingVideoController.Factory,
+    @EarnHeroClip heroClipCache: RemoteClipCache,
 ) : Model(), EarnPickerClickIntents, EarnCalculatorComponent.ModelCallback {
 
     private val params: EarnYieldPickerComponent.Params = paramsContainer.require()
@@ -130,6 +137,20 @@ internal class EarnPickerModel @Inject constructor(
     val uiState: StateFlow<EarnPickerUM>
         field = MutableStateFlow(converter.initial(intents = this))
 
+    private val heroVideo = videoFactory.createRemote(
+        scope = modelScope,
+        url = EarnPickerHeroVideo.URL,
+        cache = heroClipCache,
+        frameSize = EarnPickerHeroVideo.FRAME_SIZE,
+        diagnosticsSubject = EarnPickerHeroVideo.DIAGNOSTICS_SUBJECT,
+    )
+
+    val heroVideoState: StateFlow<LoopingVideoState>
+        get() = heroVideo.state
+
+    private var isScreenResumed = false
+    private var isHeroVisible = true
+
     init {
         summaries
             .onEach(::onSummariesFrame)
@@ -145,6 +166,25 @@ internal class EarnPickerModel @Inject constructor(
             .flowOn(dispatchers.default)
             .onEach { uiState.value = it }
             .launchIn(modelScope)
+    }
+
+    fun setScreenResumed(isResumed: Boolean) {
+        isScreenResumed = isResumed
+        updateHeroVideoRunning()
+    }
+
+    fun setHeroVisible(isVisible: Boolean) {
+        isHeroVisible = isVisible
+        updateHeroVideoRunning()
+    }
+
+    override fun onDestroy() {
+        heroVideo.release()
+        super.onDestroy()
+    }
+
+    private fun updateHeroVideoRunning() {
+        heroVideo.setRunning(isRunning = isScreenResumed && isHeroVisible)
     }
 
     private fun onSummariesFrame(frame: EarnProductSummaries) {

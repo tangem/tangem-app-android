@@ -5,11 +5,13 @@ import androidx.annotation.OptIn
 import androidx.annotation.RawRes
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.RawResourceDataSource
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.plus
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @OptIn(UnstableApi::class)
@@ -30,20 +32,60 @@ internal class DefaultLoopingVideoControllerFactory @Inject constructor(
         frameSize = frameSize,
         diagnosticsSubject = diagnosticsSubject,
         onFailed = onFailed,
-        createPlayer = { listener -> createPlayer(videoRes, diagnosticsSubject, listener) },
+        createPlayer = { listener ->
+            createPlayer(
+                videoItem = MediaItem.fromUri(RawResourceDataSource.buildRawResourceUri(videoRes)),
+                isSourceReady = true,
+                dataSourceFactory = null,
+                diagnosticsSubject = diagnosticsSubject,
+                listener = listener,
+            )
+        },
+    )
+
+    override fun createRemote(
+        scope: CoroutineScope,
+        url: String,
+        cache: RemoteClipCache,
+        frameSize: VideoFrameSize,
+        diagnosticsSubject: String,
+        onFailed: (error: Throwable, hasRenderedFrame: Boolean) -> Unit,
+    ): LoopingVideoController = LoopingVideoController(
+        scope = scope + dispatchers.mainImmediate,
+        frameSize = frameSize,
+        diagnosticsSubject = diagnosticsSubject,
+        onFailed = onFailed,
+        // The cache check waits for a still initializing cache.
+        loadSource = { withContext(dispatchers.io) { cache.downloadIfMissing(url) } },
+        createPlayer = { listener ->
+            createPlayer(
+                videoItem = MediaItem.fromUri(url),
+                isSourceReady = false,
+                dataSourceFactory = cache.dataSourceFactory,
+                diagnosticsSubject = diagnosticsSubject,
+                listener = listener,
+            )
+        },
     )
 
     private fun createPlayer(
-        @RawRes videoRes: Int,
+        videoItem: MediaItem,
+        isSourceReady: Boolean,
+        dataSourceFactory: DataSource.Factory?,
         diagnosticsSubject: String,
         listener: LoopingVideoPlayer.Listener,
     ): LoopingVideoPlayer {
-        val player = buildVideoPlayer(context = context, diagnosticsSubject = diagnosticsSubject)
+        val player = buildVideoPlayer(
+            context = context,
+            diagnosticsSubject = diagnosticsSubject,
+            dataSourceFactory = dataSourceFactory,
+        )
         return DefaultLoopingVideoPlayer(
             player = player,
             decoderCounters = { player.videoDecoderCounters },
-            videoItem = MediaItem.fromUri(RawResourceDataSource.buildRawResourceUri(videoRes)),
+            videoItem = videoItem,
             isMotionEnabled = context.isSystemAnimationsEnabled(),
+            isSourceReady = isSourceReady,
             listener = listener,
             teardownScheduler = MainThreadVideoTeardownScheduler(),
         )
