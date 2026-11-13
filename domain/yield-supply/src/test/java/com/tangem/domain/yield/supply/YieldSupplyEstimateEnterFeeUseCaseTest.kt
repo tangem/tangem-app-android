@@ -144,6 +144,36 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         }
 
     @Test
+    fun `GIVEN blockaid fails AND list of preparation and native enter WHEN invoke THEN native enter gets constant gas limit increased`() =
+        runTest {
+            // Arrange
+            val fee = TransactionFee.Single(ethLegacyFee())
+            val preparationTx = getDeployTx()
+            val nativeEnterTx = uncompiled(
+                fee = ethLegacyFee(),
+                extras = EthereumTransactionExtras(YieldSupplyContractCallDataProviderFactory.getEnterWithNativeCallData()),
+            )
+            coEvery {
+                blockAidGasEstimate.getGasEstimation(any(), any())
+            } returns GasEstimationResult(emptyList()).right()
+            coEvery { feeRepository.calculateFee(any(), any(), any()) } returns fee
+
+            // Act
+            val result = useCase(
+                userWallet = userWallet,
+                cryptoCurrency = cryptoCurrency,
+                transactionDataList = listOf(preparationTx, nativeEnterTx),
+            )
+
+            // Assert
+            val txs = (result as Either.Right).value
+            Truth.assertThat(txs.map { (it.fee as Fee.Ethereum.Legacy).gasLimit })
+                .containsExactly(BigInteger.valueOf(29_400), BigInteger.valueOf(700_000))
+                .inOrder()
+            coVerify(exactly = 0) { feeRepository.calculateFee(any(), any(), nativeEnterTx) }
+        }
+
+    @Test
     fun `test not enter transaction uses gas limit Legacy`() = runTest {
         val fee = TransactionFee.Single(ethLegacyFee())
         val deployTx = getDeployTx()

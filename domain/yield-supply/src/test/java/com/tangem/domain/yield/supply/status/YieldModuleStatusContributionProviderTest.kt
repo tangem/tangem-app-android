@@ -242,12 +242,10 @@ internal class YieldModuleStatusContributionProviderTest {
         isActive: Boolean = true,
         effectiveProtocolBalance: BigDecimal? = BigDecimal.ONE,
         effectiveBalance: BigDecimal? = null,
-    ) = YieldModuleStatus(
+    ) = MockYieldSupply.moduleStatus(
         networkId = networkId,
         tokenAddress = tokenAddress,
         isActive = isActive,
-        isInitialized = true,
-        isAllowedToSpend = true,
         effectiveProtocolBalance = effectiveProtocolBalance,
         effectiveBalance = effectiveBalance,
         source = StatusSource.ONLY_CACHE,
