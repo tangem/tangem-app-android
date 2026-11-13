@@ -16,10 +16,13 @@ import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
 import com.tangem.domain.tangempay.model.CachePolicy
 import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.model.CustomerSummary
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.tangempay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
+import com.tangem.domain.tangempay.utils.isKycAdditionalInfoRequested
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -40,6 +43,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private val resolveMoneyAccountStatusFromSummaryUseCase: ResolveMoneyAccountStatusFromSummaryUseCase,
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
     private val networkConnectionManager: NetworkConnectionManager,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : MoneyAccountStatusFetcher {
 
     override suspend fun invoke(params: MoneyAccountStatusFetcher.Params): Either<Throwable, Unit> {
@@ -79,45 +83,60 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
 
         resolveMoneyAccountStatusFromSummaryUseCase(summary)?.let { return it }
 
-        return fetchAccount(userWalletId)
+        return fetchAccount(userWalletId, summary)
     }
 
-    private suspend fun fetchAccount(userWalletId: UserWalletId): MoneyAccountStatusValue = coroutineScope {
-        val cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId)
-        val balanceDeferred = async { getMoneyAccountBalanceUseCase.invoke(userWalletId, cryptoCurrency) }
-        val channelsDeferred = async { onboardingRepository.fetchCustomerEligibility(userWalletId) }
-        val customerInfo = onboardingRepository.getCustomerInfo(userWalletId).getOrElse { error ->
-            balanceDeferred.cancel()
-            channelsDeferred.cancel()
-            return@coroutineScope error.toCachedStatusOrEmpty(userWalletId)
-        }
-        val balance = balanceDeferred.await().getOrNull()
-        val channels = channelsDeferred.await().getOrNull()
-        val instance = customerInfo.moneyAccountProductInstance
-        val isFormer = customerInfo.state == CustomerInfo.State.FORMER
-
-        when {
-            isFormer || instance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED -> {
-                MoneyAccountStatusValue.Empty
+    private suspend fun fetchAccount(userWalletId: UserWalletId, summary: CustomerSummary): MoneyAccountStatusValue =
+        coroutineScope {
+            val cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId)
+            val balanceDeferred = async { getMoneyAccountBalanceUseCase.invoke(userWalletId, cryptoCurrency) }
+            val channelsDeferred = async { onboardingRepository.fetchCustomerEligibility(userWalletId) }
+            val customerInfo = onboardingRepository.getCustomerInfo(userWalletId).getOrElse { error ->
+                balanceDeferred.cancel()
+                channelsDeferred.cancel()
+                return@coroutineScope error.toCachedStatusOrEmpty(userWalletId)
             }
-            instance?.status == CustomerInfo.ProductInstance.Status.ACTIVE -> {
-                MoneyAccountStatusValue.Account.Active(
+            val balance = balanceDeferred.await().getOrNull()
+            val channels = channelsDeferred.await().getOrNull()
+            val instance = customerInfo.moneyAccountProductInstance
+            val isFormer = customerInfo.state == CustomerInfo.State.FORMER
+
+            when {
+                isFormer || instance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED -> {
+                    MoneyAccountStatusValue.Empty
+                }
+                instance?.status == CustomerInfo.ProductInstance.Status.ACTIVE -> {
+                    MoneyAccountStatusValue.Account.Active(
+                        source = StatusSource.ACTUAL,
+                        cryptoCurrency = cryptoCurrency,
+                        balance = balance,
+                        customerId = customerInfo.customerId,
+                        productInstanceId = instance.id,
+                        error = null,
+                        isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
+                        isKycAdditionalInfoRequired = isKycAdditionalInfoRequired(userWalletId, summary, customerInfo),
+                    )
+                }
+                else -> MoneyAccountStatusValue.Onboarding.Activating(
                     source = StatusSource.ACTUAL,
-                    cryptoCurrency = cryptoCurrency,
-                    balance = balance,
                     customerId = customerInfo.customerId,
-                    productInstanceId = instance.id,
-                    error = null,
-                    isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
-                    isKycAdditionalInfoRequired = false,
+                    step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
                 )
             }
-            else -> MoneyAccountStatusValue.Onboarding.Activating(
-                source = StatusSource.ACTUAL,
-                customerId = customerInfo.customerId,
-                step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
+        }
+
+    private fun isKycAdditionalInfoRequired(
+        userWalletId: UserWalletId,
+        summary: CustomerSummary,
+        customerInfo: CustomerInfo,
+    ): Boolean {
+        if (!tangemPayFeatureToggles.isKycAdditionalInfoEnabled) return false
+        if (summary.isKycAdditionalInfoRequested != customerInfo.isKycAdditionalInfoRequested) {
+            TangemLogger.e(
+                "Money account status $userWalletId: summary and customer info disagree on KYC additional info",
             )
         }
+        return customerInfo.isKycAdditionalInfoRequested
     }
 
     private suspend fun TangemPayApiError.toCachedStatusOrEmpty(userWalletId: UserWalletId): MoneyAccountStatusValue {

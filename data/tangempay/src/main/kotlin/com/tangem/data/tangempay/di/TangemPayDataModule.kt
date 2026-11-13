@@ -638,8 +638,12 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideIsTangemPayCustomerVerifiedUseCase(
             getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
+            tangemPayFeatureToggles: TangemPayFeatureToggles,
         ): IsTangemPayCustomerVerifiedUseCase {
-            return IsTangemPayCustomerVerifiedUseCase(getCustomerSummaryUseCase = getCustomerSummaryUseCase)
+            return IsTangemPayCustomerVerifiedUseCase(
+                getCustomerSummaryUseCase = getCustomerSummaryUseCase,
+                tangemPayFeatureToggles = tangemPayFeatureToggles,
+            )
         }
 
         @Provides
@@ -656,6 +660,7 @@ internal interface TangemPayDataModule {
             tangemPayCurrencyFactory: TangemPayCurrencyFactory,
             getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase,
             paymentAccountStatusesStore: PaymentAccountStatusesStore,
+            tangemPayFeatureToggles: TangemPayFeatureToggles,
         ): ResolvePaymentAccountStatusFromSummaryUseCase {
             return ResolvePaymentAccountStatusFromSummaryUseCase(
                 onboardingRepository = onboardingRepository,
@@ -663,12 +668,15 @@ internal interface TangemPayDataModule {
                 tangemPayCurrencyFactory = tangemPayCurrencyFactory,
                 getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
                 paymentAccountStatusCache = paymentAccountStatusesStore,
+                tangemPayFeatureToggles = tangemPayFeatureToggles,
             )
         }
 
         @Provides
-        fun provideResolveMoneyAccountStatusFromSummaryUseCase(): ResolveMoneyAccountStatusFromSummaryUseCase {
-            return ResolveMoneyAccountStatusFromSummaryUseCase()
+        fun provideResolveMoneyAccountStatusFromSummaryUseCase(
+            tangemPayFeatureToggles: TangemPayFeatureToggles,
+        ): ResolveMoneyAccountStatusFromSummaryUseCase {
+            return ResolveMoneyAccountStatusFromSummaryUseCase(tangemPayFeatureToggles = tangemPayFeatureToggles)
         }
 
         @Provides

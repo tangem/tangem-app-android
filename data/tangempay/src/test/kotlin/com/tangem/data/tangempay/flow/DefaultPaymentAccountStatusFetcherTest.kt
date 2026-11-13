@@ -197,11 +197,13 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         ),
         tariffPlan: TangemPayCustomerTariffPlan? = null,
         networks: List<CustomerInfo.NetworkInfo> = emptyList(),
+        kycStatus: KycStatus = KycStatus.APPROVED,
+        state: CustomerInfo.State = CustomerInfo.State.ACTIVE,
     ) = CustomerInfo(
         customerId = customerId,
         paymentAccount = paymentAccount,
-        kycStatus = KycStatus.APPROVED,
-        state = CustomerInfo.State.ACTIVE,
+        kycStatus = kycStatus,
+        state = state,
         fiatBalance = fiatBalance,
         cards = cards,
         productInstances = productInstances,
@@ -254,6 +256,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
         coEvery { getCustomerSummaryUseCase(userWalletId, any()) } returns null.right()
         every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
+        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
     }
 
     /**
@@ -337,8 +340,8 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             isBankOfframpAvailable = null,
             tariffPlan = null,
             isPaymentAccountIssuing = false,
-            networks = emptyList(),
             isKycAdditionalInfoRequired = false,
+            networks = emptyList(),
         )
     }
 
@@ -669,6 +672,121 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
                 assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Eligible)
             }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class KycAdditionalInfo {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN state and kyc status WHEN invoke THEN expected status type and flag`(model: KycAdditionalInfoModel) =
+            runTest {
+                // Arrange
+                stubHappyPath(
+                    buildCustomerInfo(
+                        paymentAccount = paymentAccount,
+                        kycStatus = model.kycStatus,
+                        state = model.state,
+                    ),
+                )
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.last().value.toKycAdditionalInfoOutcome()).isEqualTo(model.expected)
+            }
+
+        @Test
+        fun `GIVEN toggle off AND ACTIVE with PENDING WHEN invoke THEN Loaded without flag`() = runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns false
+            stubHappyPath(buildCustomerInfo(paymentAccount = paymentAccount, kycStatus = KycStatus.PENDING))
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().isKycAdditionalInfoRequired).isFalse()
+        }
+
+        @Test
+        fun `GIVEN ACTIVE with PENDING AND deactivated payment product WHEN invoke THEN Deactivated`() = runTest {
+            // Arrange
+            val deactivatedCard = cardProductInstance.copy(status = CustomerInfo.ProductInstance.Status.DEACTIVATED)
+            stubHappyPath(
+                buildCustomerInfo(
+                    productInstances = listOf(deactivatedCard),
+                    paymentAccount = paymentAccount,
+                    kycStatus = KycStatus.PENDING,
+                ),
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isInstanceOf(PaymentAccountStatusValue.Deactivated::class.java)
+        }
+
+        @Test
+        fun `GIVEN cached Loaded with flag WHEN customer info fails THEN Loaded with flag kept as ONLY_CACHE`() =
+            runTest {
+                // Arrange
+                val cached = loadedFixture().copy(source = StatusSource.CACHE, isKycAdditionalInfoRequired = true)
+                stubHappyPath(buildCustomerInfo())
+                coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns AccountStatus.Payment(
+                    account = Account.Payment(userWalletId = userWalletId),
+                    value = cached,
+                )
+                coEvery {
+                    onboardingRepository.getCustomerInfo(userWalletId)
+                } returns TangemPayApiError.ServerUnavailable.left()
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.last().value).isEqualTo(
+                    cached.copy(source = StatusSource.ONLY_CACHE, error = PaymentAccountStatusValue.Error.Unavailable),
+                )
+            }
+
+        private fun PaymentAccountStatusValue.toKycAdditionalInfoOutcome(): Any = when (this) {
+            is PaymentAccountStatusValue.Loaded -> LoadedOutcome(isKycAdditionalInfoRequired)
+            else -> this::class
+        }
+
+        private fun provideTestModels() = listOf(
+            KycAdditionalInfoModel(CustomerInfo.State.ACTIVE, KycStatus.PENDING, LoadedOutcome(true)),
+            KycAdditionalInfoModel(CustomerInfo.State.ACTIVE, KycStatus.REQUIRED, LoadedOutcome(false)),
+            KycAdditionalInfoModel(CustomerInfo.State.ACTIVE, KycStatus.INIT, LoadedOutcome(false)),
+            KycAdditionalInfoModel(CustomerInfo.State.ACTIVE, KycStatus.UNKNOWN, LoadedOutcome(false)),
+            KycAdditionalInfoModel(CustomerInfo.State.ACTIVE, KycStatus.REJECTED, LoadedOutcome(false)),
+            KycAdditionalInfoModel(CustomerInfo.State.ACTIVE, KycStatus.APPROVED, LoadedOutcome(false)),
+            KycAdditionalInfoModel(CustomerInfo.State.NEW, KycStatus.PENDING, LoadedOutcome(false)),
+            KycAdditionalInfoModel(CustomerInfo.State.BLOCKED, KycStatus.PENDING, LoadedOutcome(false)),
+            KycAdditionalInfoModel(
+                CustomerInfo.State.FORMER,
+                KycStatus.PENDING,
+                PaymentAccountStatusValue.Deactivated::class,
+            ),
+        )
+    }
+
+    internal data class LoadedOutcome(val isKycAdditionalInfoRequired: Boolean)
+
+    internal data class KycAdditionalInfoModel(
+        val state: CustomerInfo.State,
+        val kycStatus: KycStatus,
+        val expected: Any,
+    ) {
+        override fun toString(): String = "$state + $kycStatus"
     }
 
     @Nested

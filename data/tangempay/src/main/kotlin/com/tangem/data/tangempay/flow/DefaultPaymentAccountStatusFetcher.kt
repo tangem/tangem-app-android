@@ -25,6 +25,7 @@ import com.tangem.domain.tangempay.usecase.GetTangemPayFiatRateUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.tangempay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
+import com.tangem.domain.tangempay.utils.isKycAdditionalInfoRequested
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -207,13 +208,18 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 customerId = customerId,
                 networks = multichainNetworkStatuses,
                 isPaymentAccountIssuing = isPaymentAccountIssuing(userWalletId),
+                isKycAdditionalInfoRequired = tangemPayFeatureToggles.isKycAdditionalInfoEnabled &&
+                    isKycAdditionalInfoRequested,
             )
         }
     }
 
     private suspend fun isPaymentAccountIssuing(userWalletId: UserWalletId): Boolean {
         val summary = getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE).getOrNull() ?: return false
-        val state = TangemPayCustomerStateConverter.convert(summary) as? TangemPayCustomerState.Accounts
+        val state = TangemPayCustomerStateConverter.convert(
+            value = summary,
+            isKycAdditionalInfoEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
+        ) as? TangemPayCustomerState.Accounts
         return state?.paymentAccount == PaymentAccountActivationState.Issuing(
             step = PaymentAccountActivationState.Issuing.Step.ISSUING,
         )
@@ -293,6 +299,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         fiatRate: BigDecimal?,
         networks: List<PaymentNetworkStatus>,
         isPaymentAccountIssuing: Boolean,
+        isKycAdditionalInfoRequired: Boolean,
     ): PaymentAccountStatusValue {
         val cards = resolveCards(userWalletId)
 
@@ -327,7 +334,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
             tariffPlan = tariffPlanState,
             isPaymentAccountIssuing = isPaymentAccountIssuing || tariffPlanState?.isPlanTransitioningState == true,
-            isKycAdditionalInfoRequired = false,
+            isKycAdditionalInfoRequired = isKycAdditionalInfoRequired,
         )
     }
 

@@ -8,9 +8,11 @@ import com.tangem.domain.tangempay.model.CachePolicy
 import com.tangem.domain.tangempay.model.TangemPayCustomerState
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 
 class IsTangemPayCustomerVerifiedUseCase(
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
     suspend operator fun invoke(userWalletId: UserWalletId): Either<TangemPayApiError, Boolean> = either {
         val summary = getCustomerSummaryUseCase(
@@ -20,6 +22,10 @@ class IsTangemPayCustomerVerifiedUseCase(
 
         ensureNotNull(summary) { TangemPayApiError.UnknownWithoutCode }
 
-        TangemPayCustomerStateConverter.convert(summary) == TangemPayCustomerState.KycApproved
+        val state = TangemPayCustomerStateConverter.convert(
+            value = summary,
+            isKycAdditionalInfoEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
+        )
+        state == TangemPayCustomerState.KycApproved
     }
 }
