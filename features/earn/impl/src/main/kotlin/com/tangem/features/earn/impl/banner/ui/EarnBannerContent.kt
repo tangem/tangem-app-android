@@ -15,17 +15,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_right_20
-import com.tangem.features.earn.api.overview.EarnProductRate
-import com.tangem.features.earn.api.overview.EarnRateType
-import com.tangem.features.earn.impl.banner.EarnBannerTexts
 import com.tangem.features.earn.impl.banner.ui.state.EarnBannerUM
-import java.math.BigDecimal
+import com.tangem.utils.StringsSigns
 
 @Composable
 internal fun EarnBannerContent(state: EarnBannerUM, modifier: Modifier = Modifier) {
@@ -95,19 +96,20 @@ private fun EarnBannerContentPreview() {
         ) {
             EarnBannerContent(
                 state = EarnBannerUM.Offer(
-                    title = EarnBannerTexts.title,
-                    description = EarnBannerTexts.upTo(
-                        rate = EarnProductRate(fraction = BigDecimal("0.055"), type = EarnRateType.APY),
+                    title = resourceReference(R.string.token_details_earn_title),
+                    description = resourceReference(
+                        id = R.string.token_details_earn_staking_subtitle_apy,
+                        formatArgs = wrappedList("5.5%"),
                     ),
-                    buttonText = EarnBannerTexts.enable,
+                    buttonText = resourceReference(R.string.common_enable),
                     onEnableClick = {},
                 ),
                 modifier = Modifier.fillMaxWidth(),
             )
             EarnBannerContent(
                 state = EarnBannerUM.Enabled(
-                    title = EarnBannerTexts.enabledTitle,
-                    description = EarnBannerTexts.enabledDescription(amount = "1.3254 ETH", activeCount = 1),
+                    title = resourceReference(R.string.token_details_yield_enabled_title),
+                    description = stringReference("1.3254 ETH ${StringsSigns.MIDDLE_DOT} 1 active"),
                     onClick = {},
                 ),
                 modifier = Modifier.fillMaxWidth(),
