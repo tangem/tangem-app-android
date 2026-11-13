@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
@@ -23,6 +24,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.YieldSupplyTestTags
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.yield.supply.impl.R
@@ -86,6 +88,7 @@ internal class YieldSupplyClaimComponent(
                 val modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
+                    .testTag(YieldSupplyTestTags.CLAIM_CONFIRM_BUTTON)
 
                 if (state.isHoldToConfirmEnabled) {
                     HoldToConfirmButton(
