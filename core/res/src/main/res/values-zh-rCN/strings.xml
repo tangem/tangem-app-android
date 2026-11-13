@@ -2591,7 +2591,7 @@
   <string name="tangempay_card_activation_attempts_exceeded_title">您已超过激活尝试次数</string>
   <string name="tangempay_card_activation_description">输入您卡号的最后 4 位数字</string>
   <string name="tangempay_card_activation_error">末位数字有误，请重试</string>
-  <string name="tangempay_card_activation_error_already_active">该卡已激活。</string>
+  <string name="tangempay_card_activation_error_already_active">该卡已激活</string>
   <string name="tangempay_card_activation_error_in_progress">激活正在进行中，请稍候。</string>
   <string name="tangempay_card_activation_error_not_physical">这不是实体卡</string>
   <string name="tangempay_card_activation_error_not_ready">该卡尚未准备好激活。请在收到卡片后重试。</string>
@@ -2600,8 +2600,8 @@
   <string name="tangempay_card_close_error_message">请稍后重试或联系客服</string>
   <string name="tangempay_card_close_error_title">无法注销卡片</string>
   <string name="tangempay_card_close_last_card_disabled">无法注销最后一张卡片</string>
-  <string name="tangempay_card_closed_toast">卡片 ••%s 已关闭</string>
-  <string name="tangempay_card_closed_toast_named">%s 已关闭</string>
+  <string name="tangempay_card_closed_toast">卡片 %s 已注销</string>
+  <string name="tangempay_card_closed_toast_named">卡片“%s”已注销</string>
   <string name="tangempay_card_default_name">Tangem 支付卡 1</string>
   <string name="tangempay_card_delivery_activate_after_delivery_toast">卡片送达后即可激活</string>
   <string name="tangempay_card_delivery_banner_description">收到后请激活</string>
@@ -2618,6 +2618,7 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">尝试次数过多，请 24 小时后再试</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">无法添加卡片</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Google 钱包不可用，请检查系统设置</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">卡片已添加到 Google 钱包</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">取消 %1$s，切换到 %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">支付套餐月费并开始使用新卡片</string>
   <string name="tangempay_card_details_awaiting_deposit_title">在 %1$s 前为您的账户充值</string>
@@ -2635,7 +2636,7 @@
   <string name="tangempay_card_details_name_on_card">持卡人姓名</string>
   <string name="tangempay_card_details_open_wallet_button">打开 Google 钱包</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">只需轻点几下即可设置 Tangem Pay，然后即可开始使用 Google Pay 付款。</string>
-  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">只需轻点几下即可设置 Tangem Pay，然后即可开始使用 Apple Pay 付款。</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">只需轻点几下即可设置 Tangem Pay，然后即可开始使用 Apple Pay 付款</string>
   <string name="tangempay_card_details_open_wallet_notification_title">将您的卡片添加到 Google Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title_apple">将您的卡片添加到 Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_step_1">打开 Google 钱包</string>
@@ -2675,8 +2676,8 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">从 %s设定一个限额</string>
   <string name="tangempay_card_limit_setup_error_message">我们无法设置限额，请稍后再试。</string>
   <string name="tangempay_card_page_activating_banner_title">正在激活您的实体卡</string>
-  <string name="tangempay_card_page_closing_banner_description">通常需要最多 5 分钟</string>
-  <string name="tangempay_card_page_closing_banner_title">关闭您的卡片</string>
+  <string name="tangempay_card_page_closing_banner_description">最多可能需要 5 分钟</string>
+  <string name="tangempay_card_page_closing_banner_title">正在注销您的卡片</string>
   <string name="tangempay_card_page_daily_limit_change">改变</string>
   <string name="tangempay_card_page_daily_limit_current_limit">当前限额</string>
   <string name="tangempay_card_page_daily_limit_error_description">我们无法加载您的每日限额。请稍后再试。</string>
@@ -2778,7 +2779,7 @@
   <string name="tangempay_factory_settings_warning_title">我明白，我将完全失去对 Tangem Pay 卡及其上所有资金的访问权，且无法挽回</string>
   <string name="tangempay_failed_to_issue_card">发卡失败</string>
   <string name="tangempay_failed_to_issue_card_retry_description">发生技术故障，请点击下方按钮重试。</string>
-  <string name="tangempay_failed_to_issue_card_support_description">发生技术故障，请联系技术支持。</string>
+  <string name="tangempay_failed_to_issue_card_support_description">发生技术故障，请联系技术支持</string>
   <string name="tangempay_feature_will_be_available_soon">该功能即将上线</string>
   <string name="tangempay_feature_will_be_available_soon_description">您将可以为您的支付账户发行额外的卡。</string>
   <string name="tangempay_get_banner_description">免费 Tangem Pay 卡，享最高 2% 返现</string>
@@ -2808,7 +2809,7 @@
   <string name="tangempay_kyc_rejected">已拒绝</string>
   <string name="tangempay_kyc_rejected_button_text">隐藏状态</string>
   <string name="tangempay_kyc_rejected_description">抱歉，我们无法验证</string>
-  <string name="tangempay_kyc_rejected_description_span">您的个人资料。</string>
+  <string name="tangempay_kyc_rejected_description_span">您的个人资料</string>
   <string name="tangempay_main_select_plan">选择套餐</string>
   <string name="tangempay_maximum_cards_issued_description">注销一张卡即可添加新卡</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">升级套餐以获得更多卡片</string>
