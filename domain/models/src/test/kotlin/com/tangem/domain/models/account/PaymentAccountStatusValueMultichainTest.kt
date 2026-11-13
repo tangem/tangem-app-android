@@ -38,6 +38,7 @@ internal class PaymentAccountStatusValueMultichainTest {
         isBankOfframpAvailable = null,
         tariffPlan = null,
         isPaymentAccountIssuing = false,
+        isKycAdditionalInfoRequired = false,
     )
 
     @Test

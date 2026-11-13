@@ -338,6 +338,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             tariffPlan = null,
             isPaymentAccountIssuing = false,
             networks = emptyList(),
+            isKycAdditionalInfoRequired = false,
         )
     }
 

@@ -1181,6 +1181,7 @@ internal class MoneyAccountDetailsModelTest {
         productInstanceId = PRODUCT_INSTANCE_ID,
         isBankOfframpAvailable = isBankOfframpAvailable,
         error = error,
+        isKycAdditionalInfoRequired = false,
     )
 
     private fun balance(amount: BigDecimal = BigDecimal("25250.50")) = MoneyAccountStatusValue.Balance(

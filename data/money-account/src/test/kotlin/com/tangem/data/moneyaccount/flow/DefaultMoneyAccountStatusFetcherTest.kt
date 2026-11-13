@@ -258,6 +258,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                 customerId = CUSTOMER_ID,
                 productInstanceId = PRODUCT_INSTANCE_ID,
                 error = null,
+                isKycAdditionalInfoRequired = false,
             ),
         )
     }
@@ -282,6 +283,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                     customerId = CUSTOMER_ID,
                     productInstanceId = PRODUCT_INSTANCE_ID,
                     error = null,
+                    isKycAdditionalInfoRequired = false,
                 ),
             )
         }
@@ -317,6 +319,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                 productInstanceId = PRODUCT_INSTANCE_ID,
                 isBankOfframpAvailable = model.expected,
                 error = null,
+                isKycAdditionalInfoRequired = false,
             ),
         )
     }
@@ -411,6 +414,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         customerId = CUSTOMER_ID,
         productInstanceId = PRODUCT_INSTANCE_ID,
         error = null,
+        isKycAdditionalInfoRequired = false,
     )
 
     private fun activating() = MoneyAccountStatusValue.Onboarding.Activating(

@@ -116,6 +116,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                     isBankOfframpAvailable = null,
                     tariffPlan = null,
                     isPaymentAccountIssuing = false,
+                    isKycAdditionalInfoRequired = false,
                 ),
                 expected = PaymentAccountStatusValueDM.ActiveAccount(
                     customerId = "customer-3",
@@ -220,6 +221,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                     isBankOfframpAvailable = null,
                     tariffPlan = null,
                     isPaymentAccountIssuing = false,
+                    isKycAdditionalInfoRequired = false,
                 ),
             ),
         )
@@ -358,5 +360,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
         tariffPlan = null,
         isPaymentAccountIssuing = false,
         networks = emptyList(),
+        isKycAdditionalInfoRequired = false,
     )
 }
