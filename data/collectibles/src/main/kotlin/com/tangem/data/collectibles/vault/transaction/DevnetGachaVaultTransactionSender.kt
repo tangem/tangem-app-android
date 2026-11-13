@@ -1,6 +1,7 @@
 package com.tangem.data.collectibles.vault.transaction
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
@@ -158,6 +159,28 @@ internal class DevnetGachaVaultTransactionSender @Inject constructor(
             .toEither()
             .map { result -> result.hash }
             .onLeft { error -> TangemLogger.e("GachaVaultRepository: purchase_pack failed: ${error.customMessage}") }
+            .mapLeft { error -> error.toVaultFailure(userWallet) }
+            .bind()
+    }
+
+    override suspend fun withdraw(
+        userWallet: UserWallet,
+        mint: String,
+        recipient: String,
+        amount: Long,
+    ): Either<CollectiblesAccountError, String> = either {
+        val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
+        val walletManager = walletManagersFacade.vaultWalletManager(
+            userWalletId = userWallet.walletId,
+            network = network,
+        )
+            .mapLeft { error -> error.toVaultFailure(userWallet) }
+            .bind()
+
+        walletManager.buildWithdrawCollectiblesVault(mint = mint, recipient = recipient, amount = amount).toEither()
+            .flatMap { transaction -> walletManager.send(transaction, signers.signer(userWallet)).toEither() }
+            .map { result -> result.hash }
+            .onLeft { error -> TangemLogger.e("GachaVaultRepository: withdraw_token failed: ${error.customMessage}") }
             .mapLeft { error -> error.toVaultFailure(userWallet) }
             .bind()
     }
