@@ -351,6 +351,63 @@ internal class SdkTransactionHistoryItemConverterTest {
 
     private fun providePayoutOrders() = listOf(false, true)
 
+    @ParameterizedTest
+    @MethodSource("providePayoutOrders")
+    fun `GIVEN a DEX call and its coin payout on a personal coin WHEN convertList THEN only the call row`(
+        isPayoutFirst: Boolean,
+    ) {
+        // Arrange
+        val call = item(
+            type = contractMethod(SWAP_CALLDATA),
+            isOutgoing = true,
+            destination = TransactionHistoryItem.AddressType.Contract(DEX_ROUTER),
+            amount = BigDecimal.ZERO,
+            fee = CALL_FEE,
+        )
+        val payout = item(
+            type = TransactionHistoryItem.TransactionType.Transfer,
+            isOutgoing = false,
+            destination = TransactionHistoryItem.AddressType.User(SENDER),
+            source = DEX_ROUTER,
+            amount = HALF,
+        )
+        val items = if (isPayoutFirst) listOf(payout, call) else listOf(call, payout)
+
+        // Act
+        val actual = lendingConverter.convertList(items)
+
+        // Assert
+        assertThat(actual).containsExactly(lendingConverter.convert(call))
+    }
+
+    @Test
+    fun `GIVEN only internal transfers on a personal coin WHEN convertList THEN they stay merged`() {
+        // Arrange
+        val incoming = item(
+            type = TransactionHistoryItem.TransactionType.Transfer,
+            isOutgoing = false,
+            destination = TransactionHistoryItem.AddressType.User(SENDER),
+            source = DEX_ROUTER,
+            amount = BigDecimal.ONE,
+        )
+        val outgoing = item(
+            type = TransactionHistoryItem.TransactionType.Transfer,
+            isOutgoing = true,
+            destination = TransactionHistoryItem.AddressType.User(RECIPIENT),
+            source = SENDER,
+            amount = HALF,
+        )
+
+        // Act
+        val actual = lendingConverter.convertList(listOf(incoming, outgoing)).single()
+
+        // Assert
+        assertThat(actual).isInstanceOf(TxInfo.MultiTransfer::class.java)
+        assertThat(listOf(actual.type, actual.isOutgoing, actual.amount))
+            .containsExactly(TxInfo.TransactionType.Transfer, false, HALF)
+            .inOrder()
+    }
+
     private val lendingConverter = createConverter(
         smartContractMethods = mapOf(
             EthereumYieldSupplyEnterWithNativeCallData.METHOD_ID to yieldModuleMethod("enterProtocolByOwnerWithNative"),
@@ -483,6 +540,8 @@ internal class SdkTransactionHistoryItemConverterTest {
         const val TX_HASH = "0xhash"
         const val SELECTOR_LENGTH = 10
         const val YIELD_MODULE_ADDRESS = "0x4444444444444444444444444444444444444444"
+        const val DEX_ROUTER = "0x1111111254eeb25477b68fb85ed929f73a960582"
+        const val SWAP_CALLDATA = "0x07ed2379"
         val HALF: BigDecimal = BigDecimal("0.5")
         val ONE_ETHER: BigDecimal = BigDecimal.ONE.setScale(Blockchain.Ethereum.decimals())
         val WITHDRAW_ONE_ETHER_CALLDATA: String = EthereumYieldSupplyWithdrawNativeCallData(
