@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -26,6 +25,7 @@ import coil.request.ImageRequest
 import com.tangem.common.ui.expressStatus.ExpressStatusNotificationBlock
 import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -49,7 +49,6 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.core.ui.R as CoreUiR
-import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
 import com.tangem.features.onramp.success.entity.previewdata.OnrampSuccessComponentUMPreviewData
@@ -76,33 +75,20 @@ internal fun OnrampStatusScreenContent(
     TangemThemeRedesign {
         TangemStatusScreen(
             modifier = modifier,
-            variant = state.activeStatus.toScreenVariant(),
+            variant = state.statusVariant,
             title = state.statusTitle,
             description = state.timestampDescription(),
-            asset = { StatusAsset(status = state.activeStatus) },
+            asset = { StatusAsset(variant = state.statusVariant) },
             details = { Details(state = state) },
             footer = { Footer(onCloseClick = onCloseClick) },
         )
     }
 }
 
-private fun OnrampStatus.Status.toScreenVariant(): TangemStatusScreen.Variant = when (this) {
-    OnrampStatus.Status.Finished -> TangemStatusScreen.Variant.Success
-    OnrampStatus.Status.Failed,
-    OnrampStatus.Status.Expired,
-    OnrampStatus.Status.Refunded,
-    -> TangemStatusScreen.Variant.Error
-    OnrampStatus.Status.Verifying,
-    OnrampStatus.Status.RefundInProgress,
-    OnrampStatus.Status.Paused,
-    -> TangemStatusScreen.Variant.Warning
-    else -> TangemStatusScreen.Variant.Info
-}
-
 @Composable
-private fun StatusAsset(status: OnrampStatus.Status) {
+private fun StatusAsset(variant: TangemStatusScreen.Variant) {
     val modifier = Modifier.size(40.dp)
-    when (status.toScreenVariant()) {
+    when (variant) {
         TangemStatusScreen.Variant.Success ->
             TangemStatusIcon(kind = TangemStatusIcon.Kind.Checkmark, modifier = modifier)
         TangemStatusScreen.Variant.Error ->
@@ -236,19 +222,19 @@ private fun ProviderRow(name: TextReference, imageUrl: String) {
 
 @Composable
 private fun Footer(onCloseClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+    TangemFooter(
+        fadeEnabled = false,
+        blurBackground = false,
+        extraTop = {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = resourceReference(R.string.onramp_transaction_status_footer_text).resolveReference(),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
+                textAlign = TextAlign.Center,
+            )
+        },
     ) {
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = resourceReference(R.string.onramp_transaction_status_footer_text).resolveReference(),
-            style = TangemTheme.typography3.caption.medium,
-            color = TangemTheme.colors3.text.secondary,
-            textAlign = TextAlign.Center,
-        )
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Primary,

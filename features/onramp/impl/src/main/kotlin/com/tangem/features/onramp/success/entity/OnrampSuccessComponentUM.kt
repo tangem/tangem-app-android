@@ -2,6 +2,7 @@ package com.tangem.features.onramp.success.entity
 
 import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.onramp.model.OnrampStatus
 
@@ -20,6 +21,7 @@ sealed class OnrampSuccessComponentUM {
         val providerImageUrl: String,
         val notification: NotificationUM?,
         val activeStatus: OnrampStatus.Status,
+        val statusVariant: TangemStatusScreen.Variant,
         val statusTitle: TextReference,
         val externalTxId: String?,
     ) : OnrampSuccessComponentUM()

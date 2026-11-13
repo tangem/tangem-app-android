@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.R
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -16,6 +17,7 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -62,6 +64,31 @@ internal class SetOnrampSuccessContentConverterTest {
         // Assert
         assertThat(actual.activeStatus).isEqualTo(model.status)
         assertThat(actual.statusTitle).isEqualTo(model.expected)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "Finished, Success",
+        "Failed, Error",
+        "Expired, Error",
+        "Refunded, Error",
+        "Verifying, Warning",
+        "RefundInProgress, Warning",
+        "Paused, Warning",
+        "Created, Info",
+    )
+    fun `GIVEN status WHEN convert THEN status variant matches status`(
+        status: OnrampStatus.Status,
+        expected: TangemStatusScreen.Variant,
+    ) {
+        // Arrange
+        val onrampStatus = onrampStatus(status = status)
+
+        // Act
+        val actual = converter.convert(onrampStatus).asContent()
+
+        // Assert
+        assertThat(actual.statusVariant).isEqualTo(expected)
     }
 
     @Test
