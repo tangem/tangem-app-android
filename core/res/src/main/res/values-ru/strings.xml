@@ -2771,7 +2771,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">Можно установить от %s</string>
   <string name="tangempay_card_limit_setup_error_message">Не удалось установить лимит. Пожалуйста, попробуйте снова.</string>
   <string name="tangempay_card_page_activating_banner_title">Активируем вашу карту</string>
-  <string name="tangempay_card_page_closing_banner_description">Может занять до 5 минут</string>
+  <string name="tangempay_card_page_closing_banner_description">Обычно занимает до 5 минут</string>
   <string name="tangempay_card_page_closing_banner_title">Закрытие вашей карты</string>
   <string name="tangempay_card_page_daily_limit_change">Изменить</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Текущий лимит</string>
