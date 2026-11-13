@@ -11,17 +11,21 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.impl.incentive.EarnIncentiveSheet
+import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetComponent
 import com.tangem.features.earn.impl.picker.model.EarnPickerModel
 import com.tangem.features.earn.impl.picker.ui.EarnPickerContent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.launch
 
 internal class EarnYieldPickerComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: Params,
     calculatorFactory: EarnCalculatorComponent.Factory,
+    incentiveSheetFactory: EarnIncentiveSheetComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by context {
 
     private val model: EarnPickerModel = getOrCreateModel(params)
@@ -35,6 +39,12 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
         ),
     )
 
+    private val incentiveSheet = EarnIncentiveSheet(context = context, sheetFactory = incentiveSheetFactory)
+
+    init {
+        componentScope.launch { model.incentiveSheetRequests.collect(incentiveSheet::show) }
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
@@ -44,6 +54,8 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
             modifier = modifier,
             calculator = { calculator.Content(modifier = Modifier) },
         )
+
+        incentiveSheet.BottomSheet()
     }
 
     /**
