@@ -14,12 +14,13 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.*
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
+import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.tangempay.usecase.CancelTariffPlanPendingTransitionUseCase
-import com.tangem.domain.tangempay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
@@ -49,10 +50,10 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     private val router: Router,
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase,
     private val cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
-    private val isTangemPayCustomerVerifiedUseCase: IsTangemPayCustomerVerifiedUseCase,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+    private val getTangemPayProductsAvailabilityUseCase: GetTangemPayProductsAvailabilityUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
@@ -193,10 +194,11 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
                             moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
                         }
                     }
-                    when (isTangemPayCustomerVerifiedUseCase(userWalletId = params.userWalletId).getOrNull()) {
-                        null -> router.replaceAll(AppRoute.Wallet)
-                        true -> router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
-                        false -> Unit
+                    val products = getTangemPayProductsAvailabilityUseCase(params.userWalletId).getOrNull()
+                    if (products == null || TangemPayProduct.PAYMENT_ACCOUNT !in products) {
+                        router.replaceAll(AppRoute.Wallet)
+                    } else {
+                        router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
                     }
                 }
             }.onLeft {

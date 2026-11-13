@@ -15,12 +15,13 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
+import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.tangempay.usecase.CancelTariffPlanPendingTransitionUseCase
-import com.tangem.domain.tangempay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.TangemPayConstants
@@ -51,16 +52,17 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
 
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase = mockk()
     private val cancelTangemPayOrder: CancelTangemPayOrderUseCase = mockk()
-    private val isCustomerVerified: IsTangemPayCustomerVerifiedUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
+    private val getProductsAvailability: GetTangemPayProductsAvailabilityUseCase = mockk()
     private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     @BeforeEach
@@ -69,9 +71,9 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
             router,
             cancelPendingTransition,
             cancelTangemPayOrder,
-            isCustomerVerified,
             paymentAccountStatusFetcher,
             moneyAccountStatusFetcher,
+            getProductsAvailability,
             uiMessageSender,
             analytics,
             urlOpener,
@@ -217,10 +219,10 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
     }
 
     @Test
-    fun `GIVEN onboarding order AND customer verified WHEN cancel clicked THEN verified opened`() {
+    fun `GIVEN onboarding order AND products available WHEN cancel clicked THEN verified opened`() {
         // Arrange
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { isCustomerVerified(USER_WALLET_ID) } returns true.right()
+        coEvery { getProductsAvailability(USER_WALLET_ID) } returns setOf(TangemPayProduct.PAYMENT_ACCOUNT).right()
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
 
         // Act
@@ -230,11 +232,11 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
         coVerify(exactly = 1) { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) }
         coVerifyOrder {
             paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(USER_WALLET_ID))
-            isCustomerVerified(USER_WALLET_ID)
+            getProductsAvailability(USER_WALLET_ID)
         }
         coVerifyOrder {
             moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
-            isCustomerVerified(USER_WALLET_ID)
+            getProductsAvailability(USER_WALLET_ID)
         }
         verify(exactly = 1) {
             router.replaceAll(
@@ -246,27 +248,14 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
         verify(exactly = 0) { uiMessageSender.send(any()) }
     }
 
-    @Test
-    fun `GIVEN onboarding order AND customer not verified WHEN cancel clicked THEN no navigation`() {
+    @ParameterizedTest
+    @MethodSource("noProductsResults")
+    fun `GIVEN onboarding order AND no products to order WHEN cancel clicked THEN wallet opened`(
+        availability: Either<TangemPayApiError, Set<TangemPayProduct>>,
+    ) {
         // Arrange
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { isCustomerVerified(USER_WALLET_ID) } returns false.right()
-        val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
-
-        // Act
-        model.state.value.notification?.button?.onClick?.invoke()
-
-        // Assert
-        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
-        verify(exactly = 0) { uiMessageSender.send(any()) }
-        assertThat(model.state.value.notification?.button?.isProcessing).isFalse()
-    }
-
-    @Test
-    fun `GIVEN onboarding order AND summary fails WHEN cancel clicked THEN wallet opened`() {
-        // Arrange
-        coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { isCustomerVerified(USER_WALLET_ID) } returns TangemPayApiError.Unspecified.left()
+        coEvery { getProductsAvailability(USER_WALLET_ID) } returns availability
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
 
         // Act
@@ -276,6 +265,11 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
         verify(exactly = 1) { router.replaceAll(AppRoute.Wallet, onComplete = any()) }
         verify(exactly = 0) { uiMessageSender.send(any()) }
     }
+
+    private fun noProductsResults(): List<Either<TangemPayApiError, Set<TangemPayProduct>>> = listOf(
+        emptySet<TangemPayProduct>().right(),
+        TangemPayApiError.Unspecified.left(),
+    )
 
     @Test
     fun `GIVEN upgrade order WHEN cancel clicked THEN order cancelled AND screen kept`() {
@@ -288,7 +282,6 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
 
         // Assert
         coVerify(exactly = 1) { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) }
-        coVerify(exactly = 0) { isCustomerVerified(any()) }
         coVerify(exactly = 0) { paymentAccountStatusFetcher(any<PaymentAccountStatusFetcher.Params>()) }
         coVerify(exactly = 0) { moneyAccountStatusFetcher(any<MoneyAccountStatusFetcher.Params>()) }
         verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
@@ -354,10 +347,10 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
             router = router,
             cancelPendingTransition = cancelPendingTransition,
             cancelTangemPayOrderUseCase = cancelTangemPayOrder,
-            isTangemPayCustomerVerifiedUseCase = isCustomerVerified,
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+            getTangemPayProductsAvailabilityUseCase = getProductsAvailability,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
             urlOpener = urlOpener,
