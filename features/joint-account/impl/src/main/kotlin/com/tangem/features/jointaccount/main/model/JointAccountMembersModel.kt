@@ -77,6 +77,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private val stateController: JointAccountMembersStateController,
     private val inviteSharing: JointAccountInviteSharing,
     private val currentTimeProvider: CurrentTimeProvider,
+    private val pushPermissionPrompt: JointAccountPushPermissionPrompt,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountMembersListParams>()
@@ -90,7 +91,12 @@ internal class JointAccountMembersModel @Inject constructor(
     val memberStatusChanges: Flow<Unit>
         field = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
+    val pushPermissionRequests: Flow<Unit>
+        get() = pushPermissionPrompt.systemRequests
+
     private val isResumed = MutableStateFlow(false)
+
+    private var isPushPromptStarted = false
 
     /** One invite is issued at a time */
     private val issuingSlot = MutableStateFlow<Int?>(null)
@@ -126,6 +132,10 @@ internal class JointAccountMembersModel @Inject constructor(
         isResumed.value = true
     }
 
+    fun onPushPermissionResult(result: PushPermissionResult) {
+        pushPermissionPrompt.onSystemRequestResult(result)
+    }
+
     fun onPause() {
         isResumed.value = false
     }
@@ -134,6 +144,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private fun observeAccount() {
         resolvedAccountFlow
             .onEach(::leaveOnActivation)
+            .onEach(::promptPushPermissionOnce)
             .flatMapLatest { account ->
                 if (account == null) return@flatMapLatest flowOf(null)
 
@@ -169,6 +180,17 @@ internal class JointAccountMembersModel @Inject constructor(
 
         if (previous != null && previous != JointAccount.Status.ACTIVE && status == JointAccount.Status.ACTIVE) {
             params.onActivated()
+        }
+    }
+
+    private fun promptPushPermissionOnce(account: JointAccount?) {
+        if (account == null || isPushPromptStarted) return
+        isPushPromptStarted = true
+        modelScope.launch {
+            pushPermissionPrompt.promptOnce(
+                userWalletId = params.userWalletId,
+                cryptoAccountId = account.cryptoAccountId,
+            )
         }
     }
 
