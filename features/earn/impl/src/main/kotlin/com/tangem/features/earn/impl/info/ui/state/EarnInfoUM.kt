@@ -8,19 +8,13 @@ import com.tangem.features.earn.api.ui.EarnRowUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
 import kotlinx.collections.immutable.ImmutableList
 
-/**
- * @property earned `null` while the product reports no earnings
- * @property staleNotice when the data was last updated, `null` while the data is fresh
- */
 @Immutable
 internal data class EarnInfoUM(
     val title: TextReference,
     val subtitle: TextReference,
     val balanceFiat: TextReference,
     val balanceCrypto: TextReference,
-    val earned: TextReference?,
     val rewards: RewardsUM?,
-    val staleNotice: TextReference?,
     val tabs: ImmutableList<EarnInfoTab>,
     val myFunds: MyFundsUM,
     val benefits: ImmutableList<EarnBenefitUM>,
