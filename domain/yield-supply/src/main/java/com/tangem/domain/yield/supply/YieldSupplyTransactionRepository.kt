@@ -9,6 +9,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.yield.supply.models.YieldModuleAddresses
+import com.tangem.domain.yield.supply.models.YieldModulePreparation
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import java.math.BigDecimal
@@ -59,7 +61,8 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
      * Builds the owner-signed transaction that supplies [amount] of the native coin of [network]: the coin goes in the
      * transaction value and the module wraps it. Until the module is deployed it is sent to the calculated module
      * address, so it has to go after the deployment. An outdated module is upgraded within the same call, since only
-     * the latest implementation accepts the coin.
+     * the latest implementation accepts the coin, unless [wrapIntoUpgrade] is false: then an earlier transaction of
+     * the same send upgrades it and the call goes bare.
      *
      * @throws com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException if the module is
      * outdated and cannot be upgraded.
@@ -70,6 +73,20 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
         userWalletId: UserWalletId,
         network: Network,
         amount: BigDecimal,
+        wrapIntoUpgrade: Boolean,
+    ): TransactionData.Uncompiled
+
+    /**
+     * Builds the owner-signed transaction that readies the module for a native deposit of [wrappedToken]: deploys
+     * it, or initializes or reactivates the wrapped coin in it. Init and reactivation are sent inside the module
+     * upgrade when the module is outdated, so the deposit after them needs no upgrade. No approval: the native
+     * deposit takes no allowance. Throws when the module version cannot be read or the module cannot be upgraded.
+     */
+    suspend fun createNativePreparationTransaction(
+        userWalletId: UserWalletId,
+        network: Network,
+        wrappedToken: CryptoCurrency.Token,
+        preparation: YieldModulePreparation,
     ): TransactionData.Uncompiled
 
     /**
@@ -82,6 +99,13 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
         network: Network,
         amount: BigDecimal?,
     ): TransactionData.Uncompiled
+
+    /**
+     * Addresses the native transactions of [network] are built for, so they can be checked before signing. The module
+     * address is the calculated one until it is deployed, as in [createNativeEnterTransaction]. Throws when it cannot
+     * be read.
+     */
+    suspend fun getNativeYieldModuleAddresses(userWalletId: UserWalletId, network: Network): YieldModuleAddresses
 
     /** Version of the user's Yield Module on [network] against the latest one. Throws when it cannot be read. */
     suspend fun getYieldModuleVersionStatus(userWalletId: UserWalletId, network: Network): YieldModuleVersionStatus

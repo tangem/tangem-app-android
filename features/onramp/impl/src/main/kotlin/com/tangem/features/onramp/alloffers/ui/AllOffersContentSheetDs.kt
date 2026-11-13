@@ -1,0 +1,545 @@
+package com.tangem.features.onramp.alloffers.ui
+
+import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.layout.IntrinsicMeasurable
+import androidx.compose.ui.layout.IntrinsicMeasureScope
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
+import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.ui.R as CoreUiR
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.ds.message.TangemMessage
+import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
+import com.tangem.core.ui.ds2.modal.reportMeasuredHeight
+import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_left_24
+import com.tangem.core.ui.res.generated.icons.ic_cross_24
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
+import com.tangem.domain.onramp.model.OnrampPaymentMethod
+import com.tangem.domain.onramp.model.PaymentMethodStatus
+import com.tangem.domain.onramp.model.PaymentMethodType
+import com.tangem.features.marketing.api.MarketingBannerComponent
+import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
+import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
+import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
+import com.tangem.features.onramp.impl.R
+import com.tangem.utils.annotations.RemoveWithToggle
+import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
+import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
+import com.tangem.features.onramp.main.entity.OnrampOfferUM
+import com.tangem.features.onramp.main.ui.OfferWithLinkedBanner
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
+
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
+internal fun AllOffersContentSheetDs(
+    state: AllOffersStateUM,
+    marketingBannerComponent: MarketingBannerComponent,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+    onCloseClick: () -> Unit,
+) {
+    val onBack = remember(state) {
+        {
+            if (state is AllOffersStateUM.Content && state.currentMethod != null) {
+                state.onBackClicked()
+            } else {
+                onCloseClick()
+            }
+        }
+    }
+
+    val config = TangemBottomSheetConfig(
+        isShown = true,
+        onDismissRequest = onCloseClick,
+        content = TangemBottomSheetConfigContent.Empty,
+    )
+    TangemModal<TangemBottomSheetConfigContent.Empty>(
+        config = config,
+        onBack = onBack,
+        title = {
+            CompositionLocalProvider(LocalOnrampDesignSystemEnabled provides true) {
+                if (state is AllOffersStateUM.Content && state.currentMethod != null) {
+                    ProviderTitleDs(
+                        onCloseClick = onCloseClick,
+                        onBackClick = onBack,
+                    )
+                } else {
+                    PaymentMethodTitleDs(onCloseClick = onCloseClick)
+                }
+            }
+        },
+        content = {
+            CompositionLocalProvider(LocalOnrampDesignSystemEnabled provides true) {
+                AllOffersSheetContentDs(
+                    state = state,
+                    marketingBannerComponent = marketingBannerComponent,
+                    linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+                )
+            }
+        },
+    )
+}
+
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
+private fun AllOffersSheetContentDs(
+    state: AllOffersStateUM,
+    marketingBannerComponent: MarketingBannerComponent,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Standalone marketing banner at the top of the sheet (DS3 -> wrap in the redesign theme).
+        // Renders nothing when no matching campaign, so it adds no space in the common case.
+        IntrinsicFreeBoxDs {
+            TangemThemeRedesign {
+                marketingBannerComponent.Content(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+        ) {
+            AnimatedContent(
+                targetState = state is AllOffersStateUM.Content && state.currentMethod != null,
+                transitionSpec = {
+                    fadeIn(tween(durationMillis = 220)) togetherWith
+                        fadeOut(tween(durationMillis = 90))
+                },
+                label = "Change offers and payment method state",
+            ) { shouldShowOffersScreen ->
+                when (state) {
+                    AllOffersStateUM.Loading -> AllOffersContentLoadingDs()
+                    is AllOffersStateUM.Error -> AllOffersErrorDs(state.errorNotification)
+                    is AllOffersStateUM.Content -> {
+                        if (shouldShowOffersScreen) {
+                            state.currentMethod?.let { method ->
+                                IntrinsicFreeBoxDs {
+                                    OffersBasedOnPaymentMethodContentDs(
+                                        offers = method.offers,
+                                        linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+                                        notification = state.restrictedNotification,
+                                    )
+                                }
+                            }
+                        } else {
+                            PaymentMethodsContentDs(
+                                methods = state.methods,
+                                notification = state.restrictedNotification,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// The banner pager and the offers' subcomposing images throw on the intrinsic-size queries TangemModal makes.
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
+private fun IntrinsicFreeBoxDs(content: @Composable () -> Unit) {
+    Layout(
+        content = content,
+        modifier = Modifier.reportMeasuredHeight(),
+        measurePolicy = IntrinsicFreeMeasurePolicyDs,
+    )
+}
+
+private object IntrinsicFreeMeasurePolicyDs : MeasurePolicy {
+
+    override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
+        val placeables = measurables.map { it.measure(constraints) }
+        val width = placeables.maxOfOrNull { it.width } ?: constraints.minWidth
+        val height = placeables.sumOf { it.height }
+        return layout(width, height) {
+            var y = 0
+            placeables.forEach { placeable ->
+                placeable.placeRelative(x = 0, y = y)
+                y += placeable.height
+            }
+        }
+    }
+
+    override fun IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int) = 0
+
+    override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int) = 0
+
+    override fun IntrinsicMeasureScope.minIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int) = 0
+
+    override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int) = 0
+}
+
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
+private fun ProviderTitleDs(onBackClick: () -> Unit, onCloseClick: () -> Unit) {
+    TangemModal.TopNavigation(
+        startButton = { NavigationDiscButtonDs(icon = Icons.ic_chevron_left_24, onClick = onBackClick) },
+        endButton = {
+            CloseDiscButtonDs(onClick = onCloseClick)
+        },
+        contentColumn = {
+            TitleSubtitleDs(
+                title = TextReference.Res(R.string.onramp_all_offers_button_title),
+                subtitle = TextReference.Res(R.string.express_choose_providers_title),
+            )
+        },
+    )
+}
+
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
+private fun PaymentMethodTitleDs(onCloseClick: () -> Unit) {
+    TangemModal.TopNavigation(
+        endButton = {
+            CloseDiscButtonDs(onClick = onCloseClick)
+        },
+        contentColumn = {
+            TitleSubtitleDs(
+                title = TextReference.Res(R.string.onramp_all_offers_button_title),
+                subtitle = TextReference.Res(R.string.onramp_payment_method_subtitle),
+            )
+        },
+    )
+}
+
+@Composable
+private fun ColumnScope.TitleSubtitleDs(title: TextReference, subtitle: TextReference?) {
+    TangemNavigationText(
+        text = title.resolveReference(),
+        role = TangemNavigationText.Role.Title,
+        modifier = Modifier.testTag(BaseBottomSheetTestTags.TITLE),
+    )
+    subtitle?.let { subtitleReference ->
+        Spacer(Modifier.height(4.dp))
+        TangemNavigationText(
+            text = subtitleReference.resolveReference(),
+            role = TangemNavigationText.Role.Subtitle,
+            modifier = Modifier.testTag(BaseBottomSheetTestTags.SUBTITLE),
+        )
+    }
+}
+
+private const val MATERIAL_BORDER_MID_START_STOP = 0.4f
+private const val MATERIAL_BORDER_MID_END_STOP = 0.6f
+
+private val HeaderDiscShineFill = Brush.verticalGradient(
+    listOf(Color.White.copy(alpha = 0.040f), Color.White.copy(alpha = 0.062f)),
+)
+
+@Composable
+private fun HeaderDiscDs(icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val materialBorder = TangemTheme.colors3.material.border
+    TangemSurface(
+        modifier = modifier,
+        color = Color.Transparent,
+        shape = CircleShape,
+        border = BorderStroke(
+            width = 1.dp,
+            brush = Brush.linearGradient(
+                0f to materialBorder.start,
+                MATERIAL_BORDER_MID_START_STOP to materialBorder.mid,
+                MATERIAL_BORDER_MID_END_STOP to materialBorder.mid,
+                1f to materialBorder.end,
+            ),
+        ),
+        onClick = onClick,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(HeaderDiscShineFill),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                imageVector = icon,
+                tint = TangemTheme.colors3.icon.primary,
+                contentDescription = null,
+            )
+        }
+    }
+}
+
+@Composable
+private fun NavigationDiscButtonDs(icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    HeaderDiscDs(
+        icon = icon,
+        onClick = onClick,
+        modifier = modifier.size(44.dp).semantics { role = Role.Button },
+    )
+}
+
+@Composable
+private fun CloseDiscButtonDs(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val closeDescription = stringResourceSafe(CoreUiR.string.common_close)
+    HeaderDiscDs(
+        icon = Icons.ic_cross_24,
+        onClick = onClick,
+        modifier = modifier
+            .size(44.dp)
+            .semantics {
+                role = Role.Button
+                contentDescription = closeDescription
+            }
+            .testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
+    )
+}
+
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
+private fun OffersBasedOnPaymentMethodContentDs(
+    offers: ImmutableList<OnrampOfferUM>,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+    notification: NotificationUM?,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (notification != null) {
+            TangemMessage(config = notification.config)
+            SpacerH(8.dp)
+        }
+        offers.fastForEach { offer ->
+            key("${offer.paymentMethod.id} ${offer.providerName} ${offer.rate}") {
+                OfferWithLinkedBanner(offer, linkedMarketingBannerComponent)
+                SpacerH(4.dp)
+            }
+        }
+    }
+}
+
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
+private fun AllOffersContentLoadingDs() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        repeat(times = LOADING_ITEMS_COUNT_DS) {
+            ProvideTangemShimmer {
+                TangemShimmer(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth()
+                        .height(96.dp),
+                    radius = 14.dp,
+                )
+            }
+        }
+    }
+}
+
+private const val LOADING_ITEMS_COUNT_DS = 3
+
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
+private fun AllOffersErrorDs(errorNotification: NotificationUM) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+    ) {
+        TangemMessage(config = errorNotification.config)
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
+private fun AllOffersContentSheetPaymentPreviewDs() {
+    val method = AllOffersPaymentMethodUM(
+        offers = persistentListOf(
+            OnrampOfferUM(
+                category = OnrampOfferCategoryUM.Recommended,
+                advantages = OnrampOfferAdvantagesUM.BestRate,
+                paymentMethod = OnrampPaymentMethod(
+                    id = "card",
+                    name = "Card",
+                    imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
+                    type = PaymentMethodType.CARD,
+                ),
+                providerId = "simplex",
+                providerName = "Simplex",
+                rate = "0,0245334 BTC",
+                diff = null,
+                onBuyClicked = {},
+            ),
+            OnrampOfferUM(
+                category = OnrampOfferCategoryUM.Recommended,
+                advantages = OnrampOfferAdvantagesUM.Default,
+                paymentMethod = OnrampPaymentMethod(
+                    id = "card",
+                    name = "Card",
+                    imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
+                    type = PaymentMethodType.CARD,
+                ),
+                providerId = "simplex",
+                providerName = "Simplex",
+                rate = "0,00145334 BTC",
+                diff = stringReference("–0.07%"),
+                onBuyClicked = {},
+            ),
+        ),
+        methodConfig = OnrampPaymentMethodConfig(
+            method = OnrampPaymentMethod(
+                id = "card",
+                name = "Card",
+                imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
+                type = PaymentMethodType.CARD,
+            ),
+            onClick = {},
+        ),
+        diff = null,
+        rate = "0,0245334 BTC",
+        providersCount = 2,
+        isBestRate = true,
+        paymentMethodStatus = PaymentMethodStatus.Available,
+    )
+
+    TangemThemePreview {
+        AllOffersContentSheetDs(
+            state = AllOffersStateUM.Content(
+                methods = persistentListOf(),
+                currentMethod = method,
+                onBackClicked = {},
+            ),
+            marketingBannerComponent = PreviewMarketingBannerComponentDs,
+            linkedMarketingBannerComponent = PreviewMarketingBannerComponentDs,
+            onCloseClick = {},
+        )
+    }
+}
+
+private val PreviewMarketingBannerComponentDs = object : MarketingBannerComponent {
+    @Composable
+    override fun Content(modifier: Modifier) = Unit
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+@Composable
+private fun AllOffersContentSheetOffersPreviewDs() {
+    val methods = List(5) {
+        AllOffersPaymentMethodUM(
+            offers = persistentListOf(
+                OnrampOfferUM(
+                    category = OnrampOfferCategoryUM.Recommended,
+                    advantages = OnrampOfferAdvantagesUM.BestRate,
+                    paymentMethod = OnrampPaymentMethod(
+                        id = "card",
+                        name = "Card",
+                        imageUrl =
+                        "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
+                        type = PaymentMethodType.CARD,
+                    ),
+                    providerId = "simplex",
+                    providerName = "Simplex",
+                    rate = "0,0245334 BTC",
+                    diff = null,
+                    onBuyClicked = {},
+                ),
+                OnrampOfferUM(
+                    category = OnrampOfferCategoryUM.Recommended,
+                    advantages = OnrampOfferAdvantagesUM.Default,
+                    paymentMethod = OnrampPaymentMethod(
+                        id = "card",
+                        name = "Card",
+                        imageUrl =
+                        "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
+                        type = PaymentMethodType.CARD,
+                    ),
+                    providerId = "simplex",
+                    providerName = "Simplex",
+                    rate = "0,00145334 BTC",
+                    diff = stringReference("–0.07%"),
+                    onBuyClicked = {},
+                ),
+            ),
+            methodConfig = OnrampPaymentMethodConfig(
+                method = OnrampPaymentMethod(
+                    id = "card",
+                    name = "Card",
+                    imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
+                    type = PaymentMethodType.CARD,
+                ),
+                onClick = {},
+            ),
+            diff = null,
+            rate = "0,0245334 BTC",
+            providersCount = 2,
+            isBestRate = true,
+            paymentMethodStatus = PaymentMethodStatus.Available,
+        )
+    }
+
+    TangemThemePreview {
+        AllOffersContentSheetDs(
+            state = AllOffersStateUM.Content(
+                methods = methods.toPersistentList(),
+                currentMethod = null,
+                onBackClicked = {},
+            ),
+            marketingBannerComponent = PreviewMarketingBannerComponentDs,
+            linkedMarketingBannerComponent = PreviewMarketingBannerComponentDs,
+            onCloseClick = {},
+        )
+    }
+}

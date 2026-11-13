@@ -16,6 +16,7 @@ import com.tangem.features.earn.product.api.product.EarnApyHistory
 import com.tangem.features.earn.product.api.product.EarnApyPoint
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.assertEitherLeft
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -118,7 +119,8 @@ internal class AaveApyHistoryLoaderTest {
         val actual = loader.load(asset, AaveApyPeriods.Month)
 
         // Assert
-        assertThat(actual.isLeft()).isTrue()
+        val expected = IllegalStateException("Aave APY history failed: ${YieldIncentivesError.FeatureAbsent}")
+        assertEitherLeft(actual, expected)
     }
 
     private fun emptyHistory() = YieldAprHistory(chainId = CHAIN_ID, tokenAddress = WETH, points = emptyList())

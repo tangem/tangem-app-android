@@ -25,7 +25,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 button supporting an optional leading icon, label, and trailing icon.
  *
- * Version: 1.3.0
+ * Version: 1.3.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=0-1)
  *
@@ -50,7 +50,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param variant Visual style. See [TangemButton.Variant].
  * @param size Token-driven size preset controlling height, padding, and icon size.
  *   See [TangemButton.Size].
- * @param isLoading When `true`, hides the content and shows a centered loader.
+ * @param isLoading When `true`, hides the content and shows a centered loader. TalkBack keeps the
+ *   label and adds an "In progress" state.
  * @param isEnabled When `false`, the button is dimmed by the variant's disabled alpha and clicks
  *   are ignored.
  * @param isDimmed When `true`, the button takes the disabled appearance but still routes clicks to
@@ -105,7 +106,7 @@ fun TangemButton(
 
 object TangemButton {
 
-    val version = DsVersion(major = 1, minor = 3, patch = 0)
+    val version = DsVersion(major = 1, minor = 3, patch = 1)
 
     /**
      * Visual style of the button.
@@ -260,8 +261,9 @@ private fun PreviewHoldRow(variant: TangemButton.HoldVariant) {
                 contentDescription = null,
                 interactionSource = remember { MutableInteractionSource() },
                 hold = HoldToConfirmSpec(
-                    progress = { progress },
+                    state = remember { HoldToConfirmState(initialFill = progress) },
                     overlayColor = variant.holdOverlayColor(),
+                    hint = stringReference("Tap and hold"),
                     isActionEnabled = true,
                     onConfirm = {},
                 ),

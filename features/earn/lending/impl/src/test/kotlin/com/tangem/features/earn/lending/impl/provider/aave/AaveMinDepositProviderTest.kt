@@ -15,6 +15,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
+import com.tangem.test.core.assertEitherLeft
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -105,7 +106,7 @@ internal class AaveMinDepositProviderTest {
         provider.get(userWalletId, asset)
 
         // Assert
-        assertThat(first.isLeft()).isTrue()
+        assertEitherLeft(first, IllegalStateException("fee"))
         coVerify(exactly = 2) { minAmountUseCase(userWalletId, ethStatus) }
     }
 
@@ -120,7 +121,7 @@ internal class AaveMinDepositProviderTest {
         val actual = provider.get(userWalletId, asset)
 
         // Assert
-        assertThat(actual.isLeft()).isTrue()
+        assertEitherLeft(actual, IllegalStateException("No status for ${asset.currency.id}"))
         coVerify(exactly = 0) { minAmountUseCase(any(), any()) }
     }
 

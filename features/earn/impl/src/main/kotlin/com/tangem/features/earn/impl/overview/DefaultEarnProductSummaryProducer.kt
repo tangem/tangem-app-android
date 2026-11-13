@@ -12,6 +12,7 @@ import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRateEntry
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger

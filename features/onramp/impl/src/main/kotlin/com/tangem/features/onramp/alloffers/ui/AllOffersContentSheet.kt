@@ -37,6 +37,7 @@ import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
 import com.tangem.features.onramp.impl.R
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
 import com.tangem.features.onramp.main.entity.OnrampOfferUM
@@ -45,6 +46,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 @Composable
 internal fun AllOffersContentSheet(
     state: AllOffersStateUM,
