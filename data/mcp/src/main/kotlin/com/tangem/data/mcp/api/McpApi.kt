@@ -93,13 +93,13 @@ internal interface McpApi {
      * The service only has the card of an intent: its id, source, status and session. The details are asked of the
      * service that owns the intent.
      *
-     * @param walletId the wallet in the Base64 form the authentication service uses.
+     * @param walletId the 64-character hexadecimal wallet id matching the token's wallet claim.
      */
     @GET("api/notifications/v1/intent-history")
     @RequiresSessionAuth
     suspend fun getIntentHistory(
         @Query("walletId") walletId: String,
-        @Query("offset") offset: Int,
+        @Query("page") page: Int,
         @Query("limit") limit: Int,
     ): ApiResponse<McpIntentHistoryResponse>
 }

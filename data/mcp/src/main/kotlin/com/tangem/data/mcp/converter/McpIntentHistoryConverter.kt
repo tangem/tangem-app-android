@@ -6,31 +6,28 @@ import com.tangem.domain.mcp.models.McpIntentHistoryItem
 import com.tangem.domain.mcp.models.McpIntentHistoryPage
 import com.tangem.domain.mcp.models.McpIntentStatus
 import com.tangem.domain.mcp.models.McpRequest.Intent.Source
-import java.util.concurrent.TimeUnit
+import java.time.Instant
 
 private const val SOURCE_TRANSACTION = "transaction"
 private const val SOURCE_EXPRESS = "express"
+private const val TYPE_SEND = "send"
+private const val TYPE_EXCHANGE = "exchange"
 
 private const val STATUS_CREATED = "CREATED"
 private const val STATUS_COMPLETED = "COMPLETED"
 
 /**
- * The service names the source only, and each source has a single supported operation, so it also says which one
- * the intent is. An intent of a source or status the app does not know is dropped: there is no screen to open it with.
+ * Unsupported source/type/status combinations are dropped because the app has no screen to open them with.
  */
-internal fun McpIntentHistoryResponse.toDomain(): McpIntentHistoryPage {
-    val consumed = offset + intents.size
-
-    return McpIntentHistoryPage(
-        items = intents.mapNotNull(McpIntentHistoryItemResponse::toDomainOrNull),
-        nextOffset = consumed.takeIf { intents.isNotEmpty() && it < total },
-    )
-}
+internal fun McpIntentHistoryResponse.toDomain(): McpIntentHistoryPage = McpIntentHistoryPage(
+    items = items.mapNotNull(McpIntentHistoryItemResponse::toDomainOrNull),
+    nextPage = (meta.page + 1).takeIf { meta.hasNext },
+)
 
 private fun McpIntentHistoryItemResponse.toDomainOrNull(): McpIntentHistoryItem? {
-    val intentSource = when (source) {
-        SOURCE_TRANSACTION -> Source.Transaction(Source.Transaction.Type.SEND)
-        SOURCE_EXPRESS -> Source.Express(Source.Express.Type.EXCHANGE)
+    val intentSource = when {
+        source == SOURCE_TRANSACTION && type == TYPE_SEND -> Source.Transaction(Source.Transaction.Type.SEND)
+        source == SOURCE_EXPRESS && type == TYPE_EXCHANGE -> Source.Express(Source.Express.Type.EXCHANGE)
         else -> return null
     }
     val intentStatus = when (status) {
@@ -38,12 +35,13 @@ private fun McpIntentHistoryItemResponse.toDomainOrNull(): McpIntentHistoryItem?
         STATUS_COMPLETED -> McpIntentStatus.Completed
         else -> return null
     }
+    val createdAtMillis = runCatching { Instant.parse(createdAt).toEpochMilli() }.getOrNull() ?: return null
 
     return McpIntentHistoryItem(
         intentId = intentId,
         source = intentSource,
         status = intentStatus,
         sessionId = sessionId,
-        createdAtMillis = TimeUnit.SECONDS.toMillis(createdAt),
+        createdAtMillis = createdAtMillis,
     )
 }

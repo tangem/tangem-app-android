@@ -84,13 +84,13 @@ interface McpRepository {
     suspend fun revokeAllSessions()
 
     /**
-     * Reads one page of the intents agents raised for [walletId], newest first, from [offset].
+     * Reads one page of the intents agents raised for [walletId], newest first; [page] starts at 1.
      *
      * The service lists intents of every agent connected to the wallet and cannot filter them by session.
      */
     suspend fun getIntentHistory(
         walletId: UserWalletId,
-        offset: Int,
+        page: Int,
         limit: Int,
     ): Either<Throwable, McpIntentHistoryPage>
 }

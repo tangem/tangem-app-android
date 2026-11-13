@@ -21,6 +21,7 @@ import com.tangem.data.mcp.converter.McpClientConverter
 import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
 import com.tangem.data.mcp.api.models.response.McpIntentHistoryItemResponse
+import com.tangem.data.mcp.api.models.response.McpIntentHistoryMetaResponse
 import com.tangem.data.mcp.api.models.response.McpIntentHistoryResponse
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
 import com.tangem.test.core.ProvideTestModels
@@ -475,27 +476,27 @@ internal class DefaultMcpRepositoryTest {
     inner class GetIntentHistory {
 
         @Test
-        fun `GIVEN history page WHEN getIntentHistory THEN asks with Base64 wallet id and maps the page`() = runTest {
+        fun `GIVEN history page WHEN getIntentHistory THEN hex wallet id and one-based page are sent`() = runTest {
             // Arrange
-            coEvery { mcpApi.getIntentHistory(BASE64_WALLET_ID, offset = 0, limit = 20) } returns ApiResponse.Success(
+            val walletId = UserWalletId("9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08")
+            coEvery { mcpApi.getIntentHistory(walletId.stringValue, page = 2, limit = 20) } returns ApiResponse.Success(
                 McpIntentHistoryResponse(
-                    intents = listOf(
+                    items = listOf(
                         McpIntentHistoryItemResponse(
                             intentId = "intent-1",
                             source = "transaction",
+                            type = "send",
                             status = "CREATED",
                             sessionId = SESSION_ID,
-                            createdAt = 1_789_117_759L,
+                            createdAt = "2026-09-30T08:15:42.317Z",
                         ),
                     ),
-                    total = 1,
-                    limit = 20,
-                    offset = 0,
+                    meta = McpIntentHistoryMetaResponse(total = 21, page = 2, limit = 20, hasNext = false),
                 ),
             )
 
             // Act
-            val actual = repository.getIntentHistory(walletId = WALLET_ID, offset = 0, limit = 20)
+            val actual = repository.getIntentHistory(walletId = walletId, page = 2, limit = 20)
 
             // Assert
             val expected = McpIntentHistoryPage(
@@ -505,12 +506,13 @@ internal class DefaultMcpRepositoryTest {
                         source = McpRequest.Intent.Source.Transaction(McpRequest.Intent.Source.Transaction.Type.SEND),
                         status = McpIntentStatus.Created,
                         sessionId = SESSION_ID,
-                        createdAtMillis = 1_789_117_759_000L,
+                        createdAtMillis = 1_790_756_142_317L,
                     ),
                 ),
-                nextOffset = null,
+                nextPage = null,
             )
             assertThat(actual).isEqualTo(Either.Right(expected))
+            coVerify(exactly = 1) { mcpApi.getIntentHistory(walletId.stringValue, page = 2, limit = 20) }
         }
 
         @Test
@@ -519,7 +521,7 @@ internal class DefaultMcpRepositoryTest {
             coEvery { mcpApi.getIntentHistory(any(), any(), any()) } returns apiError(NETWORK_ERROR)
 
             // Act
-            val actual = repository.getIntentHistory(walletId = WALLET_ID, offset = 0, limit = 20)
+            val actual = repository.getIntentHistory(walletId = WALLET_ID, page = 1, limit = 20)
 
             // Assert
             assertThat(actual).isEqualTo(Either.Left(NETWORK_ERROR))

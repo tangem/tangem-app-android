@@ -9,7 +9,7 @@ import javax.inject.Inject
 /**
  * Reads one backend page and keeps only intents of the requested agent session.
  *
- * The service cannot filter by session, so the result may be partial or empty while still having a next offset.
+ * The service cannot filter by session, so the result may be partial or empty while still having a next page.
  */
 class GetMcpIntentHistoryUseCase @Inject constructor(
     private val mcpRepository: McpRepository,
@@ -18,10 +18,10 @@ class GetMcpIntentHistoryUseCase @Inject constructor(
     suspend operator fun invoke(
         walletId: UserWalletId,
         sessionId: String,
-        offset: Int,
+        page: Int,
     ): Either<Throwable, McpIntentHistoryPage> =
-        mcpRepository.getIntentHistory(walletId = walletId, offset = offset, limit = PAGE_SIZE).map { page ->
-            page.copy(items = page.items.filter { it.sessionId == sessionId })
+        mcpRepository.getIntentHistory(walletId = walletId, page = page, limit = PAGE_SIZE).map { history ->
+            history.copy(items = history.items.filter { it.sessionId == sessionId })
         }
 
     private companion object {

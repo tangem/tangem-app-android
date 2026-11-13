@@ -134,10 +134,10 @@ internal class DefaultMcpRepository @Inject constructor(
 
     override suspend fun getIntentHistory(
         walletId: UserWalletId,
-        offset: Int,
+        page: Int,
         limit: Int,
     ): Either<Throwable, McpIntentHistoryPage> {
-        val response = mcpApi.getIntentHistory(walletId = walletId.toAuthWalletId(), offset = offset, limit = limit)
+        val response = mcpApi.getIntentHistory(walletId = walletId.stringValue, page = page, limit = limit)
 
         return response.toEither().map { it.toDomain() }
     }

@@ -20,10 +20,10 @@ enum class McpIntentStatus {
 /**
  * One page of the intent history.
  *
- * [nextOffset] is where the following page starts on the service, or `null` once the last page is read. It is not
- * `offset + items.size`, because items the app does not support are dropped from [items].
+ * [nextPage] is the next one-based page number, or `null` once the last page is read. It comes from the backend's
+ * pagination metadata because unsupported intents and other sessions can be filtered out of [items].
  */
 data class McpIntentHistoryPage(
     val items: List<McpIntentHistoryItem>,
-    val nextOffset: Int?,
+    val nextPage: Int?,
 )
