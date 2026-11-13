@@ -48,7 +48,6 @@ import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.jointaccount.derivation.isJointAccountReservedPath
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.isJoint
@@ -90,6 +89,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val jointRefundReceiverProvider: JointRefundReceiverProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
     private val yieldSendUpgradeDecisions: YieldSendUpgradeDecisions,
+    private val internalTransfersPolicy: InternalTransfersPolicy,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig }
@@ -259,7 +259,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val transactionHistoryState = source.provider.getTransactionHistoryState(
             address = source.address,
             filterType = currency.toTransactionHistoryFilterType(),
-            shouldIncludeInternalTransfers = currency.isSafeCoin(),
+            shouldIncludeInternalTransfers = internalTransfersPolicy.shouldInclude(currency),
         )
 
         return txHistoryStateConverter.convert(transactionHistoryState)
@@ -291,7 +291,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 page = page,
                 pageSize = pageSize,
                 filterType = currency.toTransactionHistoryFilterType(),
-                shouldIncludeInternalTransfers = currency.isSafeCoin(),
+                shouldIncludeInternalTransfers = internalTransfersPolicy.shouldInclude(currency),
                 gaslessFeeAddresses = gaslessFeeAddresses,
             ),
         )
@@ -353,9 +353,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 )
             }
     }
-
-    /** A joint account's coin moves only in the Safe's internal calls: the relayer sends the transaction */
-    private fun CryptoCurrency.isSafeCoin(): Boolean = this is CryptoCurrency.Coin && isJoint
 
     private fun CryptoCurrency.toTransactionHistoryFilterType(): TransactionHistoryRequest.FilterType {
         return when (this) {

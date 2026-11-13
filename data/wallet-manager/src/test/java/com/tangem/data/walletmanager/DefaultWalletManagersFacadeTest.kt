@@ -65,6 +65,7 @@ internal class DefaultWalletManagersFacadeTest {
         jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = mockk(),
         yieldSendUpgradeDecisions = YieldSendUpgradeDecisions(),
+        internalTransfersPolicy = mockk(relaxed = true),
     )
 
     private val userWalletId = UserWalletId("011")
@@ -415,6 +416,7 @@ internal class DefaultWalletManagersFacadeTest {
         jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = mockk(),
         yieldSendUpgradeDecisions = YieldSendUpgradeDecisions(),
+        internalTransfersPolicy = mockk(relaxed = true),
     )
 
     private companion object {
