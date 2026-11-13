@@ -25,6 +25,7 @@ internal class FakeLendingProvider(
     val refreshCalls = mutableListOf<Pair<UserWalletId, LendingAsset>>()
     var refreshPositionResult: Either<Throwable, Unit> = Unit.right()
     val refreshPositionCalls = mutableListOf<Pair<UserWalletId, LendingAsset>>()
+    var minDepositResult: Either<Throwable, BigDecimal> = BigDecimal.ZERO.right()
 
     override val info = EarnProvider(title = stringReference("Fake"), icon = ImageReference.Res(0))
     override val about = stringReference("a fake protocol")
@@ -47,7 +48,7 @@ internal class FakeLendingProvider(
     }
 
     override suspend fun minDeposit(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, BigDecimal> =
-        BigDecimal.ZERO.right()
+        minDepositResult
 
     override suspend fun apyHistory(asset: LendingAsset, period: EarnPeriod): Either<Throwable, EarnApyHistory> =
         EarnApyHistory(points = emptyList(), average = null).right()
