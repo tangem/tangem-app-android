@@ -21,7 +21,6 @@ import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnCalculatorUM
 import com.tangem.features.earn.product.api.product.DefaultEarnProjection
 import com.tangem.features.earn.product.api.product.EarnHorizon
-import com.tangem.features.earn.product.api.product.EarnProjectionPoint
 import com.tangem.features.earn.product.api.product.EarnProjectionResult
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.AfterEach
@@ -210,94 +209,42 @@ internal class EarnCalculatorConverterTest {
         }
 
         @Test
-        fun `GIVEN a high rate WHEN convert THEN the last bar splits into deposited and earned in true proportion`() {
+        fun `GIVEN 120 points WHEN convert THEN bar k is the income of month 5 times k as a share of the largest income`() {
             // Arrange
             val input = CalculatorInput.Default.copy(horizon = EarnHorizon.Year10)
             val result = projectionOf("0.0553").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
-            val last = result.points.last()
-
-            // Act
-            val actual = convert(input = input, result = result).bars.last()
-
-            // Assert
-            assertThat(actual.earned / (actual.deposited + actual.earned))
-                .isWithin(TOLERANCE)
-                .of(last.income.share(of = last.capital))
-        }
-
-        @Test
-        fun `GIVEN a higher rate WHEN convert THEN the blue share of the last bar is larger`() {
-            // Arrange
-            val input = CalculatorInput.Default.copy(horizon = EarnHorizon.Year10)
-
-            // Act
-            val lower = lastBarEarnedShare(input = input, netRate = "0.0425")
-            val higher = lastBarEarnedShare(input = input, netRate = "0.0553")
-
-            // Assert
-            assertThat(higher).isGreaterThan(lower)
-        }
-
-        @Test
-        fun `GIVEN six months WHEN convert THEN the gray layers grow by the monthly top-up`() {
-            // Arrange
-            val input = CalculatorInput.Default.copy(horizon = EarnHorizon.Months6)
-            val depositedAfter = { months: Int -> input.initialFiat + input.monthlyTopUpFiat * BigDecimal(months) }
-
-            // Act
-            val actual = convert(input = input).bars
-
-            // Assert
-            assertThat(actual).hasSize(6)
-            actual.forEachIndexed { index, bar ->
-                assertThat(bar.deposited / actual.last().deposited)
-                    .isWithin(TOLERANCE)
-                    .of(depositedAfter(index + 1).share(of = depositedAfter(6)))
-            }
-        }
-
-        @Test
-        fun `GIVEN 120 points WHEN convert THEN bar k shows the deposits of month 5 times k`() {
-            // Arrange
-            val input = CalculatorInput.Default.copy(horizon = EarnHorizon.Year10)
-            val result = projection.project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
-            val last = result.points.last()
-
-            // Act
-            val actual = convert(input = input, result = result).bars
-
-            // Assert
-            actual.forEachIndexed { index, bar ->
-                val point = result.points[5 * (index + 1) - 1]
-                assertThat(bar.deposited / actual.last().deposited)
-                    .isWithin(TOLERANCE)
-                    .of((point.capital - point.income).share(of = last.capital - last.income))
-            }
-        }
-
-        @Test
-        fun `GIVEN a high rate WHEN convert THEN the blue layer of every bar is its income share of the tallest bar`() {
-            // Arrange
-            val input = CalculatorInput.Default.copy(horizon = EarnHorizon.Year10)
-            val result = projectionOf("0.0553").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
-            val last = result.points.last()
+            val largest = result.points.maxOf { it.income }
 
             // Act
             val actual = convert(input = input, result = result).bars
 
             // Assert
             val checked = actual.withIndex().filter { (index, _) ->
-                result.points[5 * (index + 1) - 1].income.share(of = last.capital) > ABOVE_MINIMUM_SHARE
+                result.points[5 * (index + 1) - 1].income.share(of = largest) > ABOVE_MINIMUM_SHARE
             }
-            assertThat(checked.size).isAtLeast(6)
+            assertThat(checked.size).isAtLeast(12)
             checked.forEach { (index, bar) ->
                 val point = result.points[5 * (index + 1) - 1]
-                assertThat(bar.earned).isWithin(TOLERANCE).of(point.income.share(of = last.capital))
+                assertThat(bar.earned).isWithin(TOLERANCE).of(point.income.share(of = largest))
             }
         }
 
         @Test
-        fun `GIVEN a small earned amount WHEN convert THEN every blue layer stays visible`() {
+        fun `GIVEN the design example WHEN convert THEN bars never shrink and the last one is full height`() {
+            // Arrange
+            val input = CalculatorInput.Default
+            val result = projectionOf("0.012155").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+
+            // Act
+            val actual = convert(input = input, result = result).bars.map { it.earned }
+
+            // Assert
+            assertThat(actual).isInOrder()
+            assertThat(actual.last()).isEqualTo(1f)
+        }
+
+        @Test
+        fun `GIVEN a small earned amount WHEN convert THEN every bar stays visible`() {
             // Arrange
             val input = CalculatorInput.Default
             val result = projectionOf("0.012155").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
@@ -310,20 +257,7 @@ internal class EarnCalculatorConverterTest {
         }
 
         @Test
-        fun `GIVEN a visible minimum WHEN convert THEN the tallest bar is exactly one`() {
-            // Arrange
-            val input = CalculatorInput.Default
-            val result = projectionOf("0.012155").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
-
-            // Act
-            val actual = convert(input = input, result = result).bars
-
-            // Assert
-            assertThat(actual.maxOf { it.deposited + it.earned }).isWithin(TOLERANCE).of(1f)
-        }
-
-        @Test
-        fun `GIVEN a zero rate WHEN convert THEN no bar has a blue layer`() {
+        fun `GIVEN a zero rate WHEN convert THEN every bar is empty`() {
             // Arrange
             val input = CalculatorInput.Default
             val result = projectionOf("0").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
@@ -333,28 +267,10 @@ internal class EarnCalculatorConverterTest {
 
             // Assert
             assertThat(actual.map { it.earned }.toSet()).containsExactly(0f)
-            assertThat(actual.all { it.deposited > 0f }).isTrue()
         }
 
         @Test
-        fun `GIVEN a point whose income exceeds its capital WHEN convert THEN its gray layer is empty`() {
-            // Arrange
-            val result = EarnProjectionResult(
-                total = BigDecimal(100),
-                earned = BigDecimal(150),
-                points = listOf(EarnProjectionPoint(index = 1, capital = BigDecimal(100), income = BigDecimal(150))),
-            )
-
-            // Act
-            val actual = convert(result = result).bars.single()
-
-            // Assert
-            assertThat(actual.deposited).isEqualTo(0f)
-            assertThat(actual.earned).isWithin(TOLERANCE).of(1f)
-        }
-
-        @Test
-        fun `GIVEN zero inputs WHEN convert THEN all bar fractions are zero`() {
+        fun `GIVEN zero inputs WHEN convert THEN every bar is empty`() {
             // Arrange
             val input = CalculatorInput.Default.copy(initialFiat = BigDecimal.ZERO, monthlyTopUpFiat = BigDecimal.ZERO)
 
@@ -363,7 +279,7 @@ internal class EarnCalculatorConverterTest {
 
             // Assert
             assertThat(actual.bars).hasSize(24)
-            assertThat(actual.bars.map { listOf(it.deposited, it.earned) }.flatten().toSet()).containsExactly(0f)
+            assertThat(actual.bars.map { it.earned }.toSet()).containsExactly(0f)
             assertThat(actual.total).isEqualTo(stringReference("$0.00"))
         }
 
@@ -378,13 +294,6 @@ internal class EarnCalculatorConverterTest {
         private fun BigDecimal.share(of: BigDecimal): Float = divide(of, MathContext.DECIMAL64).toFloat()
 
         private fun projectionOf(netRate: String) = DefaultEarnProjection(netRate = BigDecimal(netRate))
-
-        private fun lastBarEarnedShare(input: CalculatorInput, netRate: String): Float {
-            val result = projectionOf(netRate).project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
-            val bar = convert(input = input, result = result).bars.last()
-
-            return bar.earned / (bar.deposited + bar.earned)
-        }
     }
 
     @Nested
