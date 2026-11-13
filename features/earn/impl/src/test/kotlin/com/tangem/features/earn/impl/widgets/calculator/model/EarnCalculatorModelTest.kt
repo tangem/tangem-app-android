@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl.widgets.calculator.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -14,7 +15,6 @@ import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
-import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.product.api.product.DefaultEarnProjection
 import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnProjection
@@ -169,7 +169,7 @@ internal class EarnCalculatorModelTest {
             val actual = requireNotNull(model.uiState.value)
             assertThat(actual.total).isEqualTo(stringReference("$79,881.12"))
             assertThat(actual.horizon.items.single { it.isSelected }.label)
-                .isEqualTo(EarnCalculatorTexts.horizon(EarnHorizon.Year10))
+                .isEqualTo(pluralReference(R.plurals.earn_calculator_years, count = 10, formatArgs = wrappedList(10)))
             model.onDestroy()
         }
 
