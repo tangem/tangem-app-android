@@ -107,6 +107,46 @@ internal class TangemPayDetailsStateFactoryTest {
         verify(exactly = 1) { intents.onBankTransferOnrampFailedBannerDismissed() }
     }
 
+    @Test
+    fun `GIVEN Loaded with flag WHEN getLoadedState THEN kycAdditionalInfoBanner is set`() {
+        // Arrange
+        val status = loadedStatus(isKycAdditionalInfoRequired = true)
+
+        // Act
+        val banner = factory.getLoadedState(status).kycAdditionalInfoBanner
+
+        // Assert
+        val state = requireNotNull(banner).state
+        assertThat(state.title).isEqualTo(resourceReference(R.string.tangempay_kyc_additional_info_title))
+        assertThat(banner.onClose).isNull()
+    }
+
+    @Test
+    fun `GIVEN Loaded with flag while payment account issuing WHEN getLoadedState THEN kycAdditionalInfoBanner is null`() {
+        // Arrange
+        val status = loadedStatus(isKycAdditionalInfoRequired = true, isPaymentAccountIssuing = true)
+
+        // Act
+        val actual = factory.getLoadedState(status).kycAdditionalInfoBanner
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN Loaded without flag WHEN getLoadedState THEN kycAdditionalInfoBanner is null and other banners unchanged`() {
+        // Arrange
+        val withFlag = factory.getLoadedState(loadedStatus(isKycAdditionalInfoRequired = true))
+
+        // Act
+        val withoutFlag = factory.getLoadedState(loadedStatus(isKycAdditionalInfoRequired = false))
+
+        // Assert
+        assertThat(withoutFlag.kycAdditionalInfoBanner).isNull()
+        assertThat(withoutFlag.messageBanner).isEqualTo(withFlag.messageBanner)
+        assertThat(withoutFlag.bankTransferOnrampBanner).isEqualTo(withFlag.bankTransferOnrampBanner)
+    }
+
     @ParameterizedTest
     @MethodSource("provideHiddenBankTransferOnrampBannerCases")
     fun `GIVEN no banking details creation WHEN getLoadedState THEN creating banner hidden`(
@@ -715,8 +755,12 @@ internal class TangemPayDetailsStateFactoryTest {
         statusBalance: PaymentAccountStatusValue.Balance? = balance(),
         statusNetworks: List<PaymentNetworkStatus> = listOf(availableNetwork),
         virtualAccount: VirtualAccountOnramp? = null,
+        isKycAdditionalInfoRequired: Boolean = false,
+        isPaymentAccountIssuing: Boolean = false,
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
         every { this@mockk.virtualAccount } returns virtualAccount
+        every { this@mockk.isKycAdditionalInfoRequired } returns isKycAdditionalInfoRequired
+        every { this@mockk.isPaymentAccountIssuing } returns isPaymentAccountIssuing
         every { source } returns statusSource
         every { error } returns statusError
         every { cards } returns statusCards

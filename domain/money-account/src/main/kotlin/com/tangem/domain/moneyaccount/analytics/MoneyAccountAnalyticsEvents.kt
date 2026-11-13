@@ -1,6 +1,7 @@
 package com.tangem.domain.moneyaccount.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
 import java.math.BigDecimal
 
 sealed class MoneyAccountAnalyticsEvents(
@@ -13,6 +14,7 @@ sealed class MoneyAccountAnalyticsEvents(
         val accountState: AccountState,
         val balanceBand: BalanceBand?,
         val currency: String?,
+        val additionalVerificationNotice: NoticeState?,
     ) : MoneyAccountAnalyticsEvents(
         categoryName = CASH_ACCOUNT_CATEGORY,
         event = "Account Screen Opened",
@@ -21,6 +23,7 @@ sealed class MoneyAccountAnalyticsEvents(
             balanceBand?.let { put("balance_band", it.value) }
             put("yield_enabled", "no")
             currency?.let { put("currency", it) }
+            additionalVerificationNotice?.let { put("additional_verification_notice", it.value) }
         },
     )
 
