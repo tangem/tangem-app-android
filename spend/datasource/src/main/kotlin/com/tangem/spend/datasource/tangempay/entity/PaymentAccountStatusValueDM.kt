@@ -43,6 +43,7 @@ sealed interface PaymentAccountStatusValueDM {
         @SerialName("fiat_balance") val fiatBalance: FiatBalanceDM?,
         @SerialName("fiat_rate") val fiatRate: SerializedBigDecimal?,
         @SerialName("cards") val cards: List<TangemPayCard>,
+        @SerialName("is_kyc_additional_info_required") val isKycAdditionalInfoRequired: Boolean = false,
     ) : PaymentAccountStatusValueDM
 
     @Serializable
