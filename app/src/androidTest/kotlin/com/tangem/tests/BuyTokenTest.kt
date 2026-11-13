@@ -91,9 +91,6 @@ class BuyTokenTest : BaseTestCase() {
             step("Click on 'Buy' in 'Get token' bottom sheet") {
                 onGetTokenBottomSheet { buyButton.clickWithAssertion() }
             }
-            step("Click on 'Confirm' button in 'Dialog'") {
-                onDialog { confirmButton.clickWithAssertion() }
-            }
             step("Write fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
             }
@@ -163,9 +160,6 @@ class BuyTokenTest : BaseTestCase() {
             }
             step("Click on 'Buy' in 'Get token' bottom sheet") {
                 onGetTokenBottomSheet { buyButton.clickWithAssertion() }
-            }
-            step("Click on 'Confirm' button in 'Dialog'") {
-                onDialog { confirmButton.clickWithAssertion() }
             }
             val requestsBeforeOpen = getWireMockRequestCount(currenciesMethod, currenciesPath)
             step("Click on 'Expand fiat list' button") {
@@ -374,9 +368,6 @@ class BuyTokenTest : BaseTestCase() {
             step("Click on 'Buy' in 'Get token' bottom sheet") {
                 onGetTokenBottomSheet { buyButton.clickWithAssertion() }
             }
-            step("Click on 'Confirm' button in 'Dialog'") {
-                onDialog { confirmButton.clickWithAssertion() }
-            }
             step("Assert 'Buy Token' title is displayed") {
                 onBuyTokenDetailsScreen { topBarTitle.assertTextContains("Buy $tokenTitle") }
             }
@@ -455,35 +446,15 @@ class BuyTokenTest : BaseTestCase() {
             step("Click on 'Buy' in 'Get token' bottom sheet") {
                 onGetTokenBottomSheet { buyButton.clickWithAssertion() }
             }
-            step("Click on 'Confirm' button in 'Dialog'") {
-                onDialog { confirmButton.clickWithAssertion() }
-            }
             step("Assert 'Buy $tokenTitle' title is displayed") {
                 onBuyTokenDetailsScreen { topBarTitle.assertTextContains("Buy $tokenTitle") }
             }
             step("Click 'More' button in tab bar") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) { onBuyTokenDetailsScreen { topBarMoreButton.assertIsEnabled() } }
                 onBuyTokenDetailsScreen { topBarMoreButton.clickWithAssertion() }
             }
-            step("Assert 'Residence Settings' screen top bar title is displayed") {
-                onResidenceSettingsScreen { topBarTitle.assertIsDisplayed() }
-            }
-            step("Assert 'Residence Settings' screen top bar 'Close' button is displayed") {
-                onResidenceSettingsScreen { topBarCloseButton.assertIsDisplayed() }
-            }
-            step("Assert 'Residence' button is displayed on 'Residence Settings' screen") {
-                onResidenceSettingsScreen { residenceButton.assertIsDisplayed() }
-            }
-            step("Assert country name is displayed on 'Residence Settings' screen") {
-                onResidenceSettingsScreen { countryName.assertIsDisplayed() }
-            }
-            step("Assert residence settings description is displayed on 'Residence Settings' screen") {
-                onResidenceSettingsScreen { residenceSettingsDescription.assertIsDisplayed() }
-            }
-            step("Click 'Residence button'") {
-                onResidenceSettingsScreen { residenceButton.clickWithAssertion() }
-            }
             step("Assert 'Search bar' is displayed") {
-                onSelectCountryBottomSheet { searchBar.assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT) { onSelectCountryBottomSheet { searchBar.assertIsDisplayed() } }
             }
             step("Type unavailable country name: '$unavailableCountry' in 'Search bar'") {
                 onSelectCountryBottomSheet { searchBar.performTextReplacement(unavailableCountry) }
@@ -500,8 +471,13 @@ class BuyTokenTest : BaseTestCase() {
             step("Click on country: '$country'") {
                 onSelectCountryBottomSheet { countryWithNameAndIcon(country).clickWithAssertion() }
             }
-            step("Assert country: '$country' is displayed on 'Residence Settings' screen") {
-                onResidenceSettingsScreen { countryName.assertTextContains(country) }
+            step("Assert 'Select country' sheet is closed") {
+                onSelectCountryBottomSheet { searchBar.assertDoesNotExist() }
+            }
+            step("Assert country button shows the selected country: '$country'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onBuyTokenDetailsScreen { topBarMoreButton.assertContentDescriptionEquals(country) }
+                }
             }
         }
     }
@@ -534,9 +510,6 @@ class BuyTokenTest : BaseTestCase() {
             }
             step("Click on 'Buy' in 'Get token' bottom sheet") {
                 onGetTokenBottomSheet { buyButton.clickWithAssertion() }
-            }
-            step("Click on 'Confirm' button in 'Dialog'") {
-                onDialog { confirmButton.clickWithAssertion() }
             }
             step("Write fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
@@ -618,9 +591,6 @@ class BuyTokenTest : BaseTestCase() {
             }
             step("Click on 'Buy' in 'Get token' bottom sheet") {
                 onGetTokenBottomSheet { buyButton.clickWithAssertion() }
-            }
-            step("Click on 'Confirm' button in 'Dialog'") {
-                onDialog { confirmButton.clickWithAssertion() }
             }
             step("Write fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
