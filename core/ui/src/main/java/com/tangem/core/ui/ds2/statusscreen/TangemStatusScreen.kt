@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -132,12 +134,15 @@ fun TangemStatusScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .limitMaxHeight(fraction = BOTTOM_BLOCK_MAX_HEIGHT_FRACTION)
                     .onSizeChanged { bottomBlockHeight = it.height },
             ) {
                 if (details != null) {
                     Column(
                         modifier = Modifier
+                            .weight(weight = 1f, fill = false)
                             .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                             .graphicsLayer {
                                 alpha = entrance.segment(startMs = 1000, endMs = 1200, easing = SymmetricEase)
@@ -163,6 +168,14 @@ fun TangemStatusScreen(
         }
     }
 }
+
+private fun Modifier.limitMaxHeight(fraction: Float): Modifier = layout { measurable, constraints ->
+    val bounded = constraints.copy(maxHeight = (constraints.maxHeight * fraction).roundToInt())
+    val placeable = measurable.measure(bounded)
+    layout(placeable.width, placeable.height) { placeable.placeRelative(x = 0, y = 0) }
+}
+
+private const val BOTTOM_BLOCK_MAX_HEIGHT_FRACTION = 0.6f
 
 @Composable
 private fun Header(
