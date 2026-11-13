@@ -145,6 +145,8 @@ internal class TangemPayMainSubscriberTest {
             tangemPayFeatureToggles = tangemPayFeatureToggles,
             pollTangemPayAccountStatusesUseCase = mockk(relaxed = true),
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+            moneyAccountStatusSupplier = mockk(relaxed = true),
+            analytics = mockk(relaxed = true),
         ).subscribe(
             coroutineScope = backgroundScope + UnconfinedTestDispatcher(testScheduler),
             dispatchers = UnconfinedTestDispatcher(testScheduler),
