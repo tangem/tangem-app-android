@@ -1,18 +1,15 @@
 package com.tangem.domain.mcp.usecase
 
 import arrow.core.Either
-import arrow.core.raise.either
-import com.tangem.domain.mcp.models.McpIntentHistoryItem
 import com.tangem.domain.mcp.models.McpIntentHistoryPage
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import javax.inject.Inject
 
 /**
- * Reads the intents of one agent session.
+ * Reads one backend page and keeps only intents of the requested agent session.
  *
- * The service cannot filter by session, so a page is filled by reading the service's pages until [PAGE_SIZE] items of
- * the session are found or the history ends.
+ * The service cannot filter by session, so the result may be partial or empty while still having a next offset.
  */
 class GetMcpIntentHistoryUseCase @Inject constructor(
     private val mcpRepository: McpRepository,
@@ -22,22 +19,10 @@ class GetMcpIntentHistoryUseCase @Inject constructor(
         walletId: UserWalletId,
         sessionId: String,
         offset: Int,
-    ): Either<Throwable, McpIntentHistoryPage> = either {
-        val items = mutableListOf<McpIntentHistoryItem>()
-        var nextOffset: Int? = offset
-
-        while (items.size < PAGE_SIZE && nextOffset != null) {
-            val page = mcpRepository.getIntentHistory(
-                walletId = walletId,
-                offset = nextOffset,
-                limit = PAGE_SIZE - items.size,
-            ).bind()
-            items += page.items.filter { it.sessionId == sessionId }
-            nextOffset = page.nextOffset
+    ): Either<Throwable, McpIntentHistoryPage> =
+        mcpRepository.getIntentHistory(walletId = walletId, offset = offset, limit = PAGE_SIZE).map { page ->
+            page.copy(items = page.items.filter { it.sessionId == sessionId })
         }
-
-        McpIntentHistoryPage(items = items, nextOffset = nextOffset)
-    }
 
     private companion object {
         const val PAGE_SIZE = 20

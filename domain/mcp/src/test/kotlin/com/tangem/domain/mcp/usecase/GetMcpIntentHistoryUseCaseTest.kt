@@ -49,34 +49,13 @@ internal class GetMcpIntentHistoryUseCaseTest {
     }
 
     @Test
-    fun `GIVEN session intents are sparse WHEN invoke THEN pages are read until the page is filled`() = runTest {
+    fun `GIVEN only other sessions WHEN invoke THEN empty page retains continuation after one read`() = runTest {
         // Arrange
         coEvery { repository.getIntentHistory(WALLET_ID, 0, PAGE_SIZE) } returns Either.Right(
-            McpIntentHistoryPage(items = listOf(item("other", "other-session")), nextOffset = 20),
-        )
-        coEvery { repository.getIntentHistory(WALLET_ID, 20, PAGE_SIZE) } returns Either.Right(
-            McpIntentHistoryPage(items = List(PAGE_SIZE) { item("mine-$it", SESSION_ID) }, nextOffset = 40),
-        )
-
-        // Act
-        val actual = useCase(walletId = WALLET_ID, sessionId = SESSION_ID, offset = 0)
-
-        // Assert
-        assertThat(actual.getOrNull()!!.nextOffset).isEqualTo(40)
-        coVerify(exactly = 1) { repository.getIntentHistory(WALLET_ID, 0, PAGE_SIZE) }
-        coVerify(exactly = 1) { repository.getIntentHistory(WALLET_ID, 20, PAGE_SIZE) }
-    }
-
-    @Test
-    fun `GIVEN a partially filled page WHEN invoke THEN only remaining capacity is requested`() = runTest {
-        // Arrange
-        val firstItems = List(PAGE_SIZE - 1) { item("mine-$it", SESSION_ID) }
-        val lastItem = item("last", SESSION_ID)
-        coEvery { repository.getIntentHistory(WALLET_ID, 0, PAGE_SIZE) } returns Either.Right(
-            McpIntentHistoryPage(items = firstItems, nextOffset = PAGE_SIZE),
-        )
-        coEvery { repository.getIntentHistory(WALLET_ID, PAGE_SIZE, 1) } returns Either.Right(
-            McpIntentHistoryPage(items = listOf(lastItem), nextOffset = PAGE_SIZE + 1),
+            McpIntentHistoryPage(
+                items = List(PAGE_SIZE) { item("other-$it", "other-session") },
+                nextOffset = PAGE_SIZE,
+            ),
         )
 
         // Act
@@ -84,9 +63,37 @@ internal class GetMcpIntentHistoryUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(
-            Either.Right(McpIntentHistoryPage(items = firstItems + lastItem, nextOffset = PAGE_SIZE + 1)),
+            Either.Right(McpIntentHistoryPage(items = emptyList(), nextOffset = PAGE_SIZE)),
         )
-        coVerify(exactly = 1) { repository.getIntentHistory(WALLET_ID, PAGE_SIZE, 1) }
+        coVerify(exactly = 1) { repository.getIntentHistory(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN consecutive matching pages WHEN invoked THEN pages do not overfill or skip intents`() = runTest {
+        // Arrange
+        val firstItems = List(PAGE_SIZE - 1) { item("mine-$it", SESSION_ID) }
+        val nextItems = List(PAGE_SIZE) { item("next-$it", SESSION_ID) }
+        coEvery { repository.getIntentHistory(WALLET_ID, 0, PAGE_SIZE) } returns Either.Right(
+            McpIntentHistoryPage(
+                items = firstItems + item("other", "other-session"),
+                nextOffset = PAGE_SIZE,
+            ),
+        )
+        coEvery { repository.getIntentHistory(WALLET_ID, PAGE_SIZE, PAGE_SIZE) } returns Either.Right(
+            McpIntentHistoryPage(items = nextItems, nextOffset = PAGE_SIZE * 2),
+        )
+
+        // Act
+        val first = useCase(walletId = WALLET_ID, sessionId = SESSION_ID, offset = 0)
+        val next = useCase(walletId = WALLET_ID, sessionId = SESSION_ID, offset = first.getOrNull()!!.nextOffset!!)
+
+        // Assert
+        assertThat(listOf(first, next)).containsExactly(
+            Either.Right(McpIntentHistoryPage(items = firstItems, nextOffset = PAGE_SIZE)),
+            Either.Right(McpIntentHistoryPage(items = nextItems, nextOffset = PAGE_SIZE * 2)),
+        ).inOrder()
+        coVerify(exactly = 1) { repository.getIntentHistory(WALLET_ID, 0, PAGE_SIZE) }
+        coVerify(exactly = 1) { repository.getIntentHistory(WALLET_ID, PAGE_SIZE, PAGE_SIZE) }
     }
 
     @Test
@@ -106,16 +113,13 @@ internal class GetMcpIntentHistoryUseCaseTest {
     }
 
     @Test
-    fun `GIVEN a later page fails WHEN invoke THEN the failure is returned`() = runTest {
+    fun `GIVEN backend page fails WHEN invoke THEN the failure is returned`() = runTest {
         // Arrange
         val error = IOException()
-        coEvery { repository.getIntentHistory(WALLET_ID, 0, PAGE_SIZE) } returns Either.Right(
-            McpIntentHistoryPage(items = emptyList(), nextOffset = 20),
-        )
         coEvery { repository.getIntentHistory(WALLET_ID, 20, PAGE_SIZE) } returns Either.Left(error)
 
         // Act
-        val actual = useCase(walletId = WALLET_ID, sessionId = SESSION_ID, offset = 0)
+        val actual = useCase(walletId = WALLET_ID, sessionId = SESSION_ID, offset = 20)
 
         // Assert
         assertThat(actual).isEqualTo(Either.Left(error))
