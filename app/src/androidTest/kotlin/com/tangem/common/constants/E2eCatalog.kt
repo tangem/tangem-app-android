@@ -9,10 +9,10 @@ object E2eCatalog {
 
     // Junk placeholder — not a real wallet and NOT funded. The real funded seed is injected from qa-tools on CI
     // (see the header); this value only exists so the catalog compiles.
-    const val SEED_PHRASE: String = "get it from qa-tools"
+    const val SEED_PHRASE: String = "test test test test test test test test test test test junk"
 
     // Placeholder; the real wallet id (matching the qa-tools funded wallet) is injected on CI.
-    const val WALLET_ID: String = "F833DECD4F3547C13D5CEADAE8C05452B7B171B460F807D3B040A7BA054FA337"
+    const val WALLET_ID: String = "46255D252ED3808AF7F3F7797D2F2C0E87D8BB80896D0D0366A6EB6E4898CC4B"
 
     val network: E2eNetwork = E2eNetwork(
         coinId = "katana-ethereum",
