@@ -459,6 +459,54 @@ internal class EarnInfoConverterTest {
                 )
                 .inOrder()
         }
+
+        @Test
+        fun `GIVEN hidden balance WHEN convert THEN only the amounts of my funds are masked`() {
+            // Arrange
+            val positionRows = listOf(
+                EarnRow(stringReference("Total balance"), EarnValue.Amount(BigDecimal("1.482"))),
+                EarnRow(stringReference("Status"), EarnValue.Text(stringReference("Active"))),
+                EarnRow(stringReference("Position"), EarnValue.Link(stringReference("0xABC"), "https://scan.io/0xABC")),
+            )
+            val state = readyWith(position.copy(rows = positionRows))
+
+            // Act
+            val actual = requireNotNull(convert(ready = state, isBalanceHidden = true))
+
+            // Assert
+            assertThat(actual.myFunds.rows.map { it.value })
+                .containsExactly(stringReference("***"), stringReference("Active"), stringReference("0xABC"))
+                .inOrder()
+        }
+
+        @Test
+        fun `GIVEN shown balance WHEN convert THEN an amount row is formatted like the header balance`() {
+            // Arrange
+            val amount = BigDecimal("1.482")
+            val positionRows = listOf(EarnRow(stringReference("Total balance"), EarnValue.Amount(amount)))
+            val state = readyWith(position.copy(cryptoAmount = amount, rows = positionRows))
+
+            // Act
+            val actual = requireNotNull(convert(ready = state, isBalanceHidden = false))
+
+            // Assert
+            assertThat(actual.myFunds.rows.single().value).isEqualTo(actual.balanceCrypto)
+            assertThat(actual.balanceCrypto).isEqualTo(stringReference(cryptoText(amount)))
+        }
+
+        @Test
+        fun `GIVEN hidden balance and an amount in the details WHEN convert THEN the amount is shown`() {
+            // Arrange
+            val minimum = BigDecimal("0.01")
+            val detailRows = listOf(EarnRow(stringReference("Minimum deposit"), EarnValue.Amount(minimum)))
+            val state = readyWith(position).copy(details = detailRows)
+
+            // Act
+            val actual = requireNotNull(convert(ready = state, isBalanceHidden = true))
+
+            // Assert
+            assertThat(actual.details.single().value).isEqualTo(stringReference(cryptoText(minimum)))
+        }
     }
 
     @Nested
@@ -728,6 +776,7 @@ internal class EarnInfoConverterTest {
     private fun EarnRow.textOf(): TextReference = when (val rowValue = value) {
         is EarnValue.Text -> rowValue.text
         is EarnValue.Link -> rowValue.text
+        is EarnValue.Amount -> stringReference(cryptoText(rowValue.value))
     }
 
     private fun TangemButtonUM.noOpClick() = copy(onClick = NoOp)
