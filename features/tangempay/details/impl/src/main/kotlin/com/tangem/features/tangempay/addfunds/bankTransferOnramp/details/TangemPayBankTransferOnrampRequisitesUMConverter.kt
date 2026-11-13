@@ -25,11 +25,6 @@ internal class TangemPayBankTransferOnrampRequisitesUMConverter(
             titleId = R.string.virtual_account_requisites_clabe,
             value = value.accountNumber,
         ),
-        requisite(
-            field = RequisiteField.REFERENCE,
-            titleId = R.string.virtual_account_requisites_reference,
-            value = value.transferMessage.orEmpty(),
-        ),
     )
 
     private fun usRequisites(value: BankCredentials): List<RequisiteUM> = listOfNotNull(
@@ -81,7 +76,6 @@ internal val RequisiteField.label: String
         RequisiteField.ACCOUNT_NUMBER -> "Account number"
         RequisiteField.ROUTING_NUMBER -> "Routing number"
         RequisiteField.CLABE -> "CLABE"
-        RequisiteField.REFERENCE -> "Reference"
         RequisiteField.BENEFICIARY_NAME -> "Beneficiary name"
         RequisiteField.BENEFICIARY_ADDRESS -> "Beneficiary address"
         RequisiteField.BANK_NAME -> "Bank name"

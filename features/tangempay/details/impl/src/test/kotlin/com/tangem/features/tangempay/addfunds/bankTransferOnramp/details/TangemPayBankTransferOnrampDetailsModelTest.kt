@@ -350,7 +350,6 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
             )
             .inOrder()
         assertThat(state.requisites.map { it.key }).containsExactlyElementsIn(US_REQUISITE_KEYS).inOrder()
-        assertThat(state.referenceWarning).isNull()
         assertThat(state.fees).isEqualTo(
             TangemPayOnrampFeesUM.Content(
                 rows = persistentListOf(
@@ -364,14 +363,11 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
 
     @ParameterizedTest
     @MethodSource("provideMinimumDepositModels")
-    fun `GIVEN route credentials WHEN shown THEN minimum deposit follows the amount limits and no daily limit`(
+    fun `GIVEN route credentials WHEN shown THEN minimum deposit in the rail currency and no daily limit`(
         model: MinimumDepositModel,
     ) = runTest {
         // Act
-        val detailsModel = createModel(
-            bankCredentials = USD_ROUTE.copy(amountLimits = model.amountLimits),
-            feeSource = FeeSource.Route,
-        )
+        val detailsModel = createModel(bankCredentials = model.credentials, feeSource = FeeSource.Route)
         advanceUntilIdle()
 
         // Assert
@@ -394,31 +390,13 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
         }
 
     @Test
-    fun `GIVEN ACH route with a transfer message WHEN shown THEN no reference row or warning`() = runTest {
-        // Act
-        val model = createModel(
-            bankCredentials = USD_ROUTE.copy(
-                transferMessage = "REF-A1B2C3D4",
-                exchangeRate = SPEI_CREDENTIALS.exchangeRate,
-            ),
-            feeSource = FeeSource.Route,
-        )
-        advanceUntilIdle()
-
-        // Assert
-        val state = model.uiState.value
-        assertThat(state.requisites.map { it.key }).containsExactlyElementsIn(US_REQUISITE_KEYS).inOrder()
-        assertThat(state.referenceWarning).isNull()
-    }
-
-    @Test
     fun `GIVEN lowercase spei rail WHEN shown THEN SPEI requisites shown`() = runTest {
         // Act
         val model = createModel(SPEI_CREDENTIALS.copy(rail = "spei"), FeeSource.Route)
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.requisites.map { it.key }).containsExactly("CLABE", "Reference").inOrder()
+        assertThat(model.uiState.value.requisites.map { it.key }).containsExactly("CLABE")
     }
 
     @ParameterizedTest
@@ -475,18 +453,14 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
                 TabState(id = "1", label = stringReference("MXN"), isSelected = true),
             )
             .inOrder()
-        assertThat(state.requisites.map { it.key to it.value })
-            .containsExactly("CLABE" to "646180157000000004", "Reference" to "TNG7K2Q9")
-            .inOrder()
-        assertThat(state.referenceWarning)
-            .isEqualTo(resourceReference(R.string.tangempay_bank_transfer_details_reference_warning))
+        assertThat(state.requisites.map { it.key to it.value }).containsExactly("CLABE" to "646180157000000004")
         assertThat(state.fees).isEqualTo(
             TangemPayOnrampFeesUM.Content(
                 rows = persistentListOf(SPEI_FEE_ROW, RATE_ROW),
                 notes = persistentListOf(CONVERSION_NOTICE, RATE_DISCLAIMER),
             ),
         )
-        assertThat(state.minimumDeposit).isEqualTo(stringReference("$2"))
+        assertThat(state.minimumDeposit).isEqualTo(stringReference("MX$38"))
         assertThat(state.dailyDepositLimit).isNull()
     }
 
@@ -504,22 +478,10 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
         assertThat(model.uiState.value.requisites.map { it.key })
             .containsExactlyElementsIn(US_REQUISITE_KEYS)
             .inOrder()
-        assertThat(model.uiState.value.referenceWarning).isNull()
     }
 
     @Test
-    fun `GIVEN SPEI rail without reference WHEN shown THEN only CLABE and no warning`() = runTest {
-        // Act
-        val model = createModel(SPEI_CREDENTIALS.copy(transferMessage = null), FeeSource.Route)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.uiState.value.requisites.map { it.key }).containsExactly("CLABE")
-        assertThat(model.uiState.value.referenceWarning).isNull()
-    }
-
-    @Test
-    fun `GIVEN MXN tab selected WHEN share clicked THEN CLABE and reference shared`() = runTest {
+    fun `GIVEN MXN tab selected WHEN share clicked THEN only CLABE shared`() = runTest {
         // Arrange
         val model = createModelWithRails(listOf(bankCredentials(), SPEI_CREDENTIALS))
         advanceUntilIdle()
@@ -529,24 +491,21 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
         model.uiState.value.onShareClick()
 
         // Assert
-        verify(exactly = 1) { shareManager.shareText("CLABE: 646180157000000004\nReference: TNG7K2Q9") }
+        verify(exactly = 1) { shareManager.shareText("CLABE: 646180157000000004") }
     }
 
-    @ParameterizedTest
-    @MethodSource("provideSpeiCopyModels")
-    fun `GIVEN SPEI requisite WHEN copied THEN value copied as sensitive and its field reported`(
-        model: SpeiCopyModel,
-    ) = runTest {
+    @Test
+    fun `GIVEN SPEI requisites WHEN CLABE copied THEN value copied as sensitive and CLABE reported`() = runTest {
         // Arrange
         val detailsModel = createModel(SPEI_CREDENTIALS, FeeSource.Route)
         advanceUntilIdle()
 
         // Act
-        detailsModel.uiState.value.requisites.first { it.key == model.key }.onCopyClick()
+        detailsModel.uiState.value.requisites.single().onCopyClick()
 
         // Assert
-        verify(exactly = 1) { clipboardManager.setText(text = model.value, isSensitive = true) }
-        verify(exactly = 1) { detailsAnalytics.onFieldCopied(model.field) }
+        verify(exactly = 1) { clipboardManager.setText(text = "646180157000000004", isSensitive = true) }
+        verify(exactly = 1) { detailsAnalytics.onFieldCopied(RequisiteField.CLABE) }
     }
 
     private fun TestScope.createModelWithRails(
@@ -635,13 +594,6 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
         (uiState.value.tabs[index] as TangemTabItemUM.Content).onClick()
     }
 
-    private fun provideSpeiCopyModels() = listOf(
-        SpeiCopyModel(key = "CLABE", value = "646180157000000004", field = RequisiteField.CLABE),
-        SpeiCopyModel(key = "Reference", value = "TNG7K2Q9", field = RequisiteField.REFERENCE),
-    )
-
-    data class SpeiCopyModel(val key: String, val value: String, val field: RequisiteField)
-
     private fun TestScope.createModel(
         bankCredentials: BankCredentials = bankCredentials(),
         feeSource: FeeSource = FeeSource.Catalogue(product),
@@ -683,18 +635,43 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
     }
 
     private fun provideMinimumDepositModels() = listOf(
+        MinimumDepositModel(credentials = USD_ROUTE, expected = stringReference("$2")),
         MinimumDepositModel(
-            amountLimits = AmountLimits(min = BigDecimal("2"), max = null, currency = "USD"),
-            expected = stringReference("$2"),
-        ),
-        MinimumDepositModel(
-            amountLimits = AmountLimits(min = BigDecimal("2.50"), max = BigDecimal("10000"), currency = "USD"),
+            credentials = USD_ROUTE.copy(
+                amountLimits = AmountLimits(min = BigDecimal("2.50"), max = BigDecimal("10000"), currency = "USD"),
+            ),
             expected = stringReference("$2.50"),
         ),
-        MinimumDepositModel(amountLimits = null, expected = null),
+        MinimumDepositModel(
+            credentials = USD_ROUTE.copy(exchangeRate = SPEI_CREDENTIALS.exchangeRate),
+            expected = stringReference("$2"),
+        ),
+        MinimumDepositModel(credentials = USD_ROUTE.copy(amountLimits = null), expected = null),
+        MinimumDepositModel(credentials = SPEI_CREDENTIALS, expected = stringReference("MX$38")),
+        MinimumDepositModel(
+            credentials = SPEI_CREDENTIALS.copy(
+                amountLimits = AmountLimits(min = BigDecimal("2.50"), max = null, currency = "USD"),
+                exchangeRate = BankCredentials.ExchangeRate(rate = BigDecimal("17.25"), base = "USD", quote = "MXN"),
+            ),
+            expected = stringReference("MX$44"),
+        ),
+        MinimumDepositModel(
+            credentials = SPEI_CREDENTIALS.copy(
+                exchangeRate = BankCredentials.ExchangeRate(rate = BigDecimal("18"), base = "USD", quote = "MXN"),
+            ),
+            expected = stringReference("MX$36"),
+        ),
+        MinimumDepositModel(
+            credentials = SPEI_CREDENTIALS.copy(
+                amountLimits = AmountLimits(min = BigDecimal("36"), max = null, currency = "MXN"),
+            ),
+            expected = stringReference("MX$36"),
+        ),
+        MinimumDepositModel(credentials = SPEI_CREDENTIALS.copy(exchangeRate = null), expected = stringReference("$2")),
+        MinimumDepositModel(credentials = SPEI_CREDENTIALS.copy(amountLimits = null), expected = null),
     )
 
-    data class MinimumDepositModel(val amountLimits: AmountLimits?, val expected: TextReference?)
+    data class MinimumDepositModel(val credentials: BankCredentials, val expected: TextReference?)
 
     private fun provideTestModels() = listOf(
         HiddenLimitModel(depositLimit = null),
