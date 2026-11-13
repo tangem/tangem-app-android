@@ -2398,7 +2398,7 @@
   <string name="tangempay_card_activation_attempts_exceeded_title">Ви вичерпали спроби активації</string>
   <string name="tangempay_card_activation_description">Введіть останні 4 цифри номера вашої картки</string>
   <string name="tangempay_card_activation_error">Неправильні цифри. Спробуйте ще раз</string>
-  <string name="tangempay_card_activation_error_already_active">Ця картка вже активована.</string>
+  <string name="tangempay_card_activation_error_already_active">Ця картка вже активована</string>
   <string name="tangempay_card_activation_error_in_progress">Активація вже виконується. Будь ласка, зачекайте.</string>
   <string name="tangempay_card_activation_error_not_physical">Це не пластикова картка</string>
   <string name="tangempay_card_activation_error_not_ready">Картка ще не готова до активації. Спробуйте ще раз після її отримання.</string>
@@ -2407,8 +2407,8 @@
   <string name="tangempay_card_close_error_message">Спробуйте пізніше або зверніться в підтримку</string>
   <string name="tangempay_card_close_error_title">Не вдалося закрити картку</string>
   <string name="tangempay_card_close_last_card_disabled">Не можна закрити останню картку</string>
-  <string name="tangempay_card_closed_toast">Картку ••%s закрито</string>
-  <string name="tangempay_card_closed_toast_named">Картку %s закрито</string>
+  <string name="tangempay_card_closed_toast">Картку %s закрито</string>
+  <string name="tangempay_card_closed_toast_named">Картку «%s» закрито</string>
   <string name="tangempay_card_default_name">Картка Tangem Pay 1</string>
   <string name="tangempay_card_delivery_activate_after_delivery_toast">Ви зможете активувати картку після доставки</string>
   <string name="tangempay_card_delivery_banner_description">Активуйте її після отримання</string>
@@ -2425,6 +2425,7 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Забагато спроб. Повторіть через 24 години</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Не вдалося додати картку</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Google Wallet недоступний. Перевірте налаштування системи</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Картку додано до Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Скасувати %1$s, перейти на %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Щоб оплатити щомісячну вартість тарифу та почати використовувати нову картку</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Поповніть рахунок до %1$s</string>
@@ -2442,7 +2443,7 @@
   <string name="tangempay_card_details_name_on_card">Ім\'я власника картки</string>
   <string name="tangempay_card_details_open_wallet_button">Відкрити Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Налаштуйте Tangem Pay в кілька кроків і почніть платити за допомогою Google Pay.</string>
-  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Налаштуйте Tangem Pay в кілька кроків і почніть платити за допомогою Apple Pay.</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Налаштуйте Tangem Pay в кілька кроків і почніть платити за допомогою Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Додайте картку до Google Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title_apple">Додайте свою картку в Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_step_1">Відкрийте Google Wallet</string>
@@ -2482,7 +2483,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">Встановити ліміт від %s</string>
   <string name="tangempay_card_limit_setup_error_message">Не вдалося встановити ліміт. Будь ласка, спробуйте ще раз.</string>
   <string name="tangempay_card_page_activating_banner_title">Активуємо вашу пластикову картку</string>
-  <string name="tangempay_card_page_closing_banner_description">Зазвичай займає до 5 хвилин</string>
+  <string name="tangempay_card_page_closing_banner_description">Може зайняти до 5 хвилин</string>
   <string name="tangempay_card_page_closing_banner_title">Закриття вашої картки</string>
   <string name="tangempay_card_page_daily_limit_change">Змінити</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Поточний ліміт</string>
@@ -2546,7 +2547,7 @@
   <string name="tangempay_close_card_sheet_confirm">Закрити картку</string>
   <string name="tangempay_close_card_sheet_description">Картку буде закрито, і вона перестане працювати</string>
   <string name="tangempay_close_card_sheet_description_with_freeze_hint">Картку буде закрито, і вона перестане працювати. Бажаєте призупинити її дію? Заморозьте картку.</string>
-  <string name="tangempay_close_card_sheet_freeze_instead">Заморозити</string>
+  <string name="tangempay_close_card_sheet_freeze_instead">Краще заморозити</string>
   <string name="tangempay_close_card_sheet_keep">Залишити картку</string>
   <string name="tangempay_close_card_sheet_title">Закрити %s?</string>
   <string name="tangempay_come_back_if_forget_pin">Можна подивитися тут, якщо забудете його.</string>
@@ -2588,7 +2589,7 @@
   <string name="tangempay_factory_settings_warning_title">Я розумію, що повністю втрачу доступ до своєї картки Tangem Pay та всіх коштів на ній без можливості відновлення.</string>
   <string name="tangempay_failed_to_issue_card">Не вдалося випустити картку</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Технічна помилка, спробуйте ще раз, натиснувши кнопку нижче</string>
-  <string name="tangempay_failed_to_issue_card_support_description">Технічна помилка, зверніться до служби підтримки.</string>
+  <string name="tangempay_failed_to_issue_card_support_description">Технічна помилка, зверніться до служби підтримки</string>
   <string name="tangempay_feature_will_be_available_soon">Невдовзі буде доступно</string>
   <string name="tangempay_feature_will_be_available_soon_description">Ви зможете випускати додаткові картки для свого платіжного рахунку</string>
   <string name="tangempay_get_banner_description">Безкоштовна картка Tangem Pay із кешбеком до 2%</string>
@@ -2618,7 +2619,7 @@
   <string name="tangempay_kyc_rejected">Відхилено</string>
   <string name="tangempay_kyc_rejected_button_text">Приховати статус</string>
   <string name="tangempay_kyc_rejected_description">Вибачте, ми не змогли підтвердити</string>
-  <string name="tangempay_kyc_rejected_description_span">вашу особу.</string>
+  <string name="tangempay_kyc_rejected_description_span">вашу особу</string>
   <string name="tangempay_main_select_plan">Обрати тариф</string>
   <string name="tangempay_maximum_cards_issued_description">Закрийте одну картку, щоб додати нову</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Перейдіть на вищий тариф, щоб мати більше карток</string>

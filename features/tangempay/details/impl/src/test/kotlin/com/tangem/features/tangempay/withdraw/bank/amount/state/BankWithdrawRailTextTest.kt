@@ -98,6 +98,26 @@ internal class BankWithdrawRailTextTest {
         assertThat(actual).isEqualTo(model.expected)
     }
 
+    @ParameterizedTest
+    @MethodSource("provideRailTotalFeeModels")
+    fun `GIVEN rail WHEN totalFee THEN a route fee goes on top and a SPEI fee comes out of the amount`(
+        model: RailTotalFeeModel,
+    ) {
+        // Act
+        val actual = offrampDestination(rail = model.rail, fee = BigDecimal("1.00")).totalFee(BigDecimal("0.03"))
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    private fun provideRailTotalFeeModels() = listOf(
+        RailTotalFeeModel(rail = BankRail.ACH, expected = BigDecimal("1.03")),
+        RailTotalFeeModel(rail = BankRail.WIRE, expected = BigDecimal("1.03")),
+        RailTotalFeeModel(rail = BankRail.SPEI, expected = BigDecimal("0.03")),
+    )
+
+    internal data class RailTotalFeeModel(val rail: BankRail, val expected: BigDecimal)
+
     private fun provideBuiltInLabelModels() = listOf(
         BuiltInLabelModel(rail = BankRail.ACH, expected = resourceReference(R.string.tangempay_bank_transfer_fee_ach)),
         BuiltInLabelModel(

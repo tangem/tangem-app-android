@@ -210,12 +210,12 @@ internal class NetworkSelectionModel @Inject constructor(
             currency.network.name.lowercase().contains(lowerQuery)
     }
 
-    // TODO [REDACTED_TASK_KEY] Show the network instead of the price once TangemTokenRow supports a network subtitle
     private fun buildTokenRow(currency: CryptoCurrency, context: TokenMappingParams): TangemTokenRow.State {
         val status = context.statusMap[currency.id] ?: return TangemTokenRow.State.Shimmer(id = currency.id.value)
         return TokenRowStateConverter(context.appCurrency).convert(
             currencyStatus = status,
             onClick = { onTokenClick(currency, context) },
+            subtitle = stringReference(currency.network.name),
         )
     }
 

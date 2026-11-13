@@ -9,13 +9,18 @@ import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
+import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
@@ -33,6 +38,7 @@ import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -48,6 +54,7 @@ internal class PooledStakingEarnProduct @Inject constructor(
     private val p2pEthPoolRepository: P2PEthPoolRepository,
     private val stakingIdFactory: StakingIdFactory,
     private val singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
+    private val multiStakingBalanceSupplier: MultiStakingBalanceSupplier,
     private val mapper: PooledStakingMapper,
 ) : EarnProduct {
 
@@ -73,10 +80,20 @@ internal class PooledStakingEarnProduct @Inject constructor(
         val poolStatuses = accountStatusListSupplier(userWalletId)
             .map { statuses -> statuses.flattenCurrencies().filter { it.isPoolCurrency() } }
 
-        return combine(poolStatuses, availabilities(userWalletId, poolStatuses)) { statuses, availabilities ->
+        return combine(
+            flow = poolStatuses,
+            flow2 = availabilities(userWalletId, poolStatuses),
+            flow3 = failedBalanceIds(userWalletId),
+        ) { statuses, availabilities, failedIds ->
             statuses.mapNotNull { status ->
                 val availability = availabilities[status.currency.id] ?: return@mapNotNull null
-                mapper.summary(userWalletId, status, availability)?.let { summary -> status.currency.id to summary }
+                val isBalanceFailed = status.isBalanceFailed(failedIds)
+                mapper.summary(
+                    userWalletId = userWalletId,
+                    status = status,
+                    availability = availability,
+                    isBalanceFailed = isBalanceFailed,
+                )?.let { summary -> status.currency.id to summary }
             }.toMap()
         }
     }
@@ -86,8 +103,10 @@ internal class PooledStakingEarnProduct @Inject constructor(
             statuses.flattenCurrencies().firstOrNull { it.currency.id == params.currency.id }
         },
         flow2 = stakingRepository.getStakingAvailability(params.userWalletId, params.currency),
-    ) { status, availability ->
-        status?.let { mapper.state(it, availability) } ?: EarnProductState.Unavailable
+        flow3 = failedBalanceIds(params.userWalletId),
+    ) { status, availability, failedIds ->
+        status?.let { mapper.state(it, availability, isBalanceFailed = it.isBalanceFailed(failedIds)) }
+            ?: EarnProductState.Unavailable
     }.onStart { emit(EarnProductState.Loading) }
 
     override suspend fun apyHistory(params: EarnProduct.Params, period: EarnPeriod): Either<Throwable, EarnApyHistory> =
@@ -141,6 +160,28 @@ internal class PooledStakingEarnProduct @Inject constructor(
                 ) { entries -> entries.toMap() }
             }
         }
+
+    /**
+     * Read from the balances, not the statuses, which carry only a loaded stake. The first frame is awaited, as the
+     * statuses do, so "Start earning" is not shown before it is known whether the balance can be read.
+     */
+    private fun failedBalanceIds(userWalletId: UserWalletId): Flow<Set<StakingID>> =
+        multiStakingBalanceSupplier(MultiStakingBalanceProducer.Params(userWalletId))
+            .map { balances -> balances.filter { it.isFailed() }.mapTo(hashSetOf()) { it.stakingId } }
+            .distinctUntilChanged()
+
+    /** A failed refresh over a cached empty balance keeps it `Empty` and only marks it `ONLY_CACHE`, not `Error`. */
+    private fun StakingBalance.isFailed(): Boolean =
+        this is StakingBalance.Error || this is StakingBalance.Empty && source == StatusSource.ONLY_CACHE
+
+    private fun CryptoCurrencyStatus.isBalanceFailed(failedIds: Set<StakingID>): Boolean {
+        if (failedIds.isEmpty()) return false
+
+        val address = value.networkAddress?.defaultAddress?.value
+        val stakingId = stakingIdFactory.create(currencyId = currency.id, defaultAddress = address).getOrNull()
+
+        return stakingId != null && stakingId in failedIds
+    }
 
     private fun CryptoCurrencyStatus.isPoolCurrency(): Boolean = currency.isPoolCurrency()
 

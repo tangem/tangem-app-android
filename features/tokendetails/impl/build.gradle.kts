@@ -46,6 +46,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.common.ui)
     implementation(projects.features.rating.api)
+    implementation(projects.features.earn.api)
 
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)

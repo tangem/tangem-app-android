@@ -354,9 +354,15 @@ internal class PromoCampaignModel @Inject constructor(
                     )
                 },
             ).convert(result.currency)
-            // TODO [REDACTED_TASK_KEY] Show the network instead of the price once TangemTokenRow supports a network subtitle
             val selectedTokenRow = if (walletFeatureToggles.isRedesignedTokenRowsEnabled) {
-                TokenRowStateConverter(appCurrency).convert(currencyStatus = result.currency, onClick = null)
+                TokenRowStateConverter(appCurrency).convert(
+                    currencyStatus = result.currency,
+                    onClick = null,
+                    subtitle = resourceReference(
+                        R.string.domain_receive_assets_onboarding_network_name,
+                        wrappedList(result.currency.currency.network.name),
+                    ),
+                )
             } else {
                 null
             }

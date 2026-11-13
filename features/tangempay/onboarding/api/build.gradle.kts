@@ -10,6 +10,7 @@ android {
 
 dependencies {
     /** Core */
+    api(projects.common.routing)
     api(projects.core.decompose)
     api(projects.core.ui)
 

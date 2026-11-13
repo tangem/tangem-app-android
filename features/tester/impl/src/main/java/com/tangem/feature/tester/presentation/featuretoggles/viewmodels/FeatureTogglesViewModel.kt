@@ -2,14 +2,17 @@ package com.tangem.feature.tester.presentation.featuretoggles.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.DISABLED_FEATURE_TOGGLE_VERSION
 import com.tangem.core.configtoggle.feature.FeatureToggleInfo
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
 import com.tangem.core.configtoggle.version.Version
 import com.tangem.core.navigation.finisher.AppFinisher
+import com.tangem.core.ui.components.chip.entity.ChipUM
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureToggleGroupUM
@@ -44,6 +47,9 @@ internal class FeatureTogglesViewModel @Inject constructor(
 
     // Declared before `state` so it is initialized before `initState()` runs in the field initializer.
     private val appVersion: Version? = createAppVersion()
+    private val streamByToggleName: Map<String, String> = FeatureToggles.entries.associate { it.rawName to it.stream }
+    private val streams: List<String> = FeatureToggles.entries.map(FeatureToggles::stream).distinct()
+    private var selectedStream: String? = null
 
     val state: StateFlow<FeatureTogglesScreenUM>
         field = MutableStateFlow(initState())
@@ -68,7 +74,11 @@ internal class FeatureTogglesViewModel @Inject constructor(
             topBar = getConfigSetupState(isPrimarySetup = true),
             appVersion = appInfoProvider.appVersion,
             searchBar = initSearchBar(),
-            featureToggleGroups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(query = ""),
+            streamFilters = createStreamFilters(selectedStream = null),
+            featureToggleGroups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(
+                query = "",
+                stream = null,
+            ),
             onToggleValueChange = ::onToggleValueChange,
             onRestartAppClick = {},
         )
@@ -86,13 +96,45 @@ internal class FeatureTogglesViewModel @Inject constructor(
     }
 
     private fun onQueryChange(query: String) {
-        val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(query = query)
+        val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(
+            query = query,
+            stream = selectedStream,
+        )
         state.update { screenUM ->
             screenUM.copy(
                 searchBar = screenUM.searchBar.copy(query = query),
                 featureToggleGroups = groups,
             )
         }
+    }
+
+    private fun onStreamSelect(stream: String?) {
+        selectedStream = stream
+        val groups = getCurrentToggleGroups()
+        state.update { screenUM ->
+            screenUM.copy(
+                streamFilters = createStreamFilters(selectedStream = stream),
+                featureToggleGroups = groups,
+            )
+        }
+    }
+
+    private fun createStreamFilters(selectedStream: String?): ImmutableList<ChipUM> {
+        val all = ChipUM(
+            id = 0,
+            text = stringReference(value = "All"),
+            isSelected = selectedStream == null,
+            onClick = { onStreamSelect(stream = null) },
+        )
+        val byStream = streams.mapIndexed { index, stream ->
+            ChipUM(
+                id = index + 1,
+                text = stringReference(value = stream.replaceFirstChar(Char::uppercaseChar)),
+                isSelected = stream == selectedStream,
+                onClick = { onStreamSelect(stream = stream) },
+            )
+        }
+        return (listOf(all) + byStream).toImmutableList()
     }
 
     private fun onActiveChange(isActive: Boolean) {
@@ -127,7 +169,7 @@ internal class FeatureTogglesViewModel @Inject constructor(
         viewModelScope.launch {
             mutableFeatureTogglesManager.changeToggle(name = name, isEnabled = isEnabled)
 
-            val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(query = state.value.searchBar.query)
+            val groups = getCurrentToggleGroups()
             state.update { it.copy(featureToggleGroups = groups) }
 
             // delay for smoothly update animations
@@ -143,16 +185,25 @@ internal class FeatureTogglesViewModel @Inject constructor(
             mutableFeatureTogglesManager.recoverLocalConfig()
 
             val topBar = getConfigSetupState(isPrimarySetup = false)
-            val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(query = state.value.searchBar.query)
+            val groups = getCurrentToggleGroups()
             state.update { it.copy(topBar = topBar, featureToggleGroups = groups) }
         }
     }
 
+    private fun getCurrentToggleGroups(): ImmutableList<FeatureToggleGroupUM> {
+        return mutableFeatureTogglesManager.getTesterFeatureToggleGroups(
+            query = state.value.searchBar.query,
+            stream = selectedStream,
+        )
+    }
+
     private fun MutableFeatureTogglesManager.getTesterFeatureToggleGroups(
         query: String,
+        stream: String?,
     ): ImmutableList<FeatureToggleGroupUM> {
         val togglesByStatus = getFeatureToggles()
             .filter { it.name.contains(query, ignoreCase = true) }
+            .filter { stream == null || streamByToggleName[it.name] == stream }
             .sortedWith(featureToggleComparator)
             .map { info ->
                 TesterFeatureToggleUM(

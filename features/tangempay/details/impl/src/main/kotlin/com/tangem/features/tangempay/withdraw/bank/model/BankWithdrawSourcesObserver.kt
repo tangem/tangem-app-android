@@ -24,12 +24,13 @@ import javax.inject.Inject
 internal class BankWithdrawSourcesObserver @Inject constructor(
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
+    private val speiAvailability: BankWithdrawSpeiAvailability,
 ) {
 
     fun observe(account: BankWithdrawSourceAccount, offramp: BankOfframpOptions): Flow<BankWithdrawOptions?> =
         when (account) {
             is BankWithdrawSourceAccount.Payment -> observePaymentAccount(account.userWalletId, offramp)
-            is BankWithdrawSourceAccount.Money -> observeMoneyAccount(account.userWalletId, offramp)
+            is BankWithdrawSourceAccount.Money -> observeMoneyAccount(account, offramp)
         }
 
     private fun observePaymentAccount(
@@ -52,13 +53,15 @@ internal class BankWithdrawSourcesObserver @Inject constructor(
                     }
                 },
                 balanceCurrencyCode = status.balanceOrNull()?.fiatBalance?.currency,
+                isLimitedPerRail = false,
+                isSpeiOffered = false,
             )
         }
 
     private fun observeMoneyAccount(
-        userWalletId: UserWalletId,
+        account: BankWithdrawSourceAccount.Money,
         offramp: BankOfframpOptions,
-    ): Flow<BankWithdrawOptions?> = moneyAccountStatusSupplier(userWalletId)
+    ): Flow<BankWithdrawOptions?> = moneyAccountStatusSupplier(account.userWalletId)
         .map { status ->
             val active = status.value as? MoneyAccountStatusValue.Account.Active ?: return@map null
             if (active.isBankOfframpAvailable != true) return@map null
@@ -74,6 +77,8 @@ internal class BankWithdrawSourcesObserver @Inject constructor(
                     ),
                 ),
                 balanceCurrencyCode = active.balance?.currencyCode,
+                isLimitedPerRail = true,
+                isSpeiOffered = speiAvailability.isOffered(account),
             )
         }
 

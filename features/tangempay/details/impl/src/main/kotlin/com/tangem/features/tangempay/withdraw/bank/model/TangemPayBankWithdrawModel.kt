@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.domain.tangempay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayRegionsUseCase
@@ -26,6 +27,7 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankWithdrawModel @Inject constructor(
@@ -34,6 +36,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase,
+    private val speiAvailability: BankWithdrawSpeiAvailability,
     analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -44,7 +47,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     val draft: StateFlow<BankWithdrawDraft>
         field = MutableStateFlow(BankWithdrawDraft(entry = params.entry))
 
-    /** Every saved account of the wallet: the recipient forms suggest from it while an account number is typed. */
+    /** Every saved account the withdrawal can pay: the recipient forms suggest from it as a number is typed. */
     val savedAccounts: StateFlow<List<BankAccount>>
         field = MutableStateFlow(emptyList<BankAccount>())
 
@@ -91,6 +94,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
                 source = result.source,
                 destination = result.destination,
                 networkFee = result.networkFee,
+                quote = null,
             )
         }
     }
@@ -105,6 +109,10 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
 
     fun onNetworkFeeChanged(networkFee: BigDecimal) {
         draft.update { it.copy(networkFee = networkFee) }
+    }
+
+    fun onQuoteChanged(quote: BankOfframpQuote) {
+        draft.update { it.copy(quote = quote) }
     }
 
     fun onOrderSigned() {
@@ -124,11 +132,15 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     /** One request per wizard: the suggestions and the recipient of a [BankWithdrawEntry.Saved] entry share it. */
     private fun loadSavedAccounts() {
         modelScope.launch {
-            getBankAccountsUseCase(params.userWalletId).fold(
+            getBankAccountsUseCase(
+                userWalletId = params.userWalletId,
+                includeSpeiRecipients = speiAvailability.isOffered(params.sourceAccount),
+            ).fold(
                 ifLeft = { error -> TangemLogger.withTag(TAG).e("Failed to load saved bank accounts: $error") },
                 ifRight = { accounts ->
-                    savedAccounts.value = accounts
-                    selectEntryRecipient(accounts)
+                    val payable = accounts.filter(params.options.value::canPay)
+                    savedAccounts.value = payable
+                    selectEntryRecipient(payable)
                 },
             )
         }
@@ -139,12 +151,19 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         accounts.firstOrNull { it.id == entry.bankAccountId }?.let(::onRecipientSelected)
     }
 
-    private fun BankWithdrawDraft.withSavedRecipient(account: BankAccount): BankWithdrawDraft = copy(
-        recipient = account,
-        destination = destination?.let { current ->
-            params.options.value.destinations.firstOrNull { it.rail == account.details.rail } ?: current
-        },
-    )
+    private fun BankWithdrawDraft.withSavedRecipient(account: BankAccount): BankWithdrawDraft {
+        val allowed = params.options.value.destinationsFor(account.details.rail)
+        if (allowed.isEmpty()) return this
+        return copy(
+            recipient = account,
+            quote = null,
+            destination = destination?.let { current ->
+                allowed.firstOrNull { it.rail == account.details.rail }
+                    ?: current.takeIf { it in allowed }
+                    ?: allowed.first()
+            },
+        )
+    }
 }
 
 private const val TAG = "TangemPayBankWithdrawModel"

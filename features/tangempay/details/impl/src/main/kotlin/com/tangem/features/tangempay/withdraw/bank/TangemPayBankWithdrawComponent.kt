@@ -80,6 +80,7 @@ internal class TangemPayBankWithdrawComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawRecipientsComponent.Params(
                 sourceAccount = params.sourceAccount,
+                options = params.options,
                 onRecipientSelected = { account ->
                     model.onRecipientSelected(account)
                     pushNext(from = config)
@@ -126,6 +127,7 @@ internal class TangemPayBankWithdrawComponent(
                 onOrderCreated = model::onOrderCreated,
                 onDestinationChanged = model::onDestinationChanged,
                 onNetworkFeeChanged = model::onNetworkFeeChanged,
+                onQuoteChanged = model::onQuoteChanged,
                 onCompleted = ::onOrderSigned,
                 onTransferOutcomeUnknown = params.onWithdrawSent,
                 onCloseFlow = params.onCloseFlow,
@@ -234,6 +236,7 @@ internal class TangemPayBankWithdrawComponent(
 
     private fun recipientFields(): ImmutableList<BankWithdrawFormField> = BankWithdrawFormFields.recipientDetails(
         isBusiness = params.entry == BankWithdrawEntry.NewBusiness,
+        rail = model.draft.value.destination?.rail,
     )
 
     private fun onOrderSigned() {

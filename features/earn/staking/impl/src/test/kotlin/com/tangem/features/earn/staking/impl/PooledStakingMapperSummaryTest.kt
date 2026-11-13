@@ -8,7 +8,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.earn.ResolveEarnRateUseCase
 import com.tangem.domain.staking.model.StakingAvailability
-import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
@@ -95,19 +94,56 @@ internal class PooledStakingMapperSummaryTest {
     }
 
     @Test
-    fun `GIVEN balance Error WHEN summary THEN position is null and click action is Manage`() {
+    fun `GIVEN a failed balance without position WHEN summary THEN position is null and click action is Manage`() {
         // Arrange
-        val status = currencyStatus(
-            currency = ethereum,
-            stakingBalance = StakingBalance.Error(MockStaking.stakingId(MockStaking.P2P_ID)),
-        )
+        val status = status(hasPosition = false)
 
         // Act
-        val actual = mapper.summary(userWalletId, status, StakingAvailability.Available(option()))
+        val actual = mapper.summary(
+            userWalletId = userWalletId,
+            status = status,
+            availability = StakingAvailability.Available(option()),
+            isBalanceFailed = true,
+        )
 
         // Assert
         assertThat(actual?.position).isNull()
         assertThat(actual?.onClickAction).isEqualTo(PooledStakingAction(stringReference("Manage")))
+    }
+
+    @Test
+    fun `GIVEN a failed balance and a known position WHEN summary THEN the known position is kept`() {
+        // Arrange
+        val status = status(hasPosition = true)
+
+        // Act
+        val actual = mapper.summary(
+            userWalletId = userWalletId,
+            status = status,
+            availability = StakingAvailability.Available(option()),
+            isBalanceFailed = true,
+        )
+
+        // Assert
+        assertThat(actual?.position).isEqualTo(EarnPositionSummary(BigDecimal("2")))
+        assertThat(actual?.onClickAction).isEqualTo(PooledStakingAction(stringReference("Manage")))
+    }
+
+    @Test
+    fun `GIVEN a failed balance and a Full pool without position WHEN summary THEN no entry`() {
+        // Arrange
+        val status = status(hasPosition = false)
+
+        // Act
+        val actual = mapper.summary(
+            userWalletId = userWalletId,
+            status = status,
+            availability = StakingAvailability.Full(option()),
+            isBalanceFailed = true,
+        )
+
+        // Assert
+        assertThat(actual).isNull()
     }
 
     @Test

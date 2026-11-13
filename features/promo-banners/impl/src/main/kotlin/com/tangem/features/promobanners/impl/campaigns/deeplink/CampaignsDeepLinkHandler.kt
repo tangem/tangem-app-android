@@ -20,7 +20,6 @@ internal class CampaignsDeepLinkHandler @Inject constructor(
 ) : DeepLinkHandler {
 
     override fun handle(request: DeepLinkRequest) {
-        // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         getSelectedWalletSyncUseCase().fold(
             ifLeft = {
                 TangemLogger.e("Error on getting user wallet")

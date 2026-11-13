@@ -49,7 +49,7 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
         val ownerStyle = ownerStyle ?: return
         sessionKeyCheck?.cancel()
 
-        if (!featureToggles.isPolymarketSessionKeysEnabled) {
+        if (!featureToggles.isPolymarketFastOrdersEnabled) {
             sessionKeyStyle = ownerStyle
             applyIfIdle()
             return
@@ -77,8 +77,8 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
     }
 
     fun signingPreference(confirmedWith: PlaceButtonStyleUM): PredictionOrderSigningPreference? = when {
-        !featureToggles.isPolymarketSessionKeysEnabled && confirmedWith == PlaceButtonStyleUM.PLAIN -> null
-        !featureToggles.isPolymarketSessionKeysEnabled -> PredictionOrderSigningPreference.OWNER_ONLY
+        !featureToggles.isPolymarketFastOrdersEnabled && confirmedWith == PlaceButtonStyleUM.PLAIN -> null
+        !featureToggles.isPolymarketFastOrdersEnabled -> PredictionOrderSigningPreference.OWNER_ONLY
         confirmedWith != PlaceButtonStyleUM.PLAIN -> PredictionOrderSigningPreference.AUTOMATIC
         else -> PredictionOrderSigningPreference.SESSION_KEY_ONLY
     }

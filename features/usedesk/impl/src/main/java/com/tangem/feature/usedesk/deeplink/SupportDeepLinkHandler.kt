@@ -21,7 +21,6 @@ internal class SupportDeepLinkHandler @Inject constructor(
 
     override fun handle(request: DeepLinkRequest) {
         request.scope.launch {
-            // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
             val userWallet = getSelectedWalletSyncUseCase().getOrElse { error ->
                 TangemLogger.e("Error on getting user wallet: $error")
                 return@launch

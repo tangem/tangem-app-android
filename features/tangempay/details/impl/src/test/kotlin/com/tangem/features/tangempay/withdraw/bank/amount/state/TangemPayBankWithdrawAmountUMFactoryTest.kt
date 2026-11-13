@@ -201,7 +201,11 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
         sheet: AmountSheet? = null,
     ) = create(
         draft = draft,
-        selection = AmountState(networkFee = networkFee).resolve(draft = draft, options = bankWithdrawOptions()),
+        selection = AmountState(networkFee = networkFee).resolve(
+            draft = draft,
+            options = bankWithdrawOptions(),
+            isEditing = false,
+        ),
         sheet = sheet,
         networkFee = networkFee,
         isBalanceHidden = false,

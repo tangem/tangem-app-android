@@ -17,7 +17,7 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 
 ## Invariants — expensive to break
 
-1. **Opening a screen prompts for nothing.** Background reads use `stored` / `withoutPrompting`; their `null` means
+1. **Opening a screen prompts for nothing**, except the device-link sheet at the feature entry and on Main. Background reads use `stored` / `withoutPrompting`; their `null` means
    "not derived here", never "no account".
 2. **One tap per onboarding run** (`PolymarketSigningSession`): derivation, reads and every signature share one
    card session / unlock. The derived key is stored at once, so a retry costs one tap too.
@@ -70,7 +70,7 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   `REVOKED` while the revocation is in flight; iOS does not resend).
 - A key the BFF stops listing while `REVOKING` counts as revoked only once Polymarket no longer lists the signer;
   otherwise the outcome is unsettled and the next refresh shows the truth.
-- The outcome stays in the runner until the host acknowledges it; no Activate banner while an operation runs.
+- The outcome stays in the runner until the host acknowledges it; nothing offers Activate while an operation runs.
 
 ## Claims
 

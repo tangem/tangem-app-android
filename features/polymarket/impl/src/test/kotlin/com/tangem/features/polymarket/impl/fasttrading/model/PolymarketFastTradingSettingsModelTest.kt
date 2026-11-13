@@ -41,6 +41,7 @@ import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUs
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingSettingsUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -57,6 +58,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
 import java.time.Duration
 import java.time.Instant
 
@@ -313,6 +315,59 @@ internal class PolymarketFastTradingSettingsModelTest {
             verify(exactly = 1) { startOperation(USER_WALLET_ID, REVOKE) }
         }
 
+    @Test
+    fun `GIVEN activation offered WHEN activate clicked THEN activation starts without a toast`() = runTest {
+        // Arrange
+        every { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) } returns
+            PolymarketSessionKeyOperationStart.Started(OPERATION_ID)
+        val model = createContentModel()
+
+        // Act
+        content(model).onActivateClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) }
+        assertThat(sentMessages).isEmpty()
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN banner not actionable WHEN activate clicked THEN nothing starts`(state: PolymarketFastTradingState) =
+        runTest {
+            // Arrange
+            val model = createModel()
+            states.emit(createState(OVERVIEW.right()))
+            advanceUntilIdle()
+            val onActivateClick = content(model).onActivateClick
+            states.emit(state)
+            advanceUntilIdle()
+
+            // Act
+            onActivateClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { startOperation(any(), any()) }
+            assertThat(sentMessages).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN another operation running WHEN activate clicked THEN busy toast is shown`() = runTest {
+        // Arrange
+        every { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) } returns
+            PolymarketSessionKeyOperationStart.Busy
+        val model = createContentModel()
+
+        // Act
+        content(model).onActivateClick()
+        advanceUntilIdle()
+
+        // Assert
+        val toast = sentMessages.single() as SnackbarMessage
+        assertThat(toast.message).isEqualTo(resourceReference(R.string.prediction_session_key_toast_busy))
+    }
+
     private suspend fun TestScope.createContentModel(): PolymarketFastTradingSettingsModel {
         val model = createModel()
         states.emit(createState(OVERVIEW.right()))
@@ -366,12 +421,36 @@ internal class PolymarketFastTradingSettingsModelTest {
                 ),
             ),
             localKeyAddress = null,
+            deviceId = "this-device",
             assessment = PolymarketSessionKeyAssessment(
                 deviceState = PolymarketSessionKeyDeviceState.OfferEnable,
                 reconciliation = PolymarketSessionKeyReconciliation.Unavailable,
                 nextChangeAt = null,
             ),
             isTradable = false,
+        )
+
+        @JvmStatic
+        fun provideTestModels() = listOf(
+            createState(
+                OVERVIEW.copy(
+                    assessment = OVERVIEW.assessment.copy(
+                        deviceState = PolymarketSessionKeyDeviceState.Active(
+                            sessionKey = OVERVIEW.wallet.sessionKeys.single(),
+                            isRenewDue = false,
+                        ),
+                    ),
+                ).right(),
+            ),
+            createState(OVERVIEW.right(), runningOperation(PolymarketSessionKeyOperationRequest.Activate)),
+            createState(OVERVIEW.right(), runningOperation(REVOKE)),
+        )
+
+        fun runningOperation(request: PolymarketSessionKeyOperationRequest) = PolymarketSessionKeyOperation(
+            id = OPERATION_ID,
+            request = request,
+            targetAddress = null,
+            stage = PolymarketSessionKeyOperationStage.SIGNING,
         )
 
         fun createState(

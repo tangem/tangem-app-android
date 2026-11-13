@@ -12,6 +12,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.model.AmountLimits
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
@@ -43,6 +46,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import io.mockk.verifySequence
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -88,6 +92,79 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class InitialState {
+
+        @Test
+        fun `GIVEN saved CLABE recipient WHEN model created THEN SPEI is its only rail`() {
+            // Arrange
+            val draft = BankWithdrawDraft(
+                entry = BankWithdrawEntry.SeeAll,
+                recipient = bankAccount(rail = BankRail.SPEI),
+            )
+
+            // Act
+            val model = createModel(draft = draft, options = SPEI_OPTIONS)
+
+            // Assert
+            val route = model.content().route
+            assertThat(route.rail).isEqualTo(BankRail.SPEI)
+            assertThat(route.onClick).isNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN saved US recipient without a rail WHEN model created THEN SPEI is not offered to it`() {
+            // Arrange
+            val draft = BankWithdrawDraft(entry = BankWithdrawEntry.SeeAll, recipient = bankAccount(rail = null))
+            val options = SPEI_OPTIONS.copy(destinations = persistentListOf(SPEI_DESTINATION, offrampDestination()))
+
+            // Act
+            val model = createModel(draft = draft, options = options)
+
+            // Assert
+            assertThat(model.content().route.rail).isEqualTo(BankRail.ACH)
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideEditedRailModels")
+        fun `GIVEN new recipient on a rail WHEN amount opened THEN editing keeps the rail family of the filled form`(
+            model: EditedRailModel,
+        ) {
+            // Arrange
+            val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, destination = model.destination)
+
+            // Act
+            val amountModel = createModel(draft = draft, step = model.step, options = model.options)
+            val route = amountModel.content().route
+            route.onClick?.invoke()
+
+            // Assert
+            val offeredRails = (amountModel.content().sheet as? SheetUM.Routes)?.items?.map { it.rail }
+                ?: listOf(route.rail)
+            assertThat(route.rail).isEqualTo(model.destination.rail)
+            assertThat(offeredRails).containsExactlyElementsIn(model.expectedRails).inOrder()
+            amountModel.onDestroy()
+        }
+
+        private fun provideEditedRailModels() = listOf(
+            EditedRailModel(step = EDIT_AMOUNT, destination = SPEI_DESTINATION, expectedRails = listOf(BankRail.SPEI)),
+            EditedRailModel(
+                step = EDIT_AMOUNT,
+                destination = offrampDestination(),
+                expectedRails = listOf(BankRail.ACH),
+            ),
+            EditedRailModel(
+                step = EDIT_AMOUNT,
+                destination = offrampDestination(),
+                expectedRails = listOf(BankRail.ACH, BankRail.WIRE),
+                options = US_AND_SPEI_OPTIONS,
+            ),
+            EditedRailModel(
+                step = TangemPayBankWithdrawInnerRoute.Amount,
+                destination = SPEI_DESTINATION,
+                expectedRails = listOf(BankRail.ACH, BankRail.SPEI),
+            ),
+        )
 
         @Test
         fun `GIVEN prepared options WHEN model created THEN first source and first rail preselected`() {
@@ -256,6 +333,24 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
     inner class NetworkFee {
 
         @Test
+        fun `GIVEN money account paying by SPEI WHEN max clicked THEN balance minus the network fee only`() {
+            // Arrange
+            coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
+            val draft = BankWithdrawDraft(
+                entry = BankWithdrawEntry.SeeAll,
+                recipient = bankAccount(rail = BankRail.SPEI),
+            )
+            val model = createModel(draft = draft, options = SPEI_OPTIONS, sourceAccount = moneyAccount)
+
+            // Act
+            model.content().source.onMaxClick()
+
+            // Assert
+            assertThat(model.content().amount.value).isEqualTo("2325.51")
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN money account WHEN network fee loaded THEN max subtracts bank and network fees`() {
             // Arrange
             coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
@@ -378,6 +473,48 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class AmountInput {
+
+        @Test
+        fun `GIVEN money account rail with a minimum and no maximum WHEN amount below it entered THEN minimum error`() {
+            // Arrange
+            val options = bankWithdrawOptions(
+                sources = listOf(bankWithdrawSource(fiatBalance = BigDecimal("20000"))),
+                destinations = listOf(offrampDestination(amountLimits = MONEY_ACCOUNT_LIMITS)),
+                isLimitedPerRail = true,
+            )
+            val model = createModel(sourceAccount = moneyAccount, options = options)
+
+            // Act
+            model.content().amount.onValueChange("9.99")
+
+            // Assert
+            val state = model.content()
+            assertThat(state.amount.error).isEqualTo(
+                resourceReference(R.string.tangempay_withdraw_bank_amount_error_min, wrappedList("$10")),
+            )
+            assertThat(state.isContinueEnabled).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account rail without a maximum WHEN amount above the default maximum entered THEN accepted`() {
+            // Arrange
+            val options = bankWithdrawOptions(
+                sources = listOf(bankWithdrawSource(fiatBalance = BigDecimal("20000"))),
+                destinations = listOf(offrampDestination(amountLimits = MONEY_ACCOUNT_LIMITS)),
+                isLimitedPerRail = true,
+            )
+            val model = createModel(sourceAccount = moneyAccount, options = options)
+
+            // Act
+            model.content().amount.onValueChange("15000")
+
+            // Assert
+            val state = model.content()
+            assertThat(state.amount.error).isNull()
+            assertThat(state.isContinueEnabled).isTrue()
+            model.onDestroy()
+        }
 
         @ParameterizedTest
         @ProvideTestModels
@@ -1086,8 +1223,35 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
 
     data class TypedAmountsModel(val priorAmounts: List<String>, val amount: String, val expectedEvents: Int)
 
+    data class EditedRailModel(
+        val step: TangemPayBankWithdrawInnerRoute,
+        val destination: OfframpDestination,
+        val expectedRails: List<BankRail>,
+        val options: BankWithdrawOptions = SPEI_OPTIONS,
+    )
+
     private companion object {
         val NETWORK_FEE = BigDecimal("0.04")
+        val MONEY_ACCOUNT_LIMITS = AmountLimits(min = BigDecimal("10"), max = null, currency = "USD")
+        val EDIT_AMOUNT = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount)
+        val SPEI_DESTINATION = offrampDestination(
+            rail = BankRail.SPEI,
+            fee = BigDecimal("1"),
+            calculationType = FeeCalculationType.PERCENTAGE,
+            fixedFeeAmount = BigDecimal("0.50"),
+            amountLimits = MONEY_ACCOUNT_LIMITS,
+        )
+        val SPEI_OPTIONS = bankWithdrawOptions(
+            destinations = listOf(offrampDestination(), SPEI_DESTINATION),
+            isLimitedPerRail = true,
+        )
+        val US_AND_SPEI_OPTIONS = SPEI_OPTIONS.copy(
+            destinations = persistentListOf(
+                offrampDestination(),
+                offrampDestination(rail = BankRail.WIRE),
+                SPEI_DESTINATION,
+            ),
+        )
         val RANGE_ERROR = resourceReference(
             R.string.tangempay_withdraw_bank_amount_error_range,
             wrappedList("$1", "$10,000"),

@@ -2591,7 +2591,7 @@
   <string name="tangempay_card_activation_attempts_exceeded_title">カードの有効化を試行できる回数を超えました</string>
   <string name="tangempay_card_activation_description">カード番号の下4桁を入力してください</string>
   <string name="tangempay_card_activation_error">末尾の数字が正しくありません。もう一度お試しください。</string>
-  <string name="tangempay_card_activation_error_already_active">このカードはすでに有効です。</string>
+  <string name="tangempay_card_activation_error_already_active">このカードはすでに有効です</string>
   <string name="tangempay_card_activation_error_in_progress">有効化はすでに進行中です。しばらくお待ちください。</string>
   <string name="tangempay_card_activation_error_not_physical">これはプラスチックカードではありません</string>
   <string name="tangempay_card_activation_error_not_ready">このカードはまだ有効化できません。カードを受け取ってから、もう一度お試しください。</string>
@@ -2600,13 +2600,13 @@
   <string name="tangempay_card_close_error_message">しばらくしてからもう一度お試しいただくか、サポートにお問い合わせください</string>
   <string name="tangempay_card_close_error_title">カードを解約できませんでした</string>
   <string name="tangempay_card_close_last_card_disabled">最後のカードは解約できません</string>
-  <string name="tangempay_card_closed_toast">カード••%sを解約しました</string>
-  <string name="tangempay_card_closed_toast_named">%sを解約しました</string>
+  <string name="tangempay_card_closed_toast">カード%sを解約しました</string>
+  <string name="tangempay_card_closed_toast_named">カード「%s」を解約しました</string>
   <string name="tangempay_card_default_name">Tangem Payカード 1</string>
   <string name="tangempay_card_delivery_activate_after_delivery_toast">カードの到着後に有効化できます</string>
   <string name="tangempay_card_delivery_banner_description">届いたら有効化してください</string>
   <string name="tangempay_card_delivery_banner_description_many">受け取り後に有効化してください</string>
-  <string name="tangempay_card_delivery_banner_title">カードを配送中です</string>
+  <string name="tangempay_card_delivery_banner_title">カードは配送中です</string>
   <string name="tangempay_card_delivery_banner_title_many">カードは配送中です</string>
   <string name="tangempay_card_delivery_email_note">配送会社から%s宛に配送状況をメールでお知らせします</string>
   <string name="tangempay_card_delivery_got_card_button">カードを受け取りました</string>
@@ -2618,6 +2618,7 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">試行回数が多すぎます。24時間後にもう一度お試しください</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">カードを追加できませんでした</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Googleウォレットを利用できません。システム設定をご確認ください</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">カードをGoogleウォレットに追加しました</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">%1$s をキャンセルし、%2$s に切り替える</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">プランの月額料金を支払い、新しいカードの利用を開始するには</string>
   <string name="tangempay_card_details_awaiting_deposit_title">%1$s までにアカウントにチャージしてください</string>
@@ -2675,7 +2676,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">%s以上の金額を設定してください</string>
   <string name="tangempay_card_limit_setup_error_message">限度額を設定できませんでした。もう一度お試しください</string>
   <string name="tangempay_card_page_activating_banner_title">プラスチックカードを有効化しています</string>
-  <string name="tangempay_card_page_closing_banner_description">通常、最大5分ほどかかります。</string>
+  <string name="tangempay_card_page_closing_banner_description">最大5分ほどかかる場合があります</string>
   <string name="tangempay_card_page_closing_banner_title">カードを解約しています</string>
   <string name="tangempay_card_page_daily_limit_change">変更</string>
   <string name="tangempay_card_page_daily_limit_current_limit">現在の利用限度額</string>
@@ -2808,7 +2809,7 @@
   <string name="tangempay_kyc_rejected">拒否されました</string>
   <string name="tangempay_kyc_rejected_button_text">ステータスを非表示</string>
   <string name="tangempay_kyc_rejected_description">申し訳ございませんが、</string>
-  <string name="tangempay_kyc_rejected_description_span">本人確認ができませんでした。</string>
+  <string name="tangempay_kyc_rejected_description_span">本人確認ができませんでした</string>
   <string name="tangempay_main_select_plan">プランを選択</string>
   <string name="tangempay_maximum_cards_issued_description">新しいカードを追加するには、いずれかのカードを解約してください</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">プランをアップグレードすると、より多くのカードを保有できます</string>

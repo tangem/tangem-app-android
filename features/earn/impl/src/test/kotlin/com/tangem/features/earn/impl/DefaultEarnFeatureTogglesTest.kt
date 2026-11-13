@@ -29,6 +29,21 @@ internal class DefaultEarnFeatureTogglesTest {
         assertThat(actual).isEqualTo(isEarnEnabled)
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN user portfolio toggle WHEN read isUserPortfolioEnabled THEN reflects toggle`(isEnabled: Boolean) {
+        // Arrange
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18953_EARN_UPDATE_ASSET_SELECTION)
+        } returns isEnabled
+
+        // Act
+        val actual = toggles.isUserPortfolioEnabled
+
+        // Assert
+        assertThat(actual).isEqualTo(isEnabled)
+    }
+
     @Test
     fun `GIVEN toggle changes between reads WHEN read isEarnEnabled twice THEN each read reflects current value`() {
         // Arrange

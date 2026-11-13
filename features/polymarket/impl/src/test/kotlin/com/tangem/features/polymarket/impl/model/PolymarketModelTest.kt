@@ -57,7 +57,7 @@ internal class PolymarketModelTest {
     @BeforeEach
     fun setup() {
         clearMocks(featureToggles, observeOutcome, acknowledgeOutcome, observeOperation, messageSender)
-        every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+        every { featureToggles.isPolymarketFastOrdersEnabled } returns true
         outcomes.forEach { (walletId, finished) ->
             finished.value = null
             every { observeOutcome(walletId) } returns finished
@@ -210,7 +210,7 @@ internal class PolymarketModelTest {
     @Test
     fun `GIVEN toggle off WHEN outcome arrives THEN nothing is observed sent or acknowledged`() = runTest {
         // Arrange
-        every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+        every { featureToggles.isPolymarketFastOrdersEnabled } returns false
         createVisibleModel(USER_WALLET_ID)
 
         // Act
@@ -321,6 +321,72 @@ internal class PolymarketModelTest {
         verify(exactly = 2) { messageSender.send(any()) }
     }
 
+    @Test
+    fun `GIVEN visible host WHEN activation leaves signing THEN activation in progress toast is sent once`() = runTest {
+        // Arrange
+        createVisibleModel(USER_WALLET_ID)
+        val message = slot<SnackbarMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
+
+        // Act
+        run(USER_WALLET_ID, activation(PolymarketSessionKeyOperationStage.SIGNING))
+        run(USER_WALLET_ID, activation(PolymarketSessionKeyOperationStage.AUTHORIZING))
+        run(USER_WALLET_ID, activation(PolymarketSessionKeyOperationStage.CHECKING_READINESS))
+
+        // Assert
+        verify(exactly = 1) { messageSender.send(any()) }
+        assertThat(message.captured.message)
+            .isEqualTo(resourceReference(R.string.prediction_session_key_toast_activation_in_progress))
+    }
+
+    @Test
+    fun `GIVEN visible host WHEN activation is cancelled at signing THEN nothing is sent`() = runTest {
+        // Arrange
+        createVisibleModel(USER_WALLET_ID)
+
+        // Act
+        run(USER_WALLET_ID, activation(PolymarketSessionKeyOperationStage.SIGNING))
+        run(USER_WALLET_ID, null)
+        finish(USER_WALLET_ID, ACTIVATE_CANCELLED)
+
+        // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
+        verify(exactly = 1) { acknowledgeOutcome(USER_WALLET_ID, ACTIVATE_CANCELLED.id) }
+    }
+
+    @Test
+    fun `GIVEN visible host WHEN activation fails THEN activation failed toast is sent`() = runTest {
+        // Arrange
+        createVisibleModel(USER_WALLET_ID)
+        val messages = mutableListOf<SnackbarMessage>()
+        every { messageSender.send(capture(messages)) } returns Unit
+
+        // Act
+        run(USER_WALLET_ID, activation(PolymarketSessionKeyOperationStage.AUTHORIZING))
+        run(USER_WALLET_ID, null)
+        finish(USER_WALLET_ID, activateFailed(PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)))
+
+        // Assert
+        assertThat(messages.map { it.message }).containsExactly(
+            resourceReference(R.string.prediction_session_key_toast_activation_in_progress),
+            resourceReference(R.string.prediction_session_key_toast_activation_failed),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN visible host WHEN activation ends unsettled THEN no failure toast is sent`() = runTest {
+        // Arrange
+        createVisibleModel(USER_WALLET_ID)
+        val outcome = activateFailed(PolymarketSessionKeyLifecycleError.Unsettled(sessionKey = mockk()))
+
+        // Act
+        finish(USER_WALLET_ID, outcome)
+
+        // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
+        verify(exactly = 1) { acknowledgeOutcome(USER_WALLET_ID, outcome.id) }
+    }
+
     private fun TestScope.run(walletId: UserWalletId, operation: PolymarketSessionKeyOperation?) {
         operations.getValue(walletId).value = operation
         advanceUntilIdle()
@@ -369,6 +435,19 @@ internal class PolymarketModelTest {
             request = PolymarketSessionKeyOperationRequest.Extend,
             targetAddress = "0x1",
             stage = PolymarketSessionKeyOperationStage.SIGNING,
+        )
+
+        fun activation(stage: PolymarketSessionKeyOperationStage) = PolymarketSessionKeyOperation(
+            id = 10L,
+            request = PolymarketSessionKeyOperationRequest.Activate,
+            targetAddress = null,
+            stage = stage,
+        )
+
+        fun activateFailed(error: PolymarketSessionKeyLifecycleError) = PolymarketSessionKeyOperationOutcome(
+            id = 11L,
+            request = PolymarketSessionKeyOperationRequest.Activate,
+            result = PolymarketSessionKeyOperationFailure(error = error, isAfterRevocation = false).left(),
         )
 
         fun revocation(stage: PolymarketSessionKeyOperationStage) = PolymarketSessionKeyOperation(

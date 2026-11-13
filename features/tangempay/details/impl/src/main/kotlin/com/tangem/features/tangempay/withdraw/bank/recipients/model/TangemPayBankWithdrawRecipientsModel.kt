@@ -14,6 +14,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAnalytics
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSpeiAvailability
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUMFactory
@@ -36,6 +37,7 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
+    private val speiAvailability: BankWithdrawSpeiAvailability,
     analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -69,9 +71,14 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
 
     private fun loadAccounts() {
         modelScope.launch {
-            getBankAccountsUseCase(params.userWalletId).fold(
+            getBankAccountsUseCase(
+                userWalletId = params.userWalletId,
+                includeSpeiRecipients = speiAvailability.isOffered(params.sourceAccount),
+            ).fold(
                 ifLeft = ::closeOnLoadFailure,
-                ifRight = { accounts -> state.update { it.copy(accounts = accounts) } },
+                ifRight = { accounts ->
+                    state.update { it.copy(accounts = accounts.filter(params.options.value::canPay)) }
+                },
             )
         }
     }

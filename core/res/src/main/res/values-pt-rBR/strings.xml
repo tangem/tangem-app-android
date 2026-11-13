@@ -336,6 +336,7 @@
   <string name="collectibles_main_search_empty">Nenhum resultado. Tente alterar os termos da busca\nou explore a partir da lista</string>
   <string name="collectibles_main_search_load_error">Não foi possível carregar a lista de cartões.</string>
   <string name="collectibles_main_title">Conta de pacotes</string>
+  <string name="collectibles_main_withdraw">Sacar</string>
   <string name="collectibles_open_pack_buyback_unavailable">Recompra indisponível</string>
   <string name="collectibles_open_pack_failed_subtitle">Nosso parceiro está enfrentando um problema. Entre em contato com o suporte para receber orientações adicionais, por favor</string>
   <string name="collectibles_open_pack_failed_title">Falha ao abrir o pacote</string>
@@ -482,6 +483,7 @@
   <string name="common_decline">Recusar</string>
   <string name="common_default">Padrão</string>
   <string name="common_delete">Excluir</string>
+  <string name="common_depositing">Depositando</string>
   <string name="common_disable">Desativar</string>
   <string name="common_disabled">Desabilitado</string>
   <string name="common_disabling">Desativar</string>
@@ -1640,6 +1642,10 @@
   <string name="mcp_intent_proceed">Continuar</string>
   <string name="mcp_intent_processed_title">Esta solicitação já foi processada</string>
   <string name="mcp_intent_unknown_agent_name">IA</string>
+  <string name="mcp_intents_history_status_new">Novo</string>
+  <string name="mcp_intents_history_status_viewed">Visualizado</string>
+  <string name="mcp_intents_history_title">Histórico de intenções</string>
+  <string name="mcp_intents_history_yesterday">Ontem</string>
   <string name="mcp_send_intent_cant_reach_title">Não foi possível acessar a solicitação</string>
   <string name="mcp_send_intent_offer_description">O agente está solicitando o envio de fundos da sua conta. Você poderá revisar os detalhes na próxima etapa.</string>
   <string name="mcp_send_intent_offer_title">O agente %1$s quer enviar %2$s</string>
@@ -1658,6 +1664,7 @@
   <string name="money_account_add_funds_swap_description">Use criptoativos da sua carteira para adicionar fundos à sua conta em USD</string>
   <string name="money_account_balance_unavailable_description">Estamos com dificuldades para carregar seu saldo. Tente novamente mais tarde.</string>
   <string name="money_account_balance_unavailable_title">Saldo indisponível</string>
+  <string name="money_account_banner_proceed">Continuar</string>
   <string name="money_account_close_account">Encerrar conta</string>
   <string name="money_account_main_name">Conta em USD</string>
   <string name="money_account_main_status_action_required">Ação necessária</string>
@@ -1700,6 +1707,9 @@
   <string name="money_account_send_conversion">Conversão</string>
   <string name="money_account_send_fees_deducted">As taxas são descontadas antes da conversão</string>
   <string name="money_account_send_fees_footer">As taxas incluem a tarifa de serviço de %s e a taxa de rede estimada</string>
+  <string name="money_account_send_fees_network">Rede %s</string>
+  <string name="money_account_send_fees_title">Taxas</string>
+  <string name="money_account_send_fees_total">Total</string>
   <string name="money_account_send_network_fee_note">As taxas incluem uma taxa de rede estimada de %s, que pode variar conforme a atividade da rede</string>
   <string name="money_account_send_pay_button">Pagar %s</string>
   <string name="money_account_send_rate_lock">Taxa de câmbio fixada por %s</string>
@@ -1949,6 +1959,9 @@
   <string name="onramp_recommended_title">Recomendado</string>
   <string name="onramp_redirecting_to_provider_subtitle">Você poderá concluir sua transação por meio do provedor terceirizado. %s</string>
   <string name="onramp_redirecting_to_provider_title">Redirecionando para %s...</string>
+  <string name="onramp_region_restriction_description">As operações de compra e swap não estão disponíveis na sua região %1$s, de acordo com seu endereço IP</string>
+  <string name="onramp_region_restriction_description_v2">A compra não está disponível na sua região %1$s, de acordo com seu endereço IP</string>
+  <string name="onramp_region_restriction_title">Aplicam-se restrições regionais</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Nossos serviços não estão disponíveis neste país.</string>
   <string name="onramp_residency_bottomsheet_title">Sua residência foi identificada como</string>
   <string name="onramp_settings_residence">Residência</string>
@@ -2070,6 +2083,14 @@
   <string name="prediction_main_title">Previsões</string>
   <string name="prediction_main_total_balance">Saldo Total</string>
   <string name="prediction_main_withdraw">Sacar</string>
+  <string name="prediction_match_card_exact_score">Placar exato</string>
+  <string name="prediction_match_card_first_to_score">Primeira equipe a marcar</string>
+  <string name="prediction_match_card_team_totals">Totais de %s</string>
+  <string name="prediction_match_next_line">Próxima opção</string>
+  <string name="prediction_match_over_short">O</string>
+  <string name="prediction_match_previous_line">Opção anterior</string>
+  <string name="prediction_match_rules">Regras</string>
+  <string name="prediction_match_under_short">U</string>
   <string name="prediction_onboarding_benefit_custody_subtitle">Somente seu cartão pode movimentar os fundos</string>
   <string name="prediction_onboarding_benefit_custody_title">Suas chaves, seus fundos</string>
   <string name="prediction_onboarding_benefit_fund_subtitle">USDC ou faça swap de qualquer moeda</string>
@@ -2078,6 +2099,16 @@
   <string name="prediction_onboarding_benefit_history_title">Histórico avançado</string>
   <string name="prediction_onboarding_benefit_payout_subtitle">Ganhe e será seu instantaneamente</string>
   <string name="prediction_onboarding_benefit_payout_title">Os pagamentos são enviados para sua carteira</string>
+  <string name="prediction_onboarding_error_address_mismatch">A conta de previsões retornada não pertence a esta carteira.</string>
+  <string name="prediction_onboarding_error_approvals_failed">Sua conta de previsões foi criada, mas não foi possível habilitar o trading.</string>
+  <string name="prediction_onboarding_error_card_failed">O cartão não respondeu. Aproxime-o novamente do celular.</string>
+  <string name="prediction_onboarding_error_credentials">Não foi possível entrar na Polymarket.</string>
+  <string name="prediction_onboarding_error_deployment_failed">Não foi possível criar sua conta de previsões.</string>
+  <string name="prediction_onboarding_error_polymarket_unavailable">A Polymarket não está respondendo no momento.</string>
+  <string name="prediction_onboarding_error_region_unknown">Não foi possível verificar se o recurso Predictions está disponível na sua região.</string>
+  <string name="prediction_onboarding_error_request_declined">A Polymarket recusou a solicitação.</string>
+  <string name="prediction_onboarding_error_transaction_rejected">A transação que cria sua conta de previsões foi rejeitada.</string>
+  <string name="prediction_onboarding_error_wallet_unsupported">Esta carteira não pode ser usada para fazer previsões.</string>
   <string name="prediction_onboarding_faq_availability_answer">A disponibilidade varia de acordo com a região e alguns países têm restrições. Você é responsável por cumprir as leis aplicáveis na sua jurisdição.</string>
   <string name="prediction_onboarding_faq_availability_question">Está disponível onde eu moro?</string>
   <string name="prediction_onboarding_faq_risks_answer">Os mercados de previsão envolvem riscos. Você pode perder seu dinheiro se os preços se moverem contra você. Os resultados liquidados são finais. Isso não constitui aconselhamento financeiro.</string>
@@ -2207,6 +2238,16 @@
   <string name="prediction_search_initial_subtitle">Pesquise eventos ou suas previsões</string>
   <string name="prediction_search_initial_title">Comece a digitar para pesquisar</string>
   <string name="prediction_search_results_title">Resultados da pesquisa</string>
+  <string name="prediction_session_key_activate_session_key">Ativar chave de sessão</string>
+  <string name="prediction_session_key_faq_can_text">Envie ordens de compra e venda instantaneamente, sem precisar aproximar seu cartão ou Anel Tangem. Isso é ideal para esportes ao vivo, e-sports e mercados de criptomoedas com negociações rápidas, nos quais você precisa de agilidade para enviar uma ordem.</string>
+  <string name="prediction_session_key_faq_cant_text">Movimente seu dinheiro. Os depósitos e saques sempre exigem uma aproximação do seu cartão Tangem ou Anel Tangem.</string>
+  <string name="prediction_session_key_faq_cant_title">O que ele não pode fazer?</string>
+  <string name="prediction_session_key_faq_control_text">Consulte todas as chaves de sessão ativas (uma por dispositivo) e revogue qualquer uma delas aproximando seu cartão Tangem. Desative o recurso neste celular e todas as ordens voltarão a exigir uma aproximação do cartão.</string>
+  <string name="prediction_session_key_faq_control_title">Você está no controle</string>
+  <string name="prediction_session_key_onboarding_failed_text">Sua conta foi criada, mas não foi possível criar sua chave de sessão. Por favor, tente ativá-la novamente de forma manual.</string>
+  <string name="prediction_session_key_onboarding_failed_title">Falha na ativação do trading rápido</string>
+  <string name="prediction_session_key_onboarding_toggle">Ative o trading rápido por até 180 dias.</string>
+  <string name="prediction_session_key_review">Revisar</string>
   <string name="prediction_session_key_revoke_confirm_text">As ordens assinadas no dispositivo %s deixam de funcionar imediatamente. Você poderá ativar novamente o trading rápido nesse dispositivo mais tarde.</string>
   <string name="prediction_session_key_revoke_confirm_title">Revogar o trading rápido?</string>
   <string name="prediction_session_key_revoke_confirm_unknown_signer_text">As ordens assinadas por %s deixam de funcionar imediatamente</string>
@@ -2215,6 +2256,7 @@
   <string name="prediction_session_key_unknown_signer">Signatário desconhecido</string>
   <string name="prediction_session_key_unknown_signers_text">Outra pessoa pode negociar usando seu saldo de previsões. Se você não autorizou isso, revogue estes signatários agora.</string>
   <string name="prediction_session_key_unknown_signers_title">Signatários desconhecidos podem negociar</string>
+  <string name="prediction_sports_neither">Nenhuma</string>
   <string name="prediction_withdraw_balance_unavailable">Não foi possível carregar o saldo da sua conta de previsões. Atualize ou reabra esta tela.</string>
   <string name="prediction_withdraw_confirm_fee_footer">Nenhuma taxa de rede é cobrada por este saque. O valor que você receber poderá apresentar uma pequena diferença devido à conversão realizada pela bridge.</string>
   <string name="prediction_withdraw_confirm_title">Confirmar saque</string>
@@ -2709,7 +2751,7 @@
   <string name="support_chat_share_logs_button">Anexar logs do aplicativo</string>
   <string name="support_chat_swap_prefilled_message">Dados da operação SWAP:\nDe: %1$s %2$s\nPara: %3$s %4$s\nPor %5$s - %6$s</string>
   <string name="support_selector_view_chat_button">Abra o chat</string>
-  <string name="support_selector_view_email_button">Abra o e-mail</string>
+  <string name="support_selector_view_email_button">Abrir e-mail</string>
   <string name="survey_demand_business_interest_question">Você tem interesse em serviços OTC para sua empresa?</string>
   <string name="survey_demand_button">Entre na lista de espera</string>
   <string name="survey_demand_current_solution_cash_exchange">Câmbio em dinheiro</string>
@@ -2929,7 +2971,7 @@
   <string name="tangempay_card_activation_attempts_exceeded_title">Você excedeu o número de tentativas de ativação</string>
   <string name="tangempay_card_activation_description">Digite os 4 últimos dígitos do número do seu cartão</string>
   <string name="tangempay_card_activation_error">Últimos dígitos inválidos. Tente novamente</string>
-  <string name="tangempay_card_activation_error_already_active">Este cartão já está ativo.</string>
+  <string name="tangempay_card_activation_error_already_active">Este cartão já está ativo</string>
   <string name="tangempay_card_activation_error_in_progress">A ativação já está em andamento. Por favor, aguarde.</string>
   <string name="tangempay_card_activation_error_not_physical">Este não é um cartão físico</string>
   <string name="tangempay_card_activation_error_not_ready">Este cartão ainda não está pronto para ser ativado. Tente novamente depois de recebê-lo.</string>
@@ -2938,13 +2980,13 @@
   <string name="tangempay_card_close_error_message">Tente novamente mais tarde ou entre em contato com o suporte</string>
   <string name="tangempay_card_close_error_title">Não foi possível encerrar o cartão</string>
   <string name="tangempay_card_close_last_card_disabled">Você não pode encerrar seu último cartão</string>
-  <string name="tangempay_card_closed_toast">Cartão ••%s encerrado</string>
-  <string name="tangempay_card_closed_toast_named">Cartão %s encerrado</string>
+  <string name="tangempay_card_closed_toast">O cartão %s foi encerrado</string>
+  <string name="tangempay_card_closed_toast_named">O cartão “%s” foi encerrado</string>
   <string name="tangempay_card_default_name">Cartão Tangem Pay 1</string>
   <string name="tangempay_card_delivery_activate_after_delivery_toast">Você poderá ativar seu cartão após a entrega</string>
   <string name="tangempay_card_delivery_banner_description">Ative-o quando chegar</string>
   <string name="tangempay_card_delivery_banner_description_many">Ative-os quando chegarem</string>
-  <string name="tangempay_card_delivery_banner_title">Seu cartão está a caminho para a entrega</string>
+  <string name="tangempay_card_delivery_banner_title">Seu cartão está a caminho</string>
   <string name="tangempay_card_delivery_banner_title_many">Seus cartões estão a caminho</string>
   <string name="tangempay_card_delivery_email_note">Você receberá as atualizações de entrega da transportadora por e-mail em %s</string>
   <string name="tangempay_card_delivery_got_card_button">Recebi meu cartão</string>
@@ -2956,6 +2998,7 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Tentativas demais. Tente novamente em 24 horas</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Não foi possível adicionar o cartão</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">O Google Wallet não está disponível. Verifique as configurações do sistema</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Cartão adicionado ao Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancele %1$s, mude para %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Para pagar a mensalidade do plano e começar a usar o novo cartão</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Recarregue sua conta no valor de %1$s</string>
@@ -2973,7 +3016,7 @@
   <string name="tangempay_card_details_name_on_card">Nome do titular do cartão</string>
   <string name="tangempay_card_details_open_wallet_button">Abra a Carteira do Google</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Configure o Tangem Pay em poucos toques e comece a pagar com o Google Pay.</string>
-  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Configure o Tangem Pay em poucos toques e comece a pagar com o Apple Pay.</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Configure o Tangem Pay em poucos toques e comece a pagar com o Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Adicione seu cartão ao Google Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title_apple">Adicione seu cartão ao Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_step_1">Abra a Carteira do Google</string>
@@ -3013,8 +3056,8 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">Definir um limite a partir de %s</string>
   <string name="tangempay_card_limit_setup_error_message">Não foi possível definir o limite. Tente novamente.</string>
   <string name="tangempay_card_page_activating_banner_title">Ativando seu cartão físico</string>
-  <string name="tangempay_card_page_closing_banner_description">Geralmente leva até 5 minutos</string>
-  <string name="tangempay_card_page_closing_banner_title">Fechando seu cartão</string>
+  <string name="tangempay_card_page_closing_banner_description">Pode levar até 5 minutos</string>
+  <string name="tangempay_card_page_closing_banner_title">Encerrando seu cartão</string>
   <string name="tangempay_card_page_daily_limit_change">Mudar</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Limite atual</string>
   <string name="tangempay_card_page_daily_limit_error_description">Não foi possível carregar seu limite diário. Tente novamente.</string>
@@ -3146,8 +3189,8 @@
   <string name="tangempay_kyc_in_progress_popup_description">Os documentos geralmente são verificados automaticamente em até 5 minutos. Em casos raros, se for necessária uma revisão manual, esse processo pode levar até 48 horas.</string>
   <string name="tangempay_kyc_rejected">Rejeitado</string>
   <string name="tangempay_kyc_rejected_button_text">Ocultar status</string>
-  <string name="tangempay_kyc_rejected_description">Desculpe, não foi possível verificar.</string>
-  <string name="tangempay_kyc_rejected_description_span">Seu perfil.</string>
+  <string name="tangempay_kyc_rejected_description">Desculpe, não foi possível verificar</string>
+  <string name="tangempay_kyc_rejected_description_span">seu perfil</string>
   <string name="tangempay_main_select_plan">Selecionar plano</string>
   <string name="tangempay_maximum_cards_issued_description">Encerre um cartão para adicionar um novo</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Atualize seu plano para ter mais cartões</string>
@@ -3393,6 +3436,7 @@
   <string name="tangempay_withdraw_bank_field_bank_name">Nome do banco</string>
   <string name="tangempay_withdraw_bank_field_bank_region">Estado / região do banco</string>
   <string name="tangempay_withdraw_bank_field_business_name">Nome da empresa</string>
+  <string name="tangempay_withdraw_bank_field_clabe_hint">Número de conta bancária de 18 dígitos do destinatário no México</string>
   <string name="tangempay_withdraw_bank_field_error_clabe">A CLABE está incorreta</string>
   <string name="tangempay_withdraw_bank_field_error_invalid_format">Formato de texto inválido</string>
   <string name="tangempay_withdraw_bank_field_error_routing_number">O número de roteamento está incorreto</string>
@@ -3507,6 +3551,7 @@
   <string name="transaction_history_claiming_incentive_rewards">Reivindicando recompensas de incentivo</string>
   <string name="transaction_history_claiming_reward">Reivindicar recompensa</string>
   <string name="transaction_history_contract_address">contrato: %s</string>
+  <string name="transaction_history_deposited">Depósito realizado</string>
   <string name="transaction_history_detail_page_amount_signed_value">%1$s %2$s %3$s</string>
   <string name="transaction_history_detail_page_amount_value">%1$s %2$s</string>
   <string name="transaction_history_disabling_yield_mode">Desativar o modo Yield</string>
@@ -3526,6 +3571,7 @@
   <string name="transaction_history_fee_sending_asset">Enviar %%image%%%s</string>
   <string name="transaction_history_from_inline_address">de: %%image%% %s</string>
   <string name="transaction_history_incentive_rewards_claimed">Recompensas de incentivo reivindicadas</string>
+  <string name="transaction_history_lending_provider">Empréstimo na Aave</string>
   <string name="transaction_history_multiple_addresses">Vários endereços</string>
   <string name="transaction_history_not_supported_description">O histórico de transações ainda não é suportado nesta blockchain. Mas não se preocupe, estamos trabalhando nisso! Enquanto isso, você pode conferir no explorador.</string>
   <string name="transaction_history_operation">Operação</string>
@@ -3535,6 +3581,7 @@
   <string name="transaction_history_staking_reward">Recompensa de staking</string>
   <string name="transaction_history_status_approve_failed">Falha na aprovação</string>
   <string name="transaction_history_status_claiming_rewards">Resgatando as recompensas</string>
+  <string name="transaction_history_status_deposit_failed">Falha no depósito</string>
   <string name="transaction_history_status_disabling_yield_mode_failed">Não foi possível desativar o modo de rendimento</string>
   <string name="transaction_history_status_enabling_yield_mode_failed">Não foi possível ativar o modo de rendimento</string>
   <string name="transaction_history_status_incentive_rewards_claim_failed">Não foi possível reivindicar as recompensas de incentivo</string>

@@ -9,15 +9,19 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.domain.tangempay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
+import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSpeiAvailability
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.ContentUM
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.RecipientUM
@@ -25,10 +29,12 @@ import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifySequence
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -38,6 +44,8 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
     private val paymentAccount = BankWithdrawSourceAccount.Payment(userWalletId)
     private val moneyAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1")
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
+    private val speiAvailability = BankWithdrawSpeiAvailability(moneyAccountFeatureToggles)
     private val onRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
@@ -60,6 +68,8 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
 
     @BeforeEach
     fun resetMocks() {
+        clearMocks(moneyAccountFeatureToggles)
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns false
         clearMocks(
             router,
             uiMessageSender,
@@ -68,14 +78,14 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
             onCloseFlow,
             analytics,
         )
-        coEvery { getBankAccountsUseCase(userWalletId) } returns listOf(saburo, basit, raxanax).right()
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns listOf(saburo, basit, raxanax).right()
     }
 
     @Test
     fun `GIVEN accounts not loaded yet WHEN model created THEN content loading and search inactive`() {
         // Arrange
         val pending = CompletableDeferred<List<BankAccount>>()
-        coEvery { getBankAccountsUseCase(userWalletId) } coAnswers { pending.await().right() }
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } coAnswers { pending.await().right() }
 
         // Act
         val model = createModel()
@@ -118,6 +128,21 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
                 onClick = items[1].onClick,
             ),
         )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN options without SPEI WHEN a CLABE recipient is saved THEN it is not listed`() {
+        // Arrange
+        val clabe = bankAccount(id = "acc-4", accountNumber = "646180157000000004", rail = BankRail.SPEI)
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns listOf(basit, clabe).right()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        val items = (model.uiState.value.content as ContentUM.Recipients).items
+        assertThat(items.map { it.id }).containsExactly("acc-1")
         model.onDestroy()
     }
 
@@ -170,7 +195,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
     @Test
     fun `GIVEN accounts fail to load WHEN model created THEN error message shown and step closed`() {
         // Arrange
-        coEvery { getBankAccountsUseCase(userWalletId) } returns BankOfframpError.Unknown(null).left()
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns BankOfframpError.Unknown(null).left()
 
         // Act
         val model = createModel()
@@ -324,6 +349,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawRecipientsComponent.Params(
                 sourceAccount = sourceAccount,
+                options = MutableStateFlow(bankWithdrawOptions()),
                 onRecipientSelected = onRecipientSelected,
                 onCloseFlow = onCloseFlow,
             ),
@@ -332,6 +358,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
         router = router,
         uiMessageSender = uiMessageSender,
         getBankAccountsUseCase = getBankAccountsUseCase,
+        speiAvailability = speiAvailability,
         analytics = analytics,
     )
 }
