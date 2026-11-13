@@ -45,8 +45,8 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
 
     init {
         componentScope.launch { model.incentiveSheetRequests.collect(incentiveSheet::show) }
-        lifecycle.doOnResume { model.setHeroVideoRunning(isRunning = true) }
-        lifecycle.doOnPause { model.setHeroVideoRunning(isRunning = false) }
+        lifecycle.doOnResume { model.setScreenResumed(isResumed = true) }
+        lifecycle.doOnPause { model.setScreenResumed(isResumed = false) }
     }
 
     @Composable
@@ -57,6 +57,7 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
         EarnPickerContent(
             state = state,
             heroVideo = heroVideo.surface,
+            onHeroVisibilityChange = model::setHeroVisible,
             modifier = modifier,
             calculator = { calculator.Content(modifier = Modifier) },
         )

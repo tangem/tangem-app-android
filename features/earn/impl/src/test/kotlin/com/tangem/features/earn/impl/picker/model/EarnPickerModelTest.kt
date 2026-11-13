@@ -80,6 +80,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.verify
+import io.mockk.verifySequence
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -1019,18 +1020,87 @@ internal class EarnPickerModelTest {
 
         @ParameterizedTest
         @ValueSource(booleans = [true, false])
-        fun `GIVEN a model WHEN the screen running state changes THEN the clip follows it`(isRunning: Boolean) =
+        fun `GIVEN a model with the hero in view WHEN the screen resumed state changes THEN the clip follows it`(
+            isResumed: Boolean,
+        ) = runTest {
+            // Arrange
+            val model = createModel(frames = MutableStateFlow(frame()))
+
+            // Act
+            model.setScreenResumed(isResumed = isResumed)
+
+            // Assert
+            verify(exactly = 1) { heroVideo.setRunning(isRunning = isResumed) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the screen resumed WHEN the hero scrolls out of view THEN the clip pauses`() = runTest {
+            // Arrange
+            val model = createModel(frames = MutableStateFlow(frame()))
+            model.setScreenResumed(isResumed = true)
+
+            // Act
+            model.setHeroVisible(isVisible = false)
+
+            // Assert
+            verifySequence {
+                heroVideo.setRunning(isRunning = true)
+                heroVideo.setRunning(isRunning = false)
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the hero out of view WHEN the screen resumes THEN the clip stays paused`() = runTest {
+            // Arrange
+            val model = createModel(frames = MutableStateFlow(frame()))
+            model.setHeroVisible(isVisible = false)
+
+            // Act
+            model.setScreenResumed(isResumed = true)
+
+            // Assert
+            verify(exactly = 0) { heroVideo.setRunning(isRunning = true) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the clip paused by the scroll WHEN the hero comes back into view THEN the clip runs again`() =
             runTest {
                 // Arrange
                 val model = createModel(frames = MutableStateFlow(frame()))
+                model.setScreenResumed(isResumed = true)
+                model.setHeroVisible(isVisible = false)
 
                 // Act
-                model.setHeroVideoRunning(isRunning = isRunning)
+                model.setHeroVisible(isVisible = true)
 
                 // Assert
-                verify(exactly = 1) { heroVideo.setRunning(isRunning = isRunning) }
+                verifySequence {
+                    heroVideo.setRunning(isRunning = true)
+                    heroVideo.setRunning(isRunning = false)
+                    heroVideo.setRunning(isRunning = true)
+                }
                 model.onDestroy()
             }
+
+        @Test
+        fun `GIVEN the hero in view WHEN the screen pauses THEN the clip pauses`() = runTest {
+            // Arrange
+            val model = createModel(frames = MutableStateFlow(frame()))
+            model.setScreenResumed(isResumed = true)
+
+            // Act
+            model.setScreenResumed(isResumed = false)
+
+            // Assert
+            verifySequence {
+                heroVideo.setRunning(isRunning = true)
+                heroVideo.setRunning(isRunning = false)
+            }
+            model.onDestroy()
+        }
 
         @Test
         fun `GIVEN a model destroyed in the frame it was created WHEN destroyed THEN the clip is released once`() =

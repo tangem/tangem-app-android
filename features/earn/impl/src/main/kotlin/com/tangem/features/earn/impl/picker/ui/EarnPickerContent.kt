@@ -21,11 +21,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -89,10 +91,14 @@ import java.math.BigDecimal
 internal fun EarnPickerContent(
     state: EarnPickerUM,
     heroVideo: VideoSurfaceState?,
+    onHeroVisibilityChange: (isVisible: Boolean) -> Unit,
     modifier: Modifier = Modifier,
     calculator: @Composable () -> Unit,
 ) {
     val listState = rememberLazyListState()
+    val isHeroVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+    val currentOnHeroVisibilityChange by rememberUpdatedState(onHeroVisibilityChange)
+    LaunchedEffect(isHeroVisible) { currentOnHeroVisibilityChange(isHeroVisible) }
     var heroHeightPx by remember { mutableIntStateOf(0) }
     var barHeightPx by remember { mutableIntStateOf(0) }
     var tabsHeightPx by remember { mutableIntStateOf(0) }
@@ -539,6 +545,7 @@ private fun PreviewContent(state: EarnPickerUM) {
         EarnPickerContent(
             state = state,
             heroVideo = null,
+            onHeroVisibilityChange = {},
             calculator = {
                 Box(
                     modifier = Modifier

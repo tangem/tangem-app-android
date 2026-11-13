@@ -148,6 +148,9 @@ internal class EarnPickerModel @Inject constructor(
     val heroVideoState: StateFlow<LoopingVideoState>
         get() = heroVideo.state
 
+    private var isScreenResumed = false
+    private var isHeroVisible = true
+
     init {
         summaries
             .onEach(::onSummariesFrame)
@@ -165,13 +168,23 @@ internal class EarnPickerModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    fun setHeroVideoRunning(isRunning: Boolean) {
-        heroVideo.setRunning(isRunning = isRunning)
+    fun setScreenResumed(isResumed: Boolean) {
+        isScreenResumed = isResumed
+        updateHeroVideoRunning()
+    }
+
+    fun setHeroVisible(isVisible: Boolean) {
+        isHeroVisible = isVisible
+        updateHeroVideoRunning()
     }
 
     override fun onDestroy() {
         heroVideo.release()
         super.onDestroy()
+    }
+
+    private fun updateHeroVideoRunning() {
+        heroVideo.setRunning(isRunning = isScreenResumed && isHeroVisible)
     }
 
     private fun onSummariesFrame(frame: EarnProductSummaries) {
