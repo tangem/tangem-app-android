@@ -249,8 +249,8 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("noProductsResults")
-    fun `GIVEN onboarding order AND no products to order WHEN cancel clicked THEN wallet opened`(
+    @MethodSource("paymentAccountUnavailableResults")
+    fun `GIVEN onboarding order AND payment account unavailable WHEN cancel clicked THEN wallet opened`(
         availability: Either<TangemPayApiError, Set<TangemPayProduct>>,
     ) {
         // Arrange
@@ -266,8 +266,9 @@ internal class TangemPayCurrentPlanModelTest : TangemPayModelTestBase() {
         verify(exactly = 0) { uiMessageSender.send(any()) }
     }
 
-    private fun noProductsResults(): List<Either<TangemPayApiError, Set<TangemPayProduct>>> = listOf(
+    private fun paymentAccountUnavailableResults(): List<Either<TangemPayApiError, Set<TangemPayProduct>>> = listOf(
         emptySet<TangemPayProduct>().right(),
+        setOf(TangemPayProduct.BANKING_ACCOUNT).right(),
         TangemPayApiError.Unspecified.left(),
     )
 
