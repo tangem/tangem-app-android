@@ -47,8 +47,9 @@ internal class NativeSurveyStateStore @Inject constructor(dataStoreFactory: AppD
 @Serializable
 internal data class NativeSurveyState(val device: Map<String, SurveyDeviceRecord> = emptyMap())
 
+/** A null [repeatAfterDays] is left out of the file under some DataStore JSON settings, hence the default. */
 @Serializable
-internal data class SurveyDeviceRecord(val answeredAtMillis: Long, val repeatAfterDays: Int?) {
+internal data class SurveyDeviceRecord(val answeredAtMillis: Long, val repeatAfterDays: Int? = null) {
 
     fun isAnswerActive(nowMillis: Long): Boolean {
         val days = repeatAfterDays ?: return true

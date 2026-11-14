@@ -11,6 +11,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.job
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -73,6 +74,23 @@ internal class NativeSurveyStateStoreTest {
         private fun stateStore() = NativeSurveyStateStore(
             dataStoreFactory = createAppDataStoreFactory(filesDir = directory, appScope = dataStoreScope),
         )
+    }
+
+    @Nested
+    inner class FileFormat {
+
+        @Test
+        fun `GIVEN a record written without its null term WHEN read with explicit nulls THEN the record is kept`() {
+            // Arrange
+            val state = NativeSurveyState(mapOf(SURVEY_ID.toString() to SurveyDeviceRecord(ANSWERED_AT, null)))
+            val written = Json { explicitNulls = false }.encodeToString(NativeSurveyState.serializer(), state)
+
+            // Act
+            val actual = Json.decodeFromString(NativeSurveyState.serializer(), written)
+
+            // Assert
+            assertThat(actual).isEqualTo(state)
+        }
     }
 
     @Nested
