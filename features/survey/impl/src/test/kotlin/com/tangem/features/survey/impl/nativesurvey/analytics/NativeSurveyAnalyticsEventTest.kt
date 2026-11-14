@@ -1,6 +1,7 @@
 package com.tangem.features.survey.impl.nativesurvey.analytics
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.features.survey.impl.nativesurvey.analytics.NativeSurveyAnalyticsEvent.CloseMethod
 import com.tangem.features.survey.impl.nativesurvey.analytics.NativeSurveyAnalyticsEvent.Request
 import com.tangem.features.survey.impl.nativesurvey.model.NativeSurvey
 import com.tangem.features.survey.impl.nativesurvey.model.SurveyAnswer
@@ -188,6 +189,102 @@ internal class NativeSurveyAnalyticsEventTest {
             SourceModel(SurveySource.LINK, "Link"),
         )
     }
+
+    @Nested
+    inner class SurveyOpened {
+
+        @Test
+        fun `GIVEN a freshly loaded survey WHEN built THEN id and params match the spec`() {
+            // Act
+            val event = NativeSurveyAnalyticsEvent.SurveyOpened(
+                entry = entry(),
+                surveyType = NativeSurvey.Type.NPS,
+                isFromCache = false,
+                isAlreadyPassed = false,
+            )
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Survey] Survey Opened")
+            assertThat(event.params).isEqualTo(
+                mapOf(
+                    "Survey Id" to "123456",
+                    "Survey Type" to "NPS",
+                    "Source" to "Sheet",
+                    "Lifecycle Stage" to "funded_30d",
+                    "From Cache" to "No",
+                    "Already Passed" to "No",
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN an answered survey opened from a link WHEN built THEN its type is empty and it is passed`() {
+            // Act
+            val event = NativeSurveyAnalyticsEvent.SurveyOpened(
+                entry = entry(source = SurveySource.LINK),
+                surveyType = null,
+                isFromCache = true,
+                isAlreadyPassed = true,
+            )
+
+            // Assert
+            assertThat(event.params).isEqualTo(
+                mapOf(
+                    "Survey Id" to "123456",
+                    "Survey Type" to "",
+                    "Source" to "Link",
+                    "Lifecycle Stage" to "funded_30d",
+                    "From Cache" to "Yes",
+                    "Already Passed" to "Yes",
+                ),
+            )
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SurveyClosed {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a close method WHEN built THEN id and params match the spec`(model: CloseModel) {
+            // Act
+            val event = NativeSurveyAnalyticsEvent.SurveyClosed(
+                entry = entry(),
+                surveyType = NativeSurvey.Type.NPS,
+                closeMethod = model.closeMethod,
+                isScoreSelected = model.isScoreSelected,
+            )
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Survey] Survey Closed")
+            assertThat(event.params).isEqualTo(
+                mapOf(
+                    "Survey Id" to "123456",
+                    "Survey Type" to "NPS",
+                    "Source" to "Sheet",
+                    "Lifecycle Stage" to "funded_30d",
+                    "Close Method" to model.expectedCloseMethod,
+                    "Score Selected" to model.expectedScoreSelected,
+                ),
+            )
+        }
+
+        private fun provideTestModels() = listOf(
+            CloseModel(CloseMethod.CROSS, true, "X", "Yes"),
+            CloseModel(CloseMethod.SYSTEM_BACK, false, "System Back", "No"),
+            CloseModel(CloseMethod.LOCK, false, "Lock", "No"),
+            CloseModel(CloseMethod.DEEPLINK, true, "Deeplink", "Yes"),
+            CloseModel(CloseMethod.ERROR, true, "Error", "Yes"),
+        )
+    }
+
+    data class CloseModel(
+        val closeMethod: CloseMethod,
+        val isScoreSelected: Boolean,
+        val expectedCloseMethod: String,
+        val expectedScoreSelected: String,
+    )
 
     data class ErrorModel(
         val request: Request,

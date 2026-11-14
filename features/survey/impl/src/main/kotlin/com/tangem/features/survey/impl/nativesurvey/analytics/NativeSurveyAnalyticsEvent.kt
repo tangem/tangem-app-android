@@ -37,6 +37,40 @@ internal sealed class NativeSurveyAnalyticsEvent(
         ),
     )
 
+    class SurveyOpened(
+        entry: SurveyEntry,
+        surveyType: NativeSurvey.Type?,
+        isFromCache: Boolean,
+        isAlreadyPassed: Boolean,
+    ) : NativeSurveyAnalyticsEvent(
+        event = "Survey Opened",
+        params = baseParams(entry, surveyType) + mapOf(
+            "From Cache" to isFromCache.toYesNo(),
+            "Already Passed" to isAlreadyPassed.toYesNo(),
+        ),
+    )
+
+    class SurveyClosed(
+        entry: SurveyEntry,
+        surveyType: NativeSurvey.Type?,
+        closeMethod: CloseMethod,
+        isScoreSelected: Boolean,
+    ) : NativeSurveyAnalyticsEvent(
+        event = "Survey Closed",
+        params = baseParams(entry, surveyType) + mapOf(
+            "Close Method" to closeMethod.value,
+            "Score Selected" to isScoreSelected.toYesNo(),
+        ),
+    )
+
+    enum class CloseMethod(val value: String) {
+        CROSS("X"),
+        SYSTEM_BACK("System Back"),
+        LOCK("Lock"),
+        DEEPLINK("Deeplink"),
+        ERROR("Error"),
+    }
+
     enum class Request(val value: String) {
         LOAD("Load"),
         SUBMIT("Submit"),

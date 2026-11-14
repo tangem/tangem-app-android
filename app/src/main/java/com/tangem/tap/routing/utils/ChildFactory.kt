@@ -44,6 +44,7 @@ import com.tangem.features.send.api.NFTSendComponent
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
+import com.tangem.features.survey.NativeSurveyComponent
 import com.tangem.features.survey.SurveyComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
@@ -134,6 +135,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayVerifiedComponentFactory: TangemPayVerifiedComponent.Factory,
     private val tangemPayOnboardingSuccessComponentFactory: TangemPayOnboardingSuccessComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
+    private val nativeSurveyComponentFactory: NativeSurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val earnEntryComponentFactory: EarnEntryComponent.Factory,
     private val polymarketComponentFactory: PolymarketComponent.Factory,
@@ -811,6 +813,20 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = SurveyComponent.Params(token = route.token, displayId = route.displayId),
                     componentFactory = surveyComponentFactory,
+                )
+            }
+            is AppRoute.NativeSurvey -> {
+                createComponentChild(
+                    context = context,
+                    params = NativeSurveyComponent.Params(
+                        surveyId = route.surveyId,
+                        source = route.source,
+                        stage = route.stage,
+                        repeatAfterDays = route.repeatAfterDays,
+                        userWalletId = route.userWalletId,
+                        isAlreadyAnswered = route.isAlreadyAnswered,
+                    ),
+                    componentFactory = nativeSurveyComponentFactory,
                 )
             }
             is AppRoute.YieldSupplyEntry -> {

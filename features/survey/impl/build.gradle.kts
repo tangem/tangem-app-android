@@ -38,8 +38,12 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /* Compose */
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.material3)
     implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
+    implementation(deps.lifecycle.compose)
 
     /* Other */
     implementation(deps.kotlin.coroutines)
