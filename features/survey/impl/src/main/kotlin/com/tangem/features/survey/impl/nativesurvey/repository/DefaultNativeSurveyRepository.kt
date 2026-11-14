@@ -231,7 +231,7 @@ internal class DefaultNativeSurveyRepository @Inject constructor(
         "stage" to entry.stage,
         "wallet_type" to WalletType.from(entry.userWallet)?.name?.lowercase().orEmpty(),
         "language" to survey.language,
-    )
+    ).filterValues(String::isNotEmpty) // The vendor refuses an empty value with a 404 that loses the answer
 
     private fun Throwable.toLoggedFailure(): SurveyRequestFailure = toSurveyRequestFailure().also { failure ->
         // Parse also stands for an unexpected error, so its cause is kept in the log

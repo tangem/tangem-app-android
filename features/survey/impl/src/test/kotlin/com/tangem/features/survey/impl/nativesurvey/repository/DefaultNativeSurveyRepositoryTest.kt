@@ -360,6 +360,29 @@ internal class DefaultNativeSurveyRepositoryTest {
         }
 
         @Test
+        fun `GIVEN an entry without a stage WHEN submit THEN the empty variable is left out`() = runTest {
+            // Arrange
+            val body = slot<CreateSurveySparrowResponseBody>()
+            coJustRun { api.createResponse(capture(body)) }
+
+            // Act
+            repository.submit(entry().copy(stage = ""), npsSurvey(), RESPONSE_UUID, answers())
+
+            // Assert
+            assertThat(body.captured.variables).isEqualTo(
+                mapOf(
+                    "user_wallet_id" to UserWalletId(WALLET_ID).hashedStringValue,
+                    "response_uuid" to RESPONSE_UUID,
+                    "app_version" to APP_VERSION,
+                    "platform" to "android",
+                    "source" to "sheet",
+                    "wallet_type" to "cold",
+                    "language" to "en",
+                ),
+            )
+        }
+
+        @Test
         fun `GIVEN a blank comment WHEN submit THEN only the score is sent and the answer is recorded`() = runTest {
             // Arrange
             val body = slot<CreateSurveySparrowResponseBody>()
