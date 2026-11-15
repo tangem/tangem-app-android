@@ -28,6 +28,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -147,8 +148,7 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
                 description = description,
                 isHoldToConfirm = isHoldToConfirm,
                 onConfirm = {
-                    dismiss(pendingRevocation)
-                    revoke(action.address)
+                    if (take(pendingRevocation)) revoke(action.address)
                 },
                 onDismiss = { dismiss(pendingRevocation) },
             ),
@@ -159,6 +159,9 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     private fun dismiss(pendingRevocation: PendingRevocation) {
         revokeConfirmation.update { if (it === pendingRevocation) null else it }
     }
+
+    private fun take(pendingRevocation: PendingRevocation): Boolean =
+        revokeConfirmation.getAndUpdate { if (it === pendingRevocation) null else it } === pendingRevocation
 
     private fun revoke(address: String) {
         if (isRevokeOffered(address)) start(PolymarketSessionKeyOperationRequest.Revoke(address))

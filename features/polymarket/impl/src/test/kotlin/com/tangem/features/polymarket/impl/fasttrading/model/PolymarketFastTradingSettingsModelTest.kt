@@ -230,6 +230,24 @@ internal class PolymarketFastTradingSettingsModelTest {
     }
 
     @Test
+    fun `GIVEN a dismissed revoke confirmation WHEN its hold completes late THEN nothing starts`() = runTest {
+        // Arrange
+        val model = createContentModel()
+        content(model).onActionClick(UNKNOWN_SIGNER_REVOKE)
+        advanceUntilIdle()
+        val confirmation = content(model).revokeConfirmation
+        confirmation?.onDismiss?.invoke()
+        advanceUntilIdle()
+
+        // Act
+        confirmation?.onConfirm?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { startOperation(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN a second confirmation opened WHEN the first one dismisses late THEN the second one stays`() = runTest {
         // Arrange
         val model = createContentModel()
