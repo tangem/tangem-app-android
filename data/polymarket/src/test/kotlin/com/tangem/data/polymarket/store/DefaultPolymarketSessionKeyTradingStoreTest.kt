@@ -91,6 +91,33 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
         }
 
     @Test
+    fun `GIVEN a ready key WHEN authorized again THEN it is ready only after it is marked ready again`() = runTest {
+        // Arrange
+        store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Act
+        store.markAuthorized(WALLET_A, KEY.uppercase().replace("0X", "0x"))
+        val readyAfterAuthorization = store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+        store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Assert
+        assertThat(readyAfterAuthorization).isFalse()
+        assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN another key ready WHEN a key is authorized THEN the ready key is kept`() = runTest {
+        // Arrange
+        store.markReadyOnExchange(WALLET_A, OTHER_KEY, VALID_UNTIL)
+
+        // Act
+        store.markAuthorized(WALLET_A, KEY)
+
+        // Assert
+        assertThat(store.isReadyOnExchange(WALLET_A, OTHER_KEY, VALID_UNTIL)).isTrue()
+    }
+
+    @Test
     fun `GIVEN a key refused on both wallets WHEN authorized on one THEN the other wallet keeps the refusal`() =
         runTest {
             // Arrange

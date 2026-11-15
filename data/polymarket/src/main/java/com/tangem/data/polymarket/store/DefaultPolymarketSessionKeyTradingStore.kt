@@ -32,6 +32,7 @@ internal class DefaultPolymarketSessionKeyTradingStore : PolymarketSessionKeyTra
         val address = sessionKeyAddress.normalized()
         refused.update { it.without(userWalletId, address) }
         missingOnExchange.update { it.without(userWalletId, address) }
+        dropReadiness(userWalletId, address)
     }
 
     override suspend fun restoreReadyOnExchange(
