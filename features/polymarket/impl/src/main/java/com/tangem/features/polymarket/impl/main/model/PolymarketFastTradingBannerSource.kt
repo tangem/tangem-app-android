@@ -32,6 +32,7 @@ import javax.inject.Inject
 
 private val PENDING_SETTLING_WINDOW: Duration = Duration.ofMinutes(10)
 private val DAY: Duration = Duration.ofDays(1)
+private val ACTIVATED_ANEW = setOf(PolymarketSessionKeyStatus.FAILED, PolymarketSessionKeyStatus.REVOKED)
 
 private typealias Dismissals = Map<PolymarketFastTradingBannerKind, Instant?>
 
@@ -148,7 +149,7 @@ internal class PolymarketFastTradingBannerSource(
     private fun reactivationOffer(
         sessionKey: PolymarketSessionKey,
         request: PolymarketSessionKeyOperationRequest,
-    ): PolymarketFastTradingBanner = if (sessionKey.status == PolymarketSessionKeyStatus.FAILED) {
+    ): PolymarketFastTradingBanner = if (sessionKey.status in ACTIVATED_ANEW) {
         PolymarketFastTradingBanner.Activate
     } else {
         PolymarketFastTradingBanner.Reactivate(request)
@@ -195,7 +196,7 @@ internal class PolymarketFastTradingBannerSource(
 
     private fun PolymarketSessionKeyOverview.hasForeignSigners(): Boolean {
         val reconciliation = assessment.reconciliation as? PolymarketSessionKeyReconciliation.Checked ?: return false
-        return reconciliation.foreignSigners.any { !it.address.equals(localKeyAddress, ignoreCase = true) }
+        return reconciliation.foreignSigners.isNotEmpty()
     }
 
     private fun PolymarketSessionKey.isSettlingAt(now: Instant): Boolean = when (status) {

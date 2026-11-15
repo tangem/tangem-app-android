@@ -138,6 +138,12 @@ internal class PolymarketFastTradingBannerSourceTest {
         ),
         BannerModel(
             state = stateOf(
+                PolymarketSessionKeyDeviceState.Reenable(keyOf(status = PolymarketSessionKeyStatus.REVOKED)),
+            ),
+            expected = PolymarketFastTradingBanner.Activate,
+        ),
+        BannerModel(
+            state = stateOf(
                 PolymarketSessionKeyDeviceState.Reenable(keyOf(status = PolymarketSessionKeyStatus.FAILED)),
             ),
             dismissals = mapOf(REACTIVATE_KIND to NOW),
@@ -213,10 +219,10 @@ internal class PolymarketFastTradingBannerSourceTest {
         ),
         BannerModel(
             state = stateOf(
-                PolymarketSessionKeyDeviceState.RepairByRenewal(keyOf(status = PolymarketSessionKeyStatus.FAILED)),
+                PolymarketSessionKeyDeviceState.Reenable(keyOf(status = PolymarketSessionKeyStatus.REVOKED)),
                 foreignSigners = listOf(FOREIGN_SIGNER.copy(address = "0xOWN")),
             ),
-            expected = PolymarketFastTradingBanner.Activate,
+            expected = PolymarketFastTradingBanner.UnknownSigners,
         ),
         BannerModel(
             state = stateOf(PolymarketSessionKeyDeviceState.Replace.ByRevocation(keyOf())),
