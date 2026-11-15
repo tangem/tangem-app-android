@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.fasttrading.model
 
+import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -22,6 +23,8 @@ import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeysU
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingRevokeConfirmationUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingSettingsUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -29,7 +32,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -115,7 +117,10 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     }
 
     private fun onRevokeClick(action: FastTradingKeyActionUM.Revoke) {
-        val isHotWallet = getUserWallet(params.userWalletId).getOrNull()?.isHotWallet ?: return
+        val isHotWallet = getUserWallet(params.userWalletId).getOrElse { error ->
+            TangemLogger.e("Polymarket session key revoke skipped, wallet unavailable: $error")
+            return
+        }.isHotWallet
         val isConfirmedByCardScan = !isHotWallet && action.subject is FastTradingKeyActionUM.RevokeSubject.Device
         if (isConfirmedByCardScan) {
             revoke(action.address)
