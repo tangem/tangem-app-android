@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.common.ui.account.accountLimitReachedDialog
 import com.tangem.common.ui.account.toDomain
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -33,6 +34,7 @@ import com.tangem.features.account.analytics.AccountSettingsAnalyticEvents.Compa
 import com.tangem.features.account.analytics.WalletSettingsAccountAnalyticEvents
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder
+import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.resetDerivationIndex
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.toggleProgress
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateButton
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateColorSelect
@@ -40,12 +42,13 @@ import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateIconSelect
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateName
 import com.tangem.features.account.createedit.error.AccountFeatureError
+import com.tangem.features.account.createedit.wallet.AccountCreateWalletSelector
+import com.tangem.features.commonfeatures.api.portfolioselector.AccountWalletPicker
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @ModelScoped
@@ -60,6 +63,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private val getUnoccupiedAccountIndexUseCase: GetUnoccupiedAccountIndexUseCase,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    accountWalletPickerFactory: AccountWalletPicker.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<AccountCreateEditComponent.Params>()
@@ -68,9 +72,26 @@ internal class AccountCreateEditModel @Inject constructor(
     val uiState: StateFlow<AccountCreateEditUM>
         field = MutableStateFlow(value = getInitialState())
 
+    val walletSelector: AccountCreateWalletSelector? = (params as? AccountCreateEditComponent.Params.Create)
+        ?.let { create ->
+            AccountCreateWalletSelector(
+                initialWalletId = create.userWalletId,
+                scope = modelScope,
+                picker = accountWalletPickerFactory.create(scope = modelScope),
+                onFullWalletPicked = {
+                    messageSender.send(
+                        accountLimitReachedDialog(limit = AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT),
+                    )
+                },
+            )
+        }
+
+    /** The last wallet whose free index loaded: where a failed switch falls back to. */
+    private var lastLoadedWalletId: UserWalletId? = null
+
     init {
         when (params) {
-            is AccountCreateEditComponent.Params.Create -> updateDerivationInfo(userWalletId = params.userWalletId)
+            is AccountCreateEditComponent.Params.Create -> observeWalletSelection()
             is AccountCreateEditComponent.Params.Edit -> {
                 val derivationIndex = params.account.derivationIndex.value
                 val event = AccountSettingsAnalyticEvents.AccountEditScreenOpened(derivationIndex)
@@ -125,7 +146,7 @@ internal class AccountCreateEditModel @Inject constructor(
 
         uiState.value = uiState.value.toggleProgress(showProgress = true)
         val result = addCryptoPortfolioUseCase(
-            userWalletId = params.userWalletId,
+            userWalletId = walletSelector?.selectedWalletId?.value ?: params.userWalletId,
             accountName = name,
             icon = icon,
             derivationIndex = derivationIndex,
@@ -220,8 +241,7 @@ internal class AccountCreateEditModel @Inject constructor(
     }
 
     private fun onCloseClick() {
-        val shouldShowConfirmDialog = uiState.value.buttonState.isButtonEnabled
-        if (shouldShowConfirmDialog) unsaveChangeDialog() else router.pop()
+        if (uiState.value.hasUnsavedChanges) unsaveChangeDialog() else router.pop()
     }
 
     private fun onIconSelect(icon: CryptoPortfolioIcon.Icon) {
@@ -253,7 +273,7 @@ internal class AccountCreateEditModel @Inject constructor(
 
     private fun AccountCreateEditUM.validateNewState(): AccountCreateEditUM {
         val isValidName = this.account.name.isValidName()
-        val isAvailableForConfirm = when (params) {
+        val hasUnsavedChanges = when (params) {
             is AccountCreateEditComponent.Params.Create -> isValidName
             is AccountCreateEditComponent.Params.Edit -> {
                 val oldName = params.account.accountName.toUM()
@@ -264,7 +284,10 @@ internal class AccountCreateEditModel @Inject constructor(
                 isValidName && (isNewName || isNewIcon)
             }
         }
-        return this.updateButton(isButtonEnabled = isAvailableForConfirm)
+        // In Create the index belongs to the selected wallet and is reloaded whenever the wallet changes
+        val isIndexReady = params is AccountCreateEditComponent.Params.Edit || account.derivationInfo.index != null
+        return this.updateButton(isButtonEnabled = hasUnsavedChanges && isIndexReady)
+            .copy(hasUnsavedChanges = hasUnsavedChanges)
     }
 
     private fun AccountNameUM.isValidName(): Boolean = this.toDomain().isRight()
@@ -276,28 +299,43 @@ internal class AccountCreateEditModel @Inject constructor(
             colorsState = umBuilder.initColorsUM(::onColorSelect),
             iconsState = umBuilder.initIconsUM(::onIconSelect),
             buttonState = umBuilder.initButtonUM(::onConfirmClick),
+            wallet = null,
             onCloseClick = ::onCloseClick,
         )
     }
 
-    private fun updateDerivationInfo(userWalletId: UserWalletId) {
-        modelScope.launch(dispatchers.default) {
-            getUnoccupiedAccountIndexUseCase(userWalletId = userWalletId)
-                .onRight { derivationIndex ->
-                    uiState.update {
-                        it.updateDerivationIndex(derivationIndex = derivationIndex.value)
-                    }
+    private fun observeWalletSelection() {
+        val selector = walletSelector ?: return
+        selector.walletRow
+            .onEach { wallet -> uiState.update { it.copy(wallet = wallet) } }
+            .launchIn(modelScope)
+        modelScope.launch { selector.selectedWalletId.collectLatest(::updateDerivationInfo) }
+    }
+
+    private suspend fun updateDerivationInfo(userWalletId: UserWalletId) {
+        // The previous wallet's index must not be submitted while the new one is loading
+        uiState.update { it.resetDerivationIndex().validateNewState() }
+        // withContext resumes on main only if this collection is still current, so a superseded wallet's
+        // index can't land after the reset above
+        withContext(dispatchers.default) { getUnoccupiedAccountIndexUseCase(userWalletId = userWalletId) }
+            .onRight { derivationIndex ->
+                lastLoadedWalletId = userWalletId
+                uiState.update {
+                    it.updateDerivationIndex(derivationIndex = derivationIndex.value).validateNewState()
                 }
-                .onLeft { cause ->
-                    val error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex(cause)
+            }
+            .onLeft { cause ->
+                val error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex(cause)
+                logError(error = error, params = mapOf("cause" to cause.toString()))
 
-                    logError(error = error, params = mapOf("cause" to cause.toString()))
-
-                    messageSender.showErrorDialog(universalError = error, onDismiss = router::pop)
-
-                    return@launch
-                }
-        }
+                val fallbackWalletId = lastLoadedWalletId
+                messageSender.showErrorDialog(
+                    universalError = error,
+                    onDismiss = {
+                        if (fallbackWalletId == null) router.pop() else walletSelector?.select(fallbackWalletId)
+                    },
+                )
+            }
     }
 
     private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {

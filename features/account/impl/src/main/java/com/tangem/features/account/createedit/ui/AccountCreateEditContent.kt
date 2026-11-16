@@ -38,9 +38,15 @@ import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.fields.AutoSizeTextField
+import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_down_16
 import com.tangem.core.ui.test.accounts.AccountInfoEditScreenTestTags
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -83,6 +89,10 @@ internal fun AccountCreateEditContent(
             AccountIcons(state.iconsState)
             SpacerH8()
             DerivationInfo(text = state.account.derivationInfo.text)
+            state.wallet?.let { wallet ->
+                SpacerH24()
+                WalletRow(wallet = wallet)
+            }
         }
 
         PrimaryButton(
@@ -329,6 +339,39 @@ private fun DerivationInfo(text: TextReference) {
     )
 }
 
+@Composable
+private fun WalletRow(wallet: AccountCreateEditUM.Wallet) {
+    TangemRow(
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(TangemTheme.colors3.bg.secondary),
+        onClick = wallet.onClick,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        titleSlot = {
+            TangemRowText(text = resourceReference(R.string.common_wallet), role = TangemRowTextRole.Title)
+        },
+        valueSlot = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_key_card_20),
+                    tint = TangemTheme.colors3.icon.secondary,
+                    contentDescription = null,
+                )
+                TangemRowText(text = stringReference(value = wallet.name), role = TangemRowTextRole.Value)
+            }
+        },
+        endSlot = {
+            Icon(
+                modifier = Modifier.size(16.dp),
+                imageVector = Icons.ic_chevron_down_16,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.secondary,
+            )
+        },
+    )
+}
+
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -372,6 +415,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
                 onConfirmClick = {},
                 text = stringReference("Add account"),
             ),
+            wallet = AccountCreateEditUM.Wallet(name = "My wallet", onClick = {}),
         )
         add(first)
 
@@ -406,6 +450,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
                 onConfirmClick = {},
                 text = stringReference("Save"),
             ),
+            wallet = null,
         )
         add(second)
     },

@@ -13,8 +13,16 @@ internal data class AccountCreateEditUM(
     val colorsState: Colors,
     val iconsState: Icons,
     val buttonState: Button,
+    val wallet: Wallet?,
+    val hasUnsavedChanges: Boolean = false,
     val onCloseClick: () -> Unit,
 ) {
+
+    /** Row showing the wallet the account is created in; absent when there is no other wallet to switch to */
+    data class Wallet(
+        val name: String,
+        val onClick: () -> Unit,
+    )
 
     data class Account(
         val name: AccountNameUM,

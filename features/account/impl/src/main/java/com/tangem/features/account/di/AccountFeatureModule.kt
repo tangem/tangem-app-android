@@ -3,9 +3,11 @@ package com.tangem.features.account.di
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.ArchivedAccountListComponent
+import com.tangem.features.account.CryptoAccountIntroComponent
 import com.tangem.features.account.archived.DefaultArchivedAccountListComponent
 import com.tangem.features.account.createedit.DefaultAccountCreateEditComponent
 import com.tangem.features.account.details.DefaultAccountDetailsComponent
+import com.tangem.features.account.intro.DefaultCryptoAccountIntroComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -29,4 +31,9 @@ internal interface AccountFeatureModule {
     fun bindArchivedAccountListComponentFactory(
         impl: DefaultArchivedAccountListComponent.Factory,
     ): ArchivedAccountListComponent.Factory
+
+    @Binds
+    fun bindCryptoAccountIntroComponentFactory(
+        impl: DefaultCryptoAccountIntroComponent.Factory,
+    ): CryptoAccountIntroComponent.Factory
 }
