@@ -12,8 +12,10 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.tokenreceive.TokenReceiveFeatureToggles
 import com.tangem.features.tokenreceive.model.TokenReceiveModel
 import com.tangem.features.tokenreceive.route.TokenReceiveRoutes
+import com.tangem.features.tokenreceive.ui.TokenReceiveContentModal
 import com.tangem.features.tokenreceive.ui.TokenReceiveContentSheet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -22,9 +24,11 @@ import dagger.assisted.AssistedInject
 internal class DefaultTokenReceiveComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: TokenReceiveComponent.Params,
+    featureToggles: TokenReceiveFeatureToggles,
 ) : TokenReceiveComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenReceiveModel = getOrCreateModel(params)
+    private val isModalPresentation = featureToggles.isNewReceiveScreenEnabled
     private val innerRouter = InnerRouter<TokenReceiveRoutes>(
         stackNavigation = model.stackNavigation,
         popCallback = { onChildBack() },
@@ -42,13 +46,20 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
     @Composable
     override fun BottomSheet() {
         val content by contentStack.subscribeAsState()
-        val currentRoute = content.active.configuration
-        TokenReceiveContentSheet(
-            route = currentRoute,
-            onCloseClick = ::dismiss,
-            onBackClick = ::onChildBack,
-            contentStack = content,
-        )
+        if (isModalPresentation) {
+            TokenReceiveContentModal(
+                contentStack = content,
+                onCloseClick = ::dismiss,
+                onBackClick = ::onChildBack,
+            )
+        } else {
+            TokenReceiveContentSheet(
+                route = content.active.configuration,
+                onCloseClick = ::dismiss,
+                onBackClick = ::onChildBack,
+                contentStack = content,
+            )
+        }
     }
 
     override fun dismiss() = model.params.onDismiss()
