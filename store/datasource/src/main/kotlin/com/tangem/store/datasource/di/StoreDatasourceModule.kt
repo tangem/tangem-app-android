@@ -80,6 +80,7 @@ internal object StoreDatasourceModule {
                 apiConfigId = SurveySparrow.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
+                isLoggable = false,
             ),
         )
     }

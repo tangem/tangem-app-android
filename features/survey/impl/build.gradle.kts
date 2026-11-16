@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -20,6 +21,10 @@ dependencies {
 
     /* Core */
     implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
+    implementation(projects.core.local)
+    implementation(projects.core.remote)
     implementation(projects.store.datasource)
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
@@ -38,7 +43,11 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
+    implementation(deps.moshi)
+    implementation(deps.retrofit)
     implementation(deps.arrow.core)
+    implementation(deps.androidx.datastore.core)
 
     /** Tangem libraries */
     implementation(tangemDeps.card.core)
@@ -47,8 +56,5 @@ dependencies {
     implementation(deps.decompose)
 
     /** Tests */
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
+    testImplementation(projects.test.core)
 }
