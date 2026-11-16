@@ -98,7 +98,7 @@ internal class DefaultAccountWalletPicker @AssistedInject constructor(
         val (wallets, lists) = withTimeoutOrNull(5.seconds) {
             combine(wallets.filterNotNull(), accountLists, ::Pair)
                 .first { (wallets, lists) -> wallets.all { it.walletId in lists } }
-        } ?: (wallets.value.orEmpty() to accountLists.value)
+        } ?: wallets.value.orEmpty() to accountLists.value
 
         val knownLists = wallets.mapNotNull { lists[it.walletId] }
         val single = knownLists.singleOrNull()
