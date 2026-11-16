@@ -16,7 +16,6 @@ sealed interface EarnProductState {
         val description: TextReference,
         val projection: EarnProjection?,
         val benefits: List<EarnTextBlock>,
-        val howItWorks: EarnHowItWorks?,
         val details: List<EarnRow>,
         val limits: EarnLimits,
         val apyPeriods: List<EarnPeriod>,

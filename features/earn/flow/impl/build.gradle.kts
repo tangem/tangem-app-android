@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.features.send.api)
 
     /** Common */
+    implementation(projects.common)
     implementation(projects.common.ui)
 
     /** Core */

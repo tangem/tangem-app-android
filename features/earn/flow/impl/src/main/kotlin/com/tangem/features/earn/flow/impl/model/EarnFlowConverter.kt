@@ -26,14 +26,12 @@ import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.flow.impl.ui.state.EarnAmountUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnConfirmUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnIconsUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnLegalUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnResultUM
-import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnActionInput
@@ -215,15 +213,6 @@ internal class EarnFlowConverter @Inject constructor() {
             )
         },
         onClose = { callbacks.onExit(EarnFlowExit.Done) },
-    )
-
-    fun howItWorks(howItWorks: EarnHowItWorks, onLearnMoreClick: (String) -> Unit): EarnHowItWorksUM = EarnHowItWorksUM(
-        title = howItWorks.title,
-        steps = howItWorks.entries
-            .map { entry -> EarnHowItWorksUM.Step(title = entry.title, description = entry.description) }
-            .toImmutableList(),
-        footnote = howItWorks.footnote,
-        onLearnMoreClick = howItWorks.learnMoreUrl?.let { url -> { onLearnMoreClick(url) } },
     )
 
     /** "$2,130.88 · 2 May 2024, 09:41": the default subtitle of a result the product leaves without one. */

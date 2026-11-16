@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.features.tokenRecieve.api)
 
     /** Common */
+    implementation(projects.common)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 

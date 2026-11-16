@@ -45,6 +45,24 @@ internal class EarnRateFormatTest {
         assertThat(actual).isEqualTo("5,50")
     }
 
+    @Test
+    fun `GIVEN whole percent WHEN formatEarnPercent THEN no fraction digits and a percent sign`() {
+        // Act
+        val actual = BigDecimal("0.15").formatEarnPercent()
+
+        // Assert
+        assertThat(actual).isEqualTo("15%")
+    }
+
+    @Test
+    fun `GIVEN fractional percent WHEN formatEarnPercent THEN fraction digits kept`() {
+        // Act
+        val actual = BigDecimal("0.045").formatEarnPercent()
+
+        // Assert
+        assertThat(actual).isEqualTo("4.5%")
+    }
+
     private fun provideTestModels() = listOf(
         FormatModel(fraction = BigDecimal("0.055"), expected = "5.50"),
         FormatModel(fraction = BigDecimal("0.00001"), expected = "<0.01"),

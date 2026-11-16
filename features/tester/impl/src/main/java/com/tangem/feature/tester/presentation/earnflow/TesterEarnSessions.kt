@@ -1,15 +1,16 @@
 package com.tangem.feature.tester.presentation.earnflow
 
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.earn.EarnProductId
-import com.tangem.features.earn.flow.api.EarnFlowLegal
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.impl.fake.FakeEarnSessionBehavior
 import com.tangem.features.earn.impl.fake.FakeEarnSessionPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnSession
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
+import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnProductKey
 import com.tangem.features.earn.product.api.product.EarnProvider
 import com.tangem.features.earn.product.api.product.EarnTextBlock
@@ -101,11 +102,11 @@ internal object TesterEarnProducts {
             ),
         ),
         footnote = stringReference("Contract audited by $auditor"),
-        learnMoreUrl = "https://tangem.com",
+        learnMore = TangemBlogUrlBuilder.Post.HowYieldModeWorks,
     )
 }
 
-private val TESTER_LEGAL = EarnFlowLegal(
+private val TESTER_LEGAL = EarnLegal(
     termsOfUseUrl = "https://tangem.com/tangem_tos.html",
     privacyPolicyUrl = "https://tangem.com/privacy-policy.html",
 )

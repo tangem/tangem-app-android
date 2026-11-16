@@ -22,10 +22,9 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.features.earn.api.ui.EarnHowItWorksUM
-import com.tangem.features.earn.flow.api.EarnFlowLegal
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
+import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnFlowAction
@@ -435,7 +434,7 @@ internal class EarnFlowConverterTest {
         fun `GIVEN product with legal links WHEN confirm THEN legal opens each document`() {
             // Arrange
             val opened = mutableListOf<String>()
-            val product = testFlowProduct.copy(legal = EarnFlowLegal(termsOfUseUrl = "tos", privacyPolicyUrl = "pp"))
+            val product = testFlowProduct.copy(legal = EarnLegal(termsOfUseUrl = "tos", privacyPolicyUrl = "pp"))
 
             // Act
             val legal = requireNotNull(confirm(product = product, onLegalClick = { opened += it }).legal)
@@ -478,42 +477,6 @@ internal class EarnFlowConverterTest {
         )
     }
 
-    @Nested
-    inner class HowItWorks {
-
-        @Test
-        fun `GIVEN how it works WHEN converted THEN steps footnote and learn more follow it`() {
-            // Arrange
-            val opened = mutableListOf<String>()
-
-            // Act
-            val actual = converter.howItWorks(testHowItWorks(), onLearnMoreClick = opened::add)
-            actual.onLearnMoreClick?.invoke()
-
-            // Assert
-            assertThat(actual.copy(onLearnMoreClick = null)).isEqualTo(
-                EarnHowItWorksUM(
-                    title = stringReference("How it works"),
-                    steps = persistentListOf(
-                        EarnHowItWorksUM.Step(title = stringReference("Supply"), description = stringReference("Lend")),
-                    ),
-                    footnote = stringReference("Audited"),
-                    onLearnMoreClick = null,
-                ),
-            )
-            assertThat(opened).containsExactly(TEST_LEARN_MORE_URL)
-        }
-
-        @Test
-        fun `GIVEN no learn more link WHEN converted THEN no learn more button`() {
-            // Act
-            val actual = converter.howItWorks(testHowItWorks().copy(learnMoreUrl = null), onLearnMoreClick = {})
-
-            // Assert
-            assertThat(actual.onLearnMoreClick).isNull()
-        }
-    }
-
     data class VariantModel(val status: EarnTxStatus, val expected: TangemStatusScreen.Variant)
 
     data class ExplorerModel(val isExplorerShown: Boolean, val explorerUrl: String?, val expected: Boolean)
@@ -528,13 +491,10 @@ internal class EarnFlowConverterTest {
 }
 
 private const val TEST_EXPLORER_URL = "https://etherscan.io/tx/0xhash"
-private const val TEST_LEARN_MORE_URL = "https://aave.com"
 private val PLAN_NOTICE = stringReference("From the plan")
 private val ACTION_NOTICE = stringReference("From the action")
 
 private fun testHowItWorks() = EarnHowItWorks(
     title = stringReference("How it works"),
     entries = listOf(EarnTextBlock(title = stringReference("Supply"), description = stringReference("Lend"))),
-    footnote = stringReference("Audited"),
-    learnMoreUrl = TEST_LEARN_MORE_URL,
 )

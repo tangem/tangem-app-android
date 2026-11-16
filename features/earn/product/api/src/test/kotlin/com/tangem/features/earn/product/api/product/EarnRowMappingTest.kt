@@ -1,13 +1,16 @@
 package com.tangem.features.earn.product.api.product
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.modal.TangemModalContentUM
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.api.ui.EarnRowUM
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -178,6 +181,49 @@ internal class EarnRowMappingTest {
 
         // Assert
         assertThat(actual.value).isEqualTo(stringReference("1.482"))
+    }
+
+    @Test
+    fun `GIVEN how it works with a post WHEN toUM and learn more clicked THEN callback receives the post`() {
+        // Arrange
+        val howItWorks = EarnHowItWorks(
+            title = stringReference("How it works"),
+            entries = listOf(createTextBlock(title = "Supply", description = "Your ETH goes to the protocol")),
+            footnote = stringReference("Audited"),
+            learnMore = TangemBlogUrlBuilder.Post.HowYieldModeWorks,
+        )
+        val clicked = mutableListOf<TangemBlogUrlBuilder.Post>()
+
+        // Act
+        val actual = howItWorks.toUM(onLearnMoreClick = { clicked.add(it) })
+        actual.onLearnMoreClick?.invoke()
+
+        // Assert
+        val expected = EarnHowItWorksUM(
+            title = stringReference("How it works"),
+            steps = persistentListOf(
+                EarnHowItWorksUM.Step(
+                    title = stringReference("Supply"),
+                    description = stringReference("Your ETH goes to the protocol"),
+                ),
+            ),
+            footnote = stringReference("Audited"),
+            onLearnMoreClick = actual.onLearnMoreClick,
+        )
+        assertThat(actual).isEqualTo(expected)
+        assertThat(clicked).containsExactly(TangemBlogUrlBuilder.Post.HowYieldModeWorks)
+    }
+
+    @Test
+    fun `GIVEN how it works without a post WHEN toUM THEN there is no learn more`() {
+        // Arrange
+        val howItWorks = EarnHowItWorks(title = stringReference("How it works"), entries = emptyList())
+
+        // Act
+        val actual = howItWorks.toUM(onLearnMoreClick = {})
+
+        // Assert
+        assertThat(actual.onLearnMoreClick).isNull()
     }
 
     @Test

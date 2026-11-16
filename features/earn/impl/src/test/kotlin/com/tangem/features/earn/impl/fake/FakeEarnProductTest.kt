@@ -197,7 +197,7 @@ internal class FakeEarnProductTest {
             val state = product.readyState()
 
             // Assert
-            val actual = Triple(state.projection != null, state.howItWorks != null, state.limits.remainingCap != null)
+            val actual = Triple(state.projection != null, product.howItWorks != null, state.limits.remainingCap != null)
             val expected = Triple(model.hasProjection, model.hasHowItWorks, model.hasRemainingCap)
             assertThat(actual).isEqualTo(expected)
         }

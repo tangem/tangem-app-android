@@ -24,6 +24,7 @@ import com.tangem.features.earn.lending.impl.provider.LendingMarket
 import com.tangem.features.earn.lending.impl.provider.LendingPosition
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
 import com.tangem.features.earn.product.api.product.EarnApyHistory
+import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProvider
 import com.tangem.utils.logging.TangemLogger
@@ -63,6 +64,11 @@ internal class AaveLendingProvider @Inject constructor(
     override val about = stringReference("an on-chain self-custodial lending protocol")
 
     override val websiteUrl: String = "https://aave.com"
+
+    override val legal = EarnLegal(
+        termsOfUseUrl = "https://aave.com/terms-of-service",
+        privacyPolicyUrl = "https://aave.com/privacy-policy",
+    )
 
     override val apyPeriods: List<EarnPeriod> = AaveApyPeriods.All
 
