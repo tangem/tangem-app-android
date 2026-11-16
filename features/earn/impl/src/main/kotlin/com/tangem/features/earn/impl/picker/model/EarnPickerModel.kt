@@ -17,6 +17,7 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.overview.EarnOverviewFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.impl.InnerEarnNavigator
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetRequest
 import com.tangem.features.earn.impl.di.EarnHeroClip
 import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetRequest
 import com.tangem.features.earn.impl.overview.EarnHeadlineSelector
@@ -133,6 +134,9 @@ internal class EarnPickerModel @Inject constructor(
 
     val incentiveSheetRequests: SharedFlow<EarnIncentiveSheetRequest>
         field = MutableSharedFlow<EarnIncentiveSheetRequest>(extraBufferCapacity = 1)
+
+    val getTokenSheetRequests: SharedFlow<EarnGetTokenSheetRequest>
+        field = MutableSharedFlow<EarnGetTokenSheetRequest>(extraBufferCapacity = 1)
 
     val uiState: StateFlow<EarnPickerUM>
         field = MutableStateFlow(converter.initial(intents = this))
@@ -312,7 +316,7 @@ internal class EarnPickerModel @Inject constructor(
     }
 
     override fun onAddFundsClick() {
-        TangemLogger.i("Earn picker: Add funds has no destination yet")
+        getTokenSheetRequests.tryEmit(EarnGetTokenSheetRequest(params.userWalletId, params.cryptoCurrency))
     }
 
     override fun onCloseClick() {

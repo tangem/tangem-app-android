@@ -13,6 +13,8 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheet
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetComponent
 import com.tangem.features.earn.impl.incentive.EarnIncentiveSheet
 import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetComponent
 import com.tangem.features.earn.impl.picker.model.EarnPickerModel
@@ -28,6 +30,7 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
     @Assisted params: Params,
     calculatorFactory: EarnCalculatorComponent.Factory,
     incentiveSheetFactory: EarnIncentiveSheetComponent.Factory,
+    getTokenSheetFactory: EarnGetTokenSheetComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by context {
 
     private val model: EarnPickerModel = getOrCreateModel(params)
@@ -43,8 +46,11 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
 
     private val incentiveSheet = EarnIncentiveSheet(context = context, sheetFactory = incentiveSheetFactory)
 
+    private val getTokenSheet = EarnGetTokenSheet(context = context, sheetFactory = getTokenSheetFactory)
+
     init {
         componentScope.launch { model.incentiveSheetRequests.collect(incentiveSheet::show) }
+        componentScope.launch { model.getTokenSheetRequests.collect(getTokenSheet::show) }
         lifecycle.doOnResume { model.setScreenResumed(isResumed = true) }
         lifecycle.doOnPause { model.setScreenResumed(isResumed = false) }
     }
@@ -63,6 +69,7 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
         )
 
         incentiveSheet.BottomSheet()
+        getTokenSheet.BottomSheet()
     }
 
     /**

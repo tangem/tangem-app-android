@@ -37,6 +37,7 @@ import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.impl.fake.fakeApyPeriods
 import com.tangem.features.earn.impl.fake.fakeReadyState
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetRequest
 import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetRequest
 import com.tangem.features.earn.impl.overview.EarnHeadlineSelector
 import com.tangem.features.earn.impl.overview.EarnProductSummaries
@@ -444,20 +445,29 @@ internal class EarnPickerModelTest {
         }
 
         @Test
-        fun `GIVEN Add funds WHEN cta clicked THEN neither the router nor a handler is touched`() = runTest {
-            // Arrange
-            stubBalance(BigDecimal.ZERO)
-            val model = createModel(frames = MutableStateFlow(frame(summary(lending), summary(vault))), preselected = lending.id)
-            advanceUntilIdle()
+        fun `GIVEN Add funds WHEN cta clicked THEN one Get token request is emitted and neither the router nor a handler is touched`() =
+            runTest {
+                // Arrange
+                stubBalance(BigDecimal.ZERO)
+                val requests = mutableListOf<EarnGetTokenSheetRequest>()
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                    preselected = lending.id,
+                )
+                backgroundScope.launch { model.getTokenSheetRequests.collect { requests += it } }
+                runCurrent()
+                advanceUntilIdle()
 
-            // Act
-            model.uiState.value.cta.onClick()
+                // Act
+                model.uiState.value.cta.onClick()
+                runCurrent()
 
-            // Assert
-            verify { router wasNot Called }
-            assertThat(lending.actionHandlerCalls).isEqualTo(0)
-            model.onDestroy()
-        }
+                // Assert
+                assertThat(requests).containsExactly(EarnGetTokenSheetRequest(USER_WALLET_ID, currency))
+                verify { router wasNot Called }
+                assertThat(lending.actionHandlerCalls).isEqualTo(0)
+                model.onDestroy()
+            }
     }
 
     @Nested
