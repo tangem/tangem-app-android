@@ -1,13 +1,11 @@
 package com.tangem.features.feed.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.CATEGORY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
-import com.tangem.common.routing.utils.popToIfCovered
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.v2.FeedEntryController
@@ -18,7 +16,6 @@ import javax.inject.Inject
 
 internal class DiscoverDeepLinkHandler @Inject constructor(
     private val feedEntryController: FeedEntryController,
-    private val appRouter: AppRouter,
     private val feedFeatureToggles: FeedFeatureToggles,
 ) : DeepLinkHandler {
 
@@ -27,7 +24,7 @@ internal class DiscoverDeepLinkHandler @Inject constructor(
         // start is a consequence of the navigation below
         feedEntryController.request(createEntryRequest(queryParams = request.queryParams))
 
-        appRouter.popToIfCovered(AppRoute.Wallet)
+        request.router.popTo(AppRoute.Wallet)
     }
 
     private fun createEntryRequest(queryParams: Map<String, String>): FeedEntryRequest {

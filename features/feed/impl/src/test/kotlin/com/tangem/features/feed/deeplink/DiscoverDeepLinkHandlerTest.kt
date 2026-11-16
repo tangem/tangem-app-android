@@ -2,11 +2,11 @@ package com.tangem.features.feed.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.CATEGORY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.deeplink.DiscoverDeepLinkHandler.Companion.FILTER_KEY
@@ -30,15 +30,14 @@ import org.junit.jupiter.params.ParameterizedTest
 
 internal class DiscoverDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk()
+    private val router: Router = mockk()
     private val feedEntryController: FeedEntryController = mockk()
     private val feedFeatureToggles: FeedFeatureToggles = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(appRouter, feedEntryController, feedFeatureToggles)
-        every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
-        every { appRouter.stack } returns listOf(AppRoute.Wallet, AppRoute.AppSettings)
+        clearMocks(router, feedEntryController, feedFeatureToggles)
+        every { router.popTo(any<AppRoute>(), any()) } just Runs
         every { feedEntryController.request(any()) } just Runs
         every { feedFeatureToggles.isDiscoverDeeplinkFiltersEnabled } returns false
     }
@@ -115,38 +114,12 @@ internal class DiscoverDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN a covered wallet WHEN handled THEN the screens above it are dropped`() {
+    fun `GIVEN any params WHEN handled THEN the stack pops back to the wallet`() {
         // Act
         handle(queryParams = emptyMap())
 
         // Assert
-        verify(exactly = 1) { appRouter.popTo(AppRoute.Wallet, any()) }
-    }
-
-    @Test
-    fun `GIVEN the wallet is already on top WHEN handled THEN it is not popped to again`() {
-        // Arrange - popping to where the app already is reports a failed navigation to the user
-        every { appRouter.stack } returns listOf(AppRoute.Wallet)
-
-        // Act
-        handle(queryParams = mapOf(SECTION_KEY to "assets"))
-
-        // Assert
-        verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = FeedSection.Assets)) }
-        verify(exactly = 0) { appRouter.popTo(any<AppRoute>(), any()) }
-    }
-
-    @Test
-    fun `GIVEN a cold start WHEN handled THEN the wallet is left to open on its own`() {
-        // Arrange - the wallet is not on the stack yet, so popping to it could only fail
-        every { appRouter.stack } returns emptyList()
-
-        // Act
-        handle(queryParams = mapOf(SECTION_KEY to "earn"))
-
-        // Assert
-        verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = FeedSection.Earn)) }
-        verify(exactly = 0) { appRouter.popTo(any<AppRoute>(), any()) }
+        verify(exactly = 1) { router.popTo(AppRoute.Wallet, any()) }
     }
 
     @Test
@@ -196,7 +169,7 @@ internal class DiscoverDeepLinkHandlerTest {
             handle(queryParams = mapOf(SECTION_KEY to "foryou"))
 
             // Assert
-            verify(exactly = 1) { appRouter.popTo(AppRoute.Wallet, any()) }
+            verify(exactly = 1) { router.popTo(AppRoute.Wallet, any()) }
         }
 
         private fun provideTestModels() = listOf(
@@ -267,7 +240,6 @@ internal class DiscoverDeepLinkHandlerTest {
 
     private fun handle(queryParams: Map<String, String>) = DiscoverDeepLinkHandler(
         feedEntryController = feedEntryController,
-        appRouter = appRouter,
         feedFeatureToggles = feedFeatureToggles,
     ).handle(
         DeepLinkRequest(
@@ -275,7 +247,7 @@ internal class DiscoverDeepLinkHandlerTest {
             queryParams = queryParams,
             scope = mockk<CoroutineScope>(),
             isFromOnNewIntent = false,
-            router = mockk(),
+            router = router,
         ),
     )
 }

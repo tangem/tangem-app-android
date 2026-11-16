@@ -1,12 +1,12 @@
 package com.tangem.features.feed.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
-import com.tangem.common.routing.utils.pushIfAbsent
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.pushIfAbsent
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -18,20 +18,20 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal class YieldDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val yieldSupplyGetAvailabilityUseCase: YieldSupplyGetAvailabilityUseCase,
 ) : DeepLinkHandler {
 
     override fun handle(request: DeepLinkRequest) {
+        val router = request.router
         val queryParams = request.queryParams
         val tokenId = queryParams[TOKEN_ID_KEY]?.takeIf { it.isNotBlank() }
         val networkId = queryParams[NETWORK_ID_KEY]?.takeIf { it.isNotBlank() }
 
         if (tokenId == null || networkId == null) {
             TangemLogger.i("Yield deeplink: missing token_id or network_id; falling back to earn yield list")
-            pushFallback(networkId)
+            pushFallback(router, networkId)
             return
         }
 
@@ -39,7 +39,7 @@ internal class YieldDeepLinkHandler @Inject constructor(
             val userWallet = getSelectedWalletSyncUseCase().getOrNull()
             if (userWallet == null) {
                 TangemLogger.e("Yield deeplink: no selected user wallet")
-                pushFallback(networkId)
+                pushFallback(router, networkId)
                 return@launch
             }
 
@@ -60,7 +60,7 @@ internal class YieldDeepLinkHandler @Inject constructor(
                         |- $NETWORK_ID_KEY: $networkId
                     """.trimIndent(),
                 )
-                pushFallback(networkId)
+                pushFallback(router, networkId)
                 return@launch
             }
 
@@ -68,11 +68,11 @@ internal class YieldDeepLinkHandler @Inject constructor(
             val available = availability as? YieldSupplyAvailability.Available
             if (available == null) {
                 TangemLogger.i("Yield deeplink: yield not available for ${cryptoCurrency.name}")
-                pushFallback(networkId)
+                pushFallback(router, networkId)
                 return@launch
             }
 
-            appRouter.pushIfAbsent(
+            router.pushIfAbsent(
                 AppRoute.YieldSupplyEntry(
                     userWalletId = userWallet.walletId,
                     cryptoCurrency = cryptoCurrency,
@@ -82,8 +82,8 @@ internal class YieldDeepLinkHandler @Inject constructor(
         }
     }
 
-    private fun pushFallback(networkId: String?) {
-        appRouter.pushIfAbsent(
+    private fun pushFallback(router: Router, networkId: String?) {
+        router.pushIfAbsent(
             AppRoute.Earn(
                 preselectedEarnType = PreselectedEarnType.Yield,
                 preselectedNetworkId = networkId,

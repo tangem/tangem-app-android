@@ -1,7 +1,6 @@
 package com.tangem.features.staking.impl.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
@@ -19,7 +18,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal class StakingDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
@@ -74,7 +72,7 @@ internal class StakingDeepLinkHandler @Inject constructor(
                 return@launch
             }
 
-            appRouter.push(
+            request.router.push(
                 AppRoute.Staking(
                     userWalletId = selectedUserWalletId,
                     cryptoCurrency = cryptoCurrency,

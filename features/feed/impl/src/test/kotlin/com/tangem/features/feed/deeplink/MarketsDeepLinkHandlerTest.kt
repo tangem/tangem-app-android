@@ -2,10 +2,10 @@ package com.tangem.features.feed.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.INTERVAL_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.ORDER_KEY
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.markets.PreselectedMarketsInterval
 import com.tangem.domain.markets.PreselectedMarketsOrder
 import com.tangem.test.core.ProvideTestModels
@@ -20,13 +20,13 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MarketsDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
 
-    private val handler = MarketsDeepLinkHandler(appRouter = appRouter)
+    private val handler = MarketsDeepLinkHandler()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(appRouter)
+        clearMocks(router)
     }
 
     @ParameterizedTest
@@ -38,14 +38,14 @@ internal class MarketsDeepLinkHandlerTest {
             queryParams = model.queryParams,
             scope = mockk<CoroutineScope>(),
             isFromOnNewIntent = false,
-            router = mockk(),
+            router = router,
         )
 
         // Act
         handler.handle(request)
 
         // Assert
-        verify(exactly = 1) { appRouter.push(model.expectedRoute, any()) }
+        verify(exactly = 1) { router.push(model.expectedRoute, any()) }
     }
 
     internal data class HandleModel(val queryParams: Map<String, String>, val expectedRoute: AppRoute.Markets)

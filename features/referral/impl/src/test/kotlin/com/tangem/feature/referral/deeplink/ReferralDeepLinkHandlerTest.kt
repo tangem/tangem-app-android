@@ -4,10 +4,10 @@ import android.net.Uri
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.card.configs.MultiWalletCardConfig
 import com.tangem.domain.models.wallet.UserWallet
@@ -28,17 +28,16 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ReferralDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
 
     private val handler = ReferralDeepLinkHandler(
-        appRouter = appRouter,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(appRouter, getSelectedWalletSyncUseCase)
+        clearMocks(router, getSelectedWalletSyncUseCase)
     }
 
     @ParameterizedTest
@@ -54,7 +53,7 @@ internal class ReferralDeepLinkHandlerTest {
 
         // Assert
         val expectedRoute = AppRoute.ReferralProgram(userWalletId = model.userWallet.walletId)
-        verify(exactly = if (model.isReferralOpened) 1 else 0) { appRouter.push(expectedRoute, any()) }
+        verify(exactly = if (model.isReferralOpened) 1 else 0) { router.push(expectedRoute, any()) }
     }
 
     @Test
@@ -66,7 +65,7 @@ internal class ReferralDeepLinkHandlerTest {
         handler.handle(createRequest())
 
         // Assert
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     internal data class WalletModel(val userWallet: UserWallet, val isReferralOpened: Boolean)
@@ -102,6 +101,6 @@ internal class ReferralDeepLinkHandlerTest {
         queryParams = emptyMap(),
         scope = mockk<CoroutineScope>(),
         isFromOnNewIntent = false,
-        router = mockk(),
+        router = router,
     )
 }

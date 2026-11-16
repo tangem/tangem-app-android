@@ -2,10 +2,10 @@ package com.tangem.features.feed.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.EARN_TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.earn.PreselectedEarnType
 import io.mockk.Runs
 import io.mockk.every
@@ -18,13 +18,13 @@ import org.junit.jupiter.api.Test
 
 class EarnDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk()
+    private val router: Router = mockk()
 
-    private val handler = EarnDeepLinkHandler(appRouter = appRouter)
+    private val handler = EarnDeepLinkHandler()
 
     @BeforeEach
     fun setUp() {
-        every { appRouter.push(any(), any()) } just Runs
+        every { router.push(any(), any()) } just Runs
     }
 
     @Test
@@ -32,7 +32,7 @@ class EarnDeepLinkHandlerTest {
         handler.handle(createRequest(queryParams = emptyMap()))
 
         verify {
-            appRouter.push(
+            router.push(
                 AppRoute.Earn(preselectedEarnType = null, preselectedNetworkId = null),
                 any(),
             )
@@ -44,7 +44,7 @@ class EarnDeepLinkHandlerTest {
         handler.handle(createRequest(queryParams = mapOf(EARN_TYPE_KEY to "staking")))
 
         verify {
-            appRouter.push(
+            router.push(
                 AppRoute.Earn(preselectedEarnType = PreselectedEarnType.Staking, preselectedNetworkId = null),
                 any(),
             )
@@ -56,7 +56,7 @@ class EarnDeepLinkHandlerTest {
         handler.handle(createRequest(queryParams = mapOf(EARN_TYPE_KEY to "yield")))
 
         verify {
-            appRouter.push(
+            router.push(
                 AppRoute.Earn(preselectedEarnType = PreselectedEarnType.Yield, preselectedNetworkId = null),
                 any(),
             )
@@ -68,7 +68,7 @@ class EarnDeepLinkHandlerTest {
         handler.handle(createRequest(queryParams = mapOf(EARN_TYPE_KEY to "bogus")))
 
         verify {
-            appRouter.push(
+            router.push(
                 AppRoute.Earn(preselectedEarnType = null, preselectedNetworkId = null),
                 any(),
             )
@@ -80,7 +80,7 @@ class EarnDeepLinkHandlerTest {
         handler.handle(createRequest(queryParams = mapOf(NETWORK_ID_KEY to "base")))
 
         verify {
-            appRouter.push(
+            router.push(
                 AppRoute.Earn(preselectedEarnType = null, preselectedNetworkId = "base"),
                 any(),
             )
@@ -92,7 +92,7 @@ class EarnDeepLinkHandlerTest {
         handler.handle(createRequest(queryParams = mapOf(NETWORK_ID_KEY to "   ")))
 
         verify {
-            appRouter.push(
+            router.push(
                 AppRoute.Earn(preselectedEarnType = null, preselectedNetworkId = null),
                 any(),
             )
@@ -104,7 +104,7 @@ class EarnDeepLinkHandlerTest {
         handler.handle(createRequest(queryParams = mapOf(EARN_TYPE_KEY to "yield", NETWORK_ID_KEY to "base")))
 
         verify {
-            appRouter.push(
+            router.push(
                 AppRoute.Earn(
                     preselectedEarnType = PreselectedEarnType.Yield,
                     preselectedNetworkId = "base",
@@ -119,6 +119,6 @@ class EarnDeepLinkHandlerTest {
         queryParams = queryParams,
         scope = mockk<CoroutineScope>(),
         isFromOnNewIntent = false,
-        router = mockk(),
+        router = router,
     )
 }

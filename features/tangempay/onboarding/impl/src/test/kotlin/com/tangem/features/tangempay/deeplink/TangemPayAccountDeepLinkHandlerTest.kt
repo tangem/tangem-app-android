@@ -2,8 +2,8 @@ package com.tangem.features.tangempay.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
@@ -41,17 +41,17 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayAccountDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
 
     @BeforeEach
     fun setUp() {
-        clearMocks(appRouter, userWalletsListRepository, paymentAccountStatusFetcher, paymentAccountStatusSupplier)
+        clearMocks(router, userWalletsListRepository, paymentAccountStatusFetcher, paymentAccountStatusSupplier)
         mockkObject(TangemLogger)
         every { TangemLogger.i(any()) } just Runs
-        every { appRouter.popTo(any<AppRoute>(), any()) } answers { secondArg<(Boolean) -> Unit>().invoke(true) }
+        every { router.popTo(any<AppRoute>(), any()) } answers { secondArg<(Boolean) -> Unit>().invoke(true) }
         coEvery { userWalletsListRepository.selectedUserWalletSync() } returns unlockedWallet()
         every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns flowOf(paymentStatus())
     }
@@ -80,7 +80,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
 
             // Assert
             verify(exactly = 1) {
-                appRouter.push(
+                router.push(
                     route = AppRoute.TangemPayDetails(status = status, initialRoute = model.expectedRoute),
                     onComplete = any(),
                 )
@@ -118,9 +118,9 @@ internal class TangemPayAccountDeepLinkHandlerTest {
 
             // Assert
             verify(exactly = 1) {
-                appRouter.push(route = AppRoute.TangemPayVerified(userWalletId = USER_WALLET_ID), onComplete = any())
+                router.push(route = AppRoute.TangemPayVerified(userWalletId = USER_WALLET_ID), onComplete = any())
             }
-            verify(exactly = 0) { appRouter.push(any<AppRoute.TangemPayDetails>(), any()) }
+            verify(exactly = 0) { router.push(any<AppRoute.TangemPayDetails>(), any()) }
         }
 
         @Test
@@ -134,8 +134,8 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { appRouter.push(any(), any()) }
-            verify(exactly = 1) { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify(exactly = 0) { router.push(any(), any()) }
+            verify(exactly = 1) { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
         }
     }
 
@@ -157,9 +157,9 @@ internal class TangemPayAccountDeepLinkHandlerTest {
 
             // Assert
             verify(exactly = if (model.isOpenable) 1 else 0) {
-                appRouter.push(any<AppRoute.TangemPayDetails>(), any())
+                router.push(any<AppRoute.TangemPayDetails>(), any())
             }
-            verify(atLeast = 1) { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify(atLeast = 1) { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
         }
 
         @Test
@@ -172,8 +172,8 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
-            verify(exactly = 0) { appRouter.push(any<AppRoute.TangemPayDetails>(), any()) }
+            verify(exactly = 1) { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify(exactly = 0) { router.push(any<AppRoute.TangemPayDetails>(), any()) }
         }
 
         @Test
@@ -186,7 +186,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { appRouter.push(any<AppRoute.TangemPayDetails>(), any()) }
+            verify(exactly = 0) { router.push(any<AppRoute.TangemPayDetails>(), any()) }
         }
 
         @Test
@@ -199,7 +199,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { appRouter.push(any<AppRoute.TangemPayDetails>(), any()) }
+            verify(exactly = 0) { router.push(any<AppRoute.TangemPayDetails>(), any()) }
         }
 
         private fun provideTestModels() = listOf(
@@ -219,7 +219,6 @@ internal class TangemPayAccountDeepLinkHandlerTest {
 
     private fun handle(scope: TestScope, queryParams: Map<String, String> = emptyMap()) =
         TangemPayAccountDeepLinkHandler(
-            appRouter = appRouter,
             userWalletsListRepository = userWalletsListRepository,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
@@ -229,7 +228,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
                 queryParams = queryParams,
                 scope = scope,
                 isFromOnNewIntent = false,
-                router = mockk(),
+                router = router,
             ),
         )
 
