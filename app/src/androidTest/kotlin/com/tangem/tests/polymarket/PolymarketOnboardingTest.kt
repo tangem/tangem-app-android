@@ -43,7 +43,6 @@ import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 import com.tangem.core.res.R as CoreResR
 
@@ -51,7 +50,6 @@ import com.tangem.core.res.R as CoreResR
 class PolymarketOnboardingTest : BaseTestCase() {
 
     @Test
-    @Ignore("[REDACTED_JIRA]")
     @AllureId("12918")
     @DisplayName("Polymarket: onboarding. Successful completion opens the account main screen")
     fun onboardingCompletedTest() {
