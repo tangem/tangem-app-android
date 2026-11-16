@@ -85,7 +85,8 @@ class PolymarketSessionKeyOperationRunner(
 
     @Synchronized
     private fun reserveResume(userWalletId: UserWalletId): Boolean =
-        stateOf(userWalletId).value.running == null && resuming.add(userWalletId)
+        stateOf(userWalletId).value.let { state -> state.running == null && state.finished == null } &&
+            resuming.add(userWalletId)
 
     private suspend fun executablePending(userWalletId: UserWalletId): PolymarketPendingAuthorization? {
         val pending = pendingAuthorizations.get(userWalletId).getOrNull() ?: return null
@@ -190,6 +191,7 @@ class PolymarketSessionKeyOperationRunner(
             if (result.isRight() || !hasResumable(userWalletId)) return result
             TangemLogger.i("Polymarket session key authorization not resumed, retrying in $retryDelay")
             delay(retryDelay)
+            if (!hasResumable(userWalletId)) return result
             result = tracker.follow(manage.resume(userWalletId))
         }
         return result
@@ -197,7 +199,7 @@ class PolymarketSessionKeyOperationRunner(
 
     private suspend fun hasResumable(userWalletId: UserWalletId): Boolean =
         pendingAuthorizations.get(userWalletId).fold(
-            ifLeft = { true },
+            ifLeft = { false },
             ifRight = { pending -> pending?.isResumable(clock.millis()) == true },
         )
 

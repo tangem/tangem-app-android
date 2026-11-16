@@ -67,7 +67,7 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   tracker retries its resend.
 - Renew / replace keep the signed revocation and authorization in `PolymarketPendingAuthorizationStore` (Keystore)
   before the revocation is sent, until the authorization is accepted, refused or past its deadline. Entering
-  Predictions resumes it as an Extend (retries after 10, 20, 40 s); meanwhile claims, withdrawals and new lifecycle
+  Predictions resumes it as the operation that signed it (Extend / Activate; retries after 10, 20, 40 s); meanwhile claims, withdrawals and new lifecycle
   operations are refused. The wallet nonce tells what is left: `n` → send the revocation, `n+1` → the authorization.
 - One lifecycle operation per wallet; the UI starts them only through `PolymarketSessionKeyOperationRunner` (app
   scope — leaving the screen must not drop a pre-signed authorization). `Activate` picks enable / renew / replace.

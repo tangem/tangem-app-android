@@ -42,6 +42,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -51,6 +52,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -919,6 +921,72 @@ internal class PolymarketSessionKeyOperationRunnerTest {
         }
 
         @Test
+        fun `GIVEN the record leaves the resumable window during a retry pause WHEN resume THEN it is not retried`() =
+            runTest {
+                // Arrange
+                val deadline = NOW.plusSeconds(OUTSIDE_MARGIN_SECONDS_LEFT).epochSecond.toString()
+                pendingAuthorizations.store(USER_WALLET_ID, pending(deadline = deadline))
+                val failure = PolymarketSessionKeyLifecycleError.Unsettled(key(OWN, PolymarketSessionKeyStatus.REVOKING))
+                every { manage.resume(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(failure.left()),
+                )
+                val runner = runner(clock = SchedulerClock(testScheduler))
+
+                // Act
+                runner.resume(USER_WALLET_ID)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+                assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(
+                    PolymarketSessionKeyOperationFailure(error = failure, isAfterRevocation = false).left(),
+                )
+            }
+
+        @Test
+        fun `GIVEN extend fails while the record cannot be read WHEN finished THEN nothing is resumed`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pending())
+            pendingAuthorizations.readFailure = PolymarketSessionKeyError.Failure(IllegalStateException("locked"))
+            val failure = PolymarketSessionKeyLifecycleError.OperationInProgress
+            every { manage.renew(USER_WALLET_ID) } returns flowOf(PolymarketSessionKeyProgress.Finished(failure.left()))
+            val runner = runner()
+
+            // Act
+            runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Extend)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { manage.resume(any()) }
+            assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(
+                PolymarketSessionKeyOperationFailure(error = failure, isAfterRevocation = false).left(),
+            )
+        }
+
+        @Test
+        fun `GIVEN an outcome the host has not acknowledged WHEN resume THEN it is kept and nothing is resumed`() =
+            runTest {
+                // Arrange
+                val failure = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network)
+                every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(failure.left()),
+                )
+                val runner = runner()
+                runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Reactivate)
+                advanceUntilIdle()
+                val finished = runner.observe(USER_WALLET_ID).value.finished
+                pendingAuthorizations.store(USER_WALLET_ID, pending())
+
+                // Act
+                runner.resume(USER_WALLET_ID)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 0) { manage.resume(any()) }
+                assertThat(runner.observe(USER_WALLET_ID).value.finished).isEqualTo(finished)
+            }
+
+        @Test
         fun `GIVEN the record cannot be read WHEN resume THEN no operation starts and the record is kept`() = runTest {
             // Arrange
             pendingAuthorizations.store(USER_WALLET_ID, pending())
@@ -1092,5 +1160,14 @@ internal class PolymarketSessionKeyOperationRunnerTest {
             ),
             isTradable = false,
         )
+    }
+
+    private class SchedulerClock(private val scheduler: TestCoroutineScheduler) : Clock() {
+
+        override fun getZone(): ZoneId = ZoneOffset.UTC
+
+        override fun withZone(zone: ZoneId?): Clock = this
+
+        override fun instant(): Instant = NOW.plusMillis(scheduler.currentTime)
     }
 }
