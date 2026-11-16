@@ -367,7 +367,7 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("24.50"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = BigDecimal("33.333333"),
-                    total = BigDecimal("24.98"),
+                    total = BigDecimal("24.97"),
                 ),
             ),
         ),
@@ -386,6 +386,20 @@ internal class PlaceResultUMConverterTest {
             ),
         ),
         ReadBackModel(
+            name = "a partial sell just short of the order size nets less than the full fee",
+            order = readBack(sizeMatched = BigDecimal("99")),
+            quote = SELL_QUOTE,
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = BigDecimal("72.77"),
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = BigDecimal("99"),
+                    total = BigDecimal("71.37"),
+                ),
+            ),
+        ),
+        ReadBackModel(
             name = "a partial sell nets its share of the fee from the proceeds",
             order = readBack(sizeMatched = QUOTED_SHARES.half()),
             quote = SELL_QUOTE,
@@ -395,12 +409,12 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("36.00"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES.half(),
-                    total = BigDecimal("35.30"),
+                    total = BigDecimal("35.31"),
                 ),
             ),
         ),
         ReadBackModel(
-            name = "without quoted shares the fee is shared by the collateral filled",
+            name = "without quoted shares the fee is still shared by the ordered size",
             order = readBack(sizeMatched = QUOTED_SHARES.half()),
             quote = SELL_QUOTE.copy(shares = BigDecimal.ZERO),
             expected = PlaceOutcome.Reportable(
@@ -409,7 +423,7 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("36.00"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES.half(),
-                    total = BigDecimal("35.30"),
+                    total = BigDecimal("35.31"),
                 ),
             ),
         ),

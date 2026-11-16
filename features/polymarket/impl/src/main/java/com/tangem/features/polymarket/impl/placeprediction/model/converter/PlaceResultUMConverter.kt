@@ -80,6 +80,7 @@ internal object PlaceResultUMConverter {
                                 side = side,
                                 filledCollateral = spent,
                                 filledShares = filledShares,
+                                orderedShares = quote.shares,
                                 quote = quote,
                             ),
                         ),
@@ -131,6 +132,7 @@ internal object PlaceResultUMConverter {
                     side = quote.side,
                     filledCollateral = filledAmount,
                     filledShares = filledShares,
+                    orderedShares = orderedShares,
                     quote = quote,
                 ),
             )
@@ -142,10 +144,15 @@ internal object PlaceResultUMConverter {
         side: PredictionOrderSide,
         filledCollateral: BigDecimal,
         filledShares: BigDecimal,
+        orderedShares: BigDecimal,
         quote: PredictionOrderQuote,
     ): BigDecimal? {
-        val filledRatio = fillRatio(filledCollateral = filledCollateral, filledShares = filledShares, quote = quote)
-            ?: return null
+        val filledRatio = fillRatio(
+            filledCollateral = filledCollateral,
+            filledShares = filledShares,
+            orderedShares = orderedShares,
+            quote = quote,
+        ) ?: return null
         val filledFee = quote.fees.total.multiply(filledRatio, MathContext.DECIMAL64)
         return totalOf(side = side, collateral = filledCollateral, fee = filledFee)
     }
@@ -157,8 +164,13 @@ internal object PlaceResultUMConverter {
             .coerceAtLeast(BigDecimal.ZERO.setScale(FIAT_SCALE))
     }
 
-    private fun fillRatio(filledCollateral: BigDecimal, filledShares: BigDecimal, quote: PredictionOrderQuote) = when {
-        quote.shares.signum() > 0 -> filledShares.divide(quote.shares, MathContext.DECIMAL64)
+    private fun fillRatio(
+        filledCollateral: BigDecimal,
+        filledShares: BigDecimal,
+        orderedShares: BigDecimal,
+        quote: PredictionOrderQuote,
+    ) = when {
+        orderedShares.signum() > 0 -> filledShares.divide(orderedShares, MathContext.DECIMAL64)
         quote.notional.signum() > 0 -> filledCollateral.divide(quote.notional, MathContext.DECIMAL64)
         else -> null
     }
