@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.soccer.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +32,8 @@ import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.features.polymarket.impl.common.toButtonAppearance
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
 import com.tangem.features.polymarket.impl.common.ui.PolymarketOutcomeButton
+import com.tangem.features.polymarket.impl.common.ui.counter.PolymarketCounter
+import kotlinx.collections.immutable.ImmutableList
 import com.tangem.features.polymarket.impl.soccer.ui.state.PolymarketSoccerCardUM
 
 @Composable
@@ -38,6 +41,7 @@ internal fun PolymarketSoccerCard(
     state: PolymarketSoccerCardUM,
     onOutcomeClick: (PolymarketSoccerCardUM.Target) -> Unit,
     onRulesClick: (PolymarketSoccerCardUM.Rules) -> Unit,
+    onPositionChange: (marketId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     PolymarketEventCardFrame(title = state.title, iconUrl = state.iconUrl, modifier = modifier) {
@@ -46,21 +50,18 @@ internal fun PolymarketSoccerCard(
         CardMeta(state, onRulesClick)
         Spacer(Modifier.height(16.dp))
         when (val content = state.content) {
-            is PolymarketSoccerCardUM.Content.Buttons -> TangemButtonGroup(
-                modifier = Modifier.fillMaxWidth(),
-                orientation = TangemButtonGroup.Orientation.Horizontal,
-            ) {
-                content.outcomes.forEach { outcome ->
-                    key(outcome.target) {
-                        PolymarketOutcomeButton(
-                            title = outcome.title,
-                            price = outcome.price,
-                            appearance = outcome.appearance.toButtonAppearance(),
-                            size = PolymarketOutcomeButton.Size.X9,
-                            onClick = { onOutcomeClick(outcome.target) },
-                        )
-                    }
-                }
+            is PolymarketSoccerCardUM.Content.Buttons -> OutcomeButtons(content.outcomes, onOutcomeClick)
+            is PolymarketSoccerCardUM.Content.Picker -> {
+                OutcomeButtons(content.outcomes, onOutcomeClick)
+                Spacer(Modifier.height(16.dp))
+                PolymarketCounter(
+                    items = content.items,
+                    selectedId = content.selectedId,
+                    onSelectionChange = onPositionChange,
+                    previousContentDescription = stringResourceSafe(R.string.prediction_match_previous_line),
+                    nextContentDescription = stringResourceSafe(R.string.prediction_match_next_line),
+                    contentPadding = PaddingValues(0.dp),
+                )
             }
             is PolymarketSoccerCardUM.Content.Rows -> content.outcomes.forEachIndexed { index, outcome ->
                 key(outcome.target) {
@@ -82,6 +83,26 @@ internal fun PolymarketSoccerCard(
                     )
                     if (index < content.outcomes.lastIndex) Spacer(Modifier.height(12.dp))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OutcomeButtons(
+    outcomes: ImmutableList<PolymarketSoccerCardUM.Outcome>,
+    onOutcomeClick: (PolymarketSoccerCardUM.Target) -> Unit,
+) {
+    TangemButtonGroup(modifier = Modifier.fillMaxWidth(), orientation = TangemButtonGroup.Orientation.Horizontal) {
+        outcomes.forEach { outcome ->
+            key(outcome.target) {
+                PolymarketOutcomeButton(
+                    title = outcome.title,
+                    price = outcome.price,
+                    appearance = outcome.appearance.toButtonAppearance(),
+                    size = PolymarketOutcomeButton.Size.X9,
+                    onClick = { onOutcomeClick(outcome.target) },
+                )
             }
         }
     }

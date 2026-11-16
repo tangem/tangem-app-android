@@ -38,7 +38,7 @@ private fun SoccerCardsPreview() {
                 rules = PolymarketSoccerCardUM.Rules(stringReference("Moneyline"), "Rules"),
                 content = PolymarketSoccerCardUM.Content.Buttons(persistentListOf(home, draw, away)),
             )
-            PolymarketSoccerCard(moneyline, onOutcomeClick = {}, onRulesClick = {})
+            PolymarketSoccerCard(state = moneyline, onOutcomeClick = {}, onRulesClick = {}, onPositionChange = {})
             PolymarketSoccerCard(
                 state = moneyline.copy(
                     title = stringReference("Both teams to score"),
@@ -49,6 +49,7 @@ private fun SoccerCardsPreview() {
                 ),
                 onOutcomeClick = {},
                 onRulesClick = {},
+                onPositionChange = {},
             )
             PolymarketSoccerCard(
                 state = moneyline.copy(
@@ -63,6 +64,7 @@ private fun SoccerCardsPreview() {
                 ),
                 onOutcomeClick = {},
                 onRulesClick = {},
+                onPositionChange = {},
             )
         }
     }
