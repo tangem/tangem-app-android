@@ -372,6 +372,20 @@ internal class PlaceResultUMConverterTest {
             ),
         ),
         ReadBackModel(
+            name = "a full sell nets the fee from the unrounded proceeds",
+            order = readBack(sizeMatched = ORDERED_SHARES, price = BigDecimal("0.73505")),
+            quote = SELL_QUOTE,
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.Filled(
+                    placedAt = PLACED_AT,
+                    collateralAmount = BigDecimal("73.51"),
+                    shares = ORDERED_SHARES,
+                    fee = QUOTED_FEE,
+                    total = BigDecimal("72.10"),
+                ),
+            ),
+        ),
+        ReadBackModel(
             name = "a partial sell nets its share of the fee from the proceeds",
             order = readBack(sizeMatched = QUOTED_SHARES.half()),
             quote = SELL_QUOTE,

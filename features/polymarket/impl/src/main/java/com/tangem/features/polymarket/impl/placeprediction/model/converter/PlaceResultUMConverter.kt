@@ -110,7 +110,8 @@ internal object PlaceResultUMConverter {
         val orderedShares = order.originalSize ?: return PlaceOutcome.Anomalous(reason = UNREADABLE_FILL_REASON)
         val price = order.price ?: return PlaceOutcome.Anomalous(reason = UNREADABLE_FILL_REASON)
 
-        val executedAmount = (filledShares * price).setScale(FIAT_SCALE, RoundingMode.HALF_UP)
+        val filledAmount = filledShares * price
+        val executedAmount = filledAmount.setScale(FIAT_SCALE, RoundingMode.HALF_UP)
 
         val result = if (filledShares >= orderedShares) {
             PlaceResultUM.Filled(
@@ -118,7 +119,7 @@ internal object PlaceResultUMConverter {
                 collateralAmount = executedAmount,
                 shares = filledShares,
                 fee = quote.fees.total,
-                total = totalOf(side = quote.side, collateral = executedAmount, fee = quote.fees.total),
+                total = totalOf(side = quote.side, collateral = filledAmount, fee = quote.fees.total),
             )
         } else {
             PlaceResultUM.PartiallyFilled(
@@ -128,7 +129,7 @@ internal object PlaceResultUMConverter {
                 shares = filledShares,
                 total = partialTotal(
                     side = quote.side,
-                    filledCollateral = executedAmount,
+                    filledCollateral = filledAmount,
                     filledShares = filledShares,
                     quote = quote,
                 ),
