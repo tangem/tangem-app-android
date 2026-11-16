@@ -59,7 +59,7 @@ internal class SignPredictionOrderInteractorTest {
 
         every { buildDraft(any(), any(), any(), any()) } returns DRAFT.right()
         coEvery { signer.signOrder(any(), any()) } returns SIGNED_ORDER.right()
-        every { validateOrder(any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit.right()
+        every { validateOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit.right()
     }
 
     @Test
@@ -116,26 +116,8 @@ internal class SignPredictionOrderInteractorTest {
             coVerify(exactly = 1) { signer.signOrderWithSessionKey(UserWalletId("011"), SESSION_KEY, any()) }
             coVerify(exactly = 0) { signer.signOrder(any(), any()) }
             verify(exactly = 1) {
-                validateOrder(any(), any(), any(), any(), any(), any(), any(), any(), route)
+                validateOrder(any(), any(), any(), any(), any(), any(), any(), route)
             }
-        }
-
-    @Test
-    fun `GIVEN the checks run WHEN signed THEN they judge the quote's own age and not the signing moment`() =
-        runTest {
-            // Arrange
-            val receivedAt = slot<Long>()
-            val now = slot<Long>()
-            every {
-                validateOrder(any(), any(), any(), any(), any(), any(), capture(receivedAt), capture(now), any())
-            } returns Unit.right()
-
-            // Act
-            interactor(request = createRequest())
-
-            // Assert
-            assertThat(receivedAt.captured).isEqualTo(RECEIVED_AT)
-            assertThat(now.captured).isGreaterThan(RECEIVED_AT)
         }
 
     @Test
@@ -215,8 +197,8 @@ internal class SignPredictionOrderInteractorTest {
     @Test
     fun `GIVEN the order fails its checks WHEN signed THEN the failure is returned and not the order`() = runTest {
         // Arrange
-        val error = PredictionOrderValidationError.StaleQuote(ageMillis = 120_000)
-        every { validateOrder(any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns error.left()
+        val error = PredictionOrderValidationError.SignatureNotWrapped(length = 130)
+        every { validateOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns error.left()
 
         // Act
         val actual = interactor(request = createRequest())
@@ -243,7 +225,6 @@ internal class SignPredictionOrderInteractorTest {
                 capture(isNegRisk),
                 any(),
                 any(),
-                any(),
             )
         } returns Unit.right()
 
@@ -266,7 +247,6 @@ internal class SignPredictionOrderInteractorTest {
         assetId = ASSET_ID,
         side = PredictionOrderSide.BUY,
         isNegRisk = false,
-        quoteReceivedAtMillis = RECEIVED_AT,
         route = route,
     )
 
@@ -302,7 +282,7 @@ internal class SignPredictionOrderInteractorTest {
     )
 
     private fun verifyNothingValidated() {
-        verify(exactly = 0) { validateOrder(any(), any(), any(), any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { validateOrder(any(), any(), any(), any(), any(), any(), any(), any()) }
     }
 
     private companion object {
@@ -311,7 +291,6 @@ internal class SignPredictionOrderInteractorTest {
 
         const val ASSET_ID = "1116017998421700000000000000000000000000000000000000000000000000047"
         const val DEPOSIT_WALLET = "0x5A057dc6394196fBa51D84457DA3FB8FA241Fc20"
-        const val RECEIVED_AT = 1_787_300_000_000L
         const val MILLIS_THRESHOLD = 1_000_000_000_000L
         const val SESSION_KEY = "0x5e55000000000000000000000000000000000001"
         const val FOREIGN_EXCHANGE = "0x000000000000000000000000000000000000dEaD"

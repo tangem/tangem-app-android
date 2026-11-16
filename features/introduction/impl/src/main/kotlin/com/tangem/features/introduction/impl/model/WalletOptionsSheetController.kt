@@ -1,0 +1,226 @@
+package com.tangem.features.introduction.impl.model
+
+import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
+import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
+import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import com.tangem.core.res.R as CoreResR
+
+/**
+ * A sheet of wallet options that morphs into the Import existing wallet step (recovery phrase / cloud backup) and
+ * its error step. Subclasses own the options step and what its rows do.
+ *
+ * @param isLocked whether a row is still running something the sheet must not be closed out from under
+ */
+@Suppress("LongParameterList")
+internal abstract class WalletOptionsSheetController(
+    private val host: Host,
+    private val scope: CoroutineScope,
+    private val router: Router,
+    protected val analyticsEventHandler: AnalyticsEventHandler,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase,
+    protected val isLocked: () -> Boolean,
+) {
+
+    interface Host {
+
+        val haveWalletSheetConfig: TangemBottomSheetConfig?
+
+        fun updateHaveWalletSheetConfig(transform: (TangemBottomSheetConfig?) -> TangemBottomSheetConfig?)
+
+        fun onTerminalFlowEntered()
+
+        /** Shows the unsupported-device warning when it returns `false`. */
+        fun ensureHotWalletCreationSupported(): Boolean
+    }
+
+    /** Reported when the viewer leaves the options step without picking a row */
+    protected abstract val optionsSheet: IntroductionProcess.SheetDismissed.Sheet
+
+    private var cloudResolveJob: Job? = null
+
+    val isShown: Boolean get() = host.haveWalletSheetConfig?.isShown == true
+
+    protected val isOnImportStep: Boolean get() = currentStep() is HaveWalletUM.Step.Import
+
+    protected abstract fun optionsStep(): HaveWalletUM.Step.Options
+
+    protected fun showOptions() {
+        showStep(::optionsStep)
+    }
+
+    fun refreshOptions() {
+        if (isShown && currentStep() is HaveWalletUM.Step.Options) showStep(::optionsStep)
+    }
+
+    protected fun importWalletOption(onClick: () -> Unit) = WalletOptionUM(
+        icon = WalletOptionUM.Icon.Tinted(Icons.ic_arrow_down_20),
+        title = resourceReference(CoreResR.string.hw_import_existing_wallet),
+        // The sheet's own wording: the hw_ description belongs to the mobile-wallet screens and reads
+        // differently there.
+        description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
+        isEnabled = !isLocked(),
+        onClick = onClick,
+    )
+
+    protected fun openImportStep() {
+        analyticsEventHandler.send(
+            OnboardingAnalyticsEvent.Backup.ImportWalletRequest(cloudBackup = cloudBackupAvailability()),
+        )
+        showStep { importStep(isCloudLoading = false) }
+    }
+
+    private fun cloudBackupAvailability() = if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+        AnalyticsParam.CloudBackupAvailability.Available
+    } else {
+        AnalyticsParam.CloudBackupAvailability.Unavailable
+    }
+
+    private fun currentStep(): HaveWalletUM.Step? = (host.haveWalletSheetConfig?.content as? HaveWalletUM)?.step
+
+    private fun importStep(isCloudLoading: Boolean) = HaveWalletUM.Step.Import(
+        title = resourceReference(CoreResR.string.hw_import_existing_wallet),
+        description = resourceReference(CoreResR.string.hw_import_existing_wallet_description),
+        recoveryPhraseButtonText = resourceReference(CoreResR.string.hw_cloud_backup_restore_use_recovery_phrase),
+        cloudBackupButtonText = if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+            resourceReference(
+                id = CoreResR.string.hw_import_restore_cloud_backup,
+                formatArgs = wrappedList(resourceReference(CoreResR.string.hw_cloud_backup_service_name)),
+            )
+        } else {
+            null
+        },
+        isCloudLoading = isCloudLoading,
+        onRecoveryPhraseClick = ::onRecoveryPhraseClick,
+        onCloudBackupClick = ::onCloudBackupClick,
+        onBack = ::onImportBack,
+    )
+
+    private fun onImportBack() {
+        if (importStepOrNull() == null) return
+        analyticsEventHandler.send(
+            IntroductionProcess.SheetDismissed(
+                sheet = IntroductionProcess.SheetDismissed.Sheet.ImportExisting,
+                reason = IntroductionProcess.SheetDismissed.DismissReason.BackButton,
+            ),
+        )
+        cancelCloudResolve()
+        showStep(::optionsStep)
+    }
+
+    private fun onRecoveryPhraseClick() {
+        if (importStepOrNull()?.isCloudLoading != false) return
+        dismiss()
+        if (!host.ensureHotWalletCreationSupported()) return
+        openImport(AppRoute.AddExistingWallet.Mode.RecoveryPhrase)
+    }
+
+    /**
+     * The device check comes before the account picker: after it the backups would already be parked for a restore
+     * screen that never opens.
+     */
+    private fun onCloudBackupClick() {
+        if (importStepOrNull()?.isCloudLoading != false || !hotWalletFeatureToggles.isGoogleDriveBackupEnabled) return
+        if (!host.ensureHotWalletCreationSupported()) {
+            dismiss()
+            return
+        }
+        showStep { importStep(isCloudLoading = true) }
+        cloudResolveJob = scope.launch {
+            val result = resolveCloudRestoreBackups()
+            if (!isShown) {
+                cloudResolveJob = null
+                return@launch
+            }
+            result.fold(
+                ifLeft = { error ->
+                    val message = CloudRestoreErrorMessage.of(error)
+                    if (message == null) showStep { importStep(isCloudLoading = false) } else showError(message)
+                },
+                ifRight = {
+                    cloudResolveJob = null
+                    dismiss()
+                    openImport(AppRoute.AddExistingWallet.Mode.CloudRestore)
+                },
+            )
+            cloudResolveJob = null
+        }
+    }
+
+    /** Unlike the mobile wallet screen, the sheet does not report the onboarding start, so the import flow does. */
+    private fun openImport(mode: AppRoute.AddExistingWallet.Mode) {
+        host.onTerminalFlowEntered()
+        router.push(
+            AppRoute.AddExistingWallet(
+                mode = mode,
+                shouldSendOnboardingStarted = true,
+            ),
+        )
+    }
+
+    /** The step on screen, if it is Import: the outgoing step stays tappable while the next one slides in. */
+    private fun importStepOrNull(): HaveWalletUM.Step.Import? =
+        (currentStep() as? HaveWalletUM.Step.Import)?.takeIf { isShown }
+
+    private fun cancelCloudResolve() {
+        cloudResolveJob?.cancel()
+        cloudResolveJob = null
+    }
+
+    private fun showError(message: CloudRestoreErrorMessage) {
+        showStep { HaveWalletUM.Step.Error(message = message, onGotItClick = ::onCloseClick) }
+    }
+
+    private fun showStep(step: () -> HaveWalletUM.Step) {
+        val content = HaveWalletUM(step = step(), onCloseClick = ::onCloseClick)
+        host.updateHaveWalletSheetConfig { current ->
+            current?.copy(isShown = true, content = content)
+                ?: TangemBottomSheetConfig(isShown = true, onDismissRequest = ::onDismissRequest, content = content)
+        }
+    }
+
+    private fun onCloseClick() {
+        if (isLocked()) return
+        dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.CloseButton)
+    }
+
+    private fun onDismissRequest() {
+        if (isLocked()) return
+        dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.Dismissed)
+    }
+
+    /** Only a viewer leaving without picking a row is a dismissal; rows dismiss programmatically and stay silent. */
+    private fun dismissByViewer(reason: IntroductionProcess.SheetDismissed.DismissReason) {
+        if (!isShown) return
+        val sheet = when (currentStep()) {
+            is HaveWalletUM.Step.Options -> optionsSheet
+            is HaveWalletUM.Step.Import,
+            is HaveWalletUM.Step.Error,
+            null,
+            -> IntroductionProcess.SheetDismissed.Sheet.ImportExisting
+        }
+        analyticsEventHandler.send(IntroductionProcess.SheetDismissed(sheet = sheet, reason = reason))
+        dismiss()
+    }
+
+    fun dismiss() {
+        cancelCloudResolve()
+        host.updateHaveWalletSheetConfig { it?.copy(isShown = false) }
+    }
+}

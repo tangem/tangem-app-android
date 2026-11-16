@@ -37,10 +37,14 @@ data class CollectiblePurchaseTx(
     val feeAmount: Long,
 )
 
-/** @property pack the card won, once the backend has it */
+/**
+ * @property pack the card won, once the backend has it
+ * @property autoBuybackAmount USDC paid out when Turbo mode sold the card back on opening
+ */
 data class CollectibleTxState(
     val status: CollectibleTxStatus,
     val pack: OpenedCollectiblePack?,
+    val autoBuybackAmount: BigDecimal? = null,
 )
 
 /** Lifecycle of a Collectible Transaction as the backend reports it. */

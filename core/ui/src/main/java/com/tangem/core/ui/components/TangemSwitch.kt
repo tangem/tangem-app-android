@@ -22,6 +22,14 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.SwitchTestTags
 
+@Deprecated(
+    message = "Use the design-system v2 TangemSwitch. It has a fixed size, so `size` has no counterpart.",
+    replaceWith = ReplaceWith(
+        "TangemSwitch(checked = checked, onCheckedChange = onCheckedChange, modifier = modifier, " +
+            "isEnabled = enabled, interactionSource = interactionSource)",
+        "com.tangem.core.ui.ds2.toggle.TangemSwitch",
+    ),
+)
 @Suppress("MagicNumber")
 @Composable
 fun TangemSwitch(

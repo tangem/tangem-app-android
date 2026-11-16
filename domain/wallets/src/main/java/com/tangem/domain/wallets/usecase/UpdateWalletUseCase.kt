@@ -31,7 +31,9 @@ class UpdateWalletUseCase(
         return userWalletsListRepository.saveWithoutLock(updatedWallet, canOverride = true)
             .mapLeft { error ->
                 when (error) {
-                    is SaveWalletError.DataError -> DataError(
+                    is SaveWalletError.DataError,
+                    is SaveWalletError.HotWalletsLimitReached,
+                    -> DataError(
                         IllegalStateException("Failed to update wallet: ${error.messageId}"),
                     )
                     is SaveWalletError.WalletAlreadySaved -> UpdateWalletError.NameAlreadyExists

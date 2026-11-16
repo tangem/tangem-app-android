@@ -62,6 +62,7 @@ dependencies {
     implementation(projects.libs.crypto)
     // endregion
 
+    implementation(projects.features.collectibles.api)
     implementation(projects.features.jointAccount.api)
 
     // region Test

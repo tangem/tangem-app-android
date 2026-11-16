@@ -34,9 +34,11 @@ internal class AmplitudeABTestsManager(
         client = Experiment.initializeWithAmplitudeAnalytics(
             application = application,
             apiKey = apiKey,
+            // Fetches are explicit: on a cold start the automatic one fires together with the fetch below, as soon as
+            // the analytics SDK sets the device id, and both request variants for the same anonymous user
             config = ExperimentConfig
                 .builder()
-                .automaticFetchOnAmplitudeIdentityChange(true)
+                .automaticFetchOnAmplitudeIdentityChange(false)
                 .build(),
         )
 
@@ -59,7 +61,7 @@ internal class AmplitudeABTestsManager(
         productType?.let { userProperties[AnalyticsParam.PRODUCT_TYPE] = it }
         firmware?.let { userProperties[AnalyticsParam.FIRMWARE] = it }
 
-        client.setUser(
+        fetchIfUserChanged(
             ExperimentUser
                 .builder()
                 .userId(userId)
@@ -68,6 +70,8 @@ internal class AmplitudeABTestsManager(
         )
     }
 
+    // No fetch here: the analytics SDK clears its user id asynchronously, so a fetch could still go out for the
+    // removed wallet. Variants are fetched again once the next wallet sets its user.
     override fun removeUserProperties() {
         client.setUser(ExperimentUser())
     }
@@ -81,6 +85,14 @@ internal class AmplitudeABTestsManager(
     override fun peekValue(key: String): String? {
         if (!::client.isInitialized) return null
         return client.all()[key]?.value
+    }
+
+    // The tracking context is set several times in a row for the same wallet
+    @Synchronized
+    private fun fetchIfUserChanged(user: ExperimentUser) {
+        val currentUser = client.getUser() ?: ExperimentUser()
+        if (user == currentUser) return
+        client.fetch(user)
     }
 
     private suspend fun awaitVariantsFetched() {

@@ -76,10 +76,14 @@ class GaslessSendViaSwapTest : BaseTestCase() {
                 }
             }
             step("Click on 'Network fee' block") {
-                onSendConfirmScreen { feeSelectorBlock.performClick() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendConfirmScreen { feeSelectorBlock.performClick() }
+                }
             }
             step("Click on '$nativeTokenName' fee token to open 'Choose token'") {
-                onSendFeeSelectorBottomSheet { feeTokenItem(nativeTokenName).performClick() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendFeeSelectorBottomSheet { feeTokenItem(nativeTokenName).performClick() }
+                }
             }
             step("Assert 'Choose token' bottom sheet is displayed") {
                 onSendFeeSelectorBottomSheet { chooseTokenTitle.assertIsDisplayed() }

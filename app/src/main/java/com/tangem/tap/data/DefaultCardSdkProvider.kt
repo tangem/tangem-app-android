@@ -36,7 +36,6 @@ import com.tangem.sdk.extensions.*
 import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
 import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
-import com.tangem.tap.domain.card.FirmwareFeatureToggles
 import com.tangem.tap.domain.walletregistration.withBackupColdWalletRegistration
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -57,7 +56,6 @@ internal class DefaultCardSdkProvider @Inject constructor(
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val apiConfigsManager: ApiConfigsManager,
-    private val firmwareFeatureToggles: FirmwareFeatureToggles,
     private val tangemSdkManager: Lazy<TangemSdkManager>,
     private val foregroundActivityProvider: ForegroundActivityProvider,
     appInfoProvider: AppInfoProvider,
@@ -254,11 +252,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             linkedTerminal = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.entries.toList(),
-                maxFirmwareVersion = if (firmwareFeatureToggles.isNewFirmwareSupportEnabled) {
-                    FirmwareVersion.v8
-                } else {
-                    FirmwareVersion(major = 6, minor = 33)
-                },
+                maxFirmwareVersion = FirmwareVersion.v8,
                 batchIdFilter = CardFilter.Companion.ItemFilter.Deny(
                     items = setOf("0027", "0030", "0031", "0035"),
                 ),

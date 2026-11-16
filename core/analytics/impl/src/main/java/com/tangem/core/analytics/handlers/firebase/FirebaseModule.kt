@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.pm.ApplicationInfo
 import com.tangem.core.analytics.AppInstanceIdProvider
 import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.PerformanceTracer
 import com.tangem.core.analytics.impl.BuildConfig
 import dagger.Module
 import dagger.Provides
@@ -37,4 +38,8 @@ internal object FirebaseModule {
     @Provides
     @Singleton
     fun provideAppInstanceIdProvider(): AppInstanceIdProvider = FirebaseAppInstanceIdProvider()
+
+    @Provides
+    @Singleton
+    fun providePerformanceTracer(): PerformanceTracer = FirebasePerformanceTracer()
 }

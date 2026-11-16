@@ -3,6 +3,7 @@ package com.tangem.data.account.api
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.*
@@ -25,8 +26,10 @@ internal class WalletAccountsApiTest {
 
     private val walletAccountsApi = WalletAccountsApi(
         tangemTechApi = tangemTechApi,
-        jointAccountFeatureToggles = jointAccountFeatureToggles,
-        collectiblesFeatureToggles = collectiblesFeatureToggles,
+        supportedAccountTypes = SupportedAccountTypes(
+            jointAccountFeatureToggles = jointAccountFeatureToggles,
+            collectiblesFeatureToggles = collectiblesFeatureToggles,
+        ),
     )
 
     private val walletId = "011"

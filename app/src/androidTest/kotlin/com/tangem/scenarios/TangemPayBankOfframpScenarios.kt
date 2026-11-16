@@ -11,9 +11,12 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
+import com.tangem.common.extensions.performTextInputInChunks
 import com.tangem.common.extensions.tapBackButton
 import com.tangem.common.utils.findWireMockRequestBodies
+import com.tangem.common.utils.findWireMockRequestQueryParamValues
 import com.tangem.common.utils.getWireMockRequestCount
+import com.tangem.common.utils.getWireMockRequestCountByQueryParam
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.screens.tangempay.TangemPayBankWithdrawField
@@ -110,8 +113,8 @@ fun BaseTestCase.openTangemPayRecentRecipient(recipient: TangemPayBankRecipient)
     step("Click on recent recipient '${recipient.shortName}'") {
         onTangemPayWithdrawHubScreen { recentRecipientWithName(recipient.shortName).performClick() }
     }
-    step("Assert 'Amount' screen for '${recipient.displayName}' is displayed") {
-        awaitSuccess { onTangemPayBankWithdrawAmountScreen { headerTitle(recipient.displayName).assertIsDisplayed() } }
+    step("Assert 'Amount' screen for '${recipient.fullName}' is displayed") {
+        awaitSuccess { onTangemPayBankWithdrawAmountScreen { headerTitle(recipient.fullName).assertIsDisplayed() } }
     }
 }
 
@@ -135,6 +138,27 @@ fun BaseTestCase.enterTangemPayBankWithdrawAmount(amount: String) {
     step("Dismiss keyboard") {
         Espresso.closeSoftKeyboard()
         waitForIdle()
+    }
+}
+
+fun BaseTestCase.typeTangemPayBankWithdrawAmount(amount: String) {
+    step("Type amount '$amount'") {
+        awaitSuccess { onTangemPayBankWithdrawAmountScreen { amountInput.assertIsDisplayed() } }
+        onTangemPayBankWithdrawAmountScreen { amountInput.performTextInputInChunks(amount, chunkSize = 1) }
+    }
+    step("Dismiss keyboard") {
+        Espresso.closeSoftKeyboard()
+        waitForIdle()
+    }
+}
+
+fun BaseTestCase.clickTangemPayBankWithdrawMax() {
+    step("Dismiss keyboard") {
+        Espresso.closeSoftKeyboard()
+        waitForIdle()
+    }
+    step("Click on 'Max' button") {
+        onTangemPayBankWithdrawAmountScreen { maxButton.performClick() }
     }
 }
 
@@ -191,6 +215,35 @@ fun BaseTestCase.openTangemPayBankWithdrawRouteSelector() {
     }
     step("Assert 'Select route' sheet is displayed") {
         awaitSuccess { onTangemPayBankWithdrawAmountScreen { routeSheetTitle.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.refreshTangemPayBankWithdrawNetworkFeeUntilRoute(route: TangemPayBankRoute) {
+    step("Click on 'Refresh' button until '${route.title}' route with fee '${route.fee}' is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayBankWithdrawAmountScreen {
+                if (networkFeeRefreshButton.isDisplayedSafely()) {
+                    networkFeeRefreshButton.performClick()
+                    composeTestRule.waitForIdle()
+                }
+                routeRow(route).assertIsDisplayed()
+            }
+        }
+    }
+}
+
+fun BaseTestCase.closeTangemPayBankWithdrawRouteSelector() {
+    step("Close 'Select route' sheet") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            Espresso.closeSoftKeyboard()
+            onTangemPayBankWithdrawAmountScreen {
+                if (routeSheetTitle.isDisplayedSafely()) {
+                    device.uiDevice.pressBack()
+                    composeTestRule.waitForIdle()
+                }
+                routeSheetTitle.assertDoesNotExist()
+            }
+        }
     }
 }
 
@@ -420,6 +473,14 @@ fun BaseTestCase.assertTangemPayBankWithdrawFieldValid(
     }
 }
 
+fun countTangemPayBankOfframpOptionsRequests(): Int = getWireMockRequestCount("GET", BANK_OFFRAMP_OPTIONS_ENDPOINT)
+
+fun countTangemPayBankOfframpOptionsRequests(queryParam: String, queryValue: String): Int =
+    getWireMockRequestCountByQueryParam("GET", BANK_OFFRAMP_OPTIONS_ENDPOINT, queryParam, queryValue)
+
+fun countTangemPayBankOfframpOptionsRequests(queryParam: String): Int =
+    findWireMockRequestQueryParamValues("GET", BANK_OFFRAMP_OPTIONS_ENDPOINT, queryParam).size
+
 fun countTangemPayBankOfframpOrders(order: TangemPayBankOfframpOrder): Int =
     findWireMockRequestBodies(method = "POST", urlPath = TANGEM_PAY_ORDER_ENDPOINT)
         .count { body -> body.toTangemPayBankOfframpOrder() == order }
@@ -493,5 +554,6 @@ private fun String.toTangemPayBankOfframpOrder(): TangemPayBankOfframpOrder? = r
 
 private fun JSONObject.optStringOrNull(key: String): String? = if (has(key)) getString(key) else null
 
+private const val BANK_OFFRAMP_OPTIONS_ENDPOINT = "/bff-v2/v1/account/bank-offramp/options"
 private const val TANGEM_PAY_ORDER_ENDPOINT = "/bff-v2/v1/order"
 private const val BANK_OFFRAMP_ORDER_TYPE = "BANK_OFFRAMP_RAIN"

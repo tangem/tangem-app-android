@@ -39,7 +39,7 @@ class SendViaSwapQuotesTest : BaseTestCase() {
         val secondInputAmountInSatoshi = "200000"
         val recalculatedReceiveAmount = "0.0856"
         val bestRateProviderName = "SimpleSwap"
-        val exchangeQuotePath = "/v1/exchange-quote"
+        val exchangeQuotePath = "/v[12]/exchange-quote"
         val fromAmountQueryParam = "fromAmount"
         val bitcoinBalanceScenarioName = "bitcoin_utxo"
         val bitcoinBalanceScenarioState = "Balance"
@@ -250,7 +250,7 @@ class SendViaSwapQuotesTest : BaseTestCase() {
         val autoUpdatesCount = 2
         val minQuoteUpdateIntervalMillis = 9_500L
         val maxQuoteUpdateIntervalMillis = 15_000L
-        val exchangeQuotePath = "/v1/exchange-quote"
+        val exchangeQuotePath = "/v[12]/exchange-quote"
         val providerIdQueryParam = "providerId"
         val bitcoinBalanceScenarioName = "bitcoin_utxo"
         val bitcoinBalanceScenarioState = "Balance"
@@ -476,7 +476,7 @@ class SendViaSwapQuotesTest : BaseTestCase() {
         val changedSendAmount = "0.002"
         val changedSendAmountInSatoshi = "200000"
         val recalculatedReceiveAmount = "0.0856"
-        val exchangeQuotePath = "/v1/exchange-quote"
+        val exchangeQuotePath = "/v[12]/exchange-quote"
         val fromAmountQueryParam = "fromAmount"
         val bitcoinBalanceScenarioName = "bitcoin_utxo"
         val bitcoinBalanceScenarioState = "Balance"

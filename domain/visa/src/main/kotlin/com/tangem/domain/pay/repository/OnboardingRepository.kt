@@ -34,6 +34,11 @@ interface OnboardingRepository {
         productInstanceId: String,
     ): Either<VisaApiError, BankCredentials>
 
+    suspend fun getAllBankCredentials(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+    ): Either<VisaApiError, List<BankCredentials>>
+
     suspend fun getFees(
         userWalletId: UserWalletId,
         product: TangemPayProduct,

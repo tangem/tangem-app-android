@@ -79,6 +79,18 @@ object Dialogs {
         )
     }
 
+    // Placeholder copy until the multiple mobile wallets strings are added; callers keep using this function
+    fun hotWalletsLimitReachedDialog(onDismiss: () -> Unit = {}): DialogMessage {
+        return DialogMessage(
+            message = resourceReference(R.string.user_wallet_coming_soon_dialog_description),
+            firstAction = EventMessageAction(
+                title = resourceReference(R.string.common_got_it),
+                onClick = {},
+            ),
+            onDismissRequest = onDismiss,
+        )
+    }
+
     /**
      * Dialog warning that adding funds (buy / receive / swap) goes to a wallet with a backup problem.
      * The action is not blocked: "Continue" proceeds with it, "Contact support" abandons it for the mail flow.

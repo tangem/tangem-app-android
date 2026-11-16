@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import kotlinx.coroutines.CompletableDeferred
 import com.tangem.features.polymarket.impl.createPolymarketOutcome
 import com.tangem.features.polymarket.impl.createPolymarketMarket
@@ -202,7 +203,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             // Assert
             coVerify(exactly = 0) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.notifications).contains(PredictionNotificationUM.MarketClosed)
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -263,7 +264,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             // Assert
             coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -282,7 +283,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat((model.uiState.value.order as OrderSideUM.Buy).hasSufficientBalance).isFalse()
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -327,7 +328,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat((model.uiState.value.order as OrderSideUM.Buy).balance).isNull()
             assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("pUSD")
             assertThat(model.uiState.value.amountCaption).isNotInstanceOf(AmountCaptionUM.Shortfall::class.java)
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -353,7 +354,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                         expected = BigDecimal("23.8"),
                     ),
                 )
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -426,7 +427,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -446,7 +447,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -491,7 +492,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
             assertThat(model.uiState.value.amountCaption)
                 .isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("2.15")))
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -544,14 +545,14 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             model.onResume()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isTrue()
+            assertThat(model.uiState.value.isReadyToPlace).isTrue()
 
             // Act
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
 
             // Assert
             assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Unavailable::class.java)
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -569,9 +570,13 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
             // Assert
-            assertThat(model.uiState.value.amountCaption)
-                .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForFees))
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.amountCaption).isEqualTo(
+                AmountCaptionUM.Shortfall(
+                    error = PaymentAmountErrorUM.NotEnoughForFees,
+                    payout = BigDecimal("23.8"),
+                ),
+            )
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -1007,7 +1012,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 .isEqualTo(SharesProceedsUM.Content(expected = BigDecimal("11.01")))
             assertThat(state.quote).isInstanceOf(QuoteUM.Unavailable::class.java)
             assertThat(state.notifications).contains(PredictionNotificationUM.NoLiquidity)
-            assertThat(state.isPrimaryButtonEnabled).isFalse()
+            assertThat(state.isReadyToPlace).isFalse()
 
             model.onDestroy()
         }
@@ -1034,7 +1039,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat((state.order as OrderSideUM.Sell).proceeds)
                 .isEqualTo(SharesProceedsUM.Content(expected = BigDecimal("11.01")))
             assertThat(state.notifications).contains(PredictionNotificationUM.NoLiquidity)
-            assertThat(state.isPrimaryButtonEnabled).isFalse()
+            assertThat(state.isReadyToPlace).isFalse()
             coVerify(exactly = 2) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
@@ -1058,7 +1063,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 val state = model.uiState.value
                 assertThat(state.market).isEqualTo(initialMarket.copy(isPriceUnavailable = true))
                 assertThat((state.order as OrderSideUM.Sell).proceeds).isEqualTo(SharesProceedsUM.Unavailable)
-                assertThat(state.isPrimaryButtonEnabled).isFalse()
+                assertThat(state.isReadyToPlace).isFalse()
 
                 model.onDestroy()
             }
@@ -1088,9 +1093,9 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat(priced.market).isEqualTo(initialMarket.copy(outcomePrice = "61¢"))
             assertThat(failed.market).isEqualTo(priced.market.copy(isPriceUnavailable = true))
             assertThat((failed.order as OrderSideUM.Sell).proceeds).isEqualTo(SharesProceedsUM.Unavailable)
-            assertThat(failed.isPrimaryButtonEnabled).isFalse()
+            assertThat(failed.isReadyToPlace).isFalse()
             assertThat(restored.market).isEqualTo(priced.market.copy(outcomePrice = "64¢"))
-            assertThat(restored.isPrimaryButtonEnabled).isTrue()
+            assertThat(restored.isReadyToPlace).isTrue()
 
             model.onDestroy()
         }
@@ -1179,7 +1184,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat(order.proceeds).isEqualTo(
                 SharesProceedsUM.Content(expected = BigDecimal("11.01")),
             )
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isTrue()
+            assertThat(model.uiState.value.isReadyToPlace).isTrue()
 
             model.onDestroy()
         }
@@ -1198,7 +1203,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat((model.uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.NotHeld)
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
             assertThat(model.uiState.value.notifications)
                 .contains(PredictionNotificationUM.PositionUnavailable)
 
@@ -1285,7 +1290,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             // Assert
             assertThat(model.uiState.value.notifications)
                 .contains(PredictionNotificationUM.PositionUnavailable)
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
             coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
 
             model.onDestroy()

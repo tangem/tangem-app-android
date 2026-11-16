@@ -2,6 +2,8 @@ package com.tangem.domain.walletmanager
 
 import arrow.core.Either
 import com.tangem.blockchain.blockchains.solana.RentProvider
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSignedTransaction
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
@@ -310,6 +312,29 @@ interface WalletManagersFacade {
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
     ): Either<Throwable, BigDecimal?>
+
+    /**
+     * Signs a provider-built Solana transaction for the gasless [feePayer] (account index 0), without
+     * broadcasting. Returns `null` if the wallet manager is unavailable or is not Solana.
+     */
+    suspend fun signSolanaGaslessTransaction(
+        userWalletId: UserWalletId,
+        network: Network,
+        transactionData: TransactionData,
+        feePayer: String,
+        signer: TransactionSigner,
+    ): Result<SolanaGaslessSignedTransaction>?
+
+    /**
+     * Simulates a provider-built Solana transaction as if [feePayer] paid for it, without signing. Returns `null` if
+     * the wallet manager is unavailable or is not Solana.
+     */
+    suspend fun simulateSolanaGaslessTransaction(
+        userWalletId: UserWalletId,
+        network: Network,
+        transactionData: TransactionData,
+        feePayer: String,
+    ): Result<SolanaGaslessSimulation>?
 
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
 

@@ -27,6 +27,20 @@ internal class DefaultSocketChannelTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
+    fun `GIVEN failed initial subscription WHEN opening THEN no successful connection is reported`() = runTest {
+        // Arrange
+        val channel = createChannel(SocketSpec(url = URL, onOpen = { error("subscription failed") }))
+        collect(channel)
+
+        // Act
+        transport.connections.single().serverOpens()
+        runCurrent()
+
+        // Assert
+        assertThat(channel.state.value).isInstanceOf(SocketState.WaitingToRetry::class.java)
+    }
+
+    @Test
     fun `GIVEN no collectors WHEN channel created THEN no connection is opened`() = runTest {
         // Arrange
         val channel = createChannel(SocketSpec(url = URL))

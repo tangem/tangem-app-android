@@ -11,6 +11,8 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
+import com.tangem.domain.wallets.usecase.DiscardUnsavedHotWalletUseCase
+import com.tangem.domain.wallets.usecase.GetHotWalletAdditionRestrictionUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.hot.sdk.TangemHotSdk
@@ -43,12 +45,16 @@ internal class IntroductionMobileWalletCreatorCancellationTest {
     private val saveWalletUseCase: SaveWalletUseCase = mockk()
     private val syncWalletWithRemoteUseCase: SyncWalletWithRemoteUseCase = mockk()
     private val appCoroutineScope: AppCoroutineScope = mockk()
+    private val getHotWalletAdditionRestrictionUseCase: GetHotWalletAdditionRestrictionUseCase = mockk()
+    private val discardUnsavedHotWalletUseCase: DiscardUnsavedHotWalletUseCase = mockk(relaxed = true)
 
     private val createHotWalletUseCase = CreateHotWalletUseCase(
         tangemHotSdk = tangemHotSdk,
         hotUserWalletBuilderFactory = hotUserWalletBuilderFactory,
         saveWalletUseCase = saveWalletUseCase,
         syncWalletWithRemoteUseCase = syncWalletWithRemoteUseCase,
+        getHotWalletAdditionRestrictionUseCase = getHotWalletAdditionRestrictionUseCase,
+        discardUnsavedHotWalletUseCase = discardUnsavedHotWalletUseCase,
         appCoroutineScope = appCoroutineScope,
     )
 
@@ -70,7 +76,16 @@ internal class IntroductionMobileWalletCreatorCancellationTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(tangemHotSdk, appsFlyerRepository, analyticsEventHandler, router, messageSender, onFailed)
+        clearMocks(
+            tangemHotSdk,
+            getHotWalletAdditionRestrictionUseCase,
+            appsFlyerRepository,
+            analyticsEventHandler,
+            router,
+            messageSender,
+            onFailed,
+        )
+        coEvery { getHotWalletAdditionRestrictionUseCase() } returns null
         sentEvents.clear()
         every { analyticsEventHandler.send(capture(sentEvents)) } just runs
         coEvery { appsFlyerRepository.getConversionData() } returns null

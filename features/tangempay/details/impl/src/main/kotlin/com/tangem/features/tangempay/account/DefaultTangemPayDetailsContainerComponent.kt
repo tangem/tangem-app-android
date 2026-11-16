@@ -157,7 +157,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             context = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankTransferOnrampDetailsComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
-                bankCredentials = config.bankCredentials,
+                bankCredentials = listOf(config.bankCredentials),
                 feeSource = TangemPayBankTransferOnrampDetailsComponent.FeeSource.Catalogue(
                     product = TangemPayProduct.PAYMENT_ACCOUNT,
                 ),

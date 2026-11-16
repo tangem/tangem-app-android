@@ -11,6 +11,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.feeselector.component.FeeSelectorComponentParams
 import com.tangem.features.send.feeselector.component.extended.entity.FeeExtendedSelectorUM
+import com.tangem.features.send.feeselector.component.token.model.asSponsoredFee
 import com.tangem.features.send.feeselector.route.FeeSelectorRoute
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -59,12 +60,21 @@ class FeeExtendedSelectorModel @Inject constructor(
         val tokenConverter = SelectedTokenItemConverter(
             appCurrencyProvider = Provider { appCurrency },
             onTokenClick = { router.push(FeeSelectorRoute.ChooseToken) },
-            isTokenSelectionAvailable = state.feeExtraInfo.availableFeeCurrencies.orEmpty().size > 1,
+            isTokenSelectionAvailable = state.feeExtraInfo.availableFeeCurrencies.orEmpty().size > 1 ||
+                state.feeExtraInfo.sponsoredFee.isAvailable,
+            isSponsoredFeeAvailable = state.feeExtraInfo.sponsoredFee.isAvailable,
         )
+        val feeCurrencyStatus = state.feeExtraInfo.feeCryptoCurrencyStatus
+        val feeCurrencyToken = tokenConverter.convert(feeCurrencyStatus)
+        val token = if (state.feeExtraInfo.sponsoredFee.isSelected) {
+            feeCurrencyToken.asSponsoredFee(feeCurrencyStatus.currency.symbol)
+        } else {
+            feeCurrencyToken
+        }
 
         return FeeExtendedSelectorUM(
             parent = state,
-            token = tokenConverter.convert(state.feeExtraInfo.feeCryptoCurrencyStatus),
+            token = token,
             fee = state.selectedFeeItem,
             onFeeClick = { router.push(FeeSelectorRoute.ChooseSpeed) },
         )

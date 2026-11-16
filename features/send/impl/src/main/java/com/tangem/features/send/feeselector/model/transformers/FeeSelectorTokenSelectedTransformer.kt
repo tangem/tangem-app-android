@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 class FeeSelectorTokenSelectedTransformer(
     private val selectedToken: CryptoCurrencyStatus,
+    private val isSponsoredFee: Boolean = false,
 ) : Transformer<FeeSelectorUM> {
 
     override fun transform(prevState: FeeSelectorUM): FeeSelectorUM {
@@ -20,6 +21,10 @@ class FeeSelectorTokenSelectedTransformer(
                     feeCryptoCurrencyStatus = selectedToken,
                     isNotEnoughFunds = false,
                     isFeeTokenSelectedByUser = true,
+                    sponsoredFee = prevState.feeExtraInfo.sponsoredFee.copy(
+                        isSelected = isSponsoredFee,
+                        isSmartGasPickedByUser = isSponsoredFee,
+                    ),
                 ),
             )
         } else {

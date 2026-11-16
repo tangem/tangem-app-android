@@ -97,8 +97,8 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   CTF or neg-risk CTF exchange, domain `"2"`; V2 → ExchangeV3, domain `"3"`; unknown → never signed. Any
   other `exchange` / `signingDomainVersion` is refused while the draft is built — before the card is asked —
   and the draft carries the table's constants, never the quoted strings. The signed order is re-validated
-  against the draft, the domain, the deposit wallet, the market and the quote age (60 s) before it is sent,
-  and the repository checks the signature tail against the domain once more.
+  against the draft, the domain, the deposit wallet and the market before it is sent (quote age is checked
+  at the tap, in the feature), and the repository checks the signature tail against the domain once more.
 - An order on `PredictionOrderSigningRoute.Session` keeps `maker = signer = deposit wallet`: the session key signs
   the same ERC-7739 digest, and the wrapped signature goes into `PolymarketSessionKeyEnvelope`. Validation and the
   repository unwrap it and refuse an envelope the placing identity's key did not make — or any envelope on the
@@ -110,13 +110,28 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   `PolymarketSessionKeyTradingStore`; the readiness is keyed by `validUntil`, so a renewal needs a new check. A
   CLOB `401` on a session order counts as a refusal, and so does any other `4xx` whose `error` message names the
   signature, the signer, an authorization or the API key (`ClobSignerRefusalParser`, data layer — the CLOB sends
-  no error code); a bare `403`, a geoblock for one, is a normal failure. A session key that cannot sign the order
-  or an order that cannot be sent (`NotSent`) counts as a refusal too, as on iOS (a signing failure is not
-  reconciled); a cancelled signing does not. On a refusal the
-  key is marked refused and its stored readiness dropped before the same order is signed with the owner key, so it
-  stays out of trading until marked ready again, restarts included; the wallet is reconciled in the app scope,
-  after the owner result is returned. Market, liquidity and balance errors are final. The owner route maps those
+  no error code); a bare `403`, a geoblock for one, is a normal failure. A session key that cannot sign the order or
+  an order that cannot be sent (`NotSent`) is a refusal too, as on iOS; a cancelled signing is not. A refused key is
+  marked refused and loses its stored readiness before the order is re-signed with the owner key; it stays out of
+  trading until a new authorization (enable, renew, replace) or an app restart — a reconciliation that finds it listed
+  does not lift it. Every refusal refreshes `PolymarketSessionKeyStateService`, the only place that reconciles the
+  wallet, alongside the owner retry. Market, liquidity and balance errors are final. The owner route maps those
   responses as before.
+- Every relayer batch takes the next deposit-wallet nonce, so claim, withdrawal confirm/resend and the session key
+  lifecycle (`ManagePolymarketSessionKeyInteractor`) share `PolymarketDepositWalletLock` from signing until the
+  relayer accepted the batch. On top of that, one lifecycle operation (enable, renew, replace, revoke)
+  runs per wallet: a second one ends at once in `OperationInProgress`, nothing signed; toggling is not guarded, as
+  on iOS. Progress is emitted
+  outside the lock. Renewal and replacement release the lock while the revocation settles and take it again to
+  send the pre-signed authorization; a claim in between takes that nonce. Nothing is signed twice without the
+  user: a batch refused for its signature (`NONCE_ALREADY_USED`, `INVALID_DEADLINE`, `INVALID_VALID_UNTIL`,
+  `RELAYER_REJECTED`) or a pre-signed authorization expired before it is sent ends in `StaleSignature`, and the
+  user starts the operation again; only an unanswered or `502` send is repeated, with the same body. The one
+  exception: the authorization sent after a revocation is resent up to 5 times, 3 s apart, on `RELAYER_REJECTED`
+  — the BFF reports the key `REVOKED` while the revocation is still in flight and rejects the next batch with
+  "wallet has in-flight action" (seen on prod 26.10.2026; iOS does not resend).
+  A withdrawal reads its nonce in `prepare`, outside the lock: a lifecycle operation in between costs it a
+  `RelayerRejected`.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 - A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
   them against the position: one adapter `redeemPositions` call on the root collection of the condition for
@@ -139,10 +154,17 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 
 - **Funding window** (5 s polling instead of 30 s, up to 90 s like iOS) opens only on a send this app made; an
   external transfer's timing is unknown.
-- **Positions value** is kept apart from the account status: it needs only the deposit-wallet address
-  (public data API), and a failed read must not touch the balance. `PredictionTotalBalance.of` is the one
-  place collateral and positions are added. Runtime only — persist it when the wallet total starts counting
-  it.
+- **Positions value** is read by the status fetcher in parallel with the collateral, as on iOS, and kept in
+  `Active.positions`, so it is persisted with the status and restored as `CACHE`. A failed read flags a cached
+  value `ONLY_CACHE` or, with nothing cached, records `Unavailable`; it never touches the collateral. A failed
+  collateral read (other than a missing or rejected key) keeps the cached collateral flagged `ONLY_CACHE` but
+  still commits the positions answer to the cached `Active`: the CLOB throttles, the data API is another host, so
+  neither failure hides the other's answer — a deliberate deviation from iOS, which drops it. The funding-window
+  poll skips the read (`shouldRefreshPositions = false`). `PredictionTotalBalance.of` is the one place collateral
+  and positions are added.
+  The wallet total and the wallet-screen row count collateral plus positions. Never read → the collateral
+  alone, flagged `CACHE`; failed with nothing cached → the collateral alone in the total, flagged `ONLY_CACHE`,
+  and a dash in the row — never `Loading` or `Failed` (invariant 7). iOS shows a dash in the total too.
 - **Withdraw destinations** are filtered to USDC · Polygon (phase 1, owner decision 15.09.2026).
 - **Withdraw has no minimum** by design (guide §7.1); `minCheckoutUsd` is deposit-only.
 - **Withdrawal tracker** is started from the swap withdraw flow only, not on cold start (known gap).

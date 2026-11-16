@@ -79,6 +79,20 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
     }
 
     @Test
+    fun `GIVEN non-hex wallet id WHEN handle deeplink THEN pop to Wallet without resolving wallet`() = runTest {
+        // Arrange
+        val queryParams = mapOf(WALLET_ID_KEY to "not-a-hex-id")
+
+        // Act
+        createHandler(scope = this, queryParams)
+        advanceUntilIdle()
+
+        // Assert
+        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        coVerify(exactly = 0) { resolveAndSelectUserWalletUseCase(any()) }
+    }
+
+    @Test
     fun `GIVEN no crypto by wallet WHEN handle deeplink THEN get error`() = runTest {
         val queryParams = mapOf(
             WALLET_ID_KEY to "011",

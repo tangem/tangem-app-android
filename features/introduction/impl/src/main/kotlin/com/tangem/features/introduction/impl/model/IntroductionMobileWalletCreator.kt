@@ -10,6 +10,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
+import com.tangem.domain.wallets.models.CreateHotWalletError
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
@@ -38,13 +41,24 @@ internal class IntroductionMobileWalletCreator @Inject constructor(
         analyticsEventHandler.send(OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet())
         createHotWalletUseCase(auth = HotAuth.NoAuth, mnemonicType = MnemonicType.Words12).fold(
             ifLeft = { error ->
-                TangemLogger.e("Failed to create mobile wallet from Introduction", error)
-                messageSender.send(
-                    DialogMessage(
+                val cause = (error as? CreateHotWalletError.Failed)?.cause
+                TangemLogger.e("Failed to create mobile wallet from Introduction: $error", cause)
+                val message = when (error) {
+                    CreateHotWalletError.LimitReached -> {
+                        analyticsEventHandler.send(
+                            NoticeMobileWalletLimit(
+                                type = NoticeMobileWalletLimit.Type.Create,
+                                limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                            ),
+                        )
+                        Dialogs.hotWalletsLimitReachedDialog()
+                    }
+                    is CreateHotWalletError.Failed -> DialogMessage(
                         title = resourceReference(CoreResR.string.common_something_went_wrong),
                         message = resourceReference(CoreResR.string.common_unknown_error),
-                    ),
-                )
+                    )
+                }
+                messageSender.send(message)
                 onFailed()
             },
             ifRight = {

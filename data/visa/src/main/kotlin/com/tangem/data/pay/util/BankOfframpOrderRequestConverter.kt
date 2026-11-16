@@ -3,6 +3,7 @@ package com.tangem.data.pay.util
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
@@ -10,20 +11,23 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.pay.model.bankofframp.ClabeValidator
 import com.tangem.domain.pay.model.bankofframp.PostalAddress
 import com.tangem.spend.datasource.pay.models.request.BankOfframpPlaceOrderRequest
 import com.tangem.utils.converter.Converter
 
 /**
  * Builds the create-order body. A saved recipient is sent by id alone; a new one is described in full, and the
- * backend requires every field of that description while the domain model allows a recipient to be partial — so
- * anything missing ends the call as [BankOfframpError.Validation] instead of reaching the wire half-filled.
+ * backend requires every field its rail asks for while the domain model allows a recipient to be partial — so
+ * anything missing, or a CLABE that fails its check digit, ends the call as [BankOfframpError.Validation] instead of
+ * reaching the wire half-filled.
  */
 internal object BankOfframpOrderRequestConverter :
     Converter<BankOfframpOrderRequest, Either<BankOfframpError, BankOfframpPlaceOrderRequest>> {
 
     private const val INDIVIDUAL_TYPE = "INDIVIDUAL"
     private const val BUSINESS_TYPE = "BUSINESS"
+    private const val SPEI_CURRENCY = "MXN"
 
     override fun convert(value: BankOfframpOrderRequest): Either<BankOfframpError, BankOfframpPlaceOrderRequest> =
         either {
@@ -55,18 +59,37 @@ internal object BankOfframpOrderRequestConverter :
         rail: BankRail,
     ): Either<BankOfframpError, BankOfframpPlaceOrderRequest.BankAccount> = either {
         BankOfframpPlaceOrderRequest.BankAccount(
-            details = BankOfframpPlaceOrderRequest.Details(
-                currency = required(details.currency),
-                rail = rail.name,
-                isThirdParty = details.isThirdParty,
-                beneficiary = convertBeneficiary(details.beneficiary),
-                beneficiaryAddress = convertAddress(required(details.beneficiaryAddress)),
-                bankName = required(details.bankName),
-                bankAddress = convertAddress(required(details.bankAddress)),
-                accountNumber = details.accountNumber,
-                routingNumber = required(details.routingNumber),
-                bankAccountType = required(details.accountType).name,
-            ),
+            details = when (rail) {
+                BankRail.ACH, BankRail.WIRE -> convertUsDetails(details = details, rail = rail)
+                BankRail.SPEI -> convertSpeiDetails(details)
+            },
+        )
+    }
+
+    private fun Raise<BankOfframpError>.convertUsDetails(details: BankAccountDetails, rail: BankRail) =
+        BankOfframpPlaceOrderRequest.Details(
+            currency = required(details.currency),
+            rail = rail.name,
+            isThirdParty = details.isThirdParty,
+            beneficiary = convertBeneficiary(details.beneficiary),
+            beneficiaryAddress = convertAddress(required(details.beneficiaryAddress)),
+            bankName = required(details.bankName),
+            bankAddress = convertAddress(required(details.bankAddress)),
+            accountNumber = details.accountNumber,
+            routingNumber = required(details.routingNumber),
+            bankAccountType = required(details.accountType).name,
+        )
+
+    private fun Raise<BankOfframpError>.convertSpeiDetails(
+        details: BankAccountDetails,
+    ): BankOfframpPlaceOrderRequest.Details {
+        ensure(ClabeValidator.isValid(details.accountNumber)) { BankOfframpError.Validation }
+        return BankOfframpPlaceOrderRequest.Details(
+            currency = SPEI_CURRENCY,
+            rail = BankRail.SPEI.name,
+            isThirdParty = details.isThirdParty,
+            beneficiary = convertBeneficiary(details.beneficiary),
+            accountNumber = details.accountNumber,
         )
     }
 

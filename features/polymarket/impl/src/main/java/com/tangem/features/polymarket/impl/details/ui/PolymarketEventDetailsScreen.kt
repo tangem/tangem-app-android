@@ -81,6 +81,7 @@ internal fun PolymarketEventDetailsScreen(
     state: PolymarketEventDetailsUM,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    chart: (@Composable () -> Unit)? = null,
 ) {
     val listState = rememberLazyListState()
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -115,6 +116,7 @@ internal fun PolymarketEventDetailsScreen(
                 listState = listState,
                 contentPadding = contentPadding,
                 statusBarPadding = statusBarPadding,
+                chart = chart,
             )
             is PolymarketEventDetailsUM.Error -> ErrorState(
                 modifier = Modifier.fillMaxSize(),
@@ -224,6 +226,7 @@ private fun ContentState(
     contentPadding: PaddingValues,
     statusBarPadding: Dp,
     modifier: Modifier = Modifier,
+    chart: (@Composable () -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -236,6 +239,10 @@ private fun ContentState(
     ) {
         item(key = KEY_HEADER) {
             EventHeader(state = state)
+        }
+
+        if (chart != null) {
+            item(key = "chart") { chart() }
         }
 
         if (state.subcategories.isNotEmpty()) {

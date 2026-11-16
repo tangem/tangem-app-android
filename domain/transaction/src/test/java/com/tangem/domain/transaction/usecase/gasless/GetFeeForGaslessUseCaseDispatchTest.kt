@@ -21,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import io.mockk.Called
@@ -340,5 +341,41 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
             assertThat(actual).isEqualTo(
                 TransactionFeeExtended(transactionFee = nativeFee, feeTokenId = coin.id, nativeFee = nativeFee).right(),
             )
+        }
+
+    @Test
+    fun `GIVEN EVM gasless network and integrated approval WHEN invoke THEN approval is passed to the auto resolver`() =
+        runTest {
+            // Arrange
+            val approval = GaslessApproval(spenderAddress = "0xspender", approvalTransaction = mockk())
+            val expected = TransactionFeeExtended(
+                transactionFee = nativeFee,
+                feeTokenId = coin.id,
+                nativeFee = nativeFee,
+            )
+            every { currencyChecksRepository.isNetworkSupportedForGaslessTx(network) } returns true
+            coEvery {
+                evmGaslessFeeResolver.resolveWithAutoFeeToken(
+                    userWallet = userWallet,
+                    network = network,
+                    transactionData = transactionData,
+                    nativeCurrencyStatus = nativeStatus,
+                    accountStatusList = accountStatusList,
+                    nativeTransactionData = transactionData,
+                    sentAmount = null,
+                    approval = approval,
+                )
+            } returns expected.right()
+
+            // Act
+            val actual = sut(
+                userWallet = userWallet,
+                network = network,
+                transactionData = transactionData,
+                approval = approval,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(expected.right())
         }
 }

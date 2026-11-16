@@ -30,6 +30,11 @@ data class UserWalletId(
     constructor(value: ByteArray?) : this(stringValue = value?.toHexString().orEmpty())
 
     override fun toString() = "UserWalletId(${stringValue.take(n = 3)}...${stringValue.takeLast(n = 3)})"
+
+    companion object {
+
+        fun fromHexOrNull(raw: String): UserWalletId? = runCatching { UserWalletId(raw) }.getOrNull()
+    }
 }
 
 /** SHA-256 of [UserWalletId.value] as uppercase hex — the user id Amplitude Experiment targets on both platforms. */

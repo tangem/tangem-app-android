@@ -6,7 +6,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.AppsFlyerOnlyEvent
 
-class AppsFlyerEventFilter : AnalyticsEventFilter {
+internal class AppsFlyerEventFilter : AnalyticsEventFilter {
 
     override fun canBeAppliedTo(event: AnalyticsEvent): Boolean =
         event is AppsFlyerOnlyEvent || event is AppsFlyerIncludedEvent

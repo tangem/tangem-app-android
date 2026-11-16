@@ -1,8 +1,10 @@
 package com.tangem.feature.swap.utils
 
+import androidx.annotation.StringRes
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.express.models.ExpressError
@@ -10,7 +12,12 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.presentation.R
 
-internal fun getExpressErrorMessage(expressError: ExpressError, providerName: String? = null): TextReference {
+internal fun getExpressErrorMessage(
+    expressError: ExpressError,
+    isSwapAttemptAlert: Boolean = false,
+    providerName: String? = null,
+    amountCurrency: CryptoCurrency? = null,
+): TextReference {
     if (providerName != null && expressError is ExpressError.ExchangeProviderAddressBannedByAmlError) {
         return resourceReference(
             id = R.string.express_error_transaction_cannot_be_created,
@@ -18,6 +25,16 @@ internal fun getExpressErrorMessage(expressError: ExpressError, providerName: St
         )
     }
     return when (expressError) {
+        is ExpressError.AmountError.TooSmallError -> getAmountLimitMessage(
+            id = R.string.warning_express_too_minimal_amount_title,
+            expressError = expressError,
+            amountCurrency = amountCurrency,
+        )
+        is ExpressError.AmountError.TooBigError -> getAmountLimitMessage(
+            id = R.string.warning_express_too_maximum_amount_title,
+            expressError = expressError,
+            amountCurrency = amountCurrency,
+        )
         is ExpressError.InternalError,
         is ExpressError.Forbidden,
         -> resourceReference(
@@ -25,7 +42,11 @@ internal fun getExpressErrorMessage(expressError: ExpressError, providerName: St
             formatArgs = wrappedList(expressError.code),
         )
         is ExpressError.ExchangeNotPossibleError -> resourceReference(
-            id = R.string.warning_express_pair_unavailable_message_v2,
+            id = if (isSwapAttemptAlert) {
+                R.string.warning_express_pair_unavailable_message_v2
+            } else {
+                R.string.warning_express_pair_unavailable_message
+            },
             formatArgs = wrappedList(expressError.code),
         )
         is ExpressError.UnknownError -> resourceReference(R.string.common_unknown_error)
@@ -44,8 +65,28 @@ internal fun getExpressErrorMessage(expressError: ExpressError, providerName: St
                 expressError.fromProviderAmount.format { simple(decimals = expressError.decimals) },
             ),
         )
-        else -> resourceReference(R.string.express_error_code, wrappedList(expressError.code.toString()))
+        else -> getGeneralErrorMessage(expressError)
     }
+}
+
+private fun getAmountLimitMessage(
+    @StringRes id: Int,
+    expressError: ExpressError.AmountError,
+    amountCurrency: CryptoCurrency?,
+): TextReference {
+    if (amountCurrency == null) return getGeneralErrorMessage(expressError)
+    return resourceReference(
+        id = id,
+        formatArgs = wrappedList(
+            expressError.amount.format {
+                crypto(symbol = amountCurrency.symbol, decimals = amountCurrency.decimals)
+            },
+        ),
+    )
+}
+
+private fun getGeneralErrorMessage(expressError: ExpressError): TextReference {
+    return resourceReference(R.string.express_error_code, wrappedList(expressError.code.toString()))
 }
 
 internal fun getExpressErrorTitle(expressError: ExpressError): TextReference {
@@ -54,7 +95,10 @@ internal fun getExpressErrorTitle(expressError: ExpressError): TextReference {
             id = R.string.warning_express_pair_unavailable_title,
             formatArgs = wrappedList(expressError.code),
         )
-        is ExpressError.UnknownError -> resourceReference(R.string.common_error)
+        is ExpressError.UnknownError,
+        is ExpressError.AmountError.TooSmallError,
+        is ExpressError.AmountError.TooBigError,
+        -> resourceReference(R.string.common_error)
         else -> resourceReference(R.string.warning_express_refresh_required_title)
     }
 }

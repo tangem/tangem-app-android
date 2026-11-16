@@ -43,7 +43,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * This overload only draws a given [state]; to reorder a `LazyColumn` use the `LazyItemScope`
  * overload with [rememberTangemDraggableState].
  *
- * Version: 1.0.0
+ * Version: 1.0.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=11482-705)
  *
@@ -114,7 +114,7 @@ fun TangemDraggable(state: TangemDraggable.State, modifier: Modifier = Modifier,
  * Design-system v2 drag-to-reorder item of a vertical `LazyColumn`: [TangemDraggable] wired to a
  * [TangemDraggableState].
  *
- * Version: 1.0.0
+ * Version: 1.0.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=11482-705)
  *
@@ -195,7 +195,7 @@ fun LazyItemScope.TangemDraggable(
 /** Public API surface of [TangemDraggable]. */
 object TangemDraggable {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 0, patch = 1)
 
     /** Visual state of [TangemDraggable]. */
     enum class State {

@@ -7,15 +7,24 @@ import kotlinx.collections.immutable.ImmutableList
 @Immutable
 internal sealed interface PolymarketPositionsPreviewUM {
 
+    val hasFinished: Boolean
+
     val isVisible: Boolean
         get() = this !is Content || positions.isNotEmpty() || onRetry != null
 
-    data object Loading : PolymarketPositionsPreviewUM
+    data object Loading : PolymarketPositionsPreviewUM {
+        override val hasFinished: Boolean = false
+    }
 
     data class Content(
         val positions: ImmutableList<PolymarketPositionUM>,
+        val hasMoreActive: Boolean = false,
+        override val hasFinished: Boolean = false,
         val onRetry: (() -> Unit)? = null,
     ) : PolymarketPositionsPreviewUM
 
-    data class Error(val onRetry: () -> Unit) : PolymarketPositionsPreviewUM
+    data class Error(
+        val onRetry: () -> Unit,
+        override val hasFinished: Boolean = false,
+    ) : PolymarketPositionsPreviewUM
 }

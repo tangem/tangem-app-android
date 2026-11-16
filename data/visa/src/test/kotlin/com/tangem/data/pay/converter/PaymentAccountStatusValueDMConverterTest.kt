@@ -161,6 +161,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                 virtualAccount = null,
                 isBankOfframpAvailable = null,
                 tariffPlan = null,
+                isPaymentAccountIssuing = false,
             )
 
             // WHEN
@@ -418,6 +419,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
         virtualAccount = null,
         isBankOfframpAvailable = null,
         tariffPlan = null,
+        isPaymentAccountIssuing = false,
         networks = emptyList(),
     )
 }

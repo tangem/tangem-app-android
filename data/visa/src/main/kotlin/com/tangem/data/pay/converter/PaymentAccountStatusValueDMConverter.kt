@@ -134,6 +134,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 virtualAccount = null,
                 isBankOfframpAvailable = null,
                 tariffPlan = null,
+                isPaymentAccountIssuing = false,
             )
             is PaymentAccountStatusValueDM.KycRequired -> PaymentAccountStatusValue.KycRequired(
                 source = StatusSource.CACHE,

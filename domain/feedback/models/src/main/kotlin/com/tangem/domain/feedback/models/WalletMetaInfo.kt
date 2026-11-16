@@ -16,7 +16,6 @@ data class WalletMetaInfo(
     val signedHashesList: List<SignedHashes>? = null,
     val isImported: Boolean? = null,
     val isStart2Coin: Boolean? = null,
-    val isVisa: Boolean? = null,
 ) {
 
     @Serializable

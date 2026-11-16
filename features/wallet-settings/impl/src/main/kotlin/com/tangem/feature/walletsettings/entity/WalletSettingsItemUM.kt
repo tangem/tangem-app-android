@@ -32,7 +32,6 @@ internal sealed class WalletSettingsItemUM {
         val isEnabled: Boolean,
         val imageState: ImageState,
         val additionalBlock: BlockUM? = null,
-        val isSocialLogin: Boolean = false,
         val onClick: () -> Unit,
     ) : WalletSettingsItemUM()
 
@@ -65,6 +64,12 @@ internal sealed class WalletSettingsAccountsUM : WalletSettingsItemUM() {
     }
 
     data class JointAccount(
+        val state: UserWalletItemUM,
+    ) : WalletSettingsAccountsUM() {
+        override val id: String = state.id
+    }
+
+    data class CollectiblesAccount(
         val state: UserWalletItemUM,
     ) : WalletSettingsAccountsUM() {
         override val id: String = state.id

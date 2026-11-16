@@ -3,7 +3,6 @@ package com.tangem.domain.card.common.visa
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.UnmarshalHelper
-import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.toDecompressedPublicKey
@@ -21,8 +20,6 @@ object VisaUtilities {
 
     val visaBlockchain = Blockchain.Polygon
 
-    val visaDefaultDerivationPath
-        get() = visaBlockchain.derivationPath(DerivationStyle.V3)
     val customDerivationPath = DerivationPath("m/44'/60'/999999'/0/0")
     val moneyAccountDerivationPath = MONEY_ACCOUNT_DERIVATION_PATH
     val curve = EllipticCurve.Secp256k1

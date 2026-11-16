@@ -12,8 +12,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.domain.models.account.PredictionAccountStatusValue
-import com.tangem.domain.polymarket.model.PredictionPositionsValue
-import com.tangem.domain.polymarket.model.PredictionTotalBalance
+import com.tangem.domain.models.account.PredictionTotalBalance
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.common.funding.RequisitesState
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
@@ -32,7 +31,7 @@ internal class PredictionBalanceUMConverter(
         val status = value.status
         val active = status as? PredictionAccountStatusValue.Active
         val isLoading = status is PredictionAccountStatusValue.Loading
-        val totalBalance = active?.let { PredictionTotalBalance.of(status = it, positions = value.positions) }?.amount
+        val totalBalance = active?.let { PredictionTotalBalance.of(status = it, positions = it.positions) }?.amount
         val mode = if (totalBalance == null) PredictionBalanceMode.AVAILABLE else value.mode
 
         return PredictionBalanceUM(
@@ -101,7 +100,6 @@ internal class PredictionBalanceUMConverter(
 
     data class Input(
         val status: PredictionAccountStatusValue,
-        val positions: PredictionPositionsValue,
         val requisites: RequisitesState,
         val regionStatus: PredictionRegionStatus,
         val mode: PredictionBalanceMode,

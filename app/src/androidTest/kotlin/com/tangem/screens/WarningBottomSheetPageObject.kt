@@ -52,6 +52,15 @@ class WarningBottomSheetPageObject(private val semanticsProvider: SemanticsNodeI
         hasText(getResourceString(R.string.wc_alert_connect_anyway))
     }
 
+    val forgetWalletButton: KNode = child {
+        hasTestTag(WarningBottomSheetTestTags.BUTTON_SECONDARY)
+        hasAnyDescendant(
+            withText(getResourceString(CoreResR.string.hw_remove_wallet_notification_action_forget)) or
+                withText(getResourceString(CoreResR.string.hw_remove_wallet_notification_action_forget_anyway)),
+        )
+        useUnmergedTree = true
+    }
+
     val finishWalletActivationTitle: KNode = title(getResourceString(CoreResR.string.hw_activation_need_title))
 
     val finishWalletActivationLaterButton: KNode = child {

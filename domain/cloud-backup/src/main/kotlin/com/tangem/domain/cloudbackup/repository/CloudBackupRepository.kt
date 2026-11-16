@@ -87,4 +87,13 @@ interface CloudBackupRepository {
      * restart Google would pick the account itself and look for the backup in the wrong one.
      */
     suspend fun <T> withAccountOf(walletId: String, block: suspend () -> T): T
+
+    /**
+     * Whether the account [walletId] was backed up to is known. A backup made before the account was remembered
+     * has none, so its file can be in any of the user's accounts.
+     */
+    suspend fun hasAccountOf(walletId: String): Boolean
+
+    /** Runs [block] in [accountName], whatever account is pinned for the screens */
+    suspend fun <T> withAccount(accountName: String, block: suspend () -> T): T
 }

@@ -19,6 +19,8 @@ dependencies {
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.moshi)
     // endregion
 
     // region Analytics SDKs
@@ -31,6 +33,11 @@ dependencies {
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
+    runtimeOnly(deps.firebase.crashlytics.ndk)
+    implementation(deps.firebase.perf) {
+        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
     implementation(platform(deps.otel.bom))
     implementation(deps.otel.api)
     implementation(deps.otel.sdk.common)
@@ -50,10 +57,12 @@ dependencies {
     // region Tangem
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+    implementation(projects.libs.tangemSdkApi)
     // endregion
 
     // region Core modules
     api(projects.core.analytics)
+    api(projects.core.analytics.models)
     // Core shouldn't depend on core, but with utils, logging and preferences storage it's necessary.
     implementation(projects.core.local)
     implementation(projects.core.utils)
@@ -66,6 +75,8 @@ dependencies {
     // endregion
 
     // region Tests
+    testImplementation(deps.androidx.datastore.core)
     testImplementation(projects.test.core)
+    testRuntimeOnly(deps.orgJson)
     // endregion
 }

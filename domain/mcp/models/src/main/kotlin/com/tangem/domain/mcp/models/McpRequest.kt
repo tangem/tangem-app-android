@@ -1,6 +1,10 @@
 package com.tangem.domain.mcp.models
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+
+// Plain `type` would clash with the polymorphic class discriminator of the JSON that saves the state
+private const val INTENT_TYPE_NAME = "intentType"
 
 /** Something an MCP agent asks the wallet to do, as picked up from one of the entry points. */
 @Serializable
@@ -19,13 +23,13 @@ sealed interface McpRequest {
         sealed interface Source {
 
             @Serializable
-            data class Express(val type: Type) : Source {
+            data class Express(@SerialName(INTENT_TYPE_NAME) val type: Type) : Source {
 
                 enum class Type { EXCHANGE }
             }
 
             @Serializable
-            data class Transaction(val type: Type) : Source {
+            data class Transaction(@SerialName(INTENT_TYPE_NAME) val type: Type) : Source {
 
                 enum class Type { SEND }
             }

@@ -2,6 +2,7 @@ package com.tangem.data.account.cleaner
 
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.LegacyUserTokensResponseStore
+import com.tangem.data.account.store.WalletAccountsSyncStatusStore
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.Runs
@@ -21,19 +22,22 @@ internal class AccountsUserWalletDataCleanerTest {
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory = mockk()
     private val legacyUserTokensResponseStore: LegacyUserTokensResponseStore = mockk()
     private val eTagsStore: ETagsStore = mockk()
+    private val syncStatusStore: WalletAccountsSyncStatusStore = mockk()
 
     private val cleaner = AccountsUserWalletDataCleaner(
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         legacyUserTokensResponseStore = legacyUserTokensResponseStore,
         eTagsStore = eTagsStore,
+        syncStatusStore = syncStatusStore,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(accountsResponseStoreFactory, legacyUserTokensResponseStore, eTagsStore)
+        clearMocks(accountsResponseStoreFactory, legacyUserTokensResponseStore, eTagsStore, syncStatusStore)
         coEvery { accountsResponseStoreFactory.clear(any<List<UserWalletId>>()) } just Runs
         coEvery { legacyUserTokensResponseStore.clear(any<List<UserWalletId>>()) } just Runs
         coEvery { eTagsStore.clear(any<List<UserWalletId>>()) } just Runs
+        coEvery { syncStatusStore.clear(any()) } just Runs
     }
 
     @Test
@@ -48,6 +52,7 @@ internal class AccountsUserWalletDataCleanerTest {
         coVerify(exactly = 1) { accountsResponseStoreFactory.clear(ids) }
         coVerify(exactly = 1) { legacyUserTokensResponseStore.clear(ids) }
         coVerify(exactly = 1) { eTagsStore.clear(ids) }
+        coVerify(exactly = 1) { syncStatusStore.clear(ids) }
     }
 
     private companion object {

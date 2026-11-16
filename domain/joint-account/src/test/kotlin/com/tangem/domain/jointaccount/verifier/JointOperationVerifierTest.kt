@@ -35,7 +35,7 @@ internal class JointOperationVerifierTest {
         every { decode(any()) } returns DISPLAYED
     }
     private val safeAddressCalculator: SafeAddressCalculator = mockk {
-        every { compute(owners = any(), threshold = any(), singleton = any()) } returns SAFE_ADDRESS.right()
+        every { compute(owners = any(), threshold = any()) } returns SAFE_ADDRESS.right()
     }
 
     private val signatureRecoverer: JointSignatureRecoverer = mockk {

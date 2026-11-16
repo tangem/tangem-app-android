@@ -210,6 +210,7 @@ sealed class AnalyticsParam {
     sealed class FeeAssetType(val value: String) {
         data object Coin : FeeAssetType("Coin")
         data object Token : FeeAssetType("Token")
+        data object Sponsored : FeeAssetType("Sponsored")
     }
 
     sealed class AccountType(val value: String) {
@@ -299,7 +300,6 @@ sealed class AnalyticsParam {
         Start2Coin("Start2Coin"),
         Wallet2("Wallet 2.0"),
         Ring("Ring"),
-        Visa("VISA"),
         MobileWallet("Mobile Wallet"),
     }
 
@@ -354,6 +354,7 @@ sealed class AnalyticsParam {
         const val STATE = "State"
         const val BATCH = "Batch"
         const val TYPE = "Type"
+        const val LIMIT = "Limit"
         const val FIELD = "Field"
         const val SECTION = "Section"
         const val SHTORKA_STATE = "Shtorka State"

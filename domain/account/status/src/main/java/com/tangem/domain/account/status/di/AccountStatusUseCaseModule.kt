@@ -9,9 +9,12 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
+import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.ExpressServiceFetcher
+import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.utils.NetworksCleaner
@@ -23,6 +26,7 @@ import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.tokens.BalanceFetchingOperations
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -73,11 +77,13 @@ internal object AccountStatusUseCaseModule {
     fun provideIsAccountsModeEnabledUseCase(
         multiAccountListSupplier: MultiAccountListSupplier,
         paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+        collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
         appCoroutineScope: AppCoroutineScope,
     ): IsAccountsModeEnabledUseCase {
         return IsAccountsModeEnabledUseCase(
             multiAccountListSupplier = multiAccountListSupplier,
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+            collectiblesAccountStatusSupplier = collectiblesAccountStatusSupplier,
             appCoroutineScope = appCoroutineScope,
         )
     }
@@ -159,12 +165,16 @@ internal object AccountStatusUseCaseModule {
     fun provideBalanceFetchingOperations(
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
+        contributionFetchers: Set<@JvmSuppressWildcards BalanceContributionFetcher>,
+        tokensFeatureToggles: TokensFeatureToggles,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
     ): BalanceFetchingOperations {
         return BalanceFetchingOperations(
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
+            contributionFetchers = contributionFetchers,
+            tokensFeatureToggles = tokensFeatureToggles,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
         )
@@ -217,12 +227,16 @@ internal object AccountStatusUseCaseModule {
     @Provides
     @Singleton
     fun provideCryptoCurrencyMetadataCleaner(
+        currencyDataCleaners: Set<@JvmSuppressWildcards CryptoCurrencyDataCleaner>,
+        tokensFeatureToggles: TokensFeatureToggles,
         networksCleaner: NetworksCleaner,
         stakingCleaner: StakingCleaner,
         nftCleaner: NFTCleaner,
         dispatchers: CoroutineDispatcherProvider,
     ): CryptoCurrencyMetadataCleaner {
         return CryptoCurrencyMetadataCleaner(
+            currencyDataCleaners = currencyDataCleaners,
+            tokensFeatureToggles = tokensFeatureToggles,
             networksCleaner = networksCleaner,
             stakingCleaner = stakingCleaner,
             nftCleaner = nftCleaner,

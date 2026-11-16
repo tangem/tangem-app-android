@@ -201,6 +201,7 @@ internal class JointOperationModel @Inject constructor(
                 value = JointOperationSignersUMConverter.Input(
                     membersCount = answered.membersCount,
                     signers = answered.signers,
+                    isVotingClosed = answered.isVotingClosed,
                 ),
             ),
         )

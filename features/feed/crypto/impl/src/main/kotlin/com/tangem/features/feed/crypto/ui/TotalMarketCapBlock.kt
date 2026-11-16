@@ -191,7 +191,7 @@ private fun MarketIndexCardSurface(
 ) {
     TangemSurface(
         modifier = modifier,
-        color = TangemTheme.colors3.bg.tertiary,
+        color = TangemTheme.colors3.bg.secondary,
         shape = RoundedCornerShape(size = 24.dp),
         onClick = onClick,
     ) {

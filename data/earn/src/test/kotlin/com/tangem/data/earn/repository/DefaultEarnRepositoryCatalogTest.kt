@@ -55,7 +55,6 @@ internal class DefaultEarnRepositoryCatalogTest {
         earnFilterStore = EarnFilterStore(),
         earnErrorResolver = DefaultEarnErrorResolver(),
         excludedBlockchains = ExcludedBlockchains(),
-        isMerklIncentivesEnabled = true,
     )
 
     @BeforeEach

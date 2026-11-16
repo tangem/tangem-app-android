@@ -122,6 +122,8 @@ internal class DragAndDropAdapterLegacy(
         }
     }
 
+    override fun onItemMoved(from: Int, to: Int) { /* no-op */ }
+
     private fun updateListState(type: DragOperation.Type, block: OrganizeTokensListUM.() -> List<DraggableItem>) {
         val updatedState = tokenListUM.updateItems { block(tokenListUM) }
 

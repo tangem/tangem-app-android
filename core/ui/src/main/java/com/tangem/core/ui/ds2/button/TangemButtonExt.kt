@@ -38,18 +38,29 @@ fun TangemButton.Close(modifier: Modifier = Modifier, isEnabled: Boolean = true,
 
 @Composable
 @NonRestartableComposable
-fun TangemButton.GroupEntry(iconUM: TangemIconUM, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun TangemButton.GroupEntry(
+    iconUM: TangemIconUM,
+    modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
+    onClick: () -> Unit,
+) {
     TangemButton(
         modifier = modifier,
         variant = TangemButton.Variant.Ghost,
         size = TangemButton.Size.X9,
         iconStart = iconUM,
+        isEnabled = isEnabled,
         onClick = onClick,
     )
 }
 
 @Composable
 @NonRestartableComposable
-fun TangemButton.GroupEntry(imageVector: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    GroupEntry(iconUM = TangemIconUM.Icon(imageVector), modifier = modifier, onClick = onClick)
+fun TangemButton.GroupEntry(
+    imageVector: ImageVector,
+    modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    GroupEntry(iconUM = TangemIconUM.Icon(imageVector), modifier = modifier, isEnabled = isEnabled, onClick = onClick)
 }

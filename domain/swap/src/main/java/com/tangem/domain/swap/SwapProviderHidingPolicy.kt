@@ -17,7 +17,9 @@ object SwapProviderHidingPolicy {
     private fun ExpressError.isUserResolvable(): Boolean = when (this) {
         is ExpressError.AmountError.TooSmallError,
         is ExpressError.AmountError.TooBigError,
+        is ExpressError.InvalidAmountError,
         is ExpressError.NotEnoughBalanceError,
+        is ExpressError.NotEnoughBalanceForGasFeeError,
         is ExpressError.InvalidAddressError,
         is ExpressError.ProviderDifferentAmountError,
         -> true

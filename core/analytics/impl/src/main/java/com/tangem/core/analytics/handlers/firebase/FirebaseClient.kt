@@ -14,7 +14,7 @@ import com.tangem.core.analytics.converters.UnderscoreAnalyticsEventConverter
 /**
 [REDACTED_AUTHOR]
  */
-interface FirebaseAnalyticsClient : EventLogger, ExceptionLogger, UserIdHolder
+internal interface FirebaseAnalyticsClient : EventLogger, ExceptionLogger, UserIdHolder
 
 internal class FirebaseClient : FirebaseAnalyticsClient {
 

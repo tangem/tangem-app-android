@@ -1,6 +1,7 @@
 package com.tangem.data.networks.utils
 
 import com.tangem.data.networks.store.NetworksStatusesStore
+import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -12,9 +13,12 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
- * Default implementation of [NetworksCleaner].
+ * Removes network statuses and wallet manager data when currencies are removed from a wallet or the wallet is
+ * deleted.
  *
  * @property networksStatusesStore Store to manage network statuses.
  * @property walletManagersFacade Facade to manage wallet managers.
@@ -22,11 +26,12 @@ import kotlinx.coroutines.withContext
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultNetworksCleaner(
+@Singleton
+internal class DefaultNetworksCleaner @Inject constructor(
     private val networksStatusesStore: NetworksStatusesStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
-) : NetworksCleaner {
+) : CryptoCurrencyDataCleaner, NetworksCleaner {
 
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
         runSuspendCatching { networksStatusesStore.remove(userWalletIds) }

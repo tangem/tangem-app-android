@@ -5,6 +5,7 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerKeysRepository
 import com.tangem.domain.jointaccount.repository.JointOwnerKeysRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -26,10 +27,12 @@ internal class DeriveCurrencyAndOwnerKeysUseCaseTest {
 
     private val derivationsRepository: DerivationsRepository = mockk()
     private val jointOwnerKeysRepository: JointOwnerKeysRepository = mockk()
+    private val collectiblesOwnerKeysRepository: CollectiblesOwnerKeysRepository = mockk()
 
     private val useCase = DeriveCurrencyAndOwnerKeysUseCase(
         derivationsRepository = derivationsRepository,
         jointOwnerKeysRepository = jointOwnerKeysRepository,
+        collectiblesOwnerKeysRepository = collectiblesOwnerKeysRepository,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -38,11 +41,14 @@ internal class DeriveCurrencyAndOwnerKeysUseCaseTest {
     private val jointSeedKey = ByteArrayKey("02BB".hexToBytes())
     private val currencyPath = DerivationPath(rawPath = "m/44'/60'/0'/0/0")
     private val jointPath = DerivationPath(rawPath = "m/44'/60'/888888'/0/2")
+    private val solanaSeedKey = ByteArrayKey("03CC".hexToBytes())
+    private val collectiblesPath = DerivationPath(rawPath = "m/44'/501'/999799'/0'/0'")
     private val derivedKey: ExtendedPublicKey = mockk()
 
     @BeforeEach
     fun setUp() {
-        clearMocks(derivationsRepository, jointOwnerKeysRepository)
+        clearMocks(derivationsRepository, jointOwnerKeysRepository, collectiblesOwnerKeysRepository)
+        coEvery { collectiblesOwnerKeysRepository.findMissingOwnerKeyDerivation(userWalletId) } returns emptyMap()
         coEvery { derivationsRepository.derivePublicKeys(userWalletId = any(), derivations = any()) } returns
             mapOf(currencySeedKey to ExtendedPublicKeysMap(mapOf(currencyPath to derivedKey)))
     }
@@ -61,6 +67,28 @@ internal class DeriveCurrencyAndOwnerKeysUseCaseTest {
         assertThat(actual.getOrNull()).isEqualTo(DerivationOutcome.DERIVED)
         coVerify(exactly = 1) {
             derivationsRepository.derivePublicKeys(userWalletId, mapOf(currencySeedKey to listOf(currencyPath)))
+        }
+    }
+
+    @Test
+    fun `GIVEN collectibles owner key missing with a currency WHEN invoke THEN both derived in one call`() = runTest {
+        // Arrange
+        coEvery { derivationsRepository.findMissingDerivations(userWalletId, currencies) } returns
+            mapOf(currencySeedKey to listOf(currencyPath))
+        coEvery { jointOwnerKeysRepository.findMissingOwnerKeyDerivations(userWalletId) } returns emptyMap()
+        coEvery { collectiblesOwnerKeysRepository.findMissingOwnerKeyDerivation(userWalletId) } returns
+            mapOf(solanaSeedKey to listOf(collectiblesPath))
+
+        // Act
+        val actual = useCase(userWalletId, currencies)
+
+        // Assert
+        assertThat(actual.getOrNull()).isEqualTo(DerivationOutcome.DERIVED)
+        coVerify(exactly = 1) {
+            derivationsRepository.derivePublicKeys(
+                userWalletId,
+                mapOf(currencySeedKey to listOf(currencyPath), solanaSeedKey to listOf(collectiblesPath)),
+            )
         }
     }
 

@@ -31,7 +31,10 @@ sealed interface TxHistoryItemsUM {
         val loadMore: () -> Boolean,
     ) : TxHistoryItemsUM
 
-    data class Empty(override val isBalanceHidden: Boolean, val onExploreClick: () -> Unit) : TxHistoryItemsUM
+    data class Empty(
+        override val isBalanceHidden: Boolean,
+        val onExploreClick: (() -> Unit)?,
+    ) : TxHistoryItemsUM
 
     data class NotSupported(
         override val isBalanceHidden: Boolean,

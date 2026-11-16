@@ -16,7 +16,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.isShown
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -72,6 +72,14 @@ internal class WalletTokensListUMConverter(
             onAccountCollapseClick = clickIntents::onAccountCollapseClick,
             onAccountExpandClick = clickIntents::onAccountExpandClick,
             onManageTokensClick = clickIntents::onManageTokensClick,
+            jointPendingOperations = jointPendingOperations,
+        )
+    }
+
+    private val collectiblesAccountRowConverter by lazy(LazyThreadSafetyMode.NONE) {
+        WalletCollectiblesAccountItemConverter(
+            appCurrency = appCurrency,
+            onAccountClick = clickIntents::onCollectiblesAccountClick,
         )
     }
 
@@ -81,6 +89,13 @@ internal class WalletTokensListUMConverter(
             shouldShowMainPromo,
         )
     }
+
+    /**
+     * Joint and collectibles accounts carry a row of their own while they hold no tokens, so an otherwise empty
+     * wallet must not fall into the empty state and hide them
+     */
+    private val AccountStatus.isTokenlessAccountRow: Boolean
+        get() = this is AccountStatus.Joint || this is AccountStatus.Collectibles && value.isShown
 
     private fun currencyRowConverter(
         accountId: AccountId,
@@ -112,23 +127,24 @@ internal class WalletTokensListUMConverter(
 
     override fun convert(value: AccountStatusList): WalletTokensListUM {
         val promoCryptoCurrency = yieldSupplyPromoBannerConverter.convert2(value = value)
-        // A joint account carries a row of its own even while it holds nothing, so an otherwise empty wallet
-        // must not fall into the empty state and hide it
-        val hasJointAccount = value.accountStatuses.any { it is AccountStatus.Joint }
-        return if (value.flattenPersonalCurrencies().isEmpty() && !hasJointAccount) {
+        val hasTokenlessAccountRow = value.accountStatuses.any { it.isTokenlessAccountRow }
+
+        return if (value.flattenPersonalCurrencies().isEmpty() && !hasTokenlessAccountRow) {
             WalletTokensListUM.Empty(
                 onEmptyClick = { clickIntents.onManageTokensClick(value.mainAccount.accountId) },
             )
         } else {
-            // In the order the domain sorted the accounts: a joint account is an account, and appending its row
-            // after everything else would move it away from where its list position says it belongs
             val tokenListUM = value.accountStatuses
-                .filterCryptoPortfolio()
                 .asSequence()
                 .flatMap { accountStatus ->
                     when (accountStatus) {
                         is AccountStatus.Personal -> personalItems(accountStatus, promoCryptoCurrency)
                         is AccountStatus.Joint -> jointItems(accountStatus, promoCryptoCurrency)
+                        is AccountStatus.Collectibles -> collectiblesItems(accountStatus)
+                        is AccountStatus.Payment,
+                        is AccountStatus.Money,
+                        is AccountStatus.Prediction,
+                        -> emptySequence()
                     }
                 }.toPersistentList()
 
@@ -145,6 +161,10 @@ internal class WalletTokensListUMConverter(
     ): Sequence<TokensListItemUM2> {
         if (!isAccountsModeEnabled) return getTokenListItems(accountStatus, promoCryptoCurrency)
         return sequenceOf(portfolioItem(accountStatus, promoCryptoCurrency))
+    }
+
+    private fun collectiblesItems(accountStatus: AccountStatus.Collectibles): Sequence<TokensListItemUM2> {
+        return listOfNotNull(collectiblesAccountRowConverter.convert(accountStatus)).asSequence()
     }
 
     private fun jointItems(

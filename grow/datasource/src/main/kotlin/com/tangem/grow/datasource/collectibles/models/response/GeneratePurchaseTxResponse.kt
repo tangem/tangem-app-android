@@ -3,7 +3,7 @@ package com.tangem.grow.datasource.collectibles.models.response
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** Response for POST /api/v1/collectible/generate-purchase-tx */
+/** Response for POST /api/v1/collectible/purchase-data */
 @Serializable
 data class GeneratePurchaseTxResponse(
     @SerialName("txId")

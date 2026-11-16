@@ -1,6 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.domain.pay.model.bankofframp.OfframpEta
@@ -8,9 +9,15 @@ import com.tangem.domain.pay.model.bankofframp.OfframpFee
 import com.tangem.domain.pay.model.bankofframp.OfframpSource
 import com.tangem.domain.pay.model.bankofframp.OfframpToken
 import com.tangem.spend.datasource.pay.models.response.BankOfframpOptionsResponse
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class BankOfframpOptionsConverterTest {
 
     @Test
@@ -30,8 +37,10 @@ internal class BankOfframpOptionsConverterTest {
         assertThat(actual.destinations).containsExactly(
             OfframpDestination(
                 rail = BankRail.ACH,
+                currency = "USD",
                 fee = OfframpFee(
                     name = "ACH",
+                    calculationType = AccountFee.CalculationType.FIXED,
                     amount = BigDecimal("1.50"),
                     currency = "USD",
                     description = "ACH offramp fee",
@@ -71,8 +80,10 @@ internal class BankOfframpOptionsConverterTest {
         assertThat(actual.destinations).containsExactly(
             OfframpDestination(
                 rail = BankRail.WIRE,
+                currency = "USD",
                 fee = OfframpFee(
                     name = "Wire",
+                    calculationType = AccountFee.CalculationType.FIXED,
                     amount = BigDecimal("1.50"),
                     currency = "USD",
                     description = "ACH offramp fee",
@@ -80,6 +91,77 @@ internal class BankOfframpOptionsConverterTest {
                 eta = OfframpEta(minDays = 1, maxDays = 3),
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN SPEI destination in MXN with a percentage fee WHEN convert THEN SPEI destination kept`() {
+        // Arrange
+        val spei = destination(
+            rail = "SPEI",
+            currency = "MXN",
+            feeName = "SPEI",
+            calculationType = "PERCENTAGE",
+            feeDescription = "SPEI offramp fee",
+        )
+
+        // Act
+        val actual = BankOfframpOptionsConverter.convert(result(destinations = listOf(destination(), spei)))
+
+        // Assert
+        assertThat(actual.destinations).containsExactly(
+            OfframpDestination(
+                rail = BankRail.ACH,
+                currency = "USD",
+                fee = OfframpFee(
+                    name = "ACH",
+                    calculationType = AccountFee.CalculationType.FIXED,
+                    amount = BigDecimal("1.50"),
+                    currency = "USD",
+                    description = "ACH offramp fee",
+                ),
+                eta = OfframpEta(minDays = 1, maxDays = 3),
+            ),
+            OfframpDestination(
+                rail = BankRail.SPEI,
+                currency = "MXN",
+                fee = OfframpFee(
+                    name = "SPEI",
+                    calculationType = AccountFee.CalculationType.PERCENTAGE,
+                    amount = BigDecimal("1.50"),
+                    currency = "USD",
+                    description = "SPEI offramp fee",
+                ),
+                eta = OfframpEta(minDays = 1, maxDays = 3),
+            ),
+        ).inOrder()
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN fee calculation type WHEN convert THEN known types mapped and unknown destination dropped`(
+        model: CalculationTypeModel,
+    ) {
+        // Arrange
+        val destinations = listOf(destination(calculationType = model.calculationType))
+
+        // Act
+        val actual = BankOfframpOptionsConverter.convert(result(destinations = destinations))
+
+        // Assert
+        assertThat(actual.destinations.map { it.fee.calculationType }).isEqualTo(listOfNotNull(model.expected))
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = ["", " "])
+    fun `GIVEN destination without currency WHEN convert THEN destination kept without currency`(currency: String?) {
+        // Act
+        val actual = BankOfframpOptionsConverter.convert(
+            result(destinations = listOf(destination(currency = currency))),
+        )
+
+        // Assert
+        assertThat(actual.destinations.single().currency).isNull()
     }
 
     @Test
@@ -162,19 +244,35 @@ internal class BankOfframpOptionsConverterTest {
 
     private fun destination(
         rail: String? = "ACH",
+        currency: String? = "USD",
         feeName: String? = "ACH",
+        calculationType: String? = "FIXED",
+        feeDescription: String? = "ACH offramp fee",
         hasFee: Boolean = true,
         hasEta: Boolean = true,
     ) = BankOfframpOptionsResponse.Destination(
         rail = rail,
+        currency = currency,
         fee = BankOfframpOptionsResponse.Fee(
             name = feeName,
-            calculationType = "FIXED",
+            calculationType = calculationType,
             amount = BigDecimal("1.50"),
             currency = "USD",
-            description = "ACH offramp fee",
+            description = feeDescription,
         ).takeIf { hasFee },
         eta = BankOfframpOptionsResponse.Eta(minDays = 1, maxDays = 3).takeIf { hasEta },
+    )
+
+    private fun provideTestModels() = listOf(
+        CalculationTypeModel(calculationType = "FIXED", expected = AccountFee.CalculationType.FIXED),
+        CalculationTypeModel(calculationType = "percentage", expected = AccountFee.CalculationType.PERCENTAGE),
+        CalculationTypeModel(calculationType = null, expected = AccountFee.CalculationType.FIXED),
+        CalculationTypeModel(calculationType = "TIERED", expected = null),
+    )
+
+    internal data class CalculationTypeModel(
+        val calculationType: String?,
+        val expected: AccountFee.CalculationType?,
     )
 
     private companion object {

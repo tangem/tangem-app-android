@@ -31,7 +31,7 @@ internal object TangemPayBankWithdrawSuccessUMFactory {
                 DateTimeFormatters.formatDate(DateTime(shownAt), DateTimeFormatters.dateTimeMMMdYYYY),
             ),
             rows = listOfNotNull(
-                row(R.string.send_recipient, draft.recipient?.displayName ?: details?.beneficiary?.toFullName()),
+                row(R.string.send_recipient, details?.beneficiary?.toFullName()),
                 row(R.string.tangempay_withdraw_bank_field_bank_name, details?.bankName),
                 row(R.string.tangempay_withdraw_bank_field_account_number, details?.accountNumber),
             ).toImmutableList(),

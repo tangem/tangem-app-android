@@ -7,20 +7,31 @@ import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.utils.annotations.RemoveWithToggle
 
 class GetMoneyAccountBankCredentialsUseCase(
     private val onboardingRepository: OnboardingRepository,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<VisaApiError, BankCredentials> = either {
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        @RemoveWithToggle(toggleName = "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED") includeAllRails: Boolean,
+    ): Either<VisaApiError, List<BankCredentials>> = either {
         val savedInfo = onboardingRepository.getSavedCustomerInfo(userWalletId)
         val instance = savedInfo?.moneyAccountProductInstance
             ?: onboardingRepository.getCustomerInfo(userWalletId).bind().moneyAccountProductInstance
         val productInstance = ensureNotNull(instance) { VisaApiError.ProductInstanceNotFoundActivationRequired }
 
-        onboardingRepository.getBankCredentials(
-            userWalletId = userWalletId,
-            productInstanceId = productInstance.id,
-        ).bind()
+        if (includeAllRails) {
+            onboardingRepository.getAllBankCredentials(
+                userWalletId = userWalletId,
+                productInstanceId = productInstance.id,
+            ).bind()
+        } else {
+            onboardingRepository.getBankCredentials(
+                userWalletId = userWalletId,
+                productInstanceId = productInstance.id,
+            ).map { credentials -> listOf(credentials) }.bind()
+        }
     }
 }

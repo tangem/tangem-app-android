@@ -182,9 +182,7 @@ internal class WalletSettingsModel @Inject constructor(
                         accountList = accountList,
                     ),
                     accountReorderUM = AccountReorderUM(
-                        isDragEnabled = accountList.count {
-                            it is WalletSettingsAccountsUM.Account || it is WalletSettingsAccountsUM.JointAccount
-                        } > 1,
+                        isDragEnabled = accountList.hasReorderableAccounts(),
                         onMove = ::onAccountReorder,
                         onDragStopped = ::onAccountDragStopped,
                     ),
@@ -556,6 +554,16 @@ internal class WalletSettingsModel @Inject constructor(
         }
     }
 
+    private fun List<WalletSettingsAccountsUM>.hasReorderableAccounts(): Boolean {
+        val reorderableCount = count { item ->
+            item is WalletSettingsAccountsUM.Account ||
+                item is WalletSettingsAccountsUM.JointAccount ||
+                item is WalletSettingsAccountsUM.CollectiblesAccount
+        }
+
+        return reorderableCount > 1
+    }
+
     private fun onAccountDragStopped() {
         val accountIds = state.value.items.mapNotNull { itemUM ->
             when (itemUM) {
@@ -565,6 +573,8 @@ internal class WalletSettingsModel @Inject constructor(
                 is WalletSettingsAccountsUM.JointAccount ->
                     AccountId.forJointAccount(userWalletId = params.userWalletId, value = itemUM.state.id)
                         .getOrNull()
+                is WalletSettingsAccountsUM.CollectiblesAccount ->
+                    AccountId.forCollectiblesAccount(userWalletId = params.userWalletId)
                 else -> null
             }
         }

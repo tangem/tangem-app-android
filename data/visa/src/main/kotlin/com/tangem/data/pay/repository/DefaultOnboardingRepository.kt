@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.pay.analytics.TangemPayUserPropertiesSender
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
@@ -50,6 +51,8 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
+private const val ALL_RAILS = "all"
+private const val FIAT_BANK_CREDENTIALS_TYPE = "fiat"
 
 @Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 internal class DefaultOnboardingRepository @Inject constructor(
@@ -66,6 +69,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val cashbackSummaryStore: CashbackSummaryStore,
     private val customerInfoStore: TangemPayCustomerInfoStore,
     private val derivationsRepository: DerivationsRepository,
+    private val userPropertiesSender: TangemPayUserPropertiesSender,
 ) : OnboardingRepository {
 
     override suspend fun validateDeeplink(link: String): Either<VisaApiError, Boolean> {
@@ -138,6 +142,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 }
                 getCustomerInfo(userWalletId = userWalletId, response = result).right()
             }
+            .onRight { customerInfo -> userPropertiesSender.onCustomerInfoFetched(userWalletId, customerInfo) }
     }
 
     override suspend fun getBankCredentials(
@@ -149,6 +154,25 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }.flatMap { response ->
             val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
             BankCredentialsConverter.convert(result).right()
+        }
+    }
+
+    override suspend fun getAllBankCredentials(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+    ): Either<VisaApiError, List<BankCredentials>> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.getAllBankCredentials(
+                authHeader = authHeader,
+                productInstanceId = productInstanceId,
+                rails = ALL_RAILS,
+            )
+        }.flatMap { response ->
+            val credentials = response.result.orEmpty()
+                .filter { it.type.equals(FIAT_BANK_CREDENTIALS_TYPE, ignoreCase = true) }
+                .filterNot { it.accountNumber.isNullOrBlank() }
+                .map(BankCredentialsConverter::convert)
+            if (credentials.isEmpty()) VisaApiError.UnknownWithoutCode.left() else credentials.right()
         }
     }
 

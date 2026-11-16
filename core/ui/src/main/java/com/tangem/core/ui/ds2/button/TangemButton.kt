@@ -39,7 +39,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 button supporting an optional leading icon, label, and trailing icon.
  *
- * Version: 1.2.2
+ * Version: 1.2.3
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=0-1)
  *
@@ -152,7 +152,7 @@ private fun resolveLoadingLabel(isLoading: Boolean, loadingText: TextReference?,
 
 object TangemButton {
 
-    val version = DsVersion(major = 1, minor = 2, patch = 2)
+    val version = DsVersion(major = 1, minor = 2, patch = 3)
 
     /**
      * Visual style of the button.

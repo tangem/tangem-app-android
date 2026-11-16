@@ -34,6 +34,7 @@ import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.modal.reportMeasuredHeight
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -63,6 +64,24 @@ internal fun sheetCloseButton(
 
 @Composable
 internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
+    WalletOptionsBottomSheet(
+        config = config,
+        optionsTitle = resourceReference(R.string.introduction_button_i_have_a_wallet),
+        forceDarkTheme = true,
+        isMaterialEnabled = false,
+        containerColor = TangemTheme.colors3.bg.secondary,
+    )
+}
+
+@Composable
+@Suppress("LongParameterList")
+internal fun WalletOptionsBottomSheet(
+    config: TangemBottomSheetConfig,
+    optionsTitle: TextReference,
+    forceDarkTheme: Boolean,
+    isMaterialEnabled: Boolean,
+    containerColor: Color?,
+) {
     val sheet = config.content as? HaveWalletUM
     val step = sheet?.step
     val isBusy = sheet?.isBusy == true
@@ -70,12 +89,12 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
     TangemModal<HaveWalletUM>(
         config = config,
         dismissOnClickOutside = !isBusy,
-        // Flat card for the same reason as the Create wallet sheet: the glass material would sample the
-        // video behind the screen, and a dialog window costs half a second before the sheet can animate.
-        isMaterialEnabled = false,
-        // The overlay composes in the host, outside this screen's forced palette, so the modal forces its own.
-        forceDarkTheme = true,
-        containerColor = TangemTheme.colors3.bg.secondary,
+        // The intro sheet is flat for the same reason as the Create wallet sheet: the glass material would sample
+        // the video behind the screen, and a dialog window costs half a second before the sheet can animate.
+        isMaterialEnabled = isMaterialEnabled,
+        // The intro overlay composes in the host, outside its screen's forced palette, so the modal forces its own.
+        forceDarkTheme = forceDarkTheme,
+        containerColor = containerColor,
         showDragIndicator = false,
         // Back steps inside the sheet; on the first step it dismisses, unless a row is still running.
         onBack = (step as? HaveWalletUM.Step.Import)?.onBack ?: {}.takeIf { isBusy },
@@ -87,7 +106,7 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
                     isBusy = content.isBusy,
                     onClick = content.onCloseClick,
                 ),
-                contentColumn = { StepTitle(step = content.step) },
+                contentColumn = { StepTitle(step = content.step, optionsTitle = optionsTitle) },
             )
         },
     ) { content ->
@@ -131,14 +150,14 @@ private fun StepBackButton(onBack: (() -> Unit)?) {
  * cross-fade, which clips the outgoing words away one by one as the slot shrinks to nothing.
  */
 @Composable
-private fun ColumnScope.StepTitle(step: HaveWalletUM.Step) {
+private fun ColumnScope.StepTitle(step: HaveWalletUM.Step, optionsTitle: TextReference) {
     AnimatedVisibility(
         visible = step is HaveWalletUM.Step.Options,
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
         TangemNavigationText(
-            text = resourceReference(R.string.introduction_button_i_have_a_wallet),
+            text = optionsTitle,
             role = TangemNavigationText.Role.Title,
         )
     }

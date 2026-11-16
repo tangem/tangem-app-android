@@ -7,6 +7,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.error.UniversalError
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
@@ -22,9 +23,11 @@ import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.card.view.CardDataType
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.StringsSigns
 import io.mockk.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.*
@@ -45,6 +48,7 @@ internal class TangemPayCardDetailsControllerTest {
     private val supplier: PaymentAccountStatusSupplier = mockk()
     private val supplierFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
     private val eventListener = DefaultCardDetailsEventListener()
+    private val cardAuthenticator: TangemPayCardAuthenticator = mockk()
 
     private val details = TangemPayCardDetails(
         pan = "4242424242424242",
@@ -56,6 +60,59 @@ internal class TangemPayCardDetailsControllerTest {
     init {
         every { supplier.invoke(userWalletId) } returns supplierFlow
         every { repository.cardFrozenState(any()) } returns emptyFlow()
+    }
+
+    @Test
+    fun `GIVEN user authenticated WHEN reveal requested THEN details revealed`() = runTest {
+        // Arrange
+        coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
+        coEvery { cardAuthenticator.authenticate(any()) } returns true
+        val controller = createController(scope = backgroundScope)
+        runCurrent()
+
+        // Act
+        controller.requestReveal()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) {
+            cardAuthenticator.authenticate(title = TextReference.Res(R.string.tangempay_card_details_title))
+        }
+        coVerify(exactly = 1) { repository.revealCardDetails(userWalletId, cardId) }
+        assertThat(controller.uiState.value.isHidden).isFalse()
+    }
+
+    @Test
+    fun `GIVEN user not authenticated WHEN reveal requested THEN details stay hidden`() = runTest {
+        // Arrange
+        coEvery { cardAuthenticator.authenticate(any()) } returns false
+        val controller = createController(scope = backgroundScope)
+        runCurrent()
+
+        // Act
+        controller.requestReveal()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 0) { repository.revealCardDetails(any(), any()) }
+        assertThat(controller.uiState.value.isHidden).isTrue()
+    }
+
+    @Test
+    fun `GIVEN authentication in progress WHEN reveal requested again THEN prompt shown once`() = runTest {
+        // Arrange
+        coEvery { cardAuthenticator.authenticate(any()) } coAnswers { awaitCancellation() }
+        val controller = createController(scope = backgroundScope)
+        runCurrent()
+        controller.requestReveal()
+        runCurrent()
+
+        // Act
+        controller.requestReveal()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { cardAuthenticator.authenticate(any()) }
     }
 
     @Test
@@ -322,6 +379,7 @@ internal class TangemPayCardDetailsControllerTest {
         uiMessageSender = uiMessageSender,
         analytics = analytics,
         paymentAccountStatusSupplier = supplier,
+        cardAuthenticator = cardAuthenticator,
     )
 
     private fun card(

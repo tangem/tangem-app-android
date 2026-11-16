@@ -13,6 +13,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.resolveReference
@@ -31,15 +33,20 @@ import java.math.BigDecimal
  * The slippage line of the place-prediction flow.
  */
 @Composable
-internal fun PredictionSlippageRow(slippage: SlippageUM, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+internal fun PredictionSlippageRow(
+    slippage: SlippageUM,
+    modifier: Modifier = Modifier,
+    divider: Boolean = false,
+    onClick: (() -> Unit)? = null,
+) {
     TangemRow(
         modifier = modifier,
+        divider = divider,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
-            Text(
+            TangemRowText(
                 text = stringResourceSafe(R.string.prediction_place_slippage),
-                style = TangemTheme.typography3.body.medium,
-                color = TangemTheme.colors3.text.primary,
+                role = TangemRowTextRole.Title,
             )
         },
         valueSlot = {

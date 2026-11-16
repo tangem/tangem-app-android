@@ -12,6 +12,7 @@ import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
 import com.tangem.data.collectibles.store.CollectiblesMachineStore
 import com.tangem.data.collectibles.account.cleaner.CollectiblesUserWalletDataCleaner
 import com.tangem.data.collectibles.account.derivation.DefaultCollectiblesOwnerDeriver
+import com.tangem.data.collectibles.account.derivation.DefaultCollectiblesOwnerKeysRepository
 import com.tangem.data.collectibles.account.flow.DefaultCollectiblesAccountStatusFetcher
 import com.tangem.data.collectibles.account.flow.DefaultCollectiblesAccountStatusProducer
 import com.tangem.data.collectibles.vault.DefaultCollectiblesVaultCurrencyFactory
@@ -22,6 +23,7 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupp
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
+import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerKeysRepository
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.datasource.utils.AppDataStoreFactory
@@ -46,6 +48,12 @@ internal interface CollectiblesDataModule {
     @Binds
     @Singleton
     fun bindCollectiblesOwnerDeriver(impl: DefaultCollectiblesOwnerDeriver): CollectiblesOwnerDeriver
+
+    @Binds
+    @Singleton
+    fun bindCollectiblesOwnerKeysRepository(
+        impl: DefaultCollectiblesOwnerKeysRepository,
+    ): CollectiblesOwnerKeysRepository
 
     @Binds
     @Singleton

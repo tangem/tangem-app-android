@@ -20,7 +20,7 @@ import kotlinx.collections.immutable.ImmutableList
 @Composable
 internal fun PredictionNotificationsBlock(
     notifications: ImmutableList<PredictionNotificationUM>,
-    onRetryClick: () -> Unit,
+    onRetryClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     // Emitting an empty column would still take a slot in the parent's spacing, doubling the gap below the amount.
@@ -36,7 +36,8 @@ internal fun PredictionNotificationsBlock(
                 primaryButton = if (notification.isRetryable()) {
                     TangemMessageBanner.Button(
                         text = resourceReference(R.string.common_retry),
-                        onClick = onRetryClick,
+                        onClick = onRetryClick ?: {},
+                        isEnabled = onRetryClick != null,
                     )
                 } else {
                     null

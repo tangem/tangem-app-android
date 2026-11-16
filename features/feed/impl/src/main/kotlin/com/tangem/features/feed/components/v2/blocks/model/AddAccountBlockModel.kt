@@ -10,6 +10,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.pushZooming
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -101,8 +102,25 @@ internal class AddAccountBlockModel @Inject constructor(
         override val onBack: () -> Unit = ::dismissWalletSelector
     }
 
+    /**
+     * The screen a tap leads to, held until no sheet is on screen: it zooms out of the card, which the chooser
+     * or the account type sheet still covers while it collapses. The component pushes it through
+     * [onSheetsClosed], on the next frame when no sheet was shown.
+     */
+    val routeAwaitingSheetClose: StateFlow<AppRoute?>
+        field = MutableStateFlow<AppRoute?>(value = null)
+
     init {
         observeChosenWallet()
+    }
+
+    private fun openWhenSheetsClosed(route: AppRoute) {
+        routeAwaitingSheetClose.value = route
+    }
+
+    fun onSheetsClosed(route: AppRoute) {
+        routeAwaitingSheetClose.value = null
+        router.pushZooming(route = route, sourceKey = AddAccountBlockComponent.SHARED_TRANSITION_KEY)
     }
 
     /**
@@ -183,7 +201,7 @@ internal class AddAccountBlockModel @Inject constructor(
             sendJointLimitReached()
             messageSender.send(jointAccountLimitReachedDialog())
         } else {
-            router.push(AppRoute.JointAccountCreation(userWalletId = config.userWalletId, source = source))
+            openWhenSheetsClosed(AppRoute.JointAccountCreation(userWalletId = config.userWalletId, source = source))
         }
     }
 
@@ -210,7 +228,7 @@ internal class AddAccountBlockModel @Inject constructor(
         ?.userWalletId
 
     private fun openCryptoAccountCreation(walletId: UserWalletId) {
-        router.push(AppRoute.CreateAccount(userWalletId = walletId))
+        openWhenSheetsClosed(AppRoute.CreateAccount(userWalletId = walletId))
     }
 
     private fun accountLimitReachedDialog(): DialogMessage =

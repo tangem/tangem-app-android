@@ -9,7 +9,6 @@ import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.backup.CardBackupStatus
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.usecase.ReportWalletCardsBackupUseCase
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -26,7 +25,6 @@ import kotlin.coroutines.CoroutineContext
 internal class WalletCardsBackupReporterTest {
 
     private val reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase = mockk()
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles = mockk()
 
     private val appScope = object : AppCoroutineScope {
         override val coroutineContext: CoroutineContext = Dispatchers.Unconfined
@@ -34,20 +32,18 @@ internal class WalletCardsBackupReporterTest {
 
     private val reporter = WalletCardsBackupReporter(
         reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
-        onboardingV2FeatureToggles = onboardingV2FeatureToggles,
         appScope = appScope,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(reportWalletCardsBackupUseCase, onboardingV2FeatureToggles)
+        clearMocks(reportWalletCardsBackupUseCase)
         coEvery { reportWalletCardsBackupUseCase(any(), any(), any()) } returns Unit.right()
     }
 
     @Test
-    fun `GIVEN toggle enabled WHEN report THEN cards are sent for the wallet of the primary card`() = runTest {
+    fun `GIVEN cards WHEN report THEN cards are sent for the wallet of the primary card`() = runTest {
         // Arrange
-        every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled } returns true
         val cards = listOf(primaryCard(), backupCard())
 
         // Act
@@ -65,9 +61,6 @@ internal class WalletCardsBackupReporterTest {
 
     @Test
     fun `GIVEN wallet created from a seed phrase WHEN report THEN used seed is sent`() = runTest {
-        // Arrange
-        every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled } returns true
-
         // Act
         reporter.report(scanResponse = scanResponse(), cards = listOf(primaryCard()), usedSeed = true)
 
@@ -96,22 +89,7 @@ internal class WalletCardsBackupReporterTest {
     }
 
     @Test
-    fun `GIVEN toggle disabled WHEN report THEN nothing is sent`() = runTest {
-        // Arrange
-        every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled } returns false
-
-        // Act
-        reporter.report(scanResponse = scanResponse(), cards = listOf(primaryCard()), usedSeed = false)
-
-        // Assert
-        coVerify(exactly = 0) { reportWalletCardsBackupUseCase(any(), any(), any()) }
-    }
-
-    @Test
     fun `GIVEN card without wallets WHEN report THEN nothing is sent`() = runTest {
-        // Arrange
-        every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled } returns true
-
         // Act
         reporter.report(
             scanResponse = scanResponse(wallets = emptyList()),

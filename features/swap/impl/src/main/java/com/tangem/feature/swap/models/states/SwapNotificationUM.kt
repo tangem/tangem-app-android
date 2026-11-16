@@ -59,6 +59,22 @@ internal object SwapNotificationUM {
             subtitle = resourceReference(R.string.swapping_insufficient_funds_description),
         )
 
+        /**
+         * The Tron gasless swap does not fit next to its compensation, and only a new, lower approval makes it fit.
+         * [leaveAmount] is what that approval keeps in the balance for both compensations.
+         */
+        data class TronReapprovalRequired(
+            val leaveAmount: String,
+            val onConfirmClick: () -> Unit,
+        ) : Error(
+            title = resourceReference(R.string.send_notification_exceed_balance_title),
+            subtitle = resourceReference(R.string.send_notification_exceed_balance_text),
+            buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(R.string.send_notification_leave_button, wrappedList(leaveAmount)),
+                onClick = onConfirmClick,
+            ),
+        )
+
         data class UnableToCoverFeeWarning(
             val fromToken: CryptoCurrency,
             val currencyName: String,

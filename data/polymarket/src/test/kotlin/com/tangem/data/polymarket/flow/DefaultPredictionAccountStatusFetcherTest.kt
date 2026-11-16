@@ -1,5 +1,6 @@
 package com.tangem.data.polymarket.flow
 
+import androidx.datastore.core.DataStore
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -10,6 +11,7 @@ import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -25,7 +27,9 @@ import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
+import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
@@ -36,6 +40,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.spyk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,6 +64,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     private val getBalance: GetPolymarketBalanceInteractor = mockk()
     private val recordConfirmation: RecordPolymarketConfirmationUseCase = mockk(relaxUnitFun = true)
     private val polymarketRepository: PolymarketRepository = mockk()
+    private val positionsRepository: PolymarketPositionsRepository = mockk()
 
     @BeforeEach
     fun resetMocks() {
@@ -70,7 +76,9 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             getBalance,
             recordConfirmation,
             polymarketRepository,
+            positionsRepository,
         )
+        coEvery { positionsRepository.getPositionsValue(any()) } returns POSITIONS_AMOUNT.right()
         every { userWallet.isLocked } returns false
         every { userWalletsListRepository.userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(userWallet))
         every { userWallet.walletId } returns WALLET
@@ -167,8 +175,132 @@ internal class DefaultPredictionAccountStatusFetcherTest {
                 fiatRate = null,
                 depositCurrency = COLLATERAL,
                 depositAddress = null,
+                positions = PredictionPositionsValue.Known(amount = POSITIONS_AMOUNT, source = StatusSource.ACTUAL),
             ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Positions {
+
+        @Test
+        fun `GIVEN cached positions WHEN the positions read fails THEN they are kept and flagged`() = runTest {
+            // Arrange
+            stubReadyWallet(balance = BigDecimal("40"))
+            coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns
+                PolymarketPositionsError.Network.left()
+            val store = createStore(testScope = this)
+            store.store(userWalletId = WALLET, value = ACTIVE.copy(positions = KNOWN_POSITIONS))
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+                ACTIVE.copy(positions = KNOWN_POSITIONS.copy(source = StatusSource.ONLY_CACHE)),
+            )
+        }
+
+        @Test
+        fun `GIVEN no cached positions WHEN the positions read fails THEN they are unavailable`() = runTest {
+            // Arrange
+            stubReadyWallet(balance = BigDecimal("40"))
+            coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns
+                PolymarketPositionsError.Network.left()
+            val store = createStore(testScope = this)
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            assertThat((store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active).positions)
+                .isEqualTo(PredictionPositionsValue.Unavailable)
+        }
+
+        @Test
+        fun `GIVEN positions are not refreshed WHEN invoke THEN they are not read and the cached ones are kept`() =
+            runTest {
+                // Arrange
+                stubReadyWallet(balance = BigDecimal("41"))
+                val store = createStore(testScope = this)
+                store.store(userWalletId = WALLET, value = ACTIVE.copy(positions = KNOWN_POSITIONS))
+
+                // Act
+                createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, shouldRefreshPositions = false))
+
+                // Assert
+                assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+                    ACTIVE.copy(balance = BigDecimal("41"), positions = KNOWN_POSITIONS),
+                )
+                coVerify(exactly = 0) { positionsRepository.getPositionsValue(any()) }
+            }
+
+        @Test
+        fun `GIVEN the balance read fails WHEN the positions are read THEN they refresh the cached status`() =
+            runTest {
+                // Arrange
+                stubReadyWallet(balance = BigDecimal("40"))
+                coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.RateLimited.left()
+                val store = createStore(testScope = this)
+                store.store(userWalletId = WALLET, value = ACTIVE.copy(positions = KNOWN_POSITIONS))
+
+                // Act
+                createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+                // Assert
+                assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+                    ACTIVE.copy(
+                        source = StatusSource.ONLY_CACHE,
+                        positions = FRESH_POSITIONS,
+                    ),
+                )
+            }
+
+        @Test
+        fun `GIVEN positions are not refreshed WHEN the balance read fails THEN nothing is written to disk`() =
+            runTest {
+                // Arrange
+                stubReadyWallet(balance = BigDecimal("40"))
+                coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.RateLimited.left()
+                val disk = spyk(MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()))
+                val store = createStore(testScope = this, persistenceDataStore = disk)
+                store.store(userWalletId = WALLET, value = ACTIVE.copy(positions = KNOWN_POSITIONS))
+
+                // Act
+                createFetcher(store).invoke(
+                    PredictionAccountStatusFetcher.Params(userWalletId = WALLET, shouldRefreshPositions = false),
+                )
+
+                // Assert
+                assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+                    ACTIVE.copy(source = StatusSource.ONLY_CACHE, positions = KNOWN_POSITIONS),
+                )
+                coVerify(exactly = 1) { disk.updateData(any()) }
+                coVerify(exactly = 0) { positionsRepository.getPositionsValue(any()) }
+            }
+
+        @Test
+        fun `GIVEN both reads fail WHEN invoke THEN the cached status and positions are flagged`() = runTest {
+            // Arrange
+            stubReadyWallet(balance = BigDecimal("40"))
+            coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.RateLimited.left()
+            coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns
+                PolymarketPositionsError.Network.left()
+            val store = createStore(testScope = this)
+            store.store(userWalletId = WALLET, value = ACTIVE.copy(positions = KNOWN_POSITIONS))
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+                ACTIVE.copy(
+                    source = StatusSource.ONLY_CACHE,
+                    positions = KNOWN_POSITIONS.copy(source = StatusSource.ONLY_CACHE),
+                ),
+            )
+        }
     }
 
     @Test
@@ -183,7 +315,9 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
-        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
+        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+            ACTIVE.copy(source = StatusSource.ONLY_CACHE, positions = FRESH_POSITIONS),
+        )
     }
 
     @Test
@@ -452,7 +586,9 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert — throttled or offline means the balance is unknown, not zero
-        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
+        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+            ACTIVE.copy(source = StatusSource.ONLY_CACHE, positions = FRESH_POSITIONS),
+        )
     }
 
     /**
@@ -489,12 +625,15 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
     }
 
-    private fun createStore(testScope: TestScope) = PredictionAccountStatusStore(
+    private fun createStore(
+        testScope: TestScope,
+        persistenceDataStore: DataStore<WalletIdWithPredictionStatusDTO> = MockStateDataStore(default = emptyMap()),
+    ) = PredictionAccountStatusStore(
         dtoConverter = PredictionAccountStatusValueDTOConverter(
             collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
         ),
         runtimeStore = RuntimeSharedStore(),
-        persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
+        persistenceDataStore = persistenceDataStore,
         scope = TestAppCoroutineScope(testScope),
     )
 
@@ -704,6 +843,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         getPolymarketBalanceInteractor = getBalance,
         recordPolymarketConfirmation = recordConfirmation,
         polymarketRepository = polymarketRepository,
+        positionsRepository = positionsRepository,
         collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -714,6 +854,12 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         const val BRIDGE_ADDRESS = "0xbridge0000000000000000000000000000000001"
 
         val WALLET = UserWalletId("011")
+
+        val POSITIONS_AMOUNT = BigDecimal("4.12")
+
+        val KNOWN_POSITIONS = PredictionPositionsValue.Known(amount = BigDecimal("3"), source = StatusSource.ACTUAL)
+
+        val FRESH_POSITIONS = PredictionPositionsValue.Known(amount = POSITIONS_AMOUNT, source = StatusSource.ACTUAL)
 
         val ACTIVE = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,

@@ -11,11 +11,11 @@ internal class MoneyAccountBankDetailsAnalytics @Inject constructor(
 ) : TangemPayBankTransferOnrampDetailsComponent.Analytics {
 
     override fun onDetailsShown() {
-        analytics.send(MoneyAccountAnalyticsEvents.DepositDetailsScreenOpened())
+        analytics.send(MoneyAccountAnalyticsEvents.AccountDetailsScreenOpened())
     }
 
     override fun onFieldCopied(field: RequisiteField) {
-        analytics.send(MoneyAccountAnalyticsEvents.DetailsFieldCopied(fieldName = field.toFieldName()))
+        analytics.send(MoneyAccountAnalyticsEvents.DetailsFieldCopied(field = field.toFieldName()))
     }
 
     override fun onShareClicked() {
@@ -23,13 +23,14 @@ internal class MoneyAccountBankDetailsAnalytics @Inject constructor(
     }
 
     private fun RequisiteField.toFieldName(): String = when (this) {
-        RequisiteField.ACCOUNT_NUMBER -> "account_number"
+        RequisiteField.ACCOUNT_NUMBER,
+        RequisiteField.CLABE,
+        -> "account_number"
         RequisiteField.ROUTING_NUMBER -> "routing_number"
-        RequisiteField.BENEFICIARY_NAME,
-        RequisiteField.BENEFICIARY_ADDRESS,
-        -> "beneficiary"
-        RequisiteField.BANK_NAME,
-        RequisiteField.BANK_ADDRESS,
-        -> "bank"
+        RequisiteField.REFERENCE -> "reference"
+        RequisiteField.BENEFICIARY_NAME -> "beneficiary"
+        RequisiteField.BENEFICIARY_ADDRESS -> "beneficiary_address"
+        RequisiteField.BANK_NAME -> "bank_name"
+        RequisiteField.BANK_ADDRESS -> "bank_address"
     }
 }

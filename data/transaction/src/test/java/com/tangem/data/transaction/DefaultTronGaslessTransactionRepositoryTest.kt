@@ -17,6 +17,7 @@ import com.tangem.grow.datasource.gasless.models.tron.TronTokenDto
 import com.tangem.grow.datasource.gasless.models.tron.TronTokensResponse
 import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.error.TronActivationRefusal
+import com.tangem.domain.transaction.error.TronAllowanceTooHigh
 import com.tangem.domain.transaction.models.tron.TronGaslessApprove
 import com.tangem.domain.transaction.models.tron.TronGaslessApproveEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
@@ -278,6 +279,7 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
         assertThat(error.httpCode).isEqualTo(422)
         assertThat(error.message).isEqualTo(model.expectedMessage)
         assertThat(error.tronActivationRefusal).isEqualTo(model.expectedRefusal)
+        assertThat(error.tronAllowanceTooHigh).isEqualTo(model.expectedAllowanceTooHigh)
     }
 
     @Test
@@ -325,6 +327,7 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
             val errorBody: String,
             val expectedMessage: String,
             val expectedRefusal: TronActivationRefusal?,
+            val expectedAllowanceTooHigh: TronAllowanceTooHigh? = null,
         ) {
             override fun toString(): String = case
         }
@@ -360,6 +363,32 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
                 errorBody = errorBody(code = "TRON_ACTIVATION_RATE_LIMITED", details = """{"scope":"global"}"""),
                 expectedMessage = "refused",
                 expectedRefusal = TronActivationRefusal.RateLimited(isPerWallet = false),
+            ),
+            ErrorBodyModel(
+                case = "allowance too high",
+                errorBody = errorBody(
+                    code = "TRON_ALLOWANCE_TOO_HIGH",
+                    details = """{"balance":"50000000","allowance":"49000000","required":"51000000",""" +
+                        """"allowances":{"TU3ymitEKCWQFtASkEeHaPb8NfZcJtCHLt":"1000000",""" +
+                        """"TXF1xDbVGdxFGbovmmmXvBGu8ZiE3Lq4mR":"48000000"}}""",
+                ),
+                expectedMessage = "refused",
+                expectedRefusal = null,
+                expectedAllowanceTooHigh = TronAllowanceTooHigh(
+                    balanceRaw = BigInteger("50000000"),
+                    requiredRaw = BigInteger("51000000"),
+                    allowanceRaw = BigInteger("49000000"),
+                    allowancesRaw = mapOf(
+                        "TU3ymitEKCWQFtASkEeHaPb8NfZcJtCHLt" to BigInteger("1000000"),
+                        "TXF1xDbVGdxFGbovmmmXvBGu8ZiE3Lq4mR" to BigInteger("48000000"),
+                    ),
+                ),
+            ),
+            ErrorBodyModel(
+                case = "allowance too high without details",
+                errorBody = errorBody(code = "TRON_ALLOWANCE_TOO_HIGH", details = "{}"),
+                expectedMessage = "refused",
+                expectedRefusal = null,
             ),
             ErrorBodyModel(
                 case = "sponsorship off",

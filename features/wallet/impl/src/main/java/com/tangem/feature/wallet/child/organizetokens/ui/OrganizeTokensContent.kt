@@ -194,29 +194,6 @@ private fun TokenList(
     }
 }
 
-private fun isValidDropTarget(
-    item: OrganizeRowItemUM,
-    dragging: OrganizeRowItemUM?,
-    isGrouped: Boolean,
-    isAccountsMode: Boolean,
-): Boolean {
-    return when {
-        dragging == null -> true
-        item.id == dragging.id -> true
-        dragging is OrganizeRowItemUM.Network ->
-            item is OrganizeRowItemUM.Placeholder && item.accountId == dragging.accountId
-        dragging is OrganizeRowItemUM.Token -> when (item) {
-            is OrganizeRowItemUM.Token -> when {
-                isGrouped -> item.groupId == dragging.groupId
-                isAccountsMode -> item.accountId == dragging.accountId
-                else -> true
-            }
-            else -> false
-        }
-        else -> false
-    }
-}
-
 @Suppress("LongParameterList")
 @Composable
 private fun LazyItemScope.DraggableItem(
@@ -428,6 +405,8 @@ private fun OrganizeTokensContent_Preview(
             organizeTokensUM = params,
             dragAndDropIntents = object : DragAndDropIntents {
                 override fun onItemDragged(from: ItemPosition, to: ItemPosition) {}
+
+                override fun onItemMoved(from: Int, to: Int) {}
 
                 override fun canDragItemOver(dragOver: ItemPosition, dragging: ItemPosition): Boolean = false
 

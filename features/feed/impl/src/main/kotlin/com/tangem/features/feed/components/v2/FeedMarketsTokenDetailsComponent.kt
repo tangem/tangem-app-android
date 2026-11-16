@@ -19,6 +19,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.button.Back
+import com.tangem.core.ui.ds2.button.GroupEntry
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
@@ -101,13 +102,12 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
             contentPadding = PaddingValues(horizontal = 16.dp),
             fadeEnabled = false,
             blurBackground = false,
-            isEndButtonsGroupBackgroundShown = false,
             startButton = {
                 TangemButton.Back(onClick = expandingSheetClick(sheetExpansion, onExpandSheet) { router.pop() })
             },
             endButtonsGroup = {
-                FeedNavActionButton(
-                    icon = Icons.ic_share_android_20,
+                TangemButton.GroupEntry(
+                    imageVector = Icons.ic_share_android_20,
                     onClick = expandingSheetClick(sheetExpansion, onExpandSheet, state.onShareClick),
                 )
             },

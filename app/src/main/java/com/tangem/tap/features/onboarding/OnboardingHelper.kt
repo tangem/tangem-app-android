@@ -17,13 +17,6 @@ class OnboardingHelper @Inject constructor(
         val cardId = response.card.cardId
 
         return when {
-            response.cardTypesResolver.isVisaWallet() -> {
-                // if (response.visaCardActivationStatus == null) error("Visa card activation status is null")
-                //
-                // response.visaCardActivationStatus !is VisaCardActivationStatus.Activated
-                true
-            }
-
             response.cardTypesResolver.isTangemTwins() -> {
                 if (!response.twinsIsTwinned()) {
                     true

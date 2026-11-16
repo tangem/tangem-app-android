@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.utils.retryOnError
@@ -33,7 +34,6 @@ import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
@@ -51,7 +51,7 @@ internal class DefaultManageTokensRepository(
     private val excludedBlockchains: ExcludedBlockchains,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletAccountsFetcher: WalletAccountsFetcher,
-    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
+    private val supportedAccountTypes: SupportedAccountTypes,
     networkFactory: NetworkFactory,
 ) : ManageTokensRepository {
 
@@ -278,9 +278,10 @@ internal class DefaultManageTokensRepository(
     }
 
     private fun WalletAccountDTO.toAccountDerivation(): AccountDerivation? {
+        if (!supportedAccountTypes.isSupported(this)) return null
+
         return when (type) {
             WalletAccountDTO.Type.JOINT -> OwnerKeyIndex(derivationIndex).getOrNull()
-                ?.takeIf { jointAccountFeatureToggles.isJointAccountEnabled }
                 ?.toNetworkDerivationPath()
                 ?.let(AccountDerivation::Joint)
             WalletAccountDTO.Type.CRYPTO, null -> DerivationIndex(derivationIndex).getOrNull()

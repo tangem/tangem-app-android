@@ -41,4 +41,7 @@ object DeeplinkConst {
     const val SOURCE_KEY = "source"
     const val ACCOUNT_ID_KEY = "account_id"
     const val ENTRY_KEY = "entry"
+    const val TX_ID_KEY = "tx_id"
+    const val RESULT_KEY = "result"
+    const val UID_KEY = "uid"
 }

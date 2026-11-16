@@ -39,7 +39,7 @@ class SendFeedbackEmailUseCase(
     }
 
     private suspend fun getFile(type: FeedbackEmailType): File? {
-        return if (type.isVisaEmail()) {
+        return if (type is FeedbackEmailType.Visa) {
             null
         } else {
             feedbackRepository.getZipLogFile()
@@ -49,7 +49,7 @@ class SendFeedbackEmailUseCase(
     private fun getAddress(type: FeedbackEmailType): String {
         return when {
             type is FeedbackEmailType.Visa.KycRejected -> PAERA_SUPPORT_EMAIL
-            type.isVisaEmail() -> TANGEM_VISA_SUPPORT_EMAIL
+            type is FeedbackEmailType.Visa -> TANGEM_VISA_SUPPORT_EMAIL
             type.walletMetaInfo?.isStart2Coin == true -> START2COIN_SUPPORT_EMAIL
             else -> TANGEM_SUPPORT_EMAIL
         }
@@ -83,10 +83,6 @@ class SendFeedbackEmailUseCase(
         }
     }
 
-    private fun FeedbackEmailType.isVisaEmail(): Boolean {
-        return this is FeedbackEmailType.Visa || this.walletMetaInfo?.isVisa == true
-    }
-
     private fun StringBuilder.appendDisclaimerIfNeeded(type: FeedbackEmailType): StringBuilder {
         return when (type) {
             is FeedbackEmailType.ScanningProblem,
@@ -105,7 +101,6 @@ class SendFeedbackEmailUseCase(
             is FeedbackEmailType.StakingProblem,
             is FeedbackEmailType.SwapProblem,
             is FeedbackEmailType.TransactionSendingProblem,
-            is FeedbackEmailType.Visa.Activation,
             is FeedbackEmailType.Visa.DirectUserRequest,
             is FeedbackEmailType.Visa.MoneyAccountRequest,
             is FeedbackEmailType.Visa.FailedIssueCard,

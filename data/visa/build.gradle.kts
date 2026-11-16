@@ -33,7 +33,6 @@ dependencies {
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
-    implementation(deps.okio)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
@@ -95,6 +94,10 @@ dependencies {
     // region Project - Libs
     api(projects.libs.blockchainSdk)
     api(projects.libs.tangemSdkApi)
+    // endregion
+
+    // region Mocked build
+    mockedImplementation(projects.test.mock)
     // endregion
 
     // region Test

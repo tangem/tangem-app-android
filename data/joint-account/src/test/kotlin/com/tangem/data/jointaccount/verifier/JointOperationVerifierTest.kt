@@ -15,7 +15,6 @@ import com.tangem.data.jointaccount.signing.DefaultJointSignatureRecoverer
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
-import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.models.StatusSource
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.coroutines.test.runTest
@@ -233,6 +232,14 @@ internal class JointOperationVerifierTest {
             expectedReason = VerificationFailed.Reason.SAFE_ADDRESS_MISMATCH,
         ),
         NegativeModel(
+            name = "safe address is the composition's SafeL2 one",
+            jointAccount = jointAccount(safeAddress = COMPUTED_SAFE_L2),
+            safeTx = nativeSafeTx(),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
+            expectedReason = VerificationFailed.Reason.SAFE_ADDRESS_MISMATCH,
+        ),
+        NegativeModel(
             name = "no safe address on the account",
             jointAccount = jointAccount(safeAddress = null),
             safeTx = nativeSafeTx(),
@@ -377,7 +384,11 @@ internal class JointOperationVerifierTest {
         )
 
         val COMPUTED_SAFE: String = DefaultSafeAddressCalculator()
-            .compute(owners = listOf(ALICE, BOB), threshold = 2, singleton = SafeSingleton.SAFE_L2)
+            .compute(owners = listOf(ALICE, BOB), threshold = 2)
+            .getOrNull()!!
+
+        val COMPUTED_SAFE_L2: String = DefaultSafeAddressCalculator()
+            .compute(owners = listOf(ALICE, BOB), threshold = 2, singleton = "0xEdd160fEBBD92E350D4D398fb636302fccd67C7e")
             .getOrNull()!!
 
         fun jointAccount(safeAddress: String? = COMPUTED_SAFE): JointAccount = JointAccount(
