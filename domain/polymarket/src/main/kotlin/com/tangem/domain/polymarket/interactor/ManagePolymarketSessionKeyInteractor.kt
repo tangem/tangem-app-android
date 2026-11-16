@@ -162,19 +162,25 @@ class ManagePolymarketSessionKeyInteractor(
                 TangemLogger.i("Polymarket session key authorization expired before the revocation was sent")
                 PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
             }
-            val revoking = send { relay.revoke(userWalletId, revocationOf(signed)) }
-            val revoked = withTimeoutOrNull(authorizationOf(signed).timeLeft()) {
-                awaitRevoked(userWalletId, signed.ownerAddress(), revoking)
+            var lastKnown: PolymarketSessionKey? = null
+            withTimeoutOrNull(authorizationOf(signed).timeLeft()) {
+                val revoking = send { relay.revoke(userWalletId, revocationOf(signed)) }
+                lastKnown = revoking
+                val revoked = awaitRevoked(userWalletId, signed.ownerAddress(), revoking)
+                lastKnown = revoked
+                emit(PolymarketSessionKeyProgress.Revoked(revoked))
+                sendAuthorization(
+                    userWalletId = userWalletId,
+                    signed = signed,
+                    relayerRejectionRetries = FOLLOW_UP_REJECTION_RETRIES,
+                )
             } ?: run {
-                TangemLogger.e("Polymarket session key authorization expired while waiting for the revocation")
-                raise(PolymarketSessionKeyLifecycleError.Unsettled(revoking))
+                TangemLogger.e("Polymarket session key authorization deadline reached during the renewal")
+                raise(
+                    lastKnown?.let(PolymarketSessionKeyLifecycleError::Unsettled)
+                        ?: PolymarketSessionKeyLifecycleError.StaleSignature(cause = null),
+                )
             }
-            emit(PolymarketSessionKeyProgress.Revoked(revoked))
-            sendAuthorization(
-                userWalletId = userWalletId,
-                signed = signed,
-                relayerRejectionRetries = FOLLOW_UP_REJECTION_RETRIES,
-            )
         }
         emit(PolymarketSessionKeyProgress.Authorizing(pending))
         return awaitActive(userWalletId, sent.ownerAddress, pending)

@@ -45,6 +45,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -979,6 +980,46 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 ).inOrder()
                 coVerify(exactly = 1) { signBatches(any(), any()) }
                 coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the authorization send outlasts the deadline WHEN renew THEN the wallet is released unsettled`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) } returns
+                    walletState(listOf(key(status = PolymarketSessionKeyStatus.REVOKED))).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(any(), any()) } coAnswers {
+                    awaitCancellation()
+                }
+                val interactor = createInteractor()
+                var progress: List<PolymarketSessionKeyProgress> = emptyList()
+
+                // Act
+                val renewing = launch { progress = interactor.renew(USER_WALLET_ID).toList() }
+                advanceTimeBy(SENDABLE_FOLLOW_UP_MILLIS - 1)
+                val batchBeforeDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+                advanceTimeBy(2)
+                renewing.join()
+                val batchAfterDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+
+                // Assert
+                assertThat(batchBeforeDeadline).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+                assertThat(batchAfterDeadline).isEqualTo(Unit.right())
+                assertThat(progress.last()).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.Unsettled(
+                            key(status = PolymarketSessionKeyStatus.REVOKED),
+                        ).left(),
+                    ),
+                )
+                coVerify(exactly = 1) { signBatches(any(), any()) }
             }
 
         @Test
