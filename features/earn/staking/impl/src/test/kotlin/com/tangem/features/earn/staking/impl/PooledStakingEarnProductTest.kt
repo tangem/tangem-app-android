@@ -112,7 +112,6 @@ internal class PooledStakingEarnProductTest {
         assertThat(product.provider).isEqualTo(
             EarnProvider(title = stringReference("P2P.org"), icon = ImageReference.Res(R.drawable.ic_p2p_logo)),
         )
-        assertThat(product.hasLegacyBlock).isTrue()
         assertThat(product.analytics).isEqualTo(EarnProductAnalytics(category = "ETH Staking", product = "Staking"))
     }
 

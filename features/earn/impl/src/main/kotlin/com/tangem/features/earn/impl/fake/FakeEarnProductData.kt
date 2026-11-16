@@ -57,7 +57,6 @@ internal data class FakeEarnProductSpec(
     val title: TextReference,
     val provider: EarnProvider,
     val analytics: EarnProductAnalytics,
-    val hasLegacyBlock: Boolean,
 )
 
 internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
@@ -75,7 +74,7 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
             title = "Pooled staking",
             provider = fakeProvider(name = "P2P", logo = R.drawable.ic_p2p_logo),
             product = "Staking",
-        ).copy(badgeAccent = EarnBadgeAccent.Info, hasLegacyBlock = true)
+        ).copy(badgeAccent = EarnBadgeAccent.Info)
         FakeEarnProductPreset.Vault -> fakeSpec(
             id = "vault",
             rank = 2,
@@ -219,7 +218,6 @@ private fun fakeSpec(id: String, rank: Int, title: String, provider: EarnProvide
         title = stringReference(title),
         provider = provider,
         analytics = EarnProductAnalytics(category = "Earn", product = product),
-        hasLegacyBlock = false,
     )
 
 private fun fakeHowItWorks() = EarnHowItWorks(
