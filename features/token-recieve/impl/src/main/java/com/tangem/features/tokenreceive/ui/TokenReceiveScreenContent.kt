@@ -10,7 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,8 +25,6 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -36,27 +33,9 @@ import com.tangem.features.tokenreceive.entity.ReceiveExtrasHint
 import com.tangem.features.tokenreceive.impl.R
 import com.tangem.features.tokenreceive.ui.state.ReceiveScreenUM
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.launch
 
 @Composable
 internal fun TokenReceiveScreenContent(state: ReceiveScreenUM, modifier: Modifier = Modifier) {
-    val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = LocalTopSnackbarHostState.current
-    val withCopiedSnackbar: (() -> Unit) -> () -> Unit = { copy ->
-        {
-            copy()
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                    SnackbarMessage(
-                        startIconId = R.drawable.ic_check_24,
-                        message = resourceReference(R.string.wallet_notification_address_copied),
-                    ),
-                )
-            }
-        }
-    }
-    val onCopyAddressClick = withCopiedSnackbar(state.onCopyAddressClick)
-
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -76,8 +55,8 @@ internal fun TokenReceiveScreenContent(state: ReceiveScreenUM, modifier: Modifie
                 extrasHint = state.extrasHint,
                 ensName = state.ensName,
                 networkNotice = state.networkNotice,
-                onCopyAddressClick = onCopyAddressClick,
-                onCopyEnsClick = withCopiedSnackbar(state.onCopyEnsClick),
+                onCopyAddressClick = state.onCopyAddressClick,
+                onCopyEnsClick = state.onCopyEnsClick,
             )
             if (state.warnings.isNotEmpty()) {
                 Column(
@@ -99,7 +78,7 @@ internal fun TokenReceiveScreenContent(state: ReceiveScreenUM, modifier: Modifie
             text = resourceReference(R.string.common_copy_address),
             iconEnd = TangemIconUM.Icon(Icons.ic_copy_24),
             size = TangemButton.Size.X12,
-            onClick = onCopyAddressClick,
+            onClick = state.onCopyAddressClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),

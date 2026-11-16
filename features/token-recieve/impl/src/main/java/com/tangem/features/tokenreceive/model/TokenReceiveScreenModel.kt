@@ -5,11 +5,15 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.features.tokenreceive.component.TokenReceiveScreenComponent
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.entity.ReceiveScreenStateFactory
+import com.tangem.features.tokenreceive.impl.R
 import com.tangem.features.tokenreceive.ui.state.ReceiveScreenUM
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -24,6 +28,7 @@ internal class TokenReceiveScreenModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     analyticsEventHandler: AnalyticsEventHandler,
+    private val messageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<TokenReceiveScreenComponent.Params>()
@@ -73,5 +78,11 @@ internal class TokenReceiveScreenModel @Inject constructor(
 
     private fun copy(address: ReceiveAddress) {
         params.callback.onCopyClick(address = address, source = TokenReceiveCopyActionSource.Receive)
+        messageSender.send(
+            SnackbarMessage(
+                startIconId = R.drawable.ic_check_24,
+                message = resourceReference(R.string.wallet_notification_address_copied),
+            ),
+        )
     }
 }

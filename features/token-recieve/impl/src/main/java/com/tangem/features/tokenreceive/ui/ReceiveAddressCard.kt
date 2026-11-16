@@ -28,10 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
@@ -44,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -53,6 +52,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
@@ -64,18 +65,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val ADDRESS_EDGE_LENGTH = 5
-private const val PLATE_HIDDEN_SCALE = 0.96f
 
-private const val REVEAL_DELAY_MILLIS = 350L
-private const val REVEAL_DURATION_MILLIS = 500
-private val RevealEasing = CubicBezierEasing(a = 0.8f, b = 0f, c = 0.2f, d = 1f)
-
-private const val SQUEEZE_SCALE = 0.97f
-private const val SQUEEZE_MIN_HOLD_MILLIS = 120L
-private val SqueezeIn = spring<Float>(dampingRatio = 0.7f, stiffness = 815f)
-private val SqueezeOut = spring<Float>(dampingRatio = 0.48f, stiffness = 273f)
-
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "MagicNumber")
 @Composable
 internal fun ReceiveAddressCard(
     address: String,
@@ -89,8 +80,14 @@ internal fun ReceiveAddressCard(
 ) {
     val reveal = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
-        delay(REVEAL_DELAY_MILLIS)
-        reveal.animateTo(targetValue = 1f, animationSpec = tween(REVEAL_DURATION_MILLIS, easing = RevealEasing))
+        val revealDelayMillis = 350L
+        val revealDurationMillis = 500
+        val revealEasing = CubicBezierEasing(a = 0.8f, b = 0f, c = 0.2f, d = 1f)
+        delay(revealDelayMillis)
+        reveal.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = revealDurationMillis, easing = revealEasing),
+        )
     }
     val squeeze = rememberSqueezeState()
 
@@ -257,6 +254,7 @@ private fun styledAddress(address: String): AnnotatedString {
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun CardWithNotice(
     reveal: () -> Float,
@@ -279,7 +277,8 @@ private fun CardWithNotice(
             val plateOffset = { hiddenOffset() + reveal() * noticeHeight }
             platePlaceable.placeRelativeWithLayer(x = 0, y = 0) {
                 translationY = plateOffset()
-                val scale = PLATE_HIDDEN_SCALE + (1f - PLATE_HIDDEN_SCALE) * reveal()
+                val plateHiddenScale = 0.96f
+                val scale = lerp(start = plateHiddenScale, stop = 1f, fraction = reveal())
                 scaleX = scale
                 scaleY = scale
             }
@@ -294,22 +293,31 @@ private fun CardWithNotice(
     }
 }
 
+@Suppress("MagicNumber")
 @Stable
 private class SqueezeState(private val animatable: Animatable<Float, *>) {
     val scale: Float get() = animatable.value
 
-    suspend fun press() = animatable.animateTo(SQUEEZE_SCALE, SqueezeIn)
+    suspend fun press() {
+        val squeezeScale = 0.97f
+        val squeezeIn = spring<Float>(dampingRatio = 0.7f, stiffness = 815f)
+        animatable.animateTo(targetValue = squeezeScale, animationSpec = squeezeIn)
+    }
 
-    suspend fun release() = animatable.animateTo(1f, SqueezeOut)
+    suspend fun release() {
+        val squeezeOut = spring<Float>(dampingRatio = 0.48f, stiffness = 273f)
+        animatable.animateTo(targetValue = 1f, animationSpec = squeezeOut)
+    }
 }
 
 @Composable
 private fun rememberSqueezeState(): SqueezeState = remember { SqueezeState(Animatable(1f)) }
 
+@Suppress("MagicNumber")
 @Composable
 private fun Modifier.squeezeClick(state: SqueezeState, onClick: () -> Unit): Modifier {
     val scope = rememberCoroutineScope()
-    val hapticFeedback = LocalHapticFeedback.current
+    val hapticManager = LocalHapticManager.current
     val currentOnClick by rememberUpdatedState(onClick)
     return this
         .pointerInput(state) {
@@ -320,15 +328,15 @@ private fun Modifier.squeezeClick(state: SqueezeState, onClick: () -> Unit): Mod
                     val isReleased = tryAwaitRelease()
                     scope.launch {
                         if (isReleased) {
-                            val remainingHold = SQUEEZE_MIN_HOLD_MILLIS - (SystemClock.uptimeMillis() - pressedAt)
-                            if (remainingHold > 0) delay(remainingHold)
+                            val squeezeMinHoldMillis = 120L
+                            delay(squeezeMinHoldMillis - (SystemClock.uptimeMillis() - pressedAt))
                         }
                         squeeze.cancel()
                         state.release()
                     }
                 },
                 onTap = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    hapticManager.perform(TangemHapticEffect.View.LongPress)
                     currentOnClick()
                 },
             )
