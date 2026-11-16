@@ -45,8 +45,6 @@ internal class FakeEarnProduct(
 
     override val analytics: EarnProductAnalytics = spec.analytics
 
-    override val hasLegacyBlock: Boolean = spec.hasLegacyBlock
-
     override fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>> = flowOf(
         mapOf(CryptoCurrency.ID.fromValue(FAKE_ETH_CURRENCY_ID) to fakeSummary(preset, behavior.position)),
     )

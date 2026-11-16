@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.features.earn.lending.impl.provider.FakeLendingProvider
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
+import com.tangem.test.core.assertEitherLeft
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -52,11 +53,14 @@ internal class DefaultLendingFetcherTest {
 
     @Test
     fun `GIVEN currency without asset WHEN fetch THEN Left without refresh`() = runTest {
+        // Arrange
+        val bsc = currencies.createCoin(Blockchain.BSC)
+
         // Act
-        val actual = fetcher(LendingFetcher.Params(userWalletId, currencies.createCoin(Blockchain.BSC)))
+        val actual = fetcher(LendingFetcher.Params(userWalletId, bsc))
 
         // Assert
-        assertThat(actual.isLeft()).isTrue()
+        assertEitherLeft(actual, IllegalArgumentException("Lending is not offered for ${bsc.id}"))
         assertThat(provider.refreshCalls).isEmpty()
     }
 
@@ -69,7 +73,7 @@ internal class DefaultLendingFetcherTest {
         val actual = fetcher(LendingFetcher.Params(userWalletId, eth))
 
         // Assert
-        assertThat(actual.isLeft()).isTrue()
+        assertEitherLeft(actual, IllegalStateException("provider"))
     }
 
     @Test
@@ -81,6 +85,6 @@ internal class DefaultLendingFetcherTest {
         val actual = fetcher(LendingFetcher.Params(userWalletId, eth))
 
         // Assert
-        assertThat(actual.isLeft()).isTrue()
+        assertEitherLeft(actual, IllegalStateException("network"))
     }
 }

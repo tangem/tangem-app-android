@@ -50,6 +50,7 @@ internal class DefaultWalletManagersFacadeSafeManagerTest {
         jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = blockchainSDKFactory,
         yieldSendUpgradeDecisions = YieldSendUpgradeDecisions(),
+        internalTransfersPolicy = mockk(relaxed = true),
     )
 
     @BeforeEach

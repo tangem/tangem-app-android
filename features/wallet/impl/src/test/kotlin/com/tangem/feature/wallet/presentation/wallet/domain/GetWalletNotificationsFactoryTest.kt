@@ -181,7 +181,7 @@ internal class GetWalletNotificationsFactoryTest {
         coEvery { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) } returns false.right()
         every { isSocialBackupCompletedUseCase.flow(any()) } returns flowOf(false)
         every { walletFeatureToggles.isWalletLinkingEnabled } returns true
-        every { getWalletLinkStatusUseCase(any()) } returns flowOf(true)
+        every { getWalletLinkStatusUseCase(any<UserWallet>()) } returns flowOf(true)
         // Balance is loaded and non-zero, so both the outdated-data and add-funds banners stay hidden.
         stubAccountStatusList(balance = LOADED_NON_ZERO)
 
@@ -237,14 +237,14 @@ internal class GetWalletNotificationsFactoryTest {
         fun `GIVEN toggle disabled WHEN create THEN link status is not read and no banner is shown`() = runTest {
             // Arrange
             every { walletFeatureToggles.isWalletLinkingEnabled } returns false
-            every { getWalletLinkStatusUseCase(any()) } returns flowOf(false)
+            every { getWalletLinkStatusUseCase(any<UserWallet>()) } returns flowOf(false)
 
             // Act
             val result = factory.create(coldWallet, clickIntents).first().notifications
 
             // Assert
             assertThat(result).isEmpty()
-            verify(exactly = 0) { getWalletLinkStatusUseCase(any()) }
+            verify(exactly = 0) { getWalletLinkStatusUseCase(any<UserWallet>()) }
         }
 
         @Test

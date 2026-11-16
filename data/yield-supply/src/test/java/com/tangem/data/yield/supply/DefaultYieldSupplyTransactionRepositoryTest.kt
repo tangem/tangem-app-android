@@ -20,6 +20,9 @@ import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFact
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndeterminateException
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
+import com.tangem.blockchain.yieldsupply.providers.ethereum.factory.EthereumYieldSupplyDeployCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
@@ -30,6 +33,8 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.models.YieldModuleAddresses
+import com.tangem.domain.yield.supply.models.YieldModulePreparation
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.test.core.ProvideTestModels
@@ -47,6 +52,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -945,7 +951,12 @@ class DefaultYieldSupplyTransactionRepositoryTest {
                 coEvery { nativeWalletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
 
                 // Act
-                val actual = nativeRepository.createNativeEnterTransaction(userWalletId, ethereum, BigDecimal("1.5"))
+                val actual = nativeRepository.createNativeEnterTransaction(
+                    userWalletId = userWalletId,
+                    network = ethereum,
+                    amount = BigDecimal("1.5"),
+                    wrapIntoUpgrade = true,
+                )
 
                 // Assert
                 Truth.assertThat(actual).isEqualTo(nativeTransaction(BigDecimal("1.5"), enterWithNative))
@@ -960,7 +971,12 @@ class DefaultYieldSupplyTransactionRepositoryTest {
                 coEvery { nativeWalletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.NotDeployed
 
                 // Act
-                val actual = nativeRepository.createNativeEnterTransaction(userWalletId, ethereum, BigDecimal.ONE)
+                val actual = nativeRepository.createNativeEnterTransaction(
+                    userWalletId = userWalletId,
+                    network = ethereum,
+                    amount = BigDecimal.ONE,
+                    wrapIntoUpgrade = true,
+                )
 
                 // Assert
                 Truth.assertThat(actual).isEqualTo(nativeTransaction(BigDecimal.ONE, enterWithNative))
@@ -973,7 +989,12 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             coEvery { nativeWalletManager.checkModuleVersionStatus() } returns upgradeAvailable()
 
             // Act
-            val actual = nativeRepository.createNativeEnterTransaction(userWalletId, ethereum, BigDecimal.ONE)
+            val actual = nativeRepository.createNativeEnterTransaction(
+                userWalletId = userWalletId,
+                network = ethereum,
+                amount = BigDecimal.ONE,
+                wrapIntoUpgrade = true,
+            )
 
             // Assert
             val callData = (actual.extras as EthereumTransactionExtras).callData
@@ -982,6 +1003,25 @@ class DefaultYieldSupplyTransactionRepositoryTest {
                 .isEqualTo(LATEST_IMPLEMENTATION)
             Truth.assertThat(callData.innerCallData).isSameInstanceAs(enterWithNative)
             Truth.assertThat(actual.amount).isEqualTo(Amount(value = BigDecimal.ONE, blockchain = Blockchain.Ethereum))
+        }
+
+        @Test
+        fun `GIVEN outdated module and no wrap WHEN createNativeEnterTransaction THEN enter goes bare`() = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+            coEvery { nativeWalletManager.checkModuleVersionStatus() } returns upgradeAvailable()
+
+            // Act
+            val actual = nativeRepository.createNativeEnterTransaction(
+                userWalletId = userWalletId,
+                network = ethereum,
+                amount = BigDecimal.ONE,
+                wrapIntoUpgrade = false,
+            )
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(nativeTransaction(BigDecimal.ONE, enterWithNative))
+            coVerify(exactly = 0) { nativeWalletManager.checkModuleVersionStatus() }
         }
 
         @ParameterizedTest
@@ -995,7 +1035,12 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
             // Act
             val actual = runCatching {
-                nativeRepository.createNativeEnterTransaction(userWalletId, ethereum, BigDecimal.ONE)
+                nativeRepository.createNativeEnterTransaction(
+                    userWalletId = userWalletId,
+                    network = ethereum,
+                    amount = BigDecimal.ONE,
+                    wrapIntoUpgrade = true,
+                )
             }.exceptionOrNull()
 
             // Assert
@@ -1016,7 +1061,12 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
             // Act
             val actual = runCatching {
-                nativeRepository.createNativeEnterTransaction(userWalletId, ethereum, BigDecimal.ONE)
+                nativeRepository.createNativeEnterTransaction(
+                    userWalletId = userWalletId,
+                    network = ethereum,
+                    amount = BigDecimal.ONE,
+                    wrapIntoUpgrade = true,
+                )
             }.exceptionOrNull()
 
             // Assert
@@ -1026,6 +1076,134 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
         private fun provideTestModels() = nativeRefusalModels()
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreateNativePreparationTransaction {
+
+        private val zeroCoin = Amount(value = BigDecimal.ZERO, blockchain = Blockchain.Ethereum)
+
+        @BeforeEach
+        fun resetMocks() {
+            resetNativeMocks()
+            coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+            every { nativeWalletManager.getYieldSupplyContractAddresses() } returns mockk {
+                every { factoryContractAddress } returns FACTORY_ADDRESS
+            }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN up to date module WHEN createNativePreparationTransaction THEN plain call without amount`(
+            model: PreparationModel,
+        ) = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
+
+            // Act
+            val actual = nativeRepository.createNativePreparationTransaction(
+                userWalletId = userWalletId,
+                network = ethereum,
+                wrappedToken = nativeWeth,
+                preparation = model.preparation,
+            )
+
+            // Assert
+            Truth.assertThat(actual.amount).isEqualTo(zeroCoin)
+            Truth.assertThat(actual.sourceAddress).isEqualTo(OWNER_ADDRESS)
+            Truth.assertThat(actual.destinationAddress).isEqualTo(model.destination)
+            Truth.assertThat(actual.fee).isNull()
+            Truth.assertThat((actual.extras as EthereumTransactionExtras).callData.describe())
+                .isEqualTo(model.callData(zeroCoin).describe())
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN outdated module WHEN createNativePreparationTransaction THEN only module calls go inside upgrade`(
+            model: PreparationModel,
+        ) = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.checkModuleVersionStatus() } returns upgradeAvailable()
+
+            // Act
+            val actual = nativeRepository.createNativePreparationTransaction(
+                userWalletId = userWalletId,
+                network = ethereum,
+                wrappedToken = nativeWeth,
+                preparation = model.preparation,
+            )
+
+            // Assert
+            val plainCallData = model.callData(zeroCoin)
+            val expectedCallData = if (model.preparation == YieldModulePreparation.Deploy) {
+                plainCallData
+            } else {
+                EthereumYieldSupplyUpgradeToAndCallCallData(
+                    newImplementation = LATEST_IMPLEMENTATION,
+                    innerCallData = plainCallData,
+                )
+            }
+            Truth.assertThat((actual.extras as EthereumTransactionExtras).callData.describe())
+                .isEqualTo(expectedCallData.describe())
+            Truth.assertThat(actual.destinationAddress).isEqualTo(model.destination)
+            Truth.assertThat(actual.amount).isEqualTo(zeroCoin)
+        }
+
+        @ParameterizedTest
+        @MethodSource("moduleCallRefusalModels")
+        fun `GIVEN module that cannot take the call WHEN createNativePreparationTransaction THEN throws`(
+            model: PreparationRefusalModel,
+        ) = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.checkModuleVersionStatus() } returns model.refusal.versionStatus
+
+            // Act
+            val actual = runCatching {
+                nativeRepository.createNativePreparationTransaction(
+                    userWalletId = userWalletId,
+                    network = ethereum,
+                    wrappedToken = nativeWeth,
+                    preparation = model.preparation,
+                )
+            }.exceptionOrNull()
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(model.refusal.expected)
+            Truth.assertThat(actual).hasMessageThat().isEqualTo(model.refusal.expectedMessage)
+        }
+
+        fun moduleCallRefusalModels() = listOf(YieldModulePreparation.InitToken, YieldModulePreparation.ReactivateToken)
+            .flatMap { preparation -> nativeRefusalModels().map { PreparationRefusalModel(preparation, it) } }
+
+        private fun SmartContractCallData?.describe() = this?.let { "${it::class.simpleName}:${it.data.toList()}" }
+
+        private fun provideTestModels() = listOf(
+            PreparationModel(YieldModulePreparation.Deploy, FACTORY_ADDRESS) {
+                EthereumYieldSupplyDeployCallData(
+                    address = OWNER_ADDRESS,
+                    tokenContractAddress = NATIVE_WETH_ADDRESS,
+                    maxNetworkFee = it,
+                )
+            },
+            PreparationModel(YieldModulePreparation.InitToken, MODULE_ADDRESS) {
+                EthereumYieldSupplyInitTokenCallData(tokenContractAddress = NATIVE_WETH_ADDRESS, maxNetworkFee = it)
+            },
+            PreparationModel(YieldModulePreparation.ReactivateToken, MODULE_ADDRESS) {
+                EthereumYieldSupplyReactivateTokenCallData(
+                    tokenContractAddress = NATIVE_WETH_ADDRESS,
+                    maxNetworkFee = it,
+                )
+            },
+        )
+    }
+
+    data class PreparationRefusalModel(val preparation: YieldModulePreparation, val refusal: NativeRefusalModel)
+
+    class PreparationModel(
+        val preparation: YieldModulePreparation,
+        val destination: String,
+        val callData: (Amount) -> SmartContractCallData,
+    )
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -1208,6 +1386,64 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetNativeYieldModuleAddresses {
+
+        @BeforeEach
+        fun resetMocks() {
+            resetNativeMocks()
+            every { nativeWalletManager.getYieldSupplyContractAddresses() } returns mockk {
+                every { factoryContractAddress } returns FACTORY_ADDRESS
+            }
+        }
+
+        @Test
+        fun `GIVEN deployed module WHEN getNativeYieldModuleAddresses THEN returns its address and the factory`() =
+            runTest {
+                // Arrange
+                coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+
+                // Act
+                val actual = nativeRepository.getNativeYieldModuleAddresses(userWalletId, ethereum)
+
+                // Assert
+                Truth.assertThat(actual)
+                    .isEqualTo(YieldModuleAddresses(moduleAddress = MODULE_ADDRESS, factoryAddress = FACTORY_ADDRESS))
+                coVerify(exactly = 0) { nativeWalletManager.calculateYieldModuleAddress() }
+            }
+
+        @Test
+        fun `GIVEN module not deployed WHEN getNativeYieldModuleAddresses THEN returns the calculated address`() =
+            runTest {
+                // Arrange
+                coEvery { nativeWalletManager.getYieldModuleAddress() } returns EthereumUtils.ZERO_ADDRESS
+                coEvery { nativeWalletManager.calculateYieldModuleAddress() } returns MODULE_ADDRESS
+
+                // Act
+                val actual = nativeRepository.getNativeYieldModuleAddresses(userWalletId, ethereum)
+
+                // Assert
+                Truth.assertThat(actual)
+                    .isEqualTo(YieldModuleAddresses(moduleAddress = MODULE_ADDRESS, factoryAddress = FACTORY_ADDRESS))
+            }
+
+        @Test
+        fun `GIVEN no factory WHEN getNativeYieldModuleAddresses THEN throws`() = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+            every { nativeWalletManager.getYieldSupplyContractAddresses() } returns null
+
+            // Act
+            val actual = runCatching { nativeRepository.getNativeYieldModuleAddresses(userWalletId, ethereum) }
+                .exceptionOrNull()
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(IllegalStateException::class.java)
+            Truth.assertThat(actual).hasMessageThat().isEqualTo("Factory contract address is null")
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class GetWithdrawLiquidity {
 
         @BeforeEach
@@ -1289,6 +1525,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         const val MODULE_ADDRESS = "0x2222222222222222222222222222222222222222"
         const val OLD_IMPLEMENTATION = "0x4444444444444444444444444444444444444444"
         const val LATEST_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
+        const val FACTORY_ADDRESS = "0x7777777777777777777777777777777777777777"
         const val OWNER_ADDRESS = "0x6666666666666666666666666666666666666666"
         const val NATIVE_WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
         const val NATIVE_DERIVATION_PATH = "m/44'/60'/0'/0/0"

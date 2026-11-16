@@ -1,6 +1,8 @@
 package com.tangem.data.txhistory.repository
 
 import arrow.core.Either
+import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ETAG_HEADER
@@ -11,6 +13,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
 import com.tangem.store.datasource.jointaccount.JointAccountApi
+import com.tangem.store.datasource.jointaccount.JointWalletNotLinkedResolver
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryItemDto
 import com.tangem.store.datasource.txhistory.db.dao.JointOperationDao
 import com.tangem.utils.logging.TangemLogger
@@ -26,9 +29,11 @@ import javax.inject.Inject
 internal class DefaultJointOperationHistoryRepository @Inject constructor(
     private val jointAccountApi: JointAccountApi,
     private val jointOperationDao: JointOperationDao,
+    @NetworkMoshi moshi: Moshi,
 ) : JointOperationHistoryRepository {
 
     private val finishedConverter = FinishedJointOperationConverter()
+    private val walletNotLinkedResolver = JointWalletNotLinkedResolver(moshi)
     private val operationETags = ConcurrentHashMap<OperationKey, String>()
 
     override fun getFinishedOperations(
@@ -99,15 +104,18 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
                     JointOperationFetchResult.Gone
                 }
             }
-            is ApiResponse.Error -> when ((response.cause as? ApiResponseError.HttpException)?.code) {
-                ApiResponseError.HttpException.Code.NOT_MODIFIED -> JointOperationFetchResult.NotModified
-                ApiResponseError.HttpException.Code.NOT_FOUND,
-                ApiResponseError.HttpException.Code.FORBIDDEN,
-                -> {
-                    operationETags.remove(key)
-                    JointOperationFetchResult.Gone
+            is ApiResponse.Error -> {
+                if (walletNotLinkedResolver.isWalletNotLinked(response.cause)) throw response.cause
+                when ((response.cause as? ApiResponseError.HttpException)?.code) {
+                    ApiResponseError.HttpException.Code.NOT_MODIFIED -> JointOperationFetchResult.NotModified
+                    ApiResponseError.HttpException.Code.NOT_FOUND,
+                    ApiResponseError.HttpException.Code.FORBIDDEN,
+                    -> {
+                        operationETags.remove(key)
+                        JointOperationFetchResult.Gone
+                    }
+                    else -> throw response.cause
                 }
-                else -> throw response.cause
             }
         }
     }

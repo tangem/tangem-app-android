@@ -23,7 +23,6 @@ import com.tangem.domain.tangempay.TangemPayEligibilityManager
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
@@ -50,7 +49,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val onboardingStarter: TangemPayOnboardingStarter,
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val uiMessageSender: UiMessageSender,
     videoFactory: LoopingVideoController.Factory,
@@ -58,13 +56,9 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
 
-    private val video = if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
-        videoFactory.createPayBundleVideo(scope = modelScope)
-    } else {
-        null
-    }
+    private val video = videoFactory.createPayBundleVideo(scope = modelScope)
 
-    val videoState: StateFlow<LoopingVideoState>? = video?.state
+    val videoState: StateFlow<LoopingVideoState> = video.state
 
     val bottomSheetNavigation: SlotNavigation<TangemPayOnboardingNavigation> = SlotNavigation()
 
@@ -92,6 +86,8 @@ internal class TangemPayOnboardingModel @Inject constructor(
         is TangemPayOnboardingComponent.Params.HotWalletOnboarding,
         -> null
     }
+
+    private val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
 
     private val starterCallbacks = TangemPayOnboardingStarter.Callbacks(
         onLoadingChange = { isLoading ->
@@ -133,16 +129,20 @@ internal class TangemPayOnboardingModel @Inject constructor(
         }
     }
 
-    private fun showOnboarding() {
+    private suspend fun showOnboarding() {
         uiState.update { state ->
             TangemPayOnboardingScreenState.Content(
                 onBack = state.onBack,
                 onTermsClick = ::onTermsClick,
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
                     isLoading = false,
+                    isTangemIconShown = hasCompatibleColdWallet(
+                        eligibilityManager = eligibilityManager,
+                        userWalletsListRepository = userWalletsListRepository,
+                        shouldExcludePaeraCustomers = shouldExcludePaeraCustomers,
+                    ),
                     onClick = ::onGetCardClick,
                 ),
-                isUnifiedOnboarding = moneyAccountFeatureToggles.isMoneyAccountsEnabled,
             )
         }
     }
@@ -185,7 +185,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked(entryChannel = entryChannel))
-        val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
         modelScope.launch {
             val walletsIds =
                 eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = shouldExcludePaeraCustomers)
@@ -225,11 +224,11 @@ internal class TangemPayOnboardingModel @Inject constructor(
     }
 
     fun setVideoRunning(isRunning: Boolean) {
-        video?.setRunning(isRunning = isRunning)
+        video.setRunning(isRunning = isRunning)
     }
 
     override fun onDestroy() {
-        video?.release()
+        video.release()
         super.onDestroy()
     }
 

@@ -11,6 +11,12 @@ android {
 dependencies {
     /** Core */
     api(projects.core.ui)
+    api(projects.core.analytics)
+    implementation(projects.core.analytics.models)
+    api(projects.core.decompose)
+
+    /** Domain */
+    api(projects.domain.tangempay)
 
     /** Compose */
     api(deps.compose.foundation)
@@ -18,4 +24,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

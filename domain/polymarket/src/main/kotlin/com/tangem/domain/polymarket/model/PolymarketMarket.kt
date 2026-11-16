@@ -54,4 +54,7 @@ data class PolymarketMarket(
     val orderIndex: Int,
     val outcomes: List<PolymarketOutcome>,
     val version: PolymarketMarketVersion,
+    val sportsMarketType: String? = null,
+    /** Raw market line; picker positions carry a separate left-team handicap or over/under threshold. */
+    val line: BigDecimal? = null,
 )

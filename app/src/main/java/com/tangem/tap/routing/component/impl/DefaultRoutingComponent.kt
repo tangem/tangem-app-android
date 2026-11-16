@@ -56,8 +56,8 @@ import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.startup.AppStartupGateComponent
 import com.tangem.tap.routing.utils.ChildFactory
-import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.routing.utils.PromoPageRouter
+import com.tangem.tap.routing.utils.RootDeepLinkDispatcher
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import dagger.assisted.Assisted
@@ -76,7 +76,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val uiDependencies: UiDependencies,
     private val wcRoutingComponentFactory: WcRoutingComponent.Factory,
     private val campaignsComponentFactory: CampaignsComponent.Factory,
-    private val deeplinkFactory: DeepLinkFactory,
+    private val rootDeepLinkDispatcher: RootDeepLinkDispatcher,
     private val tangemHotSDKProxy: TangemHotSDKProxy,
     private val hotAccessCodeRequestComponentFactory: HotAccessCodeRequestComponent.Factory,
     private val hotAccessCodeRequesterProxy: HotWalletPasswordRequesterProxy,
@@ -164,7 +164,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
             currentRoute.value = stack.active.configuration
             wcRoutingComponent.onAppRouteChange(stack.active.configuration)
-            deeplinkFactory.checkRoutingReadiness(stack.active.configuration)
 
             if (appRouterConfig.stack != stackItems) {
                 appRouterConfig.stack = stackItems
@@ -173,7 +172,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
         configureProxies()
         initializeInitialNavigation()
-        appsFlyerDeeplinkRouter.observe(scope = componentScope, currentRoute = currentRoute)
+        rootDeepLinkDispatcher.observe(scope = componentScope, currentRoute = currentRoute, router = router)
+        appsFlyerDeeplinkRouter.observe(scope = componentScope, currentRoute = currentRoute, router = router)
         promoPageRouter.observe(scope = componentScope, currentRoute = currentRoute)
     }
 

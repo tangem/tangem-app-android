@@ -7,8 +7,15 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -17,6 +24,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class LoopingVideoControllerTest {
@@ -374,15 +382,204 @@ internal class LoopingVideoControllerTest {
             }
     }
 
+    @Nested
+    inner class RemoteSource {
+
+        @Test
+        fun `GIVEN a source still loading WHEN created THEN the player is not told it is ready`() = runTest {
+            // Arrange
+            val loading = CompletableDeferred<Unit>()
+
+            // Act
+            createController(loadSource = { loading.await() })
+            runCurrent()
+
+            // Assert
+            verify(exactly = 0) { player.markSourceReady() }
+        }
+
+        @Test
+        fun `GIVEN a source WHEN its load completes THEN the player is told once`() = runTest {
+            // Act
+            createController(loadSource = {})
+            runCurrent()
+
+            // Assert
+            verify(exactly = 1) { player.markSourceReady() }
+        }
+
+        @Test
+        fun `GIVEN animations off system-wide WHEN the source loads THEN the player is still told it is ready`() =
+            runTest {
+                // Arrange
+                every { player.isMotionEnabled } returns false
+
+                // Act
+                val controller = createController(loadSource = {})
+                runCurrent()
+
+                // Assert
+                verify(exactly = 1) { player.markSourceReady() }
+                assertThat(controller.state.value.isMotionEnabled).isFalse()
+            }
+
+        @Test
+        fun `GIVEN a raw clip WHEN created THEN the player is never told about a source`() = runTest {
+            // Act
+            createController()
+            runCurrent()
+
+            // Assert
+            verify(exactly = 0) { player.markSourceReady() }
+        }
+
+        @Test
+        fun `GIVEN the load fails WHEN it is noticed THEN the poster stays and a load failure is reported once`() =
+            runTest {
+                // Act
+                val controller = createController(loadSource = { throw LOAD_ERROR })
+                runCurrent()
+
+                // Assert
+                assertThat(controller.state.value.isFailed).isTrue()
+                assertThat(controller.isFirstFrameShown()).isFalse()
+                assertThat(failures).containsExactly(ReportedFailure(LOAD_ERROR, hasRenderedFrame = false))
+                verify(exactly = 1) { player.setRunning(isRunning = false) }
+                verify(exactly = 0) { player.markSourceReady() }
+            }
+
+        @Test
+        fun `GIVEN a loader failing at once on an immediate dispatcher WHEN created THEN it is already failed`() =
+            runTest {
+                // Arrange
+                val immediateScope = CoroutineScope(UnconfinedTestDispatcher(testScheduler) + Job())
+
+                // Act
+                val controller = createController(scope = immediateScope, loadSource = { throw LOAD_ERROR })
+
+                // Assert
+                assertThat(failures).containsExactly(ReportedFailure(LOAD_ERROR, hasRenderedFrame = false))
+                assertThat(controller.state.value.isFailed).isTrue()
+            }
+
+        @Test
+        fun `GIVEN the load failed WHEN the screen asks to run THEN playback stays stopped`() = runTest {
+            // Arrange
+            val controller = createController(loadSource = { throw LOAD_ERROR })
+            runCurrent()
+
+            // Act
+            controller.setRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 0) { player.setRunning(isRunning = true) }
+            assertThat(controller.state.value.isRunning).isFalse()
+        }
+
+        @Test
+        fun `GIVEN the load failed WHEN the player also reports an error THEN the failure is reported once`() =
+            runTest {
+                // Arrange
+                createController(loadSource = { throw LOAD_ERROR })
+                runCurrent()
+
+                // Act
+                playerListener.onError(PLAYBACK_ERROR)
+
+                // Assert
+                assertThat(failures).containsExactly(ReportedFailure(LOAD_ERROR, hasRenderedFrame = false))
+            }
+
+        @Test
+        fun `GIVEN a load in flight WHEN released THEN the load is cancelled and the player is not told it is ready`() =
+            runTest {
+                // Arrange
+                val loading = CompletableDeferred<Unit>()
+                val controller = createController(loadSource = { loading.await() })
+                runCurrent()
+
+                // Act
+                controller.release()
+                loading.complete(Unit)
+                runCurrent()
+
+                // Assert
+                verify(exactly = 0) { player.markSourceReady() }
+                assertThat(failures).isEmpty()
+            }
+
+        @Test
+        fun `GIVEN a loader failing with another error on cancellation WHEN released THEN no failure is reported`() =
+            runTest {
+                // Arrange
+                val loading = CompletableDeferred<Unit>()
+                val controller = createController(
+                    loadSource = {
+                        try {
+                            loading.await()
+                        } catch (e: CancellationException) {
+                            throw IOException("aborted", e)
+                        }
+                    },
+                )
+                runCurrent()
+
+                // Act
+                controller.release()
+                runCurrent()
+
+                // Assert
+                assertThat(failures).isEmpty()
+                assertThat(controller.state.value.isFailed).isFalse()
+                verify(exactly = 0) { player.markSourceReady() }
+            }
+
+        @Test
+        fun `GIVEN a loader ignoring cancellation WHEN released THEN the player is not told it is ready`() = runTest {
+            // Arrange
+            val loading = CompletableDeferred<Unit>()
+            val controller = createController(loadSource = { runCatching { loading.await() } })
+            runCurrent()
+
+            // Act
+            controller.release()
+            runCurrent()
+
+            // Assert
+            verify(exactly = 0) { player.markSourceReady() }
+            assertThat(failures).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN a load in flight WHEN the scope is cancelled THEN no failure is reported`() = runTest {
+            // Arrange
+            val loadScope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
+            val controller = createController(scope = loadScope, loadSource = { CompletableDeferred<Unit>().await() })
+            runCurrent()
+
+            // Act
+            loadScope.cancel()
+            runCurrent()
+
+            // Assert
+            assertThat(controller.state.value.isFailed).isFalse()
+            assertThat(failures).isEmpty()
+        }
+    }
+
     private fun surfaceAttached(isAttached: Boolean) {
         every { player.isSurfaceAttached } returns isAttached
     }
 
-    private fun TestScope.createController() = LoopingVideoController(
-        scope = backgroundScope,
+    private fun TestScope.createController(
+        scope: CoroutineScope = backgroundScope,
+        loadSource: (suspend () -> Unit)? = null,
+    ) = LoopingVideoController(
+        scope = scope,
         frameSize = FRAME_SIZE,
         diagnosticsSubject = SUBJECT,
         onFailed = { error, hasRenderedFrame -> failures += ReportedFailure(error, hasRenderedFrame) },
+        loadSource = loadSource,
         createPlayer = { listener ->
             heardPlayerListener = listener
             player
@@ -411,6 +608,7 @@ internal class LoopingVideoControllerTest {
         const val SUBJECT = "Test video"
         val FRAME_SIZE = VideoFrameSize(width = 1080, height = 1920)
         val PLAYBACK_ERROR = IllegalStateException("decoder failed")
+        val LOAD_ERROR = IllegalStateException("offline")
 
         /** The first check only takes the baseline, then four more checks 250 ms apart see the count stand still. */
         const val STALL_DETECTED_AFTER_MS = 1_251L

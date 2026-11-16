@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl.picker.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,17 +17,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import com.tangem.core.media.VideoSurfaceState
+import com.tangem.core.media.ui.VideoSurface
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import kotlin.math.roundToInt
 
 /**
- * A gradient stands in until the video arrives. The frame keeps the design's 402 × 722 proportion, but only its top
- * 495 count as the page's height: the title, the cards and the description lie over its lower part.
+ * The flat `bg.tertiary` fill is the poster: it shows until the video's first frame is on screen, and stays without a
+ * [video]. The bottom tint always lies over it.
+ * The frame keeps the design's 402 × 722 proportion, but only its top 495 count as the page's height: the title, the
+ * cards and the description lie over its lower part.
  */
 @Composable
-internal fun EarnPickerHero(modifier: Modifier = Modifier) {
+internal fun EarnPickerHero(video: VideoSurfaceState?, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -36,9 +41,13 @@ internal fun EarnPickerHero(modifier: Modifier = Modifier) {
                 val pageHeight = (width * HERO_PAGE_HEIGHT / HERO_FRAME_WIDTH).roundToInt()
                 val placeable = measurable.measure(Constraints.fixed(width, frameHeight))
                 layout(width, pageHeight) { placeable.place(0, 0) }
-            }
-            .background(TangemTheme.colors3.bg.tertiary),
+            },
     ) {
+        if (video == null) {
+            HeroPoster()
+        } else {
+            VideoSurface(state = video, modifier = Modifier.matchParentSize()) { HeroPoster() }
+        }
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -53,6 +62,15 @@ internal fun EarnPickerHero(modifier: Modifier = Modifier) {
                 ),
         )
     }
+}
+
+@Composable
+private fun BoxScope.HeroPoster() {
+    Box(
+        modifier = Modifier
+            .matchParentSize()
+            .background(TangemTheme.colors3.bg.tertiary),
+    )
 }
 
 @Composable

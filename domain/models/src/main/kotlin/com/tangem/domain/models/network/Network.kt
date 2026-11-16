@@ -152,6 +152,12 @@ data class Network(
             override val name: String get() = "BEP2"
         }
 
+        /** Represents the CAP20 token standard, common on the Chiliz network */
+        @Serializable
+        data object CAP20 : StandardType() {
+            override val name: String get() = "CAP20"
+        }
+
         /** Represents a network that does not adhere to a predefined standard type */
         @Serializable
         data class Unspecified(override val name: String) : StandardType()

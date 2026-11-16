@@ -1,0 +1,81 @@
+{
+  "data": [
+    {
+      "id": 1559648,
+      "rtxt": "How likely are you to recommend Tangem?",
+      "type": "OpinionScale",
+      "multiple_answers": false,
+      "is_required": true,
+      "properties": {
+        "data": {
+          "min": "builder.opinion_scale.min",
+          "max": "builder.opinion_scale.max",
+          "reversed_order": false,
+          "mid": "builder.opinion_scale.mid",
+          "step": 10,
+          "start": 0,
+          "not_applicable_tooltip_text": "Not Applicable"
+        },
+        "is_rich_text": false
+      },
+      "parent_question_id": null,
+      "position": "0.000000000000",
+      "display_logic": {
+        "version": "1",
+        "logics": []
+      },
+      "jump_logic": {
+        "version": "1",
+        "logics": []
+      },
+      "created_at": "2026-11-14T09:25:26.854Z",
+      "updated_at": "2026-11-14T09:25:57.980Z",
+      "section": {
+        "position": "0.000000000000000",
+        "title": null
+      },
+      "annotations": [],
+      "scale_points": [],
+      "choices": [],
+      "tags": [],
+      "has_display_logic": false,
+      "has_jump_logic": false
+    },
+    {
+      "id": 1559649,
+      "rtxt": "What should we improve?",
+      "type": "TextInput",
+      "multiple_answers": false,
+      "is_required": false,
+      "properties": {
+        "data": {
+          "type": "MULTI_LINE"
+        },
+        "is_rich_text": false
+      },
+      "parent_question_id": null,
+      "position": "0.000000000000",
+      "display_logic": {
+        "version": "1",
+        "logics": []
+      },
+      "jump_logic": {
+        "version": "1",
+        "logics": []
+      },
+      "created_at": "2026-11-14T09:26:29.782Z",
+      "updated_at": "2026-11-14T09:29:48.269Z",
+      "section": {
+        "position": "1.000000000000000",
+        "title": null
+      },
+      "annotations": [],
+      "scale_points": [],
+      "choices": [],
+      "tags": [],
+      "has_display_logic": false,
+      "has_jump_logic": false
+    }
+  ],
+  "has_next_page": false
+}

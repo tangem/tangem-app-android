@@ -40,11 +40,18 @@ private fun TxInfo.TransactionType.toAnalyticsType(isOutgoing: Boolean): String 
     TxInfo.TransactionType.Swap -> "Swap"
     is TxInfo.TransactionType.Staking -> "Staking"
     is TxInfo.TransactionType.YieldSupply -> "Yield Supply"
+    is TxInfo.TransactionType.Lending -> lendingAnalyticsType()
     TxInfo.TransactionType.IncentiveClaim -> "Incentive Claim"
     TxInfo.TransactionType.GaslessFee -> "Gasless Fee"
     is TxInfo.TransactionType.NetworkFee -> "Network Fee"
     is TxInfo.TransactionType.Operation -> name
     TxInfo.TransactionType.UnknownOperation -> "Unknown"
+}
+
+/** The contract method names analytics already receives for these calls, until it agrees on a Lending value */
+private fun TxInfo.TransactionType.Lending.lendingAnalyticsType(): String = when (this) {
+    TxInfo.TransactionType.Lending.Deposit -> "EnterProtocolByOwnerWithNative"
+    is TxInfo.TransactionType.Lending.Withdraw -> if (isEntire) "WithdrawAndDeactivateNative" else "WithdrawNative"
 }
 
 /**

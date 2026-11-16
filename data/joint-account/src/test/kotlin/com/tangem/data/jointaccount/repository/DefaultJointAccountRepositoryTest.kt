@@ -420,6 +420,25 @@ internal class DefaultJointAccountRepositoryTest {
         assertThat(actual).isEqualTo(JointAccountInviteIssueError.SlotUnavailable(cause = cause).left())
     }
 
+    @Test
+    fun `GIVEN the wallet is not linked to the device WHEN issueInvite THEN Failed instead of SlotUnavailable`() =
+        runTest {
+            // Arrange
+            val cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.FORBIDDEN,
+                message = null,
+                errorBody = """{"errorCode":"WALLET_NOT_AUTHORIZED"}""",
+            )
+            coEvery { jointAccountApi.issueJointAccountInvite(any(), any()) } returns
+                ApiResponse.Error(cause = cause) as ApiResponse<JointAccountIssuedInviteDto>
+
+            // Act
+            val actual = issueInvite()
+
+            // Assert
+            assertThat(actual).isEqualTo(JointAccountInviteIssueError.Failed(cause = cause).left())
+        }
+
     private fun provideSlotUnavailableCodes() = listOf(
         ApiResponseError.HttpException.Code.FORBIDDEN,
         ApiResponseError.HttpException.Code.NOT_FOUND,

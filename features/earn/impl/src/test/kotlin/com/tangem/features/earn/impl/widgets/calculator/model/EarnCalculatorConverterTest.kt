@@ -19,7 +19,6 @@ import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnCalculatorUM
-import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnProjectionBarUM
 import com.tangem.features.earn.product.api.product.DefaultEarnProjection
 import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnProjectionResult
@@ -64,6 +63,21 @@ internal class EarnCalculatorConverterTest {
             assertThat(actual.total).isEqualTo(stringReference("$22,124.34"))
             assertThat(actual.earned).isEqualTo(stringReference("+$1,624.34"))
             assertThat(actual.earnedLabel).isEqualTo(EarnCalculatorTexts.earnedIn)
+        }
+
+        @Test
+        fun `GIVEN the design example WHEN convert THEN total and earned match the design`() {
+            // Arrange
+            val input = CalculatorInput.Default
+            val designProjection = DefaultEarnProjection(netRate = BigDecimal("0.012155"))
+            val result = designProjection.project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+
+            // Act
+            val actual = convert(input = input, result = result)
+
+            // Assert
+            assertThat(actual.total).isEqualTo(stringReference("$20,913.23"))
+            assertThat(actual.earned).isEqualTo(stringReference("+$413.23"))
         }
 
         @Test
@@ -195,88 +209,68 @@ internal class EarnCalculatorConverterTest {
         }
 
         @Test
-        fun `GIVEN amounts above the visible minimum WHEN convert THEN layers follow initial total and top-up`() {
-            // Arrange
-            val input = CalculatorInput.Default.copy(
-                initialFiat = BigDecimal(5_000),
-                monthlyTopUpFiat = BigDecimal(5_000),
-                horizon = EarnHorizon.Year1,
-            )
-            val result = projection.project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
-            val tallest = input.initialFiat + result.points.last().capital + input.monthlyTopUpFiat
-
-            // Act
-            val actual = convert(input = input, result = result).bars
-
-            // Assert
-            val expected = result.points.map { point ->
-                EarnProjectionBarUM(
-                    initial = input.initialFiat.share(of = tallest),
-                    total = point.capital.share(of = tallest),
-                    topUp = input.monthlyTopUpFiat.share(of = tallest),
-                )
-            }
-            assertThat(actual).hasSize(expected.size)
-            actual.zip(expected).forEach { (bar, expectedBar) ->
-                assertThat(bar.initial).isWithin(TOLERANCE).of(expectedBar.initial)
-                assertThat(bar.total).isWithin(TOLERANCE).of(expectedBar.total)
-                assertThat(bar.topUp).isWithin(TOLERANCE).of(expectedBar.topUp)
-            }
-        }
-
-        @Test
-        fun `GIVEN 120 points WHEN convert THEN bar k shows the total of month 5 times k`() {
+        fun `GIVEN 120 points WHEN convert THEN bar k is the income of month 5 times k as a share of the largest income`() {
             // Arrange
             val input = CalculatorInput.Default.copy(horizon = EarnHorizon.Year10)
-            val result = projection.project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+            val result = projectionOf("0.0553").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+            val largest = result.points.maxOf { it.income }
 
             // Act
             val actual = convert(input = input, result = result).bars
 
             // Assert
-            actual.forEachIndexed { index, bar ->
+            val checked = actual.withIndex().filter { (index, _) ->
+                result.points[5 * (index + 1) - 1].income.share(of = largest) > ABOVE_MINIMUM_SHARE
+            }
+            assertThat(checked.size).isAtLeast(12)
+            checked.forEach { (index, bar) ->
                 val point = result.points[5 * (index + 1) - 1]
-                assertThat(bar.total / actual.last().total)
-                    .isWithin(TOLERANCE)
-                    .of(point.capital.share(of = result.total))
+                assertThat(bar.earned).isWithin(TOLERANCE).of(point.income.share(of = largest))
             }
         }
 
         @Test
-        fun `GIVEN a tiny monthly top-up WHEN convert THEN its layer stays visible`() {
+        fun `GIVEN the design example WHEN convert THEN bars never shrink and the last one is full height`() {
             // Arrange
-            val input = CalculatorInput.Default.copy(monthlyTopUpFiat = BigDecimal.ONE)
+            val input = CalculatorInput.Default
+            val result = projectionOf("0.012155").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
 
             // Act
-            val actual = convert(input = input).bars
+            val actual = convert(input = input, result = result).bars.map { it.earned }
 
             // Assert
-            assertThat(actual.map { it.topUp }.min()).isAtLeast(MIN_VISIBLE_SHARE)
+            assertThat(actual).isInOrder()
+            assertThat(actual.last()).isEqualTo(1f)
         }
 
         @Test
-        fun `GIVEN a visible minimum WHEN convert THEN the tallest bar is exactly one`() {
-            // Act
-            val actual = convert().bars
-
-            // Assert
-            assertThat(actual.maxOf { it.initial + it.total + it.topUp }).isWithin(TOLERANCE).of(1f)
-        }
-
-        @Test
-        fun `GIVEN zero monthly top-up WHEN convert THEN the top-up layer is empty`() {
+        fun `GIVEN a small earned amount WHEN convert THEN every bar stays visible`() {
             // Arrange
-            val input = CalculatorInput.Default.copy(monthlyTopUpFiat = BigDecimal.ZERO)
+            val input = CalculatorInput.Default
+            val result = projectionOf("0.012155").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
 
             // Act
-            val actual = convert(input = input).bars
+            val actual = convert(input = input, result = result).bars
 
             // Assert
-            assertThat(actual.map { it.topUp }.toSet()).containsExactly(0f)
+            assertThat(actual.map { it.earned }.min()).isAtLeast(MIN_VISIBLE_SHARE)
         }
 
         @Test
-        fun `GIVEN zero inputs WHEN convert THEN all bar fractions are zero`() {
+        fun `GIVEN a zero rate WHEN convert THEN every bar is empty`() {
+            // Arrange
+            val input = CalculatorInput.Default
+            val result = projectionOf("0").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+
+            // Act
+            val actual = convert(input = input, result = result).bars
+
+            // Assert
+            assertThat(actual.map { it.earned }.toSet()).containsExactly(0f)
+        }
+
+        @Test
+        fun `GIVEN zero inputs WHEN convert THEN every bar is empty`() {
             // Arrange
             val input = CalculatorInput.Default.copy(initialFiat = BigDecimal.ZERO, monthlyTopUpFiat = BigDecimal.ZERO)
 
@@ -285,7 +279,7 @@ internal class EarnCalculatorConverterTest {
 
             // Assert
             assertThat(actual.bars).hasSize(24)
-            assertThat(actual.bars.map { listOf(it.initial, it.total, it.topUp) }.flatten().toSet()).containsExactly(0f)
+            assertThat(actual.bars.map { it.earned }.toSet()).containsExactly(0f)
             assertThat(actual.total).isEqualTo(stringReference("$0.00"))
         }
 
@@ -298,6 +292,8 @@ internal class EarnCalculatorConverterTest {
         )
 
         private fun BigDecimal.share(of: BigDecimal): Float = divide(of, MathContext.DECIMAL64).toFloat()
+
+        private fun projectionOf(netRate: String) = DefaultEarnProjection(netRate = BigDecimal(netRate))
     }
 
     @Nested
@@ -473,5 +469,6 @@ internal class EarnCalculatorConverterTest {
     private companion object {
         const val TOLERANCE = 1e-5f
         const val MIN_VISIBLE_SHARE = 0.04f
+        const val ABOVE_MINIMUM_SHARE = 0.06f
     }
 }

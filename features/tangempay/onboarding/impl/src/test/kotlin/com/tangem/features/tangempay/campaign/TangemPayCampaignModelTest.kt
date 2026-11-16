@@ -45,6 +45,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -75,6 +77,7 @@ internal class TangemPayCampaignModelTest {
         )
         givenResolution(TangemPayCampaignResolution.Landing(CAMPAIGN))
         coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns emptyList()
     }
 
     @Nested
@@ -123,6 +126,39 @@ internal class TangemPayCampaignModelTest {
             // Assert
             val landing = model.uiState.value as TangemPayCampaignUM.Landing
             assertThat(landing.mode).isEqualTo(TangemPayCampaignUM.Landing.Mode.NoPay)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no wallets WHEN landing shown THEN cta has no tangem icon`() = runTest {
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.uiState.value as TangemPayCampaignUM.Landing).isCtaIconShown).isFalse()
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN compatible wallet WHEN NoPay landing shown THEN tangem icon shown only for cold wallet`(
+            isColdWallet: Boolean,
+        ) = runTest {
+            // Arrange
+            val wallet = if (isColdWallet) mockk<UserWallet.Cold>() else mockk<UserWallet.Hot>()
+            every { wallet.walletId } returns WALLET_ID
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet)
+            coEvery {
+                eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
+            } returns listOf(WALLET_ID)
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.uiState.value as TangemPayCampaignUM.Landing).isCtaIconShown).isEqualTo(isColdWallet)
             model.onDestroy()
         }
 
@@ -674,7 +710,8 @@ internal class TangemPayCampaignModelTest {
     }
 
     private fun givenWallets(vararg walletsIds: UserWalletId) {
-        coEvery { userWalletsListRepository.userWalletsSync() } returns walletsIds.map { mockk<UserWallet>() }
+        coEvery { userWalletsListRepository.userWalletsSync() } returns
+            walletsIds.map { mockk<UserWallet>(relaxed = true) }
     }
 
     private fun TestScope.starterCallbacks(model: TangemPayCampaignModel): TangemPayOnboardingStarter.Callbacks {

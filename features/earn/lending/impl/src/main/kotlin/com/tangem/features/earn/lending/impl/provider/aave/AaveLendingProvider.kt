@@ -59,6 +59,11 @@ internal class AaveLendingProvider @Inject constructor(
 
     override val info = EarnProvider(title = stringReference("Aave"), icon = ImageReference.Res(R.drawable.img_aave_22))
 
+    // Temporary plain text: replace with a localized string resource.
+    override val about = stringReference("an on-chain self-custodial lending protocol")
+
+    override val websiteUrl: String = "https://aave.com"
+
     override val apyPeriods: List<EarnPeriod> = AaveApyPeriods.All
 
     /** A placeholder from the design until the product confirms the real fee */
@@ -134,7 +139,7 @@ internal class AaveLendingProvider @Inject constructor(
         isSupported: Boolean,
     ): LendingMarket {
         val read = chain.read?.let { AaveModuleRead(status.status, it.version, it.withdrawLiquidity) }
-        val position = status.status?.effectiveProtocolBalance?.takeIf { it.signum() > 0 }
+        val position = status.status?.position
         // Without the pool liquidity a withdrawal is capped by the position only
         val liquidity = read?.withdrawLiquidity
 
@@ -159,7 +164,7 @@ internal class AaveLendingProvider @Inject constructor(
             get() = status?.source ?: if (isFetchFailed) StatusSource.ONLY_CACHE else StatusSource.CACHE
 
         fun depositGate(state: AaveModuleState): LendingDepositGate =
-            if (state == AaveModuleState.StatusUnknown && isFetchFailed) {
+            if (state is AaveModuleState.StatusUnknown && isFetchFailed) {
                 LendingDepositGate.ReadFailed
             } else {
                 state.toDepositGate()

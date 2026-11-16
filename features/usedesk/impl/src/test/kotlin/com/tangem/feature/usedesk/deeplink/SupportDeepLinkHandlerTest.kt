@@ -135,7 +135,13 @@ internal class SupportDeepLinkHandlerTest {
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
     ).handle(
-        DeepLinkRequest(uri = mockk<Uri>(), queryParams = emptyMap(), scope = this, isFromOnNewIntent = false),
+        DeepLinkRequest(
+            uri = mockk<Uri>(),
+            queryParams = emptyMap(),
+            scope = this,
+            isFromOnNewIntent = false,
+            router = mockk(),
+        ),
     )
 
     private companion object {

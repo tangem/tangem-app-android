@@ -14,15 +14,14 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.*
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
+import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.tangempay.usecase.CancelTariffPlanPendingTransitionUseCase
-import com.tangem.domain.tangempay.usecase.CancelTariffTransitionUseCase
-import com.tangem.domain.tangempay.usecase.IsTangemPayCustomerVerifiedUseCase
-import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
@@ -31,15 +30,14 @@ import com.tangem.features.tangempay.common.tariffPlanState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
 import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
-import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -51,13 +49,11 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase,
-    private val cancelTariffTransitionUseCase: CancelTariffTransitionUseCase,
     private val cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
-    private val isTangemPayCustomerVerifiedUseCase: IsTangemPayCustomerVerifiedUseCase,
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+    private val getTangemPayProductsAvailabilityUseCase: GetTangemPayProductsAvailabilityUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
@@ -116,7 +112,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
 
     private fun onChangePlanClick() {
         analytics.send(TangemPayAnalyticsEvents.Tiers.ChangePlanClicked())
-        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.CHANGE_PLAN))
+        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan)
     }
 
     private fun createNotification(planState: TangemPayTariffPlanState): TangemPayCurrentPlanUM.Notification? {
@@ -185,32 +181,22 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         isProcessing = true
         updateState()
         modelScope.launch {
-            if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
-                cancelTangemPayOrderUseCase(
-                    userWalletId = params.userWalletId,
-                    orderId = orderId,
-                ).onRight {
-                    if (currentPlanState.tariff.isDefaultTariff) {
-                        coroutineScope {
-                            launch {
-                                paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(params.userWalletId))
-                            }
-                            launch {
-                                moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
-                            }
-                        }
-                        when (isTangemPayCustomerVerifiedUseCase(userWalletId = params.userWalletId).getOrNull()) {
-                            null -> router.replaceAll(AppRoute.Wallet)
-                            true -> router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
-                            false -> Unit
-                        }
+            cancelTangemPayOrderUseCase(
+                userWalletId = params.userWalletId,
+                orderId = orderId,
+            ).onRight {
+                if (currentPlanState.tariff.isDefaultTariff) {
+                    coroutineScope {
+                        launch { paymentAccountStatusFetcher(params.userWalletId) }
+                        launch { moneyAccountStatusFetcher(params.userWalletId) }
+                    }
+                    val products = getTangemPayProductsAvailabilityUseCase(params.userWalletId).getOrNull()
+                    if (products == null || TangemPayProduct.PAYMENT_ACCOUNT !in products) {
+                        router.replaceAll(AppRoute.Wallet)
+                    } else {
+                        router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
                     }
                 }
-            } else {
-                cancelTariffTransitionUseCase(
-                    userWalletId = params.userWalletId,
-                    orderId = orderId,
-                )
             }.onLeft {
                 uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
             }

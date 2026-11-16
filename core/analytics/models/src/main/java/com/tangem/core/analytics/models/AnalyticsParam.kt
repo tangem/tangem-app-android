@@ -121,6 +121,7 @@ sealed class AnalyticsParam {
         Deeplink("Deeplink"),
         UnsupportedDevice("Unsupported Device"),
         CritUpdate("Crit Update"),
+        JointAccount("Joint Account"),
     }
 
     sealed class TxSentFrom(val value: String) {

@@ -52,10 +52,12 @@ private const val VIDEO_FADE_TOP = 294f
 private const val VIDEO_FADE_BOTTOM = 555f
 private const val VIDEO_CONTENT_TOP = 442f
 
+@Suppress("LongParameterList")
 @Composable
 internal fun TangemPayUnifiedOnboardingLayout(
     video: VideoSurfaceState?,
     isGetStartedLoading: Boolean,
+    isGetStartedIconShown: Boolean,
     onGetStartedClick: () -> Unit,
     onTermsClick: () -> Unit,
     onCloseClick: (() -> Unit)?,
@@ -98,7 +100,8 @@ internal fun TangemPayUnifiedOnboardingLayout(
                     variant = TangemButton.Variant.Primary,
                     size = TangemButton.Size.X12,
                     text = resourceReference(R.string.common_get_started),
-                    iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
+                    iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
+                        .takeIf { isGetStartedIconShown },
                     isLoading = isGetStartedLoading,
                     onClick = onGetStartedClick,
                 )
@@ -377,6 +380,7 @@ private fun TangemPayUnifiedOnboardingLayoutPreview() {
         TangemPayUnifiedOnboardingLayout(
             video = null,
             isGetStartedLoading = false,
+            isGetStartedIconShown = true,
             onGetStartedClick = {},
             onTermsClick = {},
             onCloseClick = {},

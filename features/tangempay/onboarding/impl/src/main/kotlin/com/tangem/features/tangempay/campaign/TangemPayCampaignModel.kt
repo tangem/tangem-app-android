@@ -25,6 +25,7 @@ import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
+import com.tangem.features.tangempay.model.hasCompatibleColdWallet
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -171,6 +172,11 @@ internal class TangemPayCampaignModel @Inject constructor(
             cardArtUrl = campaign.cardArtUrl,
             mode = mode,
             isCtaLoading = false,
+            isCtaIconShown = mode == TangemPayCampaignUM.Landing.Mode.NoPay && hasCompatibleColdWallet(
+                eligibilityManager = eligibilityManager,
+                userWalletsListRepository = userWalletsListRepository,
+                shouldExcludePaeraCustomers = false,
+            ),
             onGetCardClick = ::onGetCardClick,
             onCloseClick = ::onClose,
         )

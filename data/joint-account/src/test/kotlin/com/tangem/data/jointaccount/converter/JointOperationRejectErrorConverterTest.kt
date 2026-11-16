@@ -1,9 +1,11 @@
 package com.tangem.data.jointaccount.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
+import com.tangem.store.datasource.jointaccount.JointWalletNotLinkedResolver
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -12,7 +14,9 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointOperationRejectErrorConverterTest {
 
-    private val converter = JointOperationRejectErrorConverter()
+    private val converter = JointOperationRejectErrorConverter(
+        walletNotLinkedResolver = JointWalletNotLinkedResolver(moshi = Moshi.Builder().build()),
+    )
 
     @ParameterizedTest
     @ProvideTestModels
@@ -26,11 +30,13 @@ internal class JointOperationRejectErrorConverterTest {
 
     private fun provideTestModels(): List<ConvertModel> {
         val serverError = httpException(Code.INTERNAL_SERVER_ERROR)
+        val notLinked = httpException(Code.FORBIDDEN, errorBody = """{"errorCode":"WALLET_NOT_AUTHORIZED"}""")
 
         return listOf(
             ConvertModel(error = httpException(Code.NOT_FOUND), expected = JointOperationRejectError.OperationNotFound),
             ConvertModel(error = httpException(Code.CONFLICT), expected = JointOperationRejectError.ThresholdReached),
             ConvertModel(error = httpException(Code.FORBIDDEN), expected = JointOperationRejectError.NotAMember),
+            ConvertModel(error = notLinked, expected = JointOperationRejectError.Failed(cause = notLinked)),
             ConvertModel(error = serverError, expected = JointOperationRejectError.Failed(cause = serverError)),
         )
     }
@@ -49,5 +55,6 @@ internal class JointOperationRejectErrorConverterTest {
 
     internal data class ConvertModel(val error: Throwable, val expected: JointOperationRejectError)
 
-    private fun httpException(code: Code) = ApiResponseError.HttpException(code = code, message = null, errorBody = null)
+    private fun httpException(code: Code, errorBody: String? = null) =
+        ApiResponseError.HttpException(code = code, message = null, errorBody = errorBody)
 }

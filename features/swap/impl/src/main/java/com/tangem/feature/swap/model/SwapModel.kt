@@ -81,6 +81,7 @@ import com.tangem.domain.tangempay.WithdrawalResult
 import com.tangem.domain.tangempay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.usecase.WithdrawFromCollectiblesVaultUseCase
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -124,6 +125,7 @@ import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
 import com.tangem.core.analytics.api.PerformanceTracer
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.component.slippage.SwapSlippageComponent
+import com.tangem.feature.swap.converters.CollectiblesWithdrawalErrorConverter
 import com.tangem.feature.swap.converters.SwapProviderResolver
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
@@ -1944,6 +1946,7 @@ internal class SwapModel @Inject constructor(
                 )
                 isCollectiblesWithdrawFlow -> withdrawFromCollectiblesVault(
                     amount = transferState.sendingAmount,
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                 )
                 isTangemPayWithdrawal() -> withdrawTangemPay(
@@ -1965,26 +1968,62 @@ internal class SwapModel @Inject constructor(
         }
     }
 
-    private suspend fun withdrawFromCollectiblesVault(amount: BigDecimal, toSwapCurrencyStatus: SwapCurrencyStatus) {
+    private suspend fun withdrawFromCollectiblesVault(
+        amount: BigDecimal,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ) {
         val networkAddress = toSwapCurrencyStatus.status.value.networkAddress
         val recipientAddress = networkAddress?.defaultAddress?.value
+        val vaultToken = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token
 
-        if (recipientAddress == null) {
-            TangemLogger.e("onTransferClick: collectibles withdrawal recipient address is unavailable")
+        if (recipientAddress == null || vaultToken == null) {
+            TangemLogger.e("onTransferClick: collectibles withdrawal recipient or vault token is unavailable")
             startLoadingQuotesFromLastState()
             showAlert()
             return
         }
 
         withdrawFromCollectiblesVaultUseCase(
-            userWalletId = params.userWalletId,
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            token = vaultToken,
             recipientAddress = recipientAddress,
             amount = amount,
-        ).onLeft { error ->
-            TangemLogger.e("onTransferClick: collectibles withdrawal failed: $error")
-            startLoadingQuotesFromLastState()
-            showAlert()
+        ).fold(
+            ifLeft = { error ->
+                TangemLogger.e("onTransferClick: collectibles withdrawal failed: $error")
+                if (error is CollectiblesAccountError.MaybeSent) updateWalletBalance()
+                startLoadingQuotesFromLastState()
+                CollectiblesWithdrawalErrorConverter(onDismiss = {})
+                    .convert(error)
+                    ?.let(messageSender::send)
+            },
+            ifRight = { txHash -> showCollectiblesWithdrawalSent(txHash, fromSwapCurrencyStatus) },
+        )
+    }
+
+    private fun showCollectiblesWithdrawalSent(txHash: String, fromSwapCurrencyStatus: SwapCurrencyStatus) {
+        val txUrl = getExplorerTransactionUrlUseCase(
+            txHash = txHash,
+            currency = fromSwapCurrencyStatus.currency,
+        ).getOrElse {
+            TangemLogger.i("onTransferClick: tx hash explore not supported")
+            ""
         }
+
+        updateWalletBalance()
+
+        uiState = swapTransferStateBuilder.createSuccessState(
+            uiState = uiState,
+            dataState = dataState,
+            txUrl = txUrl,
+            timestamp = System.currentTimeMillis(),
+            fee = null,
+            onExplorerClick = { if (txUrl.isNotEmpty()) urlOpener.openUrl(txUrl) },
+            onShareClick = { if (txUrl.isNotEmpty()) shareManager.shareText(txUrl) },
+        )
+
+        router.replaceAll(SwapRoute.Success)
     }
 
     private suspend fun withdrawPredictionCollateral(amount: BigDecimal, toSwapCurrencyStatus: SwapCurrencyStatus) {
@@ -3324,22 +3363,28 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun updateWalletBalance() {
-        dataState.fromSwapCurrencyStatus?.let { fromSwapCurrencyStatus ->
+        val toAccount = dataState.toSwapCurrencyStatus?.account
+        val fromAccount = dataState.fromSwapCurrencyStatus?.account
+
+        val balanceStatus = if (fromAccount is Account.Collectibles) {
+            dataState.toSwapCurrencyStatus
+        } else {
+            dataState.fromSwapCurrencyStatus
+        }
+
+        balanceStatus?.let { status ->
             modelScope.launch {
                 withContext(NonCancellable) {
-                    updateForBalance(
-                        fromSwapCurrencyStatus.userWalletId,
-                        fromSwapCurrencyStatus.currency.network,
-                    )
+                    updateForBalance(status.userWalletId, status.currency.network)
                 }
             }
         }
-        val toAccount = dataState.toSwapCurrencyStatus?.account
-        val fromAccount = dataState.fromSwapCurrencyStatus?.account
+
         when {
-            toAccount is Account.Collectibles -> refreshAccountWithDelay(accountName = "collectibles vault") {
-                collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
-            }
+            toAccount is Account.Collectibles || fromAccount is Account.Collectibles ->
+                refreshAccountWithDelay(accountName = "collectibles vault") {
+                    collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
+                }
             toAccount is Account.Money || fromAccount is Account.Money ->
                 refreshAccountWithDelay(accountName = "money account") {
                     txHistoryContentUpdateEmitter.triggerUpdate()

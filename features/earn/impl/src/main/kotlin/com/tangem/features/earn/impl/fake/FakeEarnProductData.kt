@@ -57,7 +57,6 @@ internal data class FakeEarnProductSpec(
     val title: TextReference,
     val provider: EarnProvider,
     val analytics: EarnProductAnalytics,
-    val hasLegacyBlock: Boolean,
 )
 
 internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
@@ -75,7 +74,7 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
             title = "Pooled staking",
             provider = fakeProvider(name = "P2P", logo = R.drawable.ic_p2p_logo),
             product = "Staking",
-        ).copy(badgeAccent = EarnBadgeAccent.Info, hasLegacyBlock = true)
+        ).copy(badgeAccent = EarnBadgeAccent.Info)
         FakeEarnProductPreset.Vault -> fakeSpec(
             id = "vault",
             rank = 2,
@@ -219,7 +218,6 @@ private fun fakeSpec(id: String, rank: Int, title: String, provider: EarnProvide
         title = stringReference(title),
         provider = provider,
         analytics = EarnProductAnalytics(category = "Earn", product = product),
-        hasLegacyBlock = false,
     )
 
 private fun fakeHowItWorks() = EarnHowItWorks(
@@ -233,6 +231,12 @@ private fun fakeHowItWorks() = EarnHowItWorks(
 private fun fakeRow(label: String, value: String, info: String? = null) = EarnRow(
     label = stringReference(label),
     value = EarnValue.Text(stringReference(value)),
+    info = info?.let { EarnTextBlock(stringReference(label), stringReference(it)) },
+)
+
+private fun fakeAmountRow(label: String, amount: BigDecimal, info: String? = null) = EarnRow(
+    label = stringReference(label),
+    value = EarnValue.Amount(amount),
     info = info?.let { EarnTextBlock(stringReference(label), stringReference(it)) },
 )
 
@@ -263,8 +267,8 @@ private fun fakePositionState(preset: FakeEarnProductPreset, position: FakeEarnP
                 earned = BigDecimal("0.03"),
                 description = stringReference("Your ETH is supplied and is earning interest"),
                 rows = listOf(
-                    fakeRow("Total balance", "ETH 1.482", info = "Everything you have in the product"),
-                    fakeRow("Available balance", "ETH 1.482", info = "What you can withdraw now"),
+                    fakeAmountRow("Total balance", FAKE_PRODUCT_POSITION, info = "Everything you have in the product"),
+                    fakeAmountRow("Available balance", FAKE_PRODUCT_POSITION, info = "What you can withdraw now"),
                 ),
                 rewards = EarnRewards(amount = BigDecimal("0.02"), claimAction = fakeClaimAction())
                     .takeIf { preset == FakeEarnProductPreset.Lending },

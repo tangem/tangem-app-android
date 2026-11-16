@@ -15,7 +15,6 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.media.VideoSurfaceState
 import com.tangem.core.ui.R
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.loader.TangemLoader
@@ -28,7 +27,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_heart_broken_32
-import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.core.ui.test.TangemPayTestTags
 
 @Composable
@@ -42,25 +40,15 @@ internal fun TangemPayOnboardingScreen(
             onBack = state.onBack,
             modifier = modifier,
         )
-        is TangemPayOnboardingScreenState.Content -> if (state.isUnifiedOnboarding) {
-            TangemPayUnifiedOnboardingLayout(
-                modifier = modifier,
-                video = video,
-                isGetStartedLoading = state.buttonConfig.isLoading,
-                onGetStartedClick = state.buttonConfig.onClick,
-                onTermsClick = state.onTermsClick,
-                onCloseClick = state.onBack,
-            )
-        } else {
-            TangemPayOnboardingLayout(
-                modifier = modifier,
-                isGetCardLoading = state.buttonConfig.isLoading,
-                onGetCardClick = state.buttonConfig.onClick,
-                onTermsClick = state.onTermsClick,
-                getCardIcon = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
-                onCloseClick = state.onBack,
-            )
-        }
+        is TangemPayOnboardingScreenState.Content -> TangemPayUnifiedOnboardingLayout(
+            modifier = modifier,
+            video = video,
+            isGetStartedLoading = state.buttonConfig.isLoading,
+            isGetStartedIconShown = state.buttonConfig.isTangemIconShown,
+            onGetStartedClick = state.buttonConfig.onClick,
+            onTermsClick = state.onTermsClick,
+            onCloseClick = state.onBack,
+        )
         is TangemPayOnboardingScreenState.NotAvailable ->
             TangemPayOnboardingUnavailable(onBack = state.onBack, modifier = modifier)
     }
@@ -159,20 +147,20 @@ private class TangemPayOnboardingScreenStateProvider :
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
-                buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = false, onClick = {}),
-                isUnifiedOnboarding = false,
+                buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
+                    isLoading = false,
+                    isTangemIconShown = true,
+                    onClick = {},
+                ),
             ),
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
-                buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = true, onClick = {}),
-                isUnifiedOnboarding = false,
-            ),
-            TangemPayOnboardingScreenState.Content(
-                onBack = {},
-                onTermsClick = {},
-                buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = false, onClick = {}),
-                isUnifiedOnboarding = true,
+                buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
+                    isLoading = true,
+                    isTangemIconShown = true,
+                    onClick = {},
+                ),
             ),
             TangemPayOnboardingScreenState.NotAvailable(onBack = {}),
         ),

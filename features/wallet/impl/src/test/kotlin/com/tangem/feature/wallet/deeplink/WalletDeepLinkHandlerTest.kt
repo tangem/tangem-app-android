@@ -23,6 +23,7 @@ internal class WalletDeepLinkHandlerTest {
             queryParams = emptyMap(),
             scope = mockk<CoroutineScope>(),
             isFromOnNewIntent = false,
+            router = mockk(),
         )
 
         // Act

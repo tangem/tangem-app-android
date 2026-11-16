@@ -108,7 +108,7 @@ internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmoun
         when (state) {
             is TangemPayBankWithdrawAmountUM.Content -> AmountContent(state = state)
             is TangemPayBankWithdrawAmountUM.Loading -> AmountLoading(state = state)
-            is TangemPayBankWithdrawAmountUM.FeeUnreachable -> FeeUnreachable(state = state)
+            is TangemPayBankWithdrawAmountUM.Unreachable -> Unreachable(state = state)
         }
     }
     BankWithdrawAmountSheets(sheet = (state as? TangemPayBankWithdrawAmountUM.Content)?.sheet ?: SheetUM.Hidden)
@@ -179,7 +179,7 @@ private fun ColumnScope.AmountLoading(state: TangemPayBankWithdrawAmountUM.Loadi
 }
 
 @Composable
-private fun ColumnScope.FeeUnreachable(state: TangemPayBankWithdrawAmountUM.FeeUnreachable) {
+private fun ColumnScope.Unreachable(state: TangemPayBankWithdrawAmountUM.Unreachable) {
     Column(
         modifier = Modifier
             .weight(1f)
@@ -196,7 +196,7 @@ private fun ColumnScope.FeeUnreachable(state: TangemPayBankWithdrawAmountUM.FeeU
             onClick = state.onRetryClick,
         )
         Text(
-            text = stringResourceSafe(R.string.tangempay_withdraw_bank_network_fee_unreachable),
+            text = state.message.resolveReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
@@ -436,5 +436,6 @@ private class AmountPreviewProvider : PreviewParameterProvider<TangemPayBankWith
         TangemPayBankWithdrawAmountPreviewData.moneyAccount,
         TangemPayBankWithdrawAmountPreviewData.loading,
         TangemPayBankWithdrawAmountPreviewData.feeUnreachable,
+        TangemPayBankWithdrawAmountPreviewData.dataUnreachable,
     )
 }

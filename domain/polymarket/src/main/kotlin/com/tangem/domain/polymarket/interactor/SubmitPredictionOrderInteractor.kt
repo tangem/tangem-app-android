@@ -23,48 +23,35 @@ class SubmitPredictionOrderInteractor(
 
     /**
      * @param request the order to sign; its route is chosen here
-     * @param onStep told when a signature is requested and when a signed order is sent, possibly twice each
+     * @param onStep told when a signature is requested and when a signed order is sent
      */
     suspend operator fun invoke(
         request: PredictionSignRequest,
         preference: PredictionOrderSigningPreference,
         onStep: (PredictionOrderSubmitStep) -> Unit = {},
-    ): Either<PredictionSubmitOrderError, PredictionSubmittedOrder> {
-        val route = when (preference) {
-            PredictionOrderSigningPreference.OWNER_ONLY -> PredictionOrderSigningRoute.Owner
-            PredictionOrderSigningPreference.AUTOMATIC,
-            PredictionOrderSigningPreference.SESSION_KEY_ONLY,
-            -> router.route(addresses = request.addresses)
-        }
-
-        return when (route) {
-            PredictionOrderSigningRoute.Owner -> submitWithOwnerKey(
-                request = request,
-                preference = preference,
-                onStep = onStep,
-            )
-            is PredictionOrderSigningRoute.Session -> submitWithSessionKey(
-                request = request,
-                route = route,
-                preference = preference,
-                onStep = onStep,
-            )
-        }
+    ): Either<PredictionSubmitOrderError, PredictionSubmittedOrder> = when (preference) {
+        PredictionOrderSigningPreference.OWNER_ONLY -> submit(
+            request = request,
+            route = PredictionOrderSigningRoute.Owner,
+            onStep = onStep,
+        )
+        PredictionOrderSigningPreference.SESSION_KEY_ONLY -> submitWithSessionKey(request = request, onStep = onStep)
     }
 
     private suspend fun submitWithSessionKey(
         request: PredictionSignRequest,
-        route: PredictionOrderSigningRoute.Session,
-        preference: PredictionOrderSigningPreference,
         onStep: (PredictionOrderSubmitStep) -> Unit,
     ): Either<PredictionSubmitOrderError, PredictionSubmittedOrder> {
+        val route = router.route(addresses = request.addresses) as? PredictionOrderSigningRoute.Session
+            ?: return PredictionSubmitOrderError.SessionKeyUnavailable.left()
+
         onStep(PredictionOrderSubmitStep.SIGNING)
         val signedOrder = signOrder(request = request.copy(route = route)).getOrElse { failure ->
             if (!failure.isLocalSigningFailure()) return PredictionSubmitOrderError.NotSigned(failure).left()
 
             router.reportSigningFailed(addresses = request.addresses, identity = route.identity, failure = failure)
             stateService.refresh(request.addresses.userWalletId)
-            return submitWithOwnerKey(request = request, preference = preference, onStep = onStep)
+            return PredictionSubmitOrderError.SessionKeyUnavailable.left()
         }
 
         onStep(PredictionOrderSubmitStep.POSTING)
@@ -78,21 +65,10 @@ class SubmitPredictionOrderInteractor(
 
             router.reportRefused(addresses = request.addresses, identity = route.identity, error = error)
             stateService.refresh(request.addresses.userWalletId)
-            return submitWithOwnerKey(request = request, preference = preference, onStep = onStep)
+            return PredictionSubmitOrderError.SessionKeyUnavailable.left()
         }
 
         return PredictionSubmittedOrder(result = result, route = route).right()
-    }
-
-    private suspend fun submitWithOwnerKey(
-        request: PredictionSignRequest,
-        preference: PredictionOrderSigningPreference,
-        onStep: (PredictionOrderSubmitStep) -> Unit,
-    ): Either<PredictionSubmitOrderError, PredictionSubmittedOrder> {
-        if (preference == PredictionOrderSigningPreference.SESSION_KEY_ONLY) {
-            return PredictionSubmitOrderError.SessionKeyUnavailable.left()
-        }
-        return submit(request = request, route = PredictionOrderSigningRoute.Owner, onStep = onStep)
     }
 
     private suspend fun submit(

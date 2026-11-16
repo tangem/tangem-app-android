@@ -25,7 +25,7 @@ internal data class TangemPayWithdrawHubUM(
 
         data class Content(
             val toPersonalAccount: ActionCardUM,
-            val toBusinessAccount: ActionCardUM,
+            val toBusinessAccount: ActionCardUM?,
             val recents: RecentsUM,
             val isAvailable: Boolean,
             val unavailableSubtitle: TextReference,

@@ -30,6 +30,8 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.media)
+    implementation(projects.core.media.ui)
     implementation(projects.core.navigation)
     implementation(projects.core.pagination)
     implementation(projects.core.res)

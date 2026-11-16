@@ -11,12 +11,14 @@ import com.tangem.core.ui.res.generated.icons.ic_error_20
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
+import com.tangem.features.tangempay.common.kyc.createKycAdditionalInfoBannerState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
 import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
 
 internal class TangemPayDetailsNotificationFactory(
     private val intents: TangemPayDetailIntents,
+    private val isColdWallet: Boolean,
 ) {
     fun createErrorConfig(error: PaymentAccountStatusValue.Error?): TangemMessageBanner.State? = when (error) {
         null -> null
@@ -37,6 +39,9 @@ internal class TangemPayDetailsNotificationFactory(
             tintReference = { TangemTheme.colors3.icon.primary },
         ),
     )
+
+    fun createKycAdditionalInfoBannerState(): TangemMessageBanner.State =
+        createKycAdditionalInfoBannerState(onProvideInformationClick = intents::onProvideKycInformationClick)
 
     fun createBankTransferOnrampCreatingBannerState() = TangemMessageBanner.State(
         title = resourceReference(R.string.tangempay_bank_transfer_creating_title),
@@ -106,7 +111,7 @@ internal class TangemPayDetailsNotificationFactory(
             iconEnd = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_tangem_24,
                 tintReference = { TangemTheme.colors3.icon.primary },
-            ),
+            ).takeIf { isColdWallet },
         ),
     )
 

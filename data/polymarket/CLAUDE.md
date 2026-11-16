@@ -13,6 +13,7 @@ in the same PR as the code.
 
 - [BFF onboarding](https://app.notion.com/p/39e5d34eb6788042b112e10747b02827) — `/wallet*`, approvals, `walletId` · 10.09.2026
 - [BFF discovery](https://app.notion.com/p/3965d34eb6788015af10eed189d2f6e8) — `/categories`, `/events`, `/search` · 30.10.2026 (page updated 16.10.2026; categories/filter checked live on PROD)
+- [Soccer match](https://app.notion.com/p/4095d34eb6788145b4a0dc1efdfb561a) — `/sports/soccer/events/{id}` · 11.11.2026 (page revised 05.11.2026; dev responses checked)
 - [Order flow](https://app.notion.com/p/3ab5d34eb678803e8462c1b95681bdb6) — `/orders/quote`, CLOB order, positions · 26.08.2026
 - [Mobile order placement](https://app.notion.com/p/3c35d34eb6788044b0eed0781c44ef18) — order screen rules · 01.09.2026
 - [Deposit & withdraw guide](https://app.notion.com/p/3cd5d34eb6788087b7f2c748c6b24a46) — bridge, `/withdraw`, minimums · 17.09.2026
@@ -51,6 +52,12 @@ Discovery categories checked on `api.tangem.org` on 30.10.2026 return nested `su
 that response. A subcategory is requested through the same `category` parameter; All uses the parent
 id. `filter=games|props` is optional and must survive pagination. Missing/null lists remain compatible
 with old responses. Category labels may be Lokalise keys; preserve them as supplied.
+
+Soccer detail always returns the main match, including for a child ID. `NOT_A_MATCH` is a 404,
+not a generic-event fallback. Tabs/cards/positions retain BFF order; unknown keys/templates and
+invalid card references are skipped. `startTime` is kickoff; `startDate` is event creation.
+Picker labels can repeat: identify positions by market ID, retain the signed position line separately
+from the raw market line, and use each referenced market's trading metadata and outcome asset ID.
 
 ## Wire-format traps (each one cost a device session)
 

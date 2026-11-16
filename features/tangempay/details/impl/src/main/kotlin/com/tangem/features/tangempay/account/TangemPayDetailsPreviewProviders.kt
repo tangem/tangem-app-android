@@ -15,67 +15,72 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_error_20
 import com.tangem.domain.models.tangempay.TangemPayCardType
+import com.tangem.features.tangempay.common.kyc.createKycAdditionalInfoBannerState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.txhistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUM
 import kotlinx.collections.immutable.persistentListOf
 
+private val previewTopBarConfig = TangemPayDetailsTopBarConfig(
+    onBackClick = {},
+    onOpenMenu = {},
+    items = persistentListOf(),
+    subtitle = resourceReference(R.string.tangempay_multinetwork),
+)
+
+private val previewContentBalanceBlockState = TangemPayDetailsBalanceBlockState.Content(
+    actionButtons = persistentListOf(
+        TangemPayActionButtonUM(
+            action = TangemPayAction.AddFunds,
+            text = resourceReference(id = R.string.common_receive),
+            icon = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24),
+            onClick = {},
+            isEnabled = true,
+        ),
+    ),
+    fiatBalance = combinedReference(
+        stringReference("1,234"),
+        styledStringReference(
+            ".56",
+            { SpanStyle(color = TangemTheme.colors3.text.primary) },
+        ),
+        stringReference(" $"),
+    ),
+    isBalanceFlickering = false,
+    cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
+        cards = persistentListOf(
+            TangemPayDetailsBalanceBlockState.Card(
+                lastDigits = "1234",
+                imageUrl = null,
+                cardType = TangemPayCardType.VIRTUAL,
+                onClick = {},
+                isEnabled = false,
+                isFrozen = false,
+                state = TangemPayCardUiState.Active,
+            ),
+            TangemPayDetailsBalanceBlockState.Card(
+                lastDigits = "3456",
+                imageUrl = null,
+                cardType = TangemPayCardType.PHYSICAL,
+                onClick = {},
+                isEnabled = true,
+                isFrozen = false,
+                state = TangemPayCardUiState.Active,
+            ),
+        ),
+        onAddCardClick = {},
+        isAddCardEnabled = true,
+    ),
+    isNegative = false,
+    isInactive = false,
+)
+
 internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<TangemPayDetailsUM>(
     collection = listOf(
         TangemPayDetailsUM(
-            topBarConfig = TangemPayDetailsTopBarConfig(
-                onBackClick = {},
-                onOpenMenu = {},
-                items = persistentListOf(),
-                subtitle = resourceReference(R.string.tangempay_multinetwork),
-            ),
+            topBarConfig = previewTopBarConfig,
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
-            balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
-                actionButtons = persistentListOf(
-                    TangemPayActionButtonUM(
-                        action = TangemPayAction.AddFunds,
-                        text = resourceReference(id = R.string.common_receive),
-                        icon = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24),
-                        onClick = {},
-                        isEnabled = true,
-                    ),
-                ),
-                fiatBalance = combinedReference(
-                    stringReference("1,234"),
-                    styledStringReference(
-                        ".56",
-                        { SpanStyle(color = TangemTheme.colors3.text.primary) },
-                    ),
-                    stringReference(" $"),
-                ),
-                isBalanceFlickering = false,
-                cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
-                    cards = persistentListOf(
-                        TangemPayDetailsBalanceBlockState.Card(
-                            lastDigits = "1234",
-                            imageUrl = null,
-                            cardType = TangemPayCardType.VIRTUAL,
-                            onClick = {},
-                            isEnabled = false,
-                            isFrozen = false,
-                            state = TangemPayCardUiState.Active,
-                        ),
-                        TangemPayDetailsBalanceBlockState.Card(
-                            lastDigits = "3456",
-                            imageUrl = null,
-                            cardType = TangemPayCardType.PHYSICAL,
-                            onClick = {},
-                            isEnabled = true,
-                            isFrozen = false,
-                            state = TangemPayCardUiState.Active,
-                        ),
-                    ),
-                    onAddCardClick = {},
-                    isAddCardEnabled = true,
-                ),
-                isNegative = false,
-                isInactive = false,
-            ),
+            balanceBlockState = previewContentBalanceBlockState,
             isBalanceHidden = false,
             messageBanner = MessageBannerUM(
                 state = TangemMessageBanner.State(
@@ -94,12 +99,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
             ),
         ),
         TangemPayDetailsUM(
-            topBarConfig = TangemPayDetailsTopBarConfig(
-                onBackClick = {},
-                onOpenMenu = {},
-                items = persistentListOf(),
-                subtitle = resourceReference(R.string.tangempay_multinetwork),
-            ),
+            topBarConfig = previewTopBarConfig,
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(
                 actionButtons = persistentListOf(),
@@ -139,6 +139,16 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         tintReference = { TangemTheme.colors3.icon.primary },
                     ),
                 ),
+            ),
+        ),
+        TangemPayDetailsUM(
+            topBarConfig = previewTopBarConfig,
+            pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+            balanceBlockState = previewContentBalanceBlockState,
+            isBalanceHidden = false,
+            messageBanner = null,
+            kycAdditionalInfoBanner = MessageBannerUM(
+                state = createKycAdditionalInfoBannerState(onProvideInformationClick = {}),
             ),
         ),
     ),

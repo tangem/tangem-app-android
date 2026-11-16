@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket
 import arrow.core.Either
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -11,6 +12,7 @@ import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
@@ -33,6 +35,7 @@ import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import java.math.BigDecimal
 import java.math.BigInteger
 
+@Suppress("TooManyFunctions")
 interface PolymarketRepository {
 
     /**
@@ -70,6 +73,12 @@ interface PolymarketRepository {
      * (unlike the feed, which carries only the top active ones).
      */
     suspend fun getEvent(userWalletId: UserWalletId, eventId: String): Either<PolymarketEventError, PolymarketEvent>
+
+    /** A child event ID returns the main match; NOT_A_MATCH is NotFound without a generic-event fallback. */
+    suspend fun getSoccerEvent(
+        userWalletId: UserWalletId,
+        eventId: String,
+    ): Either<PolymarketEventError, PolymarketSoccerEvent>
 
     /**
      * Preview a fill-and-kill order against the live book (BFF `POST /orders/quote`). Places nothing.
@@ -145,9 +154,8 @@ interface PolymarketRepository {
 
     /**
      * Check whether Polymarket is geo-blocked for the caller's region (`GET polymarket.com/api/geoblock`).
-     * Returns `true` when trading is blocked.
      */
-    suspend fun checkGeoblock(): Either<DataError, Boolean>
+    suspend fun checkGeoblock(): Either<DataError, PolymarketGeoblock>
 
     /**
      * Fetch the relayer nonce for [ownerAddress] (`GET relayer-v2.polymarket.com/nonce?address=&type=WALLET`),

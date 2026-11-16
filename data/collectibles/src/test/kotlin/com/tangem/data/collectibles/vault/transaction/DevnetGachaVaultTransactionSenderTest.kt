@@ -465,6 +465,47 @@ internal class DevnetGachaVaultTransactionSenderTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Withdraw {
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(walletManagersFacade, networkProvider, hotWalletSignerFactory, walletManager)
+            every { hotWalletSignerFactory.create(userWallet) } returns signer
+            coEvery { networkProvider.create(userWallet) } returns network.right()
+            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns walletManager
+            coEvery { walletManager.buildWithdrawCollectiblesVault(MINT, RECIPIENT, AMOUNT) } returns
+                Result.Success(transaction)
+            coEvery { walletManager.send(transaction, signer, any()) } returns
+                Result.Success(TransactionSendResult(hash = TX_HASH))
+        }
+
+        @Test
+        fun `GIVEN the owner signs WHEN withdraw THEN the transaction is sent and its hash returned`() = runTest {
+            // Act
+            val actual = sender.withdraw(userWallet, MINT, RECIPIENT, AMOUNT)
+
+            // Assert
+            assertThat(actual).isEqualTo(TX_HASH.right())
+            coVerify(exactly = 1) { walletManager.send(transaction, signer, any()) }
+        }
+
+        @Test
+        fun `GIVEN the build fails WHEN withdraw THEN nothing is sent`() = runTest {
+            // Arrange
+            coEvery { walletManager.buildWithdrawCollectiblesVault(any(), any(), any()) } returns
+                Result.Failure(BlockchainSdkError.CustomError("bad recipient"))
+
+            // Act
+            val actual = sender.withdraw(userWallet, MINT, RECIPIENT, AMOUNT)
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+            coVerify(exactly = 0) { walletManager.send(any<TransactionData>(), any(), any()) }
+        }
+    }
+
     private companion object {
 
         val WALLET_ID = UserWalletId("011977")
@@ -477,6 +518,8 @@ internal class DevnetGachaVaultTransactionSenderTest {
         const val FEE_AMOUNT = 1_000_000L
         const val MEMO = "cc-uuid"
         const val TX_HASH = "hash"
+        const val MINT = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"
+        const val RECIPIENT = "Hx6LbkMHe69DYawhPyVNs8Apa6tyfogfzQV6a7XkwBUU"
 
         const val CARD_ID = "AC01000000041225"
         val SEED_KEY = byteArrayOf(2, 0xA.toByte(), 0xB.toByte())

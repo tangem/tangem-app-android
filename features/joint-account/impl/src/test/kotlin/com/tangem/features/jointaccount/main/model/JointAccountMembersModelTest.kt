@@ -95,6 +95,7 @@ internal class JointAccountMembersModelTest {
     private val compositionVerifier: JointAccountCompositionVerifier = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val jointAccountCompromisedAlert: JointAccountCompromisedAlert = mockk(relaxed = true)
+    private val pushPermissionPrompt: JointAccountPushPermissionPrompt = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
@@ -115,6 +116,7 @@ internal class JointAccountMembersModelTest {
             compositionVerifier,
             jointAccountCompromisedAlert,
             singleAccountListSupplier,
+            pushPermissionPrompt,
         )
         val localAccount = mockk<Account.Joint> {
             every { accountId } returns AccountId.forJointAccount(USER_WALLET_ID, ACCOUNT_ID).getOrNull()!!
@@ -768,6 +770,63 @@ internal class JointAccountMembersModelTest {
             verify(exactly = 0) { onActivated() }
         }
 
+    @Test
+    fun `GIVEN account updated twice WHEN model created THEN push permission is prompted once for it`() = runTest {
+        // Arrange
+        val accounts = MutableStateFlow(listOf(pendingAccount(members = listOf(creator))))
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+        createModel()
+
+        // Act
+        accounts.value = listOf(pendingAccount(members = listOf(creator, member)))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { pushPermissionPrompt.promptOnce(userWalletId = any(), cryptoAccountId = any()) }
+        coVerify(exactly = 1) {
+            pushPermissionPrompt.promptOnce(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID)
+        }
+    }
+
+    @Test
+    fun `GIVEN no account id in params WHEN account resolved THEN push permission is prompted for its id`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+
+        // Act
+        createModel(cryptoAccountId = null)
+
+        // Assert
+        coVerify(exactly = 1) {
+            pushPermissionPrompt.promptOnce(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID)
+        }
+    }
+
+    @Test
+    fun `GIVEN no account WHEN model created THEN push permission is not prompted`() = runTest {
+        // Arrange
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns flowOf(emptyList())
+
+        // Act
+        createModel()
+
+        // Assert
+        coVerify(exactly = 0) { pushPermissionPrompt.promptOnce(userWalletId = any(), cryptoAccountId = any()) }
+    }
+
+    @Test
+    fun `GIVEN permission result WHEN passed to model THEN prompt receives it`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        val model = createModel()
+
+        // Act
+        model.onPushPermissionResult(PushPermissionResult.Blocked)
+
+        // Assert
+        verify(exactly = 1) { pushPermissionPrompt.onSystemRequestResult(PushPermissionResult.Blocked) }
+    }
+
     private fun confirmingAccount() = pendingAccount(members = listOf(creator, member))
         .copy(status = JointAccount.Status.CONFIRMING, membersCount = 2, safeAddress = SAFE_ADDRESS)
 
@@ -808,6 +867,7 @@ internal class JointAccountMembersModelTest {
             stateController = JointAccountMembersStateController(),
             inviteSharing = JointAccountInviteSharing(shareManager = shareManager),
             currentTimeProvider = clock,
+            pushPermissionPrompt = pushPermissionPrompt,
             compromiseWatcher = JointAccountCompromiseWatcher(
                 singleAccountListSupplier = singleAccountListSupplier,
                 compositionVerifier = compositionVerifier,

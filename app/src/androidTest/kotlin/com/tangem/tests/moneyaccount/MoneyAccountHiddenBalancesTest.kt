@@ -10,7 +10,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.utils.hideBalances
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.common.utils.showBalances
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -28,10 +27,6 @@ import org.junit.Test
 
 @HiltAndroidTest
 class MoneyAccountHiddenBalancesTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1525_MONEY_ACCOUNTS_ENABLED.rawName to true,
-    )
 
     private val eligibilityState = "PaeraCustomer"
     private val moneyAccountScenario = "tangem_pay_money_account"

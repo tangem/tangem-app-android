@@ -14,8 +14,11 @@ dependencies {
     api(projects.features.earn.api)
 
     /** Core */
+    api(projects.core.analytics.models)
     api(projects.core.decompose)
+    implementation(projects.core.res)
     api(projects.core.ui)
+    api(projects.core.utils)
 
     /** Domain */
     api(projects.domain.models)

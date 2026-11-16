@@ -286,7 +286,7 @@ internal class DefaultCollectiblesRepositoryTest {
             // Arrange
             coEvery { collectiblesApi.generatePurchaseTx(any(), any()) } returns httpError(
                 code = ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE,
-                body = """{"status":503,"detail":"Low inventory","code":3016}""",
+                body = """{"status":503,"detail":"Machine is low","code":4105}""",
             )
 
             // Act
@@ -301,7 +301,7 @@ internal class DefaultCollectiblesRepositoryTest {
             // Arrange
             coEvery { collectiblesApi.generatePurchaseTx(any(), any()) } returns httpError(
                 code = ApiResponseError.HttpException.Code.FORBIDDEN,
-                body = """{"status":403,"detail":"Purchase address is blocked","code":3012}""",
+                body = """{"status":403,"detail":"Purchase address is blocked","code":4102}""",
             )
 
             // Act
@@ -489,7 +489,11 @@ internal class DefaultCollectiblesRepositoryTest {
                 httpError(code = model.httpCode, body = model.body)
 
             // Act
-            val actual = runCatching { repository.openPack(userWalletId, txId = "tx-id", includeAutoBuyback = false) }.exceptionOrNull()
+            val actual = runCatching { repository.openPack(
+                userWalletId,
+                txId = "tx-id",
+                includeAutoBuyback = false,
+            ) }.exceptionOrNull()
 
             // Assert
             assertThat(actual).isInstanceOf(model.expected)
@@ -498,22 +502,32 @@ internal class DefaultCollectiblesRepositoryTest {
         private fun provideTestModels() = listOf(
             OpenPackErrorModel(
                 httpCode = ApiResponseError.HttpException.Code.CONFLICT,
-                body = """{"status":409,"detail":"Pack is not ready","code":3009}""",
+                body = """{"status":409,"detail":"Payment is not confirmed yet","code":4202}""",
                 expected = CollectibleException.PackOpeningRefused::class.java,
             ),
             OpenPackErrorModel(
                 httpCode = ApiResponseError.HttpException.Code.BAD_GATEWAY,
-                body = """{"status":502,"detail":"Machine empty","code":3010}""",
+                body = """{"status":502,"detail":"Pack opening failed","code":4200}""",
                 expected = CollectibleException.PackOpeningRefused::class.java,
             ),
             OpenPackErrorModel(
-                httpCode = ApiResponseError.HttpException.Code.BAD_REQUEST,
-                body = """{"status":400,"detail":"Refund in progress","code":3999}""",
+                httpCode = ApiResponseError.HttpException.Code.FORBIDDEN,
+                body = """{"status":403,"detail":"Recipient address is blocked","code":4203}""",
+                expected = CollectibleException.PackOpeningRefused::class.java,
+            ),
+            OpenPackErrorModel(
+                httpCode = ApiResponseError.HttpException.Code.CONFLICT,
+                body = """{"status":409,"detail":"Machine empty","code":4204}""",
+                expected = CollectibleException.PackOpeningRefused::class.java,
+            ),
+            OpenPackErrorModel(
+                httpCode = ApiResponseError.HttpException.Code.CONFLICT,
+                body = """{"status":409,"detail":"Pack cannot be opened","code":4201}""",
                 expected = CollectibleException.RefundInProgress::class.java,
             ),
             OpenPackErrorModel(
                 httpCode = ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE,
-                body = """{"status":503,"detail":"Provider is unavailable","code":3015}""",
+                body = """{"status":503,"detail":"Provider is unavailable","code":4000}""",
                 expected = ApiResponseError.HttpException::class.java,
             ),
             OpenPackErrorModel(

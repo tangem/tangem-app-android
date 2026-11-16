@@ -1,6 +1,7 @@
 package com.tangem.data.tangempay.repository
 
 import arrow.core.Either
+import arrow.core.right
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.models.tangempay.TangemPayProduct
@@ -9,6 +10,7 @@ import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.CustomerName
 import com.tangem.domain.tangempay.repository.BankOfframpRepository
 import com.tangem.spend.datasource.config.TangemPay
 import javax.inject.Inject
@@ -39,5 +41,10 @@ internal class MockAwareBankOfframpRepository @Inject constructor(
         val options = real.getOptions(userWalletId = userWalletId, product = product)
         if (!isMockMode) return options
         return options.map { current -> withMockSpeiDestination(options = current, product = product) }
+    }
+
+    override suspend fun getCustomerName(userWalletId: UserWalletId): Either<BankOfframpError, CustomerName> {
+        if (!isMockMode) return real.getCustomerName(userWalletId)
+        return MOCK_CUSTOMER_NAME.right()
     }
 }

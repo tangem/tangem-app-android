@@ -5,7 +5,9 @@ import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultLimits
 import com.tangem.domain.models.account.CollectiblesVaultBalance
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
+import java.math.BigDecimal
 
 /**
  * Access to a wallet's `tangem_gacha_vault` account.
@@ -40,9 +42,8 @@ interface GachaVaultRepository {
     ): Either<CollectiblesAccountError, Unit>
 
     /**
-     * What the vault holds. Read among the token balances of the vault address — the vault account itself
-
-     * with the vault.
+     * What the vault holds: the balance of the vault's own USDC ATA, other token accounts of the vault don't count.
+     * A missing ATA is zero; a failed read is an error, never zero.
      *
      * @param cached what a previous read answered with. Its token and token account spare a request for the
      * program config: neither can change while the program is deployed.
@@ -83,5 +84,20 @@ interface GachaVaultRepository {
     suspend fun sendWithOwnerSignature(
         userWallet: UserWallet,
         transaction: String,
+    ): Either<CollectiblesAccountError, String>
+
+    /**
+     * Moves [amount] of [token] from the vault to [recipientWallet]'s ATA, creating that ATA if it is missing. Signed
+     * by the owner key. Not idempotent: never call again while the outcome is unknown —
+     * [CollectiblesAccountError.MaybeSent].
+     *
+     * @param recipientWallet base58 wallet address, not a token account
+     * @return the transaction signature
+     */
+    suspend fun withdraw(
+        userWallet: UserWallet,
+        token: CryptoCurrency.Token,
+        recipientWallet: String,
+        amount: BigDecimal,
     ): Either<CollectiblesAccountError, String>
 }

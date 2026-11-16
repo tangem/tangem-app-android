@@ -1,9 +1,14 @@
 package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
+import arrow.core.raise.Raise
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import com.domain.blockaid.models.transaction.GasEstimationResult
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterWithNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -16,6 +21,7 @@ import com.tangem.domain.yield.supply.fixFee
 import com.tangem.domain.yield.supply.increaseGasLimitBy
 import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.logging.TangemLogger
+import java.math.BigInteger
 
 class YieldSupplyEstimateEnterFeeUseCase(
     private val feeRepository: FeeRepository,
@@ -27,55 +33,70 @@ class YieldSupplyEstimateEnterFeeUseCase(
         userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
         transactionDataList: List<TransactionData.Uncompiled>,
-    ): Either<GetFeeError, List<TransactionData.Uncompiled>> = Either.catch {
+        policy: SimulationPolicy = SimulationPolicy(),
+    ): Either<GetFeeError, List<TransactionData.Uncompiled>> = either {
         if (transactionDataList.isSingleItem()) {
-            transactionDataList.map { transaction ->
-                transaction.copy(
-                    fee = feeRepository.calculateFee(
-                        userWallet = userWallet,
-                        cryptoCurrency = cryptoCurrency,
-                        transactionData = transaction,
-                    ).normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
-                )
+            return@either catchFee {
+                transactionDataList.map { transaction ->
+                    transaction.copy(
+                        fee = feeRepository.calculateFee(
+                            userWallet = userWallet,
+                            cryptoCurrency = cryptoCurrency,
+                            transactionData = transaction,
+                        ).normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
+                    )
+                }
             }
-        } else {
-            val estimatedFees = estimateFeeWithBlockAid(
-                userWallet = userWallet,
-                cryptoCurrency = cryptoCurrency,
-                transactionDataList = transactionDataList,
-            )
+        }
 
-            if (estimatedFees.isNullOrEmpty()) {
-                // Fallback in case block aid returns error
-                estimateFeeWithStatic(
+        when (val simulation = simulate(cryptoCurrency, transactionDataList)) {
+            is GasEstimationResult.Estimated -> catchFee {
+                priceSimulatedGas(
                     userWallet = userWallet,
                     cryptoCurrency = cryptoCurrency,
                     transactionDataList = transactionDataList,
+                    gasLimits = simulation.gasLimits,
                 )
-            } else {
-                estimatedFees
+            }
+            GasEstimationResult.Reverted -> {
+                ensure(!policy.isRevertFatal) { GetFeeError.SimulationError.Reverted }
+                catchFee { estimateFeeWithStatic(userWallet, cryptoCurrency, transactionDataList) }
+            }
+            GasEstimationResult.Unavailable -> {
+                ensure(policy.isStaticFallbackAllowed) { GetFeeError.SimulationError.Unavailable }
+                catchFee { estimateFeeWithStatic(userWallet, cryptoCurrency, transactionDataList) }
             }
         }
-    }.mapLeft(feeErrorResolver::resolve)
+    }
 
-    private suspend fun estimateFeeWithBlockAid(
+    private suspend fun <T> Raise<GetFeeError>.catchFee(block: suspend () -> T): T =
+        Either.catch { block() }.mapLeft(feeErrorResolver::resolve).bind()
+
+    private suspend fun simulate(
+        cryptoCurrency: CryptoCurrency,
+        transactionDataList: List<TransactionData.Uncompiled>,
+    ): GasEstimationResult {
+        val result = blockAidGasEstimate.getGasEstimation(
+            cryptoCurrency = cryptoCurrency,
+            transactionDataList = transactionDataList,
+        ).onLeft { TangemLogger.e("Error", it) }.getOrNull() ?: return GasEstimationResult.Unavailable
+
+        if (result == GasEstimationResult.Reverted) TangemLogger.e("Gas simulation reverted")
+        return result
+    }
+
+    private suspend fun priceSimulatedGas(
         userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
         transactionDataList: List<TransactionData.Uncompiled>,
-    ): List<TransactionData.Uncompiled>? {
-        val estimatedFees = blockAidGasEstimate.getGasEstimation(
-            cryptoCurrency = cryptoCurrency,
-            transactionDataList = transactionDataList,
-        ).onLeft { TangemLogger.e("Error", it) }.getOrNull() ?: return null
-
-        if (estimatedFees.estimatedGasList.isEmpty()) return null
-
+        gasLimits: List<BigInteger>,
+    ): List<TransactionData.Uncompiled> {
         val fee = feeRepository.getEthereumFeeWithoutGas(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrency,
         )
 
-        return transactionDataList.zip(estimatedFees.estimatedGasList) { transaction, estimatedGas ->
+        return transactionDataList.zip(gasLimits) { transaction, estimatedGas ->
             transaction.copy(
                 fee = fee.fixFee(cryptoCurrency, estimatedGas)
                     .increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
@@ -83,8 +104,10 @@ class YieldSupplyEstimateEnterFeeUseCase(
         }
     }
 
-    private fun TransactionData.Uncompiled.isEnter(): Boolean =
-        (extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade() is EthereumYieldSupplyEnterCallData
+    private fun TransactionData.Uncompiled.isEnter(): Boolean {
+        val callData = (extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade()
+        return callData is EthereumYieldSupplyEnterCallData || callData is EthereumYieldSupplyEnterWithNativeCallData
+    }
 
     private suspend fun estimateFeeWithStatic(
         userWallet: UserWallet,
@@ -113,6 +136,12 @@ class YieldSupplyEstimateEnterFeeUseCase(
         // First return calculated fees then estimated
         return withCalculatedFees + withEstimatedFees
     }
+
+    /** What an estimate of several transactions does when their simulation does not price them */
+    data class SimulationPolicy(
+        val isRevertFatal: Boolean = false,
+        val isStaticFallbackAllowed: Boolean = true,
+    )
 
     private companion object {
         // Using constant gas limit to avoid fee calculation errors when contract address is not deployed yet

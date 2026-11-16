@@ -11,6 +11,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test
 internal class JointAccountPollingCoordinatorTest {
 
     private val fetcher: SingleJointAccountListFetcher = mockk()
+    private val isLinked = MutableStateFlow(true)
 
     @BeforeEach
     fun resetMocks() {
@@ -311,9 +313,66 @@ internal class JointAccountPollingCoordinatorTest {
             assertThat(secondReceived).hasSize(1)
         }
 
+    @Test
+    fun `GIVEN a wallet not linked to the device WHEN intervals elapse THEN nothing is fetched`() = runTest {
+        // Arrange
+        isLinked.value = false
+        val coordinator = createCoordinator(testScope = this)
+        val received = mutableListOf<Unit>()
+
+        // Act
+        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { received += it } }
+        runCurrent()
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 3)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 0) { fetcher.invoke(userWalletId = any()) }
+        assertThat(received).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a wallet not linked WHEN it gets linked THEN polling starts`() = runTest {
+        // Arrange
+        isLinked.value = false
+        val coordinator = createCoordinator(testScope = this)
+        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect() }
+        runCurrent()
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 2)
+
+        // Act
+        isLinked.value = true
+        runCurrent()
+        advanceTimeBy(POLL_INTERVAL_MILLIS)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN a polled wallet WHEN its link is lost THEN polling stops`() = runTest {
+        // Arrange
+        val coordinator = createCoordinator(testScope = this)
+        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect() }
+        runCurrent()
+        advanceTimeBy(POLL_INTERVAL_MILLIS)
+        runCurrent()
+
+        // Act
+        isLinked.value = false
+        runCurrent()
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 3)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+    }
+
     private fun createCoordinator(testScope: TestScope): JointAccountPollingCoordinator {
         return JointAccountPollingCoordinator(
             fetcher = fetcher,
+            isWalletLinked = { isLinked },
             appScope = TestAppCoroutineScope(testScope.backgroundScope.coroutineContext),
             now = { testScope.testScheduler.currentTime },
         )

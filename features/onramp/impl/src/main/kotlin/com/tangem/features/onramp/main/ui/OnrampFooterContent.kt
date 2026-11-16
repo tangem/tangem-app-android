@@ -20,10 +20,12 @@ import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.main.entity.OnrampAmountButtonUM
 import com.tangem.features.onramp.main.entity.OnrampAmountButtonUMState
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampOffersBlockUM
+import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
 internal fun BoxScope.OnrampFooterContent(state: OnrampMainComponentUM.Content, modifier: Modifier = Modifier) {
@@ -65,7 +67,11 @@ private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
             is OnrampAmountButtonUMState.Loaded -> {
                 if (keyboard is Keyboard.Opened) {
                     LazyRow(
-                        modifier = Modifier.background(color = TangemTheme.colors3.bg.secondary),
+                        modifier = if (LocalOnrampDesignSystemEnabled.current) {
+                            Modifier
+                        } else {
+                            Modifier.background(color = TangemTheme.colors3.bg.secondary)
+                        },
                         contentPadding = PaddingValues(
                             vertical = 10.dp,
                             horizontal = 8.dp,
@@ -76,8 +82,12 @@ private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
                         items(
                             items = state.amountButtons,
                             key = OnrampAmountButtonUM::value,
-                        ) {
-                            AmountButton(button = it)
+                        ) { button ->
+                            if (LocalOnrampDesignSystemEnabled.current) {
+                                OnrampAmountButtonDs(button = button)
+                            } else {
+                                AmountButton(button = button)
+                            }
                         }
                     }
                 }
@@ -88,6 +98,7 @@ private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
 }
 
 @Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 private fun AmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modifier) {
     val focusManager = LocalFocusManager.current
     Box(

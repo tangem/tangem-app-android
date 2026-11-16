@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
+import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -41,11 +42,6 @@ internal fun TangemPayMainBlockContent(
     when (state) {
         is TangemPayMainUM.Empty -> Unit
         is TangemPayMainUM.Loading -> TangemPayMainLoading(modifier)
-        is TangemPayMainUM.SelectPlan -> TangemPayRow(
-            subtitle = resourceReference(R.string.tangempay_main_select_plan),
-            modifier = modifier,
-            onClick = state.onClick,
-        )
         is TangemPayMainUM.UnderReview -> TangemPayRow(
             subtitle = state.subtitle,
             modifier = modifier,
@@ -90,28 +86,46 @@ private fun TangemPayMainContent(
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    TangemRow(
-        modifier = modifier.tangemPayCard(),
-        contentLead = TangemRowContentLead.Start,
-        verticalAlignment = TangemRowVerticalAlignment.Center,
-        onClick = payMainUM.onClick,
-        startSlot = { TangemPayIssuedIcon() },
-        titleSlot = { TangemPayTitle() },
-        subtitleSlot = { TangemPaySubtitle(text = payMainUM.subtitle) },
-        valueSlot = {
-            TangemPayFiatAmount(
-                text = payMainUM.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-                isBalanceFlickering = payMainUM.isBalanceFlickering,
-                isBalanceFromCache = payMainUM.shouldShowOnlyCacheWarning,
+    Box(modifier = modifier) {
+        TangemRow(
+            modifier = Modifier.tangemPayCard(isActionRequired = payMainUM.isActionRequired),
+            contentLead = TangemRowContentLead.Start,
+            verticalAlignment = TangemRowVerticalAlignment.Center,
+            onClick = payMainUM.onClick,
+            startSlot = { TangemPayIssuedIcon() },
+            titleSlot = { TangemPayTitle() },
+            subtitleSlot = {
+                TangemPaySubtitle(
+                    text = payMainUM.subtitle,
+                    color = if (payMainUM.isActionRequired) {
+                        TangemTheme.colors3.text.status.warning
+                    } else {
+                        TangemTheme.colors3.text.secondary
+                    },
+                )
+            },
+            valueSlot = {
+                TangemPayFiatAmount(
+                    text = payMainUM.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+                    isBalanceFlickering = payMainUM.isBalanceFlickering,
+                    isBalanceFromCache = payMainUM.shouldShowOnlyCacheWarning,
+                )
+            },
+            subvalueSlot = {
+                TangemRowText(
+                    text = payMainUM.balanceSubtitle.orMaskWithStars(isBalanceHidden),
+                    role = TangemRowTextRole.Subvalue,
+                )
+            },
+        )
+        if (payMainUM.isActionRequired) {
+            TangemGlowRing(
+                modifier = Modifier.matchParentSize(),
+                variant = TangemGlowRing.Variant.Warning,
+                cornerRadius = 24.dp,
             )
-        },
-        subvalueSlot = {
-            TangemRowText(
-                text = payMainUM.balanceSubtitle.orMaskWithStars(isBalanceHidden),
-                role = TangemRowTextRole.Subvalue,
-            )
-        },
-    )
+        }
+    }
 }
 
 @Composable
@@ -270,9 +284,11 @@ private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Modifier.tangemPayCard(): Modifier = this
+private fun Modifier.tangemPayCard(isActionRequired: Boolean = false): Modifier = this
     .clip(RoundedCornerShape(24.dp))
-    .background(TangemTheme.colors3.bg.secondary)
+    .background(
+        if (isActionRequired) TangemTheme.colors3.bg.status.warningSubtle else TangemTheme.colors3.bg.secondary,
+    )
     .testTag(TangemPayTestTags.MAIN_SCREEN_TILE)
 
 // region Preview
@@ -303,7 +319,6 @@ private class TangemPayMainBlockContentPreviewParameterProvider : CollectionPrev
         TangemPayMainUM.FailedToIssue(onClick = {}),
         TangemPayMainUM.UnderReview(subtitle = resourceReference(R.string.tangempay_kyc_in_progress), onClick = {}),
         TangemPayMainUM.ActionRequired(onClick = {}),
-        TangemPayMainUM.SelectPlan(onClick = {}),
         TangemPayMainUM.IssuingCard(onClick = {}),
         TangemPayMainUM.Content(
             subtitle = TextReference.Str("*1234"),
@@ -312,6 +327,16 @@ private class TangemPayMainBlockContentPreviewParameterProvider : CollectionPrev
             balanceSubtitle = TextReference.Str("USDC"),
             onClick = {},
             shouldShowOnlyCacheWarning = true,
+            isActionRequired = false,
+        ),
+        TangemPayMainUM.Content(
+            subtitle = resourceReference(R.string.tangempay_action_required_title),
+            isBalanceFlickering = false,
+            balance = TextReference.Str("$ 101.56"),
+            balanceSubtitle = TextReference.Str("USD"),
+            onClick = {},
+            shouldShowOnlyCacheWarning = false,
+            isActionRequired = true,
         ),
     ),
 )

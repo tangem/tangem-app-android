@@ -31,7 +31,6 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
-import com.tangem.domain.tangempay.usecase.GetTangemPayProductsAvailabilityForCustomerUseCase
 import com.tangem.domain.tangempay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
 import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
@@ -45,6 +44,7 @@ import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCas
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.tangempay.usecase.CreateOnboardingOrderUseCase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
 import dagger.Module
@@ -186,12 +186,14 @@ internal interface MoneyAccountDataModule {
             getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
             paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
             moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+            tangemPayFeatureToggles: TangemPayFeatureToggles,
         ): PollTangemPayAccountStatusesUseCase {
             return PollTangemPayAccountStatusesUseCase(
                 getCustomerSummaryUseCase = getCustomerSummaryUseCase,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 moneyAccountStatusFetcher = moneyAccountStatusFetcher,
                 timeSource = TimeSource.Monotonic,
+                tangemPayFeatureToggles = tangemPayFeatureToggles,
             )
         }
 
@@ -225,12 +227,12 @@ internal interface MoneyAccountDataModule {
 
         @Provides
         fun provideGetTangemPayProductsAvailabilityUseCase(
-            getTangemPayProductsAvailabilityForCustomerUseCase: GetTangemPayProductsAvailabilityForCustomerUseCase,
             isMoneyAccountPathOccupiedUseCase: IsMoneyAccountPathOccupiedUseCase,
+            getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
         ): GetTangemPayProductsAvailabilityUseCase {
             return GetTangemPayProductsAvailabilityUseCase(
-                getTangemPayProductsAvailabilityForCustomerUseCase = getTangemPayProductsAvailabilityForCustomerUseCase,
                 isMoneyAccountPathOccupiedUseCase = isMoneyAccountPathOccupiedUseCase,
+                getCustomerSummaryUseCase = getCustomerSummaryUseCase,
             )
         }
 

@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
@@ -16,6 +17,7 @@ import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.TestScope
@@ -84,6 +86,7 @@ internal class TangemPayVerifiedModelTest {
         getTangemPayProductsAvailabilityUseCase = getProductsAvailabilityUseCase,
         startTangemPayOnboardingUseCase = startTangemPayOnboardingUseCase,
         analytics = analytics,
+        getUserWalletUseCase = mockk { every { this@mockk(USER_WALLET_ID) } returns mockk<UserWallet.Cold>().right() },
     )
 
     private companion object {

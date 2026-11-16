@@ -90,19 +90,25 @@ internal class TangemPayWithdrawHubUMFactory(
                     title = resourceReference(R.string.tangempay_withdraw_hub_to_personal_account),
                     onClick = callbacks.onToPersonalAccountClick,
                 ),
-                toBusinessAccount = ActionCardUM(
-                    icon = TangemIconUM.Icon(
-                        iconRes = R.drawable.ic_briefcase_filled_16,
-                        tintReference = { TangemTheme.colors3.icon.staticDark },
-                    ),
-                    title = resourceReference(R.string.tangempay_withdraw_hub_to_business_account),
-                    onClick = callbacks.onToBusinessAccountClick,
-                ),
+                toBusinessAccount = createToBusinessAccount(options = (state.options as? OptionsState.Ready)?.options),
                 recents = createRecents(state.recents, (state.options as? OptionsState.Ready)?.options),
                 isAvailable = state.options is OptionsState.Ready,
                 unavailableSubtitle = unavailableSubtitle,
             )
         }
+
+    /** SPEI pays only the customer's own account, so a business recipient needs a US rail to be offered. */
+    private fun createToBusinessAccount(options: BankWithdrawOptions?): ActionCardUM? {
+        if (options != null && options.destinationsFor(recipientRail = null).isEmpty()) return null
+        return ActionCardUM(
+            icon = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_briefcase_filled_16,
+                tintReference = { TangemTheme.colors3.icon.staticDark },
+            ),
+            title = resourceReference(R.string.tangempay_withdraw_hub_to_business_account),
+            onClick = callbacks.onToBusinessAccountClick,
+        )
+    }
 
     private fun createRecents(state: RecentsState, options: BankWithdrawOptions?): RecentsUM = when (state) {
         RecentsState.Loading -> RecentsUM.Loading

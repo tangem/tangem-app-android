@@ -16,6 +16,9 @@ dependencies {
     implementation(projects.features.earn.product.api)
 
     /** Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
+    implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
@@ -26,10 +29,15 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.networks)
     implementation(projects.domain.quotes)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.yieldSupply.models)
 
     /** Tangem SDKs */
+    implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
     implementation(tangemDeps.blockchain)
 
     /** Kotlin */
@@ -44,4 +52,5 @@ dependencies {
     /** Tests */
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.mock)
 }

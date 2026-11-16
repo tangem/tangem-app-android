@@ -133,7 +133,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             }
 
         @Test
-        fun `GIVEN Polymarket lists the key with every scope and its own expiry WHEN enable THEN it is marked ready`() =
+        fun `GIVEN the key listed with every scope and its own expiry WHEN enable THEN it finishes not ready`() =
             runTest {
                 // Arrange
                 val authorization = authorization()
@@ -144,6 +144,46 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns listOf(
                     signer(KEY, validUntil = VALID_UNTIL.minusSeconds(60)).copy(scopes = listOf("all")),
                 ).right()
+
+                // Act
+                val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the key listed with CLOB and another expiry WHEN enable THEN it finishes not ready`() =
+            runTest {
+                // Arrange
+                val authorization = authorization()
+                givenSigned(nonEmptyListOf(authorize()), signed(authorization))
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(listOf(key()))
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                    listOf(signer(KEY, validUntil = VALID_UNTIL.plusSeconds(1))).right()
+
+                // Act
+                val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the key listed in the recorded second WHEN enable THEN it is marked ready`() =
+            runTest {
+                // Arrange
+                val authorization = authorization()
+                givenSigned(nonEmptyListOf(authorize()), signed(authorization))
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(listOf(key()))
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                    listOf(signer(KEY, validUntil = VALID_UNTIL.plusMillis(500))).right()
 
                 // Act
                 val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
@@ -252,6 +292,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 ),
             )
             coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+            coVerify(exactly = 0) { tradingStore.markAuthorized(any(), any()) }
         }
 
         @Test
@@ -292,22 +333,43 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN Polymarket never lists the key WHEN enable THEN it is not marked ready`() = runTest {
+        fun `GIVEN Polymarket never lists the active key WHEN enable THEN it succeeds without being marked ready`() =
+            runTest {
+                // Arrange
+                givenSigned(nonEmptyListOf(authorize()), signed(authorization()))
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, any()) } returns key().right()
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                    listOf(signer(FOREIGN)).right()
+
+                // Act
+                val actual = createInteractor().enable(USER_WALLET_ID).toList()
+
+                // Assert
+                assertThat(actual).containsExactly(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Authorizing(key()),
+                    PolymarketSessionKeyProgress.CheckingReadiness(key()),
+                    PolymarketSessionKeyProgress.Finished(key().right()),
+                ).inOrder()
+                coVerify(exactly = LISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
+                assertThat(testScheduler.currentTime).isEqualTo(LISTING_WAIT_MILLIS)
+                coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+                coVerify(exactly = 1) { tradingStore.markAuthorized(USER_WALLET_ID, KEY) }
+            }
+
+        @Test
+        fun `GIVEN the active key has no expiry WHEN enable THEN it succeeds without asking Polymarket`() = runTest {
             // Arrange
             givenSigned(nonEmptyListOf(authorize()), signed(authorization()))
-            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, any()) } returns key().right()
-            coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
-                listOf(signer(FOREIGN)).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, any()) } returns
+                key(validUntil = null).right()
 
             // Act
             val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
 
             // Assert
-            assertThat(actual).isEqualTo(
-                PolymarketSessionKeyProgress.Finished(
-                    PolymarketSessionKeyLifecycleError.NotListedOnExchange(key()).left(),
-                ),
-            )
+            assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key(validUntil = null).right()))
+            coVerify(exactly = 0) { sessionKeyRepository.getSessionSigners(any()) }
             coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
         }
 
@@ -595,6 +657,36 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             coVerify(exactly = 1) { signBatches(any(), any()) }
             coVerify(exactly = 1) { tradingStore.markReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) }
         }
+
+        @Test
+        fun `GIVEN Polymarket does not list the renewed key yet WHEN renew THEN it is authorized not ready`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                val authorization = authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(
+                    listOf(key(status = PolymarketSessionKeyStatus.REVOKED)),
+                    listOf(key()),
+                )
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                    emptyList<PolymarketSessionSigner>().right()
+
+                // Act
+                val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+                coVerify(exactly = 1) { tradingStore.markAuthorized(USER_WALLET_ID, KEY) }
+            }
 
         @Test
         fun `GIVEN the revoking key is missing twice in a row WHEN renew THEN it is taken as revoked and authorized`() =
@@ -888,6 +980,8 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     PolymarketSessionKeyProgress.Finished(key().right()),
                 ).inOrder()
                 coVerify(exactly = 1) { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) }
+                coVerify(exactly = 1) { tradingStore.markAuthorized(USER_WALLET_ID, KEY) }
+                coVerify(exactly = 0) { tradingStore.markAuthorized(USER_WALLET_ID, PREVIOUS) }
             }
 
         @Test
@@ -1106,7 +1200,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     ).left(),
                 ),
             )
-            coVerify(exactly = LISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
+            coVerify(exactly = UNLISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
         }
 
         @Test
@@ -1244,7 +1338,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     ).left(),
                 ),
             )
-            coVerify(exactly = LISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
+            coVerify(exactly = UNLISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
         }
 
         @Test
@@ -1431,7 +1525,9 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         const val DEVICE_NAME = "Pixel"
         const val SETTLE_TIMEOUT_MILLIS = 35 * 60 * 1_000L
         const val BUSY_RETRY_DELAY_MILLIS = 1_500L
-        const val LISTING_ATTEMPTS = 20
+        const val LISTING_ATTEMPTS = 10
+        const val LISTING_WAIT_MILLIS = (LISTING_ATTEMPTS - 1) * 3_000L
+        const val UNLISTING_ATTEMPTS = 20
         val NOW: Instant = Instant.ofEpochSecond(1_789_430_000)
         val VALID_UNTIL: Instant = NOW.plusSeconds(180L * 24 * 60 * 60)
         val DEADLINE = (NOW.epochSecond + 600).toString()
@@ -1445,7 +1541,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             address: String = KEY,
             status: PolymarketSessionKeyStatus = PolymarketSessionKeyStatus.ACTIVE,
             isEnabled: Boolean = true,
-            validUntil: Instant = VALID_UNTIL,
+            validUntil: Instant? = VALID_UNTIL,
         ) = PolymarketSessionKey(
             address = address,
             deviceId = DEVICE_ID,

@@ -74,8 +74,6 @@ internal class PooledStakingEarnProduct @Inject constructor(
 
     override val analytics: EarnProductAnalytics = EarnProductAnalytics(category = "ETH Staking", product = "Staking")
 
-    override val hasLegacyBlock: Boolean = true
-
     override fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>> {
         val poolStatuses = accountStatusListSupplier(userWalletId)
             .map { statuses -> statuses.flattenCurrencies().filter { it.isPoolCurrency() } }

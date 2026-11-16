@@ -25,6 +25,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.*
+import com.tangem.pagination.fetcher.DistinctPagesFilter
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.store.datasource.markets.TangemTechMarketsApi
 import com.tangem.store.datasource.markets.models.response.TokenMarketExchangesResponse
@@ -55,12 +56,14 @@ internal class DefaultMarketsTokenRepository(
         subFetcher = object : LimitOffsetBatchFetcher.SubFetcher<TokenMarketListConfig, List<TokenMarket>> {
 
             val requestTimeStamp = AtomicLong(0)
+            val distinctPages = DistinctPagesFilter(TokenMarket::id)
 
             override suspend fun fetch(
                 request: LimitOffsetBatchFetcher.Request<TokenMarketListConfig>,
                 lastResult: BatchFetchResult<List<TokenMarket>>?,
                 isFirstBatchFetching: Boolean,
             ): BatchFetchResult<List<TokenMarket>> {
+                val page = distinctPages.startPage(isFirstPage = isFirstBatchFetching)
                 val searchText =
                     if (request.params.searchText.isNullOrBlank()) null else request.params.searchText
 
@@ -96,12 +99,12 @@ internal class DefaultMarketsTokenRepository(
 
                 val isLast = res.tokens.size < request.limit
 
-                val tokenMarketListWithMaxApy = TokenMarketListConverter.convert(res)
+                val tokens = page.distinct(TokenMarketListConverter.convert(res).tokens)
 
                 return BatchFetchResult.Success(
-                    data = tokenMarketListWithMaxApy.tokens,
+                    data = tokens,
                     isLast = isLast,
-                    isEmpty = res.tokens.isEmpty(),
+                    isEmpty = tokens.isEmpty(),
                     total = res.total,
                 )
             }

@@ -16,6 +16,7 @@ internal class DefaultLoopingVideoPlayer(
     private val decoderCounters: () -> DecoderCounters?,
     videoItem: MediaItem,
     override val isMotionEnabled: Boolean,
+    private var isSourceReady: Boolean = true,
     private val listener: LoopingVideoPlayer.Listener,
     teardownScheduler: VideoTeardownScheduler,
 ) : LoopingVideoPlayer {
@@ -63,15 +64,16 @@ internal class DefaultLoopingVideoPlayer(
 
     override fun attachSurface(surfaceView: SurfaceView) {
         if (!surfaceBinding.attach(surfaceView)) return
-        // Prepared without a surface, media3 reports a first frame that nothing paints.
-        if (!isPrepared) {
-            isPrepared = true
-            player.prepare()
-        }
+        prepareIfReady()
     }
 
     override fun detachSurface(surfaceView: SurfaceView) {
         surfaceBinding.detach(surfaceView)
+    }
+
+    override fun markSourceReady() {
+        isSourceReady = true
+        prepareIfReady()
     }
 
     override fun setRunning(isRunning: Boolean) {
@@ -87,6 +89,13 @@ internal class DefaultLoopingVideoPlayer(
     override fun release() {
         player.removeListener(playerListener)
         surfaceBinding.release()
+    }
+
+    // Prepared without a surface, media3 reports a first frame that nothing paints.
+    private fun prepareIfReady() {
+        if (isPrepared || !isSourceReady || !surfaceBinding.isAttached) return
+        isPrepared = true
+        player.prepare()
     }
 
     private companion object {

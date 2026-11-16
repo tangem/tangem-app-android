@@ -18,6 +18,9 @@ internal interface LoopingVideoPlayer {
 
     fun detachSurface(surfaceView: SurfaceView)
 
+    /** Lets a player built without its source start preparing once a surface is attached. */
+    fun markSourceReady()
+
     /** Keeps the clip paused while [isMotionEnabled] is `false`. */
     fun setRunning(isRunning: Boolean)
 

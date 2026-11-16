@@ -48,7 +48,13 @@ internal data class EarnFlowState(
     val feeSelection: EarnFeeSelection?
         get() = (fee as? FeeSelectorUM.Content)
             ?.takeIf { it.isPrimaryButtonEnabled }
-            ?.let { EarnFeeSelection(fee = it.selectedFeeItem.fee, extended = it.feeExtraInfo.transactionFeeExtended) }
+            ?.let { content ->
+                EarnFeeSelection(
+                    fee = content.selectedFeeItem.fee,
+                    extended = content.feeExtraInfo.transactionFeeExtended,
+                    feeType = content.toAnalyticType(),
+                )
+            }
 
     val isPlanCurrent: Boolean
         get() = plan != null && planFee != null && planFee == feeSelection

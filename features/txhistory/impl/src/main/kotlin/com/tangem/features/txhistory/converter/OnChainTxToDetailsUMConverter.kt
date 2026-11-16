@@ -90,14 +90,14 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * The menu with a trailing "Explore Aave" row for a yield-supply tx — the DeFi protocol the funds are supplied to.
-     * The yield-supply product is a single hard-wired integration across the app (Aave), so the row opens the constant
-     * [AAVE_WEBSITE] rather than a per-tx resolved link, and every yield-supply transaction offers it.
+     * The menu with a trailing "Explore Aave" row for a yield-supply or Lending tx — the DeFi protocol the funds are in.
+     * Both are hard-wired to Aave for now, so the row opens the constant [AAVE_WEBSITE] rather than a per-tx resolved
+     * link.
      */
     private fun ImmutableList<TxHistoryDetailsUM.MenuItemUM>.withExploreProvider(
         tx: TxInfo,
     ): ImmutableList<TxHistoryDetailsUM.MenuItemUM> {
-        if (tx.type !is TransactionType.YieldSupply) return this
+        if (tx.type !is TransactionType.YieldSupply && tx.type !is TransactionType.Lending) return this
         val exploreProvider = TxHistoryDetailsUM.MenuItemUM(
             icon = Icons.ic_globe_24,
             title = resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title),
@@ -302,6 +302,7 @@ internal class OnChainTxToDetailsUMConverter(
                 TxHistoryDetailsUM.AmountIconUM.OverlappingPair(leading = aave, trailing = asset)
             is TransactionType.YieldSupply.Exit,
             is TransactionType.YieldSupply.Topup,
+            is TransactionType.Lending,
             -> TxHistoryDetailsUM.AmountIconUM.OverlappingPair(leading = asset, trailing = aave)
             is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
                 TxHistoryDetailsUM.AmountIconUM.OverlappingPair(leading = asset, trailing = aave)
@@ -379,6 +380,7 @@ internal class OnChainTxToDetailsUMConverter(
         if (isFeeOnly(currency)) return false
         val isPlainSend = (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
         val isProtocolType = type is TransactionType.YieldSupply ||
+            type is TransactionType.Lending ||
             type is TransactionType.IncentiveClaim ||
             type is TransactionType.Staking ||
             type is TransactionType.Approve
@@ -425,7 +427,7 @@ private enum class AmountSign {
     /** `-` for outgoing, `+` for incoming — plain value transfers. */
     BY_DIRECTION,
 
-    /** Always `+` — an inflow regardless of the reported direction (staking rewards). */
+    /** Always `+` — an inflow regardless of the reported direction (staking rewards, a Lending withdrawal). */
     ALWAYS_PLUS,
 
     /**
@@ -436,7 +438,9 @@ private enum class AmountSign {
 }
 
 private fun TransactionType.amountSign(): AmountSign = when (this) {
-    is TransactionType.Staking.ClaimRewards -> AmountSign.ALWAYS_PLUS
+    is TransactionType.Staking.ClaimRewards,
+    is TransactionType.Lending.Withdraw,
+    -> AmountSign.ALWAYS_PLUS
     is TransactionType.Staking,
     is TransactionType.Approve,
     is TransactionType.YieldSupply.Enter,
@@ -485,7 +489,7 @@ private fun TxInfo.headerIcon(currency: CryptoCurrency): TxIcon {
         is TransactionType.YieldSupply -> yieldSupplyIcon(type)
         is TransactionType.Operation -> TxIcon.Vector(Icons.ic_document_20)
         is TransactionType.Swap -> TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20)
-        else -> TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
+        else -> TxIcon.Vector(if (isOutgoingFunds) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
     }
 }
 

@@ -247,6 +247,21 @@ sealed interface TxInfo {
         }
 
         @Serializable
+        sealed interface Lending : TransactionType {
+
+            @Serializable
+            data object Deposit : Lending
+
+            /**
+             * @property isEntire        the whole position is withdrawn and the reserve deactivated
+             * @property requestedAmount the amount a partial withdrawal asked for; `null` for an entire one, or when the
+             *                           call data could not be decoded
+             */
+            @Serializable
+            data class Withdraw(val isEntire: Boolean, val requestedAmount: SerializedBigDecimal?) : Lending
+        }
+
+        @Serializable
         sealed interface Staking : TransactionType {
 
             @Serializable

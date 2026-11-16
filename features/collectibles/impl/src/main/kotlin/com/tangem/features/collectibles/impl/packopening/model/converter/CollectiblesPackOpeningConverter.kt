@@ -78,6 +78,8 @@ internal class CollectiblesPackOpeningConverter(
             OpenPackStep.Opening,
             is OpenPackStep.Opened,
             is OpenPackStep.AutoBuybacked,
+            OpenPackStep.Failed.Refunding,
+            OpenPackStep.Failed.Refunded,
             -> ButtonUM(
                 textRef = resourceReference(R.string.collectibles_confirm_order_opening_pack_button),
                 isEnabled = false,

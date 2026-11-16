@@ -34,7 +34,7 @@ internal fun createStatus(
 ): YieldModuleStatus {
     val key = YieldModuleStatus.Key(token)
 
-    return YieldModuleStatus(
+    return MockYieldSupply.moduleStatus(
         networkId = key.networkId,
         tokenAddress = key.tokenAddress,
         isActive = isActive,

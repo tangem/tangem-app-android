@@ -122,6 +122,42 @@ internal class EarnTokensBatchFetcherTest {
             assertThat((result as BatchFetchResult.Success).isLast).isFalse()
         }
 
+    @Test
+    fun `GIVEN a token returned on two pages WHEN the next page is fetched THEN it drops the token`() = runTest {
+        // Arrange
+        coEvery { getEarnTokensWithApyType() } returnsMany listOf(
+            page(hasNext = true, tokenIds = listOf("tether", "usd-coin"), pageNumber = 1),
+            page(hasNext = true, tokenIds = listOf("usd-coin", "dai"), pageNumber = 2),
+        )
+        val first = fetcher.fetchFirst(config())
+
+        // Act
+        val result = fetcher.fetchNext(overrideRequestParams = null, lastResult = first) as BatchFetchResult.Success
+
+        // Assert
+        assertThat(result.data.map { it.earnToken.tokenId }).containsExactly("dai")
+        assertThat(result.isLast).isFalse()
+    }
+
+    @Test
+    fun `GIVEN loaded pages WHEN the first page is fetched again THEN all its tokens are returned`() = runTest {
+        // Arrange
+        val firstPage = page(hasNext = true, tokenIds = listOf("tether", "usd-coin"), pageNumber = 1)
+        coEvery { getEarnTokensWithApyType() } returnsMany listOf(
+            firstPage,
+            page(hasNext = true, tokenIds = listOf("dai"), pageNumber = 2),
+            firstPage,
+        )
+        val first = fetcher.fetchFirst(config())
+        fetcher.fetchNext(overrideRequestParams = null, lastResult = first)
+
+        // Act
+        val result = fetcher.fetchFirst(config()) as BatchFetchResult.Success
+
+        // Assert
+        assertThat(result.data.map { it.earnToken.tokenId }).containsExactly("tether", "usd-coin").inOrder()
+    }
+
     private fun config() = EarnTokensListConfig(type = null, networks = null, isForEarn = false)
 
     private fun page(
@@ -129,17 +165,19 @@ internal class EarnTokensBatchFetcherTest {
         itemCount: Int = BATCH_SIZE,
         serverLimit: Int = BATCH_SIZE,
         networkId: String = "ethereum",
+        tokenIds: List<String> = List(itemCount) { index -> "usd-coin-$index" },
+        pageNumber: Int = 1,
     ): ApiResponse<EarnListResponse> = ApiResponse.Success(
         data = EarnListResponse(
-            meta = MetaEarnListResponse(page = 1, limit = serverLimit, total = 51, hasNext = hasNext),
-            items = List(itemCount) { index ->
+            meta = MetaEarnListResponse(page = pageNumber, limit = serverLimit, total = 51, hasNext = hasNext),
+            items = tokenIds.mapIndexed { index, tokenId ->
                 EarnResponse(
                     apy = "0.038400",
                     networkId = networkId,
                     rewardType = "apy",
                     type = "yield",
                     token = EarnTokenResponse(
-                        id = "usd-coin-$index",
+                        id = tokenId,
                         symbol = "USDC",
                         name = "USDC",
                         address = "0xabc$index",

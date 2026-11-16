@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.jointaccount.model.JointOperationFetchResult
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
+import com.tangem.domain.wallets.usecase.GetWalletLinkStatusUseCase
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
@@ -14,6 +15,7 @@ import kotlin.time.Duration.Companion.seconds
 @ModelScoped
 internal class JointOperationPoller @Inject constructor(
     private val repository: JointOperationHistoryRepository,
+    private val getWalletLinkStatusUseCase: GetWalletLinkStatusUseCase,
 ) {
 
     private val refreshRequests = Channel<Unit>(Channel.CONFLATED)
@@ -26,6 +28,7 @@ internal class JointOperationPoller @Inject constructor(
         var hasLoggedFailureRun = false
 
         while (!isFinished(userWalletId = userWalletId, operationId = operationId)) {
+            awaitLinked(userWalletId)
             refreshRequests.tryReceive()
             val result = repository.fetchOperation(userWalletId = userWalletId, operationId = operationId)
                 .onLeft { error ->
@@ -41,6 +44,10 @@ internal class JointOperationPoller @Inject constructor(
         }
 
         return End.FINISHED
+    }
+
+    private suspend fun awaitLinked(userWalletId: UserWalletId) {
+        getWalletLinkStatusUseCase(userWalletId).first { isLinked -> isLinked }
     }
 
     private suspend fun isFinished(userWalletId: UserWalletId, operationId: String): Boolean {

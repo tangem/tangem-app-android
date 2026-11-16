@@ -1653,6 +1653,58 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(amountBlock.label).isNull()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideLendingTypes")
+    fun `GIVEN lending tx WHEN convert THEN asset-leading Aave pair, no counterparty and Explore Aave`(
+        type: TransactionType.Lending,
+    ) {
+        // Arrange
+        val tx = txInfo(
+            type = type,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(USER_ADDRESS),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        val pair = details.amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
+        assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
+        assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22))
+        assertThat(details.counterparty).isNull()
+        assertThat(details.header.menu.last().title)
+            .isEqualTo(resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title))
+    }
+
+    private fun provideLendingTypes() = listOf(
+        TransactionType.Lending.Deposit,
+        TransactionType.Lending.Withdraw(isEntire = false, requestedAmount = BigDecimal.ONE),
+        TransactionType.Lending.Withdraw(isEntire = true, requestedAmount = null),
+    )
+
+    @Test
+    fun `GIVEN lending deposit WHEN convert THEN deposited title and minus sign`() {
+        // Act
+        val details = converter.convert(txInfo(type = TransactionType.Lending.Deposit, isOutgoing = true))
+
+        // Assert
+        assertThat(details.header.title).isEqualTo(resourceReference(R.string.transaction_history_deposited))
+        assertThat(details.amountBlock.amount.resolveString()).startsWith(OUTGOING_SIGN)
+    }
+
+    @Test
+    fun `GIVEN lending withdrawal sent by the wallet WHEN convert THEN withdrawn title and plus sign`() {
+        // Act
+        val details = converter.convert(
+            txInfo(type = TransactionType.Lending.Withdraw(isEntire = false, requestedAmount = BigDecimal.ONE), isOutgoing = true),
+        )
+
+        // Assert
+        assertThat(details.header.title).isEqualTo(resourceReference(R.string.transaction_history_withdrawn))
+        assertThat(details.amountBlock.amount.resolveString()).startsWith(INCOMING_SIGN)
+    }
+
     @Test
     fun `GIVEN incentive reward on the token WHEN convert THEN Merkl paired with the asset and no counterparty`() {
         // Arrange

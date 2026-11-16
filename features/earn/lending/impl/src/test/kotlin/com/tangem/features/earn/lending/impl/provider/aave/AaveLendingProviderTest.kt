@@ -26,6 +26,8 @@ import com.tangem.features.earn.lending.impl.provider.LendingAsset
 import com.tangem.features.earn.lending.impl.provider.LendingDepositGate
 import com.tangem.features.earn.lending.impl.provider.LendingMarket
 import com.tangem.features.earn.lending.impl.provider.LendingPosition
+import com.tangem.test.core.assertEitherLeft
+import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -366,7 +368,7 @@ internal class AaveLendingProviderTest {
         val actual = provider.refresh(userWalletId, asset)
 
         // Assert
-        assertThat(actual.isLeft()).isTrue()
+        assertEitherLeft(actual, IllegalStateException("backend"))
     }
 
     @Test
@@ -378,7 +380,7 @@ internal class AaveLendingProviderTest {
         val actual = provider.refresh(userWalletId, asset)
 
         // Assert
-        assertThat(actual.isLeft()).isTrue()
+        assertEitherLeft(actual, IllegalStateException("rpc"))
     }
 
     @Test
@@ -422,15 +424,10 @@ internal class AaveLendingProviderTest {
         totalApyEst = BigDecimal(totalApyEst),
     )
 
-    private fun wethStatus(balance: String) = YieldModuleStatus(
+    private fun wethStatus(balance: String) = MockYieldSupply.moduleStatus(
         networkId = eth.network.id,
         tokenAddress = WETH.lowercase(),
-        isActive = true,
-        isInitialized = true,
-        isAllowedToSpend = true,
         effectiveProtocolBalance = BigDecimal(balance),
-        effectiveBalance = null,
-        source = StatusSource.ACTUAL,
     )
 
     private fun apy(fraction: String) = EarnProductRate(fraction = BigDecimal(fraction), type = EarnRateType.APY)

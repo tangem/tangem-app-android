@@ -68,7 +68,9 @@ internal fun BankSection(state: BankSectionUM, modifier: Modifier = Modifier) {
                     item(key = "bank_actions") {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             BankActionCard(state = state.toPersonalAccount, isEnabled = state.isAvailable)
-                            BankActionCard(state = state.toBusinessAccount, isEnabled = state.isAvailable)
+                            state.toBusinessAccount?.let { card ->
+                                BankActionCard(state = card, isEnabled = state.isAvailable)
+                            }
                         }
                     }
                     recentsItems(recents = state.recents, isEnabled = state.isAvailable)

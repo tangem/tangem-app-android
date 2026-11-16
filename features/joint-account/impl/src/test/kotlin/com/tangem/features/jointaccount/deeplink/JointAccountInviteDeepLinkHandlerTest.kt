@@ -143,6 +143,7 @@ internal class JointAccountInviteDeepLinkHandlerTest {
                 queryParams = emptyMap(),
                 scope = scope,
                 isFromOnNewIntent = false,
+                router = mockk(),
             ),
         )
     }

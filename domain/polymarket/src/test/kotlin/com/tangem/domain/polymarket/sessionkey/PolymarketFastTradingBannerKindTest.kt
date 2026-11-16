@@ -33,13 +33,24 @@ internal class PolymarketFastTradingBannerKindTest {
             dismissedAgo = Duration.ofDays(30),
             expected = false,
         ),
+        DismissalModel(kind = PolymarketFastTradingBannerKind.REACTIVATE, dismissedAgo = null, expected = false),
         DismissalModel(
             kind = PolymarketFastTradingBannerKind.EXTEND,
-            dismissedAgo = Duration.ofHours(23),
+            dismissedAgo = Duration.ofDays(29),
             expected = true,
         ),
         DismissalModel(
             kind = PolymarketFastTradingBannerKind.EXTEND,
+            dismissedAgo = Duration.ofDays(30),
+            expected = false,
+        ),
+        DismissalModel(
+            kind = PolymarketFastTradingBannerKind.REACTIVATE,
+            dismissedAgo = Duration.ofHours(23),
+            expected = true,
+        ),
+        DismissalModel(
+            kind = PolymarketFastTradingBannerKind.REACTIVATE,
             dismissedAgo = Duration.ofHours(24),
             expected = false,
         ),

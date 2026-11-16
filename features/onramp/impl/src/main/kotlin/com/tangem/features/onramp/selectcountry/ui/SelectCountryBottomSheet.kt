@@ -31,16 +31,23 @@ import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcountry.entity.CountryItemState
 import com.tangem.features.onramp.selectcountry.entity.CountryListUM
+import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
-internal fun SelectCountryBottomSheet(config: TangemBottomSheetConfig, content: @Composable () -> Unit) {
+internal fun SelectCountryBottomSheet(
+    config: TangemBottomSheetConfig,
+    addBottomInsets: Boolean = true,
+    content: @Composable () -> Unit,
+) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = config,
+        addBottomInsets = addBottomInsets,
         content = { content() },
     )
 }
 
 @Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 internal fun OnrampCountryList(state: CountryListUM, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier.testTag(SelectCountryBottomSheetTestTags.LAZY_LIST),

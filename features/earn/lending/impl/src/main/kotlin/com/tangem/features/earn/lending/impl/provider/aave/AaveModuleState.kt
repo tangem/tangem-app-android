@@ -14,7 +14,8 @@ internal data class AaveOnChainRead(
 
 /**
  * @property status           the reserve in the user's Yield Module; null until it is read
- * @property withdrawLiquidity null when the pool liquidity could not be read: a withdrawal is capped by the position only
+ * @property withdrawLiquidity null when the pool liquidity could not be read:
+ * a withdrawal is capped by the position only
  */
 internal data class AaveModuleRead(
     val status: YieldModuleStatus?,
@@ -25,19 +26,31 @@ internal data class AaveModuleRead(
     override val planKey: String
         get() = toState().toString()
 
-    /** The first matching row wins: the module version goes before the reserve status */
+    override val isUpgradeRequired: Boolean
+        get() = latestImplementation != null
+
+    /**
+     * The module version and the reserve status are read independently:
+     * an outdated module still needs its reserve set up
+     */
     fun toState(): AaveModuleState = when (version) {
         is YieldModuleVersionStatus.Indeterminate -> AaveModuleState.ReadFailed
         is YieldModuleVersionStatus.NotDeployed -> AaveModuleState.NotDeployed
         is YieldModuleVersionStatus.UpgradeUnavailable -> AaveModuleState.UpgradeUnavailable
-        is YieldModuleVersionStatus.UpgradeAvailable -> AaveModuleState.UpgradeAvailable
-        is YieldModuleVersionStatus.UpToDate -> when {
-            status == null -> AaveModuleState.StatusUnknown
-            !status.isInitialized || !status.isActive -> AaveModuleState.NeedsActivation
-            else -> AaveModuleState.Ready
-        }
+        is YieldModuleVersionStatus.UpgradeAvailable -> activationState(isUpgradeRequired = true)
+        is YieldModuleVersionStatus.UpToDate -> activationState(isUpgradeRequired = false)
+    }
+
+    private fun activationState(isUpgradeRequired: Boolean): AaveModuleState = when {
+        status == null -> AaveModuleState.StatusUnknown(isUpgradeRequired)
+        !status.isInitialized -> AaveModuleState.NeedsInit(isUpgradeRequired)
+        !status.isActive -> AaveModuleState.NeedsReactivation(isUpgradeRequired)
+        else -> AaveModuleState.Ready(isUpgradeRequired)
     }
 }
+
+internal val AaveModuleRead.latestImplementation: String?
+    get() = (version as? YieldModuleVersionStatus.UpgradeAvailable)?.latestImplementation
 
 internal sealed interface AaveModuleState {
 
@@ -45,21 +58,21 @@ internal sealed interface AaveModuleState {
 
     data object NotDeployed : AaveModuleState
 
-    data object UpgradeAvailable : AaveModuleState
-
     data object UpgradeUnavailable : AaveModuleState
 
-    /** The module is up to date, but the reserve status has not arrived yet */
-    data object StatusUnknown : AaveModuleState
+    /** The reserve status has not arrived yet */
+    data class StatusUnknown(val isUpgradeRequired: Boolean) : AaveModuleState
 
-    data object NeedsActivation : AaveModuleState
+    data class NeedsInit(val isUpgradeRequired: Boolean) : AaveModuleState
 
-    data object Ready : AaveModuleState
+    data class NeedsReactivation(val isUpgradeRequired: Boolean) : AaveModuleState
+
+    data class Ready(val isUpgradeRequired: Boolean) : AaveModuleState
 
     fun toDepositGate(): LendingDepositGate = when (this) {
         ReadFailed -> LendingDepositGate.ReadFailed
         UpgradeUnavailable -> LendingDepositGate.Unavailable
-        StatusUnknown -> LendingDepositGate.Loading
-        NotDeployed, UpgradeAvailable, NeedsActivation, Ready -> LendingDepositGate.Open
+        is StatusUnknown -> LendingDepositGate.Loading
+        NotDeployed, is NeedsInit, is NeedsReactivation, is Ready -> LendingDepositGate.Open
     }
 }
