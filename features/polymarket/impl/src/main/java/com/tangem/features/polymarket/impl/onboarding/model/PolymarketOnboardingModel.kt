@@ -12,6 +12,7 @@ import com.tangem.core.media.LoopingVideoState
 import com.tangem.core.media.VideoFrameSize
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -292,12 +293,24 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun completeOnboarding(isNewAccount: Boolean) {
         modelScope.launch {
+            if (isNewAccount) reportAccountCreated()
+
             if (isNewAccount && isStoryAvailable()) {
                 router.push(AppRoute.Stories(storyId = STORY_ID, screenSource = STORY_SOURCE))
             }
 
             openFeed()
         }
+    }
+
+    private fun reportAccountCreated() {
+        messageSender.send(
+            SnackbarMessage(
+                message = resourceReference(R.string.account_create_success_message),
+                startIconId = CoreUiR.drawable.ic_success_20,
+                isIconTinted = false,
+            ),
+        )
     }
 
     private fun prefetchStory() {
