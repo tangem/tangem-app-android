@@ -170,7 +170,13 @@
   <string name="alert_manage_tokens_unsupported_message">Tokens in %1$s network are not supported by this card or ring due to firmware limitation.</string>
   <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card or ring?</string>
   <string name="alert_unsupported_card">This card is not designed to work with this app</string>
+  <string name="all_services_crypto_account_subtitle">Separate funds by purpose</string>
+  <string name="all_services_header_description">Everything available to you in one place.\nAdd what you need, when you need it.</string>
+  <string name="all_services_header_title">All services</string>
+  <string name="all_services_joint_account_subtitle">Share funds with group approvals</string>
+  <string name="all_services_staking_subtitle">Stake tokens for up to %s APY</string>
   <string name="all_services_title">Services</string>
+  <string name="all_services_yield_mode_subtitle">Up to %s APY, withdraw anytime</string>
   <string name="app_settings_access_code_warning">Set an access code to enable biometrics</string>
   <string name="app_settings_biometrics_footer">Use %1$s to unlock your wallet and approve sensitive actions, like signing transactions. For hardware wallets, a card or ring is still required to sign.</string>
   <string name="app_settings_default_fee">Default Fee</string>
@@ -817,7 +823,11 @@
     <item quantity="other">%d Years</item>
   </plurals>
   <string name="earn_chart_average_apr">Average APR</string>
+  <string name="earn_chart_clear_selection_accessibility">Clear selection</string>
   <string name="earn_chart_current_apr">Current APR</string>
+  <string name="earn_chart_history_accessibility">Rate history chart</string>
+  <string name="earn_chart_next_bar_accessibility">Next bar</string>
+  <string name="earn_chart_previous_bar_accessibility">Previous bar</string>
   <string name="earn_clear_filter">Clear filter</string>
   <string name="earn_deposit_title">Deposit to %s</string>
   <string name="earn_empty">The list is temporarily empty as it’s being refreshed. Check back in a moment.</string>
@@ -843,6 +853,7 @@
   <string name="earn_mostly_used">Popular</string>
   <string name="earn_no_results">No results</string>
   <string name="earn_product_details_audits">Audits</string>
+  <string name="earn_product_details_lending_no_lockups_title">No lock-ups.</string>
   <string name="earn_product_details_lending_withdraw_anytime_subtitle">Aave\'s deep liquidity means your ETH is available on demand, subject to protocol liquidity</string>
   <string name="earn_product_details_lending_withdraw_anytime_title">Withdraw anytime.</string>
   <string name="earn_product_details_lending_withdrawals_info">Withdrawals are usually instant. They depend on the ETH available in Aave, so if liquidity is low, you can withdraw up to the available amount and the rest once liquidity returns.</string>
@@ -1413,6 +1424,9 @@
     <item quantity="one">Waiting for %d member</item>
     <item quantity="other">Waiting for %d members</item>
   </plurals>
+  <string name="joint_account_members_access_loss_all">If all members lose access to the wallet, the funds will be permanently lost</string>
+  <string name="joint_account_members_access_loss_any">If any member loses access to the wallet, the funds will be permanently lost</string>
+  <string name="joint_account_members_access_loss_some">If %1$s of %2$s members lose access to the wallet, the funds will be permanently lost</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d member</item>
     <item quantity="other">%d members</item>
@@ -1798,6 +1812,7 @@
   <string name="money_account_balance_unavailable_title">Balance unavailable</string>
   <string name="money_account_banner_proceed">Proceed</string>
   <string name="money_account_close_account">Close account</string>
+  <string name="money_account_main_details_button">Details</string>
   <string name="money_account_main_name">USD account</string>
   <string name="money_account_main_status_action_required">Action required</string>
   <string name="money_account_main_status_activating">Activating…</string>
@@ -1813,6 +1828,9 @@
   <string name="money_account_main_status_dialog_failed_title">We couldn\'t activate your account</string>
   <string name="money_account_main_status_dialog_hide_account">Hide account from home</string>
   <string name="money_account_main_status_dialog_join_waitlist">Join the waitlist</string>
+  <string name="money_account_main_status_dialog_not_started_description">Receive ACH transfers with your own US bank details. Separate balance, your card stays as it is. Ready in up to 2 days.</string>
+  <string name="money_account_main_status_dialog_not_started_terms_link">Tangem Pay Virtual Account Terms</string>
+  <string name="money_account_main_status_dialog_not_started_terms_notice">By tapping Activate, you agree to the\n%s</string>
   <string name="money_account_main_status_dialog_verification_declined_description">Sorry, we couldn\'t verify your identity based on the information provided</string>
   <string name="money_account_main_status_dialog_verification_declined_title">We couldn\'t verify your identity</string>
   <string name="money_account_main_status_dialog_verification_description">This usually takes a few minutes. You can check the status below</string>
@@ -1829,6 +1847,7 @@
   <string name="money_account_onboarding_fees_provider">Provider</string>
   <string name="money_account_onboarding_fees_title">Fees</string>
   <string name="money_account_onboarding_secondary_button">Terms and fees</string>
+  <string name="money_account_onboarding_success_title">USD account is activating</string>
   <string name="money_account_onboarding_terms_link">Terms of Service</string>
   <string name="money_account_onboarding_terms_notice">By using the service, you agree to the provider’s %1$s</string>
   <string name="money_account_onboarding_title">Get a USD account</string>
@@ -4162,8 +4181,8 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Your transaction with an amount of %1$s %2$s was not completed. You can try again to complete it.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">You have an unfinished transaction</string>
   <string name="warning_last_balance_updated_time">Last update was %s</string>
-  <string name="warning_link_wallet_cold_message">Sync your wallet with Tangem services to add an extra layer of security.</string>
-  <string name="warning_link_wallet_hot_message">Sync your wallet with Tangem services to add an extra layer of security.</string>
+  <string name="warning_link_wallet_cold_message">Use your card to add an extra layer of security when connecting to Tangem services</string>
+  <string name="warning_link_wallet_hot_message">Add an extra layer of security when connecting to Tangem services</string>
   <string name="warning_link_wallet_title">Secure your connection</string>
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>

@@ -63,15 +63,16 @@ internal class PortfolioSelectorModel @Inject constructor(
             flow = isAccountsModeEnabledUseCase(),
             flow2 = balanceFetcher.data,
             flow3 = walletImageFetcher.allWallets(ArtworkSize.SMALL),
-            flow4 = selectorController.isEnabled,
+            flow4 = combine(selectorController.isEnabled, selectorController.walletBadge, ::Pair),
             flow5 = innerSelectedAccounts,
-            transform = { isAccountsMode, portfolioData, artworks, isEnabled, selectedAccount ->
+            transform = { isAccountsMode, portfolioData, artworks, (isEnabled, walletBadge), selectedAccount ->
                 val isAccountsModeEffective = isAccountsMode && !params.settings.isWalletSelectionOnly
                 val uiList = buildUiList(
                     isAccountsMode = isAccountsModeEffective,
                     portfolioData = portfolioData,
                     artworks = artworks,
                     isEnabled = isEnabled,
+                    walletBadge = walletBadge,
                     selectedAccount = selectedAccount,
                 )
                 val title = when (isAccountsModeEffective) {
@@ -105,6 +106,7 @@ internal class PortfolioSelectorModel @Inject constructor(
         portfolioData: PortfolioFetcher.Data,
         artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
         isEnabled: (UserWallet, AccountStatus) -> Boolean,
+        walletBadge: (UserWallet) -> TextReference?,
         selectedAccount: Set<AccountId>,
     ): List<PortfolioSelectorItemUM> = when (isAccountsMode) {
         true -> buildAccountsList(
@@ -117,6 +119,7 @@ internal class PortfolioSelectorModel @Inject constructor(
             portfolioData = portfolioData,
             artworks = artworks,
             isEnabled = isEnabled,
+            walletBadge = walletBadge,
             selectedAccount = selectedAccount,
         )
     }
@@ -125,6 +128,7 @@ internal class PortfolioSelectorModel @Inject constructor(
         portfolioData: PortfolioFetcher.Data,
         artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
         isEnabled: (UserWallet, AccountStatus) -> Boolean,
+        walletBadge: (UserWallet) -> TextReference?,
         selectedAccount: Set<AccountId>,
     ): List<PortfolioSelectorItemUM> = buildList {
         val appCurrency = portfolioData.appCurrency
@@ -157,14 +161,22 @@ internal class PortfolioSelectorModel @Inject constructor(
                 val isEnabledByFeature = isEnabled(wallet, mainAccount)
                 val finalWalletItemUM =
                     if (isEnabledByFeature) walletItemUM else walletItemUM.copy(isEnabled = false)
-                add(PortfolioSelectorItemUM.Portfolio(finalWalletItemUM, isSelected))
+                val item = PortfolioSelectorItemUM.Portfolio(finalWalletItemUM, isSelected, walletBadge(wallet))
+                add(item)
+            } else if (params.settings.areLockedWalletsInline) {
+                val lockedItemUM = walletItemUM.copy(
+                    information = UserWalletItemUM.Information.Loaded(resourceReference(R.string.common_locked)),
+                )
+                lockedWallets.add(PortfolioSelectorItemUM.Portfolio(lockedItemUM, isSelected = false))
             } else {
                 lockedWallets.add(PortfolioSelectorItemUM.Portfolio(walletItemUM, isSelected = false))
             }
         }
 
-        if (lockedWallets.isNotEmpty()) {
-            addAll(createLockedWallets(wallets = lockedWallets))
+        when {
+            lockedWallets.isEmpty() -> Unit
+            params.settings.areLockedWalletsInline -> addAll(lockedWallets)
+            else -> addAll(createLockedWallets(wallets = lockedWallets))
         }
     }
 
