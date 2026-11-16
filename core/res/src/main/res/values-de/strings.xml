@@ -3943,7 +3943,7 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Deine Transaktion mit einem Betrag von %1$s %2$s wurde nicht abgeschlossen. Du kannst versuchen, diese erneut abzuschließen.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Du hast eine nicht abgeschlossene Transaktion</string>
   <string name="warning_last_balance_updated_time">Letzte Aktualisierung war %s</string>
-  <string name="warning_link_wallet_cold_message">Sorge für zusätzliche Sicherheit bei der Verbindung mit Tangem-Diensten.</string>
+  <string name="warning_link_wallet_cold_message">Nutze deine Karte für zusätzliche Sicherheit bei der Verbindung mit Tangem-Diensten.</string>
   <string name="warning_link_wallet_hot_message">Sorge für zusätzliche Sicherheit bei der Verbindung mit Tangem-Diensten.</string>
   <string name="warning_link_wallet_title">Sichere deine Verbindung</string>
   <string name="warning_low_signatures_message">Auf dieser Karte oder Ring sind nur noch %s Unterschriften übrig. Du musst dein gesamtes Guthaben abheben.</string>

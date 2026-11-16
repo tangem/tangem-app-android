@@ -814,6 +814,7 @@
   <string name="earn_chart_average_apr">APR médio</string>
   <string name="earn_chart_current_apr">APR atual</string>
   <string name="earn_clear_filter">Limpar filtro</string>
+  <string name="earn_deposit_title">Depositar em %s</string>
   <string name="earn_empty">A lista está temporariamente vazia, pois está sendo atualizada. Volte daqui a pouco.</string>
   <string name="earn_filter_all_networks">Todas as redes</string>
   <string name="earn_filter_all_types">Todos os tipos</string>
@@ -837,6 +838,7 @@
   <string name="earn_mostly_used">Utilizado principalmente</string>
   <string name="earn_no_results">Nenhum resultado</string>
   <string name="earn_product_details_audits">Auditorias</string>
+  <string name="earn_product_details_lending_no_lockups_title">Sem períodos de bloqueio.</string>
   <string name="earn_product_details_lending_withdraw_anytime_subtitle">A alta liquidez da Aave permite que seu ETH esteja disponível sempre que você precisar, sujeito à liquidez do protocolo</string>
   <string name="earn_product_details_lending_withdraw_anytime_title">Saque quando quiser.</string>
   <string name="earn_product_details_lending_withdrawals_info">Os saques geralmente são instantâneos. Eles dependem da quantidade de ETH disponível na Aave. Portanto, se a liquidez estiver baixa, você poderá sacar até o valor disponível e retirar o restante quando a liquidez for restabelecida.</string>
@@ -879,6 +881,7 @@
   <string name="email_subject_wc_error">Erro no WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Você usou um cartão ou anel de outra carteira. Toque no cartão ou anel associado a esta carteira.</string>
   <string name="eth_gas_required_exceeds_allowance">Não há fundos suficientes para esta transação. Por favor, adicione mais fundos à sua conta.</string>
+  <string name="eth_yield_manage">Gerenciar</string>
   <string name="eth_yield_net_apy">APY líquido: %s</string>
   <string name="eth_yield_not_active_yet">Ainda não ativo</string>
   <string name="eth_yield_start_earning">Comece a obter rendimentos</string>
@@ -1298,7 +1301,9 @@
   <string name="joint_account_coming_soon_description">Esta ação ainda não é compatível com contas conjuntas. Estamos trabalhando nisso</string>
   <string name="joint_account_coming_soon_title">Em breve nas contas conjuntas</string>
   <string name="joint_account_compromised_message">O endereço da conta no seu dispositivo não corresponde ao registrado em nossos servidores.</string>
+  <string name="joint_account_compromised_message_v2">Não foi possível confirmar se os dados desta conta estão corretos. Por isso, suspendemos temporariamente a conta para manter seus fundos seguros.</string>
   <string name="joint_account_compromised_title">Não foi possível verificar esta conta</string>
+  <string name="joint_account_compromised_title_v2">Conta suspensa por segurança</string>
   <string name="joint_account_confirm_account_subtitle">Antes de usar sua conta conjunta, certifique-se de que todos os membros vejam exatamente o mesmo endereço.</string>
   <string name="joint_account_confirm_account_title">Confirmar a conta</string>
   <string name="joint_account_confirm_address_compare_subtitle">Entre em contato com todos os membros fora do aplicativo Tangem, por telefone, mensagem ou pessoalmente. Verifique se todos veem exatamente o mesmo endereço.</string>
@@ -3345,6 +3350,11 @@
   <string name="tangempay_kyc_rejected_button_text">Ocultar status</string>
   <string name="tangempay_kyc_rejected_description">Desculpe, não foi possível verificar</string>
   <string name="tangempay_kyc_rejected_description_span">seu perfil</string>
+  <plurals name="tangempay_main_group_subtitle">
+    <item quantity="one">%d conta</item>
+    <item quantity="other">%d contas</item>
+  </plurals>
+  <string name="tangempay_main_group_title">Pagamentos</string>
   <string name="tangempay_main_select_plan">Selecionar plano</string>
   <string name="tangempay_maximum_cards_issued_description">Encerre um cartão para adicionar um novo</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Atualize seu plano para ter mais cartões</string>
