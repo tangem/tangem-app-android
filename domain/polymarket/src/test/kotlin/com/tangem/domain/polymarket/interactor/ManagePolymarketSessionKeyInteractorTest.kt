@@ -45,10 +45,13 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -430,7 +433,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN a signing in progress WHEN another deposit wallet operation starts THEN it waits for the send`() =
+        fun `GIVEN a signing in progress WHEN a deposit wallet batch starts THEN it is busy at once`() =
             runTest {
                 // Arrange
                 val signing = CompletableDeferred<Unit>()
@@ -439,21 +442,19 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     signed(authorization()).right()
                 }
                 coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, any()) } returns key().right()
-                var isClaimStarted = false
+                var isBatchRun = false
                 val interactor = createInteractor()
 
                 // Act
                 val enabling = launch { interactor.enable(USER_WALLET_ID).toList() }
                 runCurrent()
-                launch { depositWalletLock.withLock(USER_WALLET_ID) { isClaimStarted = true } }
-                runCurrent()
-                val isStartedWhileSigning = isClaimStarted
+                val batch = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) { isBatchRun = true }
                 signing.complete(Unit)
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(isStartedWhileSigning).isFalse()
-                assertThat(isClaimStarted).isTrue()
+                assertThat(batch).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+                assertThat(isBatchRun).isFalse()
                 enabling.join()
             }
 
@@ -474,7 +475,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     }
                 }
                 runCurrent()
-                launch { depositWalletLock.withLock(USER_WALLET_ID) { isClaimStarted = true } }
+                launch { depositWalletLock.withBatchOrBusy(USER_WALLET_ID) { isClaimStarted = true } }
                 runCurrent()
                 val isStartedWhileCollecting = isClaimStarted
                 collecting.complete(Unit)
@@ -847,7 +848,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             }
 
         @Test
-        fun `GIVEN the revocation is settling WHEN another deposit wallet operation starts THEN it does not wait`() =
+        fun `GIVEN the revocation is settling WHEN a claim starts THEN it is busy and the authorization keeps its nonce`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -865,19 +866,23 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     listOf(key(status = PolymarketSessionKeyStatus.REVOKED)),
                     listOf(key()),
                 )
-                var isClaimStarted = false
+                val claimInteractor = SubmitPredictionClaimInteractor(
+                    redeemRepository = mockk(),
+                    polymarketRepository = mockk(),
+                    positionsRepository = mockk(),
+                    signer = mockk(),
+                    depositWalletLock = depositWalletLock,
+                )
                 val interactor = createInteractor()
 
                 // Act
                 val renewing = launch { interactor.renew(USER_WALLET_ID).toList() }
                 runCurrent()
-                launch { depositWalletLock.withLock(USER_WALLET_ID) { isClaimStarted = true } }
-                runCurrent()
-                val isStartedWhileSettling = isClaimStarted
+                val claim = claimInteractor.claim(claimParams())
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(isStartedWhileSettling).isTrue()
+                assertThat(claim).isEqualTo(PredictionClaimFailure.WalletBusy.left())
                 coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) }
                 renewing.join()
             }
@@ -907,7 +912,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN the authorization expired while revoking WHEN renew THEN it ends stale without a second signing`() =
+        fun `GIVEN the authorization expired while revoking WHEN renew THEN it ends unsettled after one signing`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -927,10 +932,118 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 // Assert
                 assertThat(actual).isEqualTo(
                     PolymarketSessionKeyProgress.Finished(
-                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                        PolymarketSessionKeyLifecycleError.Unsettled(
+                            key(status = PolymarketSessionKeyStatus.REVOKING),
+                        ).left(),
                     ),
                 )
                 coVerify(exactly = 1) { signBatches(any(), any()) }
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the revocation outlasts the deadline WHEN renew THEN the wallet is released unsettled at the signed deadline`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) } returns
+                    walletState(listOf(key(status = PolymarketSessionKeyStatus.REVOKING))).right()
+                val interactor = createInteractor()
+                var progress: List<PolymarketSessionKeyProgress> = emptyList()
+
+                // Act
+                val renewing = launch { progress = interactor.renew(USER_WALLET_ID).toList() }
+                advanceTimeBy(FOLLOW_UP_DEADLINE_MILLIS - 1)
+                val batchBeforeDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+                advanceTimeBy(2)
+                renewing.join()
+                val batchAfterDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+
+                // Assert
+                assertThat(batchBeforeDeadline).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+                assertThat(batchAfterDeadline).isEqualTo(Unit.right())
+                assertThat(testScheduler.currentTime).isLessThan(FOLLOW_UP_DEADLINE_MILLIS + RELAY_POLL_MILLIS)
+                assertThat(progress).containsExactly(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.Unsettled(
+                            key(status = PolymarketSessionKeyStatus.REVOKING),
+                        ).left(),
+                    ),
+                ).inOrder()
+                coVerify(exactly = 1) { signBatches(any(), any()) }
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the authorization send outlasts the deadline WHEN renew THEN the wallet is released at the signed deadline`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) } returns
+                    walletState(listOf(key(status = PolymarketSessionKeyStatus.REVOKED))).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(any(), any()) } coAnswers {
+                    awaitCancellation()
+                }
+                val interactor = createInteractor()
+                var progress: List<PolymarketSessionKeyProgress> = emptyList()
+
+                // Act
+                val renewing = launch { progress = interactor.renew(USER_WALLET_ID).toList() }
+                advanceTimeBy(FOLLOW_UP_DEADLINE_MILLIS - 1)
+                val batchBeforeDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+                advanceTimeBy(2)
+                renewing.join()
+                val batchAfterDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+
+                // Assert
+                assertThat(batchBeforeDeadline).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+                assertThat(batchAfterDeadline).isEqualTo(Unit.right())
+                assertThat(progress.last()).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.Unsettled(
+                            key(status = PolymarketSessionKeyStatus.REVOKED),
+                        ).left(),
+                    ),
+                )
+                coVerify(exactly = 1) { signBatches(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN signing outlasts the authorization deadline WHEN renew THEN it ends stale and nothing is revoked`() =
+            runTest {
+                // Arrange
+                val signed = signed(revocation(nonce = "7"), authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE))
+                coEvery {
+                    signBatches(USER_WALLET_ID, nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()))
+                } coAnswers {
+                    delay(SENDABLE_FOLLOW_UP_MILLIS + RELAY_POLL_MILLIS)
+                    signed.right()
+                }
+
+                // Act
+                val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                    ),
+                )
+                coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
                 coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
             }
 
@@ -1514,6 +1627,17 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         override fun instant(): Instant = NOW.plusMillis(scheduler.currentTime)
     }
 
+    private fun claimParams() = SubmitPredictionClaimInteractor.Params(
+        userWalletId = USER_WALLET_ID,
+        walletId = USER_WALLET_ID.stringValue,
+        ownerAddress = OWNER,
+        depositWalletAddress = OWNER,
+        conditionId = "0xcondition",
+        assetId = "1",
+        isNegRisk = false,
+        version = null,
+    )
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
         const val OWNER = "0x1111111111111111111111111111111111111111"
@@ -1528,6 +1652,9 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         const val LISTING_ATTEMPTS = 10
         const val LISTING_WAIT_MILLIS = (LISTING_ATTEMPTS - 1) * 3_000L
         const val UNLISTING_ATTEMPTS = 20
+        const val RELAY_POLL_MILLIS = 3_000L
+        const val SENDABLE_FOLLOW_UP_MILLIS = 1_200_000L - 30_000L
+        const val FOLLOW_UP_DEADLINE_MILLIS = 1_200_000L
         val NOW: Instant = Instant.ofEpochSecond(1_789_430_000)
         val VALID_UNTIL: Instant = NOW.plusSeconds(180L * 24 * 60 * 60)
         val DEADLINE = (NOW.epochSecond + 600).toString()

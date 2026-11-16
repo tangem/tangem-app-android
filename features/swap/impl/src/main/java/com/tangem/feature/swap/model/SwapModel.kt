@@ -2078,6 +2078,10 @@ internal class SwapModel @Inject constructor(
                 startLoadingQuotesFromLastState()
                 showAlert(resourceReference(R.string.prediction_withdraw_in_progress_message))
             }
+            PredictionWithdrawalFailure.WalletBusy -> {
+                startLoadingQuotesFromLastState()
+                showAlert(resourceReference(R.string.prediction_session_key_wallet_busy))
+            }
             is PredictionWithdrawalFailure.SigningFailed -> {
                 if (failure.error == PolymarketSigningError.UserCancelled) {
                     TangemLogger.i("onTransferClick: prediction withdrawal signing failed: ${failure.error}")
