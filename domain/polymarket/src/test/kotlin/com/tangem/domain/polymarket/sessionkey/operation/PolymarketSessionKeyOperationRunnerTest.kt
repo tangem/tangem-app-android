@@ -392,6 +392,24 @@ internal class PolymarketSessionKeyOperationRunnerTest {
     inner class Activation {
 
         @Test
+        fun `GIVEN activation leaves the key active and unlisted WHEN finished THEN the outcome is the active key`() =
+            runTest {
+                // Arrange
+                every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Authorizing(key(OWN, PolymarketSessionKeyStatus.PENDING)),
+                    PolymarketSessionKeyProgress.CheckingReadiness(key(OWN)),
+                    PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+                )
+
+                // Act
+                val actual = finishedResult(PolymarketSessionKeyOperationRequest.Activate)
+
+                // Assert
+                assertThat(actual).isEqualTo(key(OWN).right())
+            }
+
+        @Test
         fun `GIVEN reenable WHEN activate THEN enable is called`() = runTest {
             // Arrange
             givenDeviceState(PolymarketSessionKeyDeviceState.Reenable(key(OWN, PolymarketSessionKeyStatus.EXPIRED)))

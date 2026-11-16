@@ -73,6 +73,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - The outcome stays in the runner until the host acknowledges it; nothing offers Activate while an operation runs.
 - A listed signer is ours only with scopes exactly `{CLOB}` and the record's `validUntil` to the second.
   Readiness and reconciliation share it; the own key listed with other terms is foreign, missing and not traded.
+- Readiness lives in memory only, as on iOS: reconciliation restores it from the signer list (Predictions screens,
+  fast trading settings, and an order sheet whose held key is not tradable).
+- An `ACTIVE` key Polymarket does not list after 10 reads (~27 s) still finishes the operation successfully, not
+  ready: the owner signs until reconciliation marks it ready (iOS rule). Only a key that is not `ACTIVE` fails.
 
 ## Claims
 
