@@ -3,7 +3,10 @@ package com.tangem.tests.addFunds
 import androidx.compose.ui.test.performTextReplacement
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
+import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.utils.assertUrlOpened
+import com.tangem.common.utils.stubUrlOpening
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openAppByDeepLink
 import com.tangem.scenarios.openBuyScreenFromTokenDetails
@@ -170,6 +173,7 @@ class BuyCampaignBannersTest : BaseTestCase() {
     @Test
     fun waitlistSurveyOpensWithoutResettingBuyTest() {
         val onrampTransactionId = "mock-onramp-tx-001"
+        val providerPageUrl = "https://example.com/onramp-widget"
 
         setupHooks().run {
             step("Set WireMock scenario '$campaignsScenarioName' to '$campaignsState'") {
@@ -207,6 +211,17 @@ class BuyCampaignBannersTest : BaseTestCase() {
             }
             step("Assert 'Buy' screen is opened with the same amount") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.assertTextContains(thresholdAmount) }
+            }
+            step("Assert offer is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) { onBuyTokenDetailsScreen { offerTokenAmount.assertIsDisplayed() } }
+            }
+            step("Stub opening of the provider page") {
+                stubUrlOpening(providerPageUrl)
+            }
+            step("Click on 'Buy' button and assert provider page is opened") {
+                onBuyTokenDetailsScreen {
+                    buyButton.clickAndWaitFor(composeTestRule) { assertUrlOpened(providerPageUrl, times = 1) }
+                }
             }
             step("Return from the provider by the deeplink with 'tx_id' and 'result'") {
                 openAppByDeepLink("tangem://onramp?tx_id=$onrampTransactionId&result=success")
