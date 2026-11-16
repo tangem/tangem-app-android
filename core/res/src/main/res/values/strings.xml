@@ -817,7 +817,11 @@
     <item quantity="other">%d Years</item>
   </plurals>
   <string name="earn_chart_average_apr">Average APR</string>
+  <string name="earn_chart_clear_selection_accessibility">Clear selection</string>
   <string name="earn_chart_current_apr">Current APR</string>
+  <string name="earn_chart_history_accessibility">Rate history chart</string>
+  <string name="earn_chart_next_bar_accessibility">Next bar</string>
+  <string name="earn_chart_previous_bar_accessibility">Previous bar</string>
   <string name="earn_clear_filter">Clear filter</string>
   <string name="earn_deposit_title">Deposit to %s</string>
   <string name="earn_empty">The list is temporarily empty as it’s being refreshed. Check back in a moment.</string>
@@ -843,6 +847,7 @@
   <string name="earn_mostly_used">Popular</string>
   <string name="earn_no_results">No results</string>
   <string name="earn_product_details_audits">Audits</string>
+  <string name="earn_product_details_lending_no_lockups_title">No lock-ups.</string>
   <string name="earn_product_details_lending_withdraw_anytime_subtitle">Aave\'s deep liquidity means your ETH is available on demand, subject to protocol liquidity</string>
   <string name="earn_product_details_lending_withdraw_anytime_title">Withdraw anytime.</string>
   <string name="earn_product_details_lending_withdrawals_info">Withdrawals are usually instant. They depend on the ETH available in Aave, so if liquidity is low, you can withdraw up to the available amount and the rest once liquidity returns.</string>
@@ -4162,8 +4167,8 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Your transaction with an amount of %1$s %2$s was not completed. You can try again to complete it.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">You have an unfinished transaction</string>
   <string name="warning_last_balance_updated_time">Last update was %s</string>
-  <string name="warning_link_wallet_cold_message">Sync your wallet with Tangem services to add an extra layer of security.</string>
-  <string name="warning_link_wallet_hot_message">Sync your wallet with Tangem services to add an extra layer of security.</string>
+  <string name="warning_link_wallet_cold_message">Use your card to add an extra layer of security when connecting to Tangem services</string>
+  <string name="warning_link_wallet_hot_message">Add an extra layer of security when connecting to Tangem services</string>
   <string name="warning_link_wallet_title">Secure your connection</string>
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>

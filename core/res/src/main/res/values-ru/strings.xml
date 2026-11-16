@@ -3515,9 +3515,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакция %1$s %2$s не была завершена. Вы можете попробовать отправить ее еще раз.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">У вас есть незавершенная транзакция</string>
   <string name="warning_last_balance_updated_time">Последнее обновление %s</string>
-  <string name="warning_link_wallet_cold_message">Синхронизируйте кошелёк с сервисами Tangem для дополнительной защиты.</string>
-  <string name="warning_link_wallet_hot_message">Синхронизируйте кошелёк с сервисами Tangem для дополнительной защиты.</string>
-  <string name="warning_link_wallet_title">Защитите своё соединение</string>
+  <string name="warning_link_wallet_cold_message">Используйте карту для дополнительной защиты при подключении к сервисам Tangem.</string>
+  <string name="warning_link_wallet_hot_message">Добавьте ещё один уровень защиты при подключении к сервисам Tangem</string>
+  <string name="warning_link_wallet_title">Защитите подключение</string>
   <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
   <string name="warning_low_signatures_title">Малое количество подписей</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токены на разных сетях могут иметь разные адреса. Пожалуйста, убедитесь при переводе средств, что ваш адрес соответствует сети.</string>
