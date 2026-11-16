@@ -78,8 +78,12 @@ class ResolvePaymentAccountStatusFromSummaryUseCase(
             is PaymentAccountActivationState.AwaitingKyc -> {
                 kycStatus(userWalletId, summary, state.kycStatus)
             }
-            is PaymentAccountActivationState.Failed -> {
-                cardIssueFailed(userWalletId, summary)
+            is PaymentAccountActivationState.Failed -> when (state.reason) {
+                CustomerSummary.PaymentAccount.Activation.FailureReason.DEPOSIT_TIMEOUT -> verified()
+                CustomerSummary.PaymentAccount.Activation.FailureReason.RAIN_REJECTED,
+                CustomerSummary.PaymentAccount.Activation.FailureReason.TECHNICAL,
+                CustomerSummary.PaymentAccount.Activation.FailureReason.UNKNOWN,
+                -> cardIssueFailed(userWalletId, summary)
             }
             is PaymentAccountActivationState.Issuing, is PaymentAccountActivationState.Completed -> {
                 null
