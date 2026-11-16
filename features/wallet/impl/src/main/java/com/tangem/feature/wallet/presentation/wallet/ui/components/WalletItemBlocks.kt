@@ -1,20 +1,35 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components
 
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.expandable.EXPANDABLE_ROW_REVEAL_DURATION_MILLIS
+import com.tangem.core.ui.ds2.expandable.ExpandableRowRevealItem
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_sign_usd_20
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayGroupUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
@@ -24,6 +39,7 @@ import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComp
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 
 internal const val ORGANIZE_TOKENS_BUTTON_ITEM_KEY = "OrganizeTokensButton"
+private const val TANGEM_PAY_GROUP_CHILDREN_COUNT = 2
 
 internal fun LazyListScope.nftCollections2(state: WalletUM, itemModifier: Modifier) {
     (state as? WalletUM.Content)?.let { content ->
@@ -111,5 +127,98 @@ internal fun LazyListScope.moneyAccount(
 ) {
     with(moneyAccountComponent) {
         moneyAccountMainContent(modifier = modifier, state = moneyAccountUM, isBalanceHidden = isBalanceHidden)
+    }
+}
+
+@Suppress("LongParameterList", "LongMethod")
+internal fun LazyListScope.tangemPayGroup(
+    groupUM: TangemPayGroupUM.Content,
+    tangemPayComponent: TangemPayMainBlockComponent,
+    tangemPayUM: TangemPayMainUM,
+    moneyAccountComponent: MoneyAccountMainBlockComponent,
+    moneyAccountUM: MoneyAccountMainUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier,
+) {
+    item(key = groupUM.id, contentType = TangemPayGroupUM.Content::class.java) {
+        val effectiveLastIndex by animateIntAsState(
+            targetValue = if (groupUM.isExpanded) TANGEM_PAY_GROUP_CHILDREN_COUNT else 0,
+            animationSpec = if (groupUM.isExpanded) {
+                snap()
+            } else {
+                snap(delayMillis = EXPANDABLE_ROW_REVEAL_DURATION_MILLIS)
+            },
+            label = "tangemPayGroupLastIndex",
+        )
+        TangemAccountRow(
+            avatar = TangemAvatar.UiState.Icon(
+                imageVector = Icons.ic_sign_usd_20,
+                appearance = TangemAvatar.Appearance.Neutral,
+                shape = TangemAvatar.Shape.RoundedSquare,
+            ),
+            title = groupUM.title,
+            label = groupUM.label,
+            balance = groupUM.balance,
+            isBalanceHidden = isBalanceHidden,
+            isBalanceFlickering = groupUM.isBalanceFlickering,
+            showCompactBalance = false,
+            isExpanded = groupUM.isExpanded,
+            collapseContentDescription = stringResourceSafe(id = R.string.common_hide),
+            onClick = groupUM.onClick,
+            isExpandable = true,
+            shape = RectangleShape,
+            modifier = modifier
+                .padding(top = 12.dp)
+                .roundedShapeItemDecoration(
+                    currentIndex = 0,
+                    radius = 24.dp,
+                    addDefaultPadding = false,
+                    lastIndex = effectiveLastIndex,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                    groupKey = groupUM.id,
+                ),
+        )
+    }
+    item(key = "${groupUM.id}_tangem_pay", contentType = TangemPayMainUM::class.java) {
+        ExpandableRowRevealItem(
+            isExpanded = groupUM.isExpanded,
+            index = 0,
+            count = TANGEM_PAY_GROUP_CHILDREN_COUNT,
+            modifier = modifier
+                .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
+                .roundedShapeItemDecoration(
+                    radius = 24.dp,
+                    currentIndex = 1,
+                    addDefaultPadding = false,
+                    lastIndex = TANGEM_PAY_GROUP_CHILDREN_COUNT,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                    groupKey = groupUM.id,
+                ),
+        ) {
+            tangemPayComponent.GroupedRow(state = tangemPayUM, isBalanceHidden = isBalanceHidden, modifier = Modifier)
+        }
+    }
+    item(key = "${groupUM.id}_money_account", contentType = MoneyAccountMainUM::class.java) {
+        ExpandableRowRevealItem(
+            isExpanded = groupUM.isExpanded,
+            index = 1,
+            count = TANGEM_PAY_GROUP_CHILDREN_COUNT,
+            modifier = modifier
+                .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
+                .roundedShapeItemDecoration(
+                    radius = 24.dp,
+                    currentIndex = TANGEM_PAY_GROUP_CHILDREN_COUNT,
+                    addDefaultPadding = false,
+                    lastIndex = TANGEM_PAY_GROUP_CHILDREN_COUNT,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                    groupKey = groupUM.id,
+                ),
+        ) {
+            moneyAccountComponent.GroupedRow(
+                state = moneyAccountUM,
+                isBalanceHidden = isBalanceHidden,
+                modifier = Modifier,
+            )
+        }
     }
 }
