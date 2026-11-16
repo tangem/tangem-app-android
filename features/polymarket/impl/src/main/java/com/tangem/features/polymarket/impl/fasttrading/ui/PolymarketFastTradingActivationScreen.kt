@@ -1,7 +1,6 @@
 package com.tangem.features.polymarket.impl.fasttrading.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,24 +57,7 @@ internal fun PolymarketFastTradingActivationScreen(
                     onBack = state.onBackClick,
                 )
             },
-        ) { contentPadding ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(top = contentPadding.calculateTopPadding()),
-                ) {
-                    Text(
-                        text = stringResourceSafe(R.string.prediction_session_key_info_title),
-                        style = TangemTheme.typography3.heading.medium,
-                        color = TangemTheme.colors3.text.primary,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-                    )
-                    PolymarketFastTradingInfoTiles(onDurationInfoClick = state.onFaqClick)
-                    PolymarketFastTradingSections(sections = ActivationSections, firstSeparatedIndex = 1)
-                    Spacer(modifier = Modifier.height(FooterClearance))
-                }
+            overlay = {
                 TangemFooter(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -83,6 +65,23 @@ internal fun PolymarketFastTradingActivationScreen(
                 ) {
                     ActivationButton(state = state)
                 }
+            },
+        ) { contentPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = contentPadding.calculateTopPadding()),
+            ) {
+                Text(
+                    text = stringResourceSafe(R.string.prediction_session_key_info_title),
+                    style = TangemTheme.typography3.heading.medium,
+                    color = TangemTheme.colors3.text.primary,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                )
+                PolymarketFastTradingInfoTiles(onDurationInfoClick = state.onFaqClick)
+                PolymarketFastTradingSections(sections = ActivationSections, firstSeparatedIndex = 1)
+                Spacer(modifier = Modifier.height(FooterClearance))
             }
         }
     }
