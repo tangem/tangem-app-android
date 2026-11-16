@@ -3,10 +3,12 @@ package com.tangem.domain.yield.supply.status
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.balance.ContributionResolver
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.normalizeEvmAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyBalanceProvider
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.domain.yield.supply.YieldSupplyWrappedNativeFactory
 import com.tangem.domain.yield.supply.models.status.YieldModuleStatus
 import com.tangem.domain.yield.supply.models.status.findFor
 import com.tangem.domain.yield.supply.models.status.toYieldSupplyStatus
@@ -30,6 +32,7 @@ import java.math.BigDecimal
 class YieldModuleStatusContributionProvider(
     private val yieldModuleStatusSupplier: YieldModuleStatusSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
+    private val wrappedNativeFactory: YieldSupplyWrappedNativeFactory,
 ) : YieldSupplyBalanceProvider {
 
     override fun contributions(userWallet: UserWallet): Flow<ContributionResolver> {
@@ -52,11 +55,20 @@ class YieldModuleStatusContributionProvider(
         val token = currency as? CryptoCurrency.Token ?: return null
         val yieldStatus = yieldStatuses.findFor(token) ?: return null
 
+        // The module holds a Lending position of the network coin under this token, it is not Yield Mode of the token
+        if (token.isWrappedNative()) return null
+
         return YieldSupplyContribution(
             status = yieldStatus.toYieldSupplyStatus(),
             source = yieldStatus.source,
             spendableDelta = yieldStatus.spendableDelta(currency = currency, networkStatus = networkStatus),
         )
+    }
+
+    private fun CryptoCurrency.Token.isWrappedNative(): Boolean {
+        val wrappedNative = wrappedNativeFactory.create(network) ?: return false
+
+        return wrappedNative.contractAddress.normalizeEvmAddress() == contractAddress.normalizeEvmAddress()
     }
 
     private fun YieldModuleStatus.spendableDelta(currency: CryptoCurrency, networkStatus: NetworkStatus?): BigDecimal {
