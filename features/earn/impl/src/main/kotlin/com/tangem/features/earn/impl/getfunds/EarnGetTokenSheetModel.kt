@@ -4,7 +4,9 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.ManageFundsAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -15,6 +17,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -52,6 +55,7 @@ internal class EarnGetTokenSheetModel @Inject constructor(
     private val backupErrorWarningSender: BackupErrorWarningSender,
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: EarnGetTokenSheetComponent.Params = paramsContainer.require()
@@ -87,9 +91,13 @@ internal class EarnGetTokenSheetModel @Inject constructor(
             params.onDismiss()
             return
         }
+        if (uiState.value == null) {
+            analyticsEventHandler.send(ManageFundsAnalyticsEvent.MethodScreenOpened(AnalyticsParam.ScreensSources.Earn))
+        }
         uiState.value = EarnGetTokenSheetConverter.convert(
             currency = request.cryptoCurrency,
             actions = data.actions,
+            isReceiveCached = data.status.value.sources.networkSource == StatusSource.CACHE,
             onActionClick = { action -> onActionClick(action, data) },
             onDismiss = params.onDismiss,
         )
@@ -97,7 +105,7 @@ internal class EarnGetTokenSheetModel @Inject constructor(
 
     private fun onActionClick(action: EarnGetTokenAction, data: EarnGetTokenData) {
         val reason = action.reasonIn(data.actions) ?: return
-        if (reason != ScenarioUnavailabilityReason.None) {
+        if (reason.blocks(action)) {
             uiMessageSender.send(
                 DialogMessage(
                     message = reason.getUnavailabilityReasonText(),
@@ -107,10 +115,30 @@ internal class EarnGetTokenSheetModel @Inject constructor(
             return
         }
         when (action) {
-            EarnGetTokenAction.Swap -> openSwap(data)
-            EarnGetTokenAction.Buy -> warnAboutBackupErrorOrProceed(data) { openOnramp(data) }
-            EarnGetTokenAction.Deposit -> warnAboutBackupErrorOrProceed(data) { openReceive(data) }
+            EarnGetTokenAction.Swap -> proceed(action) { openSwap(data) }
+            EarnGetTokenAction.Buy -> warnAboutBackupErrorOrProceed(data) { proceed(action) { openOnramp(data) } }
+            EarnGetTokenAction.Deposit -> warnAboutBackupErrorOrProceed(data) { proceed(action) { openReceive(data) } }
         }
+    }
+
+    /**
+     * Swap here funds the currency instead of spending it, and a joint account holds back only spending: the shared
+     * Add funds sheet lets the same tap through.
+     */
+    private fun ScenarioUnavailabilityReason.blocks(action: EarnGetTokenAction): Boolean = when (this) {
+        ScenarioUnavailabilityReason.None -> false
+        ScenarioUnavailabilityReason.JointAccount -> action != EarnGetTokenAction.Swap
+        else -> true
+    }
+
+    private fun proceed(action: EarnGetTokenAction, open: () -> Unit) {
+        val event = when (action) {
+            EarnGetTokenAction.Deposit -> ManageFundsAnalyticsEvent.ButtonReceive()
+            EarnGetTokenAction.Swap -> ManageFundsAnalyticsEvent.ButtonSwap()
+            EarnGetTokenAction.Buy -> ManageFundsAnalyticsEvent.ButtonBuy()
+        }
+        analyticsEventHandler.send(event)
+        open()
     }
 
     private fun warnAboutBackupErrorOrProceed(data: EarnGetTokenData, onProceed: () -> Unit) {

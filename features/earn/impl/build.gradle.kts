@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Core */
+    implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
