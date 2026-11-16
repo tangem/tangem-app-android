@@ -238,6 +238,43 @@ internal class DefaultPolymarketPendingAuthorizationStoreTest {
         }
 
     @Test
+    fun `GIVEN the marker file was corrupted WHEN replaced THEN every wallet is in flight for the follow up window`() {
+        // Act
+        val actual = inFlightMarkersAfterCorruption(nowMillis = IN_FLIGHT_SECONDS * MILLIS_IN_SECOND)
+
+        // Assert
+        assertThat(actual).containsExactly("*", (IN_FLIGHT_SECONDS + FOLLOW_UP_WINDOW_SECONDS).toString())
+    }
+
+    @Test
+    fun `GIVEN a corrupted marker file still in flight and no payload WHEN get THEN Failure`() = runTest {
+        // Arrange
+        inFlightUntil = MockStateDataStore(default = inFlightMarkersAfterCorruption(now.toEpochMilli()))
+
+        // Act
+        val actual = store.get(USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(PolymarketSessionKeyError.Failure::class.java)
+        assertThat(inFlightUntil.data.first()).containsKey("*")
+    }
+
+    @Test
+    fun `GIVEN a corrupted marker file past the follow up window WHEN get THEN null and the marker is cleared`() =
+        runTest {
+            // Arrange
+            inFlightUntil = MockStateDataStore(default = inFlightMarkersAfterCorruption(now.toEpochMilli()))
+            now = now.plusSeconds(FOLLOW_UP_WINDOW_SECONDS)
+
+            // Act
+            val actual = store.get(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(null.right())
+            assertThat(inFlightUntil.data.first()).isEmpty()
+        }
+
+    @Test
     fun `GIVEN the payload reads as absent after both deadlines WHEN get THEN null and the marker is cleared`() =
         runTest {
             // Arrange
@@ -352,5 +389,7 @@ internal class DefaultPolymarketPendingAuthorizationStoreTest {
         const val MARKER_KEY = "011"
         const val LAST_DEADLINE = "1789431200"
         const val IN_FLIGHT_SECONDS = 1_789_430_000L
+        const val FOLLOW_UP_WINDOW_SECONDS = 1_200L
+        const val MILLIS_IN_SECOND = 1_000L
     }
 }

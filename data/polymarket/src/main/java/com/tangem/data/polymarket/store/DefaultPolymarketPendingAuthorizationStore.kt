@@ -67,24 +67,29 @@ internal class DefaultPolymarketPendingAuthorizationStore(
     }
 
     private suspend fun missing(userWalletId: UserWalletId): Either<PolymarketSessionKeyError, Nothing?> {
-        val inFlightUntil = runSuspendCatching { inFlightUntil.data.first()[userWalletId.markerKey()] }
+        val marked = runSuspendCatching { inFlightUntil.data.first() }
             .getOrElse { error ->
                 TangemLogger.e("Pending session key authorization marker of $userWalletId unreadable", error)
                 return PolymarketSessionKeyError.Failure(error).left()
             }
-            ?: return null.right()
-        if (PolymarketRelayerDeadline.isExpired(deadline = inFlightUntil, nowMillis = clock.millis())) {
-            clearMarker(userWalletId)
-            return null.right()
+        val markerKeys = listOf(userWalletId.markerKey(), ANY_WALLET_MARKER_KEY).filter { it in marked }
+        val (expired, inFlight) = markerKeys.partition { key ->
+            PolymarketRelayerDeadline.isExpired(deadline = marked.getValue(key), nowMillis = clock.millis())
         }
+        expired.forEach { key -> clearMarker(key) }
+        if (inFlight.isEmpty()) return null.right()
         TangemLogger.e("Pending session key authorization of $userWalletId unreadable while it may still land")
         return PolymarketSessionKeyError.Failure(IllegalStateException(UNREADABLE_IN_FLIGHT)).left()
     }
 
     private suspend fun clearMarker(userWalletId: UserWalletId) {
-        runSuspendCatching { inFlightUntil.updateData { marked -> marked - userWalletId.markerKey() } }
+        clearMarker(userWalletId.markerKey())
+    }
+
+    private suspend fun clearMarker(markerKey: String) {
+        runSuspendCatching { inFlightUntil.updateData { marked -> marked - markerKey } }
             .onFailure { error ->
-                TangemLogger.e("Failed to clear the pending session key authorization marker of $userWalletId", error)
+                TangemLogger.e("Failed to clear the pending session key authorization marker $markerKey", error)
             }
     }
 
@@ -127,6 +132,15 @@ internal class DefaultPolymarketPendingAuthorizationStore(
         const val UNPARSEABLE_DEADLINE = "Pending authorization deadline is not a number"
     }
 }
+
+internal const val ANY_WALLET_MARKER_KEY = "*"
+
+internal fun inFlightMarkersAfterCorruption(nowMillis: Long): Map<String, String> = mapOf(
+    ANY_WALLET_MARKER_KEY to PolymarketRelayerDeadline.fromNow(
+        nowMillis = nowMillis,
+        windowSeconds = PolymarketRelayerDeadline.FOLLOW_UP_WINDOW_SECONDS,
+    ),
+)
 
 private fun UserWalletId.markerKey(): String = stringValue.lowercase()
 

@@ -3,6 +3,8 @@ package com.tangem.data.polymarket.di
 import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
+import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
@@ -17,6 +19,7 @@ import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConve
 import com.tangem.data.polymarket.store.DefaultPolymarketFastTradingBannerStore
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
 import com.tangem.data.polymarket.store.DefaultPolymarketPendingAuthorizationStore
+import com.tangem.data.polymarket.store.inFlightMarkersAfterCorruption
 import com.tangem.data.polymarket.store.DefaultPredictionWithdrawalStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
@@ -197,7 +200,6 @@ internal object PolymarketStorageModule {
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
         scope: AppCoroutineScope,
-        dataStoreFactory: AppDataStoreFactory,
     ): PolymarketPendingAuthorizationStore {
         return DefaultPolymarketPendingAuthorizationStore(
             secureStorage = AndroidSecureStorageV2(
@@ -205,7 +207,7 @@ internal object PolymarketStorageModule {
                 useStrongBox = false,
                 name = "polymarket_pending_authorization_storage",
             ),
-            inFlightUntil = dataStoreFactory.create(
+            inFlightUntil = DataStoreFactory.create(
                 serializer = KotlinxDataStoreSerializer(
                     defaultValue = emptyMap(),
                     serializer = MapSerializer(
@@ -213,8 +215,11 @@ internal object PolymarketStorageModule {
                         valueSerializer = String.serializer(),
                     ),
                 ),
-                produceFile = { context.dataStoreFile(fileName = "polymarket_pending_authorization_in_flight") },
+                corruptionHandler = ReplaceFileCorruptionHandler {
+                    inFlightMarkersAfterCorruption(nowMillis = System.currentTimeMillis())
+                },
                 scope = scope,
+                produceFile = { context.dataStoreFile(fileName = "polymarket_pending_authorization_in_flight") },
             ),
             json = Json { ignoreUnknownKeys = true },
             dispatchers = dispatchers,
