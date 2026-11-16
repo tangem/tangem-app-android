@@ -19,6 +19,8 @@ internal sealed interface PolymarketPendingAuthorizationStage {
     data object Expired : PolymarketPendingAuthorizationStage
 
     data object NonceMoved : PolymarketPendingAuthorizationStage
+
+    data object NonceBehind : PolymarketPendingAuthorizationStage
 }
 
 internal fun PolymarketPendingAuthorization.stageAt(
@@ -36,11 +38,15 @@ internal fun PolymarketPendingAuthorization.stageAt(
             revocationRecord.showsRevocation() -> PolymarketPendingAuthorizationStage.RevocationSent(revocationRecord)
             else -> PolymarketPendingAuthorizationStage.RevocationUnconfirmed(revocationRecord)
         }
+        walletNonce < authorizationNonce - BigInteger.ONE -> PolymarketPendingAuthorizationStage.NonceBehind
         walletNonce != authorizationNonce - BigInteger.ONE -> PolymarketPendingAuthorizationStage.NonceMoved
         revocationRecord?.showsRevocation() == true -> {
             PolymarketPendingAuthorizationStage.RevocationSent(revocationRecord)
         }
-        PolymarketRelayerDeadline.isExpired(deadline = revocation.deadline, nowMillis = nowMillis) -> {
+        PolymarketRelayerDeadline.isExpired(
+            deadline = revocation.deadline,
+            nowMillis = nowMillis + PolymarketRelayerDeadline.SEND_MARGIN_MILLIS,
+        ) -> {
             PolymarketPendingAuthorizationStage.Expired
         }
         else -> PolymarketPendingAuthorizationStage.RevocationUnsent

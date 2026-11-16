@@ -196,12 +196,25 @@ internal object PolymarketStorageModule {
     fun providePolymarketPendingAuthorizationStore(
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
+        scope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): PolymarketPendingAuthorizationStore {
         return DefaultPolymarketPendingAuthorizationStore(
             secureStorage = AndroidSecureStorageV2(
                 appContext = context,
                 useStrongBox = false,
                 name = "polymarket_pending_authorization_storage",
+            ),
+            inFlightUntil = dataStoreFactory.create(
+                serializer = KotlinxDataStoreSerializer(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(
+                        keySerializer = String.serializer(),
+                        valueSerializer = String.serializer(),
+                    ),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "polymarket_pending_authorization_in_flight") },
+                scope = scope,
             ),
             json = Json { ignoreUnknownKeys = true },
             dispatchers = dispatchers,

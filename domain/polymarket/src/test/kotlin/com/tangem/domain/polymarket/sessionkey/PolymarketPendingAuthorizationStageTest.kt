@@ -37,6 +37,18 @@ internal class PolymarketPendingAuthorizationStageTest {
         }
 
         @Test
+        fun `GIVEN an extension whose old record is revoking at the next nonce WHEN stageAt THEN the revocation was sent`() {
+            // Arrange
+            val revokingOld = record(REVOKED_KEY, PolymarketSessionKeyStatus.REVOKING).copy(validUntil = CREATED_AT)
+
+            // Act
+            val actual = extension().stageAt(listOf(revokingOld), AUTHORIZATION_NONCE, nowMillis = NOW_MILLIS)
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketPendingAuthorizationStage.RevocationSent(revokingOld))
+        }
+
+        @Test
         fun `GIVEN an authorization nonce that is not a number WHEN stageAt THEN the nonce moved`() {
             // Arrange
             val pending = pending(authorizationNonce = "eight")
@@ -134,7 +146,19 @@ internal class PolymarketPendingAuthorizationStageTest {
                 StageModel(
                     walletNonce = REVOCATION_NONCE - BigInteger.ONE,
                     revokedRecord = revoking,
-                    expected = PolymarketPendingAuthorizationStage.NonceMoved,
+                    expected = PolymarketPendingAuthorizationStage.NonceBehind,
+                ),
+                StageModel(
+                    walletNonce = REVOCATION_NONCE,
+                    revokedRecord = record(REVOKED_KEY, PolymarketSessionKeyStatus.ACTIVE),
+                    nowMillis = (REVOCATION_DEADLINE - MARGIN_SECONDS) * MILLIS_IN_SECOND,
+                    expected = PolymarketPendingAuthorizationStage.Expired,
+                ),
+                StageModel(
+                    walletNonce = REVOCATION_NONCE,
+                    revokedRecord = record(REVOKED_KEY, PolymarketSessionKeyStatus.ACTIVE),
+                    nowMillis = (REVOCATION_DEADLINE - MARGIN_SECONDS - 1) * MILLIS_IN_SECOND,
+                    expected = PolymarketPendingAuthorizationStage.RevocationUnsent,
                 ),
                 StageModel(
                     walletNonce = AUTHORIZATION_NONCE + BigInteger.ONE,
@@ -159,6 +183,34 @@ internal class PolymarketPendingAuthorizationStageTest {
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
+        }
+
+        @Test
+        fun `GIVEN an extension whose old record is revoked and the new one listed WHEN acceptedIn THEN the new record`() {
+            // Arrange
+            val revokedOld = record(REVOKED_KEY, PolymarketSessionKeyStatus.REVOKED).copy(
+                createdAt = CREATED_AT.minusSeconds(60),
+                validUntil = CREATED_AT,
+            )
+            val listedNew = record(REVOKED_KEY, PolymarketSessionKeyStatus.PENDING)
+
+            // Act
+            val actual = extension().acceptedIn(listOf(revokedOld, listedNew))
+
+            // Assert
+            assertThat(actual).isEqualTo(listedNew)
+        }
+
+        @Test
+        fun `GIVEN an extension whose old record is still revoking WHEN acceptedIn THEN nothing is accepted`() {
+            // Arrange
+            val revokingOld = record(REVOKED_KEY, PolymarketSessionKeyStatus.REVOKING).copy(validUntil = CREATED_AT)
+
+            // Act
+            val actual = extension().acceptedIn(listOf(revokingOld))
+
+            // Assert
+            assertThat(actual).isNull()
         }
 
         private fun provideTestModels(): List<AcceptedModel> {
@@ -216,6 +268,7 @@ internal class PolymarketPendingAuthorizationStageTest {
         const val AUTHORIZED_KEY = "0x5e55000000000000000000000000000000000abc"
         const val AUTHORIZED_KEY_CHECKSUM = "0x5E55000000000000000000000000000000000ABC"
         const val MILLIS_IN_SECOND = 1_000L
+        const val MARGIN_SECONDS = 30L
         const val NOW_SECONDS = 1_789_430_000L
         const val NOW_MILLIS = NOW_SECONDS * MILLIS_IN_SECOND
         const val REVOCATION_DEADLINE = NOW_SECONDS + 600
@@ -238,6 +291,13 @@ internal class PolymarketPendingAuthorizationStageTest {
             authorizedAt = null,
             createdAt = CREATED_AT,
         )
+
+        fun extension() = pending().let { pending ->
+            pending.copy(
+                authorization = pending.authorization.copy(sessionKeyAddress = REVOKED_KEY),
+                purpose = PolymarketPendingAuthorization.Purpose.EXTEND,
+            )
+        }
 
         fun pending(authorizationNonce: String = AUTHORIZATION_NONCE.toString()) = PolymarketPendingAuthorization(
             revocation = PolymarketSessionKeyRevocation(
