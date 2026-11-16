@@ -29,7 +29,6 @@ internal class FakeLendingProvider(
     var minDepositResult: Either<Throwable, BigDecimal> = BigDecimal.ZERO.right()
 
     override val info = EarnProvider(title = stringReference("Fake"), icon = ImageReference.Res(0))
-    override val about = stringReference("a fake protocol")
     override val websiteUrl: String = "https://fake.example"
     override val legal = EarnLegal(
         termsOfUseUrl = "https://fake.example/terms",

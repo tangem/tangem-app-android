@@ -1,7 +1,6 @@
 package com.tangem.features.earn.lending.impl.provider
 
 import arrow.core.Either
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -20,9 +19,6 @@ import java.math.BigDecimal
 internal interface LendingProvider {
 
     val info: EarnProvider
-
-    /** What the provider is, in a few words that follow its name: "an on-chain lending protocol" */
-    val about: TextReference
 
     val websiteUrl: String
 

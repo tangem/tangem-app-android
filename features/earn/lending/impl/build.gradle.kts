@@ -17,6 +17,7 @@ dependencies {
 
     /** Common */
     implementation(projects.common)
+    implementation(projects.common.ui)
 
     /** Core */
     implementation(projects.core.analytics)
