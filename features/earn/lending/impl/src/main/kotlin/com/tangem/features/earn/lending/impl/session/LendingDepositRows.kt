@@ -6,7 +6,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.earn.lending.impl.product.projectionOf
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
 import com.tangem.features.earn.lending.impl.supplier.LendingAssetState
-import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.rate.formatEarnPercent
@@ -31,11 +30,7 @@ internal class LendingDepositRows @Inject constructor(
                 value = EarnValue.Text(stringReference(lendingProvider.performanceFee.formatEarnPercent())),
             ),
             state.fiatRate?.let { fiatRate ->
-                val yearlyEarnings = lendingProvider.projectionOf(rate).project(
-                    initialFiat = amount * fiatRate,
-                    monthlyTopUpFiat = BigDecimal.ZERO,
-                    horizon = EarnHorizon.Year1,
-                ).earned
+                val yearlyEarnings = lendingProvider.projectionOf(rate).yearlyEstimate(amountFiat = amount * fiatRate)
                 EarnRow(
                     label = resourceReference(R.string.lending_projected_earnings),
                     value = EarnValue.YearlyFiatEarnings(yearlyEarnings),

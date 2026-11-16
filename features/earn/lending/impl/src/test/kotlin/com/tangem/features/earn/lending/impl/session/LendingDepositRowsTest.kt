@@ -89,6 +89,8 @@ internal class LendingDepositRowsTest {
         EarningsModel(fiatRate = BigDecimal("1600"), earnings = BigDecimal("37.40")),
         // 0.5 ETH × $20 × 5.5% × (1 − 15%) = $0.4675, rounded to cents
         EarningsModel(fiatRate = BigDecimal("20"), earnings = BigDecimal("0.47")),
+        // 0.5 ETH × $20.012 = $10.006, × 5.5% × (1 − 15%) = $0.46778: only the earnings are rounded, not the total
+        EarningsModel(fiatRate = BigDecimal("20.012"), earnings = BigDecimal("0.47")),
     )
 
     @Test
