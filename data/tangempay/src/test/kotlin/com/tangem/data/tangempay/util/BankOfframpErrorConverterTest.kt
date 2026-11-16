@@ -7,6 +7,7 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class BankOfframpErrorConverterTest {
@@ -18,7 +19,7 @@ internal class BankOfframpErrorConverterTest {
     ) {
         // Act
         val actual = BankOfframpErrorConverter.convert(
-            BankOfframpErrorConverter.Input(error = model.error, operation = "createQuote"),
+            BankOfframpErrorConverter.Input(error = model.error, operation = "createQuote", isMxnEnabled = true),
         )
 
         // Assert
@@ -26,13 +27,34 @@ internal class BankOfframpErrorConverterTest {
         assertThat(actual.errorCode).isEqualTo(model.expectedCode)
     }
 
-    @Test
-    fun `GIVEN unsupported configuration code WHEN converted THEN unsupported configuration error`() {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN MXN off and an error named for MXN WHEN converted THEN unknown error keeping the universal code`(
+        model: NamedErrorModel,
+    ) {
+        // Act
+        val actual = BankOfframpErrorConverter.convert(
+            BankOfframpErrorConverter.Input(error = model.error, operation = "createRoute", isMxnEnabled = false),
+        )
+
+        // Assert
+        val unknown = actual as BankOfframpError.Unknown
+        assertThat(unknown.cause).hasMessageThat().isEqualTo("Bank off-ramp createRoute failed: ${model.error}")
+        assertThat(unknown.isOutcomeUnknown).isFalse()
+        assertThat(unknown.errorCode).isEqualTo(model.expectedCode)
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN unsupported configuration code WHEN converted THEN unsupported configuration error`(
+        isMxnEnabled: Boolean,
+    ) {
         // Act
         val actual = BankOfframpErrorConverter.convert(
             BankOfframpErrorConverter.Input(
                 error = TangemPayApiError.BankOfframpUnsupportedConfiguration,
                 operation = "createOrder",
+                isMxnEnabled = isMxnEnabled,
             ),
         )
 
@@ -44,7 +66,11 @@ internal class BankOfframpErrorConverterTest {
     fun `GIVEN any other api error WHEN converted THEN unknown error with the cause and the error code`() {
         // Act
         val actual = BankOfframpErrorConverter.convert(
-            BankOfframpErrorConverter.Input(error = TangemPayApiError.CustomerIsBlocked, operation = "cancelOrder"),
+            BankOfframpErrorConverter.Input(
+                error = TangemPayApiError.CustomerIsBlocked,
+                operation = "cancelOrder",
+                isMxnEnabled = true,
+            ),
         )
 
         // Assert
@@ -61,7 +87,11 @@ internal class BankOfframpErrorConverterTest {
     fun `GIVEN an outcome unknown api error WHEN converted THEN unknown error marked as outcome unknown`() {
         // Act
         val actual = BankOfframpErrorConverter.convert(
-            BankOfframpErrorConverter.Input(error = TangemPayApiError.ServerUnavailable, operation = "createOrder"),
+            BankOfframpErrorConverter.Input(
+                error = TangemPayApiError.ServerUnavailable,
+                operation = "createOrder",
+                isMxnEnabled = true,
+            ),
         )
 
         // Assert

@@ -772,7 +772,7 @@ internal class TangemPayWithdrawHubModelTest : TangemPayModelTestBase() {
             model.bankContent().toPersonalAccount.onClick()
 
             // Assert
-            assertThat(opened.single().second.value).isEqualTo(bankWithdrawOptions(isLimitedPerRail = true))
+            assertThat(opened.single().second.value).isEqualTo(bankWithdrawOptions())
             model.onDestroy()
         }
 
@@ -1035,6 +1035,7 @@ internal class TangemPayWithdrawHubModelTest : TangemPayModelTestBase() {
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             moneyAccountStatusSupplier = moneyAccountStatusSupplier,
             speiAvailability = speiAvailability,
+            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
         ),
         speiAvailability = speiAvailability,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
