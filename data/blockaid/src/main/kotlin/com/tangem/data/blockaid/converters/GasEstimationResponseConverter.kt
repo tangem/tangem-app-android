@@ -6,9 +6,16 @@ import com.tangem.store.datasource.blockaid.models.response.GasEstimationRespons
 import com.tangem.utils.converter.Converter
 
 internal object GasEstimationResponseConverter : Converter<List<GasEstimationResponse>, GasEstimationResult> {
+
+    private const val ERROR_STATUS = "Error"
+
     override fun convert(value: List<GasEstimationResponse>): GasEstimationResult {
-        return GasEstimationResult(
-            estimatedGasList = value.map { it.gasEstimation.estimate.hexToBigInteger() },
-        )
+        val estimations = value.map(GasEstimationResponse::gasEstimation)
+        if (estimations.any { it.status == ERROR_STATUS }) return GasEstimationResult.Reverted
+
+        val gasLimits = estimations.map { it.estimate ?: return GasEstimationResult.Unavailable }
+        if (gasLimits.isEmpty()) return GasEstimationResult.Unavailable
+
+        return GasEstimationResult.Estimated(gasLimits = gasLimits.map(String::hexToBigInteger))
     }
 }
