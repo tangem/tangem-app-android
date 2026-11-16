@@ -37,7 +37,6 @@ import com.tangem.domain.polymarket.signing.PolymarketSigningSession
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
-import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCase
@@ -52,6 +51,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketSoccerEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionOrderSessionKeyWindowUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
@@ -333,9 +333,9 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun provideCanSignPredictionOrderWithSessionKeyUseCase(
+    fun provideGetPredictionOrderSessionKeyWindowUseCase(
         router: PolymarketOrderSigningRouter,
-    ): CanSignPredictionOrderWithSessionKeyUseCase = CanSignPredictionOrderWithSessionKeyUseCase(router = router)
+    ): GetPredictionOrderSessionKeyWindowUseCase = GetPredictionOrderSessionKeyWindowUseCase(router = router)
 
     @Provides
     @Singleton

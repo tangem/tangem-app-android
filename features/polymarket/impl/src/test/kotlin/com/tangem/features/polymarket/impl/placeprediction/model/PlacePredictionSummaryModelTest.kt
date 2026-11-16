@@ -50,6 +50,7 @@ import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -1150,7 +1151,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             }
 
         @Test
-        fun `GIVEN session keys turned on WHEN a delayed order is placed THEN the router's route signs and reads it back`() =
+        fun `GIVEN session keys turned on WHEN a delayed order is placed on the plain button THEN the router's route signs and reads it back`() =
             runTest {
                 // Arrange
                 every { featureToggles.isPolymarketFastOrdersEnabled } returns true
@@ -1162,7 +1163,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 val model = createSummaryModel(testScope = this, amountModel = pricedAmountModel())
 
                 // Act
-                model.tapPlace()
+                model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.PLAIN)
                 advanceUntilIdle()
 
                 // Assert
@@ -1274,22 +1275,82 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a usable session key WHEN the summary resumes THEN the button is plain`() = runTest {
             // Arrange
             every { featureToggles.isPolymarketFastOrdersEnabled } returns true
-            coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+            coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
             val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
 
             // Act
             model.onResume()
-            advanceUntilIdle()
+            runCurrent()
 
             // Assert
             assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
         }
 
         @Test
+        fun `GIVEN a plain summary button WHEN the signing window elapses THEN the card is asked`() = runTest {
+            // Arrange
+            every { featureToggles.isPolymarketFastOrdersEnabled } returns true
+            coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
+            val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
+            model.onResume()
+            runCurrent()
+
+            // Act
+            advanceTimeBy(delayTimeMillis = SIGNING_WINDOW.toMillis() - 1)
+            val styleBeforeWindow = model.uiState.value.placeButtonStyle
+            advanceTimeBy(delayTimeMillis = 2)
+
+            // Assert
+            assertThat(styleBeforeWindow).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+        }
+
+        @Test
+        fun `GIVEN a plain summary button WHEN a resume lookup outlasts the signing window THEN the card is asked`() =
+            runTest {
+                // Arrange
+                every { featureToggles.isPolymarketFastOrdersEnabled } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
+                val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
+                model.onResume()
+                runCurrent()
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } coAnswers {
+                    awaitCancellation()
+                }
+
+                // Act
+                model.onResume()
+                advanceTimeBy(delayTimeMillis = SIGNING_WINDOW.toMillis() + 1)
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN a usable session key WHEN the card button is tapped on the summary THEN only the owner signs`() =
+            runTest {
+                // Arrange
+                every { featureToggles.isPolymarketFastOrdersEnabled } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns SESSION_ROUTE
+                val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
+
+                // Act
+                model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.CARD)
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 0) { signingRouter.route(any()) }
+                coVerify(exactly = 1) {
+                    signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
+                }
+            }
+
+        @Test
         fun `GIVEN no usable session key WHEN the summary resumes THEN the card is asked`() = runTest {
             // Arrange
             every { featureToggles.isPolymarketFastOrdersEnabled } returns true
-            coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+            coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns null
             val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
 
             // Act
@@ -1304,17 +1365,19 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN the session key expired meanwhile WHEN the summary resumes THEN the card is asked`() = runTest {
             // Arrange
             every { featureToggles.isPolymarketFastOrdersEnabled } returns true
-            coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
-                listOf(true, false)
+            coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returnsMany
+                listOf(SIGNING_WINDOW, null)
             val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
             model.onResume()
-            advanceUntilIdle()
+            runCurrent()
+            val styleBeforeResume = model.uiState.value.placeButtonStyle
 
             // Act
             model.onResume()
-            advanceUntilIdle()
+            runCurrent()
 
             // Assert
+            assertThat(styleBeforeResume).isEqualTo(PlaceButtonStyleUM.PLAIN)
             assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
         }
 

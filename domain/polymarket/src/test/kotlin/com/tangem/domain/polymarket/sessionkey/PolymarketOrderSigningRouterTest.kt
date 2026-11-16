@@ -253,7 +253,7 @@ internal class PolymarketOrderSigningRouterTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class CanSignWithSessionKey {
+    inner class SessionKeySigningWindow {
 
         @BeforeEach
         fun arrangeTradableKey() {
@@ -266,14 +266,14 @@ internal class PolymarketOrderSigningRouterTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN a session key condition WHEN canSignWithSessionKey THEN answers as route without side effects`(
+        fun `GIVEN a session key condition WHEN sessionKeySigningWindow THEN answers as route without side effects`(
             model: PeekModel,
         ) = runTest {
             // Arrange
             model.arrange()
 
             // Act
-            val actual = router.canSignWithSessionKey(userWalletId = USER_WALLET_ID)
+            val actual = router.sessionKeySigningWindow(userWalletId = USER_WALLET_ID)
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
@@ -283,28 +283,40 @@ internal class PolymarketOrderSigningRouterTest {
         }
 
         private fun provideTestModels() = listOf(
-            PeekModel(case = "every condition holds", expected = true),
-            PeekModel(case = "no session key on the device", expected = false) {
+            PeekModel(case = "every condition holds", expected = Duration.between(NOW, VALID_UNTIL - SIGNING_MARGIN)),
+            PeekModel(case = "a second is left before the margin", expected = Duration.ofSeconds(1)) {
+                arrangeKeyValidUntil(validUntil = NOW + SIGNING_MARGIN + Duration.ofSeconds(1))
+            },
+            PeekModel(case = "the key reached the margin", expected = null) {
+                arrangeKeyValidUntil(validUntil = NOW + SIGNING_MARGIN)
+            },
+            PeekModel(case = "no session key on the device", expected = null) {
                 coEvery { sessionKeyStore.heldAddress(USER_WALLET_ID) } returns null
             },
-            PeekModel(case = "the exchange refused the key", expected = false) {
+            PeekModel(case = "the exchange refused the key", expected = null) {
                 every { tradingStore.isRefused(USER_WALLET_ID, SESSION_KEY) } returns true
             },
-            PeekModel(case = "the key is gone from Polymarket", expected = false) {
+            PeekModel(case = "the key is gone from Polymarket", expected = null) {
                 every { tradingStore.isMissingOnExchange(USER_WALLET_ID, SESSION_KEY) } returns true
             },
-            PeekModel(case = "the wallet cannot be read", expected = false) {
+            PeekModel(case = "the wallet cannot be read", expected = null) {
                 coEvery { repository.getWalletStatusByWalletId(WALLET_ID) } returns
                     PolymarketWalletError.Network.left()
             },
-            PeekModel(case = "the BFF does not let the key trade", expected = false) {
+            PeekModel(case = "the BFF does not let the key trade", expected = null) {
                 coEvery { repository.getWalletStatusByWalletId(WALLET_ID) } returns
                     walletState(keys = listOf(sessionKey(status = PolymarketSessionKeyStatus.REVOKED))).right()
             },
-            PeekModel(case = "Polymarket has not listed the key", expected = false) {
+            PeekModel(case = "Polymarket has not listed the key", expected = null) {
                 coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, SESSION_KEY, VALID_UNTIL) } returns false
             },
         )
+
+        private fun arrangeKeyValidUntil(validUntil: Instant) {
+            coEvery { repository.getWalletStatusByWalletId(WALLET_ID) } returns
+                walletState(keys = listOf(sessionKey(validUntil = validUntil))).right()
+            coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, SESSION_KEY, validUntil) } returns true
+        }
     }
 
     @Nested
@@ -344,7 +356,7 @@ internal class PolymarketOrderSigningRouterTest {
 
     class PeekModel(
         private val case: String,
-        val expected: Boolean,
+        val expected: Duration?,
         val arrange: suspend () -> Unit = {},
     ) {
         override fun toString(): String = case
@@ -366,6 +378,7 @@ internal class PolymarketOrderSigningRouterTest {
         )
         val NOW: Instant = Instant.ofEpochSecond(1_790_000_000)
         val VALID_UNTIL: Instant = NOW + Duration.ofDays(30)
+        val SIGNING_MARGIN: Duration = Duration.ofMinutes(10)
         val SESSION_IDENTITY = PolymarketClobIdentity.Session(
             address = SESSION_KEY,
             credentials = PolymarketApiCredentials(apiKey = "session", secret = "c2VjcmV0", passphrase = "pass"),
