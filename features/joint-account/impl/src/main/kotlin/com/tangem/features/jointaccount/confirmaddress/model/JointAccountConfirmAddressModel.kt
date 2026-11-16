@@ -11,6 +11,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -69,6 +70,7 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
         field = MutableStateFlow(
             JointAccountConfirmAddressUM(
                 address = null,
+                shareMessage = null,
                 buttonIcon = userWalletsListRepository
                     .getSyncOrNull(id = params.userWalletId)
                     ?.let(::walletInterationIcon)
@@ -100,7 +102,9 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
         jointAccountListSupplier(userWalletId = params.userWalletId)
             .map { accounts -> accounts.firstOrNull { it.cryptoAccountId == params.cryptoAccountId }?.safeAddress }
             .distinctUntilChanged()
-            .onEach { address -> uiState.update { it.copy(address = address) } }
+            .onEach { address ->
+                uiState.update { it.copy(address = address, shareMessage = address?.let(::shareMessage)) }
+            }
             .launchIn(modelScope)
     }
 
@@ -112,10 +116,13 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun onShareClick() {
-        val address = uiState.value.address ?: return
+    private fun shareMessage(address: String) = resourceReference(
+        id = CoreUiR.string.joint_account_confirm_address_share_message,
+        formatArgs = wrappedList(address),
+    )
 
-        shareManager.shareText(text = address)
+    private fun onShareClick(message: String) {
+        shareManager.shareText(text = message)
     }
 
     private fun onMismatchClick() {

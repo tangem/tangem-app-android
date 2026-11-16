@@ -142,9 +142,7 @@ internal class JointOperationUMConverter(
         add(
             TxHistoryDetailsUM.MenuItemUM(
                 icon = if (isInitiator) Icons.ic_trash_bin_24 else Icons.ic_cross_24,
-                title = resourceReference(
-                    if (isInitiator) CoreUiR.string.common_delete else CoreUiR.string.common_decline,
-                ),
+                title = resourceReference(CoreUiR.string.common_cancel),
                 isDestructive = true,
                 action = TxHistoryDetailsUM.MenuItemUM.Action.Direct(onRefuseClick),
             ),
