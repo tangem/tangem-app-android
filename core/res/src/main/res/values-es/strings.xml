@@ -3553,8 +3553,8 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Su transacción con un importe de %1$s %2$s no se ha completado. Puede volver a intentarlo para completarla.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Tiene una transacción sin terminar</string>
   <string name="warning_last_balance_updated_time">Última actualización hace %s</string>
-  <string name="warning_link_wallet_cold_message">Sincroniza tu billetera con los servicios de Tangem para añadir una capa adicional de seguridad.</string>
-  <string name="warning_link_wallet_hot_message">Sincroniza tu billetera con los servicios de Tangem para añadir una capa adicional de seguridad.</string>
+  <string name="warning_link_wallet_cold_message">Usa tu tarjeta para añadir una capa adicional de seguridad al conectarte a los servicios de Tangem.</string>
+  <string name="warning_link_wallet_hot_message">Añade una capa adicional de seguridad al conectarte a los servicios de Tangem.</string>
   <string name="warning_link_wallet_title">Protege tu conexión</string>
   <string name="warning_low_signatures_message">Solo quedan %s firmas en esta tarjeta. Debe retirar todos sus fondos.</string>
   <string name="warning_low_signatures_title">Recuento de firmas bajo</string>

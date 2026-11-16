@@ -3459,8 +3459,8 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">您金额为 %1$s %2$s 的交易未完成。您可以再次尝试完成交易。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">您有未完成的交易</string>
   <string name="warning_last_balance_updated_time">上次更新时间是 %s</string>
-  <string name="warning_link_wallet_cold_message">扫描您的卡片，将您的钱包与该设备绑定。</string>
-  <string name="warning_link_wallet_hot_message">请确认将您的钱包与该设备绑定。</string>
+  <string name="warning_link_wallet_cold_message">连接 Tangem 服务时，增加一层额外的安全保护</string>
+  <string name="warning_link_wallet_hot_message">连接 Tangem 服务时，增加一层额外的安全保护</string>
   <string name="warning_link_wallet_title">确保连接安全</string>
   <string name="warning_low_signatures_message">该卡上只剩下 %s 签名。您必须提取所有资金。</string>
   <string name="warning_low_signatures_title">签名数量少</string>

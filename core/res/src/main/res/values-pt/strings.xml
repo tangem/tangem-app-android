@@ -322,7 +322,7 @@
   <string name="tangempay_va_banking_details_error_title">Não foi possível carregar os dados bancários</string>
   <string name="token_details_balance_total">Saldo total</string>
   <string name="virtual_account_transactions_empty">Ainda não existem transações. Comece a gastar e consulte o histórico aqui.</string>
-  <string name="warning_link_wallet_cold_message">Sincronize a sua carteira com os serviços Tangem para adicionar uma camada extra de segurança.</string>
+  <string name="warning_link_wallet_cold_message">Adicione uma camada extra de segurança ao ligar-se aos serviços Tangem.</string>
   <string name="warning_link_wallet_hot_message">Sincronize a sua carteira com os serviços Tangem para uma proteção adicional.</string>
   <string name="warning_link_wallet_title">Proteja a sua ligação</string>
   <string name="yield_module_main_promo_button">Experimentar o Modo Yield</string>
