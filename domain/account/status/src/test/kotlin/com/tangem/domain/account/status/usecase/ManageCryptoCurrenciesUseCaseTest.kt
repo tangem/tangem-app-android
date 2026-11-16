@@ -1,5 +1,6 @@
 package com.tangem.domain.account.status.usecase
 
+import arrow.core.some
 import com.google.common.truth.Truth
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
@@ -19,18 +20,22 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.mockk
+import java.math.BigDecimal
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.math.BigDecimal
+import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ManageCryptoCurrenciesUseCaseTest {
@@ -67,6 +72,117 @@ internal class ManageCryptoCurrenciesUseCaseTest {
             walletManagersFacade,
             cryptoCurrencyBalanceFetcher,
         )
+        coEvery { accountsCRUDRepository.syncTokensOrRefresh(any()) } returns false
+    }
+
+    /**
+     * Another device changed the list first: the sync is refused, the account is replaced by the backend's one and
+     * the user's edit is made on it once more.
+     */
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StaleList {
+
+        private val coin = createCoin(derivationPath = Network.DerivationPath.Card(ACCOUNT_DERIVATION_PATH))
+        private val own = createToken(derivationPath = Network.DerivationPath.Card(ACCOUNT_DERIVATION_PATH))
+        private val peer = own.copy(
+            id = own.id.copy(suffix = CryptoCurrency.ID.Suffix.ContractAddress(contractAddress = "0xpeer")),
+            contractAddress = "0xpeer",
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun invokeAndAwait(model: StaleModel) = runTest {
+            // Arrange
+            val account = createAccount(currencies = model.local)
+            coEvery {
+                singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+            } returns createAccountStatusList(account = account, currencies = model.local)
+            coEvery { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) } returnsMany listOf(true, false)
+            coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returns
+                account.copy(cryptoCurrencies = model.refreshed).some()
+
+            // Act
+            useCase.invokeAndAwait(accountId = account.accountId, add = model.add, remove = model.remove)
+
+            // Assert
+            coVerifyOrder {
+                accountsCRUDRepository.syncTokensOrRefresh(userWalletId)
+                accountsCRUDRepository.saveAccount(account.copy(cryptoCurrencies = model.expected))
+                accountsCRUDRepository.syncTokensOrRefresh(userWalletId)
+            }
+        }
+
+        private fun provideTestModels() = listOf(
+            StaleModel(
+                name = "own addition lands next to a token the peer added",
+                local = listOf(coin),
+                add = listOf(own),
+                refreshed = listOf(coin, peer),
+                expected = listOf(coin, peer, own),
+            ),
+            StaleModel(
+                name = "own removal survives a token the peer added",
+                local = listOf(coin, own),
+                remove = listOf(own),
+                refreshed = listOf(coin, own, peer),
+                expected = listOf(coin, peer),
+            ),
+            StaleModel(
+                name = "a token the peer removed is not brought back",
+                local = listOf(coin, peer),
+                add = listOf(own),
+                refreshed = listOf(coin),
+                expected = listOf(coin, own),
+            ),
+        )
+
+        @Test
+        fun `GIVEN the peer made the same edit WHEN the list is refreshed THEN nothing is saved or synced again`() =
+            runTest {
+                // Arrange
+                val account = createAccount(currencies = listOf(coin))
+                coEvery {
+                    singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+                } returns createAccountStatusList(account = account, currencies = listOf(coin))
+                coEvery { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) } returns true
+                coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returns
+                    account.copy(cryptoCurrencies = listOf(coin, own)).some()
+
+                // Act
+                useCase.invokeAndAwait(accountId = account.accountId, add = listOf(own))
+
+                // Assert
+                coVerify(exactly = 1) { accountsCRUDRepository.saveAccount(any()) }
+                coVerify(exactly = 1) { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) }
+            }
+
+        @Test
+        fun `GIVEN the list is current WHEN edit THEN it is synced once and not repeated`() = runTest {
+            // Arrange
+            val account = createAccount(currencies = listOf(coin))
+            coEvery {
+                singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+            } returns createAccountStatusList(account = account, currencies = listOf(coin))
+
+            // Act
+            useCase.invokeAndAwait(accountId = account.accountId, add = listOf(own))
+
+            // Assert
+            coVerify(exactly = 1) { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) }
+            coVerify(exactly = 0) { accountsCRUDRepository.getAccountSync(any()) }
+        }
+    }
+
+    data class StaleModel(
+        val name: String,
+        val local: List<CryptoCurrency>,
+        val add: List<CryptoCurrency> = emptyList(),
+        val remove: List<CryptoCurrency> = emptyList(),
+        val refreshed: List<CryptoCurrency>,
+        val expected: List<CryptoCurrency>,
+    ) {
+        override fun toString(): String = name
     }
 
     @Test
@@ -94,38 +210,6 @@ internal class ManageCryptoCurrenciesUseCaseTest {
             }
             coVerify(inverse = true) { currenciesRepository.createCoinCurrency(any()) }
         }
-
-    @Test
-    fun `GIVEN account with a token WHEN remove it and add another THEN the change itself is synced`() = runTest {
-        // Arrange
-        val coin = createCoin(derivationPath = Network.DerivationPath.Card(ACCOUNT_DERIVATION_PATH))
-        val removedToken = createToken(derivationPath = Network.DerivationPath.Card(ACCOUNT_DERIVATION_PATH))
-        val addedToken = removedToken.copy(
-            id = removedToken.id.copy(suffix = CryptoCurrency.ID.Suffix.ContractAddress(contractAddress = "0xadded")),
-            contractAddress = "0xadded",
-        )
-        val account = createAccount(currencies = listOf(coin, removedToken))
-        coEvery {
-            singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
-        } returns createAccountStatusList(account = account, currencies = listOf(coin, removedToken))
-
-        // Act
-        val actual = useCase.invokeAndAwait(
-            accountId = account.accountId,
-            add = listOf(addedToken),
-            remove = listOf(removedToken),
-        )
-
-        // Assert
-        Truth.assertThat(actual.isRight()).isTrue()
-        coVerify(exactly = 1) {
-            accountsCRUDRepository.syncTokens(
-                account = account.copy(cryptoCurrencies = listOf(coin, addedToken)),
-                added = listOf(addedToken),
-                removed = listOf(removedToken),
-            )
-        }
-    }
 
     @Test
     fun `GIVEN account without coin WHEN add token THEN coin is created`() = runTest {

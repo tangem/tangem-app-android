@@ -4,7 +4,6 @@ import arrow.core.Option
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWalletId
@@ -87,14 +86,12 @@ interface AccountsCRUDRepository {
     suspend fun syncTokens(userWalletId: UserWalletId)
 
     /**
-     * Synchronizes the tokens of [account] after the user [added] and [removed] some of them. Unlike the plain sync,
-     * the change itself is carried along, so another member's concurrent edit of the same list does not undo it
+     * Synchronizes tokens unless the remote data source holds a newer list. In that case nothing is sent and the
+     * local accounts are replaced by the remote ones: an edit has to be repeated on them.
+     *
+     * @return `true` when the local accounts were replaced
      */
-    suspend fun syncTokens(
-        account: Account.CryptoPortfolio,
-        added: List<CryptoCurrency>,
-        removed: List<CryptoCurrency>,
-    )
+    suspend fun syncTokensOrRefresh(userWalletId: UserWalletId): Boolean
 
     /**
      * Retrieves the total count of active accounts associated with a specific user wallet excluding archived accounts

@@ -142,11 +142,12 @@ class ManageCryptoCurrenciesUseCase(
                 }
             }
 
-            val account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total)
-            saveAccount(account = account)
+            saveAccount(
+                account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total),
+            )
 
             syncTokensAndLaunchUpdates(
-                account = account,
+                edit = TokensEdit(accountId = accountId, add = add, remove = remove),
                 modifiedCurrencyList = modifiedCurrencyList,
                 awaitSync = awaitTokensSyncFinished,
             ) {
@@ -190,11 +191,10 @@ class ManageCryptoCurrenciesUseCase(
             val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = listOf(tokenToAdd))
 
-            val account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total)
-            saveAccount(account = account)
+            saveAccount(account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total))
 
             syncTokensAndLaunchUpdates(
-                account = account,
+                edit = TokensEdit(accountId = accountId, add = listOf(tokenToAdd), remove = emptyList()),
                 modifiedCurrencyList = modifiedCurrencyList,
                 awaitSync = awaitTokensSyncFinished,
             ) {
@@ -279,25 +279,6 @@ class ManageCryptoCurrenciesUseCase(
         return ModifiedCurrencyList(added = added, removed = removed, total = mutableCurrencies)
     }
 
-    private fun List<CryptoCurrency>.groupByNetwork(
-        valuePredicate: (TempID) -> Boolean,
-    ): LinkedHashMap<Network, MutableMap<TempID, CryptoCurrency>> {
-        val destination = LinkedHashMap<Network, MutableMap<TempID, CryptoCurrency>>()
-
-        for (currency in this) {
-            val key = currency.network
-            val mutableMap = destination.getOrPut(key) { mutableMapOf() }
-
-            val id = TempID(currency)
-
-            if (valuePredicate(id)) {
-                mutableMap[id] = currency
-            }
-        }
-
-        return destination
-    }
-
     private suspend fun Raise<Throwable>.saveAccount(account: Account.CryptoPortfolio) {
         catch(
             block = { accountsCRUDRepository.saveAccount(account) },
@@ -329,34 +310,49 @@ class ManageCryptoCurrenciesUseCase(
         )
     }
 
-    private suspend fun syncTokens(account: Account.CryptoPortfolio, modifiedCurrencyList: ModifiedCurrencyList) {
-        val userWalletId = account.userWalletId
+    private suspend fun syncTokens(edit: TokensEdit, modifiedCurrencyList: ModifiedCurrencyList) {
+        val userWalletId = edit.accountId.userWalletId
         createWalletManagers(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
 
         runSuspendCatching {
-            accountsCRUDRepository.syncTokens(
-                account = account,
-                added = modifiedCurrencyList.added,
-                removed = modifiedCurrencyList.removed,
-            )
+            val isRefreshed = accountsCRUDRepository.syncTokensOrRefresh(userWalletId)
+            if (isRefreshed) repeatOnRefreshedAccount(edit)
         }
             .onFailure { TangemLogger.e("Failed to sync tokens for wallet $userWalletId", it) }
     }
 
+    /**
+     * Another device changed the list first: the account now holds the backend's tokens, and the edit is made on
+     * them once more. A second refusal drops the edit — the list on the screen is the backend's one by then.
+     */
+    private suspend fun repeatOnRefreshedAccount(edit: TokensEdit) {
+        val account = accountsCRUDRepository.getAccountSync(edit.accountId).getOrNull() ?: return
+        val modifiedCurrencyList = account.cryptoCurrencies
+            .map { currency -> CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading) }
+            .modify(add = edit.add, remove = edit.remove)
+
+        if (!modifiedCurrencyList.hasChanges) return
+
+        accountsCRUDRepository.saveAccount(account.copySealed(cryptoCurrencies = modifiedCurrencyList.total))
+
+        val isRefusedAgain = accountsCRUDRepository.syncTokensOrRefresh(edit.accountId.userWalletId)
+        if (isRefusedAgain) TangemLogger.e("Tokens edit of ${edit.accountId} is dropped: refused as stale twice")
+    }
+
     private suspend fun syncTokensAndLaunchUpdates(
-        account: Account.CryptoPortfolio,
+        edit: TokensEdit,
         modifiedCurrencyList: ModifiedCurrencyList,
         awaitSync: Boolean,
         updates: suspend () -> Unit,
     ) {
         if (awaitSync) {
-            syncTokens(account, modifiedCurrencyList)
+            syncTokens(edit, modifiedCurrencyList)
             parallelUpdatingScope.launch {
                 updates()
             }
         } else {
             parallelUpdatingScope.launch {
-                syncTokens(account, modifiedCurrencyList)
+                syncTokens(edit, modifiedCurrencyList)
                 updates()
             }
         }
@@ -407,42 +403,10 @@ class ManageCryptoCurrenciesUseCase(
             }
         }
     }
-
-    /**
-     * Identity of a currency inside an account.
-     *
-     * The derivation path is compared by its raw value, not by the [Network.DerivationPath] subtype: the same path
-     * may be represented as [Network.DerivationPath.Card] for one currency and as [Network.DerivationPath.Custom]
-     * for another one, while both describe the very same address. Comparing the subtypes made such currencies look
-
-     */
-    private data class TempID(
-        val networkId: String,
-        val derivationPath: String?,
-        val contractAddress: String?,
-    ) {
-
-        constructor(network: Network) : this(
-            networkId = network.rawId,
-            derivationPath = network.derivationPath.value,
-            contractAddress = null,
-        )
-
-        constructor(currency: CryptoCurrency) : this(
-            networkId = currency.network.rawId,
-            derivationPath = currency.network.derivationPath.value,
-            contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
-        )
-
-        constructor(status: CryptoCurrencyStatus) : this(
-            networkId = status.currency.network.rawId,
-            derivationPath = status.currency.network.derivationPath.value,
-            contractAddress = (status.currency as? CryptoCurrency.Token)?.contractAddress,
-        )
-    }
 }
 
-private fun List<CryptoCurrency>.withoutJointNetworks(): List<CryptoCurrency> = filterNot { it.isJoint }
+/** What the user asked for, kept to be repeated on a list refreshed from the backend */
+private data class TokensEdit(val accountId: AccountId, val add: List<CryptoCurrency>, val remove: List<CryptoCurrency>)
 
 private data class ModifiedCurrencyList(
     val added: List<CryptoCurrency>,
@@ -451,4 +415,60 @@ private data class ModifiedCurrencyList(
 ) {
 
     val hasChanges get() = added.isNotEmpty() || removed.isNotEmpty()
+}
+
+private fun List<CryptoCurrency>.withoutJointNetworks(): List<CryptoCurrency> {
+    return filterNot { it.isJoint }
+}
+
+private fun List<CryptoCurrency>.groupByNetwork(
+    valuePredicate: (TempID) -> Boolean,
+): LinkedHashMap<Network, MutableMap<TempID, CryptoCurrency>> {
+    val destination = LinkedHashMap<Network, MutableMap<TempID, CryptoCurrency>>()
+
+    for (currency in this) {
+        val key = currency.network
+        val mutableMap = destination.getOrPut(key) { mutableMapOf() }
+
+        val id = TempID(currency)
+
+        if (valuePredicate(id)) {
+            mutableMap[id] = currency
+        }
+    }
+
+    return destination
+}
+
+/**
+ * Identity of a currency inside an account.
+ *
+ * The derivation path is compared by its raw value, not by the [Network.DerivationPath] subtype: the same path
+ * may be represented as [Network.DerivationPath.Card] for one currency and as [Network.DerivationPath.Custom]
+ * for another one, while both describe the very same address. Comparing the subtypes made such currencies look
+
+ */
+private data class TempID(
+    val networkId: String,
+    val derivationPath: String?,
+    val contractAddress: String?,
+) {
+
+    constructor(network: Network) : this(
+        networkId = network.rawId,
+        derivationPath = network.derivationPath.value,
+        contractAddress = null,
+    )
+
+    constructor(currency: CryptoCurrency) : this(
+        networkId = currency.network.rawId,
+        derivationPath = currency.network.derivationPath.value,
+        contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
+    )
+
+    constructor(status: CryptoCurrencyStatus) : this(
+        networkId = status.currency.network.rawId,
+        derivationPath = status.currency.network.derivationPath.value,
+        contractAddress = (status.currency as? CryptoCurrency.Token)?.contractAddress,
+    )
 }

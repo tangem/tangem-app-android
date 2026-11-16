@@ -1,11 +1,12 @@
 package com.tangem.data.common.currency
 
-import com.tangem.data.common.cache.etag.ETagsStore
-import com.tangem.data.common.cache.etag.WalletAccountsETags
-import com.tangem.data.common.wallet.WalletServerBinder
+import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ETAG_HEADER
+import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.cache.etag.WalletAccountsETags
+import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletType
@@ -17,17 +18,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import io.mockk.coVerify
 import java.io.IOException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
-import com.google.common.truth.Truth.assertThat
-import com.tangem.test.core.ProvideTestModels
-import io.mockk.slot
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.params.ParameterizedTest
-import io.mockk.coVerifyOrder
-import io.mockk.coVerify
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -446,109 +441,43 @@ class UserTokensSaverTest {
         assert(onFailSendCalled) { "onFailSend callback should be called when the merged tokens are not stored" }
     }
 
-    /**
-     * The user's change is replayed on the list the backend holds after a 412: nothing but the change differs from
-     * that list, whatever the stale local copy looked like.
-     */
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class StaleWriteWithChange {
-
-        private val userWalletId = UserWalletId("1234567890abcdef")
-        private val kept = createToken()
-        private val own = createToken().copy(id = "bsc", networkId = "bsc")
-        private val peer = createPeerToken()
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun push(model: ChangeModel) = runTest {
-            // Arrange
-            val response = stubStaleWriteRecovery(
-                userWalletId = userWalletId,
-                pushedTokens = model.pushed,
-                remoteTokens = emptyList(),
-                mergedWriteResult = ApiResponse.Success(Unit),
-                remoteState = model.remote,
-            )
-            val merged = slot<UserTokensResponse>()
-            coEvery { tangemTechApi.saveTokens(any(), capture(merged), FRESH_ETAG) } returns ApiResponse.Success(Unit)
-
-            // Act
-            userTokensSaver.push(userWalletId = userWalletId, response = response, change = model.change)
-
-            // Assert
-            assertThat(merged.captured.tokens).containsExactlyElementsIn(model.expected).inOrder()
-            coVerify(exactly = 1) { walletTokensLocalStore.setTokens(userWalletId, model.expected) }
-            coVerify(exactly = 0) { walletTokensLocalStore.addRemoteTokens(any(), any()) }
-        }
-
-        private fun provideTestModels() = listOf(
-            ChangeModel(
-                name = "own removal survives a token the peer added",
-                pushed = listOf(kept),
-                remote = listOf(kept, own, peer),
-                change = TokensChange(added = emptyList(), removed = listOf(own)),
-                expected = listOf(kept, peer),
-            ),
-            ChangeModel(
-                name = "own addition lands next to a token the peer added",
-                pushed = listOf(kept, own),
-                remote = listOf(kept, peer),
-                change = TokensChange(added = listOf(own), removed = emptyList()),
-                expected = listOf(kept, peer, own),
-            ),
-            ChangeModel(
-                name = "a token the peer removed is not brought back by the stale local list",
-                pushed = listOf(kept, peer, own),
-                remote = listOf(kept),
-                change = TokensChange(added = listOf(own), removed = emptyList()),
-                expected = listOf(kept, own),
-            ),
-            ChangeModel(
-                name = "an addition the backend already has is not doubled",
-                pushed = listOf(kept, own),
-                remote = listOf(kept, own),
-                change = TokensChange(added = listOf(own), removed = emptyList()),
-                expected = listOf(kept, own),
-            ),
+    @Test
+    fun `GIVEN write rejected with 412 WHEN pushUnlessStale THEN stale is reported and nothing is merged`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("1234567890abcdef")
+        val response = stubStaleWriteRecovery(
+            userWalletId = userWalletId,
+            pushedTokens = listOf(createToken()),
+            remoteTokens = listOf(createPeerToken()),
+            mergedWriteResult = ApiResponse.Success(Unit),
         )
 
-        @Test
-        fun `GIVEN 412 and a change WHEN push THEN the merged list is stored locally before the fresh etag`() =
-            runTest {
-                // Arrange
-                val response = stubStaleWriteRecovery(
-                    userWalletId = userWalletId,
-                    pushedTokens = listOf(kept, own),
-                    remoteTokens = emptyList(),
-                    mergedWriteResult = ApiResponse.Success(Unit),
-                    remoteState = listOf(kept, peer),
-                )
+        // Act
+        val actual = userTokensSaver.pushUnlessStale(userWalletId = userWalletId, response = response)
 
-                // Act
-                userTokensSaver.push(
-                    userWalletId = userWalletId,
-                    response = response,
-                    change = TokensChange(added = listOf(own), removed = emptyList()),
-                )
-
-                // Assert
-                coVerifyOrder {
-                    walletTokensLocalStore.setTokens(userWalletId = userWalletId, tokens = listOf(kept, peer, own))
-                    eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, FRESH_ETAG)
-                    tangemTechApi.saveTokens(userWalletId.stringValue, any(), FRESH_ETAG)
-                }
-            }
+        // Assert
+        assertThat(actual).isTrue()
+        coVerify(exactly = 1) { tangemTechApi.saveTokens(any(), any(), any()) }
+        coVerify(exactly = 0) { tangemTechApi.getWalletAccountsV2(walletId = any()) }
+        coVerify(exactly = 0) { walletTokensLocalStore.addRemoteTokens(any(), any()) }
     }
 
-    data class ChangeModel(
-        val name: String,
-        val pushed: List<UserTokensResponse.Token>,
-        val remote: List<UserTokensResponse.Token>,
-        val change: TokensChange,
-        val expected: List<UserTokensResponse.Token>,
-    ) {
-        override fun toString(): String = name
+    @Test
+    fun `GIVEN write accepted WHEN pushUnlessStale THEN no stale write is reported`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("1234567890abcdef")
+        stubUserWallet(userWalletId)
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+        coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns FRESH_ETAG
+        val response = createResponse(tokens = listOf(createToken()))
+        coEvery { enricher(userWalletId, response) } returns response
+        coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returns ApiResponse.Success(Unit)
+
+        // Act
+        val actual = userTokensSaver.pushUnlessStale(userWalletId = userWalletId, response = response)
+
+        // Assert
+        assertThat(actual).isFalse()
     }
 
     private fun stubStaleWriteRecovery(
@@ -556,7 +485,6 @@ class UserTokensSaverTest {
         pushedTokens: List<UserTokensResponse.Token>,
         remoteTokens: List<UserTokensResponse.Token>,
         mergedWriteResult: ApiResponse<Unit>,
-        remoteState: List<UserTokensResponse.Token> = pushedTokens + remoteTokens,
     ): UserTokensResponse {
         stubUserWallet(userWalletId)
         every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
@@ -571,7 +499,7 @@ class UserTokensSaverTest {
             mergedWriteResult,
         )
         coEvery { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) } returns ApiResponse.Success(
-            data = createAccountsV2Response(tokens = remoteState),
+            data = createAccountsV2Response(tokens = pushedTokens + remoteTokens),
             headers = mapOf(ETAG_HEADER to listOf(FRESH_ETAG)),
         )
 

@@ -15,7 +15,6 @@ import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.WalletAccountsETags
-import com.tangem.data.common.currency.TokensChange
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.common.response.isNetworkError
@@ -143,37 +142,32 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         return pushInternal(userWalletId = userWalletId, body = body)
     }
 
-    override suspend fun syncTokens(userWalletId: UserWalletId, change: TokensChange?) {
-        if (!syncStatusStore.isSyncedWithRemote(userWalletId)) reconcileWithRemote(userWalletId)
+    override suspend fun syncTokens(userWalletId: UserWalletId) {
+        val response = getSyncedWithRemote(userWalletId) ?: return
 
-        // A fetch that completed after the change was saved has put the backend's list over it
-        if (change != null) update(userWalletId) { saved -> saved?.withTokensChange(change) }
+        userTokensSaver.pushWithRetryer(userWalletId = userWalletId, response = response.toUserTokensResponse())
+    }
+
+    override suspend fun syncTokensOrRefresh(userWalletId: UserWalletId): Boolean {
+        val response = getSyncedWithRemote(userWalletId) ?: return false
+
+        val isStale = userTokensSaver.pushUnlessStale(
+            userWalletId = userWalletId,
+            response = response.toUserTokensResponse(),
+        )
+        if (isStale) fetch(userWalletId)
+
+        return isStale
+    }
+
+    private suspend fun getSyncedWithRemote(userWalletId: UserWalletId): GetWalletAccountsResponse? {
+        if (!syncStatusStore.isSyncedWithRemote(userWalletId)) reconcileWithRemote(userWalletId)
 
         val response = if (syncStatusStore.isSyncedWithRemote(userWalletId)) getSaved(userWalletId) else null
 
-        if (response == null) {
-            TangemLogger.e("Can't sync tokens of $userWalletId: no document synced with the backend")
-            return
-        }
+        if (response == null) TangemLogger.e("Can't sync tokens of $userWalletId: no document synced with the backend")
 
-        userTokensSaver.pushWithRetryer(
-            userWalletId = userWalletId,
-            response = response.toUserTokensResponse(),
-            change = change,
-        )
-    }
-
-    private fun GetWalletAccountsResponse.withTokensChange(change: TokensChange): GetWalletAccountsResponse {
-        return copy(
-            accounts = accounts.map { account ->
-                val accountChange = TokensChange(
-                    added = change.added.filter { it.accountId == account.id },
-                    removed = change.removed.filter { it.accountId == account.id },
-                )
-
-                account.copy(tokens = accountChange.applyTo(tokens = account.tokens.orEmpty()))
-            },
-        )
+        return response
     }
 
     private suspend fun reconcileWithRemote(userWalletId: UserWalletId) {

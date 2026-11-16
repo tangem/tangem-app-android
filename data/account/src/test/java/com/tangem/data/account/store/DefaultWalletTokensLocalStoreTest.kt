@@ -142,28 +142,6 @@ internal class DefaultWalletTokensLocalStoreTest {
         assertThat(dataStore.data.first()).isNull()
     }
 
-    @Test
-    fun `GIVEN saved document WHEN setTokens THEN each account holds exactly its tokens from the new list`() = runTest {
-        // Arrange
-        val secondAccountToken = createToken(index = 2, accountId = SECOND_ACCOUNT_ID)
-        val dataStore = stubSaved(
-            createResponse(
-                createAccount(MAIN_ACCOUNT_ID, listOf(savedToken)),
-                createAccount(SECOND_ACCOUNT_ID, listOf(secondAccountToken)),
-            ),
-        )
-
-        // Act
-        store.setTokens(userWalletId = userWalletId, tokens = listOf(peerToken))
-
-        // Assert
-        val expected = createResponse(
-            createAccount(MAIN_ACCOUNT_ID, listOf(peerToken)),
-            createAccount(SECOND_ACCOUNT_ID, emptyList()),
-        )
-        assertThat(dataStore.data.first()).isEqualTo(expected)
-    }
-
     private fun stubSaved(saved: GetWalletAccountsResponse?): MockStateDataStore<GetWalletAccountsResponse?> {
         val dataStore = MockStateDataStore(default = saved)
         every { accountsResponseStoreFactory.create(userWalletId) } returns dataStore

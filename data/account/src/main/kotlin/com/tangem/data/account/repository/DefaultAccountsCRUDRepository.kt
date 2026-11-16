@@ -20,7 +20,6 @@ import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
-import com.tangem.data.common.currency.TokensChange
 import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
@@ -30,9 +29,7 @@ import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
-import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWalletId
@@ -210,20 +207,8 @@ internal class DefaultAccountsCRUDRepository(
         walletAccountsSaver.syncTokens(userWalletId)
     }
 
-    override suspend fun syncTokens(
-        account: Account.CryptoPortfolio,
-        added: List<CryptoCurrency>,
-        removed: List<CryptoCurrency>,
-    ) {
-        val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = account.userWalletId)
-        fun List<CryptoCurrency>.toTokens(): List<UserTokensResponse.Token> {
-            return converter.convertBack(value = account.copySealed(cryptoCurrencies = this)).tokens.orEmpty()
-        }
-
-        walletAccountsSaver.syncTokens(
-            userWalletId = account.userWalletId,
-            change = TokensChange(added = added.toTokens(), removed = removed.toTokens()),
-        )
+    override suspend fun syncTokensOrRefresh(userWalletId: UserWalletId): Boolean {
+        return walletAccountsSaver.syncTokensOrRefresh(userWalletId)
     }
 
     override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {

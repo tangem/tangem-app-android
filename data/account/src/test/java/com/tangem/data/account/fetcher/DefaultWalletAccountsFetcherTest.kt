@@ -15,7 +15,6 @@ import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.cache.etag.WalletAccountsETags
-import com.tangem.data.common.currency.TokensChange
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -882,49 +881,49 @@ class DefaultWalletAccountsFetcherTest {
         }
 
         @Test
-        fun `GIVEN a fetch wiped the saved change WHEN syncTokens with it THEN it is put back and pushed along`() =
+        fun `GIVEN the backend holds a newer list WHEN syncTokensOrRefresh THEN its document replaces the saved one`() =
             runTest {
                 // Arrange
-                val accountId = savedResponse.accounts.first().id
-                val kept = createUserToken(networkId = "ethereum", accountId = accountId)
-                val added = createUserToken(networkId = "polygon", accountId = accountId)
-                val removed = createUserToken(networkId = "bsc", accountId = accountId)
-                val change = TokensChange(added = listOf(added), removed = listOf(removed))
-                accountsResponseStoreFlow.value = savedResponse.withTokens(listOf(kept, removed))
+                val serverResponse = createGetWalletAccountsResponse(
+                    userWalletId = userWalletId,
+                    sortType = UserTokensResponse.SortType.MANUAL,
+                )
+                accountsResponseStoreFlow.value = savedResponse
+                coEvery {
+                    userTokensSaver.pushUnlessStale(userWalletId, savedResponse.toUserTokensResponse())
+                } returns true
+                coEvery {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = any())
+                } returns ApiResponse.Success(data = serverResponse)
                 coEvery { accountsResponseStore.updateData(any()) } coAnswers {
-                    val transform = firstArg<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?>()
-                    transform(accountsResponseStoreFlow.value).also { accountsResponseStoreFlow.value = it }
+                    accountsResponseStoreFlow.value = serverResponse
+                    serverResponse
                 }
 
                 // Act
-                fetcher.syncTokens(userWalletId = userWalletId, change = change)
+                val actual = fetcher.syncTokensOrRefresh(userWalletId)
 
                 // Assert
-                val expected = savedResponse.withTokens(listOf(kept, added))
-                Truth.assertThat(accountsResponseStoreFlow.value).isEqualTo(expected)
-                coVerify(exactly = 1) {
-                    userTokensSaver.pushWithRetryer(
-                        userWalletId = userWalletId,
-                        response = expected.toUserTokensResponse(),
-                        change = change,
-                    )
-                }
+                Truth.assertThat(actual).isTrue()
+                Truth.assertThat(accountsResponseStoreFlow.value).isEqualTo(serverResponse)
             }
 
-        private fun GetWalletAccountsResponse.withTokens(tokens: List<UserTokensResponse.Token>) = copy(
-            accounts = listOf(accounts.first().copy(tokens = tokens)) + accounts.drop(n = 1),
-        )
+        @Test
+        fun `GIVEN the saved list is current WHEN syncTokensOrRefresh THEN it is pushed and nothing is fetched`() =
+            runTest {
+                // Arrange
+                accountsResponseStoreFlow.value = savedResponse
+                coEvery {
+                    userTokensSaver.pushUnlessStale(userWalletId, savedResponse.toUserTokensResponse())
+                } returns false
 
-        private fun createUserToken(networkId: String, accountId: String) = UserTokensResponse.Token(
-            id = networkId,
-            accountId = accountId,
-            networkId = networkId,
-            derivationPath = "m/44'/60'/0'/0/0",
-            name = networkId,
-            symbol = networkId,
-            decimals = 18,
-            contractAddress = null,
-        )
+                // Act
+                val actual = fetcher.syncTokensOrRefresh(userWalletId)
+
+                // Assert
+                Truth.assertThat(actual).isFalse()
+                coVerify(exactly = 0) { walletAccountsApi.getAccounts(walletId = any(), eTag = any()) }
+            }
 
         @Test
         fun `GIVEN no saved document WHEN syncTokens THEN nothing is pushed`() = runTest {
