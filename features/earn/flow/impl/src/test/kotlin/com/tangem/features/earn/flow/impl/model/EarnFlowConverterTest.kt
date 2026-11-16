@@ -16,16 +16,21 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.features.earn.api.ui.EarnRowUM
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnLegal
+import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnFlowAction
 import com.tangem.features.earn.product.api.session.EarnFlowExit
@@ -39,12 +44,15 @@ import io.mockk.mockk
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.datetime.Instant
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
+import java.util.Locale
 import com.tangem.core.ui.R as CoreUiR
 
 internal class EarnFlowConverterTest {
@@ -354,6 +362,19 @@ internal class EarnFlowConverterTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Confirm {
 
+        private var previousLocale: Locale = Locale.getDefault()
+
+        @BeforeEach
+        fun pinLocale() {
+            previousLocale = Locale.getDefault()
+            Locale.setDefault(Locale.US)
+        }
+
+        @AfterEach
+        fun restoreLocale() {
+            Locale.setDefault(previousLocale)
+        }
+
         @Test
         fun `GIVEN executing WHEN confirm THEN primary is loading`() {
             // Act
@@ -430,6 +451,61 @@ internal class EarnFlowConverterTest {
             assertThat(actual.tangemIconUM).isNull()
         }
 
+        @ParameterizedTest
+        @MethodSource("provideEarningsModels")
+        fun `GIVEN yearly fiat earnings row WHEN confirm THEN approximate amount per year in the app currency`(
+            model: EarningsModel,
+        ) {
+            // Arrange
+            val plan = TestPlan(
+                rows = listOf(EarnRow(label = EARNINGS_LABEL, value = EarnValue.YearlyFiatEarnings(model.earnings))),
+            )
+
+            // Act
+            val actual = confirm(plan = plan).rows
+
+            // Assert
+            val expected = EarnRowUM(
+                label = EARNINGS_LABEL,
+                value = combinedReference(
+                    stringReference("~"),
+                    resourceReference(R.string.for_you_earn_per_year, wrappedList(model.expected)),
+                ),
+                onInfoClick = null,
+                onValueClick = null,
+            )
+            assertThat(actual).containsExactly(expected)
+        }
+
+        private fun provideEarningsModels() = listOf(
+            EarningsModel(earnings = BigDecimal("37.40"), expected = "$37"),
+            EarningsModel(earnings = BigDecimal("0.47"), expected = "$0.47"),
+        )
+
+        @Test
+        fun `GIVEN yearly fiat earnings row and no app currency WHEN confirm THEN the earnings row waits`() {
+            // Arrange
+            val textRow = EarnRow(label = stringReference("APY"), value = EarnValue.Text(stringReference("5.5%")))
+            val plan = TestPlan(
+                rows = listOf(
+                    textRow,
+                    EarnRow(label = EARNINGS_LABEL, value = EarnValue.YearlyFiatEarnings(BigDecimal("37.40"))),
+                ),
+            )
+
+            // Act
+            val actual = confirm(plan = plan, appCurrency = null).rows
+
+            // Assert
+            val expected = EarnRowUM(
+                label = stringReference("APY"),
+                value = stringReference("5.5%"),
+                onInfoClick = null,
+                onValueClick = null,
+            )
+            assertThat(actual).containsExactly(expected)
+        }
+
         @Test
         fun `GIVEN product with legal links WHEN confirm THEN legal opens each document`() {
             // Arrange
@@ -462,12 +538,13 @@ internal class EarnFlowConverterTest {
             product: EarnFlowProduct = testFlowProduct,
             walletIcon: Int? = null,
             onLegalClick: (String) -> Unit = {},
+            appCurrency: AppCurrency? = AppCurrency.Default,
         ) = converter.confirm(
             action = action,
             product = product,
             plan = plan,
             status = status,
-            appCurrency = AppCurrency.Default,
+            appCurrency = appCurrency,
             signing = signing,
             isFeeReady = true,
             isPreparing = false,
@@ -476,6 +553,8 @@ internal class EarnFlowConverterTest {
             callbacks = EarnConfirmCallbacks(onInfoClick = {}, onConfirm = {}, onLegalClick = onLegalClick),
         )
     }
+
+    data class EarningsModel(val earnings: BigDecimal, val expected: String)
 
     data class VariantModel(val status: EarnTxStatus, val expected: TangemStatusScreen.Variant)
 
@@ -493,6 +572,7 @@ internal class EarnFlowConverterTest {
 private const val TEST_EXPLORER_URL = "https://etherscan.io/tx/0xhash"
 private val PLAN_NOTICE = stringReference("From the plan")
 private val ACTION_NOTICE = stringReference("From the action")
+private val EARNINGS_LABEL = stringReference("Projected earnings")
 
 private fun testHowItWorks() = EarnHowItWorks(
     title = stringReference("How it works"),

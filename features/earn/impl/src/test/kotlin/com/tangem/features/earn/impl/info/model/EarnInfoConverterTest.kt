@@ -781,6 +781,7 @@ internal class EarnInfoConverterTest {
         is EarnValue.Text -> rowValue.text
         is EarnValue.Link -> rowValue.text
         is EarnValue.Amount -> stringReference(cryptoText(rowValue.value))
+        is EarnValue.YearlyFiatEarnings -> stringReference(rowValue.value.toPlainString())
     }
 
     private fun TangemButtonUM.noOpClick() = copy(onClick = NoOp)

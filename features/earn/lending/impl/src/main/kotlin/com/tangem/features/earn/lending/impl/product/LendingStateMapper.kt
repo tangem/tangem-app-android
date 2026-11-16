@@ -14,7 +14,6 @@ import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.features.earn.lending.impl.provider.LendingDepositGate
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
 import com.tangem.features.earn.lending.impl.supplier.LendingAssetState
-import com.tangem.features.earn.product.api.product.DefaultEarnProjection
 import com.tangem.features.earn.product.api.product.EarnActionItem
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnBlockAction
@@ -62,7 +61,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         return EarnProductState.Ready(
             rate = rate,
             description = descriptionOf(symbol),
-            projection = DefaultEarnProjection(netRate = rate.fraction * (BigDecimal.ONE - provider.performanceFee)),
+            projection = provider.projectionOf(rate.fraction),
             benefits = BENEFITS,
             details = details,
             limits = EarnLimits(minDeposit = minDeposit ?: BigDecimal.ZERO, remainingCap = null),
