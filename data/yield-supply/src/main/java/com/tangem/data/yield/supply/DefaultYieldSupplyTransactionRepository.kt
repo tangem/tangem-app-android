@@ -307,22 +307,27 @@ internal class DefaultYieldSupplyTransactionRepository(
     ): TransactionData.Uncompiled = withContext(dispatchers.io) {
         runSuspendCatching {
             val walletManager = getWalletManager(userWalletId, network)
-            val zeroAmount = Amount(value = BigDecimal.ZERO, blockchain = walletManager.wallet.blockchain)
+            val blockchain = walletManager.wallet.blockchain
             val moduleCallData = when (preparation) {
-                YieldModulePreparation.Deploy -> return@runSuspendCatching createDeployTransaction(
+                YieldModulePreparation.Deploy -> return@runSuspendCatching createFactoryTransaction(
                     walletManager = walletManager,
                     cryptoCurrency = wrappedToken,
-                    amount = zeroAmount,
-                    maxNetworkFee = zeroAmount,
+                    callData = YieldSupplyContractCallDataProviderFactory.getNativeDeployCallData(
+                        walletAddress = walletManager.wallet.address,
+                        wrappedNativeAddress = wrappedToken.contractAddress,
+                        blockchain = blockchain,
+                    ),
+                    amount = Amount(value = BigDecimal.ZERO, blockchain = blockchain),
                 )
-                YieldModulePreparation.InitToken -> YieldSupplyContractCallDataProviderFactory.getInitTokenCallData(
-                    tokenContractAddress = wrappedToken.contractAddress,
-                    maxNetworkFee = zeroAmount,
-                )
+                YieldModulePreparation.InitToken ->
+                    YieldSupplyContractCallDataProviderFactory.getNativeInitTokenCallData(
+                        wrappedNativeAddress = wrappedToken.contractAddress,
+                        blockchain = blockchain,
+                    )
                 YieldModulePreparation.ReactivateToken ->
-                    YieldSupplyContractCallDataProviderFactory.getReactivateTokenCallData(
-                        tokenContractAddress = wrappedToken.contractAddress,
-                        maxNetworkFee = zeroAmount,
+                    YieldSupplyContractCallDataProviderFactory.getNativeReactivateTokenCallData(
+                        wrappedNativeAddress = wrappedToken.contractAddress,
+                        blockchain = blockchain,
                     )
             }
             createNativeTransaction(
@@ -573,7 +578,20 @@ internal class DefaultYieldSupplyTransactionRepository(
             walletAddress = walletManager.wallet.address,
             maxNetworkFee = maxNetworkFee,
         )
+        return createFactoryTransaction(
+            walletManager = walletManager,
+            cryptoCurrency = cryptoCurrency,
+            callData = callData,
+            amount = amount,
+        )
+    }
 
+    private fun createFactoryTransaction(
+        walletManager: WalletManager,
+        cryptoCurrency: CryptoCurrency.Token,
+        callData: SmartContractCallData,
+        amount: Amount,
+    ): TransactionData.Uncompiled {
         val factoryContractAddress = walletManager.getYieldSupplyContractAddresses()?.factoryContractAddress
             ?: error("Factory contract address is null")
 
