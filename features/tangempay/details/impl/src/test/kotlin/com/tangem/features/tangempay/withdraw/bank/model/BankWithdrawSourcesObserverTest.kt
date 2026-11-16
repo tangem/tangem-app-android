@@ -59,6 +59,7 @@ internal class BankWithdrawSourcesObserverTest {
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
         moneyAccountStatusSupplier = moneyAccountStatusSupplier,
         speiAvailability = speiAvailability,
+        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     )
 
     private val usdcPolygon = paymentToken()
@@ -266,10 +267,24 @@ internal class BankWithdrawSourcesObserverTest {
                         fiatBalance = BigDecimal("2325.55"),
                     ),
                 ),
-                isLimitedPerRail = true,
             )
             assertThat(actual).containsExactly(expected)
         }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN active account WHEN observed THEN the rail limits apply only with MXN on`(isMxnEnabled: Boolean) =
+            runTest {
+                // Arrange
+                every { moneyAccountFeatureToggles.isMxnEnabled } returns isMxnEnabled
+                emitMoneyStatus(activeMoneyAccount(token = usdcPolygon, balance = moneyAccountBalance()))
+
+                // Act
+                val actual = observer.observe(account, offrampOptions()).toList()
+
+                // Assert
+                assertThat(actual.single()?.isLimitedPerRail).isEqualTo(isMxnEnabled)
+            }
 
         @ParameterizedTest
         @ValueSource(booleans = [true, false])

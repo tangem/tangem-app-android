@@ -10,6 +10,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesLoader
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
@@ -37,6 +39,7 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
     private val getOnrampFeesUseCase: GetOnrampFeesUseCase,
     private val clipboardManager: ClipboardManager,
     private val shareManager: ShareManager,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankTransferOnrampDetailsComponent.Params>()
@@ -96,10 +99,14 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
             is FeeSource.Catalogue -> selected.copy(
                 dailyDepositLimit = dailyDepositLimitConverter.convert(credentials),
             )
-            FeeSource.Route -> selected.copy(
-                fees = TangemPayRouteFeeUMConverter.convert(credentials),
-                minimumDeposit = TangemPayMinimumDepositUMConverter.convert(credentials),
-            )
+            FeeSource.Route -> {
+                val isMxnEnabled = moneyAccountFeatureToggles.isMxnEnabled
+                selected.copy(
+                    fees = TangemPayRouteFeeUMConverter.convert(credentials),
+                    minimumDeposit = TangemPayMinimumDepositUMConverter.convert(credentials)?.takeIf { isMxnEnabled },
+                    dailyDepositLimit = dailyDepositLimitConverter.convert(credentials)?.takeUnless { isMxnEnabled },
+                )
+            }
         }
     }
 
