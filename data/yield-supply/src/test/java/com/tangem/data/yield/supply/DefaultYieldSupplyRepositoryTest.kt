@@ -10,6 +10,7 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.domain.yield.supply.models.YieldChartWindow
 import com.tangem.grow.datasource.yield.YieldIncentivesApi
 import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.yield.models.YieldMarketsResponse
@@ -308,9 +309,14 @@ internal class DefaultYieldSupplyRepositoryTest {
     @Test
     fun `GIVEN evm token WHEN getTokenChart THEN returns converted chart`() = runTest {
         // Arrange
-        coEvery { yieldSupplyApi.getYieldTokenChart(1, token.contractAddress) } returns ApiResponse.Success(
-            chartResponse(),
-        )
+        coEvery {
+            yieldSupplyApi.getYieldTokenChart(
+                chainId = 1,
+                tokenAddress = token.contractAddress,
+                window = null,
+                bucketSizeDays = null,
+            )
+        } returns ApiResponse.Success(chartResponse())
 
         // Act
         val result = repository.getTokenChart(token)
@@ -318,6 +324,33 @@ internal class DefaultYieldSupplyRepositoryTest {
         // Assert
         assertThat(result.avr).isEqualTo(4.25)
         assertThat(result.y).containsExactly(3.5).inOrder()
+    }
+
+    @Test
+    fun `GIVEN window and bucket size WHEN getTokenChart THEN the request carries them`() = runTest {
+        // Arrange
+        coEvery {
+            yieldSupplyApi.getYieldTokenChart(
+                chainId = 1,
+                tokenAddress = token.contractAddress,
+                window = "LAST_YEAR",
+                bucketSizeDays = 6,
+            )
+        } returns ApiResponse.Success(chartResponse())
+
+        // Act
+        val result = repository.getTokenChart(token, window = YieldChartWindow.LastYear, bucketSizeDays = 6)
+
+        // Assert
+        assertThat(result.y).containsExactly(3.5).inOrder()
+        coVerify(exactly = 1) {
+            yieldSupplyApi.getYieldTokenChart(
+                chainId = 1,
+                tokenAddress = token.contractAddress,
+                window = "LAST_YEAR",
+                bucketSizeDays = 6,
+            )
+        }
     }
 
     @Test
