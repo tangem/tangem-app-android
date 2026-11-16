@@ -12,4 +12,5 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class JointAccountErrorDto(
     @Json(name = "code") val code: String? = null,
+    @Json(name = "errorCode") val errorCode: String? = null,
 )

@@ -147,7 +147,7 @@ internal object StoreDatasourceModule {
             RetrofitApiSpec(
                 apiConfigId = TangemGatewayApiConfig.TANGEM_TECH_ID,
                 shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
+                shouldUseSessionAuth = true,
             ),
         )
     }

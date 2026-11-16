@@ -30,16 +30,20 @@ internal object JointHistoryPoller {
 
     private val POLL_INTERVAL = 10.seconds
 
+    @Suppress("LongParameterList")
     fun launchIn(
         scope: CoroutineScope,
         currency: CryptoCurrency,
         isResumed: Flow<Boolean>,
         hasLoadedMorePages: Flow<Boolean>,
+        isWalletLinked: Flow<Boolean>,
         reload: () -> Unit,
     ) {
         if (!currency.isJoint) return
 
-        combine(isResumed, hasLoadedMorePages) { resumed, hasMorePages -> resumed && !hasMorePages }
+        combine(isResumed, hasLoadedMorePages, isWalletLinked) { resumed, hasMorePages, isLinked ->
+            resumed && !hasMorePages && isLinked
+        }
             .distinctUntilChanged()
             .flatMapLatest { isPolling -> if (isPolling) ticks() else emptyFlow() }
             .onEach { reload() }
