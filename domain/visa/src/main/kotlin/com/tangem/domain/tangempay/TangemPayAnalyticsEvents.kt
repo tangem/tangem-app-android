@@ -3,7 +3,12 @@ package com.tangem.domain.tangempay
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.domain.models.account.TangemPayTariffPlan
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.visa.error.VisaApiError
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 sealed class TangemPayAnalyticsEvents(
     categoryName: String,
@@ -11,9 +16,10 @@ sealed class TangemPayAnalyticsEvents(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = categoryName, event = event, params = params) {
 
-    class ActivationScreenOpened : TangemPayAnalyticsEvents(
+    class ActivationScreenOpened(entryChannel: EntryChannel?) : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Activation Screen Opened",
+        params = entryParams(entryChannel) + ("first_product_listed" to Product.CARD.value),
     ), AppsFlyerIncludedEvent
 
     class ShortForHwActivationScreenOpened : TangemPayAnalyticsEvents(
@@ -28,16 +34,19 @@ sealed class TangemPayAnalyticsEvents(
     class ViewTermsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Button - Visa View Terms",
+        params = mapOf("link" to "terms"),
     )
 
-    class GetCardClicked : TangemPayAnalyticsEvents(
+    class GetCardClicked(entryChannel: EntryChannel?) : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Button - Visa Get Card",
+        params = entryParams(entryChannel),
     ), AppsFlyerIncludedEvent
 
     class KycFlowOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Flow Opened",
+        params = entryParams(entryChannel = null),
     ), AppsFlyerIncludedEvent
 
     class IssuingBannerDisplayed : TangemPayAnalyticsEvents(
@@ -48,11 +57,13 @@ sealed class TangemPayAnalyticsEvents(
     class PermanentBannerShowed : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Banner Showed",
+        params = entryParams(EntryChannel.BANNER),
     )
 
     class PermanentButtonShowed : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Button Showed",
+        params = entryParams(EntryChannel.DETAILS),
     )
 
     class MainScreenOpened : TangemPayAnalyticsEvents(
@@ -85,9 +96,10 @@ sealed class TangemPayAnalyticsEvents(
         event = "Button - Card Settings",
     )
 
-    class TermsAndLimitsClicked : TangemPayAnalyticsEvents(
+    class TermsAndLimitsClicked(product: Product) : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Terms And Limits",
+        params = mapOf("product" to product.value),
     )
 
     class FreezeCardClicked : TangemPayAnalyticsEvents(
@@ -190,10 +202,11 @@ sealed class TangemPayAnalyticsEvents(
         event = "Button - Go To Support On Beta Banner",
     )
 
-    class TransactionInListClicked(type: String, status: String) : TangemPayAnalyticsEvents(
+    class TransactionInListClicked(product: Product, type: String, status: String) : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Clicked On Transaction In List",
         params = mapOf(
+            "product" to product.value,
             "type" to type,
             "status" to status,
         ),
@@ -226,6 +239,80 @@ sealed class TangemPayAnalyticsEvents(
     class KycCancelled : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Canceled",
+    )
+
+    class VerificationResultReceived(availableProducts: Set<TangemPayProduct>) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Verification Result Received",
+        params = buildMap {
+            put("products_available", ProductSet.of(availableProducts)?.value ?: "none")
+            put("card_available", (TangemPayProduct.PAYMENT_ACCOUNT in availableProducts).toLowercaseYesNo())
+            put("account_available", (TangemPayProduct.BANKING_ACCOUNT in availableProducts).toLowercaseYesNo())
+            putAll(entryParams(entryChannel = null))
+        },
+    )
+
+    class EligibilityRetryScreenOpened(stage: EligibilityStage) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Eligibility Retry Screen Opened",
+        params = mapOf("stage" to stage.value),
+    )
+
+    class WalletSignatureRequested(walletType: WalletType) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Wallet Signature Requested",
+        params = mapOf("wallet_type" to walletType.value),
+    )
+
+    class WalletSignatureFinished(result: SignatureResult, walletType: WalletType) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Wallet Signature Finished",
+        params = mapOf("result" to result.value, "wallet_type" to walletType.value),
+    )
+
+    class OnboardingOrderCreated(
+        availableProducts: Set<TangemPayProduct>,
+        plan: TangemPayTariffPlan?,
+    ) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Onboarding Order Created",
+        params = buildMap {
+            ProductSet.of(availableProducts)?.let { put("products", it.value) }
+            plan?.let { put("plan", it.toPlanValue()) }
+            put("order_type", "onboarding")
+            put("is_existing_holder", "no")
+            putAll(entryParams(entryChannel = null))
+        },
+    ), AppsFlyerIncludedEvent
+
+    class ProductActivationFinished(
+        product: Product,
+        result: ActivationResult,
+        failureReason: ActivationFailureReason?,
+        sinceOrder: Duration,
+        plan: TangemPayTariffPlan?,
+    ) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Product Activation Finished",
+        params = buildMap {
+            put("product", product.value)
+            put("result", result.value)
+            failureReason?.let { put("failure_reason", it.value) }
+            put("minutes_since_order", sinceOrder.toMinutesBand())
+            plan?.let { put("plan", it.toPlanValue()) }
+        },
+    )
+
+    class OnboardingOrderFailed(
+        error: VisaApiError,
+        availableProducts: Set<TangemPayProduct>,
+    ) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Onboarding Order Failed",
+        params = buildMap {
+            put("error_code", error.toOrderErrorCode())
+            ProductSet.of(availableProducts)?.let { put("products", it.value) }
+        },
     )
 
     class ReplaceCardClicked : TangemPayAnalyticsEvents(
@@ -277,11 +364,13 @@ sealed class TangemPayAnalyticsEvents(
     class MainVisaPermanentBannerClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Banner Clicked",
+        params = entryParams(EntryChannel.BANNER),
     )
 
     class DetailsVisaPermanentButtonClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Button Clicked",
+        params = entryParams(EntryChannel.DETAILS),
     )
 
     class CobrandOnboardingNewHotWallet : TangemPayAnalyticsEvents(
@@ -383,10 +472,15 @@ sealed class TangemPayAnalyticsEvents(
     object Tiers {
 
         private const val CATEGORY = "Visa Tiers"
+        private val PAYMENT_ACCOUNT_SOURCE = mapOf("source" to "payment_account")
 
-        class TierSelectionScreenShowed : TangemPayAnalyticsEvents(
+        class TierSelectionScreenShowed(products: ProductSet?) : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Tier Selection Screen Showed",
+            params = buildMap {
+                products?.let { put("products", it.value) }
+                put("consent_line_shown", "no")
+            },
         )
 
         class TiersSwiped : TangemPayAnalyticsEvents(
@@ -409,10 +503,18 @@ sealed class TangemPayAnalyticsEvents(
             event = "Plans Comparison Popup Closed",
         )
 
-        data class PlanSelectedClick(val tierId: String) : TangemPayAnalyticsEvents(
+        data class PlanSelectedClick(
+            val tierId: String,
+            val products: ProductSet?,
+            val context: PlanContext,
+        ) : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Plan Selected Click",
-            params = mapOf("Plan" to tierId),
+            params = buildMap {
+                put("Plan", tierId)
+                products?.let { put("products", it.value) }
+                put("context", context.value)
+            },
         )
 
         class TopUpBannerForPlusShowed : TangemPayAnalyticsEvents(
@@ -423,16 +525,19 @@ sealed class TangemPayAnalyticsEvents(
         class CancelPlusMoveToBasicClicked : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Cancel Plus Move To Basic Clicked",
+            params = mapOf("stage" to "before_deposit"),
         )
 
         class CurrentPlanClicked : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Current Plan Clicked",
+            params = PAYMENT_ACCOUNT_SOURCE,
         )
 
         class ChangePlanClicked : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Change Plan Clicked",
+            params = PAYMENT_ACCOUNT_SOURCE,
         )
 
         data class PlanChangeConfirmationScreenShowed(val tierId: String) : TangemPayAnalyticsEvents(
@@ -470,6 +575,11 @@ sealed class TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Stay On Plus Popup Clicked",
         )
+
+        enum class PlanContext(val value: String) {
+            ONBOARDING("onboarding"),
+            CHANGE_PLAN("change_plan"),
+        }
     }
 
     object Plastic {
@@ -687,14 +797,16 @@ sealed class TangemPayAnalyticsEvents(
         )
 
         data class EligibilityCheckResult(
-            val isEligible: Boolean,
+            val availableProducts: Set<TangemPayProduct>,
             val country: String,
             val state: String?,
         ) : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "VA Eligibility Check Result",
             params = buildMap {
-                put("result", if (isEligible) "eligible" else "not_eligible")
+                put("result", if (availableProducts.isNotEmpty()) "eligible" else "not_eligible")
+                put("card_eligible", (TangemPayProduct.PAYMENT_ACCOUNT in availableProducts).toLowercaseYesNo())
+                put("account_eligible", (TangemPayProduct.BANKING_ACCOUNT in availableProducts).toLowercaseYesNo())
                 put("country", country)
                 if (state != null) put("state", state)
             },
@@ -948,14 +1060,104 @@ sealed class TangemPayAnalyticsEvents(
             val railName = when (rail) {
                 BankRail.ACH -> RAIL_ACH
                 BankRail.WIRE -> RAIL_WIRE
-                null -> return emptyMap()
+                BankRail.SPEI, null -> return emptyMap()
             }
 
             return mapOf(AnalyticsParam.Key.TYPE to railName)
         }
+    }
+
+    enum class Product(val value: String) {
+        CARD("card"),
+        ACCOUNT("account"),
+    }
+
+    enum class ProductSet(val value: String) {
+        CARD_AND_ACCOUNT("card+account"),
+        CARD("card"),
+        ACCOUNT("account"),
+        ;
+
+        companion object {
+            fun of(products: Set<TangemPayProduct>): ProductSet? {
+                val hasCard = TangemPayProduct.PAYMENT_ACCOUNT in products
+                val hasAccount = TangemPayProduct.BANKING_ACCOUNT in products
+                return when {
+                    hasCard && hasAccount -> CARD_AND_ACCOUNT
+                    hasCard -> CARD
+                    hasAccount -> ACCOUNT
+                    else -> null
+                }
+            }
+        }
+    }
+
+    enum class EntryChannel(val value: String) {
+        BANNER("banner"),
+        DETAILS("details"),
+        DEEPLINK("deeplink"),
+    }
+
+    enum class EligibilityStage(val value: String) {
+        EARLY_FILTER("early_filter"),
+        AFTER_VERIFICATION("after_verification"),
+    }
+
+    enum class WalletType(val value: String) {
+        CARD("card"),
+        HOT("hot"),
+    }
+
+    enum class SignatureResult(val value: String) {
+        SIGNED("signed"),
+        CANCELLED("cancelled"),
+        FAILED("failed"),
+    }
+
+    enum class ActivationResult(val value: String) {
+        ACTIVE("active"),
+        FAILED("failed"),
+        TIMED_OUT("timed_out"),
+        POLLING_STOPPED("polling_stopped"),
+    }
+
+    enum class ActivationFailureReason(val value: String) {
+        ISSUER_REJECTED("issuer_rejected"),
+        PLUS_DEPOSIT_TIMEOUT("plus_deposit_timeout"),
+        OTHER("other"),
     }
 }
 
 private const val MISSING_WIRE_TYPE = "missing"
 
 private fun Boolean.toYesNo(): String = if (this) "Yes" else "No"
+
+private fun Boolean.toLowercaseYesNo(): String = if (this) "yes" else "no"
+
+private fun entryParams(entryChannel: TangemPayAnalyticsEvents.EntryChannel?): Map<String, String> = buildMap {
+    put("entry_intent", "generic")
+    entryChannel?.let { put("entry_channel", it.value) }
+}
+
+private fun TangemPayTariffPlan.toPlanValue(): String = if (isBasicTier) "basic" else "plus"
+
+private fun Duration.toMinutesBand(): String = when {
+    this < 1.minutes -> "<1"
+    this < 5.minutes -> "1-5"
+    this <= 15.minutes -> "5-15"
+    else -> ">15"
+}
+
+private fun VisaApiError.toOrderErrorCode(): String = when (this) {
+    VisaApiError.CardIssueOfferNotAvailable,
+    VisaApiError.CustomerIsBlocked,
+    -> "not_eligible"
+    VisaApiError.CardIssueActiveOrderExists,
+    VisaApiError.AccountIssueActiveOrderExists,
+    -> "active_order_exists"
+    VisaApiError.ProductInstanceIsAlreadyActivated -> "already_onboarded"
+    VisaApiError.ServerUnavailable,
+    VisaApiError.UnknownWithoutCode,
+    -> "network"
+    else -> "other"
+}

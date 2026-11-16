@@ -9,12 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -238,8 +233,8 @@ private fun MoneyAccountSection() {
             text = formattedText(
                 formatResId = R.string.tangempay_unified_onboarding_fees_title,
                 arg = stringResourceSafe(R.string.tangempay_unified_onboarding_fees_subtitle),
-                argColor = primaryColor,
-                textColor = secondaryColor,
+                argColor = secondaryColor,
+                textColor = primaryColor,
             ),
         )
         FeatureCardsRow(
@@ -247,11 +242,8 @@ private fun MoneyAccountSection() {
                 FeatureCard(
                     modifier = modifier,
                     caption = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_caption),
-                    text = formattedText(
-                        formatResId = R.string.tangempay_unified_onboarding_money_account_title,
-                        arg = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_subtitle),
-                        argColor = primaryColor,
-                        textColor = primaryColor,
+                    text = AnnotatedString(
+                        stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_title_v2),
                     ),
                 )
             },

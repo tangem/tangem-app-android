@@ -40,7 +40,8 @@ class TronGaslessFeeResolver(
      * preference is gated by [TransactionFeatureToggles]; with both off, TRX is weighed only when the gasless
      * quote fails or the token cannot cover it. A refused account
      * activation is returned as is: an account that must be activated first cannot pay in TRX either,
-     * so falling back would replace an actionable message with an unpayable fee.
+     * so falling back would replace an actionable message with an unpayable fee. A refused allowance is
+     * returned as is unless TRX can pay.
      *
      * [onNativeFeePreferred] fires when TRX is returned in place of an offered or failed gasless quote and
      * the balance covers it, so the caller can keep paying in TRX instead of re-quoting gasless.
@@ -80,9 +81,12 @@ class TronGaslessFeeResolver(
         val gaslessFee = getTronGaslessFeeUseCase(userWalletId, transactionData, sentToken).getOrElse { error ->
             if (error.isTronActivationRefusal()) return error.left()
             TangemLogger.i("Tron gasless quote unavailable ($error), falling back to the native fee")
-            return (eagerNativeFee ?: loadNativeFee()).onRight { nativeFee ->
-                if (isPayableInNative(nativeCurrencyStatus, nativeFee)) onNativeFeePreferred()
-            }
+            return fallBackToNativeFee(
+                error = error,
+                nativeFee = eagerNativeFee ?: loadNativeFee(),
+                nativeCurrencyStatus = nativeCurrencyStatus,
+                onNativeFeePreferred = onNativeFeePreferred,
+            )
         }
 
         val cheaperNativeFee = eagerNativeFee?.getOrNull()?.takeIf { nativeFee ->
@@ -141,6 +145,19 @@ class TronGaslessFeeResolver(
 
     private fun isNativeFeeAutoPicked(): Boolean =
         transactionFeatureToggles.isTronClientEnergyEnabled || transactionFeatureToggles.isTronLowerFeeTypeEnabled
+
+    private fun fallBackToNativeFee(
+        error: GetFeeError,
+        nativeFee: Either<GetFeeError, TransactionFeeExtended>,
+        nativeCurrencyStatus: CryptoCurrencyStatus,
+        onNativeFeePreferred: () -> Unit,
+    ): Either<GetFeeError, TransactionFeeExtended> {
+        val isNativePayable = nativeFee.getOrNull()?.let { isPayableInNative(nativeCurrencyStatus, it) } == true
+        // An unpayable TRX fee would hide that the amount does not fit next to the compensation.
+        if (error is GetFeeError.GaslessError.TronAllowanceTooHigh && !isNativePayable) return error.left()
+        if (isNativePayable) onNativeFeePreferred()
+        return nativeFee
+    }
 
     private fun isPayableInNative(nativeStatus: CryptoCurrencyStatus, nativeFee: TransactionFeeExtended): Boolean {
         val feeValue = nativeFee.feeValue() ?: return false

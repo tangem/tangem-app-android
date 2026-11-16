@@ -153,7 +153,7 @@ internal class ExchangeIntentModelTest {
         }
 
     @Test
-    fun `GIVEN known agent WHEN model created THEN offer is made in its verified origin`() = runTest {
+    fun `GIVEN known agent WHEN model created THEN offer is made in its name`() = runTest {
         // Act
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -162,7 +162,7 @@ internal class ExchangeIntentModelTest {
         assertThat(model.shownOffer().title).isEqualTo(
             resourceReference(
                 R.string.mcp_swap_intent_offer_title,
-                wrappedList(stringReference("mcp.claude.com"), "42.00\u00a0USDT", "POL"),
+                wrappedList(stringReference("Claude"), "42.00\u00a0USDT", "POL"),
             ),
         )
         model.onDestroy()

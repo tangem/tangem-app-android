@@ -17,7 +17,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * The owner is derived from this key and the vault's `cold_owner` is signed with it, so the two callers must read
+ * The owner is derived from this key and the vault's `owner` is signed with it, so the two callers must read
  * the very same one — see [solanaSeedKey].
  */
 internal class SolanaSeedKeyTest {

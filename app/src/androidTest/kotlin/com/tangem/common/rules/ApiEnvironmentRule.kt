@@ -9,6 +9,7 @@ import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.grow.datasource.config.StakeKit
 
 import com.tangem.grow.datasource.config.Express
+import com.tangem.lib.auth.api.config.Auth
 
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.common.annotations.ApiEnv
@@ -139,6 +140,7 @@ class ApiEnvironmentRule : TestRule {
             TangemPay.Bff.ID,
             StakeKit.ID,
             News.ID,
+            Auth.ID,
         )
     }
 }

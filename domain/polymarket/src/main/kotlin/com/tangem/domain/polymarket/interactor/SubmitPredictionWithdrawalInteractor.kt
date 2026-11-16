@@ -8,6 +8,7 @@ import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
+import com.tangem.domain.polymarket.PolymarketDepositWalletLock
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
@@ -49,6 +50,7 @@ sealed interface PredictionWithdrawalFailure {
     data class PersistenceFailed(val cause: Throwable) : PredictionWithdrawalFailure
 }
 
+@Suppress("LongParameterList")
 class SubmitPredictionWithdrawalInteractor(
     private val bridgeRepository: PolymarketBridgeRepository,
     private val withdrawRepository: PolymarketWithdrawRepository,
@@ -56,6 +58,7 @@ class SubmitPredictionWithdrawalInteractor(
     private val signer: PolymarketTypedDataSigner,
     private val store: PredictionWithdrawalStore,
     private val codec: PredictionTransferCallCodec,
+    private val depositWalletLock: PolymarketDepositWalletLock,
 ) {
 
     /**
@@ -105,6 +108,12 @@ class SubmitPredictionWithdrawalInteractor(
      */
     suspend fun confirm(
         prepared: PreparedPredictionWithdrawal,
+    ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = depositWalletLock.withLock(
+        prepared.userWalletId,
+    ) { confirmLocked(prepared) }
+
+    private suspend fun confirmLocked(
+        prepared: PreparedPredictionWithdrawal,
     ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = either {
         ensure(!PolymarketRelayerDeadline.isExpired(prepared.deadline)) { PredictionWithdrawalFailure.Expired }
 
@@ -138,10 +147,12 @@ class SubmitPredictionWithdrawalInteractor(
     suspend fun resend(
         userWalletId: UserWalletId,
         walletId: String,
-    ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = either {
-        val record = readRecord(userWalletId) ?: raise(PredictionWithdrawalFailure.NothingToResend)
+    ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = depositWalletLock.withLock(userWalletId) {
+        either {
+            val record = readRecord(userWalletId) ?: raise(PredictionWithdrawalFailure.NothingToResend)
 
-        send(userWalletId = userWalletId, walletId = walletId, batch = record.batch)
+            send(userWalletId = userWalletId, walletId = walletId, batch = record.batch)
+        }
     }
 
     private suspend fun Raise<PredictionWithdrawalFailure>.send(

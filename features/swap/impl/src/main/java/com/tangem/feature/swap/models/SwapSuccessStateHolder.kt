@@ -9,6 +9,7 @@ data class SwapSuccessStateHolder(
     val timestamp: Long,
     val txUrl: String,
     val fee: TextReference?,
+    val isFeeSponsored: Boolean = false,
     val rate: TextReference,
     val shouldShowStatusButton: Boolean,
     val isTransferMode: Boolean,

@@ -50,6 +50,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -101,6 +102,8 @@ internal class WalletBackupModelTest {
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
         coEvery { cloudBackupRepository.isBackedUp(any()) } returns false
         coEvery { cloudBackupRepository.signOut() } just Runs
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
+        coEvery { cloudBackupRepository.hasAccountOf(any()) } returns false
         pinnedWalletId = null
         coEvery { cloudBackupRepository.withAccountOf<Any?>(any(), any()) } coAnswers {
             pinnedWalletId = firstArg()
@@ -575,6 +578,7 @@ internal class WalletBackupModelTest {
         // Arrange
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
         coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+        coEvery { cloudBackupRepository.hasAccountOf("011") } returns true
         coEvery { cloudBackupRepository.findBackups() } returns emptyList<CloudBackupInfo>().right()
 
         // Act
@@ -588,11 +592,12 @@ internal class WalletBackupModelTest {
     }
 
     @Test
-    fun `GIVEN backup file not found WHEN create clicked THEN the account is asked again before the creation`() =
+    fun `GIVEN backup file not found in the wallet's account WHEN create clicked THEN no other account is offered`() =
         runTest {
             // Arrange
             every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
             coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+            coEvery { cloudBackupRepository.hasAccountOf("011") } returns true
             coEvery { cloudBackupRepository.findBackups() } returns emptyList<CloudBackupInfo>().right()
             val sentMessages = mutableListOf<UiMessage>()
             every { uiMessageSender.send(capture(sentMessages)) } just Runs
@@ -601,11 +606,34 @@ internal class WalletBackupModelTest {
 
             // Act
             model.uiState.value.onGoogleDriveClick()
-            val sheet = sentMessages.filterIsInstance<BottomSheetMessage>().last()
-            sheet.messageBottomSheetUM.elements
-                .filterIsInstance<MessageBottomSheetUM.Button>()
-                .first { it.text == resourceReference(R.string.hw_cloud_backup_not_found_create) }
-                .onClick?.invoke(sheet.messageBottomSheetUM.closeScope)
+            clickSheetButton(sentMessages, R.string.hw_cloud_backup_not_found_create)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { cloudBackupRepository.signOut() }
+            verify(exactly = 1) { router.push(route = AppRoute.CreateCloudBackup(walletId), onComplete = any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN legacy backup picked AND file not found WHEN create clicked THEN the account is asked before creation`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+            coEvery { cloudBackupRepository.findBackups(any(), any()) } returns emptyList<CloudBackupInfo>().right()
+            val sentMessages = mutableListOf<UiMessage>()
+            every { uiMessageSender.send(capture(sentMessages)) } just Runs
+            val model = createModel(this)
+            advanceUntilIdle()
+            model.uiState.value.onGoogleDriveClick()
+            clickSheetButton(sentMessages, R.string.hw_cloud_backup_retry)
+            advanceUntilIdle()
+            clearMocks(cloudBackupRepository, answers = false, recordedCalls = true, childMocks = false)
+
+            // Act
+            model.uiState.value.onGoogleDriveClick()
+            clickSheetButton(sentMessages, R.string.hw_cloud_backup_not_found_create)
             advanceUntilIdle()
 
             // Assert
@@ -615,6 +643,271 @@ internal class WalletBackupModelTest {
             }
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN legacy backup WHEN retry picks an account without the file THEN FileNotFound required`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+        coEvery { cloudBackupRepository.findBackups(any(), any()) } returns emptyList<CloudBackupInfo>().right()
+        val sentMessages = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(sentMessages)) } just Runs
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onGoogleDriveClick()
+        clickSheetButton(sentMessages, R.string.hw_cloud_backup_retry)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.googleDriveStatus)
+            .isEqualTo(BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.FileNotFound))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN legacy backup without a remembered account AND file not found WHEN model created THEN NoAccess required`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+            coEvery { cloudBackupRepository.findBackups() } returns emptyList<CloudBackupInfo>().right()
+
+            // Act
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.googleDriveStatus)
+                .isEqualTo(BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.NoAccess))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a remembered account AND no access WHEN retry clicked THEN the wallet's account is used without picker`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+            coEvery { cloudBackupRepository.hasAccountOf("011") } returns true
+            coEvery { cloudBackupRepository.findBackups(interactive = false) } returns
+                CloudBackupError.AuthRequired.left()
+            var listedInteractivelyFor: String? = null
+            coEvery { cloudBackupRepository.findBackups(interactive = true) } coAnswers {
+                listedInteractivelyFor = pinnedWalletId
+                listOf(backup(walletId = "011")).right()
+            }
+            val sentMessages = mutableListOf<UiMessage>()
+            every { uiMessageSender.send(capture(sentMessages)) } just Runs
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onGoogleDriveClick()
+            clickSheetButton(sentMessages, R.string.hw_cloud_backup_retry)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(listedInteractivelyFor).isEqualTo("011")
+            coVerify(exactly = 0) { cloudBackupRepository.signOut() }
+            assertThat(model.uiState.value.googleDriveStatus).isEqualTo(BackupStatus.Done)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the remembered account is unavailable WHEN retry clicked THEN another account is picked`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+        coEvery { cloudBackupRepository.hasAccountOf("011") } returns true
+        coEvery { cloudBackupRepository.findBackups(interactive = false) } returns CloudBackupError.AuthRequired.left()
+        coEvery { cloudBackupRepository.findBackups(interactive = true) } coAnswers {
+            if (pinnedWalletId == "011") {
+                CloudBackupError.AuthRequired.left()
+            } else {
+                listOf(backup(walletId = "011")).right()
+            }
+        }
+        val sentMessages = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(sentMessages)) } just Runs
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onGoogleDriveClick()
+        clickSheetButton(sentMessages, R.string.hw_cloud_backup_retry)
+        advanceUntilIdle()
+
+        // Assert
+        coVerifyOrder {
+            cloudBackupRepository.signOut()
+            cloudBackupRepository.findBackups(interactive = true)
+            setCloudBackupStateUseCase("011", isBackedUp = true)
+        }
+        assertThat(model.uiState.value.googleDriveStatus).isEqualTo(BackupStatus.Done)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the remembered account is unavailable AND picked one has no file WHEN retry clicked THEN wallet rebound`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+            coEvery { cloudBackupRepository.hasAccountOf("011") } returns true
+            coEvery { cloudBackupRepository.findBackups(interactive = false) } returns
+                CloudBackupError.AuthRequired.left()
+            coEvery { cloudBackupRepository.findBackups(interactive = true) } coAnswers {
+                if (pinnedWalletId == "011") {
+                    CloudBackupError.AuthRequired.left()
+                } else {
+                    emptyList<CloudBackupInfo>().right()
+                }
+            }
+            val sentMessages = mutableListOf<UiMessage>()
+            every { uiMessageSender.send(capture(sentMessages)) } just Runs
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onGoogleDriveClick()
+            clickSheetButton(sentMessages, R.string.hw_cloud_backup_retry)
+            advanceUntilIdle()
+
+            // Assert
+            coVerifyOrder {
+                cloudBackupRepository.signOut()
+                cloudBackupRepository.findBackups(interactive = true)
+                setCloudBackupStateUseCase("011", isBackedUp = true)
+            }
+            assertThat(model.uiState.value.googleDriveStatus)
+                .isEqualTo(BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.FileNotFound))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN legacy backup WHEN retry clicked THEN the account is picked once AND remembered for the wallet`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+            coEvery { cloudBackupRepository.findBackups(interactive = false) } returns
+                emptyList<CloudBackupInfo>().right()
+            var listedInteractivelyFor: String? = "unset"
+            coEvery { cloudBackupRepository.findBackups(interactive = true) } coAnswers {
+                listedInteractivelyFor = pinnedWalletId
+                listOf(backup(walletId = "011")).right()
+            }
+            val sentMessages = mutableListOf<UiMessage>()
+            every { uiMessageSender.send(capture(sentMessages)) } just Runs
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onGoogleDriveClick()
+            clickSheetButton(sentMessages, R.string.hw_cloud_backup_retry)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(listedInteractivelyFor).isNull()
+            coVerifyOrder {
+                cloudBackupRepository.signOut()
+                cloudBackupRepository.findBackups(interactive = true)
+                setCloudBackupStateUseCase("011", isBackedUp = true)
+            }
+            assertThat(model.uiState.value.googleDriveStatus).isEqualTo(BackupStatus.Done)
+            model.onDestroy()
+        }
+
+    @Nested
+    inner class MultipleHotWalletsDisabled {
+
+        @BeforeEach
+        fun disableMultipleHotWallets() {
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+        }
+
+        @Test
+        fun `GIVEN backup without a remembered account AND file not found WHEN model created THEN FileNotFound required`() =
+            runTest {
+                // Arrange
+                coEvery { cloudBackupRepository.findBackups() } returns emptyList<CloudBackupInfo>().right()
+
+                // Act
+                val model = createModel(this)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.googleDriveStatus)
+                    .isEqualTo(BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.FileNotFound))
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a remembered account AND no access WHEN retry clicked THEN the account is picked again`() = runTest {
+            // Arrange
+            coEvery { cloudBackupRepository.hasAccountOf("011") } returns true
+            coEvery { cloudBackupRepository.findBackups(interactive = false) } returns
+                CloudBackupError.AuthRequired.left()
+            var listedInteractivelyFor: String? = "unset"
+            coEvery { cloudBackupRepository.findBackups(interactive = true) } coAnswers {
+                listedInteractivelyFor = pinnedWalletId
+                listOf(backup(walletId = "011")).right()
+            }
+            val sentMessages = mutableListOf<UiMessage>()
+            every { uiMessageSender.send(capture(sentMessages)) } just Runs
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onGoogleDriveClick()
+            clickSheetButton(sentMessages, R.string.hw_cloud_backup_retry)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(listedInteractivelyFor).isNull()
+            coVerifyOrder {
+                cloudBackupRepository.signOut()
+                cloudBackupRepository.findBackups(interactive = true)
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a remembered account AND file not found WHEN create clicked THEN the account is asked again`() =
+            runTest {
+                // Arrange
+                coEvery { cloudBackupRepository.hasAccountOf("011") } returns true
+                coEvery { cloudBackupRepository.findBackups() } returns emptyList<CloudBackupInfo>().right()
+                val sentMessages = mutableListOf<UiMessage>()
+                every { uiMessageSender.send(capture(sentMessages)) } just Runs
+                val model = createModel(this)
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.onGoogleDriveClick()
+                clickSheetButton(sentMessages, R.string.hw_cloud_backup_not_found_create)
+                advanceUntilIdle()
+
+                // Assert
+                coVerifyOrder {
+                    cloudBackupRepository.signOut()
+                    router.push(route = AppRoute.CreateCloudBackup(walletId), onComplete = any())
+                }
+                model.onDestroy()
+            }
+    }
+
+    private fun clickSheetButton(sentMessages: List<UiMessage>, textRes: Int) {
+        val sheet = sentMessages.filterIsInstance<BottomSheetMessage>().last()
+        sheet.messageBottomSheetUM.elements
+            .filterIsInstance<MessageBottomSheetUM.Button>()
+            .first { it.text == resourceReference(textRes) }
+            .onClick?.invoke(sheet.messageBottomSheetUM.closeScope)
+    }
 
     @Test
     fun `GIVEN toggle on WHEN screen resumed THEN first resume is skipped AND the next one refreshes`() = runTest {

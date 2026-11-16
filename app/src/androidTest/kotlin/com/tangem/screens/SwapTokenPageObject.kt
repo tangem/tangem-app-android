@@ -15,7 +15,7 @@ import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
-class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+class SwapTokenPageObject(private val semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SwapTokenPageObject>(semanticsProvider = semanticsProvider) {
 
     val container: KNode = child {
@@ -228,6 +228,11 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasText(getResourceString(R.string.warning_button_refresh))
     }
 
+    val mainButtonWithAnyLabel: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.CONTAINER))
+    }
+
     val swapButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_swap))
@@ -264,6 +269,10 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasTestTag("MAX")
         useUnmergedTree = true
     }
+
+    // The pills render only above an open keyboard; a plain node lookup answers at once, unlike a Kakao check.
+    fun isMaxAmountButtonShown(): Boolean =
+        semanticsProvider.onAllNodes(withTestTag("MAX"), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
 
     // PercentPill testTag is the PredefinedPercentAmount enum name: PERCENT_25 / PERCENT_50 / PERCENT_75 / MAX.
     fun percentButton(id: String): KNode = child {

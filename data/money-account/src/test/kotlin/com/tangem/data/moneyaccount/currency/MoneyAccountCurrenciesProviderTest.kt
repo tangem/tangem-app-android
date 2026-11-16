@@ -148,12 +148,6 @@ internal class MoneyAccountCurrenciesProviderTest {
 
         private fun provideTestModels(): List<MoneyAccountStatusValue.Account> = listOf(
             activeAccount(),
-            MoneyAccountStatusValue.Account.Deactivated(
-                source = StatusSource.ACTUAL,
-                cryptoCurrency = TOKEN,
-                balance = BALANCE,
-                customerId = CUSTOMER_ID,
-            ),
         )
     }
 
@@ -180,11 +174,12 @@ internal class MoneyAccountCurrenciesProviderTest {
         private fun provideTestModels(): List<NoStatusesModel> = listOf(
             NoStatusesModel(value = activeAccount(), network = ETHEREUM_NETWORK),
             NoStatusesModel(value = activeAccount(balance = null), network = NETWORK),
-            NoStatusesModel(value = MoneyAccountStatusValue.NotCreated, network = NETWORK),
+            NoStatusesModel(value = MoneyAccountStatusValue.Empty, network = NETWORK),
             NoStatusesModel(
                 value = MoneyAccountStatusValue.Onboarding.Activating(
                     source = StatusSource.ACTUAL,
                     customerId = CUSTOMER_ID,
+                    step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
                 ),
                 network = NETWORK,
             ),
@@ -215,7 +210,7 @@ internal class MoneyAccountCurrenciesProviderTest {
         private fun provideTestModels(): List<FindCurrencyModel> = listOf(
             FindCurrencyModel(value = activeAccount(), currencyId = TOKEN.id, expected = TOKEN),
             FindCurrencyModel(value = activeAccount(), currencyId = COIN.id, expected = null),
-            FindCurrencyModel(value = MoneyAccountStatusValue.NotCreated, currencyId = TOKEN.id, expected = null),
+            FindCurrencyModel(value = MoneyAccountStatusValue.Empty, currencyId = TOKEN.id, expected = null),
         )
     }
 
@@ -247,7 +242,7 @@ internal class MoneyAccountCurrenciesProviderTest {
         private fun provideTestModels(): List<RefreshModel> = listOf(
             RefreshModel(value = activeAccount(), network = NETWORK, expectedFetches = 1),
             RefreshModel(value = activeAccount(), network = ETHEREUM_NETWORK, expectedFetches = 0),
-            RefreshModel(value = MoneyAccountStatusValue.NotCreated, network = NETWORK, expectedFetches = 0),
+            RefreshModel(value = MoneyAccountStatusValue.Empty, network = NETWORK, expectedFetches = 0),
         )
     }
 
@@ -266,6 +261,7 @@ internal class MoneyAccountCurrenciesProviderTest {
             balance = balance,
             customerId = CUSTOMER_ID,
             productInstanceId = "instance",
+            error = null,
         )
 
     private companion object {

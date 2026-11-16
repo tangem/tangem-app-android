@@ -3,6 +3,8 @@ package com.tangem.data.pay.util
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.pay.TEST_CLABE
+import com.tangem.data.pay.speiBankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
@@ -16,6 +18,8 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullSource
+import org.junit.jupiter.params.provider.ValueSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class BankOfframpOrderRequestConverterTest {
@@ -121,6 +125,48 @@ internal class BankOfframpOrderRequestConverterTest {
 
         // Assert
         assertThat(actual.getOrNull()?.data?.bankAccount?.details?.rail).isEqualTo("ACH")
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = ["MXN", "USD"])
+    fun `GIVEN SPEI recipient with any currency WHEN convertBankAccount THEN MXN, rail, beneficiary and CLABE sent`(
+        currency: String?,
+    ) {
+        // Act
+        val actual = BankOfframpOrderRequestConverter.convertBankAccount(
+            details = speiBankAccountDetails().copy(currency = currency),
+            rail = BankRail.SPEI,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            BankOfframpPlaceOrderRequest.BankAccount(
+                details = BankOfframpPlaceOrderRequest.Details(
+                    currency = "MXN",
+                    rail = "SPEI",
+                    isThirdParty = false,
+                    beneficiary = BankOfframpPlaceOrderRequest.Beneficiary(
+                        type = "INDIVIDUAL",
+                        firstName = "Maria",
+                        lastName = "Lopez",
+                    ),
+                    accountNumber = TEST_CLABE,
+                ),
+            ).right(),
+        )
+    }
+
+    @Test
+    fun `GIVEN SPEI recipient with a wrong CLABE check digit WHEN convertBankAccount THEN validation error`() {
+        // Act
+        val actual = BankOfframpOrderRequestConverter.convertBankAccount(
+            details = speiBankAccountDetails().copy(accountNumber = "002010077777777770"),
+            rail = BankRail.SPEI,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(BankOfframpError.Validation.left())
     }
 
     @ParameterizedTest

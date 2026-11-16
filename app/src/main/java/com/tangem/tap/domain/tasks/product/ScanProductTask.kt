@@ -16,7 +16,6 @@ import com.tangem.domain.card.common.TapWorkarounds.isExcluded
 import com.tangem.domain.card.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.card.common.TapWorkarounds.isVisa
 import com.tangem.domain.card.common.TwinsHelper
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.card.repository.CardRepository
@@ -25,7 +24,6 @@ import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.ScanTask
 import com.tangem.operations.backup.PrimaryCard
@@ -33,16 +31,10 @@ import com.tangem.operations.backup.StartPrimaryCardLinkingTask
 import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
-import com.tangem.tap.domain.visa.VisaCardScanHandler
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@Suppress("LongParameterList")
 internal class ScanProductTask(
     private val card: Card?,
-    private val visaCardScanHandler: VisaCardScanHandler?,
-    private val sessionCoroutineScope: CoroutineScope?,
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles?,
     private val shouldCheckIsAlreadyActivated: Boolean,
     private val cardRepository: CardRepository,
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
@@ -60,25 +52,6 @@ internal class ScanProductTask(
         val error = getErrorIfExcludedCard(cardDto, card)
         if (error != null) {
             callback(CompletionResult.Failure(error))
-            return
-        }
-
-        if (VisaUtilities.isVisaCard(cardDto)) {
-            if (onboardingV2FeatureToggles == null ||
-                onboardingV2FeatureToggles.isVisaOnboardingEnabled.not()
-            ) {
-                callback(CompletionResult.Failure(TangemSdkError.NotSupportedFirmwareVersion()))
-                return
-            }
-
-            readVisaCard(
-                session = session,
-                cardDto = cardDto,
-                scanWalletProcessor = ScanWalletProcessor(
-                    cardRepository = cardRepository,
-                ),
-                callback = callback,
-            )
             return
         }
 
@@ -147,44 +120,8 @@ internal class ScanProductTask(
         ) {
             return TapSdkError.CardNotSupportedByRelease()
         }
+        if (VisaUtilities.isVisaCard(cardDto)) return TangemSdkError.NotSupportedFirmwareVersion()
         return null
-    }
-
-    private fun readVisaCard(
-        session: CardSession,
-        cardDto: CardDTO,
-        scanWalletProcessor: ScanWalletProcessor,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit,
-    ) {
-        visaCardScanHandler ?: run {
-            callback(CompletionResult.Failure(TangemSdkError.InsNotSupported()))
-            return
-        }
-
-        sessionCoroutineScope ?: run {
-            callback(CompletionResult.Failure(TangemSdkError.InsNotSupported()))
-            return
-        }
-
-        sessionCoroutineScope.launch {
-            when (val result = visaCardScanHandler.handleVisaCardScan(session = session)) {
-                is CompletionResult.Success -> {
-                    scanWalletProcessor.proceed(
-                        card = cardDto,
-                        session = session,
-                    ) { scanResponseResult ->
-                        // callback(
-                        // scanResponseResult.map { scanResponse ->
-                        //     scanResponse.copy(visaCardActivationStatus = result.data)
-                        // },
-                        // )
-                    }
-                }
-                is CompletionResult.Failure -> {
-                    callback(CompletionResult.Failure(result.error))
-                }
-            }
-        }
     }
 }
 
@@ -270,7 +207,6 @@ private class ScanWalletProcessor(
     private fun determineProductTypeForSingleCurrencyWallet(card: CardDTO): ProductType {
         return when {
             card.isStart2Coin -> ProductType.Start2Coin
-            card.isVisa -> ProductType.Visa
             else -> ProductType.Note
         }
     }
@@ -324,7 +260,6 @@ private class ScanWalletProcessor(
 
     private fun getWalletProductType(card: CardDTO): ProductType {
         return when {
-            card.isVisa -> ProductType.Visa
             RING_BATCH_IDS.contains(card.batchId) || card.batchId.startsWith(RING_BATCH_PREFIX) -> ProductType.Ring
             card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
                 card.settings.isKeysImportAllowed -> ProductType.Wallet2

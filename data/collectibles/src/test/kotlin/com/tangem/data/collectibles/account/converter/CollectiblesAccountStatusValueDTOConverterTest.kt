@@ -50,10 +50,7 @@ internal class CollectiblesAccountStatusValueDTOConverterTest {
                 ),
                 expected = CollectiblesAccountStatusValueDTO.UpdateRequired(balance = BALANCE_DTO),
             ),
-            ConvertModel(
-                status = CollectiblesAccountStatusValue.MissedDerivation,
-                expected = CollectiblesAccountStatusValueDTO.MissedDerivation,
-            ),
+            ConvertModel(status = CollectiblesAccountStatusValue.MissedDerivation, expected = null),
             ConvertModel(status = CollectiblesAccountStatusValue.Loading, expected = null),
             ConvertModel(status = CollectiblesAccountStatusValue.NotOnboarded, expected = null),
             ConvertModel(status = CollectiblesAccountStatusValue.Error.Unavailable, expected = null),
@@ -85,10 +82,6 @@ internal class CollectiblesAccountStatusValueDTOConverterTest {
                     source = StatusSource.CACHE,
                     vaultBalance = STORED_BALANCE,
                 ),
-            ),
-            ConvertBackModel(
-                stored = CollectiblesAccountStatusValueDTO.MissedDerivation,
-                expected = CollectiblesAccountStatusValue.MissedDerivation,
             ),
             ConvertBackModel(
                 stored = CollectiblesAccountStatusValueDTO.UpdateRequired(balance = BALANCE_DTO),

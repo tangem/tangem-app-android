@@ -8,7 +8,6 @@ import com.tangem.data.polymarket.sessionkey.DefaultPolymarketDeviceIdProvider
 import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionKeyStore
 import com.tangem.data.polymarket.sessionkey.InMemorySecureStorage
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
-import com.tangem.data.polymarket.store.PredictionPositionsValueStore
 import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
@@ -46,7 +45,6 @@ internal class PolymarketUserWalletDataCleanerTest {
 
     private val credentialsStore: PolymarketCredentialsStore = mockk(relaxUnitFun = true)
     private val statusStore: PredictionAccountStatusStore = mockk(relaxUnitFun = true)
-    private val positionsValueStore: PredictionPositionsValueStore = mockk(relaxUnitFun = true)
     private val onboardedStore: PolymarketOnboardedStore = mockk(relaxUnitFun = true)
     private val requisitesStore: PredictionDepositRequisitesStore = mockk(relaxUnitFun = true)
     private val withdrawalStore: PredictionWithdrawalStore = mockk(relaxUnitFun = true)
@@ -56,7 +54,6 @@ internal class PolymarketUserWalletDataCleanerTest {
     private val cleaner = PolymarketUserWalletDataCleaner(
         credentialsStore = credentialsStore,
         predictionAccountStatusStore = statusStore,
-        positionsValueStore = positionsValueStore,
         onboardedStore = onboardedStore,
         requisitesStore = requisitesStore,
         withdrawalStore = withdrawalStore,
@@ -69,7 +66,6 @@ internal class PolymarketUserWalletDataCleanerTest {
         clearMocks(
             credentialsStore,
             statusStore,
-            positionsValueStore,
             onboardedStore,
             requisitesStore,
             withdrawalStore,
@@ -89,8 +85,6 @@ internal class PolymarketUserWalletDataCleanerTest {
         coVerify(exactly = 1) { credentialsStore.clear(WALLET_B) }
         coVerify(exactly = 1) { statusStore.clear(WALLET_A) }
         coVerify(exactly = 1) { statusStore.clear(WALLET_B) }
-        coVerify(exactly = 1) { positionsValueStore.clear(WALLET_A) }
-        coVerify(exactly = 1) { positionsValueStore.clear(WALLET_B) }
         coVerify(exactly = 1) { onboardedStore.clear(WALLET_A) }
         coVerify(exactly = 1) { onboardedStore.clear(WALLET_B) }
         coVerify(exactly = 1) { sessionKeyTradingStore.clear(WALLET_A) }
@@ -167,7 +161,6 @@ internal class PolymarketUserWalletDataCleanerTest {
         PolymarketUserWalletDataCleaner(
             credentialsStore = store,
             predictionAccountStatusStore = statusStore,
-            positionsValueStore = positionsValueStore,
             onboardedStore = onboardedStore,
             requisitesStore = requisitesStore,
             withdrawalStore = withdrawalStore,
@@ -189,7 +182,6 @@ internal class PolymarketUserWalletDataCleanerTest {
         PolymarketUserWalletDataCleaner(
             credentialsStore = credentialsStore,
             predictionAccountStatusStore = store,
-            positionsValueStore = positionsValueStore,
             onboardedStore = onboardedStore,
             requisitesStore = requisitesStore,
             withdrawalStore = withdrawalStore,
@@ -245,7 +237,6 @@ internal class PolymarketUserWalletDataCleanerTest {
             PolymarketUserWalletDataCleaner(
                 credentialsStore = credentialsStore,
                 predictionAccountStatusStore = statusStore,
-                positionsValueStore = positionsValueStore,
                 onboardedStore = onboardedStore,
                 requisitesStore = requisitesStore,
                 withdrawalStore = store,
@@ -311,7 +302,6 @@ internal class PolymarketUserWalletDataCleanerTest {
         PolymarketUserWalletDataCleaner(
             credentialsStore = credentialsStore,
             predictionAccountStatusStore = statusStore,
-            positionsValueStore = positionsValueStore,
             onboardedStore = onboardedStore,
             requisitesStore = requisitesStore,
             withdrawalStore = withdrawalStore,

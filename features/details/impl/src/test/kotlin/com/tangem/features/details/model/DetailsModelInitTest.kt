@@ -68,7 +68,7 @@ internal class DetailsModelInitTest : DetailsModelTestBase() {
 
     @Test
     fun `GIVEN only cold wallets WHEN init THEN buildAll receives hasAnyMobileWallet false`() = runTest {
-        every { getWalletsUseCase.invokeSync() } returns listOf(coldWallet(wallet1, isVisa = false))
+        every { getWalletsUseCase.invokeSync() } returns listOf(coldWallet(wallet1))
 
         createModel(this).also { advanceUntilIdle() }.onDestroy()
 

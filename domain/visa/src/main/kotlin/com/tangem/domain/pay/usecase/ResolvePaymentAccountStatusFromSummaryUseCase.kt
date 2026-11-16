@@ -1,9 +1,13 @@
 package com.tangem.domain.pay.usecase
 
+import arrow.core.getOrElse
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.balanceOrNull
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.pay.flow.PaymentAccountStatusCache
 import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.model.PaymentAccountActivationState
 import com.tangem.domain.pay.model.TangemPayCustomerState
@@ -12,8 +16,11 @@ import com.tangem.domain.pay.utils.TangemPayCustomerStateConverter
 
 class ResolvePaymentAccountStatusFromSummaryUseCase(
     private val onboardingRepository: OnboardingRepository,
+    private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
+    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    private val getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase,
+    private val paymentAccountStatusCache: PaymentAccountStatusCache,
 ) {
-
     suspend operator fun invoke(userWalletId: UserWalletId, summary: CustomerSummary): PaymentAccountStatusValue? {
         return when (val state = TangemPayCustomerStateConverter.convert(summary)) {
             TangemPayCustomerState.Blocked -> {
@@ -66,7 +73,7 @@ class ResolvePaymentAccountStatusFromSummaryUseCase(
                 kycStatus(userWalletId, summary, state.kycStatus)
             }
             is PaymentAccountActivationState.Failed -> {
-                null
+                cardIssueFailed(userWalletId, summary)
             }
             is PaymentAccountActivationState.Issuing, is PaymentAccountActivationState.Completed -> {
                 null
@@ -97,6 +104,30 @@ class ResolvePaymentAccountStatusFromSummaryUseCase(
                 verified()
             }
         }
+    }
+
+    private suspend fun cardIssueFailed(
+        userWalletId: UserWalletId,
+        summary: CustomerSummary,
+    ): PaymentAccountStatusValue.Error.CardIssueFailed {
+        val customerInfo = onboardingRepository.getCustomerInfo(userWalletId).getOrElse {
+            return PaymentAccountStatusValue.Error.CardIssueFailed(customerId = summary.customerId)
+        }
+        val fiatRate = getTangemPayFiatRateUseCase()
+        return PaymentAccountStatusValue.Error.CardIssueFailed(
+            customerId = summary.customerId,
+            tariffPlan = customerInfo.tariffPlan?.let { tariff ->
+                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = tariff)
+            },
+            balance = customerInfo.fiatBalance?.let { PaymentAccountStatusValue.Balance(fiatBalance = it) }
+                ?: paymentAccountStatusCache.getSyncOrNull(userWalletId)?.value?.balanceOrNull,
+            networks = tangemPayCurrencyFactory.createNetworkStatuses(
+                userWalletId = userWalletId,
+                networks = customerInfo.networks,
+                fiatRate = fiatRate,
+            ),
+            fiatRate = fiatRate,
+        )
     }
 
     private fun verified() = PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL)

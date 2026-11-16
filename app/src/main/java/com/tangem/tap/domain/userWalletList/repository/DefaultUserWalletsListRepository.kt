@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.right
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -20,6 +21,7 @@ import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletTransformAction
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository.LockMethod
+import com.tangem.domain.common.wallets.isHotWalletsLimitReached
 import com.tangem.domain.common.wallets.error.*
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.CardDTO
@@ -29,6 +31,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.backup.SeenWalletCardReporter
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
@@ -75,6 +78,8 @@ internal class DefaultUserWalletsListRepository(
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
     private val walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
+    private val seenWalletCardReporter: Lazy<SeenWalletCardReporter>,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -144,6 +149,8 @@ internal class DefaultUserWalletsListRepository(
             raise(SaveWalletError.WalletAlreadySaved(messageId = R.string.user_wallet_list_error_wallet_already_saved))
         }
 
+        if (isHotWalletsLimitReachedFor(userWallet)) raise(SaveWalletError.HotWalletsLimitReached(messageId = null))
+
         val isFirstWallet = userWallets.value?.isEmpty() == true
 
         if (savePersistentInformation()) {
@@ -172,6 +179,10 @@ internal class DefaultUserWalletsListRepository(
             // A newly added hot wallet is registered with the Tangem Auth Service right away, while its
             // unlock context is fresh (fire-and-forget, idempotent per walletId).
             walletRegistrationTrigger.get().onMobileWalletCreated(userWallet)
+        }
+
+        if (oldUserWallet == null && userWallet is UserWallet.Cold) {
+            seenWalletCardReporter.get().report(userWallet = userWallet, isNewWallet = true)
         }
 
         if (isFirstWallet) {
@@ -488,6 +499,12 @@ internal class DefaultUserWalletsListRepository(
         val walletId = UserWalletIdBuilder.scanResponse(scanResponse).build() ?: return
         val storedWallet = userWallets.value?.find { it.walletId == walletId } as? UserWallet.Cold ?: return
 
+        // reported before the stored card is reconciled: a scan of another card of the wallet does not replace it
+        seenWalletCardReporter.get().report(
+            userWallet = storedWallet.copy(scanResponse = scanResponse),
+            isNewWallet = false,
+        )
+
         val storedCard = storedWallet.scanResponse.card
         val scannedCard = scanResponse.card
 
@@ -640,6 +657,14 @@ internal class DefaultUserWalletsListRepository(
         if (userWallet != null && previousId != userWallet.walletId) {
             userWalletSelectedHandler.get().invoke(userWallet)
         }
+    }
+
+    private suspend fun isHotWalletsLimitReachedFor(userWallet: UserWallet): Boolean {
+        if (userWallet !is UserWallet.Hot || !hotWalletFeatureToggles.isMultipleHotWalletsEnabled) return false
+
+        val currentWallets = userWalletsSync()
+        val isNewWallet = currentWallets.none { it.walletId == userWallet.walletId }
+        return isNewWallet && currentWallets.isHotWalletsLimitReached()
     }
 
     private fun updateWallets(block: (List<UserWallet>?) -> List<UserWallet>?) {

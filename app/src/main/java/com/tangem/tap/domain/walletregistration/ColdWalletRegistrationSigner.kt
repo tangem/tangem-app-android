@@ -4,6 +4,16 @@ import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
+import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.TangemError
+import com.tangem.common.core.TangemSdkError
+import com.tangem.data.wallets.cold.UserWalletIdPreflightReadFilter
+import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -19,16 +29,42 @@ import kotlin.coroutines.resume
 
 /**
  * Builds a [WalletSigner] for a COLD (card-backed) wallet. Runs `AttestWalletKeyTask` in Dynamic
- * mode **inside an already-open [CardSession]** (no extra tap): the card produces the wallet
- * signature and, on COS 2.01+, the card signature over the wallet nonce. On older cards without a
- * card signature the wallet is registered with the wallet signature only (backend treats it as hot).
+ * mode either **inside an already-open [CardSession]** (no extra tap) or in a session of its own: the
+ * card produces the wallet signature and, on COS 2.01+, the card signature over the wallet nonce. On
+ * older cards without a card signature the wallet is registered with the wallet signature only
+ * (backend treats it as hot).
  */
 internal class ColdWalletRegistrationSigner @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val cardSdkConfigRepository: CardSdkConfigRepository,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
     fun signerFor(session: CardSession, scanResponse: ScanResponse): WalletSigner =
         signerFor(session, scanResponse.card)
+
+    /**
+     * Signs in a card session of its own that accepts only a card of [userWallet], for a registration the user asked
+     * for. No network call runs inside the session. A failure is thrown as the card SDK error, so a user
+     * cancellation can be told from a failed signature.
+     */
+    fun signerFor(userWallet: UserWallet.Cold): WalletSigner = WalletSigner { nonceBytes ->
+        val result = withContext(dispatchers.main) {
+            suspendCancellableCoroutine { continuation ->
+                cardSdkConfigRepository.sdk.startSessionWithRunnable(
+                    runnable = SignNonceRunnable(nonceBytes),
+                    preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet),
+                ) { result ->
+                    if (continuation.isActive) continuation.resume(result)
+                }
+            }
+        }
+
+        when (result) {
+            is CompletionResult.Success -> result.data
+            is CompletionResult.Failure -> throw result.error
+        }
+    }
 
     fun signerFor(session: CardSession, card: CardDTO): WalletSigner = WalletSigner { nonceBytes ->
         val walletPublicKey = firstSecpWalletPublicKey(card)
@@ -124,14 +160,38 @@ internal class ColdWalletRegistrationSigner @Inject constructor(
         }
         return when (result) {
             is CompletionResult.Success -> result.data
-            is CompletionResult.Failure -> throw ColdWalletAttestationException(result.error.customMessage)
+            is CompletionResult.Failure -> throw ColdWalletAttestationException(result.error)
+        }
+    }
+
+    private inner class SignNonceRunnable(
+        private val nonceBytes: ByteArray,
+    ) : CardSessionRunnable<WalletSignatureBundle> {
+
+        override fun run(session: CardSession, callback: (result: CompletionResult<WalletSignatureBundle>) -> Unit) {
+            val card = session.environment.card?.let(::CardDTO)
+                ?: return callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+
+            session.scope.launch {
+                val result = runSuspendCatching { signerFor(session, card).sign(nonceBytes) }.fold(
+                    onSuccess = { bundle -> CompletionResult.Success(bundle) },
+                    onFailure = { error -> CompletionResult.Failure(error.toTangemError()) },
+                )
+                callback(result)
+            }
+        }
+
+        private fun Throwable.toTangemError(): TangemError = when (this) {
+            is ColdWalletAttestationException -> error
+            is TangemError -> this
+            else -> TangemSdkError.ExceptionError(this)
         }
     }
 }
 
 /** `AttestWalletKeyTask` failed (NFC error, verification failure, user cancelled). */
-internal class ColdWalletAttestationException(message: String) :
-    Exception("Cold wallet attestation failed: $message")
+internal class ColdWalletAttestationException(val error: TangemError) :
+    Exception("Cold wallet attestation failed: ${error.customMessage}", error)
 
 /** The first wallet on the card is not secp256k1 — unexpected for cold registration; abort. */
 internal class ColdWalletUnexpectedCurveException(cardId: String, curve: EllipticCurve) :

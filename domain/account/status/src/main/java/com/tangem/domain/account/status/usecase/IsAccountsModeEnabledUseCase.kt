@@ -2,8 +2,10 @@ package com.tangem.domain.account.status.usecase
 
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.isCreated
+import com.tangem.domain.models.account.isShown
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
@@ -17,15 +19,17 @@ import java.util.concurrent.TimeUnit
  *
  * Accounts mode is considered enabled if any user wallet either:
  *  - contains more than one [Account.CryptoPortfolio], or
- *  - has a [com.tangem.domain.models.account.AccountStatus.Payment] in an active state.
+ *  - has a [com.tangem.domain.models.account.AccountStatus.Payment] in an active state, or
+ *  - has an [Account.Collectibles] that is shown: it is an account next to the main one.
  *
- * Splits the structural check (via [MultiAccountListSupplier]) and the payment-status check
- * (via [PaymentAccountStatusSupplier] per wallet) so that the structural answer doesn't wait for
- * slow per-wallet status pipelines on cold start.
+ * Splits the structural check (via [MultiAccountListSupplier]) and the status checks (via
+ * [PaymentAccountStatusSupplier] and [CollectiblesAccountStatusSupplier] per wallet) so that the structural answer
+ * doesn't wait for slow per-wallet status pipelines on cold start.
  */
 class IsAccountsModeEnabledUseCase(
     private val multiAccountListSupplier: MultiAccountListSupplier,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
     appCoroutineScope: AppCoroutineScope,
 ) {
 
@@ -83,10 +87,32 @@ class IsAccountsModeEnabledUseCase(
             }
         }
 
-        return combine(cryptoMode, paymentMode) { crypto, payment ->
-            val isEnabled = crypto || payment
-            TangemLogger.i("$TAG: final combine crypto=$crypto, payment=$payment, result=$isEnabled")
+        return combine(cryptoMode, paymentMode, collectiblesMode()) { crypto, payment, collectibles ->
+            val isEnabled = crypto || payment || collectibles
+            TangemLogger.i(
+                "$TAG: final combine crypto=$crypto, payment=$payment, collectibles=$collectibles, result=$isEnabled",
+            )
             isEnabled
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun collectiblesMode(): Flow<Boolean> = multiAccountListSupplier.invoke().flatMapLatest { lists ->
+        val walletIdsWithCollectibles = lists.mapNotNull { list ->
+            list.userWalletId.takeIf { list.accounts.any { account -> account is Account.Collectibles } }
+        }
+
+        if (walletIdsWithCollectibles.isEmpty()) {
+            flowOf(false)
+        } else {
+            val flows = walletIdsWithCollectibles.map { walletId ->
+                collectiblesAccountStatusSupplier(walletId)
+                    .map { status -> status.isShown }
+                    // Until the status arrives the account counts as shown, as `Loading` does
+                    .onStart { emit(true) }
+            }
+
+            combine(flows) { results -> results.any { it } }
         }
     }
 

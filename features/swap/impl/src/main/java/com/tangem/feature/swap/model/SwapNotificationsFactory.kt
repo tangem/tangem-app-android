@@ -361,8 +361,7 @@ internal class SwapNotificationsFactory(
         val fromCurrency = fromSwapCurrency.currency
         val balanceStatus = quoteModel.preparedSwapConfigState.balanceStatus
         val insufficientFee = balanceStatus as? SwapBalanceStatus.InsufficientFee
-        val shouldShowCoverWarning = quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
-            feeCryptoCurrencyStatus.currency != fromCurrency
+        val isPermissionResolved = quoteModel.permissionState !is PermissionDataState.PermissionLoading
 
         // A DEX-typed provider whose quote returned txType=SEND executes as a CEX-style transfer,
         // so it must follow the same gasless suppression rule as a real CEX provider.
@@ -377,7 +376,7 @@ internal class SwapNotificationsFactory(
         // and must be surfaced. On networks without gasless support the warning always shows.
         val isFeeTokenUnresolved = swapFee == null &&
             isEvmGaslessFeeSupportedForNetwork(fromCurrency.network) && isCexLikeFlow
-        if (shouldShowCoverWarning && !isFeeTokenUnresolved && isNotEnoughFee) {
+        if (isPermissionResolved && !isFeeTokenUnresolved && isNotEnoughFee) {
             add(
                 if (fromCurrency.id == feeCryptoCurrencyStatus.currency.id) {
                     SwapNotificationUM.Error.InsufficientFunds
@@ -411,6 +410,9 @@ internal class SwapNotificationsFactory(
         }
 
         when (feeError) {
+            is GetFeeError.GaslessError.TronAllowanceTooHigh -> add(
+                feeError.toReapprovalNotification(quoteModel.fromTokenInfo.swapCurrencyStatus.currency),
+            )
             is GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError -> {
                 add(
                     getWarningForError(
@@ -451,6 +453,17 @@ internal class SwapNotificationsFactory(
                 onClick = actions.openTokenDetailsScreen,
             )
         }
+    }
+
+    private fun GetFeeError.GaslessError.TronAllowanceTooHigh.toReapprovalNotification(
+        fromCurrency: CryptoCurrency,
+    ): NotificationUM {
+        val reapproval = reapproval ?: return NotificationUM.Error.TotalExceedsBalance
+        val leaveAmount = (balance - reapproval.amount).format { crypto(fromCurrency) }
+        return SwapNotificationUM.Error.TronReapprovalRequired(
+            leaveAmount = leaveAmount,
+            onConfirmClick = { actions.onTronReapproveClick(reapproval.spenderAddress, reapproval.amount) },
+        )
     }
 
     private fun MutableList<NotificationUM>.addReduceAmountNotification(
@@ -519,7 +532,9 @@ internal fun ExpressDataError.toExpressError(): ExpressError = when (this) {
     is ExpressDataError.ExchangeProviderNotAvailableError -> ExpressError.ProviderNotAvailableError(code)
     is ExpressDataError.ExchangeProviderProviderInternalError -> ExpressError.ProviderInternalError(code)
     is ExpressDataError.ExchangeNotPossibleError -> ExpressError.ExchangeNotPossibleError(code)
+    is ExpressDataError.ExchangeInvalidAmountError -> ExpressError.InvalidAmountError(code)
     is ExpressDataError.ExchangeNotEnoughBalanceError -> ExpressError.NotEnoughBalanceError(code)
+    is ExpressDataError.ExchangeNotEnoughBalanceForGasFeeError -> ExpressError.NotEnoughBalanceForGasFeeError(code)
     is ExpressDataError.ExchangeInvalidAddressError -> ExpressError.InvalidAddressError(code)
     is ExpressDataError.ExchangeProviderAddressBannedByAmlError ->
         ExpressError.ExchangeProviderAddressBannedByAmlError(code)

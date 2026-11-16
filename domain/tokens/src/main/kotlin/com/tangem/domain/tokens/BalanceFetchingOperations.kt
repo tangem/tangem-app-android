@@ -3,25 +3,27 @@ package com.tangem.domain.tokens
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
 import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 
 /**
  * Shared utility for fetching cryptocurrency balance data from multiple sources.
  *
- * This class provides reusable fetch operations for networks, quotes, and staking balances
- * that can be used by different balance fetchers throughout the application.
+ * This class provides reusable fetch operations for networks, quotes, and registered balance contributions
+ * (staking and others) that can be used by different balance fetchers throughout the application.
  *
  * @property multiNetworkStatusFetcher Fetcher for updating network statuses.
  * @property multiQuoteStatusFetcher Fetcher for updating quote statuses.
+ * @property contributionFetchers Fetchers of extra balances registered by their owning features.
+ * @property tokensFeatureToggles Toggles switching between [contributionFetchers] and the legacy staking fetch.
  * @property multiStakingBalanceFetcher Fetcher for updating staking balances.
  * @property stakingIdFactory Factory for creating staking IDs.
  *
@@ -30,7 +32,11 @@ import kotlinx.coroutines.coroutineScope
 class BalanceFetchingOperations(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
+    private val contributionFetchers: Set<BalanceContributionFetcher>,
+    private val tokensFeatureToggles: TokensFeatureToggles,
+    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
+    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
     private val stakingIdFactory: StakingIdFactory,
 ) {
 
@@ -40,31 +46,51 @@ class BalanceFetchingOperations(
      * @param userWalletId the user wallet identifier
      * @param currencies the list of cryptocurrencies to fetch data for
      * @param sources the set of sources to fetch from
-     * @return map of errors (source to throwable), empty if all succeeded
+     * @return map of errors (source name to throwable), empty if all succeeded. Contribution errors are keyed by
+     * the fetcher's class simple name.
      */
     suspend fun fetchAll(
         userWalletId: UserWalletId,
         currencies: Collection<CryptoCurrency>,
         sources: Set<FetchingSource>,
-    ): Map<FetchingSource, Throwable> {
+    ): Map<String, Throwable> {
         return coroutineScope {
-            sources.map { source ->
-                async {
-                    val result = when (source) {
-                        FetchingSource.NETWORK -> fetchNetworks(userWalletId, currencies)
-                        FetchingSource.QUOTE -> fetchQuotes(
-                            currencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
-                        )
-                        FetchingSource.STAKING -> fetchStaking(userWalletId, currencies)
-                    }
-                    source to result
-                }
-            }
+            sources
+                .flatMap { source -> fetch(source, userWalletId, currencies) }
                 .awaitAll()
-                .mapNotNull { (source, result) ->
-                    result.leftOrNull()?.let { error -> source to error }
+                .mapNotNull { (name, result) ->
+                    result.leftOrNull()?.let { error -> name to error }
                 }
                 .toMap()
+        }
+    }
+
+    private fun CoroutineScope.fetch(
+        source: FetchingSource,
+        userWalletId: UserWalletId,
+        currencies: Collection<CryptoCurrency>,
+    ): List<Deferred<Pair<String, Either<Throwable, Unit>>>> {
+        return when (source) {
+            FetchingSource.NETWORK -> listOf(
+                async { source.name to fetchNetworks(userWalletId, currencies) },
+            )
+            FetchingSource.QUOTE -> listOf(
+                async {
+                    source.name to fetchQuotes(currencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId })
+                },
+            )
+            FetchingSource.CONTRIBUTIONS -> if (tokensFeatureToggles.isPluggableBalanceSourcesEnabled) {
+                contributionFetchers.map { fetcher ->
+                    async {
+                        fetcher.javaClass.simpleName to fetcher.fetch(
+                            userWalletId = userWalletId,
+                            currencies = currencies,
+                        )
+                    }
+                }
+            } else {
+                listOf(async { LEGACY_STAKING_SOURCE_NAME to fetchStaking(userWalletId, currencies) })
+            }
         }
     }
 
@@ -108,7 +134,8 @@ class BalanceFetchingOperations(
      * @param currencies the cryptocurrencies to fetch staking balances for
      * @return Either with Unit on success or Throwable on failure
      */
-    suspend fun fetchStaking(
+    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
+    private suspend fun fetchStaking(
         userWalletId: UserWalletId,
         currencies: Collection<CryptoCurrency>,
     ): Either<Throwable, Unit> {
@@ -137,5 +164,10 @@ class BalanceFetchingOperations(
         return multiStakingBalanceFetcher(
             params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
         )
+    }
+
+    private companion object {
+        @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
+        const val LEGACY_STAKING_SOURCE_NAME = "STAKING"
     }
 }

@@ -21,6 +21,7 @@ internal data class UiActions(
     val onReduceByAmount: (SwapAmount, reduceBy: BigDecimal) -> Unit,
     val onApproveClick: () -> Unit,
     val onApproveTypeSelect: (SwapProvider) -> Unit,
+    val onTronReapproveClick: (spenderAddress: String, amount: BigDecimal) -> Unit,
     // region new actions
     val onRetryClick: () -> Unit,
     val onProviderClick: (String) -> Unit,

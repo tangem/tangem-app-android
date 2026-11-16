@@ -198,7 +198,7 @@ internal class WalletJointAccountItemConverterTest {
     }
 
     @Test
-    fun `GIVEN compromised status WHEN convert THEN the badge takes the place of the balance`() {
+    fun `GIVEN compromised status WHEN convert THEN one paused text instead of the counts and the badge as balance`() {
         // Arrange
         val status = createStatus(
             JointAccountStatusValue.Error.Compromised(
@@ -213,13 +213,9 @@ internal class WalletJointAccountItemConverterTest {
 
         // Assert
         assertThat(state.title).isEqualTo(stringReference("Joint #0"))
-        assertThat(state.badge).isEqualTo(resourceReference(R.string.joint_account_main_cant_verify))
-        assertThat(state.label).isEqualTo(
-            pluralReference(R.plurals.common_tokens_count, count = 6, formatArgs = wrappedList(6)),
-        )
-        assertThat(state.description).isEqualTo(
-            pluralReference(R.plurals.joint_account_members_count, count = 5, formatArgs = wrappedList(5)),
-        )
+        assertThat(state.badge).isEqualTo(resourceReference(R.string.joint_account_main_unavailable))
+        assertThat(state.label).isEqualTo(resourceReference(R.string.joint_account_main_paused_for_safety))
+        assertThat(state.description).isNull()
     }
 
     @Test

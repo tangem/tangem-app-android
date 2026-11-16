@@ -13,6 +13,7 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
@@ -58,6 +59,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import java.util.Locale
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
@@ -659,6 +661,43 @@ internal class IntroductionSocialLoginHandlerTest {
         // Assert
         assertThat(host.progress).containsExactly(host.progress[0], null, null).inOrder()
         assertThat(host.progress[0]).isNotNull()
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["en", "de", "zh-Hans"])
+    fun `GIVEN any app language WHEN learn more is clicked THEN the blog article opens without a language`(
+        languageTag: String,
+    ) = runTest {
+        // Arrange
+        val defaultLocale = Locale.getDefault()
+        Locale.setDefault(Locale.forLanguageTag(languageTag))
+        val requestConsent = slot<suspend () -> SocialLoginConsent?>()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), capture(requestConsent)) } coAnswers {
+            host.onConsentShown = { consent ->
+                consent.description.learnMoreClick()
+                consent.onAcknowledgedChange(true)
+                host.consent!!.onConfirmClick(CONSENT_TEXT)
+            }
+            requestConsent.captured()
+            SocialLoginOutcome.WalletCreated(WALLET_ID).right()
+        }
+
+        try {
+            // Act
+            handler.signIn(PROVIDER, host)
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/blog/post/cloud-login") }
+        } finally {
+            Locale.setDefault(defaultLocale)
+        }
+    }
+
+    private fun TextReference.learnMoreClick() {
+        val link = (this as TextReference.Combined).refs
+            .filterIsInstance<TextReference.StyledRes>()
+            .single { it.id == CoreResR.string.social_login_consent_learn_more }
+        link.onClick!!.invoke()
     }
 
     @ParameterizedTest

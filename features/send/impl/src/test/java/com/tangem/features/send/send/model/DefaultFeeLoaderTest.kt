@@ -163,7 +163,7 @@ internal class DefaultFeeLoaderTest {
                 onNativeFeePreferred = any(),
             )
         } answers {
-            if (isNativeFeePreferred) arg<() -> Unit>(5).invoke()
+            if (isNativeFeePreferred) arg<() -> Unit>(6).invoke()
             fee
         }
     }

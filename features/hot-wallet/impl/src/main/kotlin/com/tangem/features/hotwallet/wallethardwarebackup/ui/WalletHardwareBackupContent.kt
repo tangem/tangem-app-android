@@ -5,7 +5,9 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -65,10 +67,12 @@ internal fun WalletHardwareBackupContent(state: WalletHardwareBackupUM, modifier
         Column(
             modifier = Modifier
                 .weight(1f)
+                .verticalScroll(rememberScrollState())
                 .padding(
                     start = 16.dp,
                     top = 4.dp,
                     end = 16.dp,
+                    bottom = 16.dp,
                 ),
         ) {
             Banner(onBuyClick = state.onBuyClick)

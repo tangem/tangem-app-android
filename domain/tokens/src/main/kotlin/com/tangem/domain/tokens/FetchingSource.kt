@@ -8,5 +8,6 @@ package com.tangem.domain.tokens
 enum class FetchingSource {
     NETWORK,
     QUOTE,
-    STAKING,
+    /** Every registered [com.tangem.domain.models.currency.balance.BalanceContributionFetcher], e.g. staking. */
+    CONTRIBUTIONS,
 }

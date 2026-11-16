@@ -13,6 +13,7 @@ import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.collectibles.usecase.GetMissingCollectiblesOwnerKeysCountUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.hotwallet.CheckHotWalletUpgradeBannerUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
@@ -31,15 +32,18 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.GetWalletLinkStatusUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
+import com.tangem.feature.wallet.presentation.wallet.state.WalletLinkProgressHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
-import com.tangem.utils.coroutines.combine7
+import com.tangem.utils.coroutines.combine8
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
@@ -66,11 +70,15 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getMissingJointOwnerKeysCountUseCase: GetMissingJointOwnerKeysCountUseCase,
+    private val getMissingCollectiblesOwnerKeysCountUseCase: GetMissingCollectiblesOwnerKeysCountUseCase,
     private val onboardingRepository: OnboardingRepository,
     private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase,
     private val getUpgradeBannerClosureTimestampUseCase: GetUpgradeBannerClosureTimestampUseCase,
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase,
     private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
+    private val getWalletLinkStatusUseCase: GetWalletLinkStatusUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
+    private val walletLinkProgressHolder: WalletLinkProgressHolder,
 ) {
     private fun assetsDiscoveryProgressFlow(userWallet: UserWallet): Flow<AssetsDiscoveryProgress> =
         if (userWallet is UserWallet.Hot) {
@@ -142,11 +150,26 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             flowOf(false to null)
         }
 
+    /** A link status that can't be read is treated as linked, so it never blocks the notifications or nags the user */
+    private fun isWalletLinkedFlow(userWallet: UserWallet): Flow<Boolean> =
+        if (walletFeatureToggles.isWalletLinkingEnabled) {
+            getWalletLinkStatusUseCase(userWallet).onEmpty { emit(true) }
+        } else {
+            flowOf(true)
+        }
+
+    /** Whether the wallet is linked, and whether it is being linked right now */
+    private fun linkStateFlow(userWallet: UserWallet): Flow<Pair<Boolean, Boolean>> = combine(
+        isWalletLinkedFlow(userWallet),
+        walletLinkProgressHolder.isLinking(userWallet.walletId),
+        ::Pair,
+    )
+
     @Suppress("LongMethod")
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<WalletNotificationsSnapshot> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
-        return combine7(
+        return combine8(
             flow1 = accountStateFlow(userWallet),
             flow2 = isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
             flow3 = isAccessCodeSkipHonouredFlow(userWallet),
@@ -154,6 +177,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             flow5 = getAppUpdateStateUseCase.getBannerStateFlow(),
             flow6 = freshWalletWithBackupFlow(userWallet),
             flow7 = upgradeBannerPrefsFlow(userWallet),
+            flow8 = linkStateFlow(userWallet),
         ) {
                 accountState,
                 isNeedToBackup,
@@ -162,14 +186,17 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 appUpdateState,
                 activationState,
                 upgradeBannerPrefs,
+                linkState,
             ->
             val (accountList, isOutdatedDataShown, isTangemPayPromoHidden) = accountState
             val (activationWallet, isWalletBackedUp) = activationState
             val (shouldShowUpgradeBanner, upgradeBannerClosureTimestamp) = upgradeBannerPrefs
+            val (isWalletLinked, isWalletLinking) = linkState
 
             val totalFiatBalance = accountList.totalFiatBalance
             val flattenCurrencies = accountList.flattenCurrencies()
             val jointAccounts = accountList.accountStatuses.mapNotNull { it.account as? Account.Joint }
+            val collectiblesAccounts = accountList.accountStatuses.mapNotNull { it.account as? Account.Collectibles }
 
             val paymentAccountStatus = accountList.accountStatuses
                 .filterIsInstance<AccountStatus.Payment>()
@@ -187,6 +214,13 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 )
 
                 addCriticalNotifications(userWallet, clickIntents)
+
+                addLinkWalletNotification(
+                    userWallet = activationWallet,
+                    isWalletLinked = isWalletLinked,
+                    isWalletLinking = isWalletLinking,
+                    clickIntents = clickIntents,
+                )
 
                 if (!isAddFundsBannerShown) {
                     addFinishWalletActivationNotification(
@@ -213,6 +247,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                     cardTypesResolver = cardTypesResolver,
                     flattenCurrencies = flattenCurrencies,
                     jointAccounts = jointAccounts,
+                    collectiblesAccounts = collectiblesAccounts,
                     clickIntents = clickIntents,
                 )
 
@@ -338,12 +373,29 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         }
     }
 
+    private fun MutableList<WalletNotificationUM>.addLinkWalletNotification(
+        userWallet: UserWallet,
+        isWalletLinked: Boolean,
+        isWalletLinking: Boolean,
+        clickIntents: WalletClickIntents,
+    ) {
+        addIf(isWalletLinked.not()) {
+            WalletNotificationUM.LinkWalletToDevice(
+                tangemIcon = walletInterationIcon(userWallet),
+                isHotWallet = userWallet is UserWallet.Hot,
+                shouldShowProgress = isWalletLinking,
+                onLinkClick = { clickIntents.onLinkWalletClick(userWallet) },
+            )
+        }
+    }
+
     private suspend fun MutableList<WalletNotificationUM>.addInformationalNotifications(
         userWallet: UserWallet,
         derivedKeysWallet: UserWallet,
         cardTypesResolver: CardTypesResolver?,
         flattenCurrencies: List<CryptoCurrencyStatus>,
         jointAccounts: List<Account.Joint>,
+        collectiblesAccounts: List<Account.Collectibles>,
         clickIntents: WalletClickIntents,
     ) {
         addIf(
@@ -356,6 +408,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             derivedKeysWallet = derivedKeysWallet,
             flattenCurrencies = flattenCurrencies,
             jointAccounts = jointAccounts,
+            collectiblesAccounts = collectiblesAccounts,
             clickIntents = clickIntents,
         )
     }
@@ -365,11 +418,18 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         derivedKeysWallet: UserWallet,
         flattenCurrencies: List<CryptoCurrencyStatus>,
         jointAccounts: List<Account.Joint>,
+        collectiblesAccounts: List<Account.Collectibles>,
         clickIntents: WalletClickIntents,
     ) {
         val currencies = flattenCurrencies.getMissingAddressCurrencies()
         val missingJointOwnerKeysCount = getMissingJointOwnerKeysCountUseCase(jointAccounts, derivedKeysWallet)
-        val missingAddressesCount = currencies.distinctBy { it.network.id }.count() + missingJointOwnerKeysCount
+        val missingCollectiblesOwnerKeysCount = getMissingCollectiblesOwnerKeysCountUseCase(
+            collectiblesAccounts,
+            derivedKeysWallet,
+        )
+        val missingAddressesCount = currencies.distinctBy { it.network.id }.count() +
+            missingJointOwnerKeysCount +
+            missingCollectiblesOwnerKeysCount
 
         addIf(
             element = WalletNotificationUM.MissingAddresses(

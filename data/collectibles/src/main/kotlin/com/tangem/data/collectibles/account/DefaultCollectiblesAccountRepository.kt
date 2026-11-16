@@ -103,7 +103,7 @@ internal class DefaultCollectiblesAccountRepository @Inject constructor(
 
         val syncedResponse = walletAccountsSaver.push(
             userWalletId = userWalletId,
-            accounts = response.accounts + Account.Collectibles(userWalletId).toWalletAccountDTO(),
+            accounts = listOf(Account.Collectibles(userWalletId).toWalletAccountDTO()) + response.accounts,
         ) ?: error("Failed to register the collectibles account of $userWalletId")
 
         walletAccountsSaver.store(userWalletId = userWalletId, response = syncedResponse)

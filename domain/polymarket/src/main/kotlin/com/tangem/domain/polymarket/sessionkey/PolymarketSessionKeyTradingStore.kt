@@ -9,6 +9,9 @@ interface PolymarketSessionKeyTradingStore {
 
     suspend fun markReadyOnExchange(userWalletId: UserWalletId, sessionKeyAddress: String, validUntil: Instant)
 
+    /** @param sessionKeyAddress a refused key stays refused and is not marked ready */
+    suspend fun restoreReadyOnExchange(userWalletId: UserWalletId, sessionKeyAddress: String, validUntil: Instant)
+
     fun isMissingOnExchange(userWalletId: UserWalletId, sessionKeyAddress: String): Boolean
 
     /** @param reconciliation [PolymarketSessionKeyReconciliation.Unavailable] keeps the previous one */
@@ -16,7 +19,7 @@ interface PolymarketSessionKeyTradingStore {
 
     fun isRefused(userWalletId: UserWalletId, sessionKeyAddress: String): Boolean
 
-    /** @param sessionKeyAddress its stored readiness is dropped too, so it stays out of trading after a restart */
+    /** @param sessionKeyAddress its stored readiness is dropped too; the refusal is kept in memory until the app restarts */
     suspend fun markRefused(userWalletId: UserWalletId, sessionKeyAddress: String)
 
     suspend fun clear(userWalletId: UserWalletId)

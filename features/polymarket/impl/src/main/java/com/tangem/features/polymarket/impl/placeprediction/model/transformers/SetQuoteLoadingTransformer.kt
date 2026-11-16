@@ -7,11 +7,8 @@ import com.tangem.utils.transformer.Transformer
 
 internal object SetQuoteLoadingTransformer : Transformer<PlacePredictionUM> {
 
-    override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
-        return if (prevState.quote is QuoteUM.Empty) {
-            prevState.copy(quote = QuoteUM.Loading).recomputeGate()
-        } else {
-            prevState
-        }
+    override fun transform(prevState: PlacePredictionUM): PlacePredictionUM = when (prevState.quote) {
+        QuoteUM.Empty -> prevState.copy(quote = QuoteUM.Loading).recomputeGate()
+        else -> prevState
     }
 }

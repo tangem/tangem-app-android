@@ -122,7 +122,8 @@ private fun SwapSuccessScreenContent(
             SpacerH16()
         }
 
-        if (feeSelectorUM != null) {
+        // The fee selector holds the fee as if the user paid it, which a sponsored swap never charges
+        if (feeSelectorUM != null && !state.isFeeSponsored) {
             Box(modifier = Modifier.testTag(TransactionSuccessScreenTestTags.FEE_BLOCK)) {
                 FeeBlockSuccess(feeSelectorUM)
             }

@@ -34,7 +34,7 @@ interface CollectiblesAccountRepository {
 
     /**
      * Records that `update_vault` was just broadcast for [userWalletId]. Until it lands the vault still answers to
-     * the old delegate, and that must not read as a reason to relink again.
+     * the old session key, and that must not read as a reason to relink again.
      */
     fun markRelinkSent(userWalletId: UserWalletId)
 

@@ -10,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SendTransactionSignerInfoInterceptor @Inject constructor() :
+internal class SendTransactionSignerInfoInterceptor @Inject constructor() :
     ParamsInterceptor,
     LastSignedWalletFormStore {
 

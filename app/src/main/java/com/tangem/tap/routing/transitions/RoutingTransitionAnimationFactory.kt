@@ -7,10 +7,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
-import com.arkivanov.decompose.extensions.compose.stack.animation.*
+import com.arkivanov.decompose.ExperimentalDecomposeApi
+import com.arkivanov.decompose.extensions.compose.stack.animation.Direction
+import com.tangem.core.decompose.ui.stack.animation.StackAnimator
+import com.tangem.core.decompose.ui.stack.animation.fade
+import com.tangem.core.decompose.ui.stack.animation.plus
+import com.tangem.core.decompose.ui.stack.animation.scale
+import com.tangem.core.decompose.ui.stack.animation.stackAnimator
 import com.tangem.common.routing.AppRoute
 import kotlin.math.abs
 
+@OptIn(ExperimentalDecomposeApi::class)
 object RoutingTransitionAnimationFactory {
 
     @Suppress("MagicNumber")
@@ -45,22 +52,20 @@ object RoutingTransitionAnimationFactory {
         animationSpec: FiniteAnimationSpec<Float> = tween(),
         frontFactor: Float = 1.15F,
         backFactor: Float = 0.95F,
-    ): StackAnimator = stackAnimator(animationSpec = animationSpec) { factor, direction, content ->
-        content(
-            Modifier.graphicsLayer {
-                val scaleFactor = if (directions.contains(direction)) {
-                    if (factor >= 0F) {
-                        factor * (frontFactor - 1F) + 1F
-                    } else {
-                        factor * (1F - backFactor) + 1F
-                    }
+    ): StackAnimator = stackAnimator(animationSpec = animationSpec) { factor, direction ->
+        Modifier.graphicsLayer {
+            val scaleFactor = if (directions.contains(direction)) {
+                if (factor >= 0F) {
+                    factor * (frontFactor - 1F) + 1F
                 } else {
-                    1f
+                    factor * (1F - backFactor) + 1F
                 }
-                scaleX = scaleFactor
-                scaleY = scaleFactor
-            },
-        )
+            } else {
+                1f
+            }
+            scaleX = scaleFactor
+            scaleY = scaleFactor
+        }
     }
 
     /**
@@ -81,14 +86,12 @@ object RoutingTransitionAnimationFactory {
 
         val slide = stackAnimator(
             animationSpec = tween(durationMillis = 400, easing = easing),
-        ) { factor, direction, content ->
-            content(
-                if (slideDirections == null || slideDirections.contains(direction)) {
-                    Modifier.offsetXFactor(factor)
-                } else {
-                    Modifier
-                },
-            )
+        ) { factor, direction ->
+            if (slideDirections == null || slideDirections.contains(direction)) {
+                Modifier.offsetXFactor(factor)
+            } else {
+                Modifier
+            }
         }
 
         val fade = directionalFade(
@@ -115,17 +118,15 @@ object RoutingTransitionAnimationFactory {
     private fun directionalFade(
         animationSpec: FiniteAnimationSpec<Float>,
         directions: Set<Direction>?,
-    ): StackAnimator = stackAnimator(animationSpec) { factor, direction, content ->
-        content(
-            if (directions == null || directions.contains(direction)) {
-                Modifier.graphicsLayer {
-                    alpha = 1f - abs(factor)
-                    compositingStrategy = CompositingStrategy.ModulateAlpha
-                }
-            } else {
-                Modifier
-            },
-        )
+    ): StackAnimator = stackAnimator(animationSpec) { factor, direction ->
+        if (directions == null || directions.contains(direction)) {
+            Modifier.graphicsLayer {
+                alpha = 1f - abs(factor)
+                compositingStrategy = CompositingStrategy.ModulateAlpha
+            }
+        } else {
+            Modifier
+        }
     }
 
     @Suppress("MagicNumber")

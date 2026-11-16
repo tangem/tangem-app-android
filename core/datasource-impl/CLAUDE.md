@@ -20,7 +20,7 @@ the contracts those two modules declare — and nothing else.
 composition root. **No other module may depend on it** — every other module compiles against the
 `core:local` / `core:remote` contracts and receives an implementation through DI at runtime.
 
-This is enforced by the **`verifyDatasourceImplIsolation`** Gradle task, which fails the build if any
+This is enforced by the **`verifyAppOnlyModules`** Gradle task, which fails the build if any
 project other than `:app` declares a dependency on `:core:datasource-impl`.
 
 ### No product or stream components

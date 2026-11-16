@@ -10,4 +10,6 @@ sealed interface SaveWalletError {
     data class DataError(override val messageId: Int?) : SaveWalletError
 
     data class WalletAlreadySaved(override val messageId: Int) : SaveWalletError
+
+    data class HotWalletsLimitReached(override val messageId: Int?) : SaveWalletError
 }

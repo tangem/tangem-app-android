@@ -18,6 +18,8 @@ internal sealed interface PlacePredictionRoute : Route {
 
     data object Amount : PlacePredictionRoute
 
+    data object Order : PlacePredictionRoute
+
     data class Slippage(val value: BigDecimal, val onConfirm: (BigDecimal) -> Unit) : PlacePredictionRoute
 
     data class Summary(val order: PreparedPrediction) : PlacePredictionRoute

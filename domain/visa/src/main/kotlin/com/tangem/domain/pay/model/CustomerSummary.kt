@@ -154,6 +154,7 @@ data class CustomerSummary(
 
             enum class Step {
                 AWAITING_KYC,
+                AWAITING_DEPOSIT,
                 ISSUING,
                 UNKNOWN,
                 ;
@@ -161,6 +162,7 @@ data class CustomerSummary(
                 companion object {
                     fun fromString(value: String): Step = when (value.uppercase(Locale.US)) {
                         "AWAITING_KYC" -> AWAITING_KYC
+                        "AWAITING_DEPOSIT" -> AWAITING_DEPOSIT
                         "ISSUING" -> ISSUING
                         else -> UNKNOWN
                     }

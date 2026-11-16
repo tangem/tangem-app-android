@@ -16,6 +16,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockCo
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
+import com.tangem.features.send.api.subcomponents.feeSelector.params.SponsoredFeeAvailability
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -51,6 +52,7 @@ class SwapFeeSelectorBlockComponent @AssistedInject constructor(
                 analyticsSendSource = params.analyticsParams.analyticsSendSource,
                 bottomSheetShown = params.repository::choosingInProgress,
                 isTronGaslessSupported = !params.isTransferMode,
+                onLoadSponsoredFee = params.repository::loadSponsoredFee.takeIf { !params.isTransferMode },
                 blockAppearance = FeeSelectorParams.BlockAppearance.Plain,
             ),
             onResult = params.repository::onResult,
@@ -81,6 +83,9 @@ class SwapFeeSelectorBlockComponent @AssistedInject constructor(
         fun onResult(newState: FeeSelectorUM)
 
         suspend fun loadFee(): Either<GetFeeError, TransactionFee>
+
+        suspend fun loadSponsoredFee(userPaidFee: TransactionFee): SponsoredFeeAvailability =
+            SponsoredFeeAvailability.Unavailable
 
         fun choosingInProgress(updatedState: Boolean)
     }

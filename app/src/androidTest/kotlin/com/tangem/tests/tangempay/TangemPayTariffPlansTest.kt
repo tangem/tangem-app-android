@@ -1,6 +1,7 @@
 package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.assertUrlOpenedStartingWith
@@ -135,6 +136,36 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Complete the '$basicPlan' card issuing") { completeTangemPayBasicPlanIssuing(planBasicState) }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan(assertMenuItems = true) }
             step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
+        }
+    }
+
+    @AllureId("13588")
+    @DisplayName("Tangem Pay: the Payment account row on Main reads 'Activating…' while the card is issued")
+    @Test
+    fun paymentAccountRowShowsActivatingWhileCardIssuedTest() {
+        val activatingStatus = getResourceString(CoreResR.string.money_account_main_status_activating)
+
+        setupHooks(
+            additionalBeforeSection = {
+                setTangemPayTariffPlanScenarios(
+                    plan = planSelectNeededState,
+                    transitions = transitionsOnboardingState,
+                )
+            }
+        ).run {
+            step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+            step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
+            step("Hold the '$basicPlan' card issuing in WireMock") { stageTangemPayBasicOrderPolling() }
+            step("Click on 'Select' button") {
+                onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
+            }
+            step("Assert the card is being issued") { assertTangemPayIssuingCardBanner() }
+            step("Click on system 'Back' button") { device.uiDevice.pressBack() }
+            step("Assert Tangem Pay tile shows '$activatingStatus'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onTangemPayMainScreen { tileWithSubtitle(activatingStatus).assertIsDisplayed() }
+                }
+            }
         }
     }
 

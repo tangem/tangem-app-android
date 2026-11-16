@@ -2,12 +2,17 @@ package com.tangem.domain.networks.utils
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.annotations.RemoveWithToggle
 
 /**
  * Cleans up network-related data for a specific user wallet and a list of cryptocurrencies.
  *
 [REDACTED_AUTHOR]
  */
+@RemoveWithToggle(
+    toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED",
+    description = "Replaced by the CryptoCurrencyDataCleaner set; delete with CryptoCurrencyMetadataCleaner branch.",
+)
 interface NetworksCleaner {
 
     /**

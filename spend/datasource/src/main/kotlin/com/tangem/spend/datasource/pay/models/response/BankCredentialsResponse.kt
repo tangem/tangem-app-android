@@ -23,6 +23,7 @@ data class BankCredentialsResponse(
         @SerialName("transfer_message") val transferMessage: String?,
         @SerialName("fee") val fee: Fee?,
         @SerialName("deposit_limit") val depositLimit: DepositLimit?,
+        @SerialName("exchange_rate") val exchangeRate: ExchangeRate?,
     )
 
     @Serializable
@@ -35,5 +36,12 @@ data class BankCredentialsResponse(
     data class DepositLimit(
         @SerialName("amount") val amount: String?,
         @SerialName("period") val period: String?,
+    )
+
+    @Serializable
+    data class ExchangeRate(
+        @SerialName("rate") val rate: String?,
+        @SerialName("base") val base: String?,
+        @SerialName("quote") val quote: String?,
     )
 }

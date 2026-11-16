@@ -9,6 +9,7 @@ import com.tangem.core.analytics.api.OneTimeEventStore
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
+import com.tangem.core.analytics.api.AnalyticsUserPropertiesHandler
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.filter.AppsFlyerEventFilter
@@ -39,6 +40,9 @@ internal interface AnalyticsModule {
 
     @Binds
     fun bindAnalyticsUserIdHandler(impl: DefaultAnalyticsEventHandler): AnalyticsUserIdHandler
+
+    @Binds
+    fun bindAnalyticsUserPropertiesHandler(impl: DefaultAnalyticsEventHandler): AnalyticsUserPropertiesHandler
 
     @Binds
     fun bindParamsInterceptorHolder(impl: DefaultAnalyticsEventHandler): ParamsInterceptorHolder

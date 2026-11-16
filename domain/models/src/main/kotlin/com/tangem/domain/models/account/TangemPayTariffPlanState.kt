@@ -28,6 +28,8 @@ data class TangemPayTariffPlanState(
     }
 }
 
+val TangemPayTariffPlanState.isAwaitingDeposit: Boolean
+    get() = this.order?.step is TangemPayTariffPlanState.OrderStep.AwaitingDeposit
+
 val TangemPayTariffPlanState.isPlanTransitioningState
-    get() = order?.step is TangemPayTariffPlanState.OrderStep.AwaitingDeposit ||
-        tariff.status == TangemPayCustomerTariffPlan.Status.TRANSITIONING
+    get() = isAwaitingDeposit || tariff.status == TangemPayCustomerTariffPlan.Status.TRANSITIONING

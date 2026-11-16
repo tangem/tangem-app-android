@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -37,6 +38,7 @@ import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TopNavigationTestTags
 import kotlin.math.roundToInt
 
 private enum class SlotId { Start, Content, Group, End }
@@ -350,7 +352,11 @@ private fun ColumnScope.TitleSubtitle(title: TextReference, subtitle: TextRefere
         transitionSpec = { TangemTransition.FadeEnter togetherWith TangemTransition.FadeExit },
         label = "TangemTopNavigation.title",
     ) { current ->
-        TangemNavigationText(text = current, role = TangemNavigationText.Role.Title)
+        TangemNavigationText(
+            text = current,
+            role = TangemNavigationText.Role.Title,
+            modifier = Modifier.testTag(TopNavigationTestTags.TITLE),
+        )
     }
 
     // Subtitle expands/shrinks vertically so the title doesn't visually jump when toggled.

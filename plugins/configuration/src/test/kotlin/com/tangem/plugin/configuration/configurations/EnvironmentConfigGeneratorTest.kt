@@ -40,7 +40,7 @@ class EnvironmentConfigGeneratorTest {
     }
 
     @Test
-    fun `generate handles empty string as nullable`() {
+    fun `GIVEN empty string WHEN generate THEN keeps non-null empty string`() {
         // Arrange
         val json = """
             {
@@ -52,7 +52,7 @@ class EnvironmentConfigGeneratorTest {
         val generatedCode = generateAndReadOutput(json)
 
         // Assert
-        assertThat(generatedCode).contains("val emptyValue: String? = null")
+        assertThat(generatedCode).contains("val emptyValue: String = \"\"")
     }
 
     @Test
@@ -464,7 +464,7 @@ class EnvironmentConfigGeneratorTest {
         // Assert
         // Top-level properties
         assertThat(generatedCode).contains("""val tangemComApiKey: String = "api-key-123"""")
-        assertThat(generatedCode).contains("val mercuryoWidgetId: String? = null")
+        assertThat(generatedCode).contains("val mercuryoWidgetId: String = \"\"")
         assertThat(generatedCode).contains("const val isFeatureEnabled: Boolean = true")
         assertThat(generatedCode).contains("const val maxRetryCount: Long = 3")
 

@@ -6,7 +6,6 @@ import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.safe.SafeDeployment
-import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
@@ -195,6 +194,26 @@ internal class SafeCompositionCheckerTest {
         assertThat(actual.leftOrNull()).isEqualTo(JointOperationCreateError.CompositionMismatch)
     }
 
+    @Test
+    fun `GIVEN undeployed safe at the SafeL2 address of the composition WHEN ensureMatches THEN mismatch blocks`() =
+        runTest {
+            // Arrange
+            clearMocks(networkReader)
+            coEvery { networkReader.getCode(userWalletId, network) } returns "0x".right()
+
+            // Act
+            val actual = checker.ensureMatches(
+                userWalletId = userWalletId,
+                network = network,
+                safeAddress = COMPUTED_SAFE_L2,
+                owners = listOf(ALICE, BOB),
+                threshold = 2,
+            )
+
+            // Assert
+            assertThat(actual.leftOrNull()).isEqualTo(JointOperationCreateError.CompositionMismatch)
+        }
+
     private fun encodeAddressArray(addresses: List<String>): String {
         return "0x" +
             BigInteger.valueOf(32).toWordHex() +
@@ -218,7 +237,12 @@ internal class SafeCompositionCheckerTest {
         const val GET_THRESHOLD_SELECTOR = "0xe75235b8"
 
         val COMPUTED_SAFE: String = DefaultSafeAddressCalculator()
-            .compute(owners = listOf(ALICE, BOB), threshold = 2, singleton = SafeSingleton.SAFE_L2)
+            .compute(owners = listOf(ALICE, BOB), threshold = 2)
+            .getOrNull()!!
+
+        /** The same composition under the SafeL2 singleton: a valid Safe, but not the one the account may be */
+        val COMPUTED_SAFE_L2: String = DefaultSafeAddressCalculator()
+            .compute(owners = listOf(ALICE, BOB), threshold = 2, singleton = "0xEdd160fEBBD92E350D4D398fb636302fccd67C7e")
             .getOrNull()!!
     }
 }

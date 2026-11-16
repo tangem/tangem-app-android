@@ -8,7 +8,10 @@ import com.tangem.domain.markets.TokenListBatchingContext
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.TokenMarketUpdateRequest
+import com.tangem.domain.markets.TokenQuotesShort
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
+import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
@@ -35,6 +38,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -194,6 +198,52 @@ internal class MarketPulseBatchFlowManagerTest {
             assertThat(reloadConfigs(actions).map(TokenMarketListConfig::geckoCategoryId))
                 .containsExactly(null, "ai").inOrder()
         }
+
+    @Test
+    fun `GIVEN a token returned in two batches WHEN items are built THEN it is listed once`() = runTest {
+        // Arrange
+        val state = MutableStateFlow(
+            BatchListState<Int, List<TokenMarket>>(data = emptyList(), status = PaginationStatus.None),
+        )
+        captureActions(state = state)
+        val manager = createManager(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        state.value = BatchListState(
+            data = listOf(
+                Batch(key = 0, data = listOf(tokenMarket("btc"), tokenMarket("tcy"))),
+                Batch(key = 1, data = listOf(tokenMarket("tcy"), tokenMarket("eth"))),
+            ),
+            status = PaginationStatus.EndOfPagination,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(manager.uiItems.value.map { it.id }).containsExactly("btc", "tcy", "eth").inOrder()
+    }
+
+    private fun tokenMarket(id: String) = TokenMarket(
+        id = CryptoCurrency.RawID(id),
+        name = id,
+        symbol = id.uppercase(),
+        marketRating = 1,
+        // null keeps the converter off CompactDecimalFormat, which the JVM test runtime does not stub
+        marketCap = null,
+        isUnderMarketCapLimit = false,
+        tokenQuotesShort = TokenQuotesShort(
+            currentPrice = BigDecimal.ONE,
+            h24ChangePercent = BigDecimal.ZERO,
+            weekChangePercent = null,
+            monthChangePercent = null,
+        ),
+        tokenCharts = TokenMarket.Charts(h24 = null, week = null, month = null),
+        yieldRate = null,
+        updateTimestamp = null,
+        networks = null,
+        isRestrictedForCountry = false,
+        imageHost = "",
+    )
 
     private fun selectionOf(id: String) = MarketCategorySelection(
         category = MarketCategorySelection.Entry(id = id, name = id.uppercase()),

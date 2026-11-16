@@ -1,6 +1,6 @@
 package com.tangem.core.analytics.converters
 
-class UnderscoreAnalyticsEventConverter {
+internal class UnderscoreAnalyticsEventConverter {
 
     fun convertEventName(event: String): String {
         return convertString(event, FIREBASE_EVENT_NAME_MAX_LENGTH)

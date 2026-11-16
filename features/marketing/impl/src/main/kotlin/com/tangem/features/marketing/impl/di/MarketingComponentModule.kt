@@ -3,14 +3,18 @@ package com.tangem.features.marketing.impl.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.marketing.api.MarketingBannerComponent
+import com.tangem.features.marketing.api.promopage.PromoPageComponent
 import com.tangem.features.marketing.impl.DefaultMarketingBannerComponent
 import com.tangem.features.marketing.impl.model.MarketingBannerModel
+import com.tangem.features.marketing.impl.promopage.DefaultPromoPageComponent
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
+import java.time.Clock
 import javax.inject.Singleton
 
 @Module
@@ -22,6 +26,10 @@ internal interface MarketingComponentModule {
     fun bindMarketingBannerComponentFactory(
         factory: DefaultMarketingBannerComponent.Factory,
     ): MarketingBannerComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindPromoPageComponentFactory(factory: DefaultPromoPageComponent.Factory): PromoPageComponent.Factory
 }
 
 @Module
@@ -32,4 +40,12 @@ internal interface MarketingModelModule {
     @IntoMap
     @ClassKey(MarketingBannerModel::class)
     fun bindMarketingBannerModel(model: MarketingBannerModel): Model
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+internal object MarketingClockModule {
+
+    @Provides
+    fun provideClock(): Clock = Clock.systemUTC()
 }

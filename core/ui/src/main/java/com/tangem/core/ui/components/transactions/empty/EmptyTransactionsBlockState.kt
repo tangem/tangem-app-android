@@ -6,7 +6,7 @@ import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.TextReference
 
 sealed class EmptyTransactionsBlockState(
-    val buttonsState: ButtonsState,
+    val buttonsState: ButtonsState?,
     val iconRes: Int,
     val text: TextReference,
 ) {
@@ -44,17 +44,19 @@ sealed class EmptyTransactionsBlockState(
     )
 
     data class Empty(
-        val onExplore: () -> Unit,
+        val onExplore: (() -> Unit)?,
         @DrawableRes val exploreIconResId: Int,
     ) : EmptyTransactionsBlockState(
-        buttonsState = ButtonsState.SingleButton(
-            actionButtonConfig = ActionButtonConfig(
-                text = TextReference.Res(R.string.common_explore),
-                iconResId = exploreIconResId,
-                onClick = onExplore,
-                isEnabled = true,
-            ),
-        ),
+        buttonsState = onExplore?.let { onClick ->
+            ButtonsState.SingleButton(
+                actionButtonConfig = ActionButtonConfig(
+                    text = TextReference.Res(R.string.common_explore),
+                    iconResId = exploreIconResId,
+                    onClick = onClick,
+                    isEnabled = true,
+                ),
+            )
+        },
         iconRes = R.drawable.ic_empty_token_64,
         text = TextReference.Res(R.string.transaction_history_empty_transactions),
     )

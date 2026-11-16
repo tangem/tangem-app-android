@@ -101,6 +101,8 @@ internal data class RecoveryPublicKeyApiResponse(
  * stays free of optional fields it never sends.
  *
  * @property encryptedRecoveryKey base64 RSA-OAEP-256 ciphertext, sealed to the KMS public key
+ * @property kmsKeyId `kid` of the KMS public key [encryptedRecoveryKey] is sealed to, verbatim; omitted when
+ * the key came without one, and the backend then assumes its active key
  */
 @Suppress("LongParameterList")
 @JsonClass(generateAdapter = true)
@@ -111,6 +113,7 @@ internal data class SocialWalletRegistrationApiRequest(
     @Json(name = "walletSignatureSalt") val walletSignatureSalt: String,
     @Json(name = "providerIdToken") val providerIdToken: String,
     @Json(name = "encryptedRecoveryKey") val encryptedRecoveryKey: String,
+    @Json(name = "kmsKeyId") val kmsKeyId: String?,
     @Json(name = "attestationToken") val attestationToken: String?,
     @Json(name = "metadata") val metadata: DeviceMetadata,
 ) {

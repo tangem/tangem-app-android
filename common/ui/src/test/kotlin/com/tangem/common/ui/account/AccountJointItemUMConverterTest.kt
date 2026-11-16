@@ -1,7 +1,9 @@
 package com.tangem.common.ui.account
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -54,10 +56,41 @@ internal class AccountJointItemUMConverterTest {
         assertThat(actual.balance).isEqualTo(UserWalletItemUM.Balance.Hidden)
     }
 
-    private fun converter(balance: TotalFiatBalance, isBalanceHidden: Boolean = false) = AccountJointItemUMConverter(
+    @Test
+    fun `GIVEN a compromised account WHEN convert THEN dimmed, the paused text and no balance`() {
+        // Arrange
+        val balance = TotalFiatBalance.Loaded(amount = BigDecimal("12.5"), source = StatusSource.ACTUAL)
+
+        // Act
+        val actual = converter(balance, isCompromised = true).convert(account)
+
+        // Assert
+        assertThat(actual.information).isEqualTo(
+            UserWalletItemUM.Information.Loaded(resourceReference(R.string.joint_account_main_paused_for_safety)),
+        )
+        assertThat(actual.balance).isEqualTo(UserWalletItemUM.Balance.NotShowing)
+        assertThat(actual.isDimmed).isTrue()
+        assertThat(actual.titleBadge).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN an active account WHEN convert THEN the row is not dimmed`() {
+        // Act
+        val actual = converter(TotalFiatBalance.Loading).convert(account)
+
+        // Assert
+        assertThat(actual.isDimmed).isFalse()
+    }
+
+    private fun converter(
+        balance: TotalFiatBalance,
+        isBalanceHidden: Boolean = false,
+        isCompromised: Boolean = false,
+    ) = AccountJointItemUMConverter(
         onClick = {},
         appCurrency = appCurrency,
         accountBalance = balance,
         isBalanceHidden = isBalanceHidden,
+        isCompromised = isCompromised,
     )
 }

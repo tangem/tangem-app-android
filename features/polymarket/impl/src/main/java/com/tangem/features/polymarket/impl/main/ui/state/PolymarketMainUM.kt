@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.main.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
@@ -74,6 +75,7 @@ internal data class PolymarketEventUM(
     val rows: ImmutableList<PolymarketEventRowUM>,
     val hiddenMarketsCount: Int,
     val onClick: () -> Unit,
+    val sports: PolymarketSportsUM? = null,
 )
 
 /**
@@ -95,4 +97,5 @@ internal data class PolymarketOutcomeUM(
     val title: TextReference,
     val onClick: () -> Unit,
     val price: TextReference? = null,
+    val accent: PolymarketOutcomeAccent? = null,
 )

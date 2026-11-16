@@ -4,7 +4,6 @@ import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
-import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.jointaccount.signing.JointSignatureRecoverer
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.OwnerKeyIndex
@@ -56,11 +55,9 @@ class JointAccountCompositionVerifier(
     private fun isSafeAddressComputed(jointAccount: JointAccount, safeAddress: String): Boolean {
         val owners = jointAccount.members.map(JointAccount.Member::address)
 
-        return SafeSingleton.entries.any { singleton ->
-            safeAddressCalculator.compute(owners = owners, threshold = jointAccount.threshold, singleton = singleton)
-                .getOrNull()
-                ?.equals(safeAddress, ignoreCase = true) == true
-        }
+        return safeAddressCalculator.compute(owners = owners, threshold = jointAccount.threshold)
+            .getOrNull()
+            ?.equals(safeAddress, ignoreCase = true) == true
     }
 
     /** Nobody can confirm before the Safe address exists, so a signature on a pending account is out of contract */

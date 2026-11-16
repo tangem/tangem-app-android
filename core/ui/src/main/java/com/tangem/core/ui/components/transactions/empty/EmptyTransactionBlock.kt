@@ -65,14 +65,16 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
             color = TangemTheme.colors3.text.secondary,
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        state.buttonsState?.let { buttonsState ->
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Buttons(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .testTag(EmptyTransactionBlockTestTags.EXPLORE_BUTTON),
-            state = state.buttonsState,
-        )
+            Buttons(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .testTag(EmptyTransactionBlockTestTags.EXPLORE_BUTTON),
+                state = buttonsState,
+            )
+        }
     }
 }
 

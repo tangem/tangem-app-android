@@ -119,6 +119,7 @@ object MockAccounts {
                 virtualAccount = null,
                 isBankOfframpAvailable = null,
                 tariffPlan = null,
+                isPaymentAccountIssuing = false,
             ),
         )
     }

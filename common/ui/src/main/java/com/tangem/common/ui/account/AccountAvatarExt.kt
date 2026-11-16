@@ -24,11 +24,20 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 
-// TODO([REDACTED_TASK_KEY]): render the initial for Letter accounts and the pending-operation indicator
-fun Account.CryptoPortfolio.toAvatarState(): TangemAvatar.UiState = TangemAvatar.UiState.Account(
-    imageVector = icon.value.toAvatarIcon(),
-    color = icon.color.toFillColor(),
-)
+fun Account.CryptoPortfolio.toAvatarState(hasPendingOperation: Boolean = false): TangemAvatar.UiState =
+    if (icon.value == CryptoPortfolioIcon.Icon.Letter) {
+        TangemAvatar.UiState.Account(
+            letter = accountName.toUM().value,
+            color = icon.color.toFillColor(),
+            hasIndicator = hasPendingOperation,
+        )
+    } else {
+        TangemAvatar.UiState.Account(
+            imageVector = icon.value.toAvatarIcon(),
+            color = icon.color.toFillColor(),
+            hasIndicator = hasPendingOperation,
+        )
+    }
 
 fun CryptoPortfolioIcon.Color.toFillColor(): TangemAvatar.FillColor = when (this) {
     CryptoPortfolioIcon.Color.Azure -> TangemAvatar.FillColor.AzureBlue

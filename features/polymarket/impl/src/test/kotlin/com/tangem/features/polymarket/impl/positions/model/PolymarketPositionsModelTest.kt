@@ -32,6 +32,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -122,7 +123,7 @@ internal class PolymarketPositionsModelTest {
         assertThat(model.uiState.value.content).isEqualTo(Content.Loading)
         assertThat(finishedFilter).isEqualTo(PolymarketPositionsFilter.ALL)
         assertThat(model.uiState.value.selectedFilter).isEqualTo(PolymarketPositionsFilter.ALL)
-        verify(exactly = 0) { finished.selectFilter(any()) }
+        verify(exactly = 1) { finished.selectFilter(PolymarketPositionsFilter.LOST) }
         verify(exactly = 1) { active.dispose() }
         verify(exactly = 1) { finished.dispose() }
         verify(exactly = 1) { active.resume(any()) }
@@ -176,6 +177,96 @@ internal class PolymarketPositionsModelTest {
         verify(exactly = 1) { active.selectFilter(PolymarketPositionsFilter.ALL) }
         verify(exactly = 1) { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE, any()) }
         verify(exactly = 0) { active.dispose() }
+    }
+
+    @ParameterizedTest
+    @EnumSource(PolymarketPositionsTab::class)
+    fun `GIVEN a tab WHEN opened or switched to THEN offers that tab's status filters`(tab: PolymarketPositionsTab) =
+        runTest {
+            // Arrange
+            val model = createModel(tab)
+            val expected = when (tab) {
+                PolymarketPositionsTab.ACTIVE -> listOf(
+                    PolymarketPositionsFilter.ALL,
+                    PolymarketPositionsFilter.ACTIVE,
+                    PolymarketPositionsFilter.WON,
+                    PolymarketPositionsFilter.LOST,
+                    PolymarketPositionsFilter.DISPUTED,
+                    PolymarketPositionsFilter.PENDING,
+                    PolymarketPositionsFilter.SPLIT,
+                )
+                PolymarketPositionsTab.FINISHED -> listOf(
+                    PolymarketPositionsFilter.ALL,
+                    PolymarketPositionsFilter.WON,
+                    PolymarketPositionsFilter.LOST,
+                    PolymarketPositionsFilter.SPLIT,
+                    PolymarketPositionsFilter.CLOSED,
+                )
+            }
+
+            // Act
+            val opened = model.uiState.value.filters
+            model.uiState.value.onTabSelect(PolymarketPositionsTab.entries.single { it != tab }.toTab())
+            model.uiState.value.onTabSelect(tab.toTab())
+            val switched = model.uiState.value.filters
+
+            // Assert
+            assertThat(opened).containsExactlyElementsIn(expected).inOrder()
+            assertThat(switched).containsExactlyElementsIn(expected).inOrder()
+        }
+
+    @Test
+    fun `GIVEN Finished list WHEN a finished status is selected THEN filters the Finished feed`() = runTest {
+        // Arrange
+        val model = createModel(PolymarketPositionsTab.FINISHED)
+        model.onResume()
+        runCurrent()
+        every { finished.selectFilter(any()) } answers {
+            finishedState.value = FilteredContent(firstArg(), Content.Loading)
+        }
+
+        // Act
+        model.uiState.value.onFilterSelect(PolymarketPositionsFilter.CLOSED)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.selectedFilter).isEqualTo(PolymarketPositionsFilter.CLOSED)
+        assertThat(model.uiState.value.content).isEqualTo(Content.Loading)
+        verify(exactly = 1) { finished.selectFilter(PolymarketPositionsFilter.CLOSED) }
+    }
+
+    @ParameterizedTest
+    @EnumSource(PolymarketPositionsFilter::class, names = ["ACTIVE", "DISPUTED", "PENDING"])
+    fun `GIVEN Finished list WHEN an Active-only status is selected THEN ignores it`(filter: PolymarketPositionsFilter) =
+        runTest {
+            // Arrange
+            val model = createModel(PolymarketPositionsTab.FINISHED)
+            model.onResume()
+            runCurrent()
+
+            // Act
+            model.uiState.value.onFilterSelect(filter)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.selectedFilter).isEqualTo(PolymarketPositionsFilter.ALL)
+            verify(exactly = 0) { finished.selectFilter(any()) }
+        }
+
+    @Test
+    fun `GIVEN Active list WHEN Closed is selected THEN ignores it`() = runTest {
+        // Arrange
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        model.uiState.value.onFilterSelect(PolymarketPositionsFilter.CLOSED)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.selectedFilter).isEqualTo(PolymarketPositionsFilter.ALL)
+        verify(exactly = 0) { active.selectFilter(any()) }
     }
 
     @Test
@@ -377,6 +468,11 @@ internal class PolymarketPositionsModelTest {
             loader = loader,
             urlOpener = mockk(relaxed = true),
         ).also { model = it }
+    }
+
+    private fun PolymarketPositionsTab.toTab(): Tab = when (this) {
+        PolymarketPositionsTab.ACTIVE -> Tab.Active
+        PolymarketPositionsTab.FINISHED -> Tab.Finished
     }
 
     @Test

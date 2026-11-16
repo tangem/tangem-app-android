@@ -162,6 +162,20 @@ internal class CollectiblesAccountStatusValueTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsShown {
+
+        @Test
+        fun `GIVEN every state WHEN isShown THEN only a vault found missing hides the account`() {
+            // Act
+            val hidden = allStates().filterNot { it.isShown }
+
+            // Assert
+            Truth.assertThat(hidden).containsExactly(CollectiblesAccountStatusValue.NotOnboarded)
+        }
+    }
+
     internal data class TotalFiatBalanceModel(
         val value: CollectiblesAccountStatusValue,
         val expected: TotalFiatBalance,

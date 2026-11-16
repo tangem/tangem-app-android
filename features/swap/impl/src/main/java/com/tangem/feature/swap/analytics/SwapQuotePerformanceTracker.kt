@@ -1,17 +1,16 @@
 package com.tangem.feature.swap.analytics
 
-import com.google.firebase.perf.FirebasePerformance
-import com.google.firebase.perf.metrics.Trace
+import com.tangem.core.analytics.api.PerformanceTrace
+import com.tangem.core.analytics.api.PerformanceTracer
 
-internal class SwapQuotePerformanceTracker {
+internal class SwapQuotePerformanceTracker(private val performanceTracer: PerformanceTracer) {
 
-    private var trace: Trace? = null
+    private var trace: PerformanceTrace? = null
 
     fun onLoadingStarted(providersCount: Int) {
         trace?.stop()
-        trace = FirebasePerformance.getInstance().newTrace(SWAP_QUOTES_LOADED_TRACE_NAME).apply {
+        trace = performanceTracer.start(SWAP_QUOTES_LOADED_TRACE_NAME).apply {
             putAttribute(PROVIDERS_COUNT, providersCount.toString())
-            start()
         }
     }
 

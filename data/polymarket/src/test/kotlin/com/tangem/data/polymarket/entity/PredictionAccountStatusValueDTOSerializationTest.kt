@@ -88,7 +88,7 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
     }
 
     @Test
-    fun `GIVEN a file with the dropped positions value WHEN decoded THEN the entry survives`() {
+    fun `GIVEN a file with the positions value WHEN decoded THEN the value is restored`() {
         // Arrange
         val encoded =
             """{"wallet-1":{"__type":"active","balance":"40","deposit_address":"0xbridge","positions_value":"3.25"}}"""
@@ -99,7 +99,11 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
         // Assert
         assertThat(restored).containsExactly(
             "wallet-1",
-            PredictionAccountStatusValueDTO.Active(balance = BigDecimal("40"), depositAddress = "0xbridge"),
+            PredictionAccountStatusValueDTO.Active(
+                balance = BigDecimal("40"),
+                depositAddress = "0xbridge",
+                positionsValue = BigDecimal("3.25"),
+            ),
         )
     }
 

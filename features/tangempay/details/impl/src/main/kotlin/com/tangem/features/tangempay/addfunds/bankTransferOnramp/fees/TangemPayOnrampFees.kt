@@ -1,8 +1,10 @@
 package com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -24,12 +26,14 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
+import kotlinx.collections.immutable.ImmutableList
 
 private val PlaceholderTitleIds = listOf(
     R.string.tangempay_bank_transfer_fee_ach,
@@ -59,10 +63,13 @@ internal fun TangemPayOnrampFees(
             }
         }
         is TangemPayOnrampFeesUM.Content -> {
-            if (fees.rows.isEmpty()) return
+            if (fees.isEmpty) return
             Column(modifier = rowsModifier) {
                 fees.rows.forEachIndexed { index, fee ->
-                    FeeRow(fee = fee, divider = index != fees.rows.lastIndex)
+                    FeeRow(fee = fee, divider = index != fees.rows.lastIndex || fees.notes.isNotEmpty())
+                }
+                if (fees.notes.isNotEmpty()) {
+                    FeeNotes(notes = fees.notes)
                 }
             }
         }
@@ -72,7 +79,7 @@ internal fun TangemPayOnrampFees(
 @Composable
 private fun FeeRow(fee: TangemPayOnrampFeesUM.FeeRow, divider: Boolean) {
     TangemRow(
-        contentLead = TangemRowContentLead.Equal,
+        contentLead = TangemRowContentLead.End,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         divider = divider,
         titleSlot = {
@@ -80,6 +87,7 @@ private fun FeeRow(fee: TangemPayOnrampFeesUM.FeeRow, divider: Boolean) {
                 modifier = Modifier.testTag(TangemPayTestTags.vaDepositFeeTitle(fee.type)),
                 text = fee.title,
                 role = TangemRowTextRole.Title,
+                maxLines = Int.MAX_VALUE,
             )
         },
         valueSlot = {
@@ -89,6 +97,22 @@ private fun FeeRow(fee: TangemPayOnrampFeesUM.FeeRow, divider: Boolean) {
             )
         },
     )
+}
+
+@Composable
+private fun FeeNotes(notes: ImmutableList<TextReference>) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        notes.forEach { note ->
+            Text(
+                text = note.resolveReference(),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
+        }
+    }
 }
 
 @Composable

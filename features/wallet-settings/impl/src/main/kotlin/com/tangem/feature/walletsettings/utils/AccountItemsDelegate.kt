@@ -1,6 +1,7 @@
 package com.tangem.feature.walletsettings.utils
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.account.AccountCollectiblesItemUMConverter
 import com.tangem.common.ui.account.AccountJointItemUMConverter
 import com.tangem.common.ui.account.AccountPortfolioItemUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -23,6 +24,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
+import com.tangem.domain.models.account.isShown
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.extension.isAccountsSupported
@@ -101,9 +103,10 @@ internal class AccountItemsDelegate @Inject constructor(
         }
 
         fun AccountStatus.Joint.mapJoint(): WalletSettingsAccountsUM {
+            val isCompromised = value is JointAccountStatusValue.Error.Compromised
             val accountItemUM = AccountJointItemUMConverter(
                 onClick = {
-                    if (value is JointAccountStatusValue.Error.Compromised) {
+                    if (isCompromised) {
                         jointAccountCompromisedAlert.show(userWalletId = userWalletId)
                     } else {
                         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
@@ -113,8 +116,18 @@ internal class AccountItemsDelegate @Inject constructor(
                 appCurrency = appCurrency,
                 accountBalance = jointBalance(),
                 isBalanceHidden = isBalanceHidden,
+                isCompromised = isCompromised,
             ).convert(account)
             return WalletSettingsAccountsUM.JointAccount(state = accountItemUM)
+        }
+
+        fun AccountStatus.Collectibles.mapCollectibles(): WalletSettingsAccountsUM {
+            val accountItemUM = AccountCollectiblesItemUMConverter(
+                appCurrency = appCurrency,
+                isBalanceHidden = isBalanceHidden,
+            ).convert(this)
+
+            return WalletSettingsAccountsUM.CollectiblesAccount(state = accountItemUM)
         }
 
         val accounts = accountStatusList.accountStatuses.filterIsInstance<AccountStatus.Personal>()
@@ -125,7 +138,14 @@ internal class AccountItemsDelegate @Inject constructor(
             text = resourceReference(R.string.common_accounts),
         )
 
-        val accountItems = accounts.map { it.mapCryptoPortfolio() } + jointAccounts.map { it.mapJoint() }
+        val accountItems = accountStatusList.accountStatuses.mapNotNull { status ->
+            when (status) {
+                is AccountStatus.Personal -> status.mapCryptoPortfolio()
+                is AccountStatus.Joint -> status.mapJoint()
+                is AccountStatus.Collectibles -> status.takeIf { it.value.isShown }?.mapCollectibles()
+                else -> null
+            }
+        }
 
         add(header)
         addAll(accountItems.applySortingOrder(order = accountsOrder))
@@ -184,9 +204,8 @@ internal class AccountItemsDelegate @Inject constructor(
         return this.sortedBy { positionByAccountId[it.id] ?: Int.MAX_VALUE }
     }
 
-    private fun AccountStatus.Joint.jointBalance(): TotalFiatBalance = when (val status = value) {
+    private fun AccountStatus.Joint.jointBalance(): TotalFiatBalance = when (value) {
         is JointAccountStatusValue.Loading -> TotalFiatBalance.Loading
-        is JointAccountStatusValue.Error.Compromised -> status.fiatBalance
         is JointAccountStatusValue.Error -> TotalFiatBalance.Failed
         else -> tokenList.totalFiatBalance
     }

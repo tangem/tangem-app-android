@@ -113,6 +113,20 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
             expected = MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
                 customerId = CUSTOMER_ID,
+                step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
+            ),
+        ),
+        ResolveModel(
+            name = "processing awaiting deposit",
+            summary = summary(
+                kycStatus = SummaryKycStatus.APPROVED,
+                banking = MoneyAccount.Activation.Status.PROCESSING,
+                bankingStep = MoneyAccount.Activation.Step.AWAITING_DEPOSIT,
+            ),
+            expected = MoneyAccountStatusValue.Onboarding.Activating(
+                source = StatusSource.ACTUAL,
+                customerId = CUSTOMER_ID,
+                step = MoneyAccountStatusValue.Onboarding.Activating.Step.AWAITING_DEPOSIT,
             ),
         ),
         ResolveModel(
@@ -123,7 +137,10 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
                 bankingStep = MoneyAccount.Activation.Step.ISSUING,
                 bankingFailureReason = MoneyAccount.Activation.FailureReason.RAIN_REJECTED,
             ),
-            expected = MoneyAccountStatusValue.Empty,
+            expected = MoneyAccountStatusValue.Onboarding.Failed(
+                source = StatusSource.ACTUAL,
+                customerId = CUSTOMER_ID,
+            ),
         ),
         ResolveModel(
             name = "closed with failed account",

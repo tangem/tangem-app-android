@@ -64,12 +64,12 @@ internal class JointOperationSignersUMConverterTest {
     }
 
     @Test
-    fun `GIVEN a member who never answered a finished operation WHEN converted THEN the status stays empty`() {
+    fun `GIVEN a member who never answered a closed operation WHEN converted THEN the status is no response`() {
         // Act
-        val actual = convert(signer(answer = Answer.WAITING, at = null), isFinished = true)
+        val actual = convert(signer(answer = Answer.WAITING, at = null), isVotingClosed = true)
 
         // Assert
-        assertThat(actual.statusText).isEqualTo(TextReference.EMPTY)
+        assertThat(actual.statusResId()).isEqualTo(CoreUiR.string.joint_operation_no_response)
         assertThat(actual.mark).isNull()
     }
 
@@ -104,13 +104,13 @@ internal class JointOperationSignersUMConverterTest {
 
     private fun convert(
         signer: JointOperationSignerState,
-        isFinished: Boolean = false,
+        isVotingClosed: Boolean = false,
     ): JointOperationSignersUM.SignerUM {
         return converter.convert(
             value = JointOperationSignersUMConverter.Input(
                 membersCount = 1,
                 signers = listOf(signer),
-                isFinished = isFinished,
+                isVotingClosed = isVotingClosed,
             ),
         ).signers.first()
     }

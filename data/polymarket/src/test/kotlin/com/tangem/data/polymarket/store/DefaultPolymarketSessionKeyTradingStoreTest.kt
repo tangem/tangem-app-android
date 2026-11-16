@@ -64,6 +64,28 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
     }
 
     @Test
+    fun `GIVEN a key not refused WHEN readiness is restored THEN it is ready`() = runTest {
+        // Act
+        store.restoreReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Assert
+        assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a refused key WHEN readiness is restored THEN it stays refused and not ready`() = runTest {
+        // Arrange
+        store.markRefused(WALLET_A, KEY)
+
+        // Act
+        store.restoreReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Assert
+        assertThat(store.isRefused(WALLET_A, KEY)).isTrue()
+        assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isFalse()
+    }
+
+    @Test
     fun `GIVEN a checked reconciliation WHEN isMissingOnExchange THEN true for the missing keys of that wallet`() {
         // Act
         store.setReconciliation(WALLET_A, checked(missing = setOf(KEY)))

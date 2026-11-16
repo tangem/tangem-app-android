@@ -48,14 +48,13 @@ internal class DefaultYieldSupplyRepository(
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val appPreferencesStore: AppPreferencesStore,
     private val growPreferencesKeys: GrowPreferencesKeys,
-    private val isMerklIncentivesEnabled: Boolean,
 ) : YieldSupplyRepository {
 
     private val statusMapFlow = MutableStateFlow<Map<String, YieldSupplyPendingStatus>>(emptyMap())
 
     override suspend fun getCachedMarkets(): List<YieldMarketToken> = withContext(dispatchers.io) {
         val cache = store.getSyncOrNull().orEmpty()
-        val domain = cache.map(YieldMarketTokenConverter::convert).filter(::isChainEnabled)
+        val domain = cache.map(YieldMarketTokenConverter::convert)
         domain.enrichNetworkIds()
     }
 
@@ -69,7 +68,6 @@ internal class DefaultYieldSupplyRepository(
         // reports as supported would cost every other chain its markets.
         val chains = Blockchain.yieldSupplySupportedBlockchains()
             .filterNot { it.isTestnet() }
-            .filter(::isBlockchainEnabled)
             .mapNotNull { it.getChainId() }
             .joinToString(",")
 
@@ -99,8 +97,6 @@ internal class DefaultYieldSupplyRepository(
     }
 
     private suspend fun getIncentivisedMarkets(chains: String): List<YieldSupplyMarketTokenDto> {
-        if (!isMerklIncentivesEnabled) return emptyList()
-
         return when (val response = yieldIncentivesApi.getIncentiveMarkets(chainId = chains)) {
             is ApiResponse.Success -> response.data.marketDtos
             is ApiResponse.Error -> {
@@ -115,13 +111,12 @@ internal class DefaultYieldSupplyRepository(
     }
 
     override fun getMarketsFlow(): Flow<List<YieldMarketToken>> = store.get().map {
-        it.map(YieldMarketTokenConverter::convert).filter(::isChainEnabled).enrichNetworkIds()
+        it.map(YieldMarketTokenConverter::convert).enrichNetworkIds()
     }
 
     override suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketToken =
         withContext(dispatchers.io) {
             val blockchain = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)
-            check(blockchain == null || isBlockchainEnabled(blockchain)) { "Yield supply is disabled for $blockchain" }
             val chainId = blockchain?.getChainId() ?: error("Chain id is required for evm's")
             val response = yieldSupplyApi.getYieldTokenStatus(chainId, cryptoCurrencyToken.contractAddress)
                 .getOrThrow()
@@ -226,13 +221,6 @@ internal class DefaultYieldSupplyRepository(
         val key = getTokenProtocolStatusKey(userWalletId, cryptoCurrency)
         return statusMapFlow.map { it[key] }
     }
-
-    /** Monad yield ships together with the Merkl incentives, so the toggle keeps it hidden until then. */
-    private fun isBlockchainEnabled(blockchain: Blockchain): Boolean =
-        blockchain != Blockchain.Monad || isMerklIncentivesEnabled
-
-    private fun isChainEnabled(token: YieldMarketToken): Boolean =
-        token.chainId != Blockchain.Monad.getChainId() || isMerklIncentivesEnabled
 
     private fun List<YieldMarketToken>.enrichNetworkIds(): List<YieldMarketToken> {
         val chainIdMap = Blockchain.entries.associate { it.getChainId() to it.toNetworkId() }

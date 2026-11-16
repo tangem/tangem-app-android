@@ -3,6 +3,7 @@ package com.tangem.data.polymarket.converter
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 
 /**
@@ -29,6 +30,7 @@ internal class PredictionAccountStatusValueDTOConverter(
         is PredictionAccountStatusValue.Active -> PredictionAccountStatusValueDTO.Active(
             balance = value.balance,
             depositAddress = value.depositAddress,
+            positionsValue = (value.positions as? PredictionPositionsValue.Known)?.amount,
         )
         is PredictionAccountStatusValue.Loading,
         is PredictionAccountStatusValue.Error,
@@ -50,6 +52,9 @@ internal class PredictionAccountStatusValueDTOConverter(
             fiatRate = null,
             depositCurrency = collateralCurrencyFactory.createDepositTarget(),
             depositAddress = value.depositAddress,
+            positions = value.positionsValue
+                ?.let { PredictionPositionsValue.Known(amount = it, source = StatusSource.CACHE) }
+                ?: PredictionPositionsValue.Unknown,
         )
     }
 

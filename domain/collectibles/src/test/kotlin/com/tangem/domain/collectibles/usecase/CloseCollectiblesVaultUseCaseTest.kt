@@ -4,7 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.models.account.AccountId
@@ -24,12 +24,12 @@ internal class CloseCollectiblesVaultUseCaseTest {
 
     private val gachaVaultRepository: GachaVaultRepository = mockk()
     private val accountRepository: CollectiblesAccountRepository = mockk(relaxed = true)
-    private val hotDelegate: CollectiblesHotDelegate = mockk(relaxed = true)
+    private val sessionKey: CollectiblesSessionKey = mockk(relaxed = true)
 
     private val useCase = CloseCollectiblesVaultUseCase(
         gachaVaultRepository = gachaVaultRepository,
         accountRepository = accountRepository,
-        hotDelegate = hotDelegate,
+        sessionKey = sessionKey,
     )
 
     private val userWallet: UserWallet = mockk {
@@ -38,11 +38,11 @@ internal class CloseCollectiblesVaultUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(gachaVaultRepository, accountRepository, hotDelegate)
+        clearMocks(gachaVaultRepository, accountRepository, sessionKey)
     }
 
     @Test
-    fun `GIVEN the chain closes the vault WHEN invoked THEN the delegate, the record and the backend row go`() = runTest {
+    fun `GIVEN the chain closes the vault WHEN invoked THEN the session key, the record and the backend row go`() = runTest {
         // Arrange
         coEvery { gachaVaultRepository.closeVault(userWallet) } returns Unit.right()
 
@@ -52,7 +52,7 @@ internal class CloseCollectiblesVaultUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerifyOrder {
-            hotDelegate.forget(AccountId.forCollectiblesAccount(userWalletId = WALLET_ID))
+            sessionKey.forget(AccountId.forCollectiblesAccount(userWalletId = WALLET_ID))
             accountRepository.clearAccount(WALLET_ID)
             accountRepository.unregisterAccount(WALLET_ID)
         }
@@ -69,7 +69,7 @@ internal class CloseCollectiblesVaultUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(CollectiblesAccountError.CardError(code = 50002, message = "50002").left())
         coVerify(exactly = 0) {
-            hotDelegate.forget(any())
+            sessionKey.forget(any())
             accountRepository.clearAccount(any())
             accountRepository.unregisterAccount(any())
         }

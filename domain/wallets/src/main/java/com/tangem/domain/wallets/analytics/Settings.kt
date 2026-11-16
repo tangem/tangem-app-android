@@ -40,6 +40,28 @@ sealed class Settings(
         params = mapOf(AnalyticsParam.WALLETS to walletsType.paramValue()),
     )
 
+    class NoticeMobileWalletLimit(
+        type: Type,
+        limit: Limit,
+    ) : Settings(
+        event = "Notice - Mobile Wallet Limit",
+        params = mapOf(
+            AnalyticsParam.TYPE to type.value,
+            AnalyticsParam.LIMIT to limit.value,
+        ),
+    ) {
+        enum class Type(val value: String) {
+            Create("Create"),
+            Import("Import"),
+            SocialLogin("Social Login"),
+        }
+
+        enum class Limit(val value: String) {
+            MobileWallets("Mobile Wallets"),
+            SocialLogin("Social Login"),
+        }
+    }
+
     class ColdWalletAdded(
         source: AnalyticsParam.ScreensSources?,
     ) : Settings(

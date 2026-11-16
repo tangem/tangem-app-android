@@ -77,6 +77,7 @@ dependencies {
     api(deps.kotlin.coroutines)
     api(deps.kotlin.immutable.collections)
     implementation(deps.arrow.core)
+    implementation(deps.arrow.fx)
     implementation(deps.kotlin.serialization)
 
     /** DI */

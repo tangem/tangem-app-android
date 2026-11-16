@@ -48,9 +48,14 @@ import kotlinx.collections.immutable.ImmutableList
  * @param state Content of the modal. See [messageModalUM].
  * @param onDismissRequest Called after [MessageModalUM.onDismiss] on every dismissal: the close button, back,
  *   the scrim, or an action calling [TangemModalActionScope.dismiss].
+ * @param presentation Where the modal lives. See [TangemModal.Presentation].
  */
 @Composable
-fun MessageModal(state: MessageModalUM, onDismissRequest: () -> Unit) {
+fun MessageModal(
+    state: MessageModalUM,
+    onDismissRequest: () -> Unit,
+    presentation: TangemModal.Presentation = TangemModal.Presentation.Auto,
+) {
     val actionScope = rememberActionScope(state = state, onDismissRequest = onDismissRequest)
 
     TangemModal<MessageModalUM>(
@@ -61,6 +66,7 @@ fun MessageModal(state: MessageModalUM, onDismissRequest: () -> Unit) {
         ),
         onBack = actionScope::dismiss,
         scrollableContent = false,
+        presentation = presentation,
         title = { content ->
             TangemModal.TopNavigation(
                 endButton = {
@@ -143,6 +149,7 @@ private fun Buttons(buttons: ImmutableList<MessageModalUM.Button>, actionScope: 
                     iconStart = button.iconStart,
                     iconEnd = button.iconEnd,
                     text = button.text,
+                    isLoading = button.isLoading,
                     onClick = { button.onClick(actionScope) },
                 )
             }

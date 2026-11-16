@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketFinishedPositionUM
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 internal data class PolymarketPositionsUM(
@@ -12,6 +13,7 @@ internal data class PolymarketPositionsUM(
     val content: Content,
     val onTabSelect: (Tab) -> Unit,
     val onBackClick: () -> Unit,
+    val filters: ImmutableList<PolymarketPositionsFilter> = persistentListOf(),
     val selectedFilter: PolymarketPositionsFilter = PolymarketPositionsFilter.ALL,
     val onFilterSelect: (PolymarketPositionsFilter) -> Unit = {},
     val finishedPosition: PolymarketFinishedPositionUM? = null,

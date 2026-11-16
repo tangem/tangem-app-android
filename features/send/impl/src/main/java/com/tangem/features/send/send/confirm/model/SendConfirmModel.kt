@@ -185,7 +185,14 @@ internal class SendConfirmModel @Inject constructor(
      * stay stale until a successful send.
      */
     fun updateEditedState(state: SendUM) {
-        _uiState.update { it.copy(amountUM = state.amountUM, destinationUM = state.destinationUM) }
+        _uiState.update { current ->
+            current.copy(
+                amountUM = state.amountUM.takeUnless { it is AmountState.Empty } ?: current.amountUM,
+                destinationUM = state.destinationUM
+                    .takeIf { it is DestinationUM.Content && it.isInitialized }
+                    ?: current.destinationUM,
+            )
+        }
         onFeeReload()
         updateConfirmNotifications()
     }
@@ -510,15 +517,19 @@ internal class SendConfirmModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun stopSending() {
+        _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+    }
+
     private fun verifyAndSendTransaction() {
-        val amountValue = amountState?.amountTextField?.cryptoAmount?.value ?: return
-        // A blank recipient is deliberately not filtered out here: returning early would leave `isSending` on
-        // forever. It is rejected while the transaction is built, so it surfaces as the regular error alert.
-        val destination = destinationUM?.addressTextField?.actualAddress ?: return
+        val amountValue = amountState?.amountTextField?.cryptoAmount?.value ?: return stopSending()
+        // A blank recipient is deliberately not filtered out here: it is rejected while the transaction is built,
+        // so it surfaces as the regular error alert.
+        val destination = destinationUM?.addressTextField?.actualAddress ?: return stopSending()
         val memo = destinationUM?.memoTextField?.value
         val fee = feeUMV2?.selectedFeeItem?.fee
         val nonce = (feeUMV2?.feeNonce as? FeeNonce.Nonce)?.nonce
-        val feeValue = fee?.amount?.value ?: return
+        val feeValue = fee?.amount?.value ?: return stopSending()
 
         val receivingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
@@ -606,16 +617,19 @@ internal class SendConfirmModel @Inject constructor(
                 reportIntentHashIfNeeded(transfer = transfer, txHash = txHash.ifEmpty { txData.hash.orEmpty() })
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
-                modelScope.launch(dispatchers.default) {
+                val sentUM = uiState.value
+                val sentAccount = params.accountFlow.value
+                // The success screen replaces this step right away and cancels modelScope
+                appScope.launch(dispatchers.default) {
                     sendAnalyticHelper.sendSuccessAnalytics(
                         cryptoCurrency = cryptoCurrency,
-                        sendUM = uiState.value,
-                        account = params.accountFlow.value,
+                        sendUM = sentUM,
+                        account = sentAccount,
                         feeToken = feeToken,
                     )
                     recordTokenTransferFromSendUseCase(
                         userWalletId = userWallet.walletId,
-                        sourceAccount = params.accountFlow.value,
+                        sourceAccount = sentAccount,
                         currency = cryptoCurrency,
                         destinationAddress = confirmData.enteredDestination.orEmpty(),
                     )

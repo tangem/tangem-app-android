@@ -7,6 +7,7 @@ import com.tangem.core.remote.header.RequestHeader
 import com.tangem.grow.datasource.BuildConfig
 import com.tangem.grow.datasource.express.ExpressAuthProvider
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.info.AppInfoProvider
 
 /**
@@ -15,12 +16,18 @@ import com.tangem.utils.info.AppInfoProvider
  * @property growEnvironmentConfig      grow environment config slice
  * @property expressAuthProvider        express auth provider
  * @property appInfoProvider            app info provider
+ * @param isV2Enabled                   whether base urls point to `/v2` (session-authorized) instead of `/v1`
  */
 class Express(
     private val growEnvironmentConfig: GrowEnvironmentConfig,
     private val expressAuthProvider: ExpressAuthProvider,
     private val appInfoProvider: AppInfoProvider,
+    @RemoveWithToggle(toggleName = "TWI_1906_EXPRESS_V2_ENABLED") isV2Enabled: Boolean,
 ) : ApiConfig() {
+
+    // Declared before environmentConfigs: property initializers run in order and the urls read it
+    @RemoveWithToggle(toggleName = "TWI_1906_EXPRESS_V2_ENABLED")
+    private val apiVersion: String = if (isV2Enabled) "v2" else "v1"
 
     override val id: ApiConfig.ID get() = ID
 
@@ -103,7 +110,7 @@ class Express(
 
     private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.PROD,
-        baseUrl = "https://express.tangem.com/v1/",
+        baseUrl = "https://express.tangem.com/$apiVersion/",
         headers = createHeaders(isProd = true),
     )
 
@@ -113,7 +120,7 @@ class Express(
         isProd: Boolean = false,
     ): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = environment,
-        baseUrl = "https://$host/v1/",
+        baseUrl = "https://$host/$apiVersion/",
         headers = createHeaders(isProd = isProd),
     )
 

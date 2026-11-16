@@ -15,7 +15,7 @@ internal data class PreparedPrediction(
     val quote: SignableQuoteUM = requireNotNull((state.quote as? QuoteUM.Content)?.signable)
 
     init {
-        require(state.isPrimaryButtonEnabled)
+        require(state.isReadyToPlace)
     }
 }
 

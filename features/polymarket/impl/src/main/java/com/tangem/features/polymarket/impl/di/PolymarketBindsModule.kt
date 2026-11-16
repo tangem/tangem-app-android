@@ -26,6 +26,7 @@ import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatu
 import com.tangem.features.polymarket.impl.history.model.PolymarketHistoryModel
 import com.tangem.features.polymarket.impl.walletblock.DefaultPolymarketWalletBlockComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsModel
+import com.tangem.features.polymarket.impl.main.addfunds.network.PolymarketChooseNetworkModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketPositionsPreviewModel
 import com.tangem.features.polymarket.impl.search.model.PolymarketSearchModel
@@ -34,6 +35,7 @@ import com.tangem.features.polymarket.impl.positiondetails.model.PolymarketPosit
 import com.tangem.features.polymarket.impl.positionresult.model.PolymarketPositionResultModel
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountModel
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageModel
@@ -92,6 +94,11 @@ internal interface PolymarketModelModule {
 
     @Binds
     @IntoMap
+    @ClassKey(PolymarketChooseNetworkModel::class)
+    fun bindPolymarketChooseNetworkModel(impl: PolymarketChooseNetworkModel): Model
+
+    @Binds
+    @IntoMap
     @ClassKey(PolymarketSearchModel::class)
     fun bindPolymarketSearchModel(impl: PolymarketSearchModel): Model
 
@@ -134,6 +141,11 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PlacePredictionSummaryModel::class)
     fun bindPlacePredictionSummaryModel(impl: PlacePredictionSummaryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PlacePredictionOrderModel::class)
+    fun bindPlacePredictionOrderModel(impl: PlacePredictionOrderModel): Model
 
     @Binds
     @IntoMap

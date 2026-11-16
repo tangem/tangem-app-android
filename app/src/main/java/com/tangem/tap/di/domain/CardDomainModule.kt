@@ -7,6 +7,7 @@ import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.card.repository.CardRepository
+import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerKeysRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.demo.models.DemoConfig
@@ -14,10 +15,8 @@ import com.tangem.domain.jointaccount.repository.JointOwnerKeysRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.usecase.*
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.card.DefaultResetCardUseCase
-import com.tangem.tap.domain.card.FirmwareFeatureToggles
 import com.tangem.tap.domain.scanCard.DefaultScanCardProcessor
 import dagger.Module
 import dagger.Provides
@@ -32,12 +31,6 @@ internal object CardDomainModule {
     @Provides
     fun provideScanCardProcessor(scanCardProcessor: DefaultScanCardProcessor): ScanCardProcessor {
         return scanCardProcessor
-    }
-
-    @Provides
-    @Singleton
-    fun provideFirmwareFeatureToggles(featureTogglesManager: FeatureTogglesManager): FirmwareFeatureToggles {
-        return FirmwareFeatureToggles(featureTogglesManager)
     }
 
     @Provides
@@ -71,10 +64,12 @@ internal object CardDomainModule {
     fun provideDeriveCurrencyAndOwnerKeysUseCase(
         derivationsRepository: DerivationsRepository,
         jointOwnerKeysRepository: JointOwnerKeysRepository,
+        collectiblesOwnerKeysRepository: CollectiblesOwnerKeysRepository,
     ): DeriveCurrencyAndOwnerKeysUseCase {
         return DeriveCurrencyAndOwnerKeysUseCase(
             derivationsRepository = derivationsRepository,
             jointOwnerKeysRepository = jointOwnerKeysRepository,
+            collectiblesOwnerKeysRepository = collectiblesOwnerKeysRepository,
         )
     }
 

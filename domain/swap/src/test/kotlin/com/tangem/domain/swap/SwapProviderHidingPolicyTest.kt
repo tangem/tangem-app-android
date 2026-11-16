@@ -24,7 +24,7 @@ class SwapProviderHidingPolicyTest {
 
     private val amlBanned = ExpressError.ExchangeProviderAddressBannedByAmlError(code = 2264)
     private val exchangeNotPossible = ExpressError.ExchangeNotPossibleError(code = 2240)
-    private val dataError = ExpressError.DataError(code = 2252, description = null)
+    private val dataError = ExpressError.DataError(code = 2200, description = null)
 
     private fun provideTestModels() = listOf(
         ShouldHideModel(providerId = "changehero", error = amlBanned, expected = true),
@@ -46,7 +46,17 @@ class SwapProviderHidingPolicyTest {
         ),
         ShouldHideModel(
             providerId = "changelly",
+            error = ExpressError.InvalidAmountError(code = 2252),
+            expected = false,
+        ),
+        ShouldHideModel(
+            providerId = "changelly",
             error = ExpressError.NotEnoughBalanceError(code = 2270),
+            expected = false,
+        ),
+        ShouldHideModel(
+            providerId = "changelly",
+            error = ExpressError.NotEnoughBalanceForGasFeeError(code = 2310),
             expected = false,
         ),
         ShouldHideModel(

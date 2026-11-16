@@ -17,10 +17,12 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.zoomTransitionSource
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.components.v2.blocks.model.CollectiblesBlockModel
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.v2.FeedBlockIconBadge
+import com.tangem.features.feed.ui.v2.FeedBlockShape
 import com.tangem.features.feed.ui.v2.FeedPromoCard
 import kotlinx.coroutines.flow.StateFlow
 
@@ -52,7 +54,7 @@ internal class CollectiblesBlockComponent(
             description = stringResourceSafe(R.string.collectibles_entrance_card_subtitle),
             ambientVariant = TangemAmbientBackground.Variant.Yellow,
             onClick = model::onClick,
-            modifier = modifier,
+            modifier = modifier.zoomTransitionSource(key = SHARED_TRANSITION_KEY, shape = FeedBlockShape),
             icon = { CollectiblesIcon() },
         )
     }
@@ -74,6 +76,8 @@ internal class CollectiblesBlockComponent(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         bottomSheet.child?.instance?.BottomSheet()
+
+        AfterModalsClosed(pending = model.walletAwaitingSheetClose, onClose = model::onWalletSheetClosed)
     }
 
     private fun walletSelectorChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
@@ -92,5 +96,6 @@ internal class CollectiblesBlockComponent(
 
     companion object {
         const val KEY = "collectibles"
+        const val SHARED_TRANSITION_KEY = "feed_collectibles_block"
     }
 }

@@ -14,13 +14,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
-import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
-import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -138,7 +136,7 @@ internal class OnboardingEntryModelTest {
     }
 
     @Test
-    fun `GIVEN biometry not available WHEN onManageTokensDone THEN Done WalletCreated replaces stack`() = runTest {
+    fun `GIVEN biometry not available WHEN onManageTokensDone THEN Done replaces stack`() = runTest {
         coEvery { tangemSdkManager.checkCanUseBiometry() } returns false
 
         val model = createModel(this)
@@ -148,9 +146,7 @@ internal class OnboardingEntryModelTest {
         advanceUntilIdle()
 
         Assertions.assertEquals(1, stack.size)
-        val route = stack.first()
-        Assertions.assertTrue(route is OnboardingRoute.Done)
-        Assertions.assertEquals(OnboardingDoneComponent.Mode.WalletCreated, (route as OnboardingRoute.Done).mode)
+        Assertions.assertTrue(stack.first() is OnboardingRoute.Done)
     }
 
     @Test
@@ -234,61 +230,6 @@ internal class OnboardingEntryModelTest {
     }
 
     @Test
-    fun `GIVEN Visa AND biometry available WHEN onManageTokensDone THEN BiometricScreenOpened analytics is sent`() =
-        runTest {
-            every { scanResponse.productType } returns ProductType.Visa
-            coEvery { tangemSdkManager.checkCanUseBiometry() } returns true
-            coEvery { settingsRepository.shouldShowAskBiometry() } returns true
-
-            val model = createModel(this)
-
-            model.onManageTokensDone()
-            advanceUntilIdle()
-
-            verify {
-                analyticsEventHandler.send(match<OnboardingVisaAnalyticsEvent.BiometricScreenOpened> { true })
-            }
-            verify(exactly = 0) {
-                analyticsEventHandler.send(match<OnboardingVisaAnalyticsEvent.SuccessScreenOpened> { true })
-            }
-        }
-
-    @Test
-    fun `GIVEN Visa AND biometry not available WHEN onManageTokensDone THEN SuccessScreenOpened analytics is sent`() =
-        runTest {
-            every { scanResponse.productType } returns ProductType.Visa
-            coEvery { tangemSdkManager.checkCanUseBiometry() } returns false
-
-            val model = createModel(this)
-
-            model.onManageTokensDone()
-            advanceUntilIdle()
-
-            verify {
-                analyticsEventHandler.send(match<OnboardingVisaAnalyticsEvent.SuccessScreenOpened> { true })
-            }
-            verify(exactly = 0) {
-                analyticsEventHandler.send(match<OnboardingVisaAnalyticsEvent.BiometricScreenOpened> { true })
-            }
-        }
-
-    @Test
-    fun `GIVEN non-Visa WHEN onManageTokensDone THEN no Visa analytics sent`() = runTest {
-        every { scanResponse.productType } returns ProductType.Wallet2
-        coEvery { tangemSdkManager.checkCanUseBiometry() } returns true
-        coEvery { settingsRepository.shouldShowAskBiometry() } returns true
-
-        val model = createModel(this)
-
-        model.onManageTokensDone()
-        advanceUntilIdle()
-
-        verify(exactly = 0) {
-            analyticsEventHandler.send(match<OnboardingVisaAnalyticsEvent> { true })
-        }
-    }
-
-    @Test
     fun `WHEN onBack THEN CantLeaveBackupDialog is sent`() = runTest {
         val model = createModel(this)
 
@@ -317,9 +258,7 @@ internal class OnboardingEntryModelTest {
         advanceUntilIdle()
 
         Assertions.assertEquals(1, stack.size)
-        val route = stack.first()
-        Assertions.assertTrue(route is OnboardingRoute.Done)
-        Assertions.assertEquals(OnboardingDoneComponent.Mode.WalletCreated, (route as OnboardingRoute.Done).mode)
+        Assertions.assertTrue(stack.first() is OnboardingRoute.Done)
     }
 
     private fun StackNavigation<OnboardingRoute>.trackStack(): List<OnboardingRoute> {
@@ -368,7 +307,6 @@ internal class OnboardingEntryModelTest {
             Arguments.of(ProductType.Ring, OnboardingRoute.MultiWallet::class),
             Arguments.of(ProductType.Note, OnboardingRoute.Note::class),
             Arguments.of(ProductType.Twins, OnboardingRoute.Twins::class),
-            Arguments.of(ProductType.Visa, OnboardingRoute.Visa::class),
         )
 
         @JvmStatic

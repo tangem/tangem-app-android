@@ -27,6 +27,8 @@ import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -65,6 +67,9 @@ internal fun TangemPayBankTransferOnrampDetailsScreen(
             blurBackground = false,
             onClose = state.onCloseClick,
         )
+        if (state.tabs.isNotEmpty()) {
+            TangemTabNavigation(tabs = state.tabs, modifier = Modifier.padding(vertical = 8.dp))
+        }
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -72,6 +77,7 @@ internal fun TangemPayBankTransferOnrampDetailsScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             RequisitesCard(requisites = state.requisites)
+            state.referenceWarning?.let { warning -> SectionCaption(text = warning) }
             if (!state.fees.isEmpty) {
                 FeesSection(fees = state.fees)
             }
@@ -161,7 +167,7 @@ private fun LimitationsBlock(limit: DailyDepositLimitUM, modifier: Modifier = Mo
                 .background(TangemTheme.colors3.bg.secondary),
         ) {
             TangemRow(
-                divider = true,
+                divider = limit.hint != null,
                 contentLead = TangemRowContentLead.Equal,
                 verticalAlignment = TangemRowVerticalAlignment.Center,
                 titleSlot = {
@@ -173,14 +179,16 @@ private fun LimitationsBlock(limit: DailyDepositLimitUM, modifier: Modifier = Mo
                 },
                 valueSlot = { TangemPayRowValueText(text = limit.value.resolveReference()) },
             )
-            Text(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .testTag(VirtualAccountRequisitesBottomSheetTestTags.DEPOSIT_LIMIT_SUBTITLE),
-                text = limit.hint.resolveReference(),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.secondary,
-            )
+            limit.hint?.let { hint ->
+                Text(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .testTag(VirtualAccountRequisitesBottomSheetTestTags.DEPOSIT_LIMIT_SUBTITLE),
+                    text = hint.resolveReference(),
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
+                )
+            }
         }
     }
 }
@@ -224,24 +232,71 @@ private class BankTransferOnrampDetailsPreviewProvider :
             ),
             previewState(fees = TangemPayOnrampFeesUM.Loading),
             previewState(fees = TangemPayOnrampFeesUM.Error(onRetryClick = {})),
+            previewState(
+                fees = TangemPayOnrampFeesUM.Content(rows = persistentListOf(previewFee(type = "ACH", title = "ACH"))),
+                dailyDepositLimit = DailyDepositLimitUM(
+                    value = stringReference("$10,000"),
+                    hint = stringReference("If you want to deposit more than $10,000 – contact support"),
+                ),
+                tabs = previewTabs(selectedId = "USD"),
+            ),
+            previewSpeiState(),
         ),
     )
 
-private fun previewState(fees: TangemPayOnrampFeesUM, dailyDepositLimit: DailyDepositLimitUM? = null) =
-    TangemPayBankTransferOnrampDetailsScreenUM(
-        requisites = persistentListOf(
-            previewRequisite(key = "Account number", value = "0000000000000"),
-            previewRequisite(key = "Routing number", value = "000000000"),
-            previewRequisite(key = "Beneficiary name", value = "RAIN PAYMENTS INC"),
-            previewRequisite(key = "Beneficiary address", value = "123 Finance St, New York, NY 10001, US"),
-            previewRequisite(key = "Bank name", value = "SSB Bank"),
-            previewRequisite(key = "Bank address", value = "8700 Perry Highway, Pittsburgh, PA 15237, US"),
+private fun previewState(
+    fees: TangemPayOnrampFeesUM,
+    dailyDepositLimit: DailyDepositLimitUM? = null,
+    tabs: ImmutableList<TangemTabItemUM> = persistentListOf(),
+) = TangemPayBankTransferOnrampDetailsScreenUM(
+    requisites = persistentListOf(
+        previewRequisite(key = "Account number", value = "0000000000000"),
+        previewRequisite(key = "Routing number", value = "000000000"),
+        previewRequisite(key = "Beneficiary name", value = "RAIN PAYMENTS INC"),
+        previewRequisite(key = "Beneficiary address", value = "123 Finance St, New York, NY 10001, US"),
+        previewRequisite(key = "Bank name", value = "SSB Bank"),
+        previewRequisite(key = "Bank address", value = "8700 Perry Highway, Pittsburgh, PA 15237, US"),
+    ),
+    fees = fees,
+    dailyDepositLimit = dailyDepositLimit,
+    tabs = tabs,
+    referenceWarning = null,
+    onShareClick = {},
+    onCloseClick = {},
+)
+
+private fun previewSpeiState() = TangemPayBankTransferOnrampDetailsScreenUM(
+    tabs = previewTabs(selectedId = "MXN"),
+    requisites = persistentListOf(
+        previewRequisite(key = "CLABE", value = "646180157000000004"),
+        previewRequisite(key = "Reference", value = "TNG7K2Q9"),
+    ),
+    referenceWarning = stringReference(
+        "Include the reference in the transfer. Without it, the deposit may not be credited",
+    ),
+    fees = TangemPayOnrampFeesUM.Content(
+        rows = persistentListOf(
+            TangemPayOnrampFeesUM.FeeRow(type = "SPEI", title = stringReference("SPEI"), value = "1%"),
+            TangemPayOnrampFeesUM.FeeRow(
+                type = "EXCHANGE_RATE",
+                title = stringReference("Exchange rate"),
+                value = "1 USD ≈ 18.54 MXN",
+            ),
         ),
-        fees = fees,
-        dailyDepositLimit = dailyDepositLimit,
-        onShareClick = {},
-        onCloseClick = {},
-    )
+        notes = persistentListOf(
+            stringReference("Received MXN will be converted to USD"),
+            stringReference("Indicative rate. A deposit is credited at the rate on the day it arrives"),
+        ),
+    ),
+    dailyDepositLimit = DailyDepositLimitUM(value = stringReference("$10,000"), hint = null),
+    onShareClick = {},
+    onCloseClick = {},
+)
+
+private fun previewTabs(selectedId: String) = persistentListOf<TangemTabItemUM>(
+    TangemTabItemUM.Content(id = "USD", label = stringReference("USD"), isSelected = selectedId == "USD", onClick = {}),
+    TangemTabItemUM.Content(id = "MXN", label = stringReference("MXN"), isSelected = selectedId == "MXN", onClick = {}),
+)
 
 private fun previewFee(type: String, title: String) = TangemPayOnrampFeesUM.FeeRow(
     type = type,

@@ -6,7 +6,7 @@ import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.txhistory.impl.R
 
 internal val moneyAccountOwnerName: TextReference =
-    resourceReference(R.string.tangempay_unified_onboarding_money_account_header)
+    resourceReference(R.string.money_account_main_name)
 
 internal val moneyAccountOwnerIcon: CryptoPortfolioIcon =
     CryptoPortfolioIcon.ofCustomAccount(

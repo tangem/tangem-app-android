@@ -18,6 +18,11 @@ import javax.inject.Inject
  * A dApp's provider keeps a default chain of its own, and Uniswap does not ask to switch again once an
  * add succeeds. Without this event the next transaction it builds for the newly added chain arrives as a
  * request on the old one — which is exactly what [WcEthTransactionTargetValidator] then blocks.
+ *
+ * Emit **before** answering the request that caused the change, never after: a dApp reads its provider's
+ * chain as soon as its `wallet_addEthereumChain` / `wallet_switchEthereumChain` call resolves, and one
+ * that still sees the old chain there gives up on whatever it asked for — the swap is never built and no
+ * signing request follows.
  */
 internal class WcEthChainChangedEmitter @Inject constructor(
     private val wcSdk: WcSdk,

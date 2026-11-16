@@ -5,34 +5,58 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
+import com.tangem.data.common.account.WalletAccountsFetcher
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
+import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusProducer
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultCollectiblesAccountStatusProducerTest {
 
     private val quoteSupplier: SingleQuoteStatusSupplier = mockk()
+    private val walletAccountsFetcher: WalletAccountsFetcher = mockk()
+    private val ownerDeriver: CollectiblesOwnerDeriver = mockk()
+    private val wallets = MutableStateFlow<List<UserWallet>?>(listOf(USER_WALLET))
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(quoteSupplier, walletAccountsFetcher, ownerDeriver)
+        wallets.value = listOf(USER_WALLET)
+        arrangeDocument(isListed = false)
+        coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
+    }
 
     @Test
     fun `GIVEN nothing recorded WHEN produce THEN there is no account`() = runTest {
@@ -119,19 +143,82 @@ internal class DefaultCollectiblesAccountStatusProducerTest {
             assertThat(actual).isEqualTo(CollectiblesAccountStatusValue.Error.Unavailable)
         }
 
-    @Test
-    fun `GIVEN a missed derivation WHEN produce THEN it is reported as it is`() = runTest {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN the account and the owner key WHEN produce THEN the missed derivation is worked out`(
+        model: DerivationModel,
+    ) = runTest {
         // Arrange
-        arrangeQuotes(rate = BigDecimal("150"))
+        arrangeQuotes(rate = null)
         val store = createStore(testScope = this)
-        store.store(userWalletId = WALLET, value = CollectiblesAccountStatusValue.MissedDerivation)
+        model.recorded?.let { store.store(userWalletId = WALLET, value = it) }
+        arrangeDocument(isListed = model.isListed)
+        wallets.value = listOf(if (model.isLocked) LOCKED_WALLET else USER_WALLET)
+        coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER.takeUnless { model.isOwnerKeyMissing }
 
         // Act
         val actual = createProducer(store).produce().first()
 
         // Assert
-        assertThat(actual).isEqualTo(CollectiblesAccountStatusValue.MissedDerivation)
+        assertThat(actual).isEqualTo(model.expected)
     }
+
+    @Test
+    fun `GIVEN a missed derivation WHEN the owner key is derived THEN it loads until the vault is read`() = runTest {
+        // Arrange
+        arrangeQuotes(rate = null)
+        val store = createStore(testScope = this)
+        arrangeDocument(isListed = true)
+        coEvery { ownerDeriver.storedOwner(WALLET) } returnsMany listOf(null, OWNER)
+
+        // Act & Assert
+        createProducer(store).produce().test {
+            assertThat(awaitItem()).isEqualTo(CollectiblesAccountStatusValue.MissedDerivation)
+
+            wallets.value = listOf(USER_WALLET, mockk<UserWallet.Hot>(relaxed = true))
+
+            assertThat(awaitItem()).isEqualTo(CollectiblesAccountStatusValue.Loading)
+        }
+    }
+
+    @Test
+    fun `GIVEN a backend record with no vault on chain WHEN produce THEN there is no account`() = runTest {
+        // Arrange
+        arrangeQuotes(rate = null)
+        val store = createStore(testScope = this)
+        store.store(userWalletId = WALLET, value = CollectiblesAccountStatusValue.NotOnboarded)
+        arrangeDocument(isListed = true)
+
+        // Act
+        val actual = createProducer(store).produce().first()
+
+        // Assert
+        assertThat(actual).isEqualTo(CollectiblesAccountStatusValue.NotOnboarded)
+    }
+
+    private fun provideTestModels() = listOf(
+        DerivationModel(isListed = true, expected = CollectiblesAccountStatusValue.MissedDerivation),
+        DerivationModel(
+            isListed = false,
+            recorded = ONBOARDED,
+            expected = CollectiblesAccountStatusValue.MissedDerivation,
+        ),
+        DerivationModel(isListed = false, expected = CollectiblesAccountStatusValue.NotOnboarded),
+        DerivationModel(
+            isListed = true,
+            isOwnerKeyMissing = false,
+            expected = CollectiblesAccountStatusValue.Loading,
+        ),
+        DerivationModel(isListed = true, isLocked = true, expected = CollectiblesAccountStatusValue.Loading),
+    )
+
+    data class DerivationModel(
+        val isListed: Boolean,
+        val expected: CollectiblesAccountStatusValue,
+        val recorded: CollectiblesAccountStatusValue? = null,
+        val isOwnerKeyMissing: Boolean = true,
+        val isLocked: Boolean = false,
+    )
 
     @Test
     fun `GIVEN a stale balance WHEN produce THEN the status is marked as cache-only`() = runTest {
@@ -175,6 +262,14 @@ internal class DefaultCollectiblesAccountStatusProducerTest {
         return flowOf(QuoteStatus(rawCurrencyId = USDC_RAW_ID, value = value))
     }
 
+    private fun arrangeDocument(isListed: Boolean) {
+        val response = mockk<GetWalletAccountsResponse> {
+            every { accounts } returns if (isListed) listOf(COLLECTIBLES_RECORD) else emptyList()
+        }
+        coEvery { walletAccountsFetcher.getSaved(WALLET) } returns response
+        every { walletAccountsFetcher.get(WALLET) } returns flowOf(response)
+    }
+
     private fun createStore(testScope: TestScope) = CollectiblesAccountStore(
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = MockStateDataStore(default = emptyMap()),
@@ -188,12 +283,35 @@ internal class DefaultCollectiblesAccountStatusProducerTest {
         params = CollectiblesAccountStatusProducer.Params(userWalletId = WALLET),
         flowProducerTools = mockk(),
         collectiblesAccountStore = store,
+        walletAccountsFetcher = walletAccountsFetcher,
+        userWalletsListRepository = mockk { every { userWallets } returns wallets },
+        collectiblesOwnerDeriver = ownerDeriver,
         singleQuoteStatusSupplier = quoteSupplier,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     private companion object {
+        const val OWNER = "8kXHqmvJ3sYVsBLnr5aXqjy6r2ZxHhCTvJH1DPDcnUXG"
         val WALLET = UserWalletId("011")
+
+        val USER_WALLET: UserWallet = mockk<UserWallet.Hot>(relaxed = true) {
+            every { walletId } returns WALLET
+            every { isLocked } returns false
+        }
+
+        val LOCKED_WALLET: UserWallet = mockk<UserWallet.Hot>(relaxed = true) {
+            every { walletId } returns WALLET
+            every { isLocked } returns true
+        }
+
+        val COLLECTIBLES_RECORD = WalletAccountDTO(
+            id = "collectibles",
+            name = "Collectibles",
+            derivationIndex = 999799,
+            icon = "Package",
+            iconColor = "Azure",
+            type = WalletAccountDTO.Type.COLLECTIBLES,
+        )
         val USDC_RAW_ID = CollectiblesVaultCurrencies.USDC_RAW_ID
 
         val ONBOARDED = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.CACHE)

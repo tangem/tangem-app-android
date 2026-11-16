@@ -727,10 +727,7 @@ internal class JointAccountToMembersUMConverterTest {
             // Assert
             assertThat(slots.map { it.id to it.title }).containsExactlyElementsIn(
                 model.expectedNumbers.map { number ->
-                    "slot_$number" to resourceReference(
-                        id = CoreUiR.string.joint_account_invite_members_member_number,
-                        formatArgs = wrappedList(number),
-                    )
+                    "slot_$number" to resourceReference(CoreUiR.string.joint_account_invite_members_member)
                 },
             ).inOrder()
         }

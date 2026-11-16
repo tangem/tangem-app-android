@@ -8,6 +8,7 @@ import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.BankRail
@@ -101,6 +102,7 @@ internal fun activeMoneyAccount(
     customerId = "cust_1",
     productInstanceId = "instance-1",
     isBankOfframpAvailable = isBankOfframpAvailable,
+    error = null,
 )
 
 internal fun moneyAccountBalance(
@@ -128,11 +130,20 @@ internal fun offrampDestination(
     rail: BankRail = BankRail.ACH,
     fee: BigDecimal = BigDecimal("1.00"),
     feeName: String? = null,
+    calculationType: AccountFee.CalculationType = AccountFee.CalculationType.FIXED,
+    feeCurrency: String = "USD",
     minDays: Int = 1,
     maxDays: Int = 3,
 ): OfframpDestination = OfframpDestination(
     rail = rail,
-    fee = OfframpFee(name = feeName, amount = fee, currency = "USD", description = null),
+    currency = "USD",
+    fee = OfframpFee(
+        name = feeName,
+        calculationType = calculationType,
+        amount = fee,
+        currency = feeCurrency,
+        description = null,
+    ),
     eta = OfframpEta(minDays = minDays, maxDays = maxDays),
 )
 
