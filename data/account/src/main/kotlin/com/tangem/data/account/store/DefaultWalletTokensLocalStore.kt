@@ -25,6 +25,18 @@ internal class DefaultWalletTokensLocalStore @Inject constructor(
         }
     }
 
+    override suspend fun setTokens(userWalletId: UserWalletId, tokens: List<UserTokensResponse.Token>) {
+        val compatibleTokens = userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(tokens)
+
+        accountsResponseStoreFactory.create(userWalletId).updateData { saved ->
+            val document = checkNotNull(saved) { "Tokens of $userWalletId are not stored: no saved accounts document" }
+
+            document
+                .copy(accounts = document.accounts.map { it.copy(tokens = emptyList()) })
+                .withRemoteTokens(userWalletId = userWalletId, tokens = compatibleTokens)
+        }
+    }
+
     private fun GetWalletAccountsResponse.withRemoteTokens(
         userWalletId: UserWalletId,
         tokens: List<UserTokensResponse.Token>,

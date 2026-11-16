@@ -1,5 +1,10 @@
 package com.tangem.data.account.repository
 
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.data.common.currency.TokensChange
+import com.tangem.data.account.converter.createWalletAccountDTO
 import android.content.res.Resources
 import arrow.core.None
 import arrow.core.toOption
@@ -122,6 +127,47 @@ class DefaultAccountsCRUDRepositoryTest {
             // Assert
             coVerify(exactly = 1) { walletAccountsSaver.syncTokens(userWalletId) }
         }
+
+        @Test
+        fun `GIVEN added and removed currencies WHEN syncTokens THEN they reach the saver as the account's tokens`() =
+            runTest {
+                // Arrange
+                val account = Account.Personal.createMainAccount(userWalletId = userWalletId)
+                val addedCurrency: CryptoCurrency = mockk()
+                val removedCurrency: CryptoCurrency = mockk()
+                val addedToken = createUserToken(networkId = "polygon")
+                val removedToken = createUserToken(networkId = "bsc")
+                every {
+                    cryptoPortfolioConverter.convertBack(account.copySealed(cryptoCurrencies = listOf(addedCurrency)))
+                } returns createWalletAccountDTO(userWalletId = userWalletId, tokens = listOf(addedToken))
+                every {
+                    cryptoPortfolioConverter.convertBack(account.copySealed(cryptoCurrencies = listOf(removedCurrency)))
+                } returns createWalletAccountDTO(userWalletId = userWalletId, tokens = listOf(removedToken))
+
+                // Act
+                repository.syncTokens(
+                    account = account,
+                    added = listOf(addedCurrency),
+                    removed = listOf(removedCurrency),
+                )
+
+                // Assert
+                coVerify(exactly = 1) {
+                    walletAccountsSaver.syncTokens(
+                        userWalletId = userWalletId,
+                        change = TokensChange(added = listOf(addedToken), removed = listOf(removedToken)),
+                    )
+                }
+            }
+
+        private fun createUserToken(networkId: String) = UserTokensResponse.Token(
+            id = networkId,
+            networkId = networkId,
+            name = networkId,
+            symbol = networkId,
+            decimals = 18,
+            contractAddress = null,
+        )
     }
 
     @Nested

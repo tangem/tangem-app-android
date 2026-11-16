@@ -1,5 +1,6 @@
 package com.tangem.data.common.currency
 
+import com.tangem.data.common.api.ApiResponseRaise
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.wallet.WalletServerBinder
@@ -37,6 +38,7 @@ class UserTokensSaver(
         userWalletId: UserWalletId,
         response: UserTokensResponse,
         useEnricher: Boolean = true,
+        change: TokensChange? = null,
         onFailSend: () -> Unit = {},
     ) = withContext(dispatchers.io) {
         val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId)
@@ -51,27 +53,34 @@ class UserTokensSaver(
             .withoutDuplicates()
             .enrichIf(userWalletId = userWalletId, condition = useEnricher)
 
-        push(userWallet = userWallet, response = enrichedResponse, onFailSend = onFailSend)
+        push(userWallet = userWallet, response = enrichedResponse, change = change, onFailSend = onFailSend)
     }
 
     suspend fun pushWithRetryer(
         userWalletId: UserWalletId,
         response: UserTokensResponse,
         useEnricher: Boolean = true,
+        change: TokensChange? = null,
         onFailSend: () -> Unit = {},
     ) {
         push(
             userWalletId = userWalletId,
             response = response,
             useEnricher = useEnricher,
+            change = change,
             onFailSend = {
-                pushTokensRetryerPool + createPushTokensRetryer(userWalletId, response)
+                pushTokensRetryerPool + createPushTokensRetryer(userWalletId, response, change)
                 onFailSend()
             },
         )
     }
 
-    private suspend fun push(userWallet: UserWallet, response: UserTokensResponse, onFailSend: () -> Unit) {
+    private suspend fun push(
+        userWallet: UserWallet,
+        response: UserTokensResponse,
+        change: TokensChange?,
+        onFailSend: () -> Unit,
+    ) {
         safeApiCall(
             call = {
                 // Both codes are expected flow, not failures, so they are handled before bind() gets to log them
@@ -88,7 +97,12 @@ class UserTokensSaver(
                     apiResponse.isError(code = ApiResponseError.HttpException.Code.PRECONDITION_FAILED)
 
                 if (isRecoverableStaleWrite) {
-                    mergeAndRetry(userWalletId = userWallet.walletId, response = response, onFailSend = onFailSend)
+                    mergeAndRetry(
+                        userWalletId = userWallet.walletId,
+                        response = response,
+                        change = change,
+                        onFailSend = onFailSend,
+                    )
                 } else {
                     apiResponse.bind()
                 }
@@ -124,6 +138,7 @@ class UserTokensSaver(
     private suspend fun mergeAndRetry(
         userWalletId: UserWalletId,
         response: UserTokensResponse,
+        change: TokensChange?,
         onFailSend: () -> Unit,
     ) {
         safeApiCall(
@@ -137,16 +152,15 @@ class UserTokensSaver(
                     account.tokens.orEmpty().map { token -> token.copy(accountId = account.id) }
                 } + fresh.unassignedTokens
 
-                // Token.equals compares the identity fields (network, derivation, contract), which is exactly
-                // the dedup key here: our push stays authoritative, remote-only tokens are appended
-                val pushedTokens = response.tokens.toSet()
-                val remoteOnlyTokens = remoteTokens.filterNot { it in pushedTokens }
-                val merged = response.copy(tokens = response.tokens + remoteOnlyTokens)
-
-                if (remoteOnlyTokens.isNotEmpty()) {
-                    runSuspendCatching {
-                        walletTokensLocalStore.addRemoteTokens(userWalletId = userWalletId, tokens = remoteOnlyTokens)
-                    }.getOrElse { raise(ApiResponseError.UnknownException(it)) }
+                val merged = if (change == null) {
+                    mergeByUnion(userWalletId = userWalletId, response = response, remoteTokens = remoteTokens)
+                } else {
+                    mergeByChange(
+                        userWalletId = userWalletId,
+                        response = response,
+                        remoteTokens = remoteTokens,
+                        change = change,
+                    )
                 }
 
                 storeETag(userWalletId = userWalletId, apiResponse = accountsResponse)
@@ -157,6 +171,48 @@ class UserTokensSaver(
                 onFailSend()
             },
         )
+    }
+
+    /**
+     * The backend's list is the base and the user's change is replayed on it, so a removal stays a removal and a
+     * token another member removed is not brought back. The local document becomes exactly what is pushed: the
+     * next change starts from the list the backend holds.
+     */
+    private suspend fun ApiResponseRaise.mergeByChange(
+        userWalletId: UserWalletId,
+        response: UserTokensResponse,
+        remoteTokens: List<UserTokensResponse.Token>,
+        change: TokensChange,
+    ): UserTokensResponse {
+        // The pushed copies of the added tokens are the enriched ones
+        val pushedByIdentity = response.tokens.associateBy { it }
+        val enrichedChange = change.copy(added = change.added.map { pushedByIdentity[it] ?: it })
+        val merged = response.copy(tokens = enrichedChange.applyTo(remoteTokens))
+
+        runSuspendCatching {
+            walletTokensLocalStore.setTokens(userWalletId = userWalletId, tokens = merged.tokens)
+        }.getOrElse { raise(ApiResponseError.UnknownException(it)) }
+
+        return merged
+    }
+
+    /** Without a known change nothing may be dropped: our push stays authoritative, remote-only tokens are appended */
+    private suspend fun ApiResponseRaise.mergeByUnion(
+        userWalletId: UserWalletId,
+        response: UserTokensResponse,
+        remoteTokens: List<UserTokensResponse.Token>,
+    ): UserTokensResponse {
+        // Token.equals compares the identity fields (network, derivation, contract), which is the dedup key here
+        val pushedTokens = response.tokens.toSet()
+        val remoteOnlyTokens = remoteTokens.filterNot { it in pushedTokens }
+
+        if (remoteOnlyTokens.isNotEmpty()) {
+            runSuspendCatching {
+                walletTokensLocalStore.addRemoteTokens(userWalletId = userWalletId, tokens = remoteOnlyTokens)
+            }.getOrElse { raise(ApiResponseError.UnknownException(it)) }
+        }
+
+        return response.copy(tokens = response.tokens + remoteOnlyTokens)
     }
 
     private suspend fun getETagOrNull(userWalletId: UserWalletId): String? {
@@ -232,13 +288,18 @@ class UserTokensSaver(
         return UserTokensResponseAccountIdEnricher(userWalletId = userWalletId, response = this)
     }
 
-    private fun createPushTokensRetryer(userWalletId: UserWalletId, response: UserTokensResponse): Retryer {
+    private fun createPushTokensRetryer(
+        userWalletId: UserWalletId,
+        response: UserTokensResponse,
+        change: TokensChange?,
+    ): Retryer {
         return Retryer(attempt = 3) { iteration ->
             var isSuccess = true
 
             push(
                 userWalletId = userWalletId,
                 response = response,
+                change = change,
                 onFailSend = {
                     TangemLogger.e(
                         "Retryer: Failed to push updated tokens on attempt ${iteration + 1} for $userWalletId",

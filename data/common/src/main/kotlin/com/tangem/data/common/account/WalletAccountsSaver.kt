@@ -1,5 +1,6 @@
 package com.tangem.data.common.account
 
+import com.tangem.data.common.currency.TokensChange
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
@@ -28,5 +29,6 @@ interface WalletAccountsSaver {
     @Throws
     suspend fun push(userWalletId: UserWalletId, accounts: List<WalletAccountDTO>): GetWalletAccountsResponse?
 
-    suspend fun syncTokens(userWalletId: UserWalletId)
+    /** [change] is what the user did to the list being synced; it survives a stale write and a concurrent fetch */
+    suspend fun syncTokens(userWalletId: UserWalletId, change: TokensChange? = null)
 }

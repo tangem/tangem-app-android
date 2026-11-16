@@ -142,12 +142,11 @@ class ManageCryptoCurrenciesUseCase(
                 }
             }
 
-            saveAccount(
-                account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total),
-            )
+            val account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total)
+            saveAccount(account = account)
 
             syncTokensAndLaunchUpdates(
-                userWalletId = userWalletId,
+                account = account,
                 modifiedCurrencyList = modifiedCurrencyList,
                 awaitSync = awaitTokensSyncFinished,
             ) {
@@ -191,10 +190,11 @@ class ManageCryptoCurrenciesUseCase(
             val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = listOf(tokenToAdd))
 
-            saveAccount(account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total))
+            val account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total)
+            saveAccount(account = account)
 
             syncTokensAndLaunchUpdates(
-                userWalletId = userWalletId,
+                account = account,
                 modifiedCurrencyList = modifiedCurrencyList,
                 awaitSync = awaitTokensSyncFinished,
             ) {
@@ -298,10 +298,6 @@ class ManageCryptoCurrenciesUseCase(
         return destination
     }
 
-    private fun List<CryptoCurrency>.withoutJointNetworks(): List<CryptoCurrency> {
-        return filterNot { it.isJoint }
-    }
-
     private suspend fun Raise<Throwable>.saveAccount(account: Account.CryptoPortfolio) {
         catch(
             block = { accountsCRUDRepository.saveAccount(account) },
@@ -333,27 +329,34 @@ class ManageCryptoCurrenciesUseCase(
         )
     }
 
-    private suspend fun syncTokens(userWalletId: UserWalletId, modifiedCurrencyList: ModifiedCurrencyList) {
+    private suspend fun syncTokens(account: Account.CryptoPortfolio, modifiedCurrencyList: ModifiedCurrencyList) {
+        val userWalletId = account.userWalletId
         createWalletManagers(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
 
-        runSuspendCatching { accountsCRUDRepository.syncTokens(userWalletId) }
+        runSuspendCatching {
+            accountsCRUDRepository.syncTokens(
+                account = account,
+                added = modifiedCurrencyList.added,
+                removed = modifiedCurrencyList.removed,
+            )
+        }
             .onFailure { TangemLogger.e("Failed to sync tokens for wallet $userWalletId", it) }
     }
 
     private suspend fun syncTokensAndLaunchUpdates(
-        userWalletId: UserWalletId,
+        account: Account.CryptoPortfolio,
         modifiedCurrencyList: ModifiedCurrencyList,
         awaitSync: Boolean,
         updates: suspend () -> Unit,
     ) {
         if (awaitSync) {
-            syncTokens(userWalletId, modifiedCurrencyList)
+            syncTokens(account, modifiedCurrencyList)
             parallelUpdatingScope.launch {
                 updates()
             }
         } else {
             parallelUpdatingScope.launch {
-                syncTokens(userWalletId, modifiedCurrencyList)
+                syncTokens(account, modifiedCurrencyList)
                 updates()
             }
         }
@@ -437,13 +440,15 @@ class ManageCryptoCurrenciesUseCase(
             contractAddress = (status.currency as? CryptoCurrency.Token)?.contractAddress,
         )
     }
+}
 
-    private data class ModifiedCurrencyList(
-        val added: List<CryptoCurrency>,
-        val removed: List<CryptoCurrency>,
-        val total: List<CryptoCurrency>,
-    ) {
+private fun List<CryptoCurrency>.withoutJointNetworks(): List<CryptoCurrency> = filterNot { it.isJoint }
 
-        val hasChanges get() = added.isNotEmpty() || removed.isNotEmpty()
-    }
+private data class ModifiedCurrencyList(
+    val added: List<CryptoCurrency>,
+    val removed: List<CryptoCurrency>,
+    val total: List<CryptoCurrency>,
+) {
+
+    val hasChanges get() = added.isNotEmpty() || removed.isNotEmpty()
 }

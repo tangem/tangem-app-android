@@ -96,6 +96,38 @@ internal class ManageCryptoCurrenciesUseCaseTest {
         }
 
     @Test
+    fun `GIVEN account with a token WHEN remove it and add another THEN the change itself is synced`() = runTest {
+        // Arrange
+        val coin = createCoin(derivationPath = Network.DerivationPath.Card(ACCOUNT_DERIVATION_PATH))
+        val removedToken = createToken(derivationPath = Network.DerivationPath.Card(ACCOUNT_DERIVATION_PATH))
+        val addedToken = removedToken.copy(
+            id = removedToken.id.copy(suffix = CryptoCurrency.ID.Suffix.ContractAddress(contractAddress = "0xadded")),
+            contractAddress = "0xadded",
+        )
+        val account = createAccount(currencies = listOf(coin, removedToken))
+        coEvery {
+            singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+        } returns createAccountStatusList(account = account, currencies = listOf(coin, removedToken))
+
+        // Act
+        val actual = useCase.invokeAndAwait(
+            accountId = account.accountId,
+            add = listOf(addedToken),
+            remove = listOf(removedToken),
+        )
+
+        // Assert
+        Truth.assertThat(actual.isRight()).isTrue()
+        coVerify(exactly = 1) {
+            accountsCRUDRepository.syncTokens(
+                account = account.copy(cryptoCurrencies = listOf(coin, addedToken)),
+                added = listOf(addedToken),
+                removed = listOf(removedToken),
+            )
+        }
+    }
+
+    @Test
     fun `GIVEN account without coin WHEN add token THEN coin is created`() = runTest {
         // Arrange
         val account = createAccount(currencies = emptyList())
