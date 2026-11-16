@@ -942,7 +942,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             }
 
         @Test
-        fun `GIVEN the revocation outlasts the deadline WHEN renew THEN the wallet is released unsettled`() =
+        fun `GIVEN the revocation outlasts the deadline WHEN renew THEN the wallet is released unsettled at the signed deadline`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -959,7 +959,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
 
                 // Act
                 val renewing = launch { progress = interactor.renew(USER_WALLET_ID).toList() }
-                advanceTimeBy(SENDABLE_FOLLOW_UP_MILLIS - 1)
+                advanceTimeBy(FOLLOW_UP_DEADLINE_MILLIS - 1)
                 val batchBeforeDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
                 advanceTimeBy(2)
                 renewing.join()
@@ -968,7 +968,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 // Assert
                 assertThat(batchBeforeDeadline).isEqualTo(PolymarketDepositWalletLock.Busy.left())
                 assertThat(batchAfterDeadline).isEqualTo(Unit.right())
-                assertThat(testScheduler.currentTime).isLessThan(SENDABLE_FOLLOW_UP_MILLIS + RELAY_POLL_MILLIS)
+                assertThat(testScheduler.currentTime).isLessThan(FOLLOW_UP_DEADLINE_MILLIS + RELAY_POLL_MILLIS)
                 assertThat(progress).containsExactly(
                     PolymarketSessionKeyProgress.Signing,
                     PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
@@ -983,7 +983,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             }
 
         @Test
-        fun `GIVEN the authorization send outlasts the deadline WHEN renew THEN the wallet is released unsettled`() =
+        fun `GIVEN the authorization send outlasts the deadline WHEN renew THEN the wallet is released at the signed deadline`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -1003,7 +1003,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
 
                 // Act
                 val renewing = launch { progress = interactor.renew(USER_WALLET_ID).toList() }
-                advanceTimeBy(SENDABLE_FOLLOW_UP_MILLIS - 1)
+                advanceTimeBy(FOLLOW_UP_DEADLINE_MILLIS - 1)
                 val batchBeforeDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
                 advanceTimeBy(2)
                 renewing.join()
@@ -1654,6 +1654,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         const val UNLISTING_ATTEMPTS = 20
         const val RELAY_POLL_MILLIS = 3_000L
         const val SENDABLE_FOLLOW_UP_MILLIS = 1_200_000L - 30_000L
+        const val FOLLOW_UP_DEADLINE_MILLIS = 1_200_000L
         val NOW: Instant = Instant.ofEpochSecond(1_789_430_000)
         val VALID_UNTIL: Instant = NOW.plusSeconds(180L * 24 * 60 * 60)
         val DEADLINE = (NOW.epochSecond + 600).toString()

@@ -172,7 +172,10 @@ class ManagePolymarketSessionKeyInteractor(
                     signed = signed,
                     relayerRejectionRetries = FOLLOW_UP_REJECTION_RETRIES,
                 )
-            } ?: raise(renewalPastDeadline(lastKnown))
+            } ?: run {
+                delay(PolymarketRelayerDeadline.timeLeft(authorizationOf(signed).deadline, clock.millis()))
+                raise(renewalPastDeadline(lastKnown))
+            }
         }
         emit(PolymarketSessionKeyProgress.Authorizing(pending))
         return awaitActive(userWalletId, sent.ownerAddress, pending)
