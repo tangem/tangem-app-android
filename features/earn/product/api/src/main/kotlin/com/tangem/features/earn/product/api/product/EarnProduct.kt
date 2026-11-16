@@ -33,6 +33,14 @@ interface EarnProduct {
     val hasLegacyBlock: Boolean
         get() = false
 
+    /** Documents of the provider the confirmation asks the user to agree with; `null` hides the line */
+    val legal: EarnLegal?
+        get() = null
+
+    /** The sheet the product screen and the deposit flow open from their info buttons; `null` hides the buttons */
+    val howItWorks: EarnHowItWorks?
+        get() = null
+
     fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>>
 
     fun state(params: Params): Flow<EarnProductState>
@@ -60,3 +68,5 @@ fun interface EarnActionHandler {
 }
 
 data class EarnProvider(val title: TextReference, val icon: ImageReference)
+
+data class EarnLegal(val termsOfUseUrl: String, val privacyPolicyUrl: String)

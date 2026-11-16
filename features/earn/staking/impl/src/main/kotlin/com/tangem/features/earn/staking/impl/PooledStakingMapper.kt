@@ -77,7 +77,6 @@ internal class PooledStakingMapper @Inject constructor() {
             description = stringReference(DESCRIPTION),
             projection = DefaultEarnProjection(netRate = bestVault.netRate()),
             benefits = listOf(textBlock(BENEFIT_TITLE, BENEFIT_TEXT)),
-            howItWorks = null,
             details = details(feePercent = bestVault.feePercent.stripTrailingZeros().toPlainString()),
             limits = EarnLimits(minDeposit = P2PEthPoolIntegration.DEFAULT_MINIMUM_STAKE, remainingCap = null),
             apyPeriods = emptyList(),

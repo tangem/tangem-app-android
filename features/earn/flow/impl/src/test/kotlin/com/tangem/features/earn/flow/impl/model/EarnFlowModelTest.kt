@@ -6,6 +6,7 @@ import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -110,6 +111,7 @@ internal class EarnFlowModelTest {
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
+    private val blogUrlBuilder: TangemBlogUrlBuilder = mockk()
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk()
@@ -144,6 +146,7 @@ internal class EarnFlowModelTest {
             sendFeedbackEmailUseCase,
             urlOpener,
             shareManager,
+            blogUrlBuilder,
             getExplorerTransactionUrlUseCase,
             getUserWalletUseCase,
             getAccountCurrencyStatusUseCase,
@@ -151,6 +154,7 @@ internal class EarnFlowModelTest {
         )
         coEvery { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) } returns none()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+        coEvery { blogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowYieldModeWorks) } returns TEST_LEARN_MORE_URL
         every { getUserWalletUseCase.invoke(testUserWalletId) } returns mockk<UserWallet.Hot> { every { name } returns "Wallet" }.right()
         mockkObject(CryptoCurrencyStatusOperations)
         with(CryptoCurrencyStatusOperations) {
@@ -1288,7 +1292,7 @@ internal class EarnFlowModelTest {
         }
 
         @Test
-        fun `GIVEN sheet shown WHEN learn more pressed THEN its link opens`() = runTest {
+        fun `GIVEN sheet shown WHEN learn more pressed THEN the link of its post is built and opened`() = runTest {
             // Arrange
             val model = createModel(flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks))
             advanceUntilIdle()
@@ -1296,6 +1300,7 @@ internal class EarnFlowModelTest {
 
             // Act
             model.howItWorks.value?.onLearnMoreClick?.invoke()
+            advanceUntilIdle()
 
             // Assert
             verify(exactly = 1) { urlOpener.openUrl(TEST_LEARN_MORE_URL) }
@@ -1349,6 +1354,7 @@ internal class EarnFlowModelTest {
             urlOpener = urlOpener,
             shareManager = shareManager,
             getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
+            blogUrlBuilder = blogUrlBuilder,
         ),
     )
 
@@ -1356,10 +1362,10 @@ internal class EarnFlowModelTest {
 }
 
 private const val TEST_EXPLORER_URL = "https://etherscan.io/tx/0xhash"
-private const val TEST_LEARN_MORE_URL = "https://aave.com"
+private const val TEST_LEARN_MORE_URL = "https://tangem.com/blog/yield-mode"
 
 private val testHowItWorks = EarnHowItWorks(
     title = stringReference("How it works"),
     entries = listOf(EarnTextBlock(title = stringReference("Supply"), description = stringReference("Lend"))),
-    learnMoreUrl = TEST_LEARN_MORE_URL,
+    learnMore = TangemBlogUrlBuilder.Post.HowYieldModeWorks,
 )

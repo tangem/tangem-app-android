@@ -1,5 +1,6 @@
 package com.tangem.features.earn.flow.impl.model
 
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -12,6 +13,7 @@ internal class EarnFlowLinks @Inject constructor(
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val blogUrlBuilder: TangemBlogUrlBuilder,
 ) {
 
     /** `null` when the network has no explorer for [ref]: the result screen then hides its explorer buttons. */
@@ -26,6 +28,10 @@ internal class EarnFlowLinks @Inject constructor(
 
     fun open(url: String) {
         urlOpener.openUrl(url)
+    }
+
+    suspend fun openBlogPost(post: TangemBlogUrlBuilder.Post) {
+        urlOpener.openUrl(blogUrlBuilder.build(post))
     }
 
     fun share(url: String) {

@@ -7,6 +7,7 @@ import arrow.core.right
 import arrow.core.some
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
@@ -14,7 +15,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.ds2.modal.TangemModalContentUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
@@ -31,6 +31,7 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
+import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
@@ -100,6 +101,7 @@ internal class EarnInfoModelTest {
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val blogUrlBuilder: TangemBlogUrlBuilder = mockk()
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val accountStatusList: AccountStatusList = mockk()
     private val getSelectedAppCurrency: GetSelectedAppCurrencyUseCase = mockk()
@@ -118,6 +120,7 @@ internal class EarnInfoModelTest {
             router,
             uiMessageSender,
             urlOpener,
+            blogUrlBuilder,
             accountStatusListSupplier,
             accountStatusList,
             getSelectedAppCurrency,
@@ -774,16 +777,10 @@ internal class EarnInfoModelTest {
     inner class Modals {
 
         @Test
-        fun `GIVEN onHowItWorksClick WHEN invoked THEN uiMessageSender gets a modal message with the entries`() =
+        fun `GIVEN how it works WHEN onHowItWorksClick THEN the sheet shows its steps, footnote and learn more`() =
             runTest {
                 // Arrange
-                val howItWorks = EarnHowItWorks(
-                    title = stringReference("How it works"),
-                    entries = listOf(EarnTextBlock(stringReference("Supply"), stringReference("Your ETH is supplied"))),
-                )
-                product.stateFlow.value = product.readyState().copy(howItWorks = howItWorks)
-                val sent = slot<ModalMessage>()
-                every { uiMessageSender.send(capture(sent)) } returns Unit
+                product.howItWorksContent = HOW_IT_WORKS
                 val model = createModel()
                 advanceUntilIdle()
 
@@ -791,17 +788,54 @@ internal class EarnInfoModelTest {
                 requireNotNull(requireNotNull(model.uiState.value).myFunds.onHowItWorksClick).invoke()
 
                 // Assert
-                val modal = sent.captured.messageModalUM
-                assertThat(modal.title).isEqualTo(howItWorks.title)
-                assertThat(modal.content).isEqualTo(
-                    TangemModalContentUM.Informer.Rich(
-                        items = persistentListOf(
-                            TangemModalContentUM.Informer.Item(stringReference("Supply"), stringReference("Your ETH is supplied")),
-                        ),
+                val actual = requireNotNull(model.howItWorks.value)
+                val expected = EarnHowItWorksUM(
+                    title = stringReference("How it works"),
+                    steps = persistentListOf(
+                        EarnHowItWorksUM.Step(stringReference("Supply"), stringReference("Your ETH is supplied")),
                     ),
+                    footnote = stringReference("Audited"),
+                    onLearnMoreClick = actual.onLearnMoreClick,
                 )
+                assertThat(actual).isEqualTo(expected)
+                assertThat(actual.onLearnMoreClick).isNotNull()
                 model.onDestroy()
             }
+
+        @Test
+        fun `GIVEN how it works sheet WHEN learn more clicked THEN the link of its post is built and opened`() =
+            runTest {
+                // Arrange
+                product.howItWorksContent = HOW_IT_WORKS
+                coEvery { blogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowYieldModeWorks) } returns BLOG_URL
+                val model = createModel()
+                advanceUntilIdle()
+                requireNotNull(requireNotNull(model.uiState.value).myFunds.onHowItWorksClick).invoke()
+
+                // Act
+                requireNotNull(model.howItWorks.value?.onLearnMoreClick).invoke()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { urlOpener.openUrl(BLOG_URL) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN how it works sheet WHEN dismissed THEN the sheet is hidden`() = runTest {
+            // Arrange
+            product.howItWorksContent = HOW_IT_WORKS
+            val model = createModel()
+            advanceUntilIdle()
+            requireNotNull(requireNotNull(model.uiState.value).myFunds.onHowItWorksClick).invoke()
+
+            // Act
+            model.onHowItWorksDismiss()
+
+            // Assert
+            assertThat(model.howItWorks.value).isNull()
+            model.onDestroy()
+        }
 
         @Test
         fun `GIVEN a row with info WHEN onInfoClick THEN uiMessageSender gets a modal message`() = runTest {
@@ -1076,6 +1110,7 @@ internal class EarnInfoModelTest {
         uiMessageSender = uiMessageSender,
         urlOpener = urlOpener,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
+        blogUrlBuilder = blogUrlBuilder,
     )
 
     private fun verifyRedirectedOnce() {
@@ -1138,6 +1173,11 @@ internal class EarnInfoModelTest {
 
         val stateFlow = MutableStateFlow(initialState)
 
+        var howItWorksContent: EarnHowItWorks? = delegate.howItWorks
+
+        override val howItWorks: EarnHowItWorks?
+            get() = howItWorksContent
+
         val handled = mutableListOf<EarnAction>()
 
         val apyHistoryCalls = mutableListOf<Pair<EarnProduct.Params, EarnPeriod>>()
@@ -1173,6 +1213,15 @@ internal class EarnInfoModelTest {
     }
 
     private companion object {
+
+        const val BLOG_URL = "https://tangem.com/blog/yield-mode"
+
+        val HOW_IT_WORKS = EarnHowItWorks(
+            title = stringReference("How it works"),
+            entries = listOf(EarnTextBlock(stringReference("Supply"), stringReference("Your ETH is supplied"))),
+            footnote = stringReference("Audited"),
+            learnMore = TangemBlogUrlBuilder.Post.HowYieldModeWorks,
+        )
 
         val NoOp: () -> Unit = {}
 

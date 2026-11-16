@@ -170,7 +170,6 @@ internal fun fakeReadyState(preset: FakeEarnProductPreset, position: FakeEarnPos
                 icon = TangemIconUM.Icon(Icons.ic_arrow_refresh_20),
             ),
         ),
-        howItWorks = fakeHowItWorks().takeUnless { isStaking },
         details = listOf(
             fakeRow("Risk", "Low", info = "How risky the product is"),
             EarnRow(
@@ -222,13 +221,13 @@ private fun fakeSpec(id: String, rank: Int, title: String, provider: EarnProvide
         hasLegacyBlock = false,
     )
 
-private fun fakeHowItWorks() = EarnHowItWorks(
+internal fun fakeHowItWorks(preset: FakeEarnProductPreset): EarnHowItWorks? = EarnHowItWorks(
     title = stringReference("How it works"),
     entries = listOf(
         EarnTextBlock(stringReference("Supply"), stringReference("Your ETH is supplied to the protocol")),
         EarnTextBlock(stringReference("Earn"), stringReference("Interest accrues automatically")),
     ),
-)
+).takeUnless { preset == FakeEarnProductPreset.Staking }
 
 private fun fakeRow(label: String, value: String, info: String? = null) = EarnRow(
     label = stringReference(label),

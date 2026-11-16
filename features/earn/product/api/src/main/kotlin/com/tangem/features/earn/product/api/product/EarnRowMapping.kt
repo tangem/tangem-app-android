@@ -1,9 +1,12 @@
 package com.tangem.features.earn.product.api.product
 
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.ui.ds2.modal.TangemModalContentUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.api.ui.EarnRowUM
+import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 fun EarnRow.toUM(
@@ -30,4 +33,12 @@ private fun EarnValue.linkClick(onLinkClick: ((String) -> Unit)?): (() -> Unit)?
 fun EarnTextBlock.toUM(): TangemModalContentUM.Informer.Item = TangemModalContentUM.Informer.Item(
     title = title,
     description = description,
+)
+
+fun EarnHowItWorks.toUM(onLearnMoreClick: (TangemBlogUrlBuilder.Post) -> Unit): EarnHowItWorksUM = EarnHowItWorksUM(
+    title = title,
+    steps = entries.map { entry -> EarnHowItWorksUM.Step(title = entry.title, description = entry.description) }
+        .toImmutableList(),
+    footnote = footnote,
+    onLearnMoreClick = learnMore?.let { post -> { onLearnMoreClick(post) } },
 )

@@ -26,6 +26,7 @@ import com.tangem.features.earn.flow.impl.ui.state.EarnAmountUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnConfirmUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnResultUM
 import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnActionInput
 import com.tangem.features.earn.product.api.session.EarnAmount
 import com.tangem.features.earn.product.api.session.EarnFlowAction
@@ -260,7 +261,7 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun onHowItWorksClick() {
         val content = params.flowProduct.howItWorks ?: return
-        howItWorks.value = converter.howItWorks(content, onLearnMoreClick = links::open)
+        howItWorks.value = content.toUM(onLearnMoreClick = { post -> modelScope.launch { links.openBlogPost(post) } })
     }
 
     private fun subscribeOnStatuses() {

@@ -26,6 +26,8 @@ internal class EarnFlowParamsFactory @Inject constructor(
                 title = product.title,
                 provider = product.provider,
                 analytics = product.analytics,
+                howItWorks = product.howItWorks,
+                legal = product.legal,
             ),
             action = route.action,
             source = entry.source,

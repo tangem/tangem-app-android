@@ -37,6 +37,7 @@ import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnLimits
 import com.tangem.features.earn.product.api.product.EarnPosition
 import com.tangem.features.earn.product.api.product.EarnPositionState
+import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
@@ -598,12 +599,11 @@ internal class EarnInfoConverterTest {
             // Arrange
             val state = readyWith(position.copy(rewards = null)).copy(
                 apyPeriods = emptyList(),
-                howItWorks = null,
                 freshness = null,
             )
 
             // Act
-            val actual = convert(ready = state)
+            val actual = convert(ready = state, product = withHowItWorks(null))
 
             // Assert
             assertThat(actual).isNotNull()
@@ -619,7 +619,7 @@ internal class EarnInfoConverterTest {
                 title = stringReference("How it works"),
                 entries = listOf(EarnTextBlock(stringReference("Supply"), stringReference("Your ETH is supplied"))),
             )
-            val actual = requireNotNull(convert(ready = ready.copy(howItWorks = howItWorks)))
+            val actual = requireNotNull(convert(product = withHowItWorks(howItWorks)))
 
             // Act
             actual.myFunds.onHowItWorksClick?.invoke()
@@ -634,7 +634,7 @@ internal class EarnInfoConverterTest {
             val howItWorks = EarnHowItWorks(title = stringReference("How it works"), entries = emptyList())
 
             // Act
-            val actual = requireNotNull(convert(ready = ready.copy(howItWorks = howItWorks)))
+            val actual = requireNotNull(convert(product = withHowItWorks(howItWorks)))
 
             // Assert
             assertThat(actual.myFunds.onHowItWorksClick).isNull()
@@ -675,7 +675,6 @@ internal class EarnInfoConverterTest {
                 description = stringReference("Earn variable yield on ETH by staking with P2P."),
                 projection = DefaultEarnProjection(netRate = BigDecimal("0.027")),
                 benefits = listOf(benefit),
-                howItWorks = null,
                 details = details,
                 limits = EarnLimits(minDeposit = BigDecimal("0.01"), remainingCap = null),
                 apyPeriods = emptyList(),
@@ -694,7 +693,7 @@ internal class EarnInfoConverterTest {
             )
 
             // Act
-            val actual = requireNotNull(convert(ready = pooledStaking))
+            val actual = requireNotNull(convert(ready = pooledStaking, product = withHowItWorks(null)))
 
             // Assert
             assertThat(actual.myFunds).isEqualTo(
@@ -732,8 +731,13 @@ internal class EarnInfoConverterTest {
         }
     }
 
+    private fun withHowItWorks(content: EarnHowItWorks?): EarnProduct = object : EarnProduct by product {
+        override val howItWorks: EarnHowItWorks? = content
+    }
+
     private fun convert(
         ready: EarnProductState.Ready = this.ready,
+        product: EarnProduct = this.product,
         status: CryptoCurrencyStatus = status(),
         isBalanceHidden: Boolean = false,
         locale: Locale = Locale.US,

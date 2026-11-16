@@ -2,6 +2,7 @@ package com.tangem.features.earn.impl.flow
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.EarnEntryComponent
@@ -13,6 +14,8 @@ import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
+import com.tangem.features.earn.product.api.product.EarnHowItWorks
+import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.Withdraw
@@ -51,6 +54,7 @@ internal class EarnFlowParamsFactoryTest {
                 title = lending.title,
                 provider = lending.provider,
                 analytics = lending.analytics,
+                howItWorks = lending.howItWorks,
             ),
             action = Withdraw(),
             source = EarnEntrySource.Markets,
@@ -60,9 +64,9 @@ internal class EarnFlowParamsFactoryTest {
     }
 
     @Test
-    fun `GIVEN route of a known product WHEN create THEN how it works and legal links are absent`() {
+    fun `GIVEN product without how it works and legal links WHEN create THEN both are absent`() {
         // Arrange
-        val route = EarnFlowRoute(productId = lending.id, action = Deposit())
+        val route = EarnFlowRoute(productId = staking.id, action = Deposit())
 
         // Act
         val actual = factory.create(route = route, entry = entry, callback = callback)
@@ -70,6 +74,44 @@ internal class EarnFlowParamsFactoryTest {
         // Assert
         assertThat(actual?.flowProduct?.howItWorks).isNull()
         assertThat(actual?.flowProduct?.legal).isNull()
+    }
+
+    @Test
+    fun `GIVEN product with legal links WHEN create THEN the flow gets them`() {
+        // Arrange
+        val withLegal = object : EarnProduct by lending {
+            override val legal = EarnLegal(termsOfUseUrl = "https://terms", privacyPolicyUrl = "https://privacy")
+        }
+        val factory = EarnFlowParamsFactory(
+            EarnProductsRegistry(products = setOf(withLegal, staking), rateSources = emptySet()),
+        )
+        val route = EarnFlowRoute(productId = lending.id, action = Deposit())
+
+        // Act
+        val actual = factory.create(route = route, entry = entry, callback = callback)
+
+        // Assert
+        assertThat(actual?.flowProduct?.legal)
+            .isEqualTo(EarnLegal(termsOfUseUrl = "https://terms", privacyPolicyUrl = "https://privacy"))
+    }
+
+    @Test
+    fun `GIVEN product with how it works WHEN create THEN the flow gets it`() {
+        // Arrange
+        val howItWorks = EarnHowItWorks(title = stringReference("How it works"), entries = emptyList())
+        val withHowItWorks = object : EarnProduct by lending {
+            override val howItWorks = howItWorks
+        }
+        val factory = EarnFlowParamsFactory(
+            EarnProductsRegistry(products = setOf(withHowItWorks, staking), rateSources = emptySet()),
+        )
+        val route = EarnFlowRoute(productId = lending.id, action = Deposit())
+
+        // Act
+        val actual = factory.create(route = route, entry = entry, callback = callback)
+
+        // Assert
+        assertThat(actual?.flowProduct?.howItWorks).isEqualTo(howItWorks)
     }
 
     @Test

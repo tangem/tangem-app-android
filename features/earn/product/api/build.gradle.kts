@@ -13,6 +13,9 @@ dependencies {
     /** Feature */
     api(projects.features.earn.api)
 
+    /** Common */
+    api(projects.common)
+
     /** Core */
     api(projects.core.analytics.models)
     api(projects.core.decompose)
