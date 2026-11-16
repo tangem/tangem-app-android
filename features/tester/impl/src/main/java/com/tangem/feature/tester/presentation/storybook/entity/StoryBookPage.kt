@@ -124,6 +124,20 @@ internal data object DeviceIconStory : StoryBookPage
 
 internal data object DsComponentsListStory : StoryBookPage
 
+internal data class TangemScoreScaleStory(
+    val selectedScore: Int?,
+    val width: Width,
+    val textScale: Float,
+    val isEnabled: Boolean,
+    val onScoreClick: (Int) -> Unit,
+    val onWidthChange: (Width) -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+    val onEnabledToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    enum class Width { Full, Phone, Narrow, Compact }
+}
+
 internal data class TangemLoaderStory(
     val selectedSize: TangemLoaderSize,
     val onSizeChange: (TangemLoaderSize) -> Unit,

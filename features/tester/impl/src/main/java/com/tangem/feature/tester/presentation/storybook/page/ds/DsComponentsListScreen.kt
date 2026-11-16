@@ -30,6 +30,7 @@ import com.tangem.core.ui.ds2.filter.TangemFilterGroup
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.scorescale.TangemScoreScale
 import com.tangem.core.ui.ds2.pagination.TangemPagination
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.menu.TangemMenu
@@ -82,6 +83,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.tabnavigation.ta
 import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.textStyleStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.togglebadge.tangemToggleBadgeStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.tangemTokenIconStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.scorescale.tangemScoreScaleStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.tangemTokenRowMarketStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowv2.tangemTokenRowV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.tangemTopNavigationStoryFactory
@@ -126,6 +128,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem("🎛️ TangemFilterGroup", TangemFilterGroup.version, tangemFilterGroupStoryFactory),
     DsStoryItem("📑 TangemTabNavigation", TangemTabNavigation.version, tangemTabNavigationStoryFactory),
     DsStoryItem("🎚️ TangemSegmentedControl", TangemSegmentedControl.version, tangemSegmentedControlStoryFactory),
+    DsStoryItem("🔢 TangemScoreScale", TangemScoreScale.version, tangemScoreScaleStoryFactory),
     DsStoryItem("🔤 Text styles", null, textStyleStoryFactory),
 )
 
