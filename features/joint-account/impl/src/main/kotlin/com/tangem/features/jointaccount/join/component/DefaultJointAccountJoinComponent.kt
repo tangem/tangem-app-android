@@ -27,6 +27,7 @@ import com.tangem.features.jointaccount.join.model.JoinResultAction
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
 import com.tangem.features.jointaccount.join.model.JointAccountJoinModel
 import com.tangem.features.jointaccount.join.navigation.JointAccountJoinRoute
+import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -36,6 +37,7 @@ internal class DefaultJointAccountJoinComponent @AssistedInject constructor(
     @Assisted private val params: JointAccountJoinComponent.Params,
     private val displayNameComponentFactory: JointAccountDisplayNameComponent.Factory,
     private val invitePreviewChildFactory: JointAccountInvitePreviewChildFactory,
+    private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
 ) : JointAccountJoinComponent, AppComponentContext by appComponentContext {
 
     private val model: JointAccountJoinModel = getOrCreateModel()
@@ -116,15 +118,14 @@ internal class DefaultJointAccountJoinComponent @AssistedInject constructor(
         when (val action = model.join(inviteId = params.inviteId, memberName = name)) {
             JoinResultAction.CloseFlow -> router.pop()
             JoinResultAction.None -> Unit
-            is JoinResultAction.OpenMembers -> openMembers(action)
+            is JoinResultAction.OpenMain -> openMain(action)
         }
     }
 
-    private fun openMembers(action: JoinResultAction.OpenMembers) {
-        router.replaceAll(
-            AppRoute.Wallet,
-            AppRoute.JointAccountMembers(userWalletId = action.userWalletId, cryptoAccountId = action.cryptoAccountId),
-        )
+    private fun openMain(action: JoinResultAction.OpenMain) {
+        router.replaceAll(AppRoute.Wallet) {
+            walletDeepLinkActionTrigger.selectWallet(action.userWalletId)
+        }
     }
 
     private fun onChildBack() {
