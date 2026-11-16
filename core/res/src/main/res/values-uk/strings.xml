@@ -296,6 +296,8 @@
   <string name="survey_demand_transaction_size_hint">Приблизно, у USD</string>
   <string name="survey_demand_transaction_size_question">Яка типова сума однієї транзакції?</string>
   <string name="tangempay_cancel_kyc">Приховати статус</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Картку додано до Google Wallet</string>
+  <string name="tangempay_card_page_closing_banner_description">Зазвичай займає до 5 хвилин</string>
   <string name="tangempay_cashback_accruals_pay_description">До 11-го числа наступного місяця, після перевірки транзакцій на відповідність правилам програми кешбеку</string>
   <string name="tangempay_kyc_rejected_button_text">Приховати статус</string>
   <string name="tangempay_pay_support">Підтримка</string>

@@ -2686,7 +2686,7 @@
   <string name="tangempay_card_activation_attempts_exceeded_title">Вы исчерпали попытки активации</string>
   <string name="tangempay_card_activation_description">Введите последние 4 цифры номера карты</string>
   <string name="tangempay_card_activation_error">Невалидные цифры. Попробуйте снова.</string>
-  <string name="tangempay_card_activation_error_already_active">Эта карта уже активирована.</string>
+  <string name="tangempay_card_activation_error_already_active">Эта карта уже активирована</string>
   <string name="tangempay_card_activation_error_in_progress">Активация уже выполняется. Пожалуйста, подождите.</string>
   <string name="tangempay_card_activation_error_not_physical">Это не пластиковая карта</string>
   <string name="tangempay_card_activation_error_not_ready">Карта пока не готова к активации. Попробуйте снова после её получения.</string>
@@ -2695,13 +2695,13 @@
   <string name="tangempay_card_close_error_message">Попробуйте позже или напишите в поддержку</string>
   <string name="tangempay_card_close_error_title">Не удалось закрыть карту</string>
   <string name="tangempay_card_close_last_card_disabled">Нельзя закрыть последнюю карту</string>
-  <string name="tangempay_card_closed_toast">Карта ••%s закрыта</string>
-  <string name="tangempay_card_closed_toast_named">Карта %s закрыта</string>
+  <string name="tangempay_card_closed_toast">Карта %s закрыта</string>
+  <string name="tangempay_card_closed_toast_named">Карта «%s» закрыта</string>
   <string name="tangempay_card_default_name">Карта Tangem Pay 1</string>
   <string name="tangempay_card_delivery_activate_after_delivery_toast">Вы сможете активировать карту после доставки</string>
   <string name="tangempay_card_delivery_banner_description">Активируйте её, как только получите</string>
   <string name="tangempay_card_delivery_banner_description_many">Активируйте их после получения</string>
-  <string name="tangempay_card_delivery_banner_title">Ваша карта доставляется</string>
+  <string name="tangempay_card_delivery_banner_title">Ваша карта уже в пути</string>
   <string name="tangempay_card_delivery_banner_title_many">Ваши карты уже в пути</string>
   <string name="tangempay_card_delivery_email_note">Служба доставки будет присылать обновления по электронной почте на %s</string>
   <string name="tangempay_card_delivery_got_card_button">Карта у меня</string>
@@ -2713,6 +2713,7 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Слишком много попыток. Повторите через 24 часа</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Не удалось добавить карту</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Google Wallet недоступен. Проверьте системные настройки</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Карта добавлена в Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Отменить %1$s, перейти на %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Чтобы оплатить тариф и активировать новую карту</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Пополните счёт на %1$s</string>
@@ -2730,7 +2731,7 @@
   <string name="tangempay_card_details_name_on_card">Имя держателя карты</string>
   <string name="tangempay_card_details_open_wallet_button">Открыть Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Настройте в пару кликов и начните платить</string>
-  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Настройте в пару кликов и начните платить</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Настройте Tangem Pay в пару касаний и начните платить с Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Добавьте карту в Google Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title_apple">Добавьте карту в Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_step_1">Откройте Google Wallet</string>
@@ -2834,7 +2835,7 @@
   <string name="tangempay_close_card_sheet_confirm">Закрыть карту</string>
   <string name="tangempay_close_card_sheet_description">Карта будет закрыта и перестанет работать</string>
   <string name="tangempay_close_card_sheet_description_with_freeze_hint">Карта будет закрыта и перестанет работать. Хотите приостановить её действие? Заморозьте карту.</string>
-  <string name="tangempay_close_card_sheet_freeze_instead">Заморозить</string>
+  <string name="tangempay_close_card_sheet_freeze_instead">Лучше заморозить</string>
   <string name="tangempay_close_card_sheet_keep">Оставить карту</string>
   <string name="tangempay_close_card_sheet_title">Закрыть %s?</string>
   <string name="tangempay_come_back_if_forget_pin">Можно посмотреть здесь, если забудете его.</string>
@@ -2906,7 +2907,7 @@
   <string name="tangempay_kyc_rejected">Отклонено</string>
   <string name="tangempay_kyc_rejected_button_text">Скрыть статус</string>
   <string name="tangempay_kyc_rejected_description">Извините, мы не смогли подтвердить</string>
-  <string name="tangempay_kyc_rejected_description_span">ваш профиль.</string>
+  <string name="tangempay_kyc_rejected_description_span">ваш профиль</string>
   <string name="tangempay_main_select_plan">Выбрать тариф</string>
   <string name="tangempay_maximum_cards_issued_description">Закройте одну карту, чтобы добавить новую</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Перейдите на более высокий тариф, чтобы иметь больше карт</string>
@@ -3514,8 +3515,8 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакция %1$s %2$s не была завершена. Вы можете попробовать отправить ее еще раз.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">У вас есть незавершенная транзакция</string>
   <string name="warning_last_balance_updated_time">Последнее обновление %s</string>
-  <string name="warning_link_wallet_cold_message">Синхронизируйте кошелёк с сервисами Tangem для дополнительной защиты.</string>
-  <string name="warning_link_wallet_hot_message">Синхронизируйте кошелёк с сервисами Tangem для дополнительной защиты.</string>
+  <string name="warning_link_wallet_cold_message">Добавьте дополнительный уровень защиты при подключении к сервисам Tangem.</string>
+  <string name="warning_link_wallet_hot_message">Добавьте дополнительный уровень защиты при подключении к сервисам Tangem.</string>
   <string name="warning_link_wallet_title">Защитите своё соединение</string>
   <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
   <string name="warning_low_signatures_title">Малое количество подписей</string>
