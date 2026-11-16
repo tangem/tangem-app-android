@@ -65,7 +65,12 @@ internal fun EarnCalculatorContent(state: EarnCalculatorUM, modifier: Modifier =
         Spacer(modifier = Modifier.height(8.dp))
         EarnedRow(state = state)
         Spacer(modifier = Modifier.height(24.dp))
-        EarnProjectionBars(bars = state.bars, axisLabels = state.axisLabels)
+        EarnProjectionBars(
+            bars = state.bars,
+            axisLabels = state.axisLabels,
+            selectedBar = state.selectedBar,
+            onBarSelect = state.onBarSelected,
+        )
         Spacer(modifier = Modifier.height(24.dp))
         EarnStepper(state = state.initialBalance)
         Box(
