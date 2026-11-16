@@ -6,19 +6,15 @@ import arrow.core.left
 import arrow.core.nonEmptyListOf
 import arrow.core.raise.Raise
 import arrow.core.raise.either
-import arrow.core.raise.ensure
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketDepositWalletLock
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
-import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
-import com.tangem.domain.polymarket.model.PolymarketSessionKeyAuthorization
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyBatch
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyLifecycleError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyProgress
-import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSignedSessionKeyBatches
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
@@ -26,20 +22,15 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyRelay
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
-import com.tangem.domain.polymarket.sessionkey.isSettling
-import com.tangem.domain.polymarket.signing.PolymarketRelayerDeadline
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList")
 class ManagePolymarketSessionKeyInteractor(
@@ -57,6 +48,14 @@ class ManagePolymarketSessionKeyInteractor(
 ) {
 
     private val relay = PolymarketSessionKeyRelay(sessionKeyRepository, polymarketRepository, clock)
+    private val submitter = PolymarketSessionKeySubmitter(
+        relay = relay,
+        sessionCredentialsProvider = sessionCredentialsProvider,
+        tradingStore = tradingStore,
+        getApiCredentials = getApiCredentials,
+        clock = clock,
+    )
+    private val renewal = PolymarketSessionKeyRenewal(submitter = submitter, relay = relay, clock = clock)
     private val walletsInOperation: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
 
     /**
@@ -115,9 +114,9 @@ class ManagePolymarketSessionKeyInteractor(
             emit(PolymarketSessionKeyProgress.Signing)
             val (signed, revoking) = depositWalletLock.withSessionKeyOperation(userWalletId) {
                 val signed = sign(userWalletId, nonEmptyListOf(revoke))
-                signed to send { relay.revoke(userWalletId, revocationOf(signed)) }
+                signed to with(submitter) { send { relay.revoke(userWalletId, revocationOf(signed)) } }
             }
-            awaitRevoked(userWalletId, signed.ownerAddress(), revoking)
+            with(submitter) { awaitRevoked(userWalletId, signed.ownerAddress(), revoking) }
         }
 
     suspend fun setEnabled(
@@ -137,19 +136,20 @@ class ManagePolymarketSessionKeyInteractor(
         return result
     }
 
-    private suspend fun Operation.enableWith(
+    private suspend fun SessionKeyOperationScope.enableWith(
         userWalletId: UserWalletId,
         authorize: PolymarketSessionKeyBatch.Authorize,
     ): PolymarketSessionKey {
         emit(PolymarketSessionKeyProgress.Signing)
         val (sent, pending) = depositWalletLock.withSessionKeyOperation(userWalletId) {
-            sendAuthorization(userWalletId = userWalletId, signed = sign(userWalletId, nonEmptyListOf(authorize)))
+            val signed = sign(userWalletId, nonEmptyListOf(authorize))
+            with(submitter) { sendAuthorization(userWalletId = userWalletId, authorization = authorizationOf(signed)) }
         }
         emit(PolymarketSessionKeyProgress.Authorizing(pending))
-        return awaitActive(userWalletId, sent.ownerAddress, pending)
+        return with(submitter) { awaitActive(userWalletId, sent.ownerAddress, pending) }
     }
 
-    private suspend fun Operation.revokeThenAuthorize(
+    private suspend fun SessionKeyOperationScope.revokeThenAuthorize(
         userWalletId: UserWalletId,
         revokedAddress: String,
         authorize: PolymarketSessionKeyBatch.Authorize,
@@ -158,65 +158,13 @@ class ManagePolymarketSessionKeyInteractor(
         emit(PolymarketSessionKeyProgress.Signing)
         val (sent, pending) = depositWalletLock.withSessionKeyOperation(userWalletId) {
             val signed = sign(userWalletId, batches)
-            ensure(!authorizationOf(signed).isExpired()) {
-                TangemLogger.i("Polymarket session key authorization expired before the revocation was sent")
-                PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
-            }
-            var lastKnown: PolymarketSessionKey? = null
-            withTimeoutOrNull(authorizationOf(signed).timeLeft()) {
-                val revoking = send { relay.revoke(userWalletId, revocationOf(signed)) }.also { lastKnown = it }
-                val revoked = awaitRevoked(userWalletId, signed.ownerAddress(), revoking).also { lastKnown = it }
-                emit(PolymarketSessionKeyProgress.Revoked(revoked))
-                sendAuthorization(
-                    userWalletId = userWalletId,
-                    signed = signed,
-                    relayerRejectionRetries = FOLLOW_UP_REJECTION_RETRIES,
-                )
-            } ?: run {
-                delay(PolymarketRelayerDeadline.timeLeft(authorizationOf(signed).deadline, clock.millis()))
-                raise(renewalPastDeadline(lastKnown))
-            }
+            with(renewal) { revokeThenAuthorize(userWalletId, revocationOf(signed), authorizationOf(signed)) }
         }
         emit(PolymarketSessionKeyProgress.Authorizing(pending))
-        return awaitActive(userWalletId, sent.ownerAddress, pending)
+        return with(submitter) { awaitActive(userWalletId, sent.ownerAddress, pending) }
     }
 
-    /** @param relayerRejectionRetries resends of an authorization the relayer rejected while an action is in flight */
-    private suspend fun Operation.sendAuthorization(
-        userWalletId: UserWalletId,
-        signed: PolymarketSignedSessionKeyBatches,
-        relayerRejectionRetries: Int = 0,
-    ): Pair<PolymarketSessionKeyAuthorization, PolymarketSessionKey> {
-        val authorization = authorizationOf(signed)
-        var retriesLeft = relayerRejectionRetries
-        while (true) {
-            ensure(!authorization.isExpired()) {
-                TangemLogger.i("Polymarket session key authorization expired before it was sent")
-                PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
-            }
-            val result = relay.authorize(userWalletId, authorization)
-            val rejection = result.leftOrNull() as? PolymarketSessionKeyError.RelayerRejected
-            if (rejection == null || retriesLeft == 0) return authorization to send { result }
-            retriesLeft--
-            TangemLogger.i("Polymarket session key authorization rejected by the relayer, sending it again: $rejection")
-            delay(RELAYER_REJECTION_RETRY_DELAY)
-        }
-    }
-
-    private suspend fun Operation.send(
-        request: suspend () -> Either<PolymarketSessionKeyError, PolymarketSessionKey>,
-    ): PolymarketSessionKey = request()
-        .mapLeft { error ->
-            if (error.needsNewSignature()) {
-                TangemLogger.i("Polymarket session key batch refused for its signature: $error")
-                PolymarketSessionKeyLifecycleError.StaleSignature(cause = error)
-            } else {
-                PolymarketSessionKeyLifecycleError.Failed(error)
-            }
-        }
-        .bind()
-
-    private suspend fun Operation.sign(
+    private suspend fun SessionKeyOperationScope.sign(
         userWalletId: UserWalletId,
         batches: NonEmptyList<PolymarketSessionKeyBatch>,
     ): PolymarketSignedSessionKeyBatches {
@@ -232,90 +180,6 @@ class ManagePolymarketSessionKeyInteractor(
         return signed
     }
 
-    private suspend fun Operation.awaitRevoked(
-        userWalletId: UserWalletId,
-        ownerAddress: String,
-        revoking: PolymarketSessionKey,
-    ): PolymarketSessionKey {
-        emit(PolymarketSessionKeyProgress.Revoking(revoking))
-        val settled = when (val settlement = relay.settle(userWalletId, revoking)) {
-            is PolymarketSessionKeyRelay.Settlement.Settled -> settlement.sessionKey
-            is PolymarketSessionKeyRelay.Settlement.Dropped -> {
-                confirmUnlisted(userWalletId, ownerAddress, dropped = settlement.sessionKey)
-            }
-        }
-        ensure(!settled.status.isSettling()) { PolymarketSessionKeyLifecycleError.Unsettled(settled) }
-        ensure(settled.status == PolymarketSessionKeyStatus.REVOKED) {
-            TangemLogger.e("Polymarket session key ${settled.address} not revoked, back to ${settled.status}")
-            PolymarketSessionKeyLifecycleError.RevocationFailed(settled)
-        }
-        return settled
-    }
-
-    private suspend fun Operation.confirmUnlisted(
-        userWalletId: UserWalletId,
-        ownerAddress: String,
-        dropped: PolymarketSessionKey,
-    ): PolymarketSessionKey {
-        val credentials = getApiCredentials(userWalletId) ?: run {
-            TangemLogger.e("Polymarket session key ${dropped.address} dropped while revoking, no owner to check it")
-            raise(PolymarketSessionKeyLifecycleError.Unsettled(dropped))
-        }
-        val owner = PolymarketClobIdentity.Owner(address = ownerAddress, credentials = credentials)
-        val unlisting = relay.awaitUnlisted(owner, dropped)
-        ensure(unlisting == PolymarketSessionKeyRelay.Unlisting.Gone) {
-            TangemLogger.e("Polymarket session key ${dropped.address} dropped while revoking, unconfirmed: $unlisting")
-            PolymarketSessionKeyLifecycleError.Unsettled(dropped)
-        }
-        TangemLogger.i("Polymarket session key ${dropped.address} dropped while revoking and unlisted, revoked")
-        return dropped.copy(status = PolymarketSessionKeyStatus.REVOKED)
-    }
-
-    private suspend fun Operation.awaitActive(
-        userWalletId: UserWalletId,
-        ownerAddress: String,
-        pending: PolymarketSessionKey,
-    ): PolymarketSessionKey {
-        val settled = when (val settlement = relay.settle(userWalletId, pending)) {
-            is PolymarketSessionKeyRelay.Settlement.Settled -> settlement.sessionKey
-            is PolymarketSessionKeyRelay.Settlement.Dropped -> {
-                TangemLogger.e("Polymarket session key ${settlement.sessionKey.address} dropped while authorizing")
-                raise(PolymarketSessionKeyLifecycleError.AuthorizationFailed(settlement.sessionKey))
-            }
-        }
-        ensure(!settled.status.isSettling()) { PolymarketSessionKeyLifecycleError.Unsettled(settled) }
-        ensure(settled.status == PolymarketSessionKeyStatus.ACTIVE) {
-            TangemLogger.e("Polymarket session key ${settled.address} not authorized: ${settled.status}")
-            PolymarketSessionKeyLifecycleError.AuthorizationFailed(settled)
-        }
-        tradingStore.markAuthorized(userWalletId, settled.address)
-        awaitReady(userWalletId = userWalletId, ownerAddress = ownerAddress, active = settled)
-        return settled
-    }
-
-    private suspend fun Operation.awaitReady(
-        userWalletId: UserWalletId,
-        ownerAddress: String,
-        active: PolymarketSessionKey,
-    ) {
-        emit(PolymarketSessionKeyProgress.CheckingReadiness(active))
-        sessionCredentialsProvider.get(userWalletId)
-            .mapLeft { PolymarketSessionKeyLifecycleError.CredentialsUnavailable(sessionKey = active, cause = it) }
-            .bind()
-        val credentials = getApiCredentials(userWalletId)
-            ?: raise(PolymarketSessionKeyLifecycleError.OwnerCredentialsUnavailable(active))
-        val validUntil = active.validUntil
-        val isListed = validUntil != null && relay.awaitListing(
-            owner = PolymarketClobIdentity.Owner(address = ownerAddress, credentials = credentials),
-            sessionKey = active,
-        )
-        if (validUntil == null || !isListed) {
-            TangemLogger.i("Polymarket does not list the active session key ${active.address} yet, left to reconcile")
-            return
-        }
-        tradingStore.markReadyOnExchange(userWalletId, active.address, validUntil)
-    }
-
     private suspend fun authorizeBatch(sessionKeyAddress: String, replacesSessionKeyAddress: String? = null) =
         PolymarketSessionKeyBatch.Authorize(
             sessionKeyAddress = sessionKeyAddress,
@@ -326,10 +190,10 @@ class ManagePolymarketSessionKeyInteractor(
 
     private fun operation(
         userWalletId: UserWalletId,
-        block: suspend Operation.() -> PolymarketSessionKey,
+        block: suspend SessionKeyOperationScope.() -> PolymarketSessionKey,
     ): Flow<PolymarketSessionKeyProgress> = flow {
         val result = exclusively(userWalletId) {
-            either { Operation(raise = this, collector = this@flow).block() }
+            either { SessionKeyOperationScope(raise = this, collector = this@flow).block() }
         }
         emit(PolymarketSessionKeyProgress.Finished(result))
     }
@@ -349,55 +213,26 @@ class ManagePolymarketSessionKeyInteractor(
         }
     }
 
-    private fun PolymarketSessionKeyAuthorization.isExpired(): Boolean = !timeLeft().isPositive()
-
-    private fun PolymarketSessionKeyAuthorization.timeLeft() =
-        PolymarketRelayerDeadline.timeLeft(deadline = deadline, nowMillis = clock.millis() + DEADLINE_MARGIN_MILLIS)
-
     private fun Raise<PolymarketSessionKeyLifecycleError>.unexpectedBatches(): Nothing =
         raise(PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.MalformedRequest))
 
-    private fun Operation.authorizationOf(signed: PolymarketSignedSessionKeyBatches) = signed.batches
+    private fun SessionKeyOperationScope.authorizationOf(signed: PolymarketSignedSessionKeyBatches) = signed.batches
         .filterIsInstance<PolymarketSignedSessionKeyBatches.Signed.Authorization>()
         .singleOrNull()
         ?.authorization
         ?: unexpectedBatches()
 
-    private fun Operation.revocationOf(signed: PolymarketSignedSessionKeyBatches) =
+    private fun SessionKeyOperationScope.revocationOf(signed: PolymarketSignedSessionKeyBatches) =
         (signed.batches.first() as? PolymarketSignedSessionKeyBatches.Signed.Revocation)?.revocation
             ?: unexpectedBatches()
 
-    private class Operation(
-        raise: Raise<PolymarketSessionKeyLifecycleError>,
-        collector: FlowCollector<PolymarketSessionKeyProgress>,
-    ) : Raise<PolymarketSessionKeyLifecycleError> by raise,
-        FlowCollector<PolymarketSessionKeyProgress> by collector
-
     private companion object {
         const val BUSY_ATTEMPTS = 4
-        const val DEADLINE_MARGIN_MILLIS = 30_000L
-        const val FOLLOW_UP_REJECTION_RETRIES = 5
         val BUSY_RETRY_DELAY = 1_500.milliseconds
-        val RELAYER_REJECTION_RETRY_DELAY = 3.seconds
     }
 }
-
-private fun PolymarketSessionKeyError.needsNewSignature(): Boolean =
-    this is PolymarketSessionKeyError.RelayerRejected ||
-        this == PolymarketSessionKeyError.NonceAlreadyUsed ||
-        this == PolymarketSessionKeyError.InvalidDeadline ||
-        this == PolymarketSessionKeyError.InvalidValidUntil
 
 private fun PolymarketSignedSessionKeyBatches.ownerAddress(): String = when (val batch = batches.first()) {
     is PolymarketSignedSessionKeyBatches.Signed.Authorization -> batch.authorization.ownerAddress
     is PolymarketSignedSessionKeyBatches.Signed.Revocation -> batch.revocation.ownerAddress
-}
-
-private fun renewalPastDeadline(lastKnown: PolymarketSessionKey?): PolymarketSessionKeyLifecycleError {
-    TangemLogger.e("Polymarket session key authorization deadline reached during the renewal")
-    return if (lastKnown != null) {
-        PolymarketSessionKeyLifecycleError.Unsettled(lastKnown)
-    } else {
-        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
-    }
 }
