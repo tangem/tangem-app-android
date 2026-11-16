@@ -42,10 +42,7 @@ internal class TokenReceiveStateFactory(
             },
             network = cryptoCurrency.network.name,
             isEnsResultLoading = false,
-            notificationConfigs = getNotifications(
-                tokenName = tokenName,
-                tokenReceiveNotification = tokenReceiveNotification,
-            ).toImmutableList(),
+            notificationConfigs = getNotifications(tokenName = tokenName).toImmutableList(),
         )
     }
 
@@ -121,10 +118,7 @@ internal class TokenReceiveStateFactory(
         return sortedAddresses.toPersistentList()
     }
 
-    private fun getNotifications(
-        tokenName: String,
-        tokenReceiveNotification: List<TokenReceiveNotification>,
-    ): List<NotificationUM> {
+    private fun getNotifications(tokenName: String): List<NotificationUM> {
         return buildList {
             add(
                 NotificationUM.Info(
@@ -139,17 +133,19 @@ internal class TokenReceiveStateFactory(
                     iconTint = NotificationConfig.IconTint.Accent,
                 ),
             )
-            tokenReceiveNotification.filter { !it.isYieldSupplyNotification }.map { notification ->
-                add(
-                    NotificationUM.Warning(
-                        title = resourceReference(notification.title),
-                        subtitle = resourceReference(
-                            id = notification.subtitle,
-                            formatArgs = WrappedList(notification.formatArgs),
-                        ),
-                    ),
-                )
-            }
+            addAll(getWarnings())
+        }
+    }
+
+    fun getWarnings(): List<NotificationUM> {
+        return tokenReceiveNotification.filter { !it.isYieldSupplyNotification }.map { notification ->
+            NotificationUM.Warning(
+                title = resourceReference(notification.title),
+                subtitle = resourceReference(
+                    id = notification.subtitle,
+                    formatArgs = WrappedList(notification.formatArgs),
+                ),
+            )
         }
     }
 

@@ -24,6 +24,7 @@ import com.tangem.features.tokenreceive.entity.TokenReceiveStateFactory
 import com.tangem.features.tokenreceive.route.TokenReceiveRoutes
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -53,6 +54,8 @@ internal class TokenReceiveModel @Inject constructor(
     )
 
     val stackNavigation = StackNavigation<TokenReceiveRoutes>()
+
+    val warnings = tokenReceiveStateFactory.getWarnings().toImmutableList()
 
     internal val state: StateFlow<TokenReceiveUM>
         field = MutableStateFlow<TokenReceiveUM>(tokenReceiveStateFactory.getInitialState(getTokenName()))
