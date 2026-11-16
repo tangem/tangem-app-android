@@ -2,7 +2,9 @@ package com.tangem.features.earn.lending.impl.provider.aave
 
 import arrow.core.Either
 import arrow.core.right
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.yield.supply.models.incentives.YieldAprHistory
 import com.tangem.domain.yield.supply.usecase.GetYieldAprHistoryUseCase
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
@@ -62,7 +64,9 @@ internal class AaveApyHistoryLoader @Inject constructor(
 }
 
 internal object AaveApyPeriods {
-    val Month = EarnPeriod(id = "1M", label = stringReference("1M"))
-    val ThreeMonths = EarnPeriod(id = "3M", label = stringReference("3M"))
+    val Month = EarnPeriod(id = "1M", label = monthsLabel(count = 1))
+    val ThreeMonths = EarnPeriod(id = "3M", label = monthsLabel(count = 3))
     val All = listOf(Month, ThreeMonths)
+
+    private fun monthsLabel(count: Int) = pluralReference(R.plurals.earn_calculator_months, count, wrappedList(count))
 }
