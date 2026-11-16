@@ -46,6 +46,7 @@ import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
@@ -115,6 +116,7 @@ internal abstract class SendModelTestBase {
     protected val sendAmountUpdateTrigger: SendAmountUpdateTrigger = mockk(relaxed = true)
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     protected val jointSendDelegate: JointSendDelegate = mockk(relaxed = true)
+    protected val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase = mockk()
     protected val sendTransactionUseCase: SendTransactionUseCase = mockk(relaxed = true)
 
     // SendConfirmModel-specific dependencies
@@ -152,6 +154,7 @@ internal abstract class SendModelTestBase {
             createAndSendGaslessTransactionUseCase,
             feeSelectorCheckReloadTrigger,
             reportSendIntentHashUseCase,
+            ensureWalletLinkedUseCase,
             answers = false,
             recordedCalls = true,
             childMocks = false,
@@ -179,6 +182,7 @@ internal abstract class SendModelTestBase {
         coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns "txHash".right()
         every { getExplorerTransactionUrlUseCase(any(), any()) } returns "https://explorer/tx".right()
         coEvery { reportSendIntentHashUseCase(any(), any()) } returns Unit.right()
+        coEvery { ensureWalletLinkedUseCase(testUserWallet) } returns true
 
         // --- SendConfirmModel init-path happy stubs ---
         coEvery { isSendTapHelpEnabledUseCase.invokeSync() } returns false.right()
@@ -261,6 +265,7 @@ internal abstract class SendModelTestBase {
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
             isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
             jointSendDelegate = jointSendDelegate,
+            ensureWalletLinkedUseCase = ensureWalletLinkedUseCase,
             blockaidAnalyticsSender = JointBlockaidAnalyticsSender(analyticsEventHandler = analyticsEventHandler),
             recordTokenTransferFromSendUseCase = recordTokenTransferFromSendUseCase,
             reportSendIntentHashUseCase = reportSendIntentHashUseCase,
