@@ -7,7 +7,7 @@ import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -27,8 +27,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -40,7 +42,7 @@ internal class AccountCreateEditModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
+    private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val getUnoccupiedAccountIndexUseCase: GetUnoccupiedAccountIndexUseCase = mockk()
     private val addCryptoPortfolioUseCase: AddCryptoPortfolioUseCase = mockk()
     private val portfolioSelectorController: PortfolioSelectorController = mockk(relaxed = true)
@@ -53,7 +55,7 @@ internal class AccountCreateEditModelTest {
         clearMocks(
             router,
             userWalletsListRepository,
-            multiAccountListSupplier,
+            singleAccountListSupplier,
             getUnoccupiedAccountIndexUseCase,
             addCryptoPortfolioUseCase,
             portfolioSelectorController,
@@ -143,12 +145,48 @@ internal class AccountCreateEditModelTest {
         }
     }
 
+    @Test
+    fun `GIVEN a wallet whose accounts never load WHEN model created THEN wallet row still shown`() = runTest {
+        // Arrange
+        stubWallets(hotWallet(WALLET_A, name = "A"), hotWallet(WALLET_B, name = "B"))
+        every { singleAccountListSupplier(WALLET_B) } returns emptyFlow()
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.wallet?.name).isEqualTo("A")
+    }
+
+    @Test
+    fun `GIVEN picked wallet index loading WHEN name valid THEN confirm stays disabled`() = runTest {
+        // Arrange
+        stubWallets(hotWallet(WALLET_A, name = "A"), hotWallet(WALLET_B, name = "B"))
+        val walletBIndex = CompletableDeferred<DerivationIndex>()
+        coEvery { getUnoccupiedAccountIndexUseCase(WALLET_B) } coAnswers { walletBIndex.await().right() }
+        val model = createModel()
+        advanceUntilIdle()
+        model.uiState.value.account.onNameChange(AccountNameUM.Custom(raw = "Savings"))
+
+        // Act
+        model.uiState.value.wallet?.onClick?.invoke()
+        selectedAccounts.emit(setOf(Account.Personal.createMainAccount(WALLET_B).accountId))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.buttonState.isButtonEnabled).isFalse()
+        walletBIndex.complete(derivationIndex(2))
+        advanceUntilIdle()
+        assertThat(model.uiState.value.buttonState.isButtonEnabled).isTrue()
+    }
+
     private fun stubWallets(vararg wallets: UserWallet) {
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(wallets.toList())
     }
 
     private fun stubAccountLists(vararg accountLists: AccountList) {
-        every { multiAccountListSupplier() } returns flowOf(accountLists.toList())
+        accountLists.forEach { list -> every { singleAccountListSupplier(list.userWalletId) } returns flowOf(list) }
     }
 
     private fun TestScope.createModel() = AccountCreateEditModel(
@@ -162,7 +200,7 @@ internal class AccountCreateEditModelTest {
         analyticsExceptionHandler = mockk(relaxed = true),
         analyticsEventHandler = mockk(relaxed = true),
         userWalletsListRepository = userWalletsListRepository,
-        multiAccountListSupplier = multiAccountListSupplier,
+        singleAccountListSupplier = singleAccountListSupplier,
         portfolioFetcherFactory = mockk(),
         portfolioSelectorController = portfolioSelectorController,
     )

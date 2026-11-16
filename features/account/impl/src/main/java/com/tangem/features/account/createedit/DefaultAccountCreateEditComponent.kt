@@ -26,28 +26,29 @@ internal class DefaultAccountCreateEditComponent @AssistedInject constructor(
 
     private val model: AccountCreateEditModel = getOrCreateModel(params)
 
-    private val walletSelectorSlot = childSlot(
-        source = model.walletSelectorNavigation,
-        serializer = Unit.serializer(),
-        key = "accountCreateWalletSelectorSlot",
-        handleBackButton = false,
-        childFactory = { _, componentContext ->
-            portfolioSelectorComponentFactory.create(
-                context = childByContext(componentContext),
-                params = PortfolioSelectorComponent.Params(
-                    portfolioFetcher = model.portfolioFetcher,
-                    controller = model.portfolioSelectorController,
-                    bsCallback = model.walletSelectorCallback,
-                    settings = PortfolioSelectorComponent.Settings(isWalletSelectionOnly = true),
-                ),
-            )
-        },
-    )
+    private val walletSelectorSlot = model.walletSelector?.let { selector ->
+        childSlot(
+            source = selector.navigation,
+            serializer = Unit.serializer(),
+            key = "accountCreateWalletSelectorSlot",
+            handleBackButton = false,
+            childFactory = { _, componentContext ->
+                portfolioSelectorComponentFactory.create(
+                    context = childByContext(componentContext),
+                    params = PortfolioSelectorComponent.Params(
+                        portfolioFetcher = selector.portfolioFetcher,
+                        controller = selector.portfolioSelectorController,
+                        bsCallback = selector.bottomSheetCallback,
+                        settings = PortfolioSelectorComponent.Settings(isWalletSelectionOnly = true),
+                    ),
+                )
+            },
+        )
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val walletSelector by walletSelectorSlot.subscribeAsState()
         AccountCreateEditContent(
             state = state,
             isCreateMode = params is AccountCreateEditComponent.Params.Create,
@@ -56,7 +57,10 @@ internal class DefaultAccountCreateEditComponent @AssistedInject constructor(
         // only while there are changes to confirm: otherwise back is a plain pop, left to the stack's predictive back
         BackHandler(enabled = state.buttonState.isButtonEnabled, onBack = state.onCloseClick)
 
-        walletSelector.child?.instance?.BottomSheet()
+        walletSelectorSlot?.let { slot ->
+            val walletSelector by slot.subscribeAsState()
+            walletSelector.child?.instance?.BottomSheet()
+        }
     }
 
     @AssistedFactory
