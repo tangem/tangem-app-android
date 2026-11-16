@@ -55,7 +55,6 @@ class YieldModuleStatusContributionProvider(
         val token = currency as? CryptoCurrency.Token ?: return null
         val yieldStatus = yieldStatuses.findFor(token) ?: return null
 
-        // The module holds a Lending position of the network coin under this token, it is not Yield Mode of the token
         if (wrappedNativeFactory.isWrappedNative(token)) return null
 
         return YieldSupplyContribution(

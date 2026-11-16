@@ -17,7 +17,6 @@ class YieldSupplyIsAvailableUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
         if (cryptoCurrency.isJoint) return false
 
-        // The module holds a Lending position of the network coin under this token, Yield Mode is not offered for it
         if (tokensFeatureToggles.isYieldContributionEnabled && wrappedNativeFactory.isWrappedNative(cryptoCurrency)) {
             return false
         }

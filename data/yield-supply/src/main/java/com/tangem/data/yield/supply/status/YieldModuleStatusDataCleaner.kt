@@ -15,7 +15,6 @@ internal class YieldModuleStatusDataCleaner @Inject constructor(
 ) : CryptoCurrencyDataCleaner {
 
     override suspend fun invoke(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        // The status of the wrapped native token is the Lending position of the network coin, not the token's own
         val keys = currencies
             .filterIsInstance<CryptoCurrency.Token>()
             .filterNot(wrappedNativeFactory::isWrappedNative)

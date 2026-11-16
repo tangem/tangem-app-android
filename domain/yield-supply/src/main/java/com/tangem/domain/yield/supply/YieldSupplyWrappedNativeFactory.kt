@@ -11,7 +11,12 @@ interface YieldSupplyWrappedNativeFactory {
     fun create(network: Network): CryptoCurrency.Token?
 }
 
-/** @return true when [currency] is the wrapped native token of its network, compared by contract address */
+/**
+ * The module holds the Lending position of the network coin under its wrapped native token, so the module status of
+ * that token is not a Yield Mode position of a portfolio token.
+ *
+ * @return true when [currency] is the wrapped native token of its network, compared by contract address
+ */
 fun YieldSupplyWrappedNativeFactory.isWrappedNative(currency: CryptoCurrency): Boolean {
     val token = currency as? CryptoCurrency.Token ?: return false
     val wrappedNative = create(token.network) ?: return false

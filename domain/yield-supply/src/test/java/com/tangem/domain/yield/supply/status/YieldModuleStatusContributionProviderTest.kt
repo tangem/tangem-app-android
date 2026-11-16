@@ -239,7 +239,6 @@ internal class YieldModuleStatusContributionProviderTest {
             statuses = setOf(status()),
             expected = null,
         ),
-        // the module holds the Lending position of the network coin under this token, it is not Yield Mode of the token
         ResolveModel(
             name = "active status of the network's wrapped native token",
             statuses = setOf(status(isActive = true, effectiveProtocolBalance = BigDecimal("7"))),
