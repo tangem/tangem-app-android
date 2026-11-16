@@ -73,11 +73,7 @@ internal class LendingEarnProduct @Inject constructor(
     override fun state(params: EarnProduct.Params): Flow<EarnProductState> {
         if (!isOffered) return flowOf(EarnProductState.Unavailable)
         return lendingSupplier(params.userWalletId).map { snapshot ->
-            val state = snapshot.assets[params.currency.id]
-            val minDeposit = state?.let {
-                lendingProvider.minDeposit(params.userWalletId, it.asset).getOrNull()
-            }
-            stateMapper.map(state, minDeposit)
+            stateMapper.map(snapshot.assets[params.currency.id])
         }
     }
 

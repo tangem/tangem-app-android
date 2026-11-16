@@ -147,7 +147,6 @@ internal class LendingSessionTest {
             pendingTracker,
         )
         provider.refreshCalls.clear()
-        provider.minDepositResult = BigDecimal.ZERO.right()
         every { getUserWalletUseCase(userWalletId) } returns userWallet.right()
         arrangeState(assetState())
     }
@@ -386,45 +385,29 @@ internal class LendingSessionTest {
         }
 
         @Test
-        fun `GIVEN deposit below the min deposit WHEN prepare THEN returns below minimum without building`() =
-            runTest {
-                // Arrange
-                provider.minDepositResult = (DEPOSIT_AMOUNT + BigDecimal.ONE).right()
-
-                // Act
-                val actual = session.prepare(Deposit(), EarnAmount.Exact(DEPOSIT_AMOUNT), selection(TOTAL_GAS))
-
-                // Assert
-                assertThat(actual).isEqualTo(EarnSessionError.BelowMinimum(DEPOSIT_AMOUNT + BigDecimal.ONE).left())
-                coVerify(exactly = 0) {
-                    transactions.deposit(userWalletId = any(), asset = any(), amount = any(), state = any())
-                }
-            }
-
-        @Test
-        fun `GIVEN min deposit unavailable WHEN prepare deposit THEN builds the plan`() = runTest {
+        fun `GIVEN tiny deposit WHEN prepare THEN builds the plan with no minimum`() = runTest {
             // Arrange
-            provider.minDepositResult = IllegalStateException("no fee").left()
-            arrangeDeposit(built = listOf(rawPreparation, rawDeposit))
+            val tiny = BigDecimal("0.000001")
+            arrangeDeposit(built = listOf(rawDeposit), amount = tiny)
 
             // Act
-            val actual = session.prepare(Deposit(), EarnAmount.Exact(DEPOSIT_AMOUNT), selection(TOTAL_GAS))
+            val actual = session.prepare(Deposit(), EarnAmount.Exact(tiny), selection(TOTAL_GAS))
 
             // Assert
-            assertThat(actual).isEqualTo(depositPlan().right())
+            assertThat(actual.getOrNull()).isInstanceOf(LendingPlan::class.java)
+            assertThat((actual.getOrNull() as LendingPlan).amount).isEqualTo(tiny)
         }
 
         @Test
-        fun `GIVEN withdraw below the min deposit WHEN prepare THEN builds the plan`() = runTest {
-            // Arrange
-            provider.minDepositResult = (WITHDRAW_AMOUNT + BigDecimal.ONE).right()
-            arrangeWithdraw(amount = WITHDRAW_AMOUNT)
-
+        fun `GIVEN zero deposit WHEN prepare THEN fails without building`() = runTest {
             // Act
-            val actual = session.prepare(Withdraw(), EarnAmount.Exact(WITHDRAW_AMOUNT), selection(WITHDRAW_GAS))
+            val actual = session.prepare(Deposit(), EarnAmount.Exact(BigDecimal.ZERO), selection(TOTAL_GAS))
 
             // Assert
-            assertThat(actual).isEqualTo(withdrawPlan().right())
+            assertThat(actual.leftOrNull()).isInstanceOf(EarnSessionError.Failed::class.java)
+            coVerify(exactly = 0) {
+                transactions.deposit(userWalletId = any(), asset = any(), amount = any(), state = any())
+            }
         }
 
         @Test

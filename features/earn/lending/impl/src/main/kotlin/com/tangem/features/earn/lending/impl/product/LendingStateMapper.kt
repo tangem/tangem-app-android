@@ -6,8 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
@@ -24,6 +23,7 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
+import com.tangem.features.earn.product.api.rate.formatEarnPercent
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.Withdraw
 import java.math.BigDecimal
@@ -31,24 +31,41 @@ import java.math.BigDecimal
 // Temporary plain text in this file: replace with localized string resources.
 internal class LendingStateMapper(private val provider: LendingProvider) {
 
+    private val performanceFeeText = provider.performanceFee.formatEarnPercent()
+
     private val details = listOf(
-        textRow("Risk", "Low", info = "How risky the product is"),
         EarnRow(
-            label = stringReference("Protocol"),
+            label = resourceReference(R.string.earn_product_details_risk),
+            value = EarnValue.Text(resourceReference(R.string.earn_risk_level_low)),
+            info = EarnTextBlock(
+                title = resourceReference(R.string.earn_product_details_risk_info_title),
+                description = resourceReference(R.string.earn_product_details_risk_low_description),
+            ),
+        ),
+        EarnRow(
+            label = resourceReference(R.string.earn_product_details_protocol),
             value = EarnValue.Link(text = provider.info.title, url = provider.websiteUrl),
         ),
-        textRow("Withdrawals", "Usually instant", info = "How fast you can withdraw"),
-        textRow(
-            label = "Performance fee",
-            value = "${provider.performanceFee.format { percent(minFractionDigits = 0) }} of yield",
-            info = "Taken from the earned yield",
+        infoRow(
+            label = resourceReference(R.string.earn_product_details_withdrawals),
+            value = EarnValue.Text(resourceReference(R.string.earn_product_details_usually_instant)),
+            info = resourceReference(R.string.earn_product_details_lending_withdrawals_info),
+        ),
+        infoRow(
+            label = resourceReference(R.string.earn_product_details_performance_fee),
+            value = EarnValue.Text(
+                resourceReference(R.string.earn_product_details_performance_fee_value, wrappedList(performanceFeeText)),
+            ),
+            info = resourceReference(
+                R.string.earn_product_details_performance_fee_info,
+                wrappedList(performanceFeeText),
+            ),
         ),
     )
 
     private val updateRequiredBlock = EarnBlock(reason = LendingTexts.updateRequired(provider.info))
 
-    /** @param minDeposit null when the provider could not tell: the limit is then not enforced by the screen */
-    fun map(state: LendingAssetState?, minDeposit: BigDecimal?): EarnProductState {
+    fun map(state: LendingAssetState?): EarnProductState {
         val market = state?.market ?: return EarnProductState.Unavailable
         val rate = market.rate
         if (rate == null) {
@@ -64,7 +81,8 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
             projection = provider.projectionOf(rate.fraction),
             benefits = BENEFITS,
             details = details,
-            limits = EarnLimits(minDeposit = minDeposit ?: BigDecimal.ZERO, remainingCap = null),
+            // Any amount above zero is accepted: the screen checks it against the balance and the network fee
+            limits = EarnLimits(minDeposit = BigDecimal.ZERO, remainingCap = null),
             apyPeriods = provider.apyPeriods,
             primary = primaryOf(state),
             secondary = if (position != null) listOf(withdrawOf(state)) else emptyList(),
@@ -84,7 +102,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
     )
 
     private fun withdrawOf(state: LendingAssetState): EarnActionItem =
-        EarnActionItem(action = Withdraw(), block = withdrawBlock(state))
+        EarnActionItem(action = WITHDRAW, block = withdrawBlock(state))
 
     private fun depositBlock(state: LendingAssetState): EarnBlock? = when {
         state.hasPendingTx -> PENDING_BLOCK
@@ -108,8 +126,22 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
                 EarnPosition(
                     cryptoAmount = position.cryptoAmount,
                     earned = null,
-                    description = null,
-                    rows = emptyList(),
+                    description = resourceReference(R.string.lending_position_about),
+                    rows = listOf(
+                        infoRow(
+                            label = resourceReference(R.string.token_details_balance_total),
+                            value = EarnValue.Amount(position.cryptoAmount),
+                            info = resourceReference(
+                                R.string.lending_position_total_balance_info,
+                                wrappedList(performanceFeeText),
+                            ),
+                        ),
+                        infoRow(
+                            label = resourceReference(R.string.token_details_balance_available),
+                            value = EarnValue.Amount(state.market.maxWithdraw ?: position.cryptoAmount),
+                            info = resourceReference(R.string.lending_position_available_balance_info),
+                        ),
+                    ),
                     rewards = null,
                     freshness = null,
                 ),
@@ -131,15 +163,16 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         val BENEFITS = listOf(
             EarnTextBlock(
                 title = stringReference("No lock-ups."),
-                description = stringReference("Send, swap, or sell your funds anytime"),
+                description = stringReference("Send, swap, or sell your funds instantly, anytime you want"),
                 icon = TangemIconUM.Icon(Icons.ic_lightning_20),
             ),
             EarnTextBlock(
-                title = stringReference("Withdraw anytime."),
-                description = stringReference("Subject to protocol liquidity"),
+                title = resourceReference(R.string.earn_product_details_lending_withdraw_anytime_title),
+                description = resourceReference(R.string.earn_product_details_lending_withdraw_anytime_subtitle),
                 icon = TangemIconUM.Icon(Icons.ic_arrow_refresh_20),
             ),
         )
+        val WITHDRAW = Withdraw(notice = resourceReference(R.string.lending_withdraw_instant_notice))
         val PENDING_BLOCK = EarnBlock(reason = LendingTexts.pendingTransaction)
         val CLOSED_BLOCK = EarnBlock(reason = LendingTexts.depositsPaused)
         val RETRY_BLOCK = EarnBlock(
@@ -147,10 +180,10 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
             action = EarnBlockAction.Retry,
         )
 
-        fun textRow(label: String, value: String, info: String) = EarnRow(
-            label = stringReference(label),
-            value = EarnValue.Text(stringReference(value)),
-            info = EarnTextBlock(stringReference(label), stringReference(info)),
+        fun infoRow(label: TextReference, value: EarnValue, info: TextReference) = EarnRow(
+            label = label,
+            value = value,
+            info = EarnTextBlock(title = label, description = info),
         )
     }
 }

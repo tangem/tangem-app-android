@@ -93,7 +93,7 @@ internal class LendingSession @AssistedInject constructor(
         val operation = ensureNotNull(action.toLendingOperation()) { EarnSessionError.Failed() }
         val state = ensureNotNull(currentState()) { EarnSessionError.Failed() }
         val value = ensureNotNull(amount.resolve(state, operation)) { EarnSessionError.Failed() }
-        if (operation == LendingOperation.Deposit) ensureAboveMinDeposit(state = state, amount = value)
+        ensure(value.signum() > 0) { EarnSessionError.Failed() }
         planFactory.plan(
             userWalletId = params.userWalletId,
             state = state,
@@ -203,12 +203,6 @@ internal class LendingSession @AssistedInject constructor(
                 ensure(feeValue <= balance) { EarnSessionError.InsufficientBalance }
             }
         }
-    }
-
-    /** A minimum the provider could not compute does not block the deposit, the same as on the product screen */
-    private suspend fun Raise<EarnSessionError>.ensureAboveMinDeposit(state: LendingAssetState, amount: BigDecimal) {
-        val minDeposit = lendingProvider.minDeposit(params.userWalletId, state.asset).getOrNull() ?: return
-        ensure(amount >= minDeposit) { EarnSessionError.BelowMinimum(minDeposit) }
     }
 
     /** The plan's result follows the last transaction: the deposit or withdrawal, not the preparation */
