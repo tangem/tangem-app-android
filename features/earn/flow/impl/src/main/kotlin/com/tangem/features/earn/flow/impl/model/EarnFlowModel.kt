@@ -124,7 +124,6 @@ internal class EarnFlowModel @Inject constructor(
     private val amountInput = EarnAmountInput(clickIntents = this)
 
     private var feeJob: Job? = null
-    private var feeStatusJob: Job? = null
     private var prepareJob: Job? = null
     private var executeJob: Job? = null
 
@@ -272,15 +271,10 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun subscribeOnStatuses() {
         statuses.currency(params.product)
-            .onEach { status ->
-                updateWithInitialAmount { it.copy(status = status) }
-                if (feeStatusJob == null && status.value !is CryptoCurrencyStatus.Loading) {
-                    feeStatusJob = modelScope.launch {
-                        val feeStatus = statuses.feeCurrency(params.product, status)
-                        state.update { it.copy(feeStatus = feeStatus) }
-                    }
-                }
-            }
+            .onEach { status -> updateWithInitialAmount { it.copy(status = status) } }
+            .launchIn(modelScope)
+        statuses.feeCurrency(params.product)
+            .onEach { feeStatus -> state.update { it.copy(feeStatus = feeStatus) } }
             .launchIn(modelScope)
         statuses.appCurrency()
             .onEach { appCurrency -> updateWithInitialAmount { it.copy(appCurrency = appCurrency) } }

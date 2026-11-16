@@ -80,6 +80,7 @@ import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
@@ -585,6 +586,34 @@ internal class EarnFlowModelTest {
             coVerify(exactly = 0) {
                 isAmountSubtractAvailableUseCase.invoke(userWalletId = any(), currency = any(), maybeGaslessFee = any())
             }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee coin topped up WHEN account list updates THEN withdrawal fee warning disappears`() = runTest {
+            // Arrange
+            val accountStatusLists = MutableSharedFlow<AccountStatusList>(replay = 1)
+            every { singleAccountStatusListSupplier.invoke(testUserWalletId) } returns accountStatusLists
+            coEvery {
+                getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(userWalletId = any(), cryptoCurrencyStatus = any())
+            } returnsMany listOf(testStatus(amount = BigDecimal("0.0001")).right(), testStatus().right())
+            accountStatusLists.emit(accountStatusList)
+            val model = createModel(action = Withdraw())
+            advanceUntilIdle()
+            model.onAmountValueChange("0.5")
+            model.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+            val warningsBeforeTopUp = model.amount.value?.notifications.orEmpty()
+                .filterIsInstance<NotificationUM.Error.ExceedsBalance>()
+
+            // Act
+            accountStatusLists.emit(accountStatusList)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(warningsBeforeTopUp).hasSize(1)
+            assertThat(model.amount.value?.notifications.orEmpty().filterIsInstance<NotificationUM.Error.ExceedsBalance>())
+                .isEmpty()
             model.onDestroy()
         }
     }
