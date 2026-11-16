@@ -21,6 +21,7 @@ internal enum class EarnFlowStep { Amount, Confirm, Result }
  * into the protocol. [planFee] is the fee [plan] was prepared with: a plan built for another fee is never verified.
  * [minAmount] comes from the session's `BelowMinimum` and joins the amount field validation from then on.
  * [sentAmount] keeps the plan's amount for the result: the plan itself is dropped once the transaction is sent.
+ * [sentPlan] is that dropped plan, kept only for the confirmation to show until the result replaces it.
  */
 internal data class EarnFlowState(
     val step: EarnFlowStep,
@@ -41,7 +42,9 @@ internal data class EarnFlowState(
     val explorerUrl: String? = null,
     val resultTimestamp: Long? = null,
     val sentAmount: BigDecimal? = null,
+    val sentPlan: EarnPlan? = null,
     @DrawableRes val walletIcon: Int? = null,
+    val isHoldToConfirm: Boolean = false,
     val source: AccountTitleUM? = null,
 ) {
 

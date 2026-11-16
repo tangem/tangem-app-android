@@ -47,7 +47,9 @@ import com.tangem.features.earn.flow.impl.EarnSessionFactories
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnProduct
+import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAmount
 import com.tangem.features.earn.product.api.session.EarnFeeSelection
@@ -77,6 +79,8 @@ import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
@@ -584,6 +588,34 @@ internal class EarnFlowModelTest {
             }
             model.onDestroy()
         }
+
+        @Test
+        fun `GIVEN fee coin topped up WHEN account list updates THEN withdrawal fee warning disappears`() = runTest {
+            // Arrange
+            val accountStatusLists = MutableSharedFlow<AccountStatusList>(replay = 1)
+            every { singleAccountStatusListSupplier.invoke(testUserWalletId) } returns accountStatusLists
+            coEvery {
+                getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(userWalletId = any(), cryptoCurrencyStatus = any())
+            } returnsMany listOf(testStatus(amount = BigDecimal("0.0001")).right(), testStatus().right())
+            accountStatusLists.emit(accountStatusList)
+            val model = createModel(action = Withdraw())
+            advanceUntilIdle()
+            model.onAmountValueChange("0.5")
+            model.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+            val warningsBeforeTopUp = model.amount.value?.notifications.orEmpty()
+                .filterIsInstance<NotificationUM.Error.ExceedsBalance>()
+
+            // Act
+            accountStatusLists.emit(accountStatusList)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(warningsBeforeTopUp).hasSize(1)
+            assertThat(model.amount.value?.notifications.orEmpty().filterIsInstance<NotificationUM.Error.ExceedsBalance>())
+                .isEmpty()
+            model.onDestroy()
+        }
     }
 
     @Nested
@@ -891,6 +923,30 @@ internal class EarnFlowModelTest {
         }
 
         @Test
+        fun `GIVEN sent and result not ready WHEN confirm shown THEN it keeps the sent plan rows and amount`() = runTest {
+            // Arrange
+            val row = EarnRow(label = stringReference("Current APY"), value = EarnValue.Text(stringReference("5.5%")))
+            val plan = TestPlan(rows = listOf(row))
+            coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returns plan.right()
+            coEvery { session.verify(plan = any()) } returns EarnVerification.Verified(TestVerifiedPlan(plan))
+            every { session.execute(plan = any()) } returns flow {
+                emit(EarnSigningStep.Sent(txRef))
+                awaitCancellation()
+            }
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.plan).isNull()
+            assertThat(model.confirm.value?.rows?.map { it.label }).containsExactly(row.label)
+            assertThat(model.confirm.value?.amountCrypto).isNotEqualTo(TextReference.EMPTY)
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN Failed after Sent WHEN confirm again THEN sent plan is not verified twice`() = runTest {
             // Arrange
             every { session.execute(plan = any()) } returns flowOf(
@@ -1131,6 +1187,18 @@ internal class EarnFlowModelTest {
 
             // Assert
             assertThat(model.confirm.value?.primary?.tangemIconUM).isNotNull()
+            assertThat(model.confirm.value?.isHoldToConfirm).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN mobile wallet WHEN confirm shown THEN the action is held to confirm without the logo`() = runTest {
+            // Act
+            val model = createConfirmedModel()
+
+            // Assert
+            assertThat(model.confirm.value?.isHoldToConfirm).isTrue()
+            assertThat(model.confirm.value?.primary?.tangemIconUM).isNull()
             model.onDestroy()
         }
 
