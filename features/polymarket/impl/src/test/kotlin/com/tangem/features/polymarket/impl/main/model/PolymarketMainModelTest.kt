@@ -660,7 +660,7 @@ internal class PolymarketMainModelTest {
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
-            data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
+            data = listOf(Batch(key = 0, data = batchOf(createEvent().copy(eventType = "soccer")))),
             status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
         )
         advanceUntilIdle()
@@ -675,6 +675,7 @@ internal class PolymarketMainModelTest {
                     eventId = "event-1",
                     userWalletId = USER_WALLET_ID,
                     categoryLabel = "Trending",
+                    eventType = "soccer",
                 ),
                 any(),
             )

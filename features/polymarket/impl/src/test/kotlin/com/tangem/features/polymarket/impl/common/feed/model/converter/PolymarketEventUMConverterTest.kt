@@ -27,7 +27,7 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PolymarketEventUMConverterTest {
 
-    private val clickedEvents = mutableListOf<String>()
+    private val clickedEvents = mutableListOf<PolymarketEvent>()
     private val clickedOutcomes = mutableListOf<Triple<String, String, String>>()
 
     private val converter = PolymarketEventUMConverter(
@@ -331,12 +331,15 @@ internal class PolymarketEventUMConverterTest {
         }
 
         @Test
-        fun `GIVEN converted event WHEN card clicked THEN event id is reported`() {
+        fun `GIVEN soccer event WHEN card clicked THEN the event discriminator reaches navigation`() {
+            // Arrange
+            val event = createEvent().copy(eventType = "soccer")
+
             // Act
-            converter.convert(createEvent()).onClick()
+            converter.convert(event).onClick()
 
             // Assert
-            Truth.assertThat(clickedEvents).containsExactly("event-1")
+            Truth.assertThat(clickedEvents).containsExactly(event)
         }
     }
 

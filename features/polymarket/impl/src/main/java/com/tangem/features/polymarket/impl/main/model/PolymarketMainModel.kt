@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.main.model
 
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -444,10 +445,11 @@ internal class PolymarketMainModel @Inject constructor(
         messageSender.send(SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)))
     }
 
-    private fun onEventClick(eventId: String) {
+    private fun onEventClick(event: PolymarketEvent) {
         router.push(
             PolymarketRoute.EventDetails(
-                eventId = eventId,
+                eventId = event.id,
+                eventType = event.eventType,
                 userWalletId = params.userWalletId,
                 categoryLabel = selectedFeedCategory()?.label,
             ),

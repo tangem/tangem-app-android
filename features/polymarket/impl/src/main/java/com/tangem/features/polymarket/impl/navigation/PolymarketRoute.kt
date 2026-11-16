@@ -61,6 +61,7 @@ internal sealed interface PolymarketRoute : Route {
         val marketId: String? = null,
         val assetId: String? = null,
         val categoryLabel: String? = null,
+        val eventType: String? = null,
     ) : PolymarketRoute
 
     /**
