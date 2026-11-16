@@ -96,7 +96,7 @@ internal class DefaultAccountWalletPickerTest {
     fun `GIVEN one wallet list never loads WHEN resolve THEN the loaded wallet is used after the timeout`() = runTest {
         // Arrange
         stubAccountLists(accountList(WALLET_A, activeAccounts = 1))
-        every { singleAccountListSupplier(WALLET_B) } returns emptyFlow()
+        every { singleAccountListSupplier(WALLET_B) } returns emptyFlow<AccountList>()
 
         // Act
         val resolution = createPicker().resolve(hasRoom = AccountList::canAddMoreCryptoAccounts)
@@ -108,7 +108,7 @@ internal class DefaultAccountWalletPickerTest {
     @Test
     fun `GIVEN no wallet list loads WHEN resolve THEN unavailable`() = runTest {
         // Arrange
-        every { singleAccountListSupplier(any()) } returns emptyFlow()
+        every { singleAccountListSupplier(any<UserWalletId>()) } returns emptyFlow<AccountList>()
 
         // Act
         val resolution = createPicker().resolve(hasRoom = AccountList::canAddMoreCryptoAccounts)
@@ -140,7 +140,7 @@ internal class DefaultAccountWalletPickerTest {
     fun `GIVEN a wallet whose list never loaded WHEN chooser opened THEN it is disabled`() = runTest {
         // Arrange
         stubAccountLists(accountList(WALLET_A, activeAccounts = 1))
-        every { singleAccountListSupplier(WALLET_B) } returns emptyFlow()
+        every { singleAccountListSupplier(WALLET_B) } returns emptyFlow<AccountList>()
         val picker = createPicker()
         picker.resolve(hasRoom = AccountList::canAddMoreCryptoAccounts)
 
@@ -180,7 +180,7 @@ internal class DefaultAccountWalletPickerTest {
 
         // Assert
         verify(exactly = 0) { getWalletsUseCase() }
-        verify(exactly = 0) { singleAccountListSupplier(any()) }
+        verify(exactly = 0) { singleAccountListSupplier(any<UserWalletId>()) }
         verify(exactly = 0) { portfolioFetcherFactory.create(any(), any()) }
     }
 
