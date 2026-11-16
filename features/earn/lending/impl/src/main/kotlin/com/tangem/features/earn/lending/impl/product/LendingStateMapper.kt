@@ -3,9 +3,8 @@ package com.tangem.features.earn.lending.impl.product
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -28,24 +27,36 @@ import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.Withdraw
 import java.math.BigDecimal
 
-// Temporary plain text in this file: replace with localized string resources.
 internal class LendingStateMapper(private val provider: LendingProvider) {
 
+    private val feePercent = wrappedList<Any>(provider.performanceFee.format { percent(minFractionDigits = 0) })
+
     private val details = listOf(
-        textRow("Risk", "Low", info = "How risky the product is"),
         EarnRow(
-            label = stringReference("Protocol"),
+            label = resourceReference(R.string.earn_product_details_risk),
+            value = EarnValue.Text(resourceReference(R.string.earn_risk_level_low)),
+            info = EarnTextBlock(
+                title = resourceReference(R.string.earn_product_details_risk_info_title),
+                description = resourceReference(R.string.earn_product_details_risk_low_description),
+            ),
+        ),
+        EarnRow(
+            label = resourceReference(R.string.earn_product_details_protocol),
             value = EarnValue.Link(text = provider.info.title, url = provider.websiteUrl),
         ),
-        textRow("Withdrawals", "Usually instant", info = "How fast you can withdraw"),
         textRow(
-            label = "Performance fee",
-            value = "${provider.performanceFee.format { percent(minFractionDigits = 0) }} of yield",
-            info = "Taken from the earned yield",
+            label = resourceReference(R.string.earn_product_details_withdrawals),
+            value = resourceReference(R.string.earn_product_details_usually_instant),
+            info = resourceReference(R.string.earn_product_details_lending_withdrawals_info),
+        ),
+        textRow(
+            label = resourceReference(R.string.earn_product_details_performance_fee),
+            value = resourceReference(R.string.earn_product_details_performance_fee_value, feePercent),
+            info = resourceReference(R.string.earn_product_details_performance_fee_info, feePercent),
         ),
     )
 
-    private val updateRequiredBlock = EarnBlock(reason = LendingTexts.updateRequired(provider.info))
+    private val updateRequiredBlock = EarnBlock(reason = LendingTexts.updateRequired)
 
     /** @param minDeposit null when the provider could not tell: the limit is then not enforced by the screen */
     fun map(state: LendingAssetState?, minDeposit: BigDecimal?): EarnProductState {
@@ -57,10 +68,9 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         }
 
         val position = market.position
-        val symbol = state.asset.currency.symbol
         return EarnProductState.Ready(
             rate = rate,
-            description = descriptionOf(symbol),
+            description = resourceReference(R.string.earn_yield_picker_lending_description),
             projection = provider.projectionOf(rate.fraction),
             benefits = BENEFITS,
             details = details,
@@ -79,7 +89,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         label = if (state.market.position != null) {
             resourceReference(R.string.common_add_funds)
         } else {
-            stringReference("Start earning")
+            resourceReference(R.string.eth_yield_start_earning)
         },
     )
 
@@ -119,38 +129,30 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         }
     }
 
-    private fun descriptionOf(symbol: String): TextReference = combinedReference(
-        stringReference("Earn variable yield on $symbol by lending it directly on "),
-        provider.info.title,
-        stringReference(", "),
-        provider.about,
-        stringReference(". Withdrawals are usually instant."),
-    )
-
     private companion object {
         val BENEFITS = listOf(
             EarnTextBlock(
-                title = stringReference("No lock-ups."),
-                description = stringReference("Send, swap, or sell your funds anytime"),
+                title = resourceReference(R.string.yield_module_promo_screen_cash_out_title),
+                description = resourceReference(R.string.yield_module_promo_screen_cash_out_subtitle),
                 icon = TangemIconUM.Icon(Icons.ic_lightning_20),
             ),
             EarnTextBlock(
-                title = stringReference("Withdraw anytime."),
-                description = stringReference("Subject to protocol liquidity"),
+                title = resourceReference(R.string.earn_product_details_lending_withdraw_anytime_title),
+                description = resourceReference(R.string.earn_product_details_lending_withdraw_anytime_subtitle),
                 icon = TangemIconUM.Icon(Icons.ic_arrow_refresh_20),
             ),
         )
         val PENDING_BLOCK = EarnBlock(reason = LendingTexts.pendingTransaction)
         val CLOSED_BLOCK = EarnBlock(reason = LendingTexts.depositsPaused)
         val RETRY_BLOCK = EarnBlock(
-            reason = stringReference("Position is not loaded"),
+            reason = resourceReference(R.string.common_unable_to_load),
             action = EarnBlockAction.Retry,
         )
 
-        fun textRow(label: String, value: String, info: String) = EarnRow(
-            label = stringReference(label),
-            value = EarnValue.Text(stringReference(value)),
-            info = EarnTextBlock(stringReference(label), stringReference(info)),
+        fun textRow(label: TextReference, value: TextReference, info: TextReference) = EarnRow(
+            label = label,
+            value = EarnValue.Text(value),
+            info = EarnTextBlock(label, info),
         )
     }
 }

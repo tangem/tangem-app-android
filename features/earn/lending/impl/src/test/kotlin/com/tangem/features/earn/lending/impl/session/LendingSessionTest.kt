@@ -19,8 +19,8 @@ import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
@@ -123,6 +123,7 @@ internal class LendingSessionTest {
     private val sendTransactionUseCase: SendTransactionUseCase = mockk()
     private val transactionRepository: YieldSupplyTransactionRepository = mockk()
     private val analyticsSender: LendingAnalyticsSender = mockk(relaxUnitFun = true)
+    private val accountNames: LendingAccountNames = mockk()
     private val pendingTracker: YieldSupplyPendingTracker = mockk(relaxUnitFun = true)
     private val provider = FakeLendingProvider(assets = mapOf(eth.id to asset))
 
@@ -144,8 +145,10 @@ internal class LendingSessionTest {
             sendTransactionUseCase,
             transactionRepository,
             analyticsSender,
+            accountNames,
             pendingTracker,
         )
+        coEvery { accountNames.nameOf(userWalletId, eth.id) } returns ACCOUNT_NAME
         provider.refreshCalls.clear()
         provider.minDepositResult = BigDecimal.ZERO.right()
         every { getUserWalletUseCase(userWalletId) } returns userWallet.right()
@@ -525,7 +528,7 @@ internal class LendingSessionTest {
             val actual = session.verify(depositPlan())
 
             // Assert
-            val reason = stringReference("Wait for the previous transaction to complete.")
+            val reason = resourceReference(R.string.lending_error_previous_transaction_processing)
             assertThat(actual).isEqualTo(EarnVerification.Rejected(EarnSessionError.Rejected(reason)))
         }
 
@@ -602,11 +605,39 @@ internal class LendingSessionTest {
             val actual = session.verify(plan)
 
             // Assert
-            val reason = stringReference("The gas limit is too low for this transaction.")
-            assertThat(actual).isEqualTo(EarnVerification.Rejected(EarnSessionError.Rejected(reason)))
+            assertThat(actual).isEqualTo(EarnVerification.Rejected(EarnSessionError.Rejected(gasLimitText(TOTAL_GAS))))
             coVerify(exactly = 0) {
                 transactions.verify(userWalletId = any(), asset = any(), txs = any(), expected = any(), state = any())
             }
+        }
+
+        @Test
+        fun `GIVEN custom gas limit below the old estimate and a higher fresh one WHEN verify THEN names the fresh limit`() =
+            runTest {
+                // Arrange
+                val plan = depositPlan(fee = selectedFee(TOTAL_GAS - BigInteger.ONE))
+                arrangeFreshEstimate(preparationGas = PREPARATION_GAS, depositGas = DEPOSIT_GAS + BigInteger.TEN)
+
+                // Act
+                val actual = session.verify(plan)
+
+                // Assert
+                val required = TOTAL_GAS + BigInteger.TEN
+                assertThat(actual)
+                    .isEqualTo(EarnVerification.Rejected(EarnSessionError.Rejected(gasLimitText(required))))
+            }
+
+        @Test
+        fun `GIVEN custom gas limit below the estimate WHEN verify withdraw THEN fails`() = runTest {
+            // Arrange
+            val plan = withdrawPlan().copy(fee = selectedFee(WITHDRAW_GAS - BigInteger.ONE))
+            arrangeWithdraw(amount = WITHDRAW_AMOUNT)
+
+            // Act
+            val actual = session.verify(plan)
+
+            // Assert
+            assertThat(actual).isEqualTo(EarnVerification.Rejected(EarnSessionError.Failed()))
         }
 
         @Test
@@ -621,8 +652,9 @@ internal class LendingSessionTest {
                 val actual = session.verify(changed.newPlan)
 
                 // Assert
-                val reason = stringReference("The gas limit is too low for this transaction.")
-                assertThat(actual).isEqualTo(EarnVerification.Rejected(EarnSessionError.Rejected(reason)))
+                val required = TOTAL_GAS + BigInteger.ONE
+                assertThat(actual)
+                    .isEqualTo(EarnVerification.Rejected(EarnSessionError.Rejected(gasLimitText(required))))
             }
 
         @ParameterizedTest
@@ -1198,7 +1230,6 @@ internal class LendingSessionTest {
         planFactory = LendingPlanFactory(
             transactions = transactions,
             getUserWalletUseCase = getUserWalletUseCase,
-            lendingProvider = lendingProvider,
             depositRows = LendingDepositRows(lendingProvider = lendingProvider),
         ),
         sender = LendingTxSender(
@@ -1208,6 +1239,7 @@ internal class LendingSessionTest {
         ),
         transactionRepository = transactionRepository,
         analyticsSender = analyticsSender,
+        accountNames = accountNames,
     )
 
     private fun arrangeState(state: LendingAssetState) = arrangeSnapshot(stateMap(state))
@@ -1341,11 +1373,10 @@ internal class LendingSessionTest {
         isWithUpgrade = false,
     )
 
-    private val updateRequiredText = combinedReference(
-        stringReference("Update Tangem to the latest version to use Lending on "),
-        stringReference("Fake"),
-        stringReference("."),
-    )
+    private val updateRequiredText = resourceReference(R.string.lending_update_app_message)
+
+    private fun gasLimitText(required: BigInteger) =
+        resourceReference(R.string.lending_error_gas_limit_too_low, wrappedList<Any>(required.toString()))
 
     private fun selection(gasLimit: BigInteger) = EarnFeeSelection(fee = selectedFee(gasLimit), extended = null)
 
@@ -1365,22 +1396,31 @@ internal class LendingSessionTest {
     )
 
     private fun depositResult() = EarnResult(
-        title = stringReference("Deposited ${DEPOSIT_AMOUNT.format { crypto(eth) }}"),
-        subtitle = combinedReference(stringReference("Your ${eth.symbol} is now earning in "), provider.info.title),
+        title = resourceReference(
+            R.string.lending_deposited_title,
+            wrappedList<Any>(DEPOSIT_AMOUNT.format { crypto(eth) }),
+        ),
+        subtitle = resourceReference(R.string.lending_deposited_subtitle, wrappedList<Any>(eth.symbol, ACCOUNT_NAME)),
         chip = null,
         rows = emptyList(),
-        primary = EarnResultButton(stringReference("Go to yield"), EarnFlowExit.ToYield),
+        primary = EarnResultButton(
+            resourceReference(R.string.yield_module_claim_go_to_yield_button),
+            EarnFlowExit.ToYield,
+        ),
         secondary = EarnResultButton(resourceReference(R.string.common_go_to_token), EarnFlowExit.ToToken),
     )
 
     private fun withdrawResult(fee: Fee) = EarnResult(
-        title = stringReference("Withdrawn ${WITHDRAW_AMOUNT.format { crypto(eth) }}"),
+        title = resourceReference(
+            R.string.earn_withdrawal_result_withdrawn,
+            wrappedList<Any>(WITHDRAW_AMOUNT.format { crypto(eth) }),
+        ),
         subtitle = null,
         chip = null,
         rows = listOf(
             EarnRow(
-                label = stringReference("Withdrawal period"),
-                value = EarnValue.Text(stringReference("Usually instant")),
+                label = resourceReference(R.string.earn_withdrawal_result_period),
+                value = EarnValue.Text(resourceReference(R.string.earn_product_details_usually_instant)),
             ),
             EarnRow(
                 label = resourceReference(R.string.common_network_fee_title),
@@ -1456,6 +1496,7 @@ internal class LendingSessionTest {
         val DEPOSIT_GAS: BigInteger = BigInteger.valueOf(200_000)
         val WITHDRAW_GAS: BigInteger = BigInteger.valueOf(150_000)
         val TOTAL_GAS: BigInteger = PREPARATION_GAS + DEPOSIT_GAS
+        val ACCOUNT_NAME = stringReference("Savings")
         val SELECTED_GAS: BigInteger = BigInteger.valueOf(330_000)
         val OTHER_CALL: SmartContractCallData = YieldSupplyContractCallDataProviderFactory.getExitNativeCallData()
 
