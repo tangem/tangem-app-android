@@ -68,7 +68,8 @@ class PolymarketSessionKeyOperationRunner(
 
     fun resume(userWalletId: UserWalletId) {
         if (!reserveResume(userWalletId)) {
-            if (stateOf(userWalletId).value.finished != null) resumesAfterAcknowledge.add(userWalletId)
+            val state = stateOf(userWalletId).value
+            if (state.running != null || state.finished != null) resumesAfterAcknowledge.add(userWalletId)
             return
         }
         appScope.launch {
@@ -94,7 +95,9 @@ class PolymarketSessionKeyOperationRunner(
             resuming.add(userWalletId)
 
     private suspend fun executablePending(userWalletId: UserWalletId): PolymarketPendingAuthorization? {
-        val pending = pendingAuthorizations.get(userWalletId).getOrNull() ?: return null
+        val pending = pendingAuthorizations.get(userWalletId)
+            .onLeft { TangemLogger.e("Polymarket session key authorization to resume is unreadable: $it") }
+            .getOrNull() ?: return null
         val nowMillis = clock.millis()
         if (pending.isResumable(nowMillis)) return pending
         TangemLogger.i("Polymarket session key ${pending.purpose} authorization expires too soon to resume")

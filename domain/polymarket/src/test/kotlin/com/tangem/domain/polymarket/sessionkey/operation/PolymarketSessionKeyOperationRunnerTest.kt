@@ -1089,6 +1089,37 @@ internal class PolymarketSessionKeyOperationRunnerTest {
         }
 
         @Test
+        fun `GIVEN a resume refused while a revoke runs WHEN the revoke is acknowledged THEN the pair is resumed once`() =
+            runTest {
+                // Arrange
+                val revocation = CompletableDeferred<Unit>()
+                every { manage.revoke(USER_WALLET_ID, FOREIGN) } returns flow {
+                    revocation.await()
+                    emit(PolymarketSessionKeyProgress.Finished(key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right()))
+                }
+                every { manage.resume(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+                )
+                val runner = runner()
+                runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Revoke(FOREIGN))
+                runCurrent()
+                pendingAuthorizations.store(USER_WALLET_ID, pending())
+                runner.resume(USER_WALLET_ID)
+                runCurrent()
+                revocation.complete(Unit)
+                advanceUntilIdle()
+                val revokeId = requireNotNull(runner.observe(USER_WALLET_ID).value.finished).id
+
+                // Act
+                runner.acknowledge(USER_WALLET_ID, revokeId)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+                assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(key(OWN).right())
+            }
+
+        @Test
         fun `GIVEN a resume reads the record WHEN activation starts THEN it is busy and the resume runs`() =
             runTest {
                 // Arrange
