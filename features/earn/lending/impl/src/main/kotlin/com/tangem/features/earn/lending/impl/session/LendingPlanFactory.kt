@@ -26,6 +26,7 @@ internal class LendingPlanFactory @Inject constructor(
     private val transactions: LendingTransactions,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val lendingProvider: LendingProvider,
+    private val depositRows: LendingDepositRows,
 ) {
 
     suspend fun feeLevels(
@@ -65,7 +66,7 @@ internal class LendingPlanFactory @Inject constructor(
             fee = fee.fee,
             feeType = fee.feeType,
             expectedAmount = amount,
-            rows = emptyList(),
+            rows = if (operation == LendingOperation.Deposit) depositRows.of(state, amount) else emptyList(),
             withdrawMode = WithdrawMode.Instant.takeIf { operation == LendingOperation.Withdraw },
             action = action,
             operation = plannedOperation,

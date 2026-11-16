@@ -10,7 +10,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -19,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.io.IOException
 
 internal class GetWalletLinkStatusUseCaseTest {
 
@@ -67,6 +71,33 @@ internal class GetWalletLinkStatusUseCaseTest {
         fun `GIVEN a known wallet WHEN invoke THEN emits its link statuses`() = runTest {
             // Arrange
             every { walletDeviceLinkRepository.isLinked(userWallet) } returns flowOf(false, false, true)
+
+            // Act
+            val actual = useCase(WALLET_ID).take(2).toList()
+
+            // Assert
+            assertThat(actual).containsExactly(false, true).inOrder()
+        }
+
+        @Test
+        fun `GIVEN the link status completes empty WHEN invoke THEN true`() = runTest {
+            // Arrange
+            every { walletDeviceLinkRepository.isLinked(userWallet) } returns emptyFlow()
+
+            // Act
+            val actual = useCase(WALLET_ID).first()
+
+            // Assert
+            assertThat(actual).isTrue()
+        }
+
+        @Test
+        fun `GIVEN the link status completes after false WHEN invoke THEN falls back to true`() = runTest {
+            // Arrange
+            every { walletDeviceLinkRepository.isLinked(userWallet) } returns flow {
+                emit(false)
+                throw IOException("registered wallet ids unreadable")
+            }.catch { }
 
             // Act
             val actual = useCase(WALLET_ID).take(2).toList()

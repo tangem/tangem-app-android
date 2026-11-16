@@ -22,6 +22,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelecto
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
 import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
@@ -124,7 +125,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             appComponentContext = factoryContext,
             params = PolymarketHistoryComponent.Params(userWalletId = configuration.userWalletId),
         )
-        is PolymarketRoute.FastTradingSettings -> createFastTradingSettings(configuration, factoryContext)
+        is PolymarketRoute.FastTrading -> createFastTrading(configuration, factoryContext)
         is PolymarketRoute.EventDetails -> configuration.createEventDetailsComponent(
             context = factoryContext,
             isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
@@ -174,13 +175,22 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             params = PolymarketCategoryComponent.Params(configuration.userWalletId, configuration.category),
         )
 
-    private fun createFastTradingSettings(
-        configuration: PolymarketRoute.FastTradingSettings,
+    private fun createFastTrading(
+        configuration: PolymarketRoute.FastTrading,
         factoryContext: AppComponentContext,
-    ) = PolymarketFastTradingSettingsComponent(
-        appComponentContext = factoryContext,
-        params = PolymarketFastTradingSettingsComponent.Params(userWalletId = configuration.userWalletId),
-    )
+    ): ComposableContentComponent = when (configuration) {
+        is PolymarketRoute.FastTradingActivation -> PolymarketFastTradingActivationComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketFastTradingActivationComponent.Params(
+                userWalletId = configuration.userWalletId,
+                action = configuration.action,
+            ),
+        )
+        is PolymarketRoute.FastTradingSettings -> PolymarketFastTradingSettingsComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketFastTradingSettingsComponent.Params(userWalletId = configuration.userWalletId),
+        )
+    }
 
     private fun onChildBack(onComplete: (Boolean) -> Unit) {
         stackNavigation.pop { isPopped -> if (isPopped) onComplete(true) else router.pop(onComplete) }

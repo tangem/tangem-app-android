@@ -2,15 +2,15 @@ package com.tangem.features.jointaccount.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.Runs
 import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -26,17 +26,17 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointAccountInviteDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk()
+    private val router: Router = mockk()
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
-        clearMocks(appRouter, jointAccountFeatureToggles, analyticsEventHandler)
+        clearMocks(router, jointAccountFeatureToggles, analyticsEventHandler)
         every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
-        every { appRouter.stack } returns emptyList()
-        every { appRouter.push(any<AppRoute>(), any()) } just Runs
-        every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
+        coEvery { router.contains(any()) } returns false
+        every { router.push(any<AppRoute>(), any()) } just Runs
+        every { router.popTo(any<AppRoute>(), any()) } just Runs
     }
 
     @ParameterizedTest
@@ -52,12 +52,12 @@ internal class JointAccountInviteDeepLinkHandlerTest {
         // Assert
         if (model.expectedInviteId != null) {
             verify {
-                appRouter.push(route = AppRoute.JointAccountJoin(inviteId = model.expectedInviteId), onComplete = any())
+                router.push(route = AppRoute.JointAccountJoin(inviteId = model.expectedInviteId), onComplete = any())
             }
             verify(exactly = 1) { analyticsEventHandler.send(JointAccountAnalyticsEvent.InviteLinkOpened()) }
         } else {
-            verify(exactly = 0) { appRouter.push(any<AppRoute>(), any()) }
-            verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify(exactly = 0) { router.push(any<AppRoute>(), any()) }
+            verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
             verify(exactly = 0) { analyticsEventHandler.send(any()) }
         }
     }
@@ -73,18 +73,14 @@ internal class JointAccountInviteDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { appRouter.push(any<AppRoute>(), any()) }
-        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        verify(exactly = 0) { router.push(any<AppRoute>(), any()) }
+        verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
     }
 
     @Test
     fun `GIVEN the same invite already in the stack WHEN handle deeplink THEN nothing is pushed`() = runTest {
         // Arrange
-        every { appRouter.stack } returns listOf(
-            AppRoute.Wallet,
-            AppRoute.JointAccountJoin(inviteId = "test-invite-id"),
-            AppRoute.Details(userWalletId = UserWalletId("011")),
-        )
+        coEvery { router.contains(AppRoute.JointAccountJoin(inviteId = "test-invite-id")) } returns true
         val uri = fakeUri(listOf("joint-account", "join", "test-invite-id"))
 
         // Act
@@ -92,15 +88,15 @@ internal class JointAccountInviteDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { appRouter.push(any<AppRoute>(), any()) }
-        verify(exactly = 0) { appRouter.popTo(any<AppRoute>(), any()) }
+        verify(exactly = 0) { router.push(any<AppRoute>(), any()) }
+        verify(exactly = 0) { router.popTo(any<AppRoute>(), any()) }
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @Test
     fun `GIVEN another invite on top WHEN handle deeplink THEN the new invite is pushed`() = runTest {
         // Arrange
-        every { appRouter.stack } returns listOf(AppRoute.Wallet, AppRoute.JointAccountJoin(inviteId = "other-invite-id"))
+        coEvery { router.contains(AppRoute.JointAccountJoin(inviteId = "other-invite-id")) } returns true
         val uri = fakeUri(listOf("joint-account", "join", "test-invite-id"))
 
         // Act
@@ -108,7 +104,7 @@ internal class JointAccountInviteDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { appRouter.push(route = AppRoute.JointAccountJoin(inviteId = "test-invite-id"), onComplete = any()) }
+        verify { router.push(route = AppRoute.JointAccountJoin(inviteId = "test-invite-id"), onComplete = any()) }
     }
 
     private fun provideTestModels() = listOf(
@@ -134,7 +130,6 @@ internal class JointAccountInviteDeepLinkHandlerTest {
 
     private fun createHandler(scope: CoroutineScope, deeplinkUri: Uri) {
         JointAccountInviteDeepLinkHandler(
-            appRouter = appRouter,
             jointAccountFeatureToggles = jointAccountFeatureToggles,
             analyticsEventHandler = analyticsEventHandler,
         ).handle(
@@ -143,7 +138,7 @@ internal class JointAccountInviteDeepLinkHandlerTest {
                 queryParams = emptyMap(),
                 scope = scope,
                 isFromOnNewIntent = false,
-                router = mockk(),
+                router = router,
             ),
         )
     }

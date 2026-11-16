@@ -2,7 +2,8 @@ package com.tangem.features.onramp.deeplink
 
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
@@ -17,8 +18,11 @@ import org.junit.jupiter.params.provider.ValueSource
 
 internal class SellDeepLinkHandlerRegressionTest {
 
-    private val router: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
+    private val request: DeepLinkRequest = mockk {
+        every { router } returns this@SellDeepLinkHandlerRegressionTest.router
+    }
 
     @BeforeEach
     fun setUp() {
@@ -41,7 +45,7 @@ internal class SellDeepLinkHandlerRegressionTest {
         every { getSelectedWalletSyncUseCase() } returns Either.Right(userWallet)
 
         // Act
-        SellDeepLinkHandler(router, getSelectedWalletSyncUseCase).handle(mockk())
+        SellDeepLinkHandler(getSelectedWalletSyncUseCase).handle(request)
 
         // Assert
         verify(exactly = 1) { getSelectedWalletSyncUseCase() }
@@ -57,7 +61,7 @@ internal class SellDeepLinkHandlerRegressionTest {
         every { getSelectedWalletSyncUseCase() } returns Either.Left(error)
 
         // Act
-        SellDeepLinkHandler(router, getSelectedWalletSyncUseCase).handle(mockk())
+        SellDeepLinkHandler(getSelectedWalletSyncUseCase).handle(request)
 
         // Assert
         verify(exactly = 1) { getSelectedWalletSyncUseCase() }

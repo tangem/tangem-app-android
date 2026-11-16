@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
@@ -12,6 +11,8 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.pushOrReplaceCurrent
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
@@ -40,7 +41,6 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 internal class DefaultTokenDetailsDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val resolveAndSelectUserWalletUseCase: ResolveAndSelectUserWalletUseCase,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val tokenDetailsDeepLinkActionTrigger: TokenDetailsDeepLinkActionTrigger,
@@ -55,12 +55,18 @@ internal class DefaultTokenDetailsDeepLinkHandler @Inject constructor(
     override fun handle(request: DeepLinkRequest) {
         handleDeepLink(
             scope = request.scope,
+            router = request.router,
             queryParams = request.queryParams,
             isFromOnNewIntent = request.isFromOnNewIntent,
         )
     }
 
-    private fun handleDeepLink(scope: CoroutineScope, queryParams: Map<String, String>, isFromOnNewIntent: Boolean) {
+    private fun handleDeepLink(
+        scope: CoroutineScope,
+        router: Router,
+        queryParams: Map<String, String>,
+        isFromOnNewIntent: Boolean,
+    ) {
         val networkId = queryParams[NETWORK_ID_KEY]
         val tokenId = queryParams[TOKEN_ID_KEY]
         val type = NotificationType.getType(queryParams[TYPE_KEY])
@@ -69,7 +75,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @Inject constructor(
         val accountId = queryParams[ACCOUNT_ID_KEY]
 
         scope.launch {
-            val userWallet = resolveUserWallet(walletId) ?: return@launch
+            val userWallet = resolveUserWallet(router, walletId) ?: return@launch
 
             val cryptoCurrency = resolveCryptoCurrency(
                 userWallet = userWallet,
@@ -89,7 +95,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @Inject constructor(
                     """.trimIndent(),
                 )
                 // Token is not in the response (not indexed yet / backend error): go to main, do not add.
-                appRouter.popTo(AppRoute.Wallet)
+                router.popTo(AppRoute.Wallet)
                 return@launch
             }
 
@@ -100,12 +106,12 @@ internal class DefaultTokenDetailsDeepLinkHandler @Inject constructor(
                 accountId = accountId,
             )
             if (isCompromised) {
-                appRouter.popTo(AppRoute.Wallet)
+                router.popTo(AppRoute.Wallet)
                 return@launch
             }
 
             if (userWallet.isMultiCurrency) {
-                openCurrencyDetails(
+                router.pushOrReplaceCurrent(
                     route = AppRoute.CurrencyDetails(
                         userWalletId = userWallet.walletId,
                         currency = cryptoCurrency,
@@ -138,18 +144,6 @@ internal class DefaultTokenDetailsDeepLinkHandler @Inject constructor(
         }
     }
 
-    private fun openCurrencyDetails(route: AppRoute.CurrencyDetails, onComplete: (Boolean) -> Unit) {
-        val stack = appRouter.stack
-        when {
-            // The stack holds a route at most once
-            route in stack -> appRouter.popTo(route = route, onComplete = onComplete)
-            stack.lastOrNull() is AppRoute.CurrencyDetails -> {
-                appRouter.replaceCurrent(route = route, onComplete = onComplete)
-            }
-            else -> appRouter.push(route = route, onComplete = onComplete)
-        }
-    }
-
     private fun navigationActionFor(type: NotificationType, transactionId: String?): NavigationAction? {
         if (transactionId == null || type != NotificationType.JointTx) return null
         return NavigationAction.JointOperation(operationId = transactionId)
@@ -161,11 +155,11 @@ internal class DefaultTokenDetailsDeepLinkHandler @Inject constructor(
      * A multi-currency link needs both [networkId] and [tokenId] to match a token; a malformed link can never match,
      * so we skip the refresh/await entirely to avoid wasted backend work and return immediately for the redirect.
      */
-    private suspend fun resolveUserWallet(walletId: String?): UserWallet? {
+    private suspend fun resolveUserWallet(router: Router, walletId: String?): UserWallet? {
         val userWalletId = walletId?.let(UserWalletId::fromHexOrNull)
         if (walletId != null && userWalletId == null) {
             TangemLogger.e("Malformed $WALLET_ID_KEY in token details deeplink")
-            appRouter.popTo(AppRoute.Wallet)
+            router.popTo(AppRoute.Wallet)
             return null
         }
         return resolveAndSelectUserWalletUseCase(userWalletId)

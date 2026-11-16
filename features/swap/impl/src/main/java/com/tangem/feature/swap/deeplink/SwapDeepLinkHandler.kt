@@ -2,7 +2,6 @@ package com.tangem.feature.swap.deeplink
 
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_AMOUNT_KEY
@@ -16,23 +15,24 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TO_TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TO_USER_ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TO_USER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
-import com.tangem.common.routing.utils.pushOrReplaceCurrent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.pushOrReplaceCurrent
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetWalletTotalBalanceUseCase
 import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -60,7 +60,6 @@ import kotlin.time.Duration.Companion.seconds
  */
 @Suppress("LongParameterList")
 internal class SwapDeepLinkHandler @Inject constructor(
-    private val router: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
@@ -72,12 +71,13 @@ internal class SwapDeepLinkHandler @Inject constructor(
 ) : DeepLinkHandler {
 
     override fun handle(request: DeepLinkRequest) {
+        val router = request.router
         val queryParams = request.queryParams
         val selectedResult = getSelectedWalletSyncUseCase()
 
         request.scope.launch {
-            val targetWalletId = resolveTargetWalletId(queryParams, selectedResult) ?: return@launch
-            resolveTokensAndNavigate(queryParams, targetWalletId)
+            val targetWalletId = resolveTargetWalletId(router, queryParams, selectedResult) ?: return@launch
+            resolveTokensAndNavigate(router, queryParams, targetWalletId)
         }
     }
 
@@ -97,6 +97,7 @@ internal class SwapDeepLinkHandler @Inject constructor(
      * target wallet fails.
      */
     private suspend fun resolveTargetWalletId(
+        router: Router,
         queryParams: Map<String, String>,
         selectedResult: Either<GetUserWalletError, UserWallet>,
     ): UserWalletId? {
@@ -115,7 +116,7 @@ internal class SwapDeepLinkHandler @Inject constructor(
         // Hard inconsistency: existing pinned ids disagree -> Main
         val pinned = listOfNotNull(fromWalletId, toWalletId, broadcastWalletId).distinct()
         if (pinned.size > 1) {
-            navigateToSwap(selectedWalletId ?: pinned.first())
+            navigateToSwap(router, selectedWalletId ?: pinned.first())
             return null
         }
 
@@ -127,14 +128,14 @@ internal class SwapDeepLinkHandler @Inject constructor(
         // Never switch to a locked wallet — fall back to the current (unlocked) selected wallet.
         if (targetWalletId != selectedWalletId && targetWalletId !in unlockedIds) {
             TangemLogger.e("Swap deeplink: target wallet $targetWalletId is locked, not switching")
-            if (selectedWalletId != null) navigateToSwap(selectedWalletId)
+            if (selectedWalletId != null) navigateToSwap(router, selectedWalletId)
             return null
         }
 
         if (targetWalletId != selectedWalletId) {
             selectWalletUseCase(targetWalletId).onLeft { error ->
                 TangemLogger.e("Swap deeplink: failed to select wallet $targetWalletId: $error")
-                navigateToSwap(selectedWalletId ?: targetWalletId)
+                navigateToSwap(router, selectedWalletId ?: targetWalletId)
                 return null
             }
         }
@@ -172,8 +173,9 @@ internal class SwapDeepLinkHandler @Inject constructor(
             ?: walletIds.firstOrNull()
     }
 
-    private fun navigateToSwap(userWalletId: UserWalletId) {
+    private fun navigateToSwap(router: Router, userWalletId: UserWalletId) {
         openSwap(
+            router,
             AppRoute.Swap(
                 userWalletId = userWalletId,
                 screenSource = AnalyticsParam.ScreensSources.Main.value,
@@ -186,13 +188,17 @@ internal class SwapDeepLinkHandler @Inject constructor(
      * one backs an account top-up / withdraw flow: that is a different flow which merely reuses
      * [AppRoute.Swap], so it is stacked over rather than closed.
      */
-    private fun openSwap(route: AppRoute.Swap) {
-        val currentRoute = router.stack.lastOrNull()
-        if (currentRoute is AppRoute.Swap && currentRoute.accountFlow != null) {
-            router.push(route)
-        } else {
-            router.pushOrReplaceCurrent(route)
-        }
+    private fun openSwap(router: Router, route: AppRoute.Swap) {
+        router.navigate(
+            transformer = { stack ->
+                val currentRoute = stack.lastOrNull()
+                if (currentRoute is AppRoute.Swap && currentRoute.accountFlow != null) {
+                    stack + route
+                } else {
+                    stack.pushOrReplaceCurrent(route)
+                }
+            },
+        )
     }
 
     /**
@@ -203,20 +209,24 @@ internal class SwapDeepLinkHandler @Inject constructor(
      * exists (unavailable -> Main, best-effort dropped otherwise), and opens the resulting
      * [AppRoute.Swap].
      */
-    private suspend fun resolveTokensAndNavigate(queryParams: Map<String, String>, targetWalletId: UserWalletId) {
+    private suspend fun resolveTokensAndNavigate(
+        router: Router,
+        queryParams: Map<String, String>,
+        targetWalletId: UserWalletId,
+    ) {
         val isFromRequested = !queryParams[FROM_TOKEN_ID_KEY].isNullOrBlank()
         val isToRequested = !queryParams[TO_TOKEN_ID_KEY].isNullOrBlank()
 
         // FROM token id without a network -> Main
         if (isFromRequested && queryParams[FROM_NETWORK_ID_KEY].isNullOrBlank()) {
-            navigateToSwap(targetWalletId)
+            navigateToSwap(router, targetWalletId)
             return
         }
 
         // Nothing requested, or amount/provider with no token at all: the same bare Main route,
         // and skip account loading.
         if (!isFromRequested && !isToRequested) {
-            navigateToSwap(targetWalletId)
+            navigateToSwap(router, targetWalletId)
             return
         }
 
@@ -230,7 +240,7 @@ internal class SwapDeepLinkHandler @Inject constructor(
 
         // Both sides requested but neither resolved in the portfolio -> Main
         if (isUnresolvedPair(isFromRequested = isFromRequested, isToRequested = isToRequested, from = from, to = to)) {
-            navigateToSwap(targetWalletId)
+            navigateToSwap(router, targetWalletId)
             return
         }
 
@@ -246,7 +256,7 @@ internal class SwapDeepLinkHandler @Inject constructor(
             val matched = available.firstOrNull { it.equals(requestedProviderId, ignoreCase = true) }
             if (matched == null) {
                 // provider_id doesn't serve the resolved pair -> Main
-                navigateToSwap(targetWalletId)
+                navigateToSwap(router, targetWalletId)
                 return
             }
             matched
@@ -257,6 +267,7 @@ internal class SwapDeepLinkHandler @Inject constructor(
         }
 
         openSwap(
+            router,
             AppRoute.Swap(
                 userWalletId = targetWalletId,
                 fromCryptoCurrency = from?.currency,

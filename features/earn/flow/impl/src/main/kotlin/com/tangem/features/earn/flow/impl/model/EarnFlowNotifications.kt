@@ -1,5 +1,6 @@
 package com.tangem.features.earn.flow.impl.model
 
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
@@ -12,16 +13,18 @@ import java.math.BigDecimal
 /** Fee cards of the flow screens, built by the same factory as in Send and Staking. */
 internal object EarnFlowNotifications {
 
-    fun amount(state: EarnFlowState, onFeeReload: () -> Unit): ImmutableList<NotificationUM> = buildList {
-        addFeeError(state, onFeeReload)
-        addExceedBalance(state)
-    }.toImmutableList()
+    fun amount(state: EarnFlowState, isFromPosition: Boolean, onFeeReload: () -> Unit): ImmutableList<NotificationUM> =
+        buildList {
+            addFeeError(state, onFeeReload)
+            addExceedBalance(state, isFromPosition)
+        }.toImmutableList()
 
-    fun confirm(state: EarnFlowState, onFeeReload: () -> Unit): ImmutableList<NotificationUM> = buildList {
-        addFeeError(state, onFeeReload)
-        addExceedBalance(state)
-        addFeeCoverage(state)
-    }.toImmutableList()
+    fun confirm(state: EarnFlowState, isFromPosition: Boolean, onFeeReload: () -> Unit): ImmutableList<NotificationUM> =
+        buildList {
+            addFeeError(state, onFeeReload)
+            addExceedBalance(state, isFromPosition)
+            addFeeCoverage(state)
+        }.toImmutableList()
 
     private fun MutableList<NotificationUM>.addFeeError(state: EarnFlowState, onFeeReload: () -> Unit) {
         val error = state.fee as? FeeSelectorUM.Error ?: return
@@ -32,7 +35,30 @@ internal object EarnFlowNotifications {
         )
     }
 
-    private fun MutableList<NotificationUM>.addExceedBalance(state: EarnFlowState) {
+    private fun MutableList<NotificationUM>.addExceedBalance(state: EarnFlowState, isFromPosition: Boolean) {
+        if (isFromPosition) addFeeExceedsBalance(state) else addTotalExceedsBalance(state)
+    }
+
+    /** The amount leaves the position and arrives with the transaction, so only the fee is paid from the wallet */
+    private fun MutableList<NotificationUM>.addFeeExceedsBalance(state: EarnFlowState) {
+        val feeAmount = state.feeSelection?.fee?.amount?.value ?: return
+        val feeStatus = state.feeStatus ?: return
+        val balance = feeStatus.value.amount ?: return
+        if (feeAmount <= balance) return
+        with(feeStatus.currency) {
+            add(
+                NotificationUM.Error.ExceedsBalance(
+                    networkIconId = networkIconResId,
+                    currencyName = name,
+                    feeName = name,
+                    feeSymbol = symbol,
+                    networkName = name,
+                ),
+            )
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addTotalExceedsBalance(state: EarnFlowState) {
         val selection = state.feeSelection ?: return
         addExceedBalanceNotification(
             feeAmount = selection.fee.amount.value ?: BigDecimal.ZERO,

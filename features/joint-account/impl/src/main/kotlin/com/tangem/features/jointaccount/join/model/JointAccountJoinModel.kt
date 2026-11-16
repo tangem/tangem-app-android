@@ -18,6 +18,8 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
@@ -37,6 +39,8 @@ internal class JointAccountJoinModel @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val selectWalletUseCase: SelectWalletUseCase,
     private val expandedAccountsHolder: MainExpandedAccountsHolder,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
@@ -61,6 +65,8 @@ internal class JointAccountJoinModel @Inject constructor(
             showJointLimitReached()
             return JoinResultAction.None
         }
+
+        if (!ensureWalletLinked(userWalletId = walletId)) return JoinResultAction.None
 
         return joinJointAccountUseCase(
             userWalletId = walletId,
@@ -94,6 +100,12 @@ internal class JointAccountJoinModel @Inject constructor(
         val accountList = singleAccountListSupplier.getSyncOrNull(userWalletId = walletId) ?: return false
 
         return !accountList.canAddMoreJointAccounts
+    }
+
+    private suspend fun ensureWalletLinked(userWalletId: UserWalletId): Boolean {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return true
+
+        return ensureWalletLinkedUseCase(userWallet)
     }
 
     private fun onJoinError(error: JointAccountJoinError): JoinResultAction = when (error) {

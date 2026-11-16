@@ -2,8 +2,8 @@ package com.tangem.features.send.deeplink
 
 import android.net.Uri
 import arrow.core.right
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -28,7 +28,7 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SellRedirectDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val offrampRepository: OfframpRepository = mockk()
@@ -40,7 +40,7 @@ internal class SellRedirectDeepLinkHandlerTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(appRouter, getSelectedWalletSyncUseCase, singleAccountListSupplier, offrampRepository)
+        clearMocks(router, getSelectedWalletSyncUseCase, singleAccountListSupplier, offrampRepository)
         every { getSelectedWalletSyncUseCase() } returns userWallet.right()
         // Returning null here means the (legitimate) currency lookup yields nothing, so a passed gate stops before
         // navigation. We assert the gate via whether the currency lookup is reached at all.
@@ -80,7 +80,7 @@ internal class SellRedirectDeepLinkHandlerTest {
 
         coVerify(exactly = 0) { offrampRepository.resolvePendingOfframp(any(), any(), any()) }
         coVerify(exactly = 0) { singleAccountListSupplier.getSyncOrNull(any<UserWalletId>()) }
-        verify(exactly = 0) { appRouter.push(any()) }
+        verify(exactly = 0) { router.push(any()) }
     }
 
     @Test
@@ -91,7 +91,7 @@ internal class SellRedirectDeepLinkHandlerTest {
         advanceUntilIdle()
 
         coVerify(exactly = 0) { singleAccountListSupplier.getSyncOrNull(any<UserWalletId>()) }
-        verify(exactly = 0) { appRouter.push(any()) }
+        verify(exactly = 0) { router.push(any()) }
     }
 
     @ParameterizedTest
@@ -106,13 +106,12 @@ internal class SellRedirectDeepLinkHandlerTest {
 
         // Assert
         coVerify(exactly = 0) { offrampRepository.resolvePendingOfframp(any(), any(), any()) }
-        verify(exactly = 0) { appRouter.push(any()) }
+        verify(exactly = 0) { router.push(any()) }
     }
 
     private fun provideTestModels() = listOf("-10", "0", "abc")
 
     private val handler = SellRedirectDeepLinkHandler(
-        appRouter = appRouter,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         singleAccountListSupplier = singleAccountListSupplier,
         offrampRepository = offrampRepository,
@@ -125,7 +124,7 @@ internal class SellRedirectDeepLinkHandlerTest {
                 queryParams = queryParams,
                 scope = this,
                 isFromOnNewIntent = false,
-                router = mockk(),
+                router = router,
             ),
         )
     }

@@ -1,7 +1,6 @@
 package com.tangem.features.jointaccount.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
@@ -33,7 +32,6 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("LongParameterList")
 internal class DefaultJointAccountDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val resolveAndSelectUserWalletUseCase: ResolveAndSelectUserWalletUseCase,
     private val singleAccountSupplier: SingleAccountSupplier,
     private val singleAccountListFetcher: SingleAccountListFetcher,
@@ -49,9 +47,10 @@ internal class DefaultJointAccountDeepLinkHandler @Inject constructor(
         get() = jointAccountFeatureToggles.isJointAccountEnabled
 
     override fun handle(request: DeepLinkRequest) {
+        val router = request.router
         if (!jointAccountFeatureToggles.isJointAccountEnabled) {
             TangemLogger.e("Joint account feature is disabled, ignoring deeplink")
-            appRouter.popTo(AppRoute.Wallet)
+            router.popTo(AppRoute.Wallet)
             return
         }
 
@@ -65,7 +64,7 @@ internal class DefaultJointAccountDeepLinkHandler @Inject constructor(
             val userWalletId = walletId?.let(UserWalletId::fromHexOrNull)
             if (walletId != null && userWalletId == null) {
                 TangemLogger.e("Malformed $WALLET_ID_KEY in joint account deeplink")
-                appRouter.popTo(AppRoute.Wallet)
+                router.popTo(AppRoute.Wallet)
                 return@launch
             }
             val userWallet = resolveAndSelectUserWalletUseCase(userWalletId) ?: return@launch
@@ -73,7 +72,7 @@ internal class DefaultJointAccountDeepLinkHandler @Inject constructor(
             val account = findJointAccount(userWallet, accountId, request.isFromOnNewIntent)
             if (account == null) {
                 TangemLogger.e("Could not find joint account for $ACCOUNT_ID_KEY: $accountId")
-                appRouter.popTo(AppRoute.Wallet)
+                router.popTo(AppRoute.Wallet)
                 return@launch
             }
 
@@ -82,14 +81,14 @@ internal class DefaultJointAccountDeepLinkHandler @Inject constructor(
                 accountId = account.accountId.value,
             )
             if (isCompromised) {
-                appRouter.popTo(AppRoute.Wallet)
+                router.popTo(AppRoute.Wallet)
                 return@launch
             }
 
             when (entry) {
                 JointAccountDeepLinkHandler.ENTRY_MEMBERS -> {
                     analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationOpened(type.name))
-                    appRouter.push(
+                    router.push(
                         route = AppRoute.JointAccountMembers(
                             userWalletId = userWallet.walletId,
                             cryptoAccountId = account.accountId.value,
@@ -99,7 +98,7 @@ internal class DefaultJointAccountDeepLinkHandler @Inject constructor(
                 }
                 JointAccountDeepLinkHandler.ENTRY_OVERVIEW -> {
                     analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationOpened(type.name))
-                    appRouter.popTo(AppRoute.Wallet) { isSuccess ->
+                    router.popTo(AppRoute.Wallet) { isSuccess ->
                         if (isSuccess) {
                             expandedAccountsHolder.expandAccount(account.accountId)
                             walletDeepLinkActionTrigger.selectWallet(userWallet.walletId)

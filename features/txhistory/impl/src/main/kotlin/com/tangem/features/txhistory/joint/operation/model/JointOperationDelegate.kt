@@ -41,6 +41,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.features.txhistory.joint.operation.signers.FinishedJointOperationSigners
 import com.tangem.features.txhistory.joint.ownJointAccount
 import com.tangem.features.txhistory.model.ContactCandidate
@@ -78,10 +79,17 @@ internal class JointOperationDelegate @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val displayGate: JointOperationDisplayGate,
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase,
 ) {
 
     fun isColdWallet(userWalletId: UserWalletId): Boolean {
         return userWalletsListRepository.getSyncOrNull(id = userWalletId) is UserWallet.Cold
+    }
+
+    suspend fun ensureWalletLinked(userWalletId: UserWalletId): Boolean {
+        val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId) ?: return true
+
+        return ensureWalletLinkedUseCase(userWallet)
     }
 
     /** The rate of [currency] in the selected app currency; the rate is null while there is no quote for it */

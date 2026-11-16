@@ -15,9 +15,11 @@ import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
@@ -32,6 +34,7 @@ import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -54,6 +57,7 @@ internal class JointAccountInvitePreviewModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val getJointAccountInvitePreviewUseCase: GetJointAccountInvitePreviewUseCase = mockk()
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val portfolioSelectorController: PortfolioSelectorController = mockk()
     private val portfolioFetcher: PortfolioFetcher = mockk(relaxed = true)
@@ -71,6 +75,7 @@ internal class JointAccountInvitePreviewModelTest {
             analyticsEventHandler,
             router,
             getJointAccountInvitePreviewUseCase,
+            ensureWalletLinkedUseCase,
             userWalletsListRepository,
             portfolioSelectorController,
             portfolioFetcherFactory,
@@ -81,6 +86,8 @@ internal class JointAccountInvitePreviewModelTest {
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns MutableStateFlow(null)
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(null)
         every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(null)
+        every { portfolioSelectorController.selectedAccountSync } returns null
+        coEvery { ensureWalletLinkedUseCase(any()) } returns true
     }
 
     @Test
@@ -212,6 +219,98 @@ internal class JointAccountInvitePreviewModelTest {
 
             // Assert
             assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.InvalidLink::class.java)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN linked wallet WHEN model created THEN the link is ensured before the invite is previewed`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns preview().right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        coVerifyOrder {
+            ensureWalletLinkedUseCase(wallet)
+            getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID)
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN wallet link refused WHEN model created THEN the screen closes and the invite is not previewed`() =
+        runTest {
+            // Arrange
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+            coEvery { ensureWalletLinkedUseCase(wallet) } returns false
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.pop() }
+            coVerify(exactly = 0) { getJointAccountInvitePreviewUseCase(any(), any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN preview shown for the default wallet WHEN a picked wallet's link is refused THEN the default wallet is back`() =
+        runTest {
+            // Arrange
+            val other = mockWallet(id = OTHER_WALLET_ID, locked = false)
+            val picked = MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>(value = null)
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet, other))
+            every { portfolioSelectorController.selectedAccountWithData(any()) } returns picked
+            every { portfolioSelectorController.selectAccount(accountId = any()) } answers { picked.value = null }
+            coEvery { ensureWalletLinkedUseCase(other) } returns false
+            coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns preview().right()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            picked.value = other to mockk()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { portfolioSelectorController.selectAccount(accountId = null) }
+            verify(exactly = 0) { router.pop() }
+            coVerify(exactly = 0) { getJointAccountInvitePreviewUseCase(OTHER_WALLET_ID, INVITE_ID) }
+            coVerify(exactly = 2) { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) }
+            val state = model.uiState.value as JointAccountInvitePreviewUM.Content
+            assertThat(state.wallet?.name).isEqualTo(wallet.name)
+            assertThat(state.isContinueLoading).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN preview shown for a picked account WHEN the next picked wallet's link is refused THEN that account is back`() =
+        runTest {
+            // Arrange
+            val other = mockWallet(id = OTHER_WALLET_ID, locked = false)
+            val pickedAccountId: AccountId = mockk()
+            val picked = MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>(value = wallet to mockk())
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet, other))
+            every { portfolioSelectorController.selectedAccountWithData(any()) } returns picked
+            every { portfolioSelectorController.selectedAccountSync } returns pickedAccountId
+            every { portfolioSelectorController.selectAccount(accountId = any()) } returns Unit
+            coEvery { ensureWalletLinkedUseCase(other) } returns false
+            coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns preview().right()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            picked.value = other to mockk()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { portfolioSelectorController.selectAccount(accountId = pickedAccountId) }
+            verify(exactly = 0) { router.pop() }
+            coVerify(exactly = 0) { getJointAccountInvitePreviewUseCase(OTHER_WALLET_ID, INVITE_ID) }
             model.onDestroy()
         }
 
@@ -445,6 +544,7 @@ internal class JointAccountInvitePreviewModelTest {
         router = router,
         stateController = JointAccountInvitePreviewStateController(),
         getJointAccountInvitePreviewUseCase = getJointAccountInvitePreviewUseCase,
+        ensureWalletLinkedUseCase = ensureWalletLinkedUseCase,
         userWalletsListRepository = userWalletsListRepository,
         portfolioSelectorController = portfolioSelectorController,
         portfolioFetcherFactory = portfolioFetcherFactory,

@@ -38,6 +38,26 @@ inline fun <reified R : Route> Router.popToOrReplaceCurrent(route: R, noinline p
  * @param onComplete The callback the caller passed.
  * @param errorMessage Describes the operation if it fails.
  */
+/** Pushes [route] unless it is already in the stack. */
+fun Router.pushIfAbsent(route: Route, onComplete: (isSuccess: Boolean) -> Unit = Router.NoCompletion) {
+    navigate(transformer = { stack -> if (route in stack) stack else stack + route }, onComplete = onComplete)
+}
+
+/** Brings [route] to the top of the stack, see [List.pushOrReplaceCurrent]. */
+fun Router.pushOrReplaceCurrent(route: Route, onComplete: (isSuccess: Boolean) -> Unit = Router.NoCompletion) {
+    navigate(transformer = { stack -> stack.pushOrReplaceCurrent(route) }, onComplete = onComplete)
+}
+
+/**
+ * Pops back to [route] when the stack holds it, otherwise replaces a current route of the same class with it or
+ * pushes it. Any route of that class on top must be safe to close.
+ */
+fun List<Route>.pushOrReplaceCurrent(route: Route): List<Route> = when {
+    route in this -> dropLastWhile { it != route }
+    lastOrNull()?.let { it::class } == route::class -> dropLast(1) + route
+    else -> this + route
+}
+
 fun Router.withDefaultCompletion(
     onComplete: (isSuccess: Boolean) -> Unit,
     errorMessage: () -> String,
