@@ -26,13 +26,6 @@ interface EarnProduct {
 
     val analytics: EarnProductAnalytics
 
-    /**
-     * The product already has its own block on the token page, and the banner must not count it, otherwise one
-     * position would be shown twice. A fact about the product, not a command to the banner.
-     */
-    val hasLegacyBlock: Boolean
-        get() = false
-
     /** Documents of the provider the confirmation asks the user to agree with; `null` hides the line */
     val legal: EarnLegal?
         get() = null

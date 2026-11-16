@@ -57,8 +57,6 @@ internal class LendingEarnProduct @Inject constructor(
 
     override val analytics: EarnProductAnalytics = EarnProductAnalytics(category = "Earn", product = "Lending")
 
-    override val hasLegacyBlock: Boolean = false
-
     override val legal: EarnLegal = lendingProvider.legal
 
     override val howItWorks: EarnHowItWorks = lendingHowItWorks(lendingProvider.performanceFee)

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * @property products summaries of products in [EarnSummaryOrder]: the bottom sheet, the picker, `bestActive` and the
- * banner (without products that have a legacy block) read them
+ * banner read them
  * @property rateSources summaries of rate sources (Yield Mode, StakeKit) in the same order: only the headline reads
  * them
  */
