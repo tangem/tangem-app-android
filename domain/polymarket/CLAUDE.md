@@ -65,6 +65,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   accepted authorization (revoke `n`, authorize `n+1`), never past the authorization's deadline. A claim or
   withdrawal never waits for a lifecycle op: it fails at once with `WalletBusy` (iOS parity); the withdrawal
   tracker retries its resend.
+- Renew / replace keep the signed revocation and authorization in `PolymarketPendingAuthorizationStore` (Keystore)
+  before the revocation is sent, until the authorization is accepted, refused or past its deadline. Entering
+  Predictions resumes it as an Extend (retries after 10, 20, 40 s); meanwhile claims, withdrawals and new lifecycle
+  operations are refused. The wallet nonce tells what is left: `n` → send the revocation, `n+1` → the authorization.
 - One lifecycle operation per wallet; the UI starts them only through `PolymarketSessionKeyOperationRunner` (app
   scope — leaving the screen must not drop a pre-signed authorization). `Activate` picks enable / renew / replace.
 - Nothing is signed twice without the user: a refused or expired signature → `StaleSignature`. Only an unanswered or

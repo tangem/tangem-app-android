@@ -568,12 +568,14 @@ internal object PolymarketDomainModule {
         stateService: PolymarketSessionKeyStateService,
         sessionKeyStore: PolymarketSessionKeyStore,
         bannerStore: PolymarketFastTradingBannerStore,
+        pendingAuthorizations: PolymarketPendingAuthorizationStore,
         appCoroutineScope: AppCoroutineScope,
     ): PolymarketSessionKeyOperationRunner = PolymarketSessionKeyOperationRunner(
         manage = manage,
         stateService = stateService,
         sessionKeyStore = sessionKeyStore,
         bannerStore = bannerStore,
+        pendingAuthorizations = pendingAuthorizations,
         appScope = appCoroutineScope,
     )
 
