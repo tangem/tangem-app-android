@@ -36,7 +36,7 @@ import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
-import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketSessionKeyMessagesFactory
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
@@ -326,24 +326,24 @@ internal class PolymarketMainModel @Inject constructor(
             onActionClick = ::onFastTradingSettingsClick,
         )
         PolymarketFastTradingBanner.Activate -> PolymarketFastTradingBannerUM.Activate(
-            onActionClick = { startFastTradingOperation(this) },
+            onActionClick = { openFastTradingActivation(PolymarketFastTradingActivationComponent.Action.Activate) },
             onCloseClick = { dismissFastTradingBanner(this) },
         )
         is PolymarketFastTradingBanner.Reactivate -> PolymarketFastTradingBannerUM.Reactivate(
-            onActionClick = { startFastTradingOperation(this) },
+            onActionClick = {
+                openFastTradingActivation(PolymarketFastTradingActivationComponent.Action.Reactivate(request))
+            },
             onCloseClick = { dismissFastTradingBanner(this) },
         )
         is PolymarketFastTradingBanner.Extend -> PolymarketFastTradingBannerUM.Extend(
             daysLeft = daysLeft,
-            onActionClick = { startFastTradingOperation(this) },
+            onActionClick = { openFastTradingActivation(PolymarketFastTradingActivationComponent.Action.Extend) },
             onCloseClick = { dismissFastTradingBanner(this) },
         )
     }
 
-    private fun startFastTradingOperation(banner: PolymarketFastTradingBanner) {
-        fastTradingBannerSource.start(userWalletId = params.userWalletId, banner = banner)
-            ?.let(PolymarketSessionKeyMessagesFactory::create)
-            ?.let(messageSender::send)
+    private fun openFastTradingActivation(action: PolymarketFastTradingActivationComponent.Action) {
+        router.push(PolymarketRoute.FastTradingActivation(userWalletId = params.userWalletId, action = action))
     }
 
     private fun dismissFastTradingBanner(banner: PolymarketFastTradingBanner) {
