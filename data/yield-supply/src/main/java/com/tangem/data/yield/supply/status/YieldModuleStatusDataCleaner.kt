@@ -4,16 +4,21 @@ import com.tangem.data.yield.supply.status.store.YieldModuleStatusStore
 import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.yield.supply.YieldSupplyWrappedNativeFactory
+import com.tangem.domain.yield.supply.isWrappedNative
 import com.tangem.domain.yield.supply.models.status.YieldModuleStatus
 import javax.inject.Inject
 
 internal class YieldModuleStatusDataCleaner @Inject constructor(
     private val store: YieldModuleStatusStore,
+    private val wrappedNativeFactory: YieldSupplyWrappedNativeFactory,
 ) : CryptoCurrencyDataCleaner {
 
     override suspend fun invoke(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        // The status of the wrapped native token is the Lending position of the network coin, not the token's own
         val keys = currencies
             .filterIsInstance<CryptoCurrency.Token>()
+            .filterNot(wrappedNativeFactory::isWrappedNative)
             .mapTo(hashSetOf()) { YieldModuleStatus.Key(it) }
 
         store.clear(userWalletId = userWalletId, keys = keys)
