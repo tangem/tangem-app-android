@@ -123,21 +123,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
             title = resourceReference(id = R.string.tangempay_temporarily_unavailable),
             subtitle = resourceReference(id = R.string.tangempay_service_unreachable_try_later),
         )
-
-        data class TangemPayRefreshNeeded(
-            private val onRefreshClick: () -> Unit,
-            private val buttonText: TextReference,
-            private val shouldShowProgress: Boolean,
-        ) : Warning(
-            title = resourceReference(id = R.string.tangempay_sync_needed_title),
-            subtitle = resourceReference(id = R.string.tangempay_sync_needed_body),
-            buttonsState = ButtonsState.PrimaryButtonConfig(
-                text = buttonText,
-                iconResId = R.drawable.ic_tangem_24,
-                onClick = onRefreshClick,
-                shouldShowProgress = shouldShowProgress,
-            ),
-        )
     }
 
     sealed class Informational(
