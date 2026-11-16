@@ -2,8 +2,15 @@ package com.tangem.data.transaction
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
+import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
+import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.extensions.Result
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
@@ -21,11 +28,13 @@ import com.tangem.domain.transaction.error.TronAllowanceTooHigh
 import com.tangem.domain.transaction.models.tron.TronGaslessApprove
 import com.tangem.domain.transaction.models.tron.TronGaslessApproveEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -36,8 +45,10 @@ import java.time.Instant
 internal class DefaultTronGaslessTransactionRepositoryTest {
 
     private val api: TronGaslessApi = mockk()
+    private val walletManagersFacade: WalletManagersFacade = mockk()
     private val repository = DefaultTronGaslessTransactionRepository(
         api = api,
+        walletManagersFacade = walletManagersFacade,
         errorAdapter = Moshi.Builder().build().adapter(GaslessErrorResponse::class.java),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -320,6 +331,68 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
             timestamp = "t",
         ),
     )
+
+    @Nested
+    inner class Sign {
+
+        private val walletManager: WalletManager = mockk(moreInterfaces = arrayOf(TronGaslessTransactionSigner::class))
+        private val gaslessSigner = walletManager as TronGaslessTransactionSigner
+        private val network: Network = mockk()
+        private val legs: List<TransactionData> = listOf(mockk(), mockk())
+        private val signer: TransactionSigner = mockk()
+
+        @Test
+        fun `GIVEN Tron wallet manager WHEN sign THEN returns signed transactions`() = runTest {
+            // Arrange
+            val signed = listOf("""{"txID":"1"}""", """{"txID":"2"}""")
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns walletManager
+            coEvery { gaslessSigner.signGaslessTransactions(legs, signer) } returns Result.Success(signed)
+
+            // Act
+            val actual = repository.sign(userWalletId, network, legs, signer)
+
+            // Assert
+            assertThat(actual).isEqualTo(signed)
+        }
+
+        @Test
+        fun `GIVEN signing fails WHEN sign THEN returns null`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns walletManager
+            coEvery { gaslessSigner.signGaslessTransactions(legs, signer) } returns
+                Result.Failure(BlockchainSdkError.CustomError("failed"))
+
+            // Act
+            val actual = repository.sign(userWalletId, network, legs, signer)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        @Test
+        fun `GIVEN non-Tron wallet manager WHEN sign THEN returns null`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns mockk()
+
+            // Act
+            val actual = repository.sign(userWalletId, network, legs, signer)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        @Test
+        fun `GIVEN no wallet manager WHEN sign THEN returns null`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns null
+
+            // Act
+            val actual = repository.sign(userWalletId, network, legs, signer)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+    }
 
     companion object {
         data class ErrorBodyModel(
