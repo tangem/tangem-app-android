@@ -54,15 +54,21 @@ fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
             if (!shown) onMainScreen { swipeToAdjacentWallet(toPrevious = false) }
             shown
         }
-        // Let the pager fling settle — a click mid-animation is eaten by the button's clickableSingle debounce.
-        waitForIdle()
-        onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-        // The prompt clears once the card's addresses are derived (re-scan + reload over many, some failing, RPCs).
-        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
-            var generated = false
-            onMainScreen { generated = !synchronizeAddressesButton.isDisplayedSafely() }
-            generated
+        // A click on the freshly shown page can be lost, and derivation takes ~15 s, so re-click when it stays.
+        val synchronized = (1..SYNC_ADDRESSES_CLICK_ATTEMPTS).any {
+            waitForIdle()
+            var shown = false
+            onMainScreen { shown = synchronizeAddressesButton.isDisplayedSafely() }
+            if (shown) onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
+            runCatching {
+                composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    var generated = false
+                    onMainScreen { generated = !synchronizeAddressesButton.isDisplayedSafely() }
+                    generated
+                }
+            }.isSuccess
         }
+        check(synchronized) { "'Synchronize addresses' is still shown after $SYNC_ADDRESSES_CLICK_ATTEMPTS clicks" }
     }
 }
 
@@ -186,3 +192,5 @@ fun BaseTestCase.addMissingReceiveTokenToWallet(token: String, recipientWalletNa
         onAddToPortfolioScreen { confirmButton.performClick() }
     }
 }
+
+private const val SYNC_ADDRESSES_CLICK_ATTEMPTS = 2
