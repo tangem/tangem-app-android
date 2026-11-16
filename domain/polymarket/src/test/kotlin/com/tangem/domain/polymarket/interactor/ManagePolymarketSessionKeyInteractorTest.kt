@@ -2272,6 +2272,34 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
+        fun `GIVEN the revocation has 45 s left WHEN resume THEN it is sent before the authorization`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(7).right()
+            coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation) } returns
+                key(status = PolymarketSessionKeyStatus.REVOKING).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                key(status = PolymarketSessionKeyStatus.PENDING).right()
+            givenWalletReads(
+                listOf(key(validUntil = NOW.plusSeconds(3_600))),
+                listOf(key(status = PolymarketSessionKeyStatus.REVOKED)),
+                listOf(key()),
+            )
+            delay(REVOCATION_45_SECONDS_LEFT_MILLIS)
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+            coVerifyOrder {
+                sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation)
+                sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization)
+            }
+        }
+
+        @Test
         fun `GIVEN the revocation is within its send margin WHEN resume THEN it ends stale and the pair is kept`() =
             runTest {
                 // Arrange
@@ -2614,6 +2642,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         const val SENDABLE_FOLLOW_UP_MILLIS = 1_200_000L - 30_000L
         const val FOLLOW_UP_DEADLINE_MILLIS = 1_200_000L
         const val REVOCATION_EXPIRED_AFTER_MILLIS = 600_000L - 30_000L
+        const val REVOCATION_45_SECONDS_LEFT_MILLIS = 600_000L - 45_000L
         const val REVOCATION_DEADLINE_PASSED_AFTER_MILLIS = 601_000L
         val NOW: Instant = Instant.ofEpochSecond(1_789_430_000)
         val VALID_UNTIL: Instant = NOW.plusSeconds(180L * 24 * 60 * 60)

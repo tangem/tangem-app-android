@@ -107,7 +107,7 @@ internal class PolymarketSessionKeyRenewal(
                 TangemLogger.i("Polymarket session key authorization to resume was already accepted")
                 return@beforeDeadline interrupted.authorization to accepted
             }
-            val stage = interrupted.stageAt(sessionKeys, walletNonce, nowMillis = submitter.nowWithMarginMillis())
+            val stage = interrupted.stageAt(sessionKeys, walletNonce, nowMillis = clock.millis())
             TangemLogger.i("Polymarket session key authorization to resume is at ${stage::class.simpleName}")
             val revoking = when (stage) {
                 is PolymarketPendingAuthorizationStage.RevocationSent -> stage.revoking.also(progress::record)
