@@ -37,5 +37,25 @@ internal fun Request.withDpopHeaders(accessToken: String, proof: String): Reques
  */
 internal fun Request.htuUrl(): String = url.toString().substringBefore('#').substringBefore('?')
 
+/**
+ * Marks a request as the result of a session-auth retry already taken for this logical call.
+ *
+ * [DpopAuthorizationInterceptor] (for a 403) and [SessionAuthenticator] (for a 401) each own a
+ * *separate* `chain.proceed()` invocation — a request retried by one of them starts a brand-new
+ * `RetryAndFollowUpInterceptor` run, so OkHttp's own `response.priorResponse` tracking (and
+ * [SessionAuthenticator]'s check of it) only spans retries *within* a single such invocation, not
+ * across the two. Without this shared marker, a 401 answered by the Authenticator and then followed
+ * by a 403 (or the reverse) would get a second, independent retry from the other mechanism — three
+ * requests total instead of the one retry the contract promises. Both mechanisms stamp this marker
+ * on the request they build for their retry, and both refuse to retry a request that already carries it.
+ */
+private object SessionAuthRetryMarker
+
+internal fun Request.isSessionAuthRetry(): Boolean = tag(SessionAuthRetryMarker::class.java) != null
+
+internal fun Request.markSessionAuthRetried(): Request = newBuilder()
+    .tag(SessionAuthRetryMarker::class.java, SessionAuthRetryMarker)
+    .build()
+
 private inline fun <reified A : Annotation> Request.hasMethodAnnotation(): Boolean =
     tag(Invocation::class.java)?.method()?.isAnnotationPresent(A::class.java) == true

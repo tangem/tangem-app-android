@@ -62,5 +62,6 @@ dependencies {
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    testImplementation(deps.test.okhttp.mockwebserver)
     // endregion
 }

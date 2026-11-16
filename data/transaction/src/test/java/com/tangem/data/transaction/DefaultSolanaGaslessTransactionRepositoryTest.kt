@@ -188,6 +188,31 @@ internal class DefaultSolanaGaslessTransactionRepositoryTest {
         coVerify(exactly = 2) { api.getFeePayer() }
     }
 
+    @ParameterizedTest
+    @MethodSource("provideSubmitUnauthorizedCodes")
+    fun `GIVEN cached fee payer WHEN submit gets 401 or 403 THEN returns Unauthorized and resets fee payer cache`(
+        code: ApiResponseError.HttpException.Code,
+    ) = runTest {
+        // Arrange
+        coEvery { api.getFeePayer() } returns ApiResponse.Success(envelope(SolanaFeePayerResponse("FeePayer111")))
+        coEvery { api.submit(any(), any()) } returns
+            ApiResponse.Error(httpError(code)) as ApiResponse<GaslessServiceResponse<SolanaSubmitResponse>>
+
+        // Act
+        repository.getFeePayer()
+        val submitResult = repository.submit(userWalletId, ByteArray(1), lastValidBlockHeight = 1)
+        repository.getFeePayer()
+
+        // Assert
+        assertThat(submitResult).isEqualTo(SolanaGaslessError.Unauthorized.left())
+        coVerify(exactly = 2) { api.getFeePayer() }
+    }
+
+    private fun provideSubmitUnauthorizedCodes() = listOf(
+        ApiResponseError.HttpException.Code.UNAUTHORIZED,
+        ApiResponseError.HttpException.Code.FORBIDDEN,
+    )
+
     @Test
     fun `GIVEN 502 without body WHEN getFeePayer THEN returns ServiceUnavailable`() = runTest {
         // Arrange
@@ -256,6 +281,7 @@ internal class DefaultSolanaGaslessTransactionRepositoryTest {
 
     private fun provideTestModels() = listOf(
         ErrorModel(httpError(ApiResponseError.HttpException.Code.UNAUTHORIZED), SolanaGaslessError.Unauthorized),
+        ErrorModel(httpError(ApiResponseError.HttpException.Code.FORBIDDEN), SolanaGaslessError.Unauthorized),
         ErrorModel(httpError(ApiResponseError.HttpException.Code.BAD_REQUEST, err("UNSUPPORTED_CHAIN")), SolanaGaslessError.Disabled),
         ErrorModel(
             httpError(ApiResponseError.HttpException.Code.GONE, err("SOLANA_BLOCKHASH_EXPIRED")),

@@ -13,13 +13,16 @@ import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.SessionRefreshError
 import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokens
+import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.datetime.Instant
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import retrofit2.Invocation
@@ -32,6 +35,11 @@ class SessionAuthenticatorTest {
     private val proofFactory: DpopProofFactory = mockk()
 
     private val authenticator = SessionAuthenticator(refresher, proofFactory)
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(refresher, proofFactory)
+    }
 
     private val refreshedTokens = SessionTokens(
         accessToken = "new-access",
@@ -113,6 +121,33 @@ class SessionAuthenticatorTest {
     }
 
     @Test
+    fun `retried request from authenticate() carries the session-auth retry marker`() {
+        coEvery { refresher.refresh() } returns refreshedTokens.right()
+        coEvery { proofFactory.create(any(), any(), "new-access") } returns Some("fresh-proof")
+
+        val retried = authenticator.authenticate(
+            route = null,
+            response = response(code = 401, sessionRefresh = true),
+        )
+
+        assertThat(retried!!.isSessionAuthRetry()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN request already marked as session-auth retry WHEN 401 or 403 received THEN authenticator gives up`() {
+        // A 403-then-401 sequence: DpopAuthorizationInterceptor already retried once (for the 403)
+        // and marked that retry; response.priorResponse is null here because this is a fresh
+        // chain.proceed() call, so only the marker — not priorResponse — can catch this.
+        val retried = authenticator.authenticate(
+            route = null,
+            response = response(code = 401, sessionRefresh = true, alreadyRetried = true),
+        )
+
+        assertThat(retried).isNull()
+        coVerify(exactly = 0) { refresher.refresh() }
+    }
+
+    @Test
     fun `unannotated request 401 is passed through without refresh`() {
         val retried = authenticator.authenticate(route = null, response = response(code = 401))
 
@@ -150,10 +185,11 @@ class SessionAuthenticatorTest {
         sessionRefresh: Boolean = false,
         sessionAuth: Boolean = false,
         priorResponse: Response? = null,
+        alreadyRetried: Boolean = false,
     ): Response {
         val builder = Request.Builder().url("https://example.com/api/v1/foo")
         builder.tag(Invocation::class.java, invocationWith(dpop, sessionRefresh, sessionAuth))
-        val request = builder.build()
+        val request = builder.build().let { if (alreadyRetried) it.markSessionAuthRetried() else it }
         return Response.Builder()
             .request(request)
             .protocol(Protocol.HTTP_1_1)

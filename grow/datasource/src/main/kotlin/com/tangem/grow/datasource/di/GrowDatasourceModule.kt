@@ -1,6 +1,7 @@
 package com.tangem.grow.datasource.di
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.ApiSerialization
@@ -143,14 +144,15 @@ internal object GrowDatasourceModule {
     @Provides
     @Singleton
     fun provideSolanaGaslessApi(factory: RetrofitFactory): SolanaGaslessApi {
-        return factory.build(
-            RetrofitApiSpec(
-                apiConfigId = GaslessTxService.ID,
-                shouldApplyTimeoutAnnotations = true,
-                shouldUseSessionAuth = false,
-            ),
-        )
+        return factory.build(solanaGaslessApiSpec())
     }
+
+    @VisibleForTesting
+    internal fun solanaGaslessApiSpec() = RetrofitApiSpec(
+        apiConfigId = GaslessTxService.ID,
+        shouldApplyTimeoutAnnotations = true,
+        shouldUseSessionAuth = true,
+    )
 
     private fun tronGaslessApiSpec() = RetrofitApiSpec(
         apiConfigId = GaslessTxService.ID,
