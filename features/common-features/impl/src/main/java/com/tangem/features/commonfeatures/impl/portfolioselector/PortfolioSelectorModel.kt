@@ -164,10 +164,13 @@ internal class PortfolioSelectorModel @Inject constructor(
                 val item = PortfolioSelectorItemUM.Portfolio(finalWalletItemUM, isSelected, walletBadge(wallet))
                 add(item)
             } else if (params.settings.areLockedWalletsInline) {
-                val lockedItemUM = walletItemUM.copy(
-                    information = UserWalletItemUM.Information.Loaded(resourceReference(R.string.common_locked)),
+                lockedWallets.add(
+                    PortfolioSelectorItemUM.Portfolio(
+                        walletItemUM,
+                        isSelected = false,
+                        endBadge = resourceReference(R.string.common_locked),
+                    ),
                 )
-                lockedWallets.add(PortfolioSelectorItemUM.Portfolio(lockedItemUM, isSelected = false))
             } else {
                 lockedWallets.add(PortfolioSelectorItemUM.Portfolio(walletItemUM, isSelected = false))
             }
