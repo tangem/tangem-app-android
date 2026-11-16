@@ -9,6 +9,7 @@ import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyLifecycleError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyProgress
+import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStateService
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
@@ -33,6 +34,7 @@ class PolymarketSessionKeyOperationRunner(
     private val manage: ManagePolymarketSessionKeyInteractor,
     private val stateService: PolymarketSessionKeyStateService,
     private val sessionKeyStore: PolymarketSessionKeyStore,
+    private val bannerStore: PolymarketFastTradingBannerStore,
     private val appScope: AppCoroutineScope,
 ) {
 
@@ -86,6 +88,7 @@ class PolymarketSessionKeyOperationRunner(
                     ).left()
                 }
             log(operation.request, result)
+            if (result.isRight() && operation.request.isAuthorization) bannerStore.clear(userWalletId)
             stateService.refreshAndAwait(userWalletId)
             state.value = PolymarketSessionKeyOperationState(
                 running = null,
@@ -237,6 +240,17 @@ private val PolymarketSessionKeyOperationRequest.kind: String
         PolymarketSessionKeyOperationRequest.Extend -> "extension"
         is PolymarketSessionKeyOperationRequest.Revoke -> "revocation of $sessionKeyAddress"
         is PolymarketSessionKeyOperationRequest.SetEnabled -> "toggle of $sessionKeyAddress to $isEnabled"
+    }
+
+private val PolymarketSessionKeyOperationRequest.isAuthorization: Boolean
+    get() = when (this) {
+        PolymarketSessionKeyOperationRequest.Activate,
+        PolymarketSessionKeyOperationRequest.Reactivate,
+        PolymarketSessionKeyOperationRequest.Extend,
+        -> true
+        is PolymarketSessionKeyOperationRequest.Revoke,
+        is PolymarketSessionKeyOperationRequest.SetEnabled,
+        -> false
     }
 
 private fun PolymarketSessionKeyOperationRequest.addressOrNull(): String? = when (this) {

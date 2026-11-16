@@ -15,6 +15,7 @@ import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessment
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
@@ -51,10 +52,12 @@ internal class PolymarketSessionKeyOperationRunnerTest {
     private val manage: ManagePolymarketSessionKeyInteractor = mockk()
     private val stateService: PolymarketSessionKeyStateService = mockk()
     private val sessionKeyStore: PolymarketSessionKeyStore = mockk()
+    private val bannerStore: PolymarketFastTradingBannerStore = mockk()
 
     @BeforeEach
     fun setup() {
-        clearMocks(manage, stateService, sessionKeyStore)
+        clearMocks(manage, stateService, sessionKeyStore, bannerStore)
+        coEvery { bannerStore.clear(any()) } just Runs
         every { stateService.refresh(any()) } just Runs
         coEvery { stateService.refreshAndAwait(any(), any()) } just Runs
         coEvery { sessionKeyStore.heldAddress(any()) } returns OWN
@@ -534,6 +537,82 @@ internal class PolymarketSessionKeyOperationRunnerTest {
     }
 
     @Nested
+    inner class BannerDismissals {
+
+        @Test
+        fun `GIVEN activate succeeds WHEN finished THEN the banner dismissals are cleared`() = runTest {
+            // Arrange
+            every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+            )
+
+            // Act
+            finishedResult(PolymarketSessionKeyOperationRequest.Activate)
+
+            // Assert
+            coVerify(exactly = 1) { bannerStore.clear(USER_WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN reactivate succeeds WHEN finished THEN the banner dismissals are cleared`() = runTest {
+            // Arrange
+            every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+            )
+
+            // Act
+            finishedResult(PolymarketSessionKeyOperationRequest.Reactivate)
+
+            // Assert
+            coVerify(exactly = 1) { bannerStore.clear(USER_WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN extend succeeds WHEN finished THEN the banner dismissals are cleared`() = runTest {
+            // Arrange
+            every { manage.renew(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+            )
+
+            // Act
+            finishedResult(PolymarketSessionKeyOperationRequest.Extend)
+
+            // Assert
+            coVerify(exactly = 1) { bannerStore.clear(USER_WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN activate fails WHEN finished THEN the banner dismissals are kept`() = runTest {
+            // Arrange
+            every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(
+                    PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.SessionKeyBusy).left(),
+                ),
+            )
+
+            // Act
+            finishedResult(PolymarketSessionKeyOperationRequest.Activate)
+
+            // Assert
+            coVerify(exactly = 0) { bannerStore.clear(any()) }
+        }
+
+        @Test
+        fun `GIVEN revoke succeeds WHEN finished THEN the banner dismissals are kept`() = runTest {
+            // Arrange
+            every { manage.revoke(USER_WALLET_ID, FOREIGN) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right()),
+            )
+
+            // Act
+            finishedResult(PolymarketSessionKeyOperationRequest.Revoke(FOREIGN))
+
+            // Assert
+            coVerify(exactly = 0) { bannerStore.clear(any()) }
+        }
+    }
+
+    @Nested
     inner class Acknowledge {
 
         @Test
@@ -588,6 +667,7 @@ internal class PolymarketSessionKeyOperationRunnerTest {
         manage = manage,
         stateService = stateService,
         sessionKeyStore = sessionKeyStore,
+        bannerStore = bannerStore,
         appScope = TestAppCoroutineScope(coroutineContext = StandardTestDispatcher(testScheduler)),
     )
 
