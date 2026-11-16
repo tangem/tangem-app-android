@@ -23,6 +23,7 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
     private var request: Request? = null
     private var lastLiveUpdate: Long? = null
     private var livePoints = emptyMap<PolymarketChartOutcome.Key, List<Point>>()
+    private val lastQuotes = mutableMapOf<PolymarketChartOutcome.Key, Point>()
     private var hasFailure = false
 
     val state: StateFlow<Snapshot>
@@ -76,12 +77,26 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
         )
         cache[completed.period] = loaded
         displayed = loaded
-        livePoints = emptyMap()
+        livePoints = content.outcomes.associate { outcome ->
+            val historyEnd = loaded.lastTimestamp(outcome.key)
+            outcome.key to if (content.isClosed || historyEnd == null) {
+                emptyList()
+            } else {
+                livePoints[outcome.key].orEmpty().ifEmpty { listOfNotNull(lastQuotes[outcome.key]) }
+                    .filter { it.timestampMillis > historyEnd }
+            }
+        }
         lastLiveUpdate = null
         publish(nowMillis, hasFailure = content.outcomes.any { it.key !in history.points })
     }
 
-    fun refresh(updated: PolymarketChartContent, nowMillis: Long, quoteTimestampMillis: Long? = nowMillis) {
+    fun refresh(
+        updated: PolymarketChartContent,
+        nowMillis: Long,
+        quoteTimestampsMillis: Map<PolymarketChartOutcome.Key, Long?> = updated.outcomes.associate {
+            it.key to nowMillis
+        },
+    ) {
         val wasClosed = content.isClosed
         val isSameSelection = content.eventId == updated.eventId &&
             content.outcomes.map { it.key } == updated.outcomes.map { it.key } &&
@@ -89,6 +104,7 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
         content = updated
         if (!isSameSelection) {
             cache.clear()
+            lastQuotes.clear()
             displayed = null
             selectedPeriod = updated.initialPeriod
             livePoints = emptyMap()
@@ -96,6 +112,7 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
             reload(nowMillis)
             return
         }
+        if (content.isClosed) lastQuotes.clear()
         if (selectedPeriod !in content.periods) {
             displayed = displayed?.takeIf { it.period in content.periods }
             cache.keys.retainAll(content.periods)
@@ -109,7 +126,7 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
             return
         }
         if (content.isClosed) livePoints = emptyMap()
-        refreshLivePoints(nowMillis, quoteTimestampMillis)
+        refreshLivePoints(nowMillis, quoteTimestampsMillis)
         publish(nowMillis)
     }
 
@@ -120,7 +137,7 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
         publish(nowMillis)
     }
 
-    private fun refreshLivePoints(nowMillis: Long, quoteTimestampMillis: Long?) {
+    private fun refreshLivePoints(nowMillis: Long, quoteTimestampsMillis: Map<PolymarketChartOutcome.Key, Long?>) {
         val loaded = displayed
         if (request == null && loaded != null && !content.isClosed) {
             val previousUpdate = if (streamsLive()) lastLiveUpdate ?: loaded.loadedAt else loaded.loadedAt
@@ -130,22 +147,36 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
                 reload(nowMillis)
                 return
             }
-            quoteTimestampMillis?.takeIf { timestamp ->
-                timestamp <= nowMillis && nowMillis - timestamp <= loaded.fidelityMillis * STALE_BUCKETS &&
-                    timestamp > lastLiveUpdate ?: Long.MIN_VALUE
-            }?.let(::recordLivePoints)
+            recordLivePoints(nowMillis, quoteTimestampsMillis, loaded)
         }
     }
 
-    private fun recordLivePoints(nowMillis: Long) {
+    private fun recordLivePoints(
+        nowMillis: Long,
+        quoteTimestampsMillis: Map<PolymarketChartOutcome.Key, Long?>,
+        loaded: Loaded,
+    ) {
         val updates = content.outcomes.mapNotNull { outcome ->
+            val timestamp = quoteTimestampsMillis[outcome.key] ?: return@mapNotNull null
+            val historyEnd = loaded.lastTimestamp(outcome.key) ?: return@mapNotNull null
+            val previous = maxOf(
+                lastQuotes[outcome.key]?.timestampMillis ?: Long.MIN_VALUE,
+                historyEnd,
+            )
+            if (timestamp > nowMillis + CLOCK_SKEW_TOLERANCE_MILLIS ||
+                nowMillis - timestamp > loaded.fidelityMillis * STALE_BUCKETS ||
+                timestamp <= previous
+            ) {
+                return@mapNotNull null
+            }
             val probability = outcome.probability?.toDouble()?.takeIf { it in 0.0..1.0 } ?: return@mapNotNull null
-            outcome.key to Point(nowMillis, probability)
+            outcome.key to Point(timestamp, probability)
         }.toMap()
         if (updates.isEmpty()) return
+        lastQuotes.putAll(updates)
         val recorded = livePoints.toMutableMap()
         updates.forEach { (key, point) ->
-            val previous = livePoints[key].orEmpty().filter { it.timestampMillis < nowMillis }
+            val previous = livePoints[key].orEmpty()
             val points = if (streamsLive()) previous + point else listOf(point)
             val cutoff = nowMillis - LIVE_WINDOW.inWholeMilliseconds
             recorded[key] = points.filter { it.timestampMillis >= cutoff }
@@ -212,10 +243,16 @@ class PolymarketEventChartSession(initialContent: PolymarketChartContent) {
         val series: ImmutableList<Series>,
         val fidelityMillis: Long,
         val loadedAt: Long,
-    )
+    ) {
+        fun lastTimestamp(key: PolymarketChartOutcome.Key): Long? {
+            val seriesId = key.seriesId
+            return series.find { it.id == seriesId }?.points?.lastOrNull()?.timestampMillis
+        }
+    }
 
-    private companion object {
-        const val STALE_BUCKETS = 2
-        val LIVE_WINDOW = 1.hours
+    internal companion object {
+        const val CLOCK_SKEW_TOLERANCE_MILLIS = 5_000L
+        private const val STALE_BUCKETS = 2
+        private val LIVE_WINDOW = 1.hours
     }
 }
