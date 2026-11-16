@@ -987,6 +987,55 @@ internal class PolymarketSessionKeyOperationRunnerTest {
             }
 
         @Test
+        fun `GIVEN a resume refused for an unacknowledged outcome WHEN acknowledged THEN the pair is resumed`() =
+            runTest {
+                // Arrange
+                val failure = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network)
+                every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(failure.left()),
+                )
+                every { manage.resume(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+                )
+                val runner = runner()
+                runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Reactivate)
+                advanceUntilIdle()
+                val finishedId = requireNotNull(runner.observe(USER_WALLET_ID).value.finished).id
+                pendingAuthorizations.store(USER_WALLET_ID, pending())
+                runner.resume(USER_WALLET_ID)
+                advanceUntilIdle()
+
+                // Act
+                runner.acknowledge(USER_WALLET_ID, finishedId)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+                assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(key(OWN).right())
+            }
+
+        @Test
+        fun `GIVEN no resume was refused WHEN an outcome is acknowledged THEN nothing is resumed`() = runTest {
+            // Arrange
+            val failure = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network)
+            every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(failure.left()),
+            )
+            val runner = runner()
+            runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Reactivate)
+            advanceUntilIdle()
+            val finishedId = requireNotNull(runner.observe(USER_WALLET_ID).value.finished).id
+            pendingAuthorizations.store(USER_WALLET_ID, pending())
+
+            // Act
+            runner.acknowledge(USER_WALLET_ID, finishedId)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { manage.resume(any()) }
+        }
+
+        @Test
         fun `GIVEN the record cannot be read WHEN resume THEN no operation starts and the record is kept`() = runTest {
             // Arrange
             pendingAuthorizations.store(USER_WALLET_ID, pending())

@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Clock
@@ -48,6 +49,7 @@ class PolymarketSessionKeyOperationRunner(
     private val states = ConcurrentHashMap<UserWalletId, MutableStateFlow<PolymarketSessionKeyOperationState>>()
     private val lastId = AtomicLong()
     private val resuming: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
+    private val resumesAfterAcknowledge: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
 
     fun observe(userWalletId: UserWalletId): StateFlow<PolymarketSessionKeyOperationState> =
         stateOf(userWalletId).asStateFlow()
@@ -65,7 +67,10 @@ class PolymarketSessionKeyOperationRunner(
     }
 
     fun resume(userWalletId: UserWalletId) {
-        if (!reserveResume(userWalletId)) return
+        if (!reserveResume(userWalletId)) {
+            if (stateOf(userWalletId).value.finished != null) resumesAfterAcknowledge.add(userWalletId)
+            return
+        }
         appScope.launch {
             try {
                 val pending = executablePending(userWalletId) ?: return@launch
@@ -125,9 +130,11 @@ class PolymarketSessionKeyOperationRunner(
     }
 
     fun acknowledge(userWalletId: UserWalletId, operationId: Long) {
-        states[userWalletId]?.update { state ->
-            if (state.finished?.id == operationId) state.copy(finished = null) else state
+        val state = states[userWalletId] ?: return
+        val previous = state.getAndUpdate { current ->
+            if (current.finished?.id == operationId) current.copy(finished = null) else current
         }
+        if (previous.finished?.id == operationId && resumesAfterAcknowledge.remove(userWalletId)) resume(userWalletId)
     }
 
     private suspend fun run(
