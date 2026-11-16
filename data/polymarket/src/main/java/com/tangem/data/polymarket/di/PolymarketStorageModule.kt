@@ -16,6 +16,7 @@ import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.DefaultPolymarketFastTradingBannerStore
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
+import com.tangem.data.polymarket.store.DefaultPolymarketPendingAuthorizationStore
 import com.tangem.data.polymarket.store.DefaultPredictionWithdrawalStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
@@ -29,6 +30,7 @@ import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketPendingAuthorizationStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
@@ -185,6 +187,23 @@ internal object PolymarketStorageModule {
                 name = "polymarket_session_key_storage",
             ),
             addressFactory = addressFactory,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketPendingAuthorizationStore(
+        @ApplicationContext context: Context,
+        dispatchers: CoroutineDispatcherProvider,
+    ): PolymarketPendingAuthorizationStore {
+        return DefaultPolymarketPendingAuthorizationStore(
+            secureStorage = AndroidSecureStorageV2(
+                appContext = context,
+                useStrongBox = false,
+                name = "polymarket_pending_authorization_storage",
+            ),
+            json = Json { ignoreUnknownKeys = true },
             dispatchers = dispatchers,
         )
     }

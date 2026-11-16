@@ -8,6 +8,7 @@ internal class InMemorySecureStorage : SecureStorage {
     var failWrites = false
     var failReads = false
     var failDeletes = false
+    var readFailure: Exception = IllegalStateException("Keystore is locked")
 
     override fun store(key: String, value: String) {
         if (failWrites) throw IllegalStateException("Keystore is unavailable")
@@ -19,7 +20,7 @@ internal class InMemorySecureStorage : SecureStorage {
     override fun storeKey(key: ByteArray, account: String) = store(key, account)
 
     override fun getAsString(key: String): String? {
-        if (failReads) throw IllegalStateException("Keystore is locked")
+        if (failReads) throw readFailure
         return entries[key]
     }
 
