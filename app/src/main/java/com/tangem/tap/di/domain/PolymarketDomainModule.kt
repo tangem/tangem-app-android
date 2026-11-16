@@ -338,10 +338,12 @@ internal object PolymarketDomainModule {
         router: PolymarketOrderSigningRouter,
         sessionKeyStore: PolymarketSessionKeyStore,
         stateService: PolymarketSessionKeyStateService,
+        tradingStore: PolymarketSessionKeyTradingStore,
     ): GetPredictionOrderSessionKeyWindowUseCase = GetPredictionOrderSessionKeyWindowUseCase(
         router = router,
         sessionKeyStore = sessionKeyStore,
         stateService = stateService,
+        tradingStore = tradingStore,
     )
 
     @Provides

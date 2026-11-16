@@ -337,6 +337,7 @@ internal abstract class PlacePredictionModelTestBase {
                     router = signingRouter,
                     sessionKeyStore = mockk { coEvery { heldAddress(any()) } returns null },
                     stateService = mockk(),
+                    tradingStore = mockk(),
                 ),
                 dispatchers = dispatchers,
             )
