@@ -7,6 +7,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -41,6 +42,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.TestScope
@@ -131,7 +133,7 @@ internal class NativeSurveyModelTest {
         createModel()
 
         // Assert
-        verify(exactly = 1) { router.pop() }
+        verify(exactly = 1) { router.navigate(any(), any()) }
         coVerify(exactly = 0) { repository.load(any()) }
         assertThat(events).isEmpty()
     }
@@ -148,7 +150,7 @@ internal class NativeSurveyModelTest {
 
         // Assert
         assertThat(model.uiState.value).isInstanceOf(NativeSurveyUM.Loading::class.java)
-        verify(exactly = 1) { router.pop() }
+        verify(exactly = 1) { router.navigate(any(), any()) }
         assertThat(events).isEmpty()
     }
 
@@ -161,7 +163,7 @@ internal class NativeSurveyModelTest {
         createModel()
 
         // Assert
-        verify(exactly = 1) { router.pop() }
+        verify(exactly = 1) { router.navigate(any(), any()) }
         assertThat(events).isEmpty()
     }
 
@@ -259,7 +261,7 @@ internal class NativeSurveyModelTest {
             assertThat(model.form()).isEqualTo(answered)
             assertThat(responseIds).hasSize(2)
             assertThat(responseIds.distinct()).hasSize(1)
-            verify(exactly = 0) { router.pop() }
+            verify(exactly = 0) { router.navigate(any(), any()) }
         }
 
     @Test
@@ -276,7 +278,7 @@ internal class NativeSurveyModelTest {
             (messages.single() as DialogMessage).onDismissRequest()
 
             // Assert
-            verify(exactly = 1) { router.pop() }
+            verify(exactly = 1) { router.navigate(any(), any()) }
             assertThat(events).containsExactly(
                 opened(),
                 closed(CloseMethod.ERROR, isScoreSelected = true),
@@ -297,7 +299,7 @@ internal class NativeSurveyModelTest {
         (messages.single() as DialogMessage).onDismissRequest()
 
         // Assert
-        verify(exactly = 0) { router.pop() }
+        verify(exactly = 0) { router.navigate(any(), any()) }
         assertThat(events).containsExactly(opened())
     }
 
@@ -321,7 +323,7 @@ internal class NativeSurveyModelTest {
         // Assert
         assertThat((model.form().body as BodyUM.Score).selectedScore).isEqualTo(9)
         assertThat(model.form().isSubmitting).isTrue()
-        verify(exactly = 0) { router.pop() }
+        verify(exactly = 0) { router.navigate(any(), any()) }
         coVerify(exactly = 1) { repository.submit(any(), any(), any(), any()) }
         assertThat(events).containsExactly(opened())
         accepted.complete(Unit)
@@ -344,7 +346,7 @@ internal class NativeSurveyModelTest {
             }
 
             // Assert
-            verify(exactly = 1) { router.pop() }
+            verify(exactly = 1) { router.navigate(any(), any()) }
             assertThat(events).containsExactly(opened(), closed(method, isScoreSelected = true)).inOrder()
         }
 
@@ -358,9 +360,52 @@ internal class NativeSurveyModelTest {
         model.onSystemBack()
 
         // Assert
-        verify(exactly = 1) { router.pop() }
+        verify(exactly = 1) { router.navigate(any(), any()) }
         assertThat(events).containsExactly(opened(), closed(CloseMethod.CROSS, isScoreSelected = false)).inOrder()
     }
+
+    @Test
+    fun `GIVEN the entry point fetched the survey WHEN the screen reads its cache THEN Opened is not From Cache`() =
+        runTest {
+            // Act
+            createModel(isFromCache = false)
+
+            // Assert
+            assertThat(events).containsExactly(
+                NativeSurveyAnalyticsEvent.SurveyOpened(
+                    entry = entry(),
+                    surveyType = NativeSurvey.Type.NPS,
+                    isFromCache = false,
+                    isAlreadyPassed = false,
+                ),
+            )
+        }
+
+    @Test
+    fun `GIVEN another screen over the survey WHEN the survey closes THEN only the survey leaves the stack`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            val transformer = slot<(List<Route>) -> List<Route>>()
+            every { router.navigate(capture(transformer), any()) } returns Unit
+            val survey = AppRoute.NativeSurvey(
+                surveyId = SURVEY_ID,
+                source = AppRoute.NativeSurvey.Source.LINK,
+                stage = STAGE,
+                repeatAfterDays = REPEAT_AFTER_DAYS,
+                userWalletId = USER_WALLET_ID,
+                isAlreadyAnswered = false,
+                isFromCache = true,
+            )
+
+            // Act
+            model.form().onCloseClick()
+
+            // Assert
+            assertThat(transformer.captured(listOf(AppRoute.Wallet, survey, AppRoute.Initial)))
+                .containsExactly(AppRoute.Wallet, AppRoute.Initial)
+                .inOrder()
+        }
 
     @Test
     fun `GIVEN Done WHEN closed twice THEN the screen closes once without Closed`() = runTest {
@@ -372,13 +417,14 @@ internal class NativeSurveyModelTest {
         model.uiState.value.onCloseClick()
 
         // Assert
-        verify(exactly = 1) { router.pop() }
+        verify(exactly = 1) { router.navigate(any(), any()) }
         assertThat(events).containsExactly(openedAnswered())
     }
 
     private fun TestScope.createModel(
         isAlreadyAnswered: Boolean = false,
         source: AppRoute.NativeSurvey.Source = AppRoute.NativeSurvey.Source.LINK,
+        isFromCache: Boolean = true,
     ): NativeSurveyModel {
         val model = NativeSurveyModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
@@ -390,6 +436,7 @@ internal class NativeSurveyModelTest {
                     repeatAfterDays = REPEAT_AFTER_DAYS,
                     userWalletId = USER_WALLET_ID,
                     isAlreadyAnswered = isAlreadyAnswered,
+                    isFromCache = isFromCache,
                 ),
             ),
             router = router,

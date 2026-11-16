@@ -642,6 +642,7 @@ sealed class AppRoute(val path: String) : Route {
      * @property stage the lifecycle stage label of the entry point, empty when it has none
      * @property repeatAfterDays how long an answer closes the survey on this device; null closes it for good
      * @property isAlreadyAnswered opens straight on the thank-you screen, for a survey answered within its term
+     * @property isFromCache the entry point got the survey from the cache, without a request to the vendor
      */
     @Serializable
     data class NativeSurvey(
@@ -651,6 +652,7 @@ sealed class AppRoute(val path: String) : Route {
         val repeatAfterDays: Int?,
         val userWalletId: UserWalletId,
         val isAlreadyAnswered: Boolean,
+        val isFromCache: Boolean,
     ) : AppRoute(path = "/native_survey/$surveyId") {
 
         enum class Source { SHEET, PUSH, BANNER, LINK }
