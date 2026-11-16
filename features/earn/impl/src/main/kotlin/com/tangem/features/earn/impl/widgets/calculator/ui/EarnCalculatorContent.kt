@@ -181,6 +181,7 @@ private fun EarnCalculatorContentPreview() {
                 onInitialStep = {},
                 onTopUpStep = {},
                 onHorizonSelect = {},
+                onBarSelected = {},
             ),
             modifier = Modifier
                 .background(TangemTheme.colors3.bg.primary)

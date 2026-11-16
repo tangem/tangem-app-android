@@ -47,7 +47,7 @@ internal fun EarnProjectionBars(
             val cornerRadius = CornerRadius(barWidth / 2)
 
             bars.forEachIndexed { index, bar ->
-                val barHeight = bar.earned * size.height
+                val barHeight = bar.height * size.height
                 if (barHeight > 0f) {
                     drawRoundRect(
                         color = barColor,
@@ -87,7 +87,11 @@ private fun EarnProjectionBarsPreview() {
         EarnProjectionBars(
             bars = List(PREVIEW_BARS) { index ->
                 val step = (index + 1).toFloat() / PREVIEW_BARS
-                EarnProjectionBarUM(earned = maxOf(step * step, PREVIEW_MIN_SHARE))
+                EarnProjectionBarUM(
+                    height = maxOf(step * step, PREVIEW_MIN_SHARE),
+                    balance = stringReference("$0"),
+                    earned = stringReference("+$0"),
+                )
             }.toImmutableList(),
             axisLabels = listOf(stringReference("1Y"), stringReference("2Y"), stringReference("3Y")).toImmutableList(),
             modifier = Modifier
