@@ -16,6 +16,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -146,7 +147,12 @@ internal class EarnFlowModel @Inject constructor(
             subscribeOnStatuses()
             if (amountSource != null) loadMaxAmount()
             val userWallet = wallet.userWallet(params.product)
-            state.update { it.copy(walletIcon = userWallet?.let(::walletInterationIcon)) }
+            state.update { flowState ->
+                flowState.copy(
+                    walletIcon = userWallet?.let(::walletInterationIcon),
+                    isHoldToConfirm = userWallet?.isHotWallet == true,
+                )
+            }
             if (amountSource == EarnActionInput.Amount.Source.Wallet) loadSource(userWallet)
         }
     }
@@ -242,7 +248,7 @@ internal class EarnFlowModel @Inject constructor(
             current.signing.isExecuting -> Unit
             current.step == EarnFlowStep.Confirm && amountSource != null -> {
                 prepareJob?.cancel()
-                state.update { it.copy(step = EarnFlowStep.Amount, plan = null, isPreparing = false) }
+                state.update { it.copy(step = EarnFlowStep.Amount, plan = null, sentPlan = null, isPreparing = false) }
                 navigation.pop()
             }
             else -> finish(EarnFlowExit.Done)
@@ -333,11 +339,11 @@ internal class EarnFlowModel @Inject constructor(
         prepareJob = modelScope.launch {
             session.prepare(action, amount, selection).fold(
                 ifLeft = { error ->
-                    state.update { it.copy(plan = null, planFee = null, isPreparing = false) }
+                    state.update { it.copy(plan = null, planFee = null, sentPlan = null, isPreparing = false) }
                     onPrepareFailed(error)
                 },
                 ifRight = { plan ->
-                    state.update { it.copy(plan = plan, planFee = selection, isPreparing = false) }
+                    state.update { it.copy(plan = plan, planFee = selection, sentPlan = null, isPreparing = false) }
                     onPrepared()
                 },
             )
@@ -385,7 +391,7 @@ internal class EarnFlowModel @Inject constructor(
                     }
                     // A sent transaction consumed the plan: confirming again needs a fresh prepare.
                     is EarnSigningStep.Sent -> state.update {
-                        it.copy(plan = null, planFee = null, sentAmount = expectedAmount)
+                        it.copy(plan = null, planFee = null, sentAmount = expectedAmount, sentPlan = plan.plan)
                     }
                     is EarnSigningStep.Done -> showResult(step)
                     is EarnSigningStep.Failed -> onSigningFailed(step.error)
