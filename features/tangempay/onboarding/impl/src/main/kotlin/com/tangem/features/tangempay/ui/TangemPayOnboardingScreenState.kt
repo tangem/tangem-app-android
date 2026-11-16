@@ -14,7 +14,7 @@ internal sealed class TangemPayOnboardingScreenState {
         val onTermsClick: () -> Unit,
         val buttonConfig: ButtonConfig,
     ) : TangemPayOnboardingScreenState() {
-        data class ButtonConfig(val isLoading: Boolean, val onClick: () -> Unit)
+        data class ButtonConfig(val isLoading: Boolean, val isTangemIconShown: Boolean, val onClick: () -> Unit)
     }
 
     data class NotAvailable(override val onBack: () -> Unit) : TangemPayOnboardingScreenState()

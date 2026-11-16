@@ -152,6 +152,7 @@ private class TangemPayVerifiedPreviewProvider : CollectionPreviewParameterProvi
             onChoosePlanClick = {},
             onOpenMoneyAccountClick = {},
             onCloseClick = {},
+            isColdWallet = true,
         )::create,
     ),
 )

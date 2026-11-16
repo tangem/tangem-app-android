@@ -87,6 +87,8 @@ internal class TangemPayOnboardingModel @Inject constructor(
         -> null
     }
 
+    private val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
+
     private val starterCallbacks = TangemPayOnboardingStarter.Callbacks(
         onLoadingChange = { isLoading ->
             uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = isLoading))
@@ -127,13 +129,18 @@ internal class TangemPayOnboardingModel @Inject constructor(
         }
     }
 
-    private fun showOnboarding() {
+    private suspend fun showOnboarding() {
         uiState.update { state ->
             TangemPayOnboardingScreenState.Content(
                 onBack = state.onBack,
                 onTermsClick = ::onTermsClick,
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
                     isLoading = false,
+                    isTangemIconShown = hasCompatibleColdWallet(
+                        eligibilityManager = eligibilityManager,
+                        userWalletsListRepository = userWalletsListRepository,
+                        shouldExcludePaeraCustomers = shouldExcludePaeraCustomers,
+                    ),
                     onClick = ::onGetCardClick,
                 ),
             )
@@ -178,7 +185,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked(entryChannel = entryChannel))
-        val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
         modelScope.launch {
             val walletsIds =
                 eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = shouldExcludePaeraCustomers)
