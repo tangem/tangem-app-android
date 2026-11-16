@@ -1476,6 +1476,8 @@
   <string name="joint_operation_banner_title">%1$s wants to send %2$s</string>
   <string name="joint_operation_banner_title_own">You want to send %1$s</string>
   <string name="joint_operation_cancel_alert_title">Cancel this transaction?</string>
+  <string name="joint_operation_canceled_by_creator">Canceled by creator</string>
+  <string name="joint_operation_canceled_by_members">Canceled by members</string>
   <string name="joint_operation_cancelled_snackbar">Transaction cancelled</string>
   <string name="joint_operation_completed_subtitle">It has already been executed or cancelled</string>
   <string name="joint_operation_completed_title">Operation completed</string>
@@ -1840,6 +1842,12 @@
   <string name="money_account_send_unavailable_title">Operation currently unavailable</string>
   <string name="money_account_yield_mode_average_apr">Average APR %s</string>
   <string name="money_account_yield_mode_earn_up_to">Earn up to %s a year</string>
+  <string name="native_survey_comment_placeholder">Type something</string>
+  <string name="native_survey_done_description">It helps us make Tangem better.</string>
+  <string name="native_survey_done_title">Thanks for your feedback</string>
+  <string name="native_survey_nps_scale_hint"> 0 is not at all likely, 10 is extremely likely</string>
+  <string name="native_survey_optional">Optional</string>
+  <string name="native_survey_send_feedback">Send feedback</string>
   <string name="news_all_news">All news</string>
   <string name="news_like">Like</string>
   <plurals name="news_published_hours_ago">
