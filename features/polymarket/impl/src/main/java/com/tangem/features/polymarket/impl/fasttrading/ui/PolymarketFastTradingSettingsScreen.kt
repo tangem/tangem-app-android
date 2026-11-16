@@ -87,6 +87,7 @@ internal fun PolymarketFastTradingSettingsScreen(
                         onActivateClick = state.onActivateClick,
                         contentPadding = contentPadding,
                     )
+                    state.revokeConfirmation?.let { PolymarketRevokeConfirmationSheet(it) }
                 }
             }
         }
@@ -235,6 +236,7 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             onActionClick = {},
             onActivateClick = {},
+            revokeConfirmation = null,
         ),
         PolymarketFastTradingSettingsUM.Content(
             onBackClick = {},
@@ -251,6 +253,7 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             onActionClick = {},
             onActivateClick = {},
+            revokeConfirmation = null,
         ),
         PolymarketFastTradingSettingsUM.Loading(onBackClick = {}),
         PolymarketFastTradingSettingsUM.Error(onBackClick = {}, onRetryClick = {}),
