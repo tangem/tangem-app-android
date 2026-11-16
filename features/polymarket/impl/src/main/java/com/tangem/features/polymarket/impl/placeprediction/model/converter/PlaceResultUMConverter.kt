@@ -147,13 +147,12 @@ internal object PlaceResultUMConverter {
         orderedShares: BigDecimal,
         quote: PredictionOrderQuote,
     ): BigDecimal? {
-        val filledRatio = fillRatio(
-            filledCollateral = filledCollateral,
-            filledShares = filledShares,
-            orderedShares = orderedShares,
-            quote = quote,
-        ) ?: return null
-        val filledFee = quote.fees.total.multiply(filledRatio, MathContext.DECIMAL64)
+        val (filled, ordered) = when {
+            orderedShares.signum() > 0 -> filledShares to orderedShares
+            quote.notional.signum() > 0 -> filledCollateral to quote.notional
+            else -> return null
+        }
+        val filledFee = quote.fees.total.multiply(filled).divide(ordered, MathContext.DECIMAL64)
         return totalOf(side = side, collateral = filledCollateral, fee = filledFee)
     }
 
@@ -162,17 +161,6 @@ internal object PlaceResultUMConverter {
         PredictionOrderSide.SELL -> (collateral - fee)
             .setScale(FIAT_SCALE, RoundingMode.DOWN)
             .coerceAtLeast(BigDecimal.ZERO.setScale(FIAT_SCALE))
-    }
-
-    private fun fillRatio(
-        filledCollateral: BigDecimal,
-        filledShares: BigDecimal,
-        orderedShares: BigDecimal,
-        quote: PredictionOrderQuote,
-    ) = when {
-        orderedShares.signum() > 0 -> filledShares.divide(orderedShares, MathContext.DECIMAL64)
-        quote.notional.signum() > 0 -> filledCollateral.divide(quote.notional, MathContext.DECIMAL64)
-        else -> null
     }
 
     private fun submitted(placedAt: Long) = PlaceOutcome.Reportable(result = PlaceResultUM.Submitted(placedAt))

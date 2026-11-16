@@ -400,6 +400,20 @@ internal class PlaceResultUMConverterTest {
             ),
         ),
         ReadBackModel(
+            name = "two thirds of the order net exactly two thirds of the fee",
+            order = readBack(sizeMatched = BigDecimal("2"), originalSize = BigDecimal("3"), price = BigDecimal("2")),
+            quote = SELL_QUOTE.copy(fees = SELL_QUOTE.fees.copy(total = BigDecimal("3"))),
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = BigDecimal("4.00"),
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = BigDecimal("2"),
+                    total = BigDecimal("2.00"),
+                ),
+            ),
+        ),
+        ReadBackModel(
             name = "a partial sell nets its share of the fee from the proceeds",
             order = readBack(sizeMatched = QUOTED_SHARES.half()),
             quote = SELL_QUOTE,
