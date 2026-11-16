@@ -164,23 +164,15 @@ class ManagePolymarketSessionKeyInteractor(
             }
             var lastKnown: PolymarketSessionKey? = null
             withTimeoutOrNull(authorizationOf(signed).timeLeft()) {
-                val revoking = send { relay.revoke(userWalletId, revocationOf(signed)) }
-                lastKnown = revoking
-                val revoked = awaitRevoked(userWalletId, signed.ownerAddress(), revoking)
-                lastKnown = revoked
+                val revoking = send { relay.revoke(userWalletId, revocationOf(signed)) }.also { lastKnown = it }
+                val revoked = awaitRevoked(userWalletId, signed.ownerAddress(), revoking).also { lastKnown = it }
                 emit(PolymarketSessionKeyProgress.Revoked(revoked))
                 sendAuthorization(
                     userWalletId = userWalletId,
                     signed = signed,
                     relayerRejectionRetries = FOLLOW_UP_REJECTION_RETRIES,
                 )
-            } ?: run {
-                TangemLogger.e("Polymarket session key authorization deadline reached during the renewal")
-                raise(
-                    lastKnown?.let(PolymarketSessionKeyLifecycleError::Unsettled)
-                        ?: PolymarketSessionKeyLifecycleError.StaleSignature(cause = null),
-                )
-            }
+            } ?: raise(renewalPastDeadline(lastKnown))
         }
         emit(PolymarketSessionKeyProgress.Authorizing(pending))
         return awaitActive(userWalletId, sent.ownerAddress, pending)
@@ -396,4 +388,13 @@ private fun PolymarketSessionKeyError.needsNewSignature(): Boolean =
 private fun PolymarketSignedSessionKeyBatches.ownerAddress(): String = when (val batch = batches.first()) {
     is PolymarketSignedSessionKeyBatches.Signed.Authorization -> batch.authorization.ownerAddress
     is PolymarketSignedSessionKeyBatches.Signed.Revocation -> batch.revocation.ownerAddress
+}
+
+private fun renewalPastDeadline(lastKnown: PolymarketSessionKey?): PolymarketSessionKeyLifecycleError {
+    TangemLogger.e("Polymarket session key authorization deadline reached during the renewal")
+    return if (lastKnown != null) {
+        PolymarketSessionKeyLifecycleError.Unsettled(lastKnown)
+    } else {
+        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
+    }
 }
