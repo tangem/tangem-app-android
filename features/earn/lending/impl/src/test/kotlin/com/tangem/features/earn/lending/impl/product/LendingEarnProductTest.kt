@@ -9,7 +9,6 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -91,11 +90,7 @@ internal class LendingEarnProductTest {
 
     private val product = createProduct(provider)
 
-    private val updateRequiredText = combinedReference(
-        stringReference("Update Tangem to the latest version to use Lending on "),
-        stringReference("Fake"),
-        stringReference("."),
-    )
+    private val updateRequiredText = resourceReference(R.string.lending_update_app_message)
 
     @BeforeEach
     fun resetMocks() {
@@ -209,7 +204,7 @@ internal class LendingEarnProductTest {
             DepositBlockModel(
                 isOpen = false,
                 gate = LendingDepositGate.Open,
-                expectedReason = stringReference("Deposits are paused by the provider."),
+                expectedReason = DEPOSITS_PAUSED,
             ),
         )
     }
@@ -393,7 +388,7 @@ internal class LendingEarnProductTest {
         }
 
         @Test
-        fun `GIVEN provider WHEN state THEN texts name the provider and the asset`() = runTest {
+        fun `GIVEN provider WHEN state THEN texts come from the keys and the rows carry the provider`() = runTest {
             // Arrange
             every { lendingSupplier(userWalletId) } returns flowOf(snapshotOf(assetState()))
 
@@ -401,16 +396,9 @@ internal class LendingEarnProductTest {
             val actual = product.state(params).first() as EarnProductState.Ready
 
             // Assert
-            assertThat(product.title).isEqualTo(combinedReference(stringReference("Lending on "), stringReference("Fake")))
-            assertThat(actual.description).isEqualTo(
-                combinedReference(
-                    stringReference("Earn variable yield on ${eth.symbol} by lending it directly on "),
-                    stringReference("Fake"),
-                    stringReference(", "),
-                    stringReference("a fake protocol"),
-                    stringReference(". Withdrawals are usually instant."),
-                ),
-            )
+            assertThat(product.title).isEqualTo(resourceReference(R.string.earn_product_lending_on_aave))
+            assertThat(actual.description)
+                .isEqualTo(resourceReference(R.string.earn_yield_picker_lending_description))
             assertThat(actual.details.map { it.value }).containsExactly(
                 EarnValue.Text(resourceReference(R.string.earn_risk_level_low)),
                 EarnValue.Link(text = stringReference("Fake"), url = "https://fake.example"),
@@ -438,7 +426,7 @@ internal class LendingEarnProductTest {
                 position = null,
                 hasPendingTx = false,
                 isOpen = true,
-                expectedPrimary = EarnActionItem(action = Deposit(), label = stringReference("Start earning")),
+                expectedPrimary = EarnActionItem(action = Deposit(), label = START_EARNING),
                 expectedSecondary = emptyList(),
             ),
             ActionsModel(
@@ -663,7 +651,11 @@ internal class LendingEarnProductTest {
         val FEE_TEXT = BigDecimal.ZERO.format { percent(minFractionDigits = 0) }
         val RATE = EarnProductRate(fraction = BigDecimal("0.055"), type = EarnRateType.APY)
         val ADD_FUNDS = resourceReference(R.string.common_add_funds)
-        val PENDING_BLOCK = EarnBlock(reason = stringReference("Wait for the previous transaction to complete."))
-        val CLOSED_BLOCK = EarnBlock(reason = stringReference("Deposits are paused by the provider."))
+        val START_EARNING = resourceReference(R.string.eth_yield_start_earning)
+        val PENDING_BLOCK = EarnBlock(
+            reason = resourceReference(R.string.lending_error_previous_transaction_processing),
+        )
+        val DEPOSITS_PAUSED = stringReference("Deposits are paused by the provider.")
+        val CLOSED_BLOCK = EarnBlock(reason = DEPOSITS_PAUSED)
     }
 }

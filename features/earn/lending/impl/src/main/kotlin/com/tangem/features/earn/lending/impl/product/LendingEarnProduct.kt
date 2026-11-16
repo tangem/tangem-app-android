@@ -51,7 +51,7 @@ internal class LendingEarnProduct @Inject constructor(
 
     override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success
 
-    override val title: TextReference = LendingTexts.title(lendingProvider.info)
+    override val title: TextReference = LendingTexts.title
 
     override val provider: EarnProvider = lendingProvider.info
 

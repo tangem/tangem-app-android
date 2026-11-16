@@ -28,7 +28,6 @@ internal class FakeLendingProvider(
     val refreshPositionCalls = mutableListOf<Pair<UserWalletId, LendingAsset>>()
 
     override val info = EarnProvider(title = stringReference("Fake"), icon = ImageReference.Res(0))
-    override val about = stringReference("a fake protocol")
     override val websiteUrl: String = "https://fake.example"
     override val legal = EarnLegal(
         termsOfUseUrl = "https://fake.example/terms",

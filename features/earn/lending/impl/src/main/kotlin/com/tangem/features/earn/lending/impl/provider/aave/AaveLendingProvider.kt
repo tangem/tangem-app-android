@@ -59,9 +59,6 @@ internal class AaveLendingProvider @Inject constructor(
 
     override val info = EarnProvider(title = stringReference("Aave"), icon = ImageReference.Res(R.drawable.img_aave_22))
 
-    // Temporary plain text: replace with a localized string resource.
-    override val about = stringReference("an on-chain self-custodial lending protocol")
-
     override val websiteUrl: String = "https://aave.com"
 
     override val legal = EarnLegal(

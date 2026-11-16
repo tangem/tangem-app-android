@@ -4,9 +4,9 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fee
 import com.tangem.core.ui.format.bigdecimal.format
@@ -24,24 +24,30 @@ import java.math.BigDecimal
 internal fun lendingTxAnalytics(action: EarnFlowAction): EarnTxAnalytics =
     EarnTxAnalytics(params = mapOf("action" to action.id))
 
-// Temporary plain text in this file: replace with localized string resources.
-internal fun lendingDepositResult(amount: BigDecimal, currency: CryptoCurrency, provider: TextReference) = EarnResult(
-    title = stringReference("Deposited ${amount.format { crypto(currency) }}"),
-    subtitle = combinedReference(stringReference("Your ${currency.symbol} is now earning in "), provider),
-    chip = null,
-    rows = emptyList(),
-    primary = EarnResultButton(stringReference("Go to yield"), EarnFlowExit.ToYield),
-    secondary = EarnResultButton(resourceReference(R.string.common_go_to_token), EarnFlowExit.ToToken),
-)
+internal fun lendingDepositResult(amount: BigDecimal, currency: CryptoCurrency, accountName: TextReference) =
+    EarnResult(
+        title = resourceReference(R.string.lending_deposited_title, wrappedList(amount.format { crypto(currency) })),
+        subtitle = resourceReference(R.string.lending_deposited_subtitle, wrappedList(currency.symbol, accountName)),
+        chip = null,
+        rows = emptyList(),
+        primary = EarnResultButton(
+            resourceReference(R.string.yield_module_claim_go_to_yield_button),
+            EarnFlowExit.ToYield,
+        ),
+        secondary = EarnResultButton(resourceReference(R.string.common_go_to_token), EarnFlowExit.ToToken),
+    )
 
 internal fun lendingWithdrawResult(amount: BigDecimal, currency: CryptoCurrency, fee: Fee) = EarnResult(
-    title = stringReference("Withdrawn ${amount.format { crypto(currency) }}"),
+    title = resourceReference(
+        id = R.string.earn_withdrawal_result_withdrawn,
+        formatArgs = wrappedList(amount.format { crypto(currency) }),
+    ),
     subtitle = null,
     chip = null,
     rows = listOf(
         EarnRow(
-            label = stringReference("Withdrawal period"),
-            value = EarnValue.Text(stringReference("Usually instant")),
+            label = resourceReference(R.string.earn_withdrawal_result_period),
+            value = EarnValue.Text(resourceReference(R.string.earn_product_details_usually_instant)),
         ),
         EarnRow(
             label = resourceReference(R.string.common_network_fee_title),

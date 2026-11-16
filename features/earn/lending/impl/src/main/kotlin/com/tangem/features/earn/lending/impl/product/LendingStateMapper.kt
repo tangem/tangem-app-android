@@ -3,9 +3,7 @@ package com.tangem.features.earn.lending.impl.product
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
@@ -28,7 +26,6 @@ import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.Withdraw
 import java.math.BigDecimal
 
-// Temporary plain text in this file: replace with localized string resources.
 internal class LendingStateMapper(private val provider: LendingProvider) {
 
     private val performanceFeeText = provider.performanceFee.formatEarnPercent()
@@ -63,7 +60,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         ),
     )
 
-    private val updateRequiredBlock = EarnBlock(reason = LendingTexts.updateRequired(provider.info))
+    private val updateRequiredBlock = EarnBlock(reason = LendingTexts.updateRequired)
 
     fun map(state: LendingAssetState?): EarnProductState {
         val market = state?.market ?: return EarnProductState.Unavailable
@@ -74,10 +71,9 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         }
 
         val position = market.position
-        val symbol = state.asset.currency.symbol
         return EarnProductState.Ready(
             rate = rate,
-            description = descriptionOf(symbol),
+            description = resourceReference(R.string.earn_yield_picker_lending_description),
             projection = provider.projectionOf(rate.fraction),
             benefits = BENEFITS,
             details = details,
@@ -97,7 +93,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         label = if (state.market.position != null) {
             resourceReference(R.string.common_add_funds)
         } else {
-            stringReference("Start earning")
+            resourceReference(R.string.eth_yield_start_earning)
         },
     )
 
@@ -151,19 +147,11 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         }
     }
 
-    private fun descriptionOf(symbol: String): TextReference = combinedReference(
-        stringReference("Earn variable yield on $symbol by lending it directly on "),
-        provider.info.title,
-        stringReference(", "),
-        provider.about,
-        stringReference(". Withdrawals are usually instant."),
-    )
-
     private companion object {
         val BENEFITS = listOf(
             EarnTextBlock(
-                title = stringReference("No lock-ups."),
-                description = stringReference("Send, swap, or sell your funds instantly, anytime you want"),
+                title = resourceReference(R.string.yield_module_promo_screen_cash_out_title),
+                description = resourceReference(R.string.yield_module_promo_screen_cash_out_subtitle),
                 icon = TangemIconUM.Icon(Icons.ic_lightning_20),
             ),
             EarnTextBlock(
@@ -176,7 +164,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         val PENDING_BLOCK = EarnBlock(reason = LendingTexts.pendingTransaction)
         val CLOSED_BLOCK = EarnBlock(reason = LendingTexts.depositsPaused)
         val RETRY_BLOCK = EarnBlock(
-            reason = stringReference("Position is not loaded"),
+            reason = resourceReference(R.string.common_unable_to_load),
             action = EarnBlockAction.Retry,
         )
 

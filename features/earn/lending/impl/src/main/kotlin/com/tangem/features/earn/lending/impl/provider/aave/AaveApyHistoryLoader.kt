@@ -1,7 +1,9 @@
 package com.tangem.features.earn.lending.impl.provider.aave
 
 import arrow.core.Either
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.yield.supply.models.YieldChartWindow
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetChartUseCase
@@ -56,17 +58,19 @@ internal class AaveApyHistoryLoader @Inject constructor(
 }
 
 /**
+ * @property labelMonths the period length shown on its chip
  * @property months how many last months of the window are shown; null shows the whole window
  */
 private enum class AaveChartPeriod(
     val id: String,
+    val labelMonths: Int,
     val window: YieldChartWindow,
     val bucketSizeDays: Int,
     val months: Int?,
 ) {
-    Month(id = "1M", window = YieldChartWindow.LastMonth, bucketSizeDays = 1, months = null),
-    ThreeMonths(id = "3M", window = YieldChartWindow.LastYear, bucketSizeDays = 3, months = 3),
-    SixMonths(id = "6M", window = YieldChartWindow.LastYear, bucketSizeDays = 6, months = 6),
+    Month(id = "1M", labelMonths = 1, window = YieldChartWindow.LastMonth, bucketSizeDays = 1, months = null),
+    ThreeMonths(id = "3M", labelMonths = 3, window = YieldChartWindow.LastYear, bucketSizeDays = 3, months = 3),
+    SixMonths(id = "6M", labelMonths = 6, window = YieldChartWindow.LastYear, bucketSizeDays = 6, months = 6),
     ;
 
     companion object {
@@ -79,8 +83,10 @@ private enum class AaveChartPeriod(
 
 internal object AaveApyPeriods {
     val All: List<EarnPeriod> = AaveChartPeriod.entries.map { period ->
-        EarnPeriod(id = period.id, label = stringReference(period.id))
+        EarnPeriod(id = period.id, label = monthsLabel(count = period.labelMonths))
     }
+
+    private fun monthsLabel(count: Int) = pluralReference(R.plurals.earn_calculator_months, count, wrappedList(count))
 }
 
 /** The chart sends percents as doubles: `2.0` keeps a trailing zero that `2` from other sources does not */
