@@ -34,9 +34,11 @@ internal class AllOffersModelTest : OnrampModelTestBase() {
             )
             val offers = mockk<GetOnrampAllOffersUseCase>()
             every { offers(any(), any()) } returnsMany listOf(old, replacement)
+            val params = mockk<AllOffersComponent.Params>(relaxed = true)
+            every { params.isBuyEnabled } returns MutableStateFlow(true)
             val model = AllOffersModel(
                 testDispatchers(), analyticsEventHandler, offers, mockk(), mockk(),
-                MutableParamsContainer(mockk<AllOffersComponent.Params>(relaxed = true)),
+                MutableParamsContainer(params),
             )
             advanceUntilIdle()
             assertThat(old.subscriptionCount.value).isEqualTo(1)
@@ -62,6 +64,7 @@ internal class AllOffersModelTest : OnrampModelTestBase() {
     fun `GIVEN failed offers WHEN refreshed THEN subscription restarts and restricted buy stays inert`() = runTest {
         // Arrange
         val params = mockk<AllOffersComponent.Params>(relaxed = true)
+        every { params.isBuyEnabled } returns MutableStateFlow(true)
         val offers = mockk<GetOnrampAllOffersUseCase>()
         var subscriptions = 0
         every { offers(any(), any()) } returns flow {
