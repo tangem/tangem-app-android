@@ -9,6 +9,8 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -97,18 +99,17 @@ internal class JointAccountConfirmAddressModelTest {
     }
 
     @Test
-    fun `GIVEN no safe address yet WHEN model created THEN no address and confirm does nothing`() = runTest {
+    fun `GIVEN no safe address yet WHEN model created THEN no address and no share message`() = runTest {
         // Arrange
         every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns
             flowOf(listOf(confirmingAccount().copy(safeAddress = null)))
 
         // Act
         val model = createModel()
-        model.uiState.value.onShareClick()
 
         // Assert
         assertThat(model.uiState.value.address).isNull()
-        verify(exactly = 0) { shareManager.shareText(any()) }
+        assertThat(model.uiState.value.shareMessage).isNull()
     }
 
     @Test
@@ -136,15 +137,29 @@ internal class JointAccountConfirmAddressModelTest {
     }
 
     @Test
-    fun `GIVEN address WHEN share clicked THEN the address is shared`() = runTest {
+    fun `GIVEN address WHEN model created THEN share message asks to confirm the address`() = runTest {
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value.shareMessage).isEqualTo(
+            resourceReference(
+                id = CoreUiR.string.joint_account_confirm_address_share_message,
+                formatArgs = wrappedList(SAFE_ADDRESS),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN address WHEN share clicked THEN the message is shared`() = runTest {
         // Arrange
         val model = createModel()
 
         // Act
-        model.uiState.value.onShareClick()
+        model.uiState.value.onShareClick(SHARE_MESSAGE)
 
         // Assert
-        verify(exactly = 1) { shareManager.shareText(text = SAFE_ADDRESS) }
+        verify(exactly = 1) { shareManager.shareText(text = SHARE_MESSAGE) }
     }
 
     @Test
@@ -395,5 +410,6 @@ internal class JointAccountConfirmAddressModelTest {
         val USER_WALLET_ID = UserWalletId("011")
         val ACCOUNT_ID = "a1".repeat(n = 32)
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
+        const val SHARE_MESSAGE = "Please confirm shared address: 0xSafe"
     }
 }
