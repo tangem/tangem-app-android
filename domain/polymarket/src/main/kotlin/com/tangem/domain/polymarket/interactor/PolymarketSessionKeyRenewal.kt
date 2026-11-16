@@ -233,4 +233,5 @@ private fun PolymarketSessionKeyError.isInconclusive(): Boolean = this == Polyma
     this == PolymarketSessionKeyError.UpstreamUnavailable ||
     this == PolymarketSessionKeyError.SessionKeyBusy ||
     this is PolymarketSessionKeyError.Unknown ||
+    this is PolymarketSessionKeyError.RelayerRejected ||
     this is PolymarketSessionKeyError.Failure

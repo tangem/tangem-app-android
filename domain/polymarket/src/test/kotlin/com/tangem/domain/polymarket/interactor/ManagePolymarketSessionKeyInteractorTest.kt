@@ -2043,6 +2043,27 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
+        fun `GIVEN the relayer keeps rejecting the authorization WHEN resume THEN the pair is kept`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            val error = PolymarketSessionKeyError.RelayerRejected(detail = "wallet has in-flight action")
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                error.left()
+            givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)))
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.StaleSignature(error).left()),
+            )
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
         fun `GIVEN the authorization ends with an unknown server error WHEN resume THEN the pair is kept`() = runTest {
             // Arrange
             val pending = pendingOf()
