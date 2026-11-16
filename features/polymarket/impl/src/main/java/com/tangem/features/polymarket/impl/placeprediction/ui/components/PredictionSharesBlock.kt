@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
@@ -121,6 +122,7 @@ private fun ProceedsSection(selected: BigDecimal, position: SellPositionUM, proc
 }
 
 @Composable
+@ReadOnlyComposable
 private fun String.emphasized(): AnnotatedString = buildAnnotatedString {
     appendStyled(
         text = this@emphasized,
