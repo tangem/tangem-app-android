@@ -132,6 +132,17 @@ class BuyTokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         hasText(getResourceString(R.string.onramp_all_offers_button_title))
         useUnmergedTree = true
     }
+
+    val maxAmountRestriction: KNode = child {
+        hasText(getResourceString(R.string.onramp_max_amount_restriction, ""), substring = true)
+        useUnmergedTree = true
+    }
+
+    /** Marketing banners carry no testTag — match by text. */
+    fun marketingBannerText(text: String): KNode = child {
+        hasText(text)
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onBuyTokenDetailsScreen(function: BuyTokenDetailsPageObject.() -> Unit) =
