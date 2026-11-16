@@ -14,6 +14,4 @@ interface NonPortfolioCurrenciesProvider {
     suspend fun getStatuses(userWalletId: UserWalletId, network: Network): List<CryptoCurrencyStatus>
 
     suspend fun findCurrency(userWalletId: UserWalletId, currencyId: CryptoCurrency.ID): CryptoCurrency?
-
-    suspend fun refresh(userWalletId: UserWalletId, network: Network)
 }
