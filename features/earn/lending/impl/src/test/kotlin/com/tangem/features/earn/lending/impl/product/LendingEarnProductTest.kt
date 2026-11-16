@@ -45,6 +45,7 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRisk
+import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.ProductAvailability
@@ -223,7 +224,7 @@ internal class LendingEarnProductTest {
 
             // Assert
             assertThat(actual.secondary).containsExactly(
-                EarnActionItem(action = Withdraw(), block = EarnBlock(reason = updateRequiredText)),
+                EarnActionItem(action = WITHDRAW, block = EarnBlock(reason = updateRequiredText)),
             )
         }
     }
@@ -342,7 +343,7 @@ internal class LendingEarnProductTest {
         }
 
         @Test
-        fun `GIVEN position WHEN state THEN position is known`() = runTest {
+        fun `GIVEN position WHEN state THEN position is known with total and available balance`() = runTest {
             // Arrange
             every { lendingSupplier(userWalletId) } returns flowOf(
                 snapshotOf(assetState(position = BigDecimal("2"))),
@@ -356,8 +357,28 @@ internal class LendingEarnProductTest {
                 EarnPosition(
                     cryptoAmount = BigDecimal("2"),
                     earned = null,
-                    description = null,
-                    rows = emptyList(),
+                    description = resourceReference(R.string.lending_position_about),
+                    rows = listOf(
+                        EarnRow(
+                            label = resourceReference(R.string.token_details_balance_total),
+                            value = EarnValue.Amount(BigDecimal("2")),
+                            info = EarnTextBlock(
+                                title = resourceReference(R.string.token_details_balance_total),
+                                description = resourceReference(
+                                    R.string.lending_position_total_balance_info,
+                                    wrappedList(FEE_TEXT),
+                                ),
+                            ),
+                        ),
+                        EarnRow(
+                            label = resourceReference(R.string.token_details_balance_available),
+                            value = EarnValue.Amount(BigDecimal("2")),
+                            info = EarnTextBlock(
+                                title = resourceReference(R.string.token_details_balance_available),
+                                description = resourceReference(R.string.lending_position_available_balance_info),
+                            ),
+                        ),
+                    ),
                     rewards = null,
                     freshness = null,
                 ),
@@ -383,7 +404,7 @@ internal class LendingEarnProductTest {
                 EarnValue.Link(text = stringReference("Fake"), url = "https://fake.example"),
                 EarnValue.Text(resourceReference(R.string.earn_product_details_usually_instant)),
                 EarnValue.Text(
-                    resourceReference(R.string.earn_product_details_performance_fee_value, wrappedList<Any>(FEE_TEXT)),
+                    resourceReference(R.string.earn_product_details_performance_fee_value, wrappedList(FEE_TEXT)),
                 ),
             ).inOrder()
         }
@@ -413,21 +434,21 @@ internal class LendingEarnProductTest {
                 hasPendingTx = false,
                 isOpen = true,
                 expectedPrimary = EarnActionItem(action = Deposit(), label = ADD_FUNDS),
-                expectedSecondary = listOf(EarnActionItem(action = Withdraw())),
+                expectedSecondary = listOf(EarnActionItem(action = WITHDRAW)),
             ),
             ActionsModel(
                 position = BigDecimal.ONE,
                 hasPendingTx = true,
                 isOpen = true,
                 expectedPrimary = EarnActionItem(action = Deposit(), block = PENDING_BLOCK, label = ADD_FUNDS),
-                expectedSecondary = listOf(EarnActionItem(action = Withdraw(), block = PENDING_BLOCK)),
+                expectedSecondary = listOf(EarnActionItem(action = WITHDRAW, block = PENDING_BLOCK)),
             ),
             ActionsModel(
                 position = BigDecimal.ONE,
                 hasPendingTx = false,
                 isOpen = false,
                 expectedPrimary = EarnActionItem(action = Deposit(), block = CLOSED_BLOCK, label = ADD_FUNDS),
-                expectedSecondary = listOf(EarnActionItem(action = Withdraw())),
+                expectedSecondary = listOf(EarnActionItem(action = WITHDRAW)),
             ),
         )
     }
@@ -626,6 +647,7 @@ internal class LendingEarnProductTest {
     )
 
     private companion object {
+        val WITHDRAW = Withdraw(notice = resourceReference(R.string.lending_withdraw_instant_notice))
         val FEE_TEXT = BigDecimal.ZERO.format { percent(minFractionDigits = 0) }
         val RATE = EarnProductRate(fraction = BigDecimal("0.055"), type = EarnRateType.APY)
         val ADD_FUNDS = resourceReference(R.string.common_add_funds)

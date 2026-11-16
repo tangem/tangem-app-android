@@ -50,7 +50,6 @@ internal class AaveLendingProvider @Inject constructor(
     private val assetResolver: AaveAssetResolver,
     private val markets: AaveMarkets,
     private val moduleReader: AaveModuleReader,
-    private val minDepositProvider: AaveMinDepositProvider,
     private val apyHistoryLoader: AaveApyHistoryLoader,
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val networkStatusSupplier: SingleNetworkStatusSupplier,
@@ -119,9 +118,6 @@ internal class AaveLendingProvider @Inject constructor(
     override suspend fun refreshPosition(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit> =
         fetchStatus(userWalletId, asset)
 
-    override suspend fun minDeposit(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, BigDecimal> =
-        minDepositProvider.get(userWalletId, asset)
-
     override suspend fun apyHistory(asset: LendingAsset, period: EarnPeriod): Either<Throwable, EarnApyHistory> =
         apyHistoryLoader.load(asset, period)
 
@@ -148,7 +144,8 @@ internal class AaveLendingProvider @Inject constructor(
 
         return LendingMarket(
             rate = market?.effectiveApy?.percentToApy(),
-            isOpen = isSupported && market?.isActive == true,
+            // The market's isActive is the Yield Mode switch of WETH, which the backend keeps off while Lending owns it
+            isOpen = isSupported,
             deposit = read?.let { status.depositGate(it.toState()) } ?: chain.unreadGate(),
             position = position?.let(::LendingPosition),
             maxWithdraw = if (position != null && liquidity != null) position.min(liquidity) else position,
