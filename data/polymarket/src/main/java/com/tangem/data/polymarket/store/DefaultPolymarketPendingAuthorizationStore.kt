@@ -36,7 +36,7 @@ internal class DefaultPolymarketPendingAuthorizationStore(
     ): Either<PolymarketSessionKeyError, PolymarketPendingAuthorization?> = withContext(dispatchers.io) {
         runSuspendCatching { secureStorage.getAsString(storageKey(userWalletId)) }.fold(
             onSuccess = { payload ->
-                if (payload != null) decoded(userWalletId, payload).right() else missing(userWalletId)
+                if (payload != null) decoded(userWalletId, payload) else missing(userWalletId)
             },
             onFailure = { error -> unreadable(userWalletId, error) },
         )
@@ -46,8 +46,12 @@ internal class DefaultPolymarketPendingAuthorizationStore(
         userWalletId: UserWalletId,
         pending: PolymarketPendingAuthorization,
     ): Either<PolymarketSessionKeyError, Unit> = withContext(dispatchers.io) {
+        val lastDeadline = pending.lastDeadline() ?: run {
+            TangemLogger.e("Pending session key authorization of $userWalletId not kept: deadline is not a number")
+            return@withContext PolymarketSessionKeyError.Failure(IllegalArgumentException(UNPARSEABLE_DEADLINE)).left()
+        }
         Either.catch {
-            inFlightUntil.updateData { marked -> marked + (userWalletId.markerKey() to pending.lastDeadline()) }
+            inFlightUntil.updateData { marked -> marked + (userWalletId.markerKey() to lastDeadline.toString()) }
             val payload = json.encodeToString(PolymarketPendingAuthorizationDTO.serializer(), pending.toDTO())
             secureStorage.store(storageKey(userWalletId), payload)
         }.onLeft { clearMarker(userWalletId) }.mapLeft(PolymarketSessionKeyError::Failure)
@@ -84,28 +88,35 @@ internal class DefaultPolymarketPendingAuthorizationStore(
             }
     }
 
-    private suspend fun decoded(userWalletId: UserWalletId, payload: String): PolymarketPendingAuthorization? =
-        runSuspendCatching {
-            json.decodeFromString(PolymarketPendingAuthorizationDTO.serializer(), payload).toDomain()
-        }.getOrElse { error ->
-            drop(userWalletId, error)
-            null
-        }
+    private suspend fun decoded(
+        userWalletId: UserWalletId,
+        payload: String,
+    ): Either<PolymarketSessionKeyError, PolymarketPendingAuthorization?> = runSuspendCatching {
+        json.decodeFromString(PolymarketPendingAuthorizationDTO.serializer(), payload).toDomain()
+    }.fold(
+        onSuccess = { it.right() },
+        onFailure = { error -> drop(userWalletId, error) },
+    )
 
     private suspend fun unreadable(
         userWalletId: UserWalletId,
         error: Throwable,
     ): Either<PolymarketSessionKeyError, PolymarketPendingAuthorization?> = if (error.isPermanentKeyLoss()) {
         drop(userWalletId, error)
-        null.right()
     } else {
         TangemLogger.e("Pending session key authorization of $userWalletId unreadable: ${error::class.simpleName}")
         PolymarketSessionKeyError.Failure(error).left()
     }
 
-    private suspend fun drop(userWalletId: UserWalletId, error: Throwable) {
+    private suspend fun drop(
+        userWalletId: UserWalletId,
+        error: Throwable,
+    ): Either<PolymarketSessionKeyError, PolymarketPendingAuthorization?> {
         TangemLogger.e("Pending session key authorization of $userWalletId dropped: ${error::class.simpleName}")
-        clear(userWalletId)
+        runSuspendCatching { secureStorage.delete(storageKey(userWalletId)) }.onFailure { deleteError ->
+            TangemLogger.e("Failed to drop the pending session key authorization of $userWalletId", deleteError)
+        }
+        return missing(userWalletId)
     }
 
     private fun storageKey(userWalletId: UserWalletId): String = KEY_PREFIX + userWalletId.stringValue.lowercase()
@@ -113,13 +124,17 @@ internal class DefaultPolymarketPendingAuthorizationStore(
     private companion object {
         const val KEY_PREFIX = "polymarket_pending_authorization_"
         const val UNREADABLE_IN_FLIGHT = "Pending authorization unreadable while it may still land"
+        const val UNPARSEABLE_DEADLINE = "Pending authorization deadline is not a number"
     }
 }
 
 private fun UserWalletId.markerKey(): String = stringValue.lowercase()
 
-private fun PolymarketPendingAuthorization.lastDeadline(): String =
-    maxOf(revocation.deadline.toLongOrNull() ?: 0L, authorization.deadline.toLongOrNull() ?: 0L).toString()
+private fun PolymarketPendingAuthorization.lastDeadline(): Long? {
+    val revocationDeadline = revocation.deadline.toLongOrNull() ?: return null
+    val authorizationDeadline = authorization.deadline.toLongOrNull() ?: return null
+    return maxOf(revocationDeadline, authorizationDeadline)
+}
 
 private fun Throwable.isPermanentKeyLoss(): Boolean = generateSequence(this) { it.cause }
     .any { it is KeyPermanentlyInvalidatedException || it is UnrecoverableKeyException }

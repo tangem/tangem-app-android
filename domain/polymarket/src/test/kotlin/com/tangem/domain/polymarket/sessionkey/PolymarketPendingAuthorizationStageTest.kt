@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigInteger
 import java.time.Instant
 
@@ -52,6 +53,21 @@ internal class PolymarketPendingAuthorizationStageTest {
         fun `GIVEN an authorization nonce that is not a number WHEN stageAt THEN the nonce moved`() {
             // Arrange
             val pending = pending(authorizationNonce = "eight")
+
+            // Act
+            val actual = pending.stageAt(emptyList(), REVOCATION_NONCE, nowMillis = NOW_MILLIS)
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketPendingAuthorizationStage.NonceMoved)
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = ["six", "5", "8"])
+        fun `GIVEN a revocation nonce not right before the authorization WHEN stageAt THEN the nonce moved`(
+            revocationNonce: String,
+        ) {
+            // Arrange
+            val pending = pending().let { it.copy(revocation = it.revocation.copy(nonce = revocationNonce)) }
 
             // Act
             val actual = pending.stageAt(emptyList(), REVOCATION_NONCE, nowMillis = NOW_MILLIS)

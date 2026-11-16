@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -103,18 +104,77 @@ internal class DefaultPolymarketPendingAuthorizationStoreTest {
     }
 
     @Test
-    fun `GIVEN the storage key is permanently invalidated WHEN get THEN null and the key is deleted`() = runTest {
+    fun `GIVEN a lost key after the deadlines WHEN get THEN null and all is deleted`() =
+        runTest {
+            // Arrange
+            store.store(USER_WALLET_ID, pending())
+            secureStorage.failReads = true
+            secureStorage.readFailure = IllegalStateException(DECRYPTION_FAILED, UnrecoverableKeyException("Key lost"))
+            now = Instant.ofEpochSecond(LAST_DEADLINE.toLong())
+
+            // Act
+            val actual = store.get(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(null.right())
+            assertThat(secureStorage.entries).isEmpty()
+            assertThat(inFlightUntil.data.first()).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN a lost key while the pair may land WHEN get THEN Failure, marker kept`() =
+        runTest {
+            // Arrange
+            store.store(USER_WALLET_ID, pending())
+            secureStorage.failReads = true
+            secureStorage.readFailure = IllegalStateException(DECRYPTION_FAILED, UnrecoverableKeyException("Key lost"))
+
+            // Act
+            val actual = store.get(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual.leftOrNull()).isInstanceOf(PolymarketSessionKeyError.Failure::class.java)
+            assertThat(secureStorage.entries).isEmpty()
+            assertThat(inFlightUntil.data.first()).containsExactly(MARKER_KEY, LAST_DEADLINE)
+        }
+
+    @Test
+    fun `GIVEN a corrupt payload while the pair may land WHEN get THEN Failure, marker kept`() =
+        runTest {
+            // Arrange
+            store.store(USER_WALLET_ID, pending())
+            secureStorage.entries[STORAGE_KEY] = "{not a pending authorization"
+
+            // Act
+            val actual = store.get(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual.leftOrNull()).isInstanceOf(PolymarketSessionKeyError.Failure::class.java)
+            assertThat(secureStorage.entries).isEmpty()
+            assertThat(inFlightUntil.data.first()).containsExactly(MARKER_KEY, LAST_DEADLINE)
+        }
+
+    @ParameterizedTest
+    @MethodSource("provideUnparseableDeadlines")
+    fun `GIVEN a deadline that is not a number WHEN store THEN Failure and nothing is written`(
+        revocationDeadline: String,
+        authorizationDeadline: String,
+    ) = runTest {
         // Arrange
-        store.store(USER_WALLET_ID, pending())
-        secureStorage.failReads = true
-        secureStorage.readFailure = IllegalStateException("Decryption failed", UnrecoverableKeyException("Key lost"))
+        val pending = pending().let {
+            it.copy(
+                revocation = it.revocation.copy(deadline = revocationDeadline),
+                authorization = it.authorization.copy(deadline = authorizationDeadline),
+            )
+        }
 
         // Act
-        val actual = store.get(USER_WALLET_ID)
+        val actual = store.store(USER_WALLET_ID, pending)
 
         // Assert
-        assertThat(actual).isEqualTo(null.right())
+        assertThat(actual.leftOrNull()).isInstanceOf(PolymarketSessionKeyError.Failure::class.java)
         assertThat(secureStorage.entries).isEmpty()
+        assertThat(inFlightUntil.data.first()).isEmpty()
     }
 
     @ParameterizedTest
@@ -266,6 +326,11 @@ internal class DefaultPolymarketPendingAuthorizationStoreTest {
         )
     }
 
+    private fun provideUnparseableDeadlines() = listOf(
+        Arguments.of("soon", "1789431200"),
+        Arguments.of("1789430600", ""),
+    )
+
     private fun provideTransientReadFailures() = listOf(
         IllegalStateException("Keystore is locked"),
         GeneralSecurityException("Keystore operation failed"),
@@ -277,6 +342,7 @@ internal class DefaultPolymarketPendingAuthorizationStoreTest {
     )
 
     private companion object {
+        const val DECRYPTION_FAILED = "Decryption failed"
         val USER_WALLET_ID = UserWalletId("011")
         const val STORAGE_KEY = "polymarket_pending_authorization_011"
         const val OWNER = "0x1111111111111111111111111111111111111111"
