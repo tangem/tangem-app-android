@@ -710,6 +710,45 @@ internal class OnrampMainComponentModelTest {
         }
 
         @Test
+        fun `GIVEN manual refresh pending WHEN screen returns THEN country loading waits for the replacement check`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            var countrySubscriptions = 0
+            every { getOnrampCountryUseCase() } answers {
+                countrySubscriptions++
+                flowOf(onrampCountry("USD").right())
+            }
+            val model = createModel(scheduler, quotesFlow = emptyFlow())
+            model.onStart()
+            scheduler.runCurrent()
+            val refreshed = CompletableDeferred<Either<OnrampError, OnrampAvailability>>()
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } coAnswers { refreshed.await() }
+            model.onRefresh()
+            scheduler.runCurrent()
+            val replacement = CompletableDeferred<Either<OnrampError, OnrampAvailability>>()
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } coAnswers { replacement.await() }
+            val subscriptionsBeforeReturn = countrySubscriptions
+
+            // Act
+            model.onStop()
+            model.onStart()
+            scheduler.runCurrent()
+            val subscriptionsWhileReplacementPending = countrySubscriptions
+            replacement.complete(
+                OnrampAvailability.Available(onrampCountry("USD"), onrampCountry("USD").defaultCurrency).right(),
+            )
+            scheduler.runCurrent()
+
+            // Assert
+            try {
+                assertThat(subscriptionsWhileReplacementPending).isEqualTo(subscriptionsBeforeReturn)
+                assertThat(countrySubscriptions).isEqualTo(subscriptionsBeforeReturn + 1)
+            } finally {
+                model.onDestroy()
+            }
+        }
+
+        @Test
         fun `GIVEN superseded availability request WHEN old failure arrives THEN current content is retained`() {
             // Arrange
             val scheduler = TestCoroutineScheduler()

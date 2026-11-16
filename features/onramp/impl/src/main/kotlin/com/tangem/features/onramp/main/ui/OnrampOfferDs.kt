@@ -49,7 +49,8 @@ internal fun OfferDs(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier
     } else {
         RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     }
-    val isBuyEnabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
+    val isBuyEnabled = onrampOfferUM.isBuyEnabled &&
+        onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
         onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted
     TangemSurface(
         modifier = modifier.fillMaxWidth(),

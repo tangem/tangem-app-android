@@ -213,7 +213,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private var sentGeoRestrictionProviders: Set<String> = emptySet()
     private val conciergeWaitlistJobHolder = JobHolder()
     private val countrySubscriptionJobHolder = JobHolder()
-    private val availabilityCheckJobHolder = JobHolder()
+    private var availabilityCheckJob: Job? = null
     private var isCountryBlocked = false
     private var ipRestrictedRegionName: String? = null
     private var isIpCheckPending = isCountryByIpEnabled
@@ -331,7 +331,8 @@ internal class OnrampMainComponentModel @Inject constructor(
         }
         modelScope.launch {
             clearOnrampCacheUseCase()
-            launchAvailabilityCheck().join()
+            launchAvailabilityCheck()
+            awaitLatestAvailabilityCheck()
             handleOnrampAvailable()
         }
     }
@@ -403,11 +404,17 @@ internal class OnrampMainComponentModel @Inject constructor(
         )
     }
 
-    private fun launchAvailabilityCheck(): Job {
-        availabilityCheckJobHolder.cancel()
-        return modelScope.launch {
-            checkAvailability()
-        }.saveIn(availabilityCheckJobHolder)
+    private fun launchAvailabilityCheck() {
+        availabilityCheckJob?.cancel()
+        availabilityCheckJob = modelScope.launch { checkAvailability() }
+    }
+
+    // A screen return replaces the running check; pairs need the payment methods only the latest one refills.
+    private suspend fun awaitLatestAvailabilityCheck() {
+        do {
+            val job = availabilityCheckJob ?: return
+            job.join()
+        } while (job !== availabilityCheckJob)
     }
 
     private suspend fun checkAvailability() {
