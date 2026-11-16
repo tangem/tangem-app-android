@@ -835,7 +835,7 @@ internal class LendingSessionTest {
             val plan = withdrawPlan(amount = POSITION, isEntire = true)
             val grownPosition = POSITION + BigDecimal("0.001")
             arrangeState(assetState(position = grownPosition, maxWithdraw = grownPosition))
-            arrangeWithdraw(amount = POSITION, position = grownPosition)
+            arrangeWithdraw(amount = grownPosition, position = grownPosition)
             arrangeVerifier(Unit.right())
 
             // Act
@@ -855,32 +855,32 @@ internal class LendingSessionTest {
         }
 
         @Test
-        fun `GIVEN entire withdraw rebuilt as partial after position grew WHEN verify THEN returns the rebuilt plan`() =
+        fun `GIVEN entire withdraw, grown position and different rebuilt transactions WHEN verify THEN the changed plan stays entire`() =
             runTest {
                 // Arrange
                 val plan = withdrawPlan(amount = POSITION, isEntire = true)
                 val grownPosition = POSITION + BigDecimal("0.001")
-                val partialWithdraw = rawWithdraw.withCallData(OTHER_CALL)
+                val rebuiltWithdraw = rawWithdraw.withCallData(OTHER_CALL)
                 arrangeState(assetState(position = grownPosition, maxWithdraw = grownPosition))
                 coEvery {
                     transactions.withdraw(
                         userWalletId = userWalletId,
                         asset = asset,
-                        amount = POSITION,
+                        amount = grownPosition,
                         position = grownPosition,
                         state = TestProviderState(PLAN_KEY),
                     )
-                } returns partialWithdraw.right()
+                } returns rebuiltWithdraw.right()
                 coEvery {
-                    transactions.estimate(userWallet = userWallet, asset = asset, txs = listOf(partialWithdraw))
-                } returns listOf(partialWithdraw.copy(fee = ethFee(WITHDRAW_GAS))).right()
+                    transactions.estimate(userWallet = userWallet, asset = asset, txs = listOf(rebuiltWithdraw))
+                } returns listOf(rebuiltWithdraw.copy(fee = ethFee(WITHDRAW_GAS))).right()
 
                 // Act
                 val actual = session.verify(plan)
 
                 // Assert
-                val expected = withdrawPlan(amount = POSITION, isEntire = false)
-                    .copy(txs = listOf(partialWithdraw.copy(fee = ethFee(WITHDRAW_GAS))))
+                val expected = withdrawPlan(amount = grownPosition, isEntire = true)
+                    .copy(txs = listOf(rebuiltWithdraw.copy(fee = ethFee(WITHDRAW_GAS))))
                 assertThat(actual).isEqualTo(EarnVerification.Changed(expected))
             }
 
