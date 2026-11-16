@@ -207,7 +207,7 @@ internal class AaveTransactionVerifierTest {
         ),
         invalid(
             name = "initToken of another token",
-            txs = listOf(prepare(CallDataFactory.getInitTokenCallData(OTHER, coin())), deposit()),
+            txs = listOf(prepare(CallDataFactory.getNativeInitTokenCallData(OTHER, Blockchain.Ethereum)), deposit()),
             read = needsInit,
             reason = "Unexpected preparation call",
         ),
@@ -423,8 +423,8 @@ internal class AaveTransactionVerifierTest {
         val enter = CallDataFactory.getEnterWithNativeCallData()
         val exit = CallDataFactory.getExitNativeCallData()
         val deploy = deployFor(OWNER)
-        val initToken = CallDataFactory.getInitTokenCallData(WETH, coin())
-        val reactivate = CallDataFactory.getReactivateTokenCallData(WETH, coin())
+        val initToken = CallDataFactory.getNativeInitTokenCallData(WETH, Blockchain.Ethereum)
+        val reactivate = CallDataFactory.getNativeReactivateTokenCallData(WETH, Blockchain.Ethereum)
         val approve = ApprovalERC20TokenCallData(spenderAddress = OTHER, amount = null)
 
         fun read(version: YieldModuleVersionStatus, status: YieldModuleStatus?) =
@@ -437,7 +437,7 @@ internal class AaveTransactionVerifierTest {
             type = AmountType.Token(Token(symbol = "WETH", contractAddress = WETH, decimals = 18)),
         )
 
-        fun deployFor(owner: String) = CallDataFactory.getDeployCallData(owner, WETH, coin())
+        fun deployFor(owner: String) = CallDataFactory.getNativeDeployCallData(owner, WETH, Blockchain.Ethereum)
 
         fun withdrawNative(value: BigDecimal) = CallDataFactory.getWithdrawNativeCallData(coin(value))
 

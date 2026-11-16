@@ -656,7 +656,7 @@ internal class AaveLendingTransactionsTest {
         val GAS_WITHDRAW: BigInteger = BigInteger.valueOf(150_000)
 
         val enter = CallDataFactory.getEnterWithNativeCallData()
-        val initToken = CallDataFactory.getInitTokenCallData(WETH, coin())
+        val initToken = CallDataFactory.getNativeInitTokenCallData(WETH, Blockchain.Ethereum)
         val deploy = CallDataFactory.getNativeDeployCallData(OWNER, WETH, Blockchain.Ethereum)
         val reactivate = CallDataFactory.getNativeReactivateTokenCallData(WETH, Blockchain.Ethereum)
         // The upgrade call data has no equals, so a kept upgrade is compared by the same instance
