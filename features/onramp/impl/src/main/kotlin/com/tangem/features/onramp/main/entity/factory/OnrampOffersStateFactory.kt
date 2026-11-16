@@ -37,7 +37,11 @@ internal class OnrampOffersStateFactory(
                     is OnrampQuote.Error,
                     -> Unit
                     is OnrampQuote.Data -> if (currentQuote.isRestricted) {
-                        allOffersUM.add(createRestrictedOfferUM(quote = currentQuote, category = block.category))
+                        val restrictedOffer = createRestrictedOfferUM(
+                            quote = currentQuote,
+                            category = block.category,
+                        )
+                        allOffersUM.add(restrictedOffer)
                     } else {
                         val advantages = mapOfferAdvantagesDTOtoUM(offer.advantages)
                         val category = mapOfferCategoryDTOtoUM(block.category)
@@ -76,17 +80,16 @@ internal class OnrampOffersStateFactory(
 
         if (allOffersUM.isEmpty()) return OnrampOffersBlockUM.Empty
 
+        val allOffersButton = OnrampAllOffersButtonConfig(
+            title = TextReference.Res(R.string.onramp_all_offers_button_title),
+            onClick = { onrampIntents.openProviders() },
+        )
+
         return OnrampOffersBlockUM.Content(
             recentOffer = allOffersUM.firstOrNull { it.category == OnrampOfferCategoryUM.RecentlyUsed },
             recommended = allOffersUM.filter { it.category == OnrampOfferCategoryUM.Recommended }.toPersistentList(),
-            onrampAllOffersButtonConfig = if (offersBlocks.any { it.hasMoreOffers }) {
-                OnrampAllOffersButtonConfig(
-                    title = TextReference.Res(R.string.onramp_all_offers_button_title),
-                    onClick = { onrampIntents.openProviders() },
-                )
-            } else {
-                null
-            },
+            onrampAllOffersButtonConfig = allOffersButton.takeIf { offersBlocks.any { block -> block.hasMoreOffers } },
+            allOffersButtonIfOfferHidden = allOffersButton,
         )
     }
 

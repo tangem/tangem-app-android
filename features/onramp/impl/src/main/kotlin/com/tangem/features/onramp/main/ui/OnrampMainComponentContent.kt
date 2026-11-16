@@ -277,11 +277,12 @@ private fun Content(
 
         TangemThemeRedesign {
             marketingBannerComponent.Content(Modifier.fillMaxWidth())
-            ctaMarketingBannerComponent.Content(Modifier.fillMaxWidth())
+            ctaMarketingBannerComponent.CtaContent(slot = null, modifier = Modifier.fillMaxWidth())
         }
 
         OnrampOffersContent(
             state = state.offersBlockState,
+            ctaMarketingBannerComponent = ctaMarketingBannerComponent,
             linkedMarketingBannerComponent = linkedMarketingBannerComponent,
         )
 
