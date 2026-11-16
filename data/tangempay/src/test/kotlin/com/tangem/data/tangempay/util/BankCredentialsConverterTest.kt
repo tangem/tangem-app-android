@@ -17,13 +17,15 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class BankCredentialsConverterTest {
 
+    private val converter = BankCredentialsConverter(isDepositFeeRead = true)
+
     @Test
     fun `GIVEN full response WHEN convert THEN all fields mapped`() {
         // Arrange
         val response = result()
 
         // Act
-        val actual = BankCredentialsConverter.convert(response)
+        val actual = converter.convert(response)
 
         // Assert
         val expected = BankCredentials(
@@ -71,7 +73,7 @@ internal class BankCredentialsConverterTest {
         )
 
         // Act
-        val actual = BankCredentialsConverter.convert(response)
+        val actual = converter.convert(response)
 
         // Assert
         val expected = BankCredentials(
@@ -103,7 +105,7 @@ internal class BankCredentialsConverterTest {
         )
 
         // Act
-        val actual = BankCredentialsConverter.convert(response)
+        val actual = converter.convert(response)
 
         // Assert
         assertThat(actual.transferMessage).isNull()
@@ -116,9 +118,10 @@ internal class BankCredentialsConverterTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN deposit fee or legacy fee WHEN convert THEN the fee parts are mapped`(model: FeeModel) {
+    fun `GIVEN deposit fee or legacy fee WHEN convert THEN the deposit fee is read only with MXN`(model: FeeModel) {
         // Act
-        val actual = BankCredentialsConverter.convert(result(fee = model.fee, depositFee = model.depositFee))
+        val actual = BankCredentialsConverter(isDepositFeeRead = model.isMxnEnabled)
+            .convert(result(fee = model.fee, depositFee = model.depositFee))
 
         // Assert
         assertThat(actual.depositFee).isEqualTo(model.expected)
@@ -128,7 +131,7 @@ internal class BankCredentialsConverterTest {
     @MethodSource("provideExchangeRateModels")
     fun `GIVEN exchange rate WHEN convert THEN mapped only when complete`(model: ExchangeRateModel) {
         // Act
-        val actual = BankCredentialsConverter.convert(result(exchangeRate = model.exchangeRate))
+        val actual = converter.convert(result(exchangeRate = model.exchangeRate))
 
         // Assert
         assertThat(actual.exchangeRate).isEqualTo(model.expected)
@@ -140,7 +143,7 @@ internal class BankCredentialsConverterTest {
         val response = result(rail = " ")
 
         // Act
-        val actual = BankCredentialsConverter.convert(response)
+        val actual = converter.convert(response)
 
         // Assert
         assertThat(actual.rail).isNull()
@@ -152,7 +155,7 @@ internal class BankCredentialsConverterTest {
         val response = result(transferMessage = "   ")
 
         // Act
-        val actual = BankCredentialsConverter.convert(response)
+        val actual = converter.convert(response)
 
         // Assert
         assertThat(actual.transferMessage).isNull()
@@ -166,7 +169,7 @@ internal class BankCredentialsConverterTest {
         )
 
         // Act
-        val actual = BankCredentialsConverter.convert(response)
+        val actual = converter.convert(response)
 
         // Assert
         assertThat(actual.depositLimit?.period).isEqualTo(BankCredentials.DepositLimit.Period.UNKNOWN)
@@ -180,7 +183,7 @@ internal class BankCredentialsConverterTest {
         )
 
         // Act
-        val actual = BankCredentialsConverter.convert(response)
+        val actual = converter.convert(response)
 
         // Assert
         assertThat(actual.depositLimit).isNull()
@@ -220,6 +223,24 @@ internal class BankCredentialsConverterTest {
             fee = legacyFee(type = "flat", amount = "n/a"),
             depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
             expected = fixedFee("0", currency = "USD"),
+        ),
+        FeeModel(
+            fee = legacyFee(type = "variable", amount = "1.00"),
+            depositFee = sharedFee(
+                type = "ACH_ONRAMP",
+                calculationType = "PERCENTAGE",
+                amount = "1.00",
+                fixedAmount = "0.50",
+                currency = "USD",
+            ),
+            expected = percentageFee("1.00"),
+            isMxnEnabled = false,
+        ),
+        FeeModel(
+            fee = null,
+            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
+            expected = null,
+            isMxnEnabled = false,
         ),
     )
 
@@ -326,6 +347,7 @@ internal class BankCredentialsConverterTest {
         val fee: BankCredentialsResponse.LegacyFee?,
         val depositFee: FeesResponse.Fee? = null,
         val expected: BankCredentials.DepositFee?,
+        val isMxnEnabled: Boolean = true,
     )
 
     data class ExchangeRateModel(

@@ -4,9 +4,12 @@ import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.model.AccountFeeGroupType
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.spend.datasource.tangempay.models.response.FeesResponse
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.converter.Converter
 
-internal object AccountFeeConverter : Converter<FeesResponse.Fee, AccountFee?> {
+internal class AccountFeeConverter(
+    @RemoveWithToggle(toggleName = "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED") private val isFixedAmountRead: Boolean,
+) : Converter<FeesResponse.Fee, AccountFee?> {
 
     override fun convert(value: FeesResponse.Fee): AccountFee? {
         return AccountFee(
@@ -17,7 +20,7 @@ internal object AccountFeeConverter : Converter<FeesResponse.Fee, AccountFee?> {
             calculationType = FeeCalculationType.fromString(value.calculationType),
             amount = value.amount ?: return null,
             currency = value.currency?.takeIf(String::isNotBlank) ?: return null,
-            fixedAmount = value.fixedAmount,
+            fixedAmount = value.fixedAmount?.takeIf { isFixedAmountRead },
         )
     }
 }
