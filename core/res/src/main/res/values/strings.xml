@@ -3394,6 +3394,11 @@
   <string name="tangempay_kyc_rejected_button_text">Hide status</string>
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
   <string name="tangempay_kyc_rejected_description_span">your profile</string>
+  <plurals name="tangempay_main_group_subtitle">
+    <item quantity="one">%d account</item>
+    <item quantity="other">%d accounts</item>
+  </plurals>
+  <string name="tangempay_main_group_title">Pay</string>
   <string name="tangempay_main_select_plan">Select plan</string>
   <string name="tangempay_maximum_cards_issued_description">Close one to add a new card</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Upgrade plan to have more cards</string>

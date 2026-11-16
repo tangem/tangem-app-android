@@ -36,22 +36,26 @@ import com.tangem.core.ui.R as CoreUiR
 internal fun MoneyAccountMainBlockContent(
     state: MoneyAccountMainUM,
     isBalanceHidden: Boolean,
+    isGrouped: Boolean,
     modifier: Modifier = Modifier,
 ) {
     when (state) {
         is MoneyAccountMainUM.Empty -> Unit
         is MoneyAccountMainUM.Onboarding -> MoneyAccountRow(
+            isGrouped = isGrouped,
             subtitle = state.subtitle,
             modifier = modifier,
             onClick = state.onClick,
         )
         is MoneyAccountMainUM.Failed -> MoneyAccountRow(
+            isGrouped = isGrouped,
             subtitle = state.subtitle,
             modifier = modifier,
             onClick = state.onClick,
             subtitleColor = TangemTheme.colors3.text.status.error,
         )
         is MoneyAccountMainUM.Content -> MoneyAccountRow(
+            isGrouped = isGrouped,
             subtitle = state.subtitle,
             balance = state.balance,
             isBalanceHidden = isBalanceHidden,
@@ -59,12 +63,13 @@ internal fun MoneyAccountMainBlockContent(
             modifier = modifier,
             onClick = state.onClick,
         )
-        is MoneyAccountMainUM.Unavailable -> MoneyAccountUnavailable(modifier)
+        is MoneyAccountMainUM.Unavailable -> MoneyAccountUnavailable(isGrouped = isGrouped, modifier = modifier)
     }
 }
 
 @Composable
 private fun MoneyAccountRow(
+    isGrouped: Boolean,
     subtitle: TextReference,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -76,7 +81,10 @@ private fun MoneyAccountRow(
     Box(modifier = modifier) {
         TangemRow(
             modifier = Modifier
-                .moneyAccountCard(isActionRequired = isActionRequired)
+                .moneyAccountCard(
+                    isActionRequired = isActionRequired,
+                    isGrouped = isGrouped,
+                )
                 .testTag(MoneyAccountTestTags.MAIN_ROW),
             contentLead = TangemRowContentLead.Start,
             verticalAlignment = TangemRowVerticalAlignment.Center,
@@ -114,7 +122,7 @@ private fun MoneyAccountRow(
                 { TangemRowText(text = balance.currency, role = TangemRowTextRole.Subvalue) }
             },
         )
-        if (isActionRequired) {
+        if (isActionRequired && !isGrouped) {
             TangemGlowRing(
                 modifier = Modifier.matchParentSize(),
                 variant = TangemGlowRing.Variant.Warning,
@@ -125,10 +133,13 @@ private fun MoneyAccountRow(
 }
 
 @Composable
-private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
+private fun MoneyAccountUnavailable(isGrouped: Boolean, modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier
-            .moneyAccountCard()
+            .moneyAccountCard(
+                isActionRequired = false,
+                isGrouped = isGrouped,
+            )
             .testTag(MoneyAccountTestTags.MAIN_ROW),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
@@ -188,11 +199,14 @@ private fun MoneyAccountFiatAmount(text: String, isBalanceFlickering: Boolean, i
 }
 
 @Composable
-private fun Modifier.moneyAccountCard(isActionRequired: Boolean = false): Modifier = this
-    .clip(RoundedCornerShape(24.dp))
-    .background(
-        if (isActionRequired) TangemTheme.colors3.bg.status.warningSubtle else TangemTheme.colors3.bg.secondary,
-    )
+private fun Modifier.moneyAccountCard(isActionRequired: Boolean, isGrouped: Boolean): Modifier = if (isGrouped) {
+    this
+} else {
+    clip(RoundedCornerShape(24.dp))
+        .background(
+            if (isActionRequired) TangemTheme.colors3.bg.status.warningSubtle else TangemTheme.colors3.bg.secondary,
+        )
+}
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
@@ -206,6 +220,7 @@ private fun MoneyAccountMainBlockContent_Preview(
         MoneyAccountMainBlockContent(
             state = state,
             isBalanceHidden = false,
+            isGrouped = false,
             modifier = Modifier
                 .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
