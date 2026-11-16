@@ -37,6 +37,12 @@ sealed class MoneyAccountStatusValue {
         abstract val customerId: String
 
         @Serializable
+        data class NotStarted(
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("customer_id") override val customerId: String,
+        ) : Onboarding()
+
+        @Serializable
         data class Activating(
             @SerialName("source") override val source: StatusSource,
             @SerialName("customer_id") override val customerId: String,

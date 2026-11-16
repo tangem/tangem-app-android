@@ -118,6 +118,23 @@ internal class MoneyAccountStatusValueDMConverterTest {
         assertThat(restored).isEqualTo(failed.copy(source = StatusSource.CACHE))
     }
 
+    @Test
+    fun `GIVEN not started onboarding WHEN cached and restored THEN empty from cache`() {
+        // Arrange
+        val notStarted = MoneyAccountStatusValue.Onboarding.NotStarted(
+            source = StatusSource.ACTUAL,
+            customerId = "customer-1",
+        )
+
+        // Act
+        val cached = converter.convert(notStarted)
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = cached)
+
+        // Assert
+        assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Empty)
+        assertThat(restored).isEqualTo(MoneyAccountStatusValue.Empty)
+    }
+
     @ParameterizedTest
     @EnumSource(MoneyAccountStatusValue.Onboarding.Activating.Step::class)
     fun `GIVEN activating onboarding WHEN cached and restored THEN step kept from cache`(

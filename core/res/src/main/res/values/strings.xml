@@ -1803,6 +1803,7 @@
   <string name="money_account_balance_unavailable_title">Balance unavailable</string>
   <string name="money_account_banner_proceed">Proceed</string>
   <string name="money_account_close_account">Close account</string>
+  <string name="money_account_main_details_button">Details</string>
   <string name="money_account_main_name">USD account</string>
   <string name="money_account_main_status_action_required">Action required</string>
   <string name="money_account_main_status_activating">Activating…</string>
@@ -1818,6 +1819,9 @@
   <string name="money_account_main_status_dialog_failed_title">We couldn\'t activate your account</string>
   <string name="money_account_main_status_dialog_hide_account">Hide account from home</string>
   <string name="money_account_main_status_dialog_join_waitlist">Join the waitlist</string>
+  <string name="money_account_main_status_dialog_not_started_description">Receive ACH transfers with your own US bank details. Separate balance, your card stays as it is. Ready in up to 2 days.</string>
+  <string name="money_account_main_status_dialog_not_started_terms_link">Tangem Pay Virtual Account Terms</string>
+  <string name="money_account_main_status_dialog_not_started_terms_notice">By tapping Activate, you agree to the\n%s</string>
   <string name="money_account_main_status_dialog_verification_declined_description">Sorry, we couldn\'t verify your identity based on the information provided</string>
   <string name="money_account_main_status_dialog_verification_declined_title">We couldn\'t verify your identity</string>
   <string name="money_account_main_status_dialog_verification_description">This usually takes a few minutes. You can check the status below</string>
