@@ -124,6 +124,9 @@ internal class PolymarketSessionKeyRenewal(
                 is PolymarketPendingAuthorizationStage.RevocationUnconfirmed -> {
                     raise(PolymarketSessionKeyLifecycleError.Unsettled(stage.revoking))
                 }
+                PolymarketPendingAuthorizationStage.NonceBehind -> {
+                    raise(PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network))
+                }
                 PolymarketPendingAuthorizationStage.Expired,
                 PolymarketPendingAuthorizationStage.NonceMoved,
                 -> raise(PolymarketSessionKeyLifecycleError.StaleSignature(cause = null))
@@ -213,7 +216,8 @@ private fun renewalPastDeadline(lastKnown: PolymarketSessionKey?): PolymarketSes
 
 private fun PolymarketSessionKeyLifecycleError.provesPairUnusable(): Boolean = when (this) {
     is PolymarketSessionKeyLifecycleError.Failed -> !cause.isInconclusive()
-    is PolymarketSessionKeyLifecycleError.StaleSignature -> cause != PolymarketSessionKeyError.NonceAlreadyUsed
+    is PolymarketSessionKeyLifecycleError.StaleSignature -> cause != PolymarketSessionKeyError.NonceAlreadyUsed &&
+        cause !is PolymarketSessionKeyError.RelayerRejected
     is PolymarketSessionKeyLifecycleError.Unsettled,
     PolymarketSessionKeyLifecycleError.OperationInProgress,
     -> false
