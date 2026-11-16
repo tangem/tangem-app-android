@@ -3,7 +3,6 @@ package com.tangem.tap.routing.utils
 import android.net.Uri
 import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import com.tangem.common.routing.deeplink.DeeplinkConst
-import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -18,7 +17,6 @@ import javax.inject.Inject
 /** Receives deep links and keeps the last one until [RootDeepLinkDispatcher] takes it. */
 @ActivityScoped
 internal class DeepLinkFactory @Inject constructor(
-    private val marketingFeatureToggles: MarketingFeatureToggles,
     private val marketingUidBindingRepository: MarketingUidBindingRepository,
     private val appCoroutineScope: AppCoroutineScope,
     private val deepLinkHandlerRegistry: DeepLinkHandlerRegistry,
@@ -64,7 +62,7 @@ internal class DeepLinkFactory @Inject constructor(
 
     fun bindMarketingUid(deeplinkUri: Uri) {
         // `wc:` and other opaque links have no query: getQueryParameters throws for them
-        if (!marketingFeatureToggles.isUidBindingEnabled || deeplinkUri.isOpaque) return
+        if (deeplinkUri.isOpaque) return
 
         val uid = deeplinkUri.getQueryParameters(DeeplinkConst.UID_KEY).firstOrNull(String::isNotEmpty) ?: return
         if (deepLinkHandlerRegistry.find(deeplinkUri) == null) return

@@ -47,7 +47,6 @@ internal class RootDeepLinkDispatcherTest {
     )
 
     private val deepLinkFactory = DeepLinkFactory(
-        marketingFeatureToggles = mockk(),
         marketingUidBindingRepository = mockk(),
         appCoroutineScope = TestAppCoroutineScope(),
         deepLinkHandlerRegistry = deepLinkHandlerRegistry,

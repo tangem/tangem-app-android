@@ -56,7 +56,6 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import com.tangem.features.wallet.WalletFeatureToggles
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -96,7 +95,6 @@ internal class GetWalletNotificationsFactoryTest {
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase = mockk()
     private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk()
     private val getWalletLinkStatusUseCase: GetWalletLinkStatusUseCase = mockk()
-    private val walletFeatureToggles: WalletFeatureToggles = mockk()
     private val clickIntents: WalletClickIntents = mockk(relaxed = true)
 
     private val currencyFactory = MockCryptoCurrencyFactory()
@@ -126,7 +124,6 @@ internal class GetWalletNotificationsFactoryTest {
         checkHotWalletUpgradeBannerUseCase = checkHotWalletUpgradeBannerUseCase,
         isSocialBackupCompletedUseCase = isSocialBackupCompletedUseCase,
         getWalletLinkStatusUseCase = getWalletLinkStatusUseCase,
-        walletFeatureToggles = walletFeatureToggles,
         walletLinkProgressHolder = walletLinkProgressHolder,
     )
 
@@ -152,7 +149,6 @@ internal class GetWalletNotificationsFactoryTest {
             checkHotWalletUpgradeBannerUseCase,
             isSocialBackupCompletedUseCase,
             getWalletLinkStatusUseCase,
-            walletFeatureToggles,
             clickIntents,
             coldResolver,
             coldWallet,
@@ -180,7 +176,6 @@ internal class GetWalletNotificationsFactoryTest {
         every { getUpgradeBannerClosureTimestampUseCase(any()) } returns flowOf(null)
         coEvery { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) } returns false.right()
         every { isSocialBackupCompletedUseCase.flow(any()) } returns flowOf(false)
-        every { walletFeatureToggles.isWalletLinkingEnabled } returns true
         every { getWalletLinkStatusUseCase(any<UserWallet>()) } returns flowOf(true)
         // Balance is loaded and non-zero, so both the outdated-data and add-funds banners stay hidden.
         stubAccountStatusList(balance = LOADED_NON_ZERO)
@@ -232,20 +227,6 @@ internal class GetWalletNotificationsFactoryTest {
             LinkBannerModel(isHotWallet = false),
             LinkBannerModel(isHotWallet = true),
         )
-
-        @Test
-        fun `GIVEN toggle disabled WHEN create THEN link status is not read and no banner is shown`() = runTest {
-            // Arrange
-            every { walletFeatureToggles.isWalletLinkingEnabled } returns false
-            every { getWalletLinkStatusUseCase(any<UserWallet>()) } returns flowOf(false)
-
-            // Act
-            val result = factory.create(coldWallet, clickIntents).first().notifications
-
-            // Assert
-            assertThat(result).isEmpty()
-            verify(exactly = 0) { getWalletLinkStatusUseCase(any<UserWallet>()) }
-        }
 
         @Test
         fun `GIVEN link status unreadable WHEN create THEN notifications are emitted without the banner`() = runTest {

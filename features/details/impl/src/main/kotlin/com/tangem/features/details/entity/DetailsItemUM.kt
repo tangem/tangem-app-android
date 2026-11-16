@@ -26,14 +26,7 @@ internal sealed class DetailsItemUM {
 
         sealed class Item(open val onClick: () -> Unit) {
 
-            /**
-             * @param isMcpEnabled the row stands for MCP agents as well, not just dApps, so it is
-             * named and illustrated differently.
-             */
-            data class WalletConnect(
-                override val onClick: () -> Unit,
-                val isMcpEnabled: Boolean,
-            ) : Item(onClick)
+            data class WalletConnect(override val onClick: () -> Unit) : Item(onClick)
             data class AddressBook(override val onClick: () -> Unit) : Item(onClick)
         }
     }

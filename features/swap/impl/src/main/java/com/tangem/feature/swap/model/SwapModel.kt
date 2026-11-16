@@ -3890,8 +3890,7 @@ internal class SwapModel @Inject constructor(
         swapFeatureToggles.isTronGaslessDexSwapEnabled && isTron(fromSwapCurrencyStatus.currency.network.rawId)
 
     private fun isEvmGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
-        swapFeatureToggles.isEvmGaslessDexSwapEnabled &&
-            isEvmGaslessFeeSupportedForNetwork(fromSwapCurrencyStatus.currency.network)
+        isEvmGaslessFeeSupportedForNetwork(fromSwapCurrencyStatus.currency.network)
 
     /**
      * Loads the approval transaction + its fee, stores both on the current

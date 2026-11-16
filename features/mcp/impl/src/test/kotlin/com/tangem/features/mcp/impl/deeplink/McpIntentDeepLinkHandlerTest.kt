@@ -8,9 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
-import com.tangem.features.mcp.api.McpFeatureToggles
 import io.mockk.clearMocks
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -25,12 +23,10 @@ internal class McpIntentDeepLinkHandlerTest {
 
     private val mcpRequestService: McpRequestService = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    private val mcpFeatureToggles: McpFeatureToggles = mockk()
 
     private val handler = McpIntentDeepLinkHandler(
         mcpRequestService = mcpRequestService,
         analyticsEventHandler = analyticsEventHandler,
-        mcpFeatureToggles = mcpFeatureToggles,
     )
 
     private val exchangeSource = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE)
@@ -40,20 +36,7 @@ internal class McpIntentDeepLinkHandlerTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(mcpRequestService, analyticsEventHandler, mcpFeatureToggles)
-    }
-
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `GIVEN mcp toggle WHEN isEnabled read THEN it follows the toggle`(isMcpEnabled: Boolean) {
-        // Arrange
-        every { mcpFeatureToggles.isMcpEnabled } returns isMcpEnabled
-
-        // Act
-        val actual = handler.isEnabled
-
-        // Assert
-        assertThat(actual).isEqualTo(isMcpEnabled)
+        clearMocks(mcpRequestService, analyticsEventHandler)
     }
 
     @Test

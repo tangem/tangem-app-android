@@ -16,10 +16,6 @@
         "version": "undefined"
     },
     {
-        "name": "AND_18712_EVM_GASLESS_DEX_SWAP_ENABLED",
-        "version": "6.8"
-    },
-    {
         "name": "TWI_1700_POLYMARKET_PHASE_TWO_ENABLED",
         "version": "undefined"
     },
@@ -34,10 +30,6 @@
     {
         "name": "AND_19141_SOLANA_GASLESS_RENT_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "TWI_1906_EXPRESS_V2_ENABLED",
-        "version": "6.8"
     },
     {
         "name": "TWI_1948_YIELD_CONTRIBUTION_ENABLED",

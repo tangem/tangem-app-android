@@ -4,14 +4,12 @@ import android.net.Uri
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
-import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -19,7 +17,6 @@ import javax.inject.Provider
 
 internal class DeepLinkFactoryTest {
 
-    private val marketingFeatureToggles = mockk<MarketingFeatureToggles>()
     private val marketingUidBindingRepository = mockk<MarketingUidBindingRepository>(relaxed = true)
     private val walletHandler = mockk<DeepLinkHandler>(relaxed = true) {
         every { isEnabled } returns true
@@ -27,18 +24,12 @@ internal class DeepLinkFactoryTest {
     private val scope = mockk<CoroutineScope>()
 
     private val deepLinkFactory = DeepLinkFactory(
-        marketingFeatureToggles = marketingFeatureToggles,
         marketingUidBindingRepository = marketingUidBindingRepository,
         appCoroutineScope = TestAppCoroutineScope(),
         deepLinkHandlerRegistry = DeepLinkHandlerRegistry(
             handlers = mapOf("tangem://main" to Provider { walletHandler }),
         ),
     )
-
-    @BeforeEach
-    fun setUp() {
-        every { marketingFeatureToggles.isUidBindingEnabled } returns true
-    }
 
     @Test
     fun `GIVEN deep link WHEN handleDeeplink THEN it is parked with its source and scope`() {
@@ -117,7 +108,6 @@ internal class DeepLinkFactoryTest {
         model: NotBoundMarketingUidModel,
     ) {
         // Arrange
-        every { marketingFeatureToggles.isUidBindingEnabled } returns model.isToggleOn
         val uri = marketingUidUri(scheme = model.scheme, host = model.host, uids = model.uids)
 
         // Act
@@ -152,7 +142,6 @@ internal class DeepLinkFactoryTest {
         val scheme: String = "tangem",
         val host: String? = "main",
         val uids: List<String> = listOf("spring-campaign"),
-        val isToggleOn: Boolean = true,
     ) {
         override fun toString(): String = name
     }
@@ -161,7 +150,6 @@ internal class DeepLinkFactoryTest {
 
         @JvmStatic
         fun provideNotBoundMarketingUidModels(): List<NotBoundMarketingUidModel> = listOf(
-            NotBoundMarketingUidModel(name = "toggle off", isToggleOn = false),
             NotBoundMarketingUidModel(name = "no uid", uids = emptyList()),
             NotBoundMarketingUidModel(name = "empty uid", uids = listOf("")),
             NotBoundMarketingUidModel(name = "unknown target", host = "not_a_route"),
