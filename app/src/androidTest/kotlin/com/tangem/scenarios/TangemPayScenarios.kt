@@ -827,16 +827,11 @@ fun BaseTestCase.chooseWithdrawReceiveToken(tokenName: String) {
     }
 }
 
-/**
- * Starts and ends on the Payment account; expects the first-time swap stories to be disabled. The token
- * selector keeps an expanded account expanded for the whole app session, so only the first call in a
- * session passes [expandPaymentAccount].
- */
+/** Starts and ends on the Payment account; expects the first-time swap stories to be disabled. */
 fun BaseTestCase.checkTangemPayWithdrawableOnlyOnNetwork(
     tokenName: String,
     networkName: String,
     otherNetworkNames: List<String>,
-    expandPaymentAccount: Boolean,
 ) {
     val polygonNetwork = "Polygon"
     val allFilterLabel = getResourceString(CoreResR.string.common_all)
@@ -850,13 +845,7 @@ fun BaseTestCase.checkTangemPayWithdrawableOnlyOnNetwork(
     step("Assert 'Withdraw' screen is displayed") {
         awaitSuccess { onSwapTokenScreen { withdrawTitle.assertIsDisplayed() } }
     }
-    if (expandPaymentAccount) {
-        openWithdrawSourceTokenSelector()
-    } else {
-        step("Click on the source token in the 'From' block") {
-            onSwapTokenScreen { swapSelectTokenIcon.clickWithAssertion() }
-        }
-    }
+    openWithdrawSourceTokenSelector()
     step("Assert only '$tokenName' on '$networkName' is displayed") {
         onSwapSelectTokenScreen {
             awaitSuccess { tokenWithNameAndNetwork(tokenName, networkName).assertIsDisplayed() }
