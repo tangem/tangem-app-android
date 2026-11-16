@@ -16,6 +16,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
@@ -32,6 +33,10 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.fixFee
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
+import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
+import com.tangem.features.earn.api.overview.EarnProductRate
+import com.tangem.features.earn.api.overview.EarnRateType
+import com.tangem.features.earn.lending.impl.analytics.LendingAnalyticsSender
 import com.tangem.features.earn.lending.impl.provider.FakeLendingProvider
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
 import com.tangem.features.earn.lending.impl.provider.LendingDepositGate
@@ -76,6 +81,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -84,6 +90,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.Locale
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -115,6 +122,8 @@ internal class LendingSessionTest {
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val sendTransactionUseCase: SendTransactionUseCase = mockk()
     private val transactionRepository: YieldSupplyTransactionRepository = mockk()
+    private val analyticsSender: LendingAnalyticsSender = mockk(relaxUnitFun = true)
+    private val pendingTracker: YieldSupplyPendingTracker = mockk(relaxUnitFun = true)
     private val provider = FakeLendingProvider(assets = mapOf(eth.id to asset))
 
     private val session = createSession(provider)
@@ -128,7 +137,15 @@ internal class LendingSessionTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(lendingSupplier, transactions, getUserWalletUseCase, sendTransactionUseCase, transactionRepository)
+        clearMocks(
+            lendingSupplier,
+            transactions,
+            getUserWalletUseCase,
+            sendTransactionUseCase,
+            transactionRepository,
+            analyticsSender,
+            pendingTracker,
+        )
         provider.refreshCalls.clear()
         provider.minDepositResult = BigDecimal.ZERO.right()
         every { getUserWalletUseCase(userWalletId) } returns userWallet.right()
@@ -251,6 +268,19 @@ internal class LendingSessionTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Prepare {
 
+        private var previousLocale: Locale = Locale.getDefault()
+
+        @BeforeEach
+        fun pinLocale() {
+            previousLocale = Locale.getDefault()
+            Locale.setDefault(Locale.US)
+        }
+
+        @AfterEach
+        fun restoreLocale() {
+            Locale.setDefault(previousLocale)
+        }
+
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN deposit transactions WHEN prepare THEN plan carries the estimated ones`(model: PrepareModel) =
@@ -272,6 +302,76 @@ internal class LendingSessionTest {
                 estimated = listOf(estimatedPreparation, estimatedDeposit),
             ),
         )
+
+        @Test
+        fun `GIVEN known rates WHEN prepare deposit THEN plan carries the rate, fee and earnings rows`() = runTest {
+            // Arrange
+            arrangeState(assetState(rate = BigDecimal("0.05"), fiatRate = BigDecimal("2000")))
+            arrangeDeposit(built = listOf(rawDeposit))
+
+            // Act
+            val actual = session.prepare(Deposit(), EarnAmount.Exact(DEPOSIT_AMOUNT), selection(TOTAL_GAS))
+
+            // Assert
+            val expectedRows = listOf(
+                EarnRow(
+                    label = resourceReference(R.string.yield_module_earn_sheet_current_apy_title),
+                    value = EarnValue.Text(stringReference("5%")),
+                ),
+                EarnRow(
+                    label = resourceReference(R.string.earn_product_details_performance_fee),
+                    value = EarnValue.Text(stringReference("0%")),
+                ),
+                // 1.5 ETH × $2000 × 5% with no performance fee
+                EarnRow(
+                    label = resourceReference(R.string.lending_projected_earnings),
+                    value = EarnValue.YearlyFiatEarnings(BigDecimal("150.00")),
+                ),
+            )
+            assertThat(actual).isEqualTo(depositPlan(txs = listOf(estimatedDeposit), rows = expectedRows).right())
+        }
+
+        @Test
+        fun `GIVEN known rates WHEN prepare withdraw THEN plan has no rows`() = runTest {
+            // Arrange
+            arrangeState(assetState(rate = BigDecimal("0.05"), fiatRate = BigDecimal("2000")))
+            arrangeWithdraw(amount = WITHDRAW_AMOUNT)
+
+            // Act
+            val actual = session.prepare(Withdraw(), EarnAmount.Exact(WITHDRAW_AMOUNT), selection(WITHDRAW_GAS))
+
+            // Assert
+            assertThat(actual).isEqualTo(withdrawPlan().right())
+        }
+
+        @Test
+        fun `GIVEN provider contract needs an upgrade WHEN prepare THEN plan is marked as with upgrade`() = runTest {
+            // Arrange
+            val outdated = TestProviderState(PLAN_KEY, isUpgradeRequired = true)
+            arrangeState(assetState(providerState = outdated))
+            arrangeDeposit(built = listOf(rawDeposit))
+
+            // Act
+            val actual = session.prepare(Deposit(), EarnAmount.Exact(DEPOSIT_AMOUNT), selection(TOTAL_GAS))
+
+            // Assert
+            assertThat(actual).isEqualTo(depositPlan(txs = listOf(estimatedDeposit), isWithUpgrade = true).right())
+        }
+
+        @Test
+        fun `GIVEN fast fee selected WHEN prepare THEN plan carries its fee type`() = runTest {
+            // Arrange
+            arrangeDeposit(built = listOf(rawDeposit))
+            val fastSelection = selection(TOTAL_GAS).copy(feeType = AnalyticsParam.FeeType.Max)
+
+            // Act
+            val actual = session.prepare(Deposit(), EarnAmount.Exact(DEPOSIT_AMOUNT), fastSelection)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                depositPlan(txs = listOf(estimatedDeposit), feeType = AnalyticsParam.FeeType.Max).right(),
+            )
+        }
 
         @Test
         fun `GIVEN withdraw WHEN prepare THEN builds an instant withdrawal for the position`() = runTest {
@@ -825,6 +925,91 @@ internal class LendingSessionTest {
         }
 
         @Test
+        fun `GIVEN transactions sent WHEN execute THEN reports the sent plan`() = runTest {
+            // Arrange
+            arrangeDeposit(built = listOf(rawPreparation, rawDeposit))
+            val plan = verified(depositPlan())
+            arrangeSend(listOf(PREPARATION_HASH, DEPOSIT_HASH).right())
+
+            // Act
+            session.execute(plan).test { cancelAndConsumeRemainingEvents() }
+
+            // Assert
+            coVerify(exactly = 1) {
+                analyticsSender.onSent(
+                    plan = plan.plan as LendingPlan,
+                    operation = LendingOperation.Deposit,
+                    currency = eth,
+                )
+            }
+            coVerify(exactly = 0) { analyticsSender.onSendFailed(plan = any(), operation = any(), error = any()) }
+        }
+
+        @Test
+        fun `GIVEN analytics fails WHEN execute THEN the sent plan is reported before it`() = runTest {
+            // Arrange
+            arrangeDeposit(built = listOf(rawPreparation, rawDeposit))
+            val plan = verified(depositPlan())
+            arrangeSend(listOf(PREPARATION_HASH, DEPOSIT_HASH).right())
+            coEvery {
+                analyticsSender.onSent(plan = any(), operation = any(), currency = any())
+            } throws IllegalStateException("analytics")
+
+            // Act
+            session.execute(plan).test {
+                // Assert
+                awaitItem()
+                assertThat(awaitItem()).isInstanceOf(EarnSigningStep.Sent::class.java)
+                assertThat(awaitError()).hasMessageThat().isEqualTo("analytics")
+            }
+        }
+
+        @Test
+        fun `GIVEN no hashes returned WHEN execute THEN fails and reports the failure`() = runTest {
+            // Arrange
+            arrangeDeposit(built = listOf(rawPreparation, rawDeposit))
+            val plan = verified(depositPlan())
+            arrangeSend(emptyList<String>().right())
+
+            // Act
+            session.execute(plan).test {
+                // Assert
+                awaitItem()
+                assertThat(awaitItem()).isEqualTo(EarnSigningStep.Failed(SendTransactionError.UnknownError()))
+                awaitComplete()
+            }
+            coVerify(exactly = 1) {
+                analyticsSender.onSendFailed(
+                    plan = plan.plan as LendingPlan,
+                    operation = LendingOperation.Deposit,
+                    error = SendTransactionError.UnknownError(),
+                )
+            }
+            coVerify(exactly = 0) { analyticsSender.onSent(plan = any(), operation = any(), currency = any()) }
+        }
+
+        @Test
+        fun `GIVEN transactions sent WHEN execute THEN tracks their hashes until they confirm`() = runTest {
+            // Arrange
+            arrangeDeposit(built = listOf(rawPreparation, rawDeposit))
+            val plan = verified(depositPlan())
+            arrangeSend(listOf(PREPARATION_HASH, DEPOSIT_HASH).right())
+
+            // Act
+            session.execute(plan).test { cancelAndConsumeRemainingEvents() }
+
+            // Assert
+            coVerify(exactly = 1) {
+                pendingTracker.addPending(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = eth,
+                    txIds = listOf(PREPARATION_HASH, DEPOSIT_HASH),
+                    depositContext = null,
+                )
+            }
+        }
+
+        @Test
         fun `GIVEN withdraw WHEN execute THEN shows the withdrawal result`() = runTest {
             // Arrange
             arrangeWithdraw(amount = WITHDRAW_AMOUNT)
@@ -858,6 +1043,17 @@ internal class LendingSessionTest {
                 awaitComplete()
             }
             assertThat(provider.refreshCalls).containsExactly(userWalletId to asset)
+            coVerify(exactly = 1) {
+                analyticsSender.onSendFailed(
+                    plan = plan.plan as LendingPlan,
+                    operation = LendingOperation.Deposit,
+                    error = error,
+                )
+            }
+            coVerify(exactly = 0) { analyticsSender.onSent(plan = any(), operation = any(), currency = any()) }
+            coVerify(exactly = 0) {
+                pendingTracker.addPending(userWalletId = any(), cryptoCurrency = any(), txIds = any(), depositContext = any())
+            }
         }
 
         @Test
@@ -1003,12 +1199,15 @@ internal class LendingSessionTest {
             transactions = transactions,
             getUserWalletUseCase = getUserWalletUseCase,
             lendingProvider = lendingProvider,
+            depositRows = LendingDepositRows(lendingProvider = lendingProvider),
         ),
         sender = LendingTxSender(
             getUserWalletUseCase = getUserWalletUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
+            pendingTracker = pendingTracker,
         ),
         transactionRepository = transactionRepository,
+        analyticsSender = analyticsSender,
     )
 
     private fun arrangeState(state: LendingAssetState) = arrangeSnapshot(stateMap(state))
@@ -1086,13 +1285,15 @@ internal class LendingSessionTest {
         position: BigDecimal? = POSITION,
         maxWithdraw: BigDecimal? = MAX_WITHDRAW,
         providerState: LendingProviderState? = TestProviderState(PLAN_KEY),
+        rate: BigDecimal? = null,
+        fiatRate: BigDecimal? = null,
     ) = LendingAssetState(
         asset = asset,
         address = address,
         balance = balance,
-        fiatRate = null,
+        fiatRate = fiatRate,
         market = LendingMarket(
-            rate = null,
+            rate = rate?.let { EarnProductRate(fraction = it, type = EarnRateType.APY) },
             isOpen = isOpen,
             deposit = LendingDepositGate.Open,
             position = position?.let(::LendingPosition),
@@ -1109,20 +1310,26 @@ internal class LendingSessionTest {
         txs: List<TransactionData.Uncompiled> = listOf(estimatedPreparation, estimatedDeposit),
         fee: Fee = selectedFee(TOTAL_GAS),
         planKey: String = PLAN_KEY,
+        isWithUpgrade: Boolean = false,
+        feeType: AnalyticsParam.FeeType = AnalyticsParam.FeeType.Normal,
+        rows: List<EarnRow> = emptyList(),
     ) = LendingPlan(
         fee = fee,
+        feeType = feeType,
         expectedAmount = DEPOSIT_AMOUNT,
-        rows = emptyList(),
+        rows = rows,
         withdrawMode = null,
         action = Deposit(),
         operation = LendingPlannedOperation.Deposit,
         amount = DEPOSIT_AMOUNT,
         txs = txs,
         planKey = planKey,
+        isWithUpgrade = isWithUpgrade,
     )
 
     private fun withdrawPlan(amount: BigDecimal = WITHDRAW_AMOUNT, isEntire: Boolean = false) = LendingPlan(
         fee = selectedFee(WITHDRAW_GAS),
+        feeType = AnalyticsParam.FeeType.Normal,
         expectedAmount = amount,
         rows = emptyList(),
         withdrawMode = WithdrawMode.Instant,
@@ -1131,6 +1338,7 @@ internal class LendingSessionTest {
         amount = amount,
         txs = listOf(estimatedWithdraw),
         planKey = PLAN_KEY,
+        isWithUpgrade = false,
     )
 
     private val updateRequiredText = combinedReference(
@@ -1214,7 +1422,10 @@ internal class LendingSessionTest {
 
     data class WithdrawVerifyModel(val amount: BigDecimal, val position: BigDecimal, val isEntire: Boolean)
 
-    private data class TestProviderState(override val planKey: String) : LendingProviderState
+    private data class TestProviderState(
+        override val planKey: String,
+        override val isUpgradeRequired: Boolean = false,
+    ) : LendingProviderState
 
     private object UnknownAction : EarnFlowAction {
         override val id: String = "unknown"

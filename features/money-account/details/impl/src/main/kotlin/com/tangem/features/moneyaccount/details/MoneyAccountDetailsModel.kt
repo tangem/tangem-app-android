@@ -23,6 +23,7 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.MoneyAccountStatusValue
+import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
@@ -35,6 +36,7 @@ import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsListener
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
@@ -70,6 +72,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase,
     private val uiMessageSender: UiMessageSender,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model(), MoneyAccountAddFundsOptionsListener {
 
     private val params = paramsContainer.require<MoneyAccountDetailsComponent.Params>()
@@ -85,6 +88,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         onRenewSession = ::onRenewSession,
         isYieldModeEnabled = moneyAccountFeatureToggles.isYieldModeEnabled,
         onProvideKycInformationClick = ::onProvideKycInformationClick,
+        isColdWallet = getUserWalletUseCase(params.userWalletId).getOrNull()?.isColdWallet == true,
     )
     val uiState: StateFlow<MoneyAccountDetailsUM>
         field = MutableStateFlow(stateFactory.createInitialState())

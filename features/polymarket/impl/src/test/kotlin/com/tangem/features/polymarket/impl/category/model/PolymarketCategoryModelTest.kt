@@ -138,7 +138,7 @@ internal class PolymarketCategoryModelTest {
         runCurrent()
         model.uiState.value.subcategories.single { it.id == 14 }.onClick()
         runCurrent()
-        feeds.last().load("soccer")
+        feeds.last().load("soccer", eventType = "soccer")
         runCurrent()
         val card = model.cards().single()
         val event = createPolymarketEvent(id = "soccer")
@@ -150,7 +150,7 @@ internal class PolymarketCategoryModelTest {
 
         // Assert
         verify {
-            router.push(PolymarketRoute.EventDetails("soccer", walletId, categoryLabel = "soccer"))
+            router.push(PolymarketRoute.EventDetails("soccer", walletId, categoryLabel = "soccer", eventType = "soccer"))
             router.push(PolymarketRoute.PlacePrediction(walletId, "soccer", market.id, market.outcomes.first().assetId))
         }
     }
@@ -346,9 +346,9 @@ internal class PolymarketCategoryModelTest {
                 MutableSharedFlow<Pair<PolymarketEventsUpdateRequest, BatchUpdateResult<Int, PolymarketEventsBatch>>>()
         }
 
-        fun load(id: String) {
+        fun load(id: String, eventType: String? = null) {
             state.value = BatchListState(
-                listOf(Batch(0, PolymarketEventsBatch(listOf(createPolymarketEvent(id = id)), requestCursor = null))),
+                listOf(Batch(0, PolymarketEventsBatch(listOf(createPolymarketEvent(id = id).copy(eventType = eventType)), requestCursor = null))),
                 PaginationStatus.EndOfPagination,
             )
         }

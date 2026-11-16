@@ -20,7 +20,6 @@ internal data class EarnPickerUM(
     val products: ImmutableList<EarnProductCardUM>,
     val content: ContentUM,
     val cta: TangemButtonUM,
-    val ctaHint: TextReference?,
     val onClose: () -> Unit,
 ) {
 

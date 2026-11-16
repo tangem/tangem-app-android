@@ -15,6 +15,7 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
+import com.tangem.features.earn.lending.impl.analytics.LendingAnalyticsSender
 import com.tangem.features.earn.lending.impl.product.LendingEarnProduct
 import com.tangem.features.earn.lending.impl.product.LendingTexts
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
@@ -46,6 +47,7 @@ import kotlinx.datetime.Clock
 import java.math.BigDecimal
 import kotlin.time.Duration.Companion.seconds
 
+@Suppress("LongParameterList")
 internal class LendingSession @AssistedInject constructor(
     @Assisted private val params: EarnProduct.Params,
     private val lendingSupplier: LendingSupplier,
@@ -53,6 +55,7 @@ internal class LendingSession @AssistedInject constructor(
     private val planFactory: LendingPlanFactory,
     private val sender: LendingTxSender,
     private val transactionRepository: YieldSupplyTransactionRepository,
+    private val analyticsSender: LendingAnalyticsSender,
 ) : EarnSession {
 
     override suspend fun loadFee(action: EarnFlowAction, amount: EarnAmount?): Either<GetFeeError, TransactionFee> =
@@ -96,7 +99,7 @@ internal class LendingSession @AssistedInject constructor(
             state = state,
             action = action,
             amount = value,
-            fee = fee.fee,
+            fee = fee,
         ).bind()
     }
 
@@ -117,6 +120,7 @@ internal class LendingSession @AssistedInject constructor(
         emit(EarnSigningStep.AwaitingConfirmation(stepLabel = null, tx = analytics))
         sender.send(params.userWalletId, params.currency, lendingPlan).fold(
             ifLeft = { error ->
+                analyticsSender.onSendFailed(plan = lendingPlan, operation = operation, error = error)
                 refreshProvider()
                 emit(EarnSigningStep.Failed(error))
             },
@@ -157,7 +161,7 @@ internal class LendingSession @AssistedInject constructor(
             state = state,
             action = plan.action,
             amount = plan.amount,
-            fee = plan.fee,
+            fee = EarnFeeSelection(fee = plan.fee, extended = null, feeType = plan.feeType),
         ).bind()
         val isRebuilt = newPlan.planKey != plan.planKey ||
             !newPlan.hasSameTransactionsAs(plan, params.currency.network.rawId)
@@ -216,8 +220,10 @@ internal class LendingSession @AssistedInject constructor(
     ) {
         val hash = hashes.lastOrNull()
         if (hash == null) {
+            val error = SendTransactionError.UnknownError()
+            analyticsSender.onSendFailed(plan = plan, operation = operation, error = error)
             refreshProvider()
-            emit(EarnSigningStep.Failed(SendTransactionError.UnknownError()))
+            emit(EarnSigningStep.Failed(error))
             return
         }
 
@@ -232,6 +238,7 @@ internal class LendingSession @AssistedInject constructor(
         )
         // Sent goes first: once the flow knows the hash, it never offers to send the plan again
         emit(EarnSigningStep.Sent(ref))
+        analyticsSender.onSent(plan = plan, operation = operation, currency = params.currency)
         refreshProvider()
         val result = when (operation) {
             LendingOperation.Deposit -> lendingDepositResult(plan.amount, params.currency, lendingProvider.info.title)

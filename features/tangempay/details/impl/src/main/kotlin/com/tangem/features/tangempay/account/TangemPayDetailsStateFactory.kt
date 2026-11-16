@@ -42,8 +42,12 @@ internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
+    isColdWallet: Boolean,
 ) {
-    private val notificationFactory = TangemPayDetailsNotificationFactory(intents = intents)
+    private val notificationFactory = TangemPayDetailsNotificationFactory(
+        intents = intents,
+        isColdWallet = isColdWallet,
+    )
 
     private val subtitle = resourceReference(R.string.tangempay_multinetwork)
 

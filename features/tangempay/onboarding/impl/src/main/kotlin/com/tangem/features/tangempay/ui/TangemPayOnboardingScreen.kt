@@ -44,6 +44,7 @@ internal fun TangemPayOnboardingScreen(
             modifier = modifier,
             video = video,
             isGetStartedLoading = state.buttonConfig.isLoading,
+            isGetStartedIconShown = state.buttonConfig.isTangemIconShown,
             onGetStartedClick = state.buttonConfig.onClick,
             onTermsClick = state.onTermsClick,
             onCloseClick = state.onBack,
@@ -146,12 +147,20 @@ private class TangemPayOnboardingScreenStateProvider :
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
-                buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = false, onClick = {}),
+                buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
+                    isLoading = false,
+                    isTangemIconShown = true,
+                    onClick = {},
+                ),
             ),
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
-                buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = true, onClick = {}),
+                buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
+                    isLoading = true,
+                    isTangemIconShown = true,
+                    onClick = {},
+                ),
             ),
             TangemPayOnboardingScreenState.NotAvailable(onBack = {}),
         ),

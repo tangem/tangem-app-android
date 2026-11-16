@@ -83,7 +83,7 @@ internal class PolymarketSessionKeyRelay(
 
     suspend fun awaitUnlisted(owner: PolymarketClobIdentity.Owner, sessionKey: PolymarketSessionKey): Unlisting {
         var unlisting: Unlisting = Unlisting.StillListed
-        repeat(LISTING_ATTEMPTS) { attempt ->
+        repeat(UNLISTING_ATTEMPTS) { attempt ->
             if (attempt > 0) delay(POLL_INTERVAL)
             sessionKeyRepository.getSessionSigners(owner).fold(
                 ifLeft = { error ->
@@ -135,7 +135,8 @@ internal class PolymarketSessionKeyRelay(
         private val SETTLE_TIMEOUT: Duration = 35.minutes
         private val SETTLE_ATTEMPTS = (SETTLE_TIMEOUT / POLL_INTERVAL).toInt()
         private const val DROPPED_READS = 2
-        private const val LISTING_ATTEMPTS = 20
+        private const val LISTING_ATTEMPTS = 10
+        private const val UNLISTING_ATTEMPTS = 20
         private const val RESEND_ATTEMPTS = 3
     }
 }

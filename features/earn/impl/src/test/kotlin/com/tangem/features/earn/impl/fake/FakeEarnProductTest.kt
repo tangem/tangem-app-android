@@ -197,7 +197,7 @@ internal class FakeEarnProductTest {
             val state = product.readyState()
 
             // Assert
-            val actual = Triple(state.projection != null, state.howItWorks != null, state.limits.remainingCap != null)
+            val actual = Triple(state.projection != null, product.howItWorks != null, state.limits.remainingCap != null)
             val expected = Triple(model.hasProjection, model.hasHowItWorks, model.hasRemainingCap)
             assertThat(actual).isEqualTo(expected)
         }
@@ -571,13 +571,11 @@ internal class FakeEarnProductTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class LegacyBlock {
+    inner class SummaryRoute {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN preset WHEN product and summaries read THEN legacy block flag and summary route match`(
-            model: LegacyBlockModel,
-        ) = runTest {
+        fun `GIVEN preset WHEN summaries read THEN summary route matches`(model: SummaryRouteModel) = runTest {
             // Arrange
             val product = createProduct(model.preset)
 
@@ -585,18 +583,13 @@ internal class FakeEarnProductTest {
             val summary = product.summary()
 
             // Assert
-            assertThat(product.hasLegacyBlock to summary.route)
-                .isEqualTo(model.hasLegacyBlock to model.expectedSummaryRoute)
+            assertThat(summary.route).isEqualTo(model.expectedSummaryRoute)
         }
 
         private fun provideTestModels() = listOf(
-            LegacyBlockModel(FakeEarnProductPreset.Lending, hasLegacyBlock = false, expectedSummaryRoute = null),
-            LegacyBlockModel(
-                preset = FakeEarnProductPreset.Staking,
-                hasLegacyBlock = true,
-                expectedSummaryRoute = FakeForeignRoute,
-            ),
-            LegacyBlockModel(FakeEarnProductPreset.Vault, hasLegacyBlock = false, expectedSummaryRoute = null),
+            SummaryRouteModel(FakeEarnProductPreset.Lending, expectedSummaryRoute = null),
+            SummaryRouteModel(FakeEarnProductPreset.Staking, expectedSummaryRoute = FakeForeignRoute),
+            SummaryRouteModel(FakeEarnProductPreset.Vault, expectedSummaryRoute = null),
         )
     }
 
@@ -734,9 +727,8 @@ internal class FakeEarnProductTest {
         override fun toString(): String = "$preset ${action.id}"
     }
 
-    internal data class LegacyBlockModel(
+    internal data class SummaryRouteModel(
         val preset: FakeEarnProductPreset,
-        val hasLegacyBlock: Boolean,
         val expectedSummaryRoute: Route?,
     ) {
         override fun toString(): String = "$preset"

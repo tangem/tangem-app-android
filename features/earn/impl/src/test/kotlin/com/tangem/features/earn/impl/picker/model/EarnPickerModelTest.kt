@@ -11,6 +11,11 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.LoopingVideoState
+import com.tangem.core.media.RemoteClipCache
+import com.tangem.core.media.VideoFrameSize
+import com.tangem.core.media.VideoSurfaceState
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -32,6 +37,7 @@ import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.impl.fake.fakeApyPeriods
 import com.tangem.features.earn.impl.fake.fakeReadyState
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetRequest
 import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetRequest
 import com.tangem.features.earn.impl.overview.EarnHeadlineSelector
 import com.tangem.features.earn.impl.overview.EarnProductSummaries
@@ -42,6 +48,7 @@ import com.tangem.features.earn.impl.overview.EarnSummaryOrder
 import com.tangem.features.earn.impl.overview.USER_WALLET_ID
 import com.tangem.features.earn.impl.overview.createRate
 import com.tangem.features.earn.impl.overview.createSummary
+import com.tangem.features.earn.impl.picker.EarnPickerHeroVideo
 import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.impl.picker.EarnYieldPickerComponent
 import com.tangem.features.earn.impl.picker.ui.state.EarnProductCardUM
@@ -74,6 +81,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.verify
+import io.mockk.verifySequence
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -92,6 +100,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -101,6 +110,9 @@ internal class EarnPickerModelTest {
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val videoFactory: LoopingVideoController.Factory = mockk()
+    private val heroVideo: LoopingVideoController = mockk(relaxed = true)
+    private val heroClipCache: RemoteClipCache = mockk()
     private val overviewFetcher: EarnOverviewFetcher = mockk()
     private val summarySupplier: EarnProductSummarySupplier = mockk()
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
@@ -114,12 +126,14 @@ internal class EarnPickerModelTest {
     @BeforeEach
     fun setUp() {
         clearMocks(router, uiMessageSender, urlOpener, overviewFetcher, summarySupplier, accountStatusListSupplier, accountStatusList)
+        clearMocks(videoFactory, heroVideo)
         mockkObject(CryptoCurrencyStatusOperations)
         mockkObject(TangemLogger)
         lending = PickerProduct(createFakeEarnProduct(FakeEarnProductPreset.Lending), readyState(FakeEarnProductPreset.Lending))
         staking = PickerProduct(createFakeEarnProduct(FakeEarnProductPreset.Staking), readyState(FakeEarnProductPreset.Staking))
         vault = PickerProduct(createFakeEarnProduct(FakeEarnProductPreset.Vault), readyState(FakeEarnProductPreset.Vault))
         every { accountStatusListSupplier(USER_WALLET_ID) } returns flowOf(accountStatusList)
+        every { videoFactory.createRemote(any(), any(), any(), any(), any(), any()) } returns heroVideo
         stubBalance(BigDecimal.ONE)
     }
 
@@ -416,7 +430,7 @@ internal class EarnPickerModelTest {
         }
 
         @Test
-        fun `GIVEN ETH balance below the minimum WHEN model created THEN Add funds with the hint`() = runTest {
+        fun `GIVEN ETH balance below the minimum WHEN model created THEN Add funds`() = runTest {
             // Arrange
             stubBalance(BigDecimal.ZERO)
             val model = createModel(frames = MutableStateFlow(frame(summary(lending), summary(vault))), preselected = lending.id)
@@ -426,25 +440,33 @@ internal class EarnPickerModelTest {
 
             // Assert
             assertThat(model.uiState.value.cta.text).isEqualTo(EarnPickerTexts.addFunds)
-            assertThat(model.uiState.value.ctaHint).isNotNull()
             model.onDestroy()
         }
 
         @Test
-        fun `GIVEN Add funds WHEN cta clicked THEN neither the router nor a handler is touched`() = runTest {
-            // Arrange
-            stubBalance(BigDecimal.ZERO)
-            val model = createModel(frames = MutableStateFlow(frame(summary(lending), summary(vault))), preselected = lending.id)
-            advanceUntilIdle()
+        fun `GIVEN Add funds WHEN cta clicked THEN one Get token request is emitted and neither the router nor a handler is touched`() =
+            runTest {
+                // Arrange
+                stubBalance(BigDecimal.ZERO)
+                val requests = mutableListOf<EarnGetTokenSheetRequest>()
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                    preselected = lending.id,
+                )
+                backgroundScope.launch { model.getTokenSheetRequests.collect { requests += it } }
+                runCurrent()
+                advanceUntilIdle()
 
-            // Act
-            model.uiState.value.cta.onClick()
+                // Act
+                model.uiState.value.cta.onClick()
+                runCurrent()
 
-            // Assert
-            verify { router wasNot Called }
-            assertThat(lending.actionHandlerCalls).isEqualTo(0)
-            model.onDestroy()
-        }
+                // Assert
+                assertThat(requests).containsExactly(EarnGetTokenSheetRequest(USER_WALLET_ID, currency))
+                verify { router wasNot Called }
+                assertThat(lending.actionHandlerCalls).isEqualTo(0)
+                model.onDestroy()
+            }
     }
 
     @Nested
@@ -966,6 +988,143 @@ internal class EarnPickerModelTest {
             }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class HeroVideo {
+
+        @Test
+        fun `GIVEN a picker WHEN the model is created THEN the hero clip is requested from the earn cache at its own size`() =
+            runTest {
+                // Act
+                val model = createModel(frames = MutableStateFlow(frame()))
+
+                // Assert
+                verify(exactly = 1) {
+                    videoFactory.createRemote(
+                        scope = any(),
+                        url = EarnPickerHeroVideo.URL,
+                        cache = heroClipCache,
+                        frameSize = VideoFrameSize(width = 720, height = 1280),
+                        diagnosticsSubject = "Earn picker hero video",
+                        onFailed = any(),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the hero clip WHEN the state is read THEN it is the controller state`() = runTest {
+            // Arrange
+            val state = MutableStateFlow(LOOPING_STATE)
+            every { heroVideo.state } returns state
+            val model = createModel(frames = MutableStateFlow(frame()))
+
+            // Act
+            val actual = model.heroVideoState
+
+            // Assert
+            assertThat(actual).isSameInstanceAs(state)
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN a model with the hero in view WHEN the screen resumed state changes THEN the clip follows it`(
+            isResumed: Boolean,
+        ) = runTest {
+            // Arrange
+            val model = createModel(frames = MutableStateFlow(frame()))
+
+            // Act
+            model.setScreenResumed(isResumed = isResumed)
+
+            // Assert
+            verify(exactly = 1) { heroVideo.setRunning(isRunning = isResumed) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the screen resumed WHEN the hero scrolls out of view THEN the clip pauses`() = runTest {
+            // Arrange
+            val model = createModel(frames = MutableStateFlow(frame()))
+            model.setScreenResumed(isResumed = true)
+
+            // Act
+            model.setHeroVisible(isVisible = false)
+
+            // Assert
+            verifySequence {
+                heroVideo.setRunning(isRunning = true)
+                heroVideo.setRunning(isRunning = false)
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the hero out of view WHEN the screen resumes THEN the clip stays paused`() = runTest {
+            // Arrange
+            val model = createModel(frames = MutableStateFlow(frame()))
+            model.setHeroVisible(isVisible = false)
+
+            // Act
+            model.setScreenResumed(isResumed = true)
+
+            // Assert
+            verify(exactly = 0) { heroVideo.setRunning(isRunning = true) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the clip paused by the scroll WHEN the hero comes back into view THEN the clip runs again`() =
+            runTest {
+                // Arrange
+                val model = createModel(frames = MutableStateFlow(frame()))
+                model.setScreenResumed(isResumed = true)
+                model.setHeroVisible(isVisible = false)
+
+                // Act
+                model.setHeroVisible(isVisible = true)
+
+                // Assert
+                verifySequence {
+                    heroVideo.setRunning(isRunning = true)
+                    heroVideo.setRunning(isRunning = false)
+                    heroVideo.setRunning(isRunning = true)
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the hero in view WHEN the screen pauses THEN the clip pauses`() = runTest {
+            // Arrange
+            val model = createModel(frames = MutableStateFlow(frame()))
+            model.setScreenResumed(isResumed = true)
+
+            // Act
+            model.setScreenResumed(isResumed = false)
+
+            // Assert
+            verifySequence {
+                heroVideo.setRunning(isRunning = true)
+                heroVideo.setRunning(isRunning = false)
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a model destroyed in the frame it was created WHEN destroyed THEN the clip is released once`() =
+            runTest {
+                // Arrange
+                val model = createModel(frames = MutableStateFlow(frame()))
+
+                // Act
+                model.onDestroy()
+
+                // Assert
+                verify(exactly = 1) { heroVideo.release() }
+            }
+    }
+
     private fun TestScope.createModel(
         frames: Flow<EarnProductSummaries>,
         products: List<EarnProduct> = listOf(lending, vault),
@@ -998,6 +1157,8 @@ internal class EarnPickerModelTest {
             router = router,
             uiMessageSender = uiMessageSender,
             urlOpener = urlOpener,
+            videoFactory = videoFactory,
+            heroClipCache = heroClipCache,
         )
     }
 
@@ -1082,5 +1243,21 @@ internal class EarnPickerModelTest {
         override fun onActionClick(action: EarnAction) {
             actions += action
         }
+    }
+
+    private companion object {
+
+        val LOOPING_STATE = LoopingVideoState(
+            surface = VideoSurfaceState(
+                frameSize = VideoFrameSize(width = 720, height = 1280),
+                key = 0,
+                isFirstFrameShown = false,
+                onAvailable = {},
+                onRelease = {},
+            ),
+            isRunning = false,
+            isMotionEnabled = true,
+            isFailed = false,
+        )
     }
 }

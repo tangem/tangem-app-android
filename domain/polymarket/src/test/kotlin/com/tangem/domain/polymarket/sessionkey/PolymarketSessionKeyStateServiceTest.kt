@@ -20,6 +20,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
@@ -762,20 +763,42 @@ internal class PolymarketSessionKeyStateServiceTest {
     }
 
     @Test
-    fun `GIVEN an unobserved wallet WHEN refresh and await THEN it reconciles without waiting`() = runTest {
+    fun `GIVEN an unobserved wallet WHEN refresh and await THEN it returns once the reconciliation ends`() = runTest {
         // Arrange
-        coEvery { reconcile(USER_WALLET_ID) } returns overview(PolymarketSessionKeyStatus.ACTIVE).right()
+        val inFlight = CompletableDeferred<Unit>()
+        coEvery { reconcile(USER_WALLET_ID) } coAnswers {
+            inFlight.await()
+            overview(PolymarketSessionKeyStatus.ACTIVE).right()
+        }
         val service = service()
 
         // Act
-        val started = testScheduler.currentTime
-        service.refreshAndAwait(USER_WALLET_ID)
+        val awaited = async { service.refreshAndAwait(USER_WALLET_ID) }
+        runCurrent()
+        val isDoneBeforeReconciliation = awaited.isCompleted
+        inFlight.complete(Unit)
         runCurrent()
 
         // Assert
-        assertThat(testScheduler.currentTime - started).isEqualTo(0)
+        assertThat(isDoneBeforeReconciliation).isFalse()
+        assertThat(awaited.isCompleted).isTrue()
         coVerify(exactly = 1) { reconcile(USER_WALLET_ID) }
     }
+
+    @Test
+    fun `GIVEN an unobserved reconciliation hangs WHEN refresh and await THEN it returns after the timeout`() =
+        runTest {
+            // Arrange
+            coEvery { reconcile(USER_WALLET_ID) } coAnswers { awaitCancellation() }
+            val service = service()
+
+            // Act
+            val started = testScheduler.currentTime
+            service.refreshAndAwait(USER_WALLET_ID)
+
+            // Assert
+            assertThat(testScheduler.currentTime - started).isEqualTo(REFRESH_AWAIT_TIMEOUT_MILLIS)
+        }
 
     @Test
     fun `GIVEN the overview does not change WHEN refresh and await THEN it returns once the reconciliation ends`() =

@@ -16,7 +16,6 @@ import java.math.BigDecimal
 @Serializable
 sealed interface StakingBalance : BalanceContribution {
 
-    override val kind: String get() = CONTRIBUTION_KIND
     val stakingId: StakingID
     override val source: StatusSource
 
@@ -140,11 +139,5 @@ sealed interface StakingBalance : BalanceContribution {
             is Empty -> copy(source = source)
             is Error -> this
         }
-    }
-
-    companion object {
-
-        /** [BalanceContribution.kind] of every staking balance. Owned here, not by the base contract. */
-        const val CONTRIBUTION_KIND = "staking"
     }
 }

@@ -82,7 +82,6 @@ internal fun createRateEntry(
 internal class TestEarnProduct(
     override val id: EarnProductId,
     override val rank: Int = 0,
-    override val hasLegacyBlock: Boolean = false,
     private val summariesFlow: Flow<Map<CryptoCurrency.ID, EarnProductSummary>> = emptyFlow(),
     private val refreshResult: Either<Throwable, Unit> = Unit.right(),
     override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success,

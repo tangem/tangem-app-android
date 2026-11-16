@@ -77,10 +77,34 @@ internal class TangemPayOnboardingModelTest {
             videoFactory,
         )
         every { videoFactory.create(any(), any(), any(), any(), any()) } returns video
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>(relaxed = true))
         coEvery {
             eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
         } returns listOf(OFFER_WALLET_ID)
+        coEvery {
+            eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
+        } returns listOf(OFFER_WALLET_ID)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTangemIconModels")
+    fun `GIVEN compatible wallets WHEN onboarding shown THEN tangem icon shown only if one of them is cold`(
+        model: TangemIconModel,
+    ) = runTest {
+        // Arrange
+        coEvery { userWalletsListRepository.userWalletsSync() } returns model.wallets
+        coEvery {
+            eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
+        } returns model.compatibleWalletsIds
+
+        // Act
+        val onboardingModel = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
+        advanceUntilIdle()
+
+        // Assert
+        val content = onboardingModel.uiState.value as TangemPayOnboardingScreenState.Content
+        assertThat(content.buttonConfig.isTangemIconShown).isEqualTo(model.isIconShown)
+        onboardingModel.onDestroy()
     }
 
     @Test
@@ -551,8 +575,42 @@ internal class TangemPayOnboardingModelTest {
         )
     }
 
+    private fun provideTangemIconModels(): List<TangemIconModel> {
+        val coldWallet = mockk<UserWallet.Cold> { every { walletId } returns OFFER_WALLET_ID }
+        val hotWallet = mockk<UserWallet.Hot> { every { walletId } returns HOT_WALLET_ID }
+        return listOf(
+            TangemIconModel(
+                wallets = listOf(coldWallet),
+                compatibleWalletsIds = listOf(OFFER_WALLET_ID),
+                isIconShown = true,
+            ),
+            TangemIconModel(
+                wallets = listOf(hotWallet),
+                compatibleWalletsIds = listOf(HOT_WALLET_ID),
+                isIconShown = false,
+            ),
+            TangemIconModel(
+                wallets = listOf(coldWallet, hotWallet),
+                compatibleWalletsIds = listOf(OFFER_WALLET_ID, HOT_WALLET_ID),
+                isIconShown = true,
+            ),
+            TangemIconModel(
+                wallets = listOf(coldWallet, hotWallet),
+                compatibleWalletsIds = listOf(HOT_WALLET_ID),
+                isIconShown = false,
+            ),
+        )
+    }
+
+    data class TangemIconModel(
+        val wallets: List<UserWallet>,
+        val compatibleWalletsIds: List<UserWalletId>,
+        val isIconShown: Boolean,
+    )
+
     private companion object {
         val OFFER_WALLET_ID = UserWalletId("011")
+        val HOT_WALLET_ID = UserWalletId("033")
         val DEEPLINK_ERROR = object : UniversalError {
             override val errorCode: Int = 0
         }

@@ -4,11 +4,17 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -28,18 +34,29 @@ import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnNavigator
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
+import com.tangem.features.earn.product.api.product.EarnActionItem
+import com.tangem.features.earn.product.api.product.EarnApyHistory
 import com.tangem.features.earn.product.api.product.EarnBlock
+import com.tangem.features.earn.product.api.product.EarnHowItWorks
+import com.tangem.features.earn.product.api.product.EarnLegal
+import com.tangem.features.earn.product.api.product.EarnPosition
 import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
+import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRisk
+import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.ProductAvailability
 import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.features.earn.product.api.session.Deposit
+import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.features.earn.product.api.session.Withdraw
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.assertEither
+import com.tangem.test.core.assertEitherLeft
+import com.tangem.test.core.assertEitherRight
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -53,18 +70,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
-import com.tangem.core.res.R
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.features.earn.product.api.product.EarnActionItem
-import com.tangem.features.earn.product.api.product.EarnApyHistory
-import com.tangem.features.earn.product.api.product.EarnPosition
-import com.tangem.features.earn.product.api.product.EarnProductSummary
-import com.tangem.features.earn.product.api.session.EarnAction
-import com.tangem.test.core.assertEither
-import com.tangem.test.core.assertEitherLeft
-import com.tangem.test.core.assertEitherRight
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LendingEarnProductTest {
@@ -109,6 +114,69 @@ internal class LendingEarnProductTest {
 
             // Assert
             assertThat(actual).isEqualTo(EarnProductAnalytics(category = "Earn", product = "Lending"))
+        }
+
+        @Test
+        fun `GIVEN product WHEN how it works requested THEN four steps, the auditor and the blog post`() {
+            // Act
+            val actual = product.howItWorks
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                EarnHowItWorks(
+                    title = resourceReference(R.string.earn_how_it_works_title),
+                    entries = listOf(
+                        EarnTextBlock(
+                            title = resourceReference(R.string.lending_how_it_works_choose_amount_title),
+                            description = resourceReference(R.string.lending_how_it_works_choose_amount_text),
+                        ),
+                        EarnTextBlock(
+                            title = resourceReference(R.string.lending_how_it_works_money_works_title),
+                            description = resourceReference(R.string.lending_how_it_works_money_works_text),
+                        ),
+                        EarnTextBlock(
+                            title = resourceReference(R.string.earn_how_it_works_watch_it_grow_title),
+                            description = resourceReference(
+                                R.string.lending_how_it_works_watch_it_grow_text,
+                                wrappedList(FEE_TEXT),
+                            ),
+                        ),
+                        EarnTextBlock(
+                            title = resourceReference(R.string.earn_how_it_works_take_it_back_title),
+                            description = resourceReference(R.string.lending_how_it_works_take_it_back_text),
+                        ),
+                    ),
+                    footnote = resourceReference(R.string.earn_how_it_works_audited_by, wrappedList("Pessimistic")),
+                    learnMore = TangemBlogUrlBuilder.Post.HowYieldModeWorks,
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN state never collected WHEN how it works requested THEN learn more is already there`() {
+            // Arrange
+            val product = createProduct(provider)
+
+            // Act
+            val actual = product.howItWorks.learnMore
+
+            // Assert
+            assertThat(actual).isEqualTo(TangemBlogUrlBuilder.Post.HowYieldModeWorks)
+            verify(exactly = 0) { lendingSupplier(any<UserWalletId>()) }
+        }
+
+        @Test
+        fun `GIVEN provider WHEN legal requested THEN the provider's documents`() {
+            // Act
+            val actual = product.legal
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                EarnLegal(
+                    termsOfUseUrl = "https://fake.example/terms",
+                    privacyPolicyUrl = "https://fake.example/privacy",
+                ),
+            )
         }
     }
 
@@ -568,6 +636,7 @@ internal class LendingEarnProductTest {
     )
 
     private companion object {
+        val FEE_TEXT = BigDecimal.ZERO.format { percent(minFractionDigits = 0) }
         val RATE = EarnProductRate(fraction = BigDecimal("0.055"), type = EarnRateType.APY)
         val ADD_FUNDS = resourceReference(R.string.common_add_funds)
         val PENDING_BLOCK = EarnBlock(reason = stringReference("Wait for the previous transaction to complete."))

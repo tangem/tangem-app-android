@@ -54,7 +54,7 @@ internal class JointOperationUMConverterTest {
         // Assert
         assertThat(actual.header.status).isEqualTo(TransactionItemUM.Content.Status.Confirmed)
         assertThat(actual.header.subtitle).isEqualTo(resourceReference(CoreUiR.string.transaction_history_pending))
-        assertThat(actual.header.menu.map { it.title }).contains(resourceReference(CoreUiR.string.common_decline))
+        assertThat(actual.header.menu.map { it.title }).contains(resourceReference(CoreUiR.string.common_cancel))
         assertThat(actual.cosign).isNotNull()
         assertThat(actual.cosignAction?.isEnabled).isTrue()
     }
@@ -107,7 +107,7 @@ internal class JointOperationUMConverterTest {
 
         // Assert
         assertThat(actual.header.subtitle).isEqualTo(resourceReference(CoreUiR.string.transaction_history_pending))
-        assertThat(actual.header.menu.map { it.title }).doesNotContain(resourceReference(CoreUiR.string.common_decline))
+        assertThat(actual.header.menu.map { it.title }).doesNotContain(resourceReference(CoreUiR.string.common_cancel))
         assertThat(actual.cosignAction).isEqualTo(
             TxHistoryDetailsUM.CosignActionUM(
                 buttonText = resourceReference(CoreUiR.string.joint_operation_declined),

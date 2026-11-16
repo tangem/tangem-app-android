@@ -5,10 +5,13 @@ import arrow.core.none
 import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -44,7 +47,9 @@ import com.tangem.features.earn.flow.impl.EarnSessionFactories
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnProduct
+import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAmount
 import com.tangem.features.earn.product.api.session.EarnFeeSelection
@@ -58,6 +63,7 @@ import com.tangem.features.earn.product.api.session.EarnTxStatus
 import com.tangem.features.earn.product.api.session.EarnVerification
 import com.tangem.features.earn.product.api.session.Withdraw
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -71,7 +77,10 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.verify
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
@@ -106,6 +115,7 @@ internal class EarnFlowModelTest {
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
+    private val blogUrlBuilder: TangemBlogUrlBuilder = mockk()
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk()
@@ -140,6 +150,7 @@ internal class EarnFlowModelTest {
             sendFeedbackEmailUseCase,
             urlOpener,
             shareManager,
+            blogUrlBuilder,
             getExplorerTransactionUrlUseCase,
             getUserWalletUseCase,
             getAccountCurrencyStatusUseCase,
@@ -147,6 +158,7 @@ internal class EarnFlowModelTest {
         )
         coEvery { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) } returns none()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+        coEvery { blogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowYieldModeWorks) } returns TEST_LEARN_MORE_URL
         every { getUserWalletUseCase.invoke(testUserWalletId) } returns mockk<UserWallet.Hot> { every { name } returns "Wallet" }.right()
         mockkObject(CryptoCurrencyStatusOperations)
         with(CryptoCurrencyStatusOperations) {
@@ -367,7 +379,7 @@ internal class EarnFlowModelTest {
                 // Assert
                 assertThat(model.initialStep).isEqualTo(EarnFlowStep.Confirm)
                 coVerify(exactly = 1) {
-                    session.prepare(action = TestClaim, amount = null, fee = EarnFeeSelection(testFee("0.00033"), null))
+                    session.prepare(action = TestClaim, amount = null, fee = testFeeSelection("0.00033"))
                 }
                 coVerify(exactly = 0) { session.maxAmount(action = any()) }
                 assertThat(model.confirm.value).isNotNull()
@@ -450,7 +462,7 @@ internal class EarnFlowModelTest {
                 session.prepare(
                     action = Deposit(),
                     amount = EarnAmount.Exact(BigDecimal(model.expected)),
-                    fee = EarnFeeSelection(testFee(model.fee), null),
+                    fee = testFeeSelection(model.fee),
                 )
             }
             assertThat(flow.state.value.enteredAmount).isEqualTo(BigDecimal(model.entered ?: "2.01"))
@@ -507,7 +519,7 @@ internal class EarnFlowModelTest {
                     session.prepare(
                         action = Deposit(),
                         amount = EarnAmount.Exact(BigDecimal("2.009")),
-                        fee = EarnFeeSelection(testFee("0.001"), null),
+                        fee = testFeeSelection("0.001"),
                     )
                 }
                 assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Confirm)
@@ -574,6 +586,34 @@ internal class EarnFlowModelTest {
             coVerify(exactly = 0) {
                 isAmountSubtractAvailableUseCase.invoke(userWalletId = any(), currency = any(), maybeGaslessFee = any())
             }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee coin topped up WHEN account list updates THEN withdrawal fee warning disappears`() = runTest {
+            // Arrange
+            val accountStatusLists = MutableSharedFlow<AccountStatusList>(replay = 1)
+            every { singleAccountStatusListSupplier.invoke(testUserWalletId) } returns accountStatusLists
+            coEvery {
+                getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(userWalletId = any(), cryptoCurrencyStatus = any())
+            } returnsMany listOf(testStatus(amount = BigDecimal("0.0001")).right(), testStatus().right())
+            accountStatusLists.emit(accountStatusList)
+            val model = createModel(action = Withdraw())
+            advanceUntilIdle()
+            model.onAmountValueChange("0.5")
+            model.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+            val warningsBeforeTopUp = model.amount.value?.notifications.orEmpty()
+                .filterIsInstance<NotificationUM.Error.ExceedsBalance>()
+
+            // Act
+            accountStatusLists.emit(accountStatusList)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(warningsBeforeTopUp).hasSize(1)
+            assertThat(model.amount.value?.notifications.orEmpty().filterIsInstance<NotificationUM.Error.ExceedsBalance>())
+                .isEmpty()
             model.onDestroy()
         }
     }
@@ -660,6 +700,28 @@ internal class EarnFlowModelTest {
             assertThat(model.amount.value?.notifications?.single())
                 .isInstanceOf(NotificationUM.Warning.NetworkFeeUnreachable::class.java)
             coVerify(exactly = 0) { session.prepare(action = any(), amount = any(), fee = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fast fee picked from choosable levels WHEN fee result THEN fee selection reports Max`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            val slow = testFee("0.0001")
+            val market = testFee("0.0002")
+            val fast = testFee("0.0003")
+            val content = testFeeContent("0.0003").copy(
+                fees = TransactionFee.Choosable(minimum = slow, normal = market, priority = fast),
+                feeItems = persistentListOf(FeeItem.Slow(slow), FeeItem.Market(market), FeeItem.Fast(fast)),
+                selectedFeeItem = FeeItem.Fast(fast),
+            )
+
+            // Act
+            model.onFeeResult(content)
+
+            // Assert
+            assertThat(model.state.value.feeSelection)
+                .isEqualTo(EarnFeeSelection(fee = fast, extended = null, feeType = AnalyticsParam.FeeType.Max))
             model.onDestroy()
         }
 
@@ -857,6 +919,30 @@ internal class EarnFlowModelTest {
             // Assert
             verify(exactly = 1) { callback.onFinished(EarnFlowExit.Done) }
             assertThat(model.state.value.signing).isEqualTo(EarnSigningState.Idle)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN sent and result not ready WHEN confirm shown THEN it keeps the sent plan rows and amount`() = runTest {
+            // Arrange
+            val row = EarnRow(label = stringReference("Current APY"), value = EarnValue.Text(stringReference("5.5%")))
+            val plan = TestPlan(rows = listOf(row))
+            coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returns plan.right()
+            coEvery { session.verify(plan = any()) } returns EarnVerification.Verified(TestVerifiedPlan(plan))
+            every { session.execute(plan = any()) } returns flow {
+                emit(EarnSigningStep.Sent(txRef))
+                awaitCancellation()
+            }
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.plan).isNull()
+            assertThat(model.confirm.value?.rows?.map { it.label }).containsExactly(row.label)
+            assertThat(model.confirm.value?.amountCrypto).isNotEqualTo(TextReference.EMPTY)
             model.onDestroy()
         }
 
@@ -1101,6 +1187,18 @@ internal class EarnFlowModelTest {
 
             // Assert
             assertThat(model.confirm.value?.primary?.tangemIconUM).isNotNull()
+            assertThat(model.confirm.value?.isHoldToConfirm).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN mobile wallet WHEN confirm shown THEN the action is held to confirm without the logo`() = runTest {
+            // Act
+            val model = createConfirmedModel()
+
+            // Assert
+            assertThat(model.confirm.value?.isHoldToConfirm).isTrue()
+            assertThat(model.confirm.value?.primary?.tangemIconUM).isNull()
             model.onDestroy()
         }
 
@@ -1262,7 +1360,7 @@ internal class EarnFlowModelTest {
         }
 
         @Test
-        fun `GIVEN sheet shown WHEN learn more pressed THEN its link opens`() = runTest {
+        fun `GIVEN sheet shown WHEN learn more pressed THEN the link of its post is built and opened`() = runTest {
             // Arrange
             val model = createModel(flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks))
             advanceUntilIdle()
@@ -1270,6 +1368,7 @@ internal class EarnFlowModelTest {
 
             // Act
             model.howItWorks.value?.onLearnMoreClick?.invoke()
+            advanceUntilIdle()
 
             // Assert
             verify(exactly = 1) { urlOpener.openUrl(TEST_LEARN_MORE_URL) }
@@ -1323,6 +1422,7 @@ internal class EarnFlowModelTest {
             urlOpener = urlOpener,
             shareManager = shareManager,
             getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
+            blogUrlBuilder = blogUrlBuilder,
         ),
     )
 
@@ -1330,10 +1430,10 @@ internal class EarnFlowModelTest {
 }
 
 private const val TEST_EXPLORER_URL = "https://etherscan.io/tx/0xhash"
-private const val TEST_LEARN_MORE_URL = "https://aave.com"
+private const val TEST_LEARN_MORE_URL = "https://tangem.com/blog/yield-mode"
 
 private val testHowItWorks = EarnHowItWorks(
     title = stringReference("How it works"),
     entries = listOf(EarnTextBlock(title = stringReference("Supply"), description = stringReference("Lend"))),
-    learnMoreUrl = TEST_LEARN_MORE_URL,
+    learnMore = TangemBlogUrlBuilder.Post.HowYieldModeWorks,
 )

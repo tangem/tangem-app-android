@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.search.model
 
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -155,8 +156,14 @@ internal class PolymarketSearchModel @Inject constructor(
         router.pop()
     }
 
-    private fun onEventClick(eventId: String) {
-        router.push(PolymarketRoute.EventDetails(eventId = eventId, userWalletId = params.userWalletId))
+    private fun onEventClick(event: PolymarketEvent) {
+        router.push(
+            PolymarketRoute.EventDetails(
+                eventId = event.id,
+                userWalletId = params.userWalletId,
+                eventType = event.eventType,
+            ),
+        )
     }
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {

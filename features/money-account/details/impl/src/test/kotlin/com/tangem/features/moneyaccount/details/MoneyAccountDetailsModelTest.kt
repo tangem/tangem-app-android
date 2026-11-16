@@ -14,6 +14,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.modal.TangemModalActionScope
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -32,6 +33,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents.BalanceBand
@@ -57,6 +59,7 @@ import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
@@ -116,6 +119,7 @@ internal class MoneyAccountDetailsModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val isBalanceHiddenFlow = MutableStateFlow(false)
 
     @BeforeEach
@@ -123,7 +127,8 @@ internal class MoneyAccountDetailsModelTest {
         clearMocks(moneyAccountStatusSupplier, router, sendFeedbackEmailUseCase, urlOpener, analytics)
         clearMocks(getMoneyAccountBankCredentialsUseCase, moneyAccountStatusFetcher, txHistoryContentUpdateEmitter)
         clearMocks(renewTangemPaySessionUseCase, uiMessageSender, getBalanceHidingSettingsUseCase)
-        clearMocks(moneyAccountFeatureToggles, getExploreUrlUseCase, tangemPayFeatureToggles)
+        clearMocks(moneyAccountFeatureToggles, getExploreUrlUseCase, tangemPayFeatureToggles, getUserWalletUseCase)
+        every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
         every { moneyAccountFeatureToggles.isMxnEnabled } returns false
         every { moneyAccountFeatureToggles.isYieldModeEnabled } returns false
         every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
@@ -1277,6 +1282,29 @@ internal class MoneyAccountDetailsModelTest {
             detailsModel.onDestroy()
         }
 
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN not synced banner WHEN model created THEN tangem icon shown only for cold wallet`(
+            isColdWallet: Boolean,
+        ) = runTest {
+            // Arrange
+            val userWallet = if (isColdWallet) mockk<UserWallet.Cold>() else mockk<UserWallet.Hot>()
+            every { getUserWalletUseCase(userWalletId) } returns userWallet.right()
+
+            // Act
+            val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
+            advanceUntilIdle()
+
+            // Assert
+            val icon = requireNotNull(model.uiState.value.messageBanner?.secondaryButton).iconEnd
+            if (isColdWallet) {
+                assertThat(icon).isInstanceOf(TangemIconUM.Icon::class.java)
+            } else {
+                assertThat(icon).isNull()
+            }
+            model.onDestroy()
+        }
+
         @Test
         fun `GIVEN not synced banner WHEN renew session succeeds THEN status fetched and progress hidden`() = runTest {
             // Arrange
@@ -1417,6 +1445,7 @@ internal class MoneyAccountDetailsModelTest {
             renewTangemPaySessionUseCase = renewTangemPaySessionUseCase,
             uiMessageSender = uiMessageSender,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
+            getUserWalletUseCase = getUserWalletUseCase,
         )
     }
 

@@ -9,6 +9,7 @@ import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DecoderCounters
 import com.google.common.truth.Truth.assertThat
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.just
@@ -18,7 +19,10 @@ import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(UnstableApi::class)
 internal class DefaultLoopingVideoPlayerTest {
@@ -251,8 +255,130 @@ internal class DefaultLoopingVideoPlayerTest {
         verify(exactly = 0) { listener.onVideoSizeChanged(any(), any()) }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SourceGate {
+
+        @Test
+        fun `GIVEN a source not ready WHEN a surface is attached THEN the surface is bound but playback is not prepared`() {
+            // Arrange
+            val videoPlayer = createPlayer(isSourceReady = false)
+
+            // Act
+            videoPlayer.attachSurface(surfaceView)
+
+            // Assert
+            verify(exactly = 1) { player.setVideoSurfaceView(surfaceView) }
+            verify(exactly = 0) { player.prepare() }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a surface and a source in either order WHEN both are there THEN prepared once`(model: OrderModel) {
+            // Arrange
+            val videoPlayer = createPlayer(isSourceReady = false)
+
+            // Act
+            if (model.isSurfaceFirst) {
+                videoPlayer.attachSurface(surfaceView)
+                videoPlayer.markSourceReady()
+            } else {
+                videoPlayer.markSourceReady()
+                videoPlayer.attachSurface(surfaceView)
+            }
+
+            // Assert
+            verify(exactly = 1) { player.prepare() }
+        }
+
+        @Test
+        fun `GIVEN the surface left before the source is ready WHEN a surface comes after it THEN prepared at that attach`() {
+            // Arrange
+            val videoPlayer = createPlayer(isSourceReady = false)
+            videoPlayer.attachSurface(surfaceView)
+            videoPlayer.detachSurface(surfaceView)
+
+            // Act
+            videoPlayer.markSourceReady()
+            verify(exactly = 0) { player.prepare() }
+            videoPlayer.attachSurface(otherSurfaceView)
+
+            // Assert
+            verify(exactly = 1) { player.prepare() }
+        }
+
+        @Test
+        fun `GIVEN the source marked ready twice WHEN a surface is attached THEN prepared once`() {
+            // Arrange
+            val videoPlayer = createPlayer(isSourceReady = false)
+
+            // Act
+            videoPlayer.markSourceReady()
+            videoPlayer.markSourceReady()
+            videoPlayer.attachSurface(surfaceView)
+
+            // Assert
+            verify(exactly = 1) { player.prepare() }
+        }
+
+        @Test
+        fun `GIVEN running requested before the source is ready WHEN it becomes ready THEN play was already requested and prepare follows`() {
+            // Arrange
+            val videoPlayer = createPlayer(isSourceReady = false)
+            videoPlayer.attachSurface(surfaceView)
+            videoPlayer.setRunning(isRunning = true)
+
+            // Act
+            videoPlayer.markSourceReady()
+
+            // Assert
+            verifyOrder {
+                player.play()
+                player.prepare()
+            }
+            verify(exactly = 1) { player.play() }
+        }
+
+        @Test
+        fun `GIVEN reduced motion WHEN the source is ready THEN prepared and kept paused on the first frame`() {
+            // Arrange
+            val videoPlayer = createPlayer(isMotionEnabled = false, isSourceReady = false)
+            videoPlayer.attachSurface(surfaceView)
+
+            // Act
+            videoPlayer.markSourceReady()
+            videoPlayer.setRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 1) { player.prepare() }
+            verify(exactly = 0) { player.play() }
+        }
+
+        @Test
+        fun `GIVEN a released player WHEN the source becomes ready THEN nothing is prepared`() {
+            // Arrange
+            val videoPlayer = createPlayer(isSourceReady = false)
+            videoPlayer.attachSurface(surfaceView)
+            videoPlayer.release()
+
+            // Act
+            videoPlayer.markSourceReady()
+
+            // Assert
+            verify(exactly = 0) { player.prepare() }
+        }
+
+        private fun provideTestModels() = listOf(
+            OrderModel(isSurfaceFirst = true),
+            OrderModel(isSurfaceFirst = false),
+        )
+    }
+
+    internal data class OrderModel(val isSurfaceFirst: Boolean)
+
     private fun createPlayer(
         isMotionEnabled: Boolean = true,
+        isSourceReady: Boolean = true,
         teardownScheduler: VideoTeardownScheduler = scheduler,
         decoderCounters: () -> DecoderCounters? = { null },
     ) = DefaultLoopingVideoPlayer(
@@ -260,6 +386,7 @@ internal class DefaultLoopingVideoPlayerTest {
         decoderCounters = decoderCounters,
         videoItem = videoItem,
         isMotionEnabled = isMotionEnabled,
+        isSourceReady = isSourceReady,
         listener = listener,
         teardownScheduler = teardownScheduler,
     )

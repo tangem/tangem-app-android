@@ -279,6 +279,7 @@ class NetworkLogsSaveInterceptor(
         )
         val restrictedForLogHosts = listOf(
             "us.paera.com",
+            "surveysparrow.com",
         )
     }
 }

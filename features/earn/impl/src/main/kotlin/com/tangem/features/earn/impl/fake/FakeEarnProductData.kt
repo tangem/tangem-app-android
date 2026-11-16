@@ -57,7 +57,6 @@ internal data class FakeEarnProductSpec(
     val title: TextReference,
     val provider: EarnProvider,
     val analytics: EarnProductAnalytics,
-    val hasLegacyBlock: Boolean,
 )
 
 internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
@@ -75,7 +74,7 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
             title = "Pooled staking",
             provider = fakeProvider(name = "P2P", logo = R.drawable.ic_p2p_logo),
             product = "Staking",
-        ).copy(badgeAccent = EarnBadgeAccent.Info, hasLegacyBlock = true)
+        ).copy(badgeAccent = EarnBadgeAccent.Info)
         FakeEarnProductPreset.Vault -> fakeSpec(
             id = "vault",
             rank = 2,
@@ -170,7 +169,6 @@ internal fun fakeReadyState(preset: FakeEarnProductPreset, position: FakeEarnPos
                 icon = TangemIconUM.Icon(Icons.ic_arrow_refresh_20),
             ),
         ),
-        howItWorks = fakeHowItWorks().takeUnless { isStaking },
         details = listOf(
             fakeRow("Risk", "Low", info = "How risky the product is"),
             EarnRow(
@@ -219,16 +217,15 @@ private fun fakeSpec(id: String, rank: Int, title: String, provider: EarnProvide
         title = stringReference(title),
         provider = provider,
         analytics = EarnProductAnalytics(category = "Earn", product = product),
-        hasLegacyBlock = false,
     )
 
-private fun fakeHowItWorks() = EarnHowItWorks(
+internal fun fakeHowItWorks(preset: FakeEarnProductPreset): EarnHowItWorks? = EarnHowItWorks(
     title = stringReference("How it works"),
     entries = listOf(
         EarnTextBlock(stringReference("Supply"), stringReference("Your ETH is supplied to the protocol")),
         EarnTextBlock(stringReference("Earn"), stringReference("Interest accrues automatically")),
     ),
-)
+).takeUnless { preset == FakeEarnProductPreset.Staking }
 
 private fun fakeRow(label: String, value: String, info: String? = null) = EarnRow(
     label = stringReference(label),

@@ -13,6 +13,7 @@ import com.tangem.data.yield.supply.converters.YieldTokenChartConverter
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.domain.yield.supply.models.YieldChartWindow
 import com.tangem.grow.datasource.yield.YieldIncentivesApi
 import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.yield.models.YieldSupplyChangeTokenStatusBody
@@ -125,12 +126,18 @@ internal class DefaultYieldSupplyRepository(
             YieldMarketTokenConverter.convert(response)
         }
 
-    override suspend fun getTokenChart(cryptoCurrencyToken: CryptoCurrency.Token): YieldSupplyMarketChartData {
+    override suspend fun getTokenChart(
+        cryptoCurrencyToken: CryptoCurrency.Token,
+        window: YieldChartWindow?,
+        bucketSizeDays: Int?,
+    ): YieldSupplyMarketChartData {
         val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
             ?: error("Chain id is required for evm's")
         val response = yieldSupplyApi.getYieldTokenChart(
-            Math.toIntExact(chainId),
-            cryptoCurrencyToken.contractAddress,
+            chainId = Math.toIntExact(chainId),
+            tokenAddress = cryptoCurrencyToken.contractAddress,
+            window = window?.value,
+            bucketSizeDays = bucketSizeDays,
         ).getOrThrow()
         return YieldTokenChartConverter.convert(response)
     }

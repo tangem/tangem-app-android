@@ -31,6 +31,7 @@ import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContent
 import com.tangem.domain.stories.models.StoryContentIds
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.features.polymarket.impl.R as PolymarketR
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
@@ -555,6 +556,66 @@ internal class PolymarketOnboardingModelTest {
 
         // Assert
         verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        verify(exactly = 1) { router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId)) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the story is unseen WHEN run reports a new account THEN account created toast is sent`() = runTest {
+        // Arrange
+        owesOnboarding()
+        storyIsUnseen()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(
+            PolymarketOnboardingProgress.Ready(isNewAccount = true),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { messageSender.send(ACCOUNT_CREATED_TOAST) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the story was seen WHEN run reports a new account THEN account created toast is sent`() = runTest {
+        // Arrange
+        owesOnboarding()
+        storyWasSeen()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(
+            PolymarketOnboardingProgress.Ready(isNewAccount = true),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { messageSender.send(ACCOUNT_CREATED_TOAST) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN an account that existed before WHEN run reports ready THEN nothing is sent`() = runTest {
+        // Arrange
+        owesOnboarding()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(
+            PolymarketOnboardingProgress.Ready(isNewAccount = false),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
         verify(exactly = 1) { router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId)) }
         model.onDestroy()
     }
@@ -1198,6 +1259,11 @@ internal class PolymarketOnboardingModelTest {
         const val RESOLUTION_DELAY_MILLIS = 1_000L
         val STORY_ID = StoryContentIds.STORY_POLYMARKET_ONBOARDING.id
         const val STORY_SOURCE = "Onboarding"
+        val ACCOUNT_CREATED_TOAST = SnackbarMessage(
+            message = resourceReference(R.string.account_create_success_message),
+            startIconId = CoreUiR.drawable.ic_success_20,
+            isIconTinted = false,
+        )
         val STORY_CONTENT = StoryContent(
             imageHost = "https://host/",
             story = StoryContent.Story(

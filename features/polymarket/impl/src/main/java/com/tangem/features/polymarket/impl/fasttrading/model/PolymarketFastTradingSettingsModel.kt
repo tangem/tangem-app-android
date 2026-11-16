@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.fasttrading.model
 
+import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -7,26 +8,33 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.message.modalMessage
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeysUM
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingRevokeConfirmationUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingSettingsUM
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -39,11 +47,13 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     private val startOperation: StartPolymarketSessionKeyOperationUseCase,
     private val messageSender: UiMessageSender,
     deviceIdProvider: PolymarketDeviceIdProvider,
+    private val getUserWallet: GetUserWalletUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketFastTradingSettingsComponent.Params>()
     private val converter = PolymarketFastTradingKeysUMConverter(thisDeviceName = deviceIdProvider.deviceName)
     private val isRefreshing = MutableStateFlow(false)
+    private val revokeConfirmation = MutableStateFlow<PendingRevocation?>(null)
 
     val uiState: StateFlow<PolymarketFastTradingSettingsUM>
         field = MutableStateFlow<PolymarketFastTradingSettingsUM>(
@@ -51,18 +61,27 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
         )
 
     init {
-        combine(observeFastTrading(params.userWalletId), isRefreshing) { state, isRefreshing ->
+        combine(
+            observeFastTrading(params.userWalletId),
+            isRefreshing,
+            revokeConfirmation,
+        ) { state, isRefreshing, pendingRevocation ->
             state.overview.fold(
                 ifLeft = {
+                    pendingRevocation?.let(::dismiss)
                     PolymarketFastTradingSettingsUM.Error(onBackClick = ::onBackClick, onRetryClick = ::refresh)
                 },
                 ifRight = { overview ->
+                    val keys = converter.convert(overview, state.operation)
+                    val stillOffered = pendingRevocation?.takeIf { keys.isRevokeOffered(it.address) }
+                    if (stillOffered == null) pendingRevocation?.let(::dismiss)
                     PolymarketFastTradingSettingsUM.Content(
                         onBackClick = ::onBackClick,
-                        keys = converter.convert(overview, state.operation),
+                        keys = keys,
                         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = isRefreshing) { refresh() },
                         onActionClick = ::onActionClick,
                         onActivateClick = ::onActivateClick,
+                        revokeConfirmation = stillOffered?.confirmation,
                     )
                 },
             )
@@ -81,7 +100,7 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
             FastTradingKeyActionUM.Reactivate -> {
                 startOnThisDevice(action, PolymarketSessionKeyOperationRequest.Reactivate)
             }
-            is FastTradingKeyActionUM.Revoke -> confirmRevocation(action)
+            is FastTradingKeyActionUM.Revoke -> onRevokeClick(action)
         }
     }
 
@@ -92,7 +111,14 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
     }
 
     private fun onActivateClick() {
-        if (isActivationOffered()) start(PolymarketSessionKeyOperationRequest.Activate)
+        if (isActivationOffered()) {
+            router.push(
+                PolymarketRoute.FastTradingActivation(
+                    userWalletId = params.userWalletId,
+                    action = PolymarketFastTradingActivationComponent.Action.Activate,
+                ),
+            )
+        }
     }
 
     private fun isActivationOffered(): Boolean {
@@ -100,7 +126,20 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
         return content.keys.activateBanner?.isEnabled == true
     }
 
-    private fun confirmRevocation(action: FastTradingKeyActionUM.Revoke) {
+    private fun onRevokeClick(action: FastTradingKeyActionUM.Revoke) {
+        val isHotWallet = getUserWallet(params.userWalletId).getOrElse { error ->
+            TangemLogger.e("Polymarket session key revoke skipped, wallet unavailable: $error")
+            return
+        }.isHotWallet
+        val isConfirmedByCardScan = !isHotWallet && action.subject is FastTradingKeyActionUM.RevokeSubject.Device
+        if (isConfirmedByCardScan) {
+            revoke(action.address)
+        } else {
+            confirmRevocation(action, isHoldToConfirm = isHotWallet)
+        }
+    }
+
+    private fun confirmRevocation(action: FastTradingKeyActionUM.Revoke, isHoldToConfirm: Boolean) {
         val description = when (val subject = action.subject) {
             is FastTradingKeyActionUM.RevokeSubject.Device -> resourceReference(
                 id = R.string.prediction_session_key_revoke_confirm_text,
@@ -111,34 +150,40 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
                 formatArgs = wrappedList(action.address),
             )
         }
-        messageSender.send(
-            modalMessage {
-                status {
-                    variant = TangemModalStatus.Variant.Warning
-                    title = resourceReference(R.string.prediction_session_key_revoke_confirm_title)
-                    this.description = description
-                }
-                primaryButton {
-                    text = resourceReference(R.string.prediction_session_key_revoke)
-                    onClick {
-                        dismiss()
-                        if (isRevokeOffered(action.address)) {
-                            start(PolymarketSessionKeyOperationRequest.Revoke(action.address))
-                        }
-                    }
-                }
-                secondaryButton {
-                    text = resourceReference(R.string.common_cancel)
-                }
-            },
+        lateinit var pendingRevocation: PendingRevocation
+        pendingRevocation = PendingRevocation(
+            address = action.address,
+            confirmation = FastTradingRevokeConfirmationUM(
+                description = description,
+                isHoldToConfirm = isHoldToConfirm,
+                onConfirm = {
+                    if (take(pendingRevocation)) revoke(action.address)
+                },
+                onDismiss = { dismiss(pendingRevocation) },
+            ),
         )
+        revokeConfirmation.value = pendingRevocation
+    }
+
+    private fun dismiss(pendingRevocation: PendingRevocation) {
+        revokeConfirmation.update { if (it === pendingRevocation) null else it }
+    }
+
+    private fun take(pendingRevocation: PendingRevocation): Boolean =
+        revokeConfirmation.getAndUpdate { if (it === pendingRevocation) null else it } === pendingRevocation
+
+    private fun revoke(address: String) {
+        if (isRevokeOffered(address)) start(PolymarketSessionKeyOperationRequest.Revoke(address))
     }
 
     private fun isRevokeOffered(address: String): Boolean {
         val keys = (uiState.value as? PolymarketFastTradingSettingsUM.Content)?.keys ?: return false
-        if (!keys.areActionsEnabled) return false
-        val rows = keys.thisDevice + keys.otherDevices
-        val actions = rows.flatMap { it.actions } + keys.unknownSigners.flatMap { it.actions }
+        return keys.isRevokeOffered(address)
+    }
+
+    private fun FastTradingKeysUM.isRevokeOffered(address: String): Boolean {
+        if (!areActionsEnabled) return false
+        val actions = (thisDevice + otherDevices).flatMap { it.actions } + unknownSigners.flatMap { it.actions }
         return actions.any { it is FastTradingKeyActionUM.Revoke && it.address.equals(address, ignoreCase = true) }
     }
 
@@ -158,4 +203,6 @@ internal class PolymarketFastTradingSettingsModel @Inject constructor(
             }
         }
     }
+
+    private class PendingRevocation(val address: String, val confirmation: FastTradingRevokeConfirmationUM)
 }

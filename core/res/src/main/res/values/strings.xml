@@ -801,6 +801,7 @@
   <string name="earn_calculator_axis_years">%dY</string>
   <string name="earn_calculator_decrease_accessibility">Decrease %s</string>
   <string name="earn_calculator_earned_in">%1$s earned in %2$s</string>
+  <string name="earn_calculator_earned_in_label">earned in</string>
   <string name="earn_calculator_increase_accessibility">Increase %s</string>
   <string name="earn_calculator_initial_balance">Initial balance</string>
   <string name="earn_calculator_month_accessibility">Month %d</string>
@@ -815,7 +816,10 @@
     <item quantity="one">%d Year</item>
     <item quantity="other">%d Years</item>
   </plurals>
+  <string name="earn_chart_average_apr">Average APR</string>
+  <string name="earn_chart_current_apr">Current APR</string>
   <string name="earn_clear_filter">Clear filter</string>
+  <string name="earn_deposit_title">Deposit to %s</string>
   <string name="earn_empty">The list is temporarily empty as it’s being refreshed. Check back in a moment.</string>
   <string name="earn_filter_all_networks">All networks</string>
   <string name="earn_filter_all_types">All types</string>
@@ -835,6 +839,7 @@
   <string name="earn_how_it_works_take_it_back_title">Take it back anytime</string>
   <string name="earn_how_it_works_title">How it works</string>
   <string name="earn_how_it_works_watch_it_grow_title">Watch it grow</string>
+  <string name="earn_incentive_sheet_service_fee">The displayed APY includes incentive rewards after Tangem’s %s%% service fee.</string>
   <string name="earn_mostly_used">Popular</string>
   <string name="earn_no_results">No results</string>
   <string name="earn_product_details_audits">Audits</string>
@@ -880,6 +885,7 @@
   <string name="email_subject_wc_error">WalletConnect error</string>
   <string name="error_wrong_wallet_tapped">You have used a card or ring from another wallet. Tap the card or ring associated with this wallet</string>
   <string name="eth_gas_required_exceeds_allowance">Not enough funds for the transaction. Please top up your account.</string>
+  <string name="eth_yield_manage">Manage</string>
   <string name="eth_yield_net_apy">%s net APY</string>
   <string name="eth_yield_not_active_yet">Not active yet</string>
   <string name="eth_yield_start_earning">Start earning</string>
@@ -1302,7 +1308,9 @@
   <string name="joint_account_coming_soon_description">This action isn\'t supported for joint accounts yet. We\'re working on it</string>
   <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
   <string name="joint_account_compromised_message">The account address on your device doesn\'t match the one from our servers.</string>
+  <string name="joint_account_compromised_message_v2">We couldn’t confirm this account’s details are correct, so we paused it to keep your funds safe.</string>
   <string name="joint_account_compromised_title">Can\'t verify this account</string>
+  <string name="joint_account_compromised_title_v2">Account paused for safety</string>
   <string name="joint_account_confirm_account_subtitle">Before using your Joint Account, make sure every member sees exactly the same address.</string>
   <string name="joint_account_confirm_account_title">Confirm the account</string>
   <string name="joint_account_confirm_address_compare_subtitle">Contact all members outside Tangem by phone, messenger, or in person. Check that everyone sees the exact same address.</string>
@@ -1312,6 +1320,7 @@
   <string name="joint_account_confirm_address_everyone_title">Everyone must confirm</string>
   <string name="joint_account_confirm_address_label">Shared address</string>
   <string name="joint_account_confirm_address_mismatch_button">Address doesn\'t match</string>
+  <string name="joint_account_confirm_address_share_message">Please confirm shared address: %s</string>
   <string name="joint_account_confirm_shared_address">Confirm shared address</string>
   <string name="joint_account_invite_invalid_subtitle">Check that you opened the correct link, or ask the account creator to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
@@ -1474,6 +1483,10 @@
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
   <string name="joint_operation_banner_title">%1$s wants to send %2$s</string>
   <string name="joint_operation_banner_title_own">You want to send %1$s</string>
+  <string name="joint_operation_cancel_alert_title">Cancel this transaction?</string>
+  <string name="joint_operation_canceled_by_creator">Canceled by creator</string>
+  <string name="joint_operation_canceled_by_members">Canceled by members</string>
+  <string name="joint_operation_cancelled_snackbar">Transaction cancelled</string>
   <string name="joint_operation_completed_subtitle">It has already been executed or cancelled</string>
   <string name="joint_operation_completed_title">Operation completed</string>
   <string name="joint_operation_created_at">Created at %s</string>
@@ -1837,6 +1850,12 @@
   <string name="money_account_send_unavailable_title">Operation currently unavailable</string>
   <string name="money_account_yield_mode_average_apr">Average APR %s</string>
   <string name="money_account_yield_mode_earn_up_to">Earn up to %s a year</string>
+  <string name="native_survey_comment_placeholder">Type something</string>
+  <string name="native_survey_done_description">It helps us make Tangem better.</string>
+  <string name="native_survey_done_title">Thanks for your feedback</string>
+  <string name="native_survey_nps_scale_hint">0 is not at all likely, 10 is extremely likely</string>
+  <string name="native_survey_optional">Optional</string>
+  <string name="native_survey_send_feedback">Send feedback</string>
   <string name="news_all_news">All news</string>
   <string name="news_like">Like</string>
   <plurals name="news_published_hours_ago">
@@ -2544,6 +2563,11 @@
   <string name="receive_bottom_sheet_warning_message_description">Sending any other currency will result in its irreversible loss.</string>
   <string name="receive_bottom_sheet_warning_message_full">Send only %s to this address. Sending any other currency will result in its irreversible loss.</string>
   <string name="receive_bottom_sheet_warning_title">Send only %1$s on the %2$s network</string>
+  <string name="receive_network_subtitle">%1$s network • %2$s</string>
+  <string name="receive_network_with_label">%1$s (%2$s) network</string>
+  <string name="receive_no_tag_required">No tag required</string>
+  <string name="receive_send_only_on_network">Send only %1$s on %2$s network</string>
+  <string name="receive_send_only_on_network_with_label">Send only %1$s on %2$s (%3$s) network</string>
   <string name="receive_token_description">Transfer funds from any wallet or exchange</string>
   <string name="referral_address_for_rewards">Address for rewards</string>
   <string name="referral_button_participate">Participate</string>
@@ -3200,7 +3224,7 @@
   <string name="tangempay_card_details_added_to_google_wallet_text">Card added to Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancel %1$s, move to %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">To pay monthly fee for plan and start use new card</string>
-  <string name="tangempay_card_details_awaiting_deposit_title">Top-up your account on %1$s</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">Top up your account with %1$s</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
   <string name="tangempay_card_details_change_pin">PIN code</string>
   <string name="tangempay_card_details_change_pin_success_description">The card is fully ready for payments.</string>
@@ -3255,7 +3279,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">Set a limit from %s</string>
   <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again</string>
   <string name="tangempay_card_page_activating_banner_title">Activating your physical card</string>
-  <string name="tangempay_card_page_closing_banner_description">Can take up to 5 minutes</string>
+  <string name="tangempay_card_page_closing_banner_description">Usually takes up to 5 minutes</string>
   <string name="tangempay_card_page_closing_banner_title">Closing your card</string>
   <string name="tangempay_card_page_daily_limit_change">Change</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Current limit</string>
@@ -3394,6 +3418,11 @@
   <string name="tangempay_kyc_rejected_button_text">Hide status</string>
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
   <string name="tangempay_kyc_rejected_description_span">your profile</string>
+  <plurals name="tangempay_main_group_subtitle">
+    <item quantity="one">%d account</item>
+    <item quantity="other">%d accounts</item>
+  </plurals>
+  <string name="tangempay_main_group_title">Pay</string>
   <string name="tangempay_main_select_plan">Select plan</string>
   <string name="tangempay_maximum_cards_issued_description">Close one to add a new card</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Upgrade plan to have more cards</string>

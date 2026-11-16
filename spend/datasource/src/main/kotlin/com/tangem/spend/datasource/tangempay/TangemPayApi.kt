@@ -136,12 +136,6 @@ interface TangemPayApi {
         @Query("region_code") region: String?,
     ): ApiResponse<EligibilityCheckResponse>
 
-    @GET("v1/eligibility/check")
-    suspend fun checkEligibilityForCustomer(
-        @Header("Authorization") authHeader: String,
-        @Query("product") product: String,
-    ): ApiResponse<EligibilityCheckResponse>
-
     @POST("v1/waitlist")
     suspend fun joinWaitlist(
         @Header("Authorization") authHeader: String?,

@@ -14,11 +14,9 @@ import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.features.earn.lending.impl.provider.LendingDepositGate
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
 import com.tangem.features.earn.lending.impl.supplier.LendingAssetState
-import com.tangem.features.earn.product.api.product.DefaultEarnProjection
 import com.tangem.features.earn.product.api.product.EarnActionItem
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnBlockAction
-import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnLimits
 import com.tangem.features.earn.product.api.product.EarnPosition
 import com.tangem.features.earn.product.api.product.EarnPositionState
@@ -63,9 +61,8 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         return EarnProductState.Ready(
             rate = rate,
             description = descriptionOf(symbol),
-            projection = DefaultEarnProjection(netRate = rate.fraction * (BigDecimal.ONE - provider.performanceFee)),
+            projection = provider.projectionOf(rate.fraction),
             benefits = BENEFITS,
-            howItWorks = howItWorksOf(symbol),
             details = details,
             limits = EarnLimits(minDeposit = minDeposit ?: BigDecimal.ZERO, remainingCap = null),
             apyPeriods = provider.apyPeriods,
@@ -128,14 +125,6 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         stringReference(", "),
         provider.about,
         stringReference(". Withdrawals are usually instant."),
-    )
-
-    private fun howItWorksOf(symbol: String) = EarnHowItWorks(
-        title = stringReference("How it works"),
-        entries = listOf(
-            EarnTextBlock(stringReference("Supply"), stringReference("Your $symbol is supplied to the protocol")),
-            EarnTextBlock(stringReference("Earn"), stringReference("Interest accrues automatically")),
-        ),
     )
 
     private companion object {

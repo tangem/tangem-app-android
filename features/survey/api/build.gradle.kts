@@ -9,6 +9,8 @@ android {
 }
 
 dependencies {
+    api(projects.common.routing)
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    api(projects.domain.models)
 }

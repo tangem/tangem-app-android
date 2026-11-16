@@ -1,6 +1,7 @@
 package com.tangem.features.earn.product.api.session
 
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.stringReference
@@ -85,4 +86,8 @@ sealed interface EarnAmount {
     data object Entire : EarnAmount
 }
 
-data class EarnFeeSelection(val fee: Fee, val extended: TransactionFeeExtended?)
+data class EarnFeeSelection(
+    val fee: Fee,
+    val extended: TransactionFeeExtended?,
+    val feeType: AnalyticsParam.FeeType = AnalyticsParam.FeeType.Normal,
+)

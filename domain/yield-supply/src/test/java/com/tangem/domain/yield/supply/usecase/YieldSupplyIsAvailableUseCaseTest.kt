@@ -4,17 +4,64 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.YieldSupplyWrappedNativeFactory
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class YieldSupplyIsAvailableUseCaseTest {
 
     private val repository: YieldSupplyRepository = mockk()
-    private val useCase = YieldSupplyIsAvailableUseCase(repository)
+    private val wrappedNativeFactory: YieldSupplyWrappedNativeFactory = mockk()
+    private val tokensFeatureToggles: TokensFeatureToggles = mockk()
+    private val useCase = YieldSupplyIsAvailableUseCase(
+        yieldSupplyRepository = repository,
+        wrappedNativeFactory = wrappedNativeFactory,
+        tokensFeatureToggles = tokensFeatureToggles,
+    )
+
+    @BeforeEach
+    fun setUp() {
+        every { tokensFeatureToggles.isYieldContributionEnabled } returns true
+        every { wrappedNativeFactory.create(any()) } returns null
+    }
+
+    @Test
+    fun `GIVEN the wrapped native token WHEN invoke THEN yield is unavailable without asking the repository`() =
+        runTest {
+            // Arrange
+            val token = createToken(derivationPath = Network.DerivationPath.None)
+            every { wrappedNativeFactory.create(token.network) } returns token.copy(contractAddress = "0xCONTRACT")
+
+            // Act
+            val actual = useCase(WALLET_ID, token)
+
+            // Assert
+            assertThat(actual).isFalse()
+            coVerify(exactly = 0) { repository.isYieldSupplySupported(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN the wrapped native token and yield contribution disabled WHEN invoke THEN the repository answers`() =
+        runTest {
+            // Arrange
+            val token = createToken(derivationPath = Network.DerivationPath.None)
+            every { tokensFeatureToggles.isYieldContributionEnabled } returns false
+            every { wrappedNativeFactory.create(token.network) } returns token
+            coEvery { repository.isYieldSupplySupported(WALLET_ID, token) } returns true
+
+            // Act
+            val actual = useCase(WALLET_ID, token)
+
+            // Assert
+            assertThat(actual).isTrue()
+        }
 
     @Test
     fun `GIVEN a personal token WHEN invoke THEN the repository answers`() = runTest {

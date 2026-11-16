@@ -28,6 +28,9 @@ import com.tangem.domain.polymarket.model.PredictionRedeemCalls
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -41,13 +44,14 @@ internal class SubmitPredictionClaimInteractorTest {
     private val positionsRepository: PolymarketPositionsRepository = mockk()
     private val signer: PolymarketTypedDataSigner = mockk()
     private var nowMillis = NOW_MILLIS
+    private val depositWalletLock = PolymarketDepositWalletLock()
 
     private val interactor = SubmitPredictionClaimInteractor(
         redeemRepository = redeemRepository,
         polymarketRepository = polymarketRepository,
         positionsRepository = positionsRepository,
         signer = signer,
-        depositWalletLock = PolymarketDepositWalletLock(),
+        depositWalletLock = depositWalletLock,
         currentTimeMillis = { nowMillis },
     )
 
@@ -239,6 +243,25 @@ internal class SubmitPredictionClaimInteractorTest {
             // Assert
             assertThat(actual).isEqualTo(PredictionClaimFailure.NonceUnavailable.left())
             coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN a session key operation holds the wallet WHEN claimed THEN WalletBusy and nothing is read or signed`() =
+        runTest {
+            // Arrange
+            val operating = CompletableDeferred<Unit>()
+            launch { depositWalletLock.withSessionKeyOperation(USER_WALLET_ID) { operating.await() } }
+            runCurrent()
+
+            // Act
+            val actual = interactor.claim(params())
+
+            // Assert
+            assertThat(actual).isEqualTo(PredictionClaimFailure.WalletBusy.left())
+            coVerify(exactly = 0) { polymarketRepository.getRelayerNonce(any()) }
+            coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
+            coVerify(exactly = 0) { redeemRepository.submit(any(), any()) }
+            operating.complete(Unit)
         }
 
     @Test

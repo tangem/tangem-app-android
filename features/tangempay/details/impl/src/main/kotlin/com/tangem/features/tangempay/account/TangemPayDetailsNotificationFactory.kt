@@ -18,6 +18,7 @@ import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
 
 internal class TangemPayDetailsNotificationFactory(
     private val intents: TangemPayDetailIntents,
+    private val isColdWallet: Boolean,
 ) {
     fun createErrorConfig(error: PaymentAccountStatusValue.Error?): TangemMessageBanner.State? = when (error) {
         null -> null
@@ -110,7 +111,7 @@ internal class TangemPayDetailsNotificationFactory(
             iconEnd = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_tangem_24,
                 tintReference = { TangemTheme.colors3.icon.primary },
-            ),
+            ).takeIf { isColdWallet },
         ),
     )
 

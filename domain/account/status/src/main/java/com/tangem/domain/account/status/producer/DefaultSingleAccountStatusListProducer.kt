@@ -26,6 +26,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.balance.BalanceContributionProvider
 import com.tangem.domain.models.currency.balance.ContributionResolver
+import com.tangem.domain.models.currency.balance.resolversFlow
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.PriceChange
@@ -449,17 +450,9 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         }
     }
 
-    /** Frames of every registered [BalanceContributionProvider]. */
+    /** Frames of every registered [BalanceContributionProvider]: the portfolio takes every contribution type. */
     private fun contributionResolversFlow(userWallet: UserWallet): Flow<List<ContributionResolver>> {
-        if (balanceContributionProviders.isEmpty()) {
-            return flowOf(emptyList())
-        }
-
-        return combine(
-            balanceContributionProviders.map { provider -> provider.contributions(userWallet) },
-        ) { resolvers ->
-            resolvers.toList()
-        }
+        return balanceContributionProviders.resolversFlow(userWallet = userWallet)
     }
 
     private fun networkStatusFlow(walletId: UserWalletId): Flow<Map<Network.ID, NetworkStatus>> =

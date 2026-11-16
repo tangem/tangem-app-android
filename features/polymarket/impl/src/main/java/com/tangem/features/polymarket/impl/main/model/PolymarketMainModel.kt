@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.main.model
 
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -35,6 +36,7 @@ import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
@@ -324,13 +326,28 @@ internal class PolymarketMainModel @Inject constructor(
             onActionClick = ::onFastTradingSettingsClick,
         )
         PolymarketFastTradingBanner.Activate -> PolymarketFastTradingBannerUM.Activate(
-            onActionClick = ::onFastTradingSettingsClick,
-            onCloseClick = ::dismissFastTradingActivation,
+            onActionClick = { openFastTradingActivation(PolymarketFastTradingActivationComponent.Action.Activate) },
+            onCloseClick = { dismissFastTradingBanner(this) },
+        )
+        is PolymarketFastTradingBanner.Reactivate -> PolymarketFastTradingBannerUM.Reactivate(
+            onActionClick = {
+                openFastTradingActivation(PolymarketFastTradingActivationComponent.Action.Reactivate(request))
+            },
+            onCloseClick = { dismissFastTradingBanner(this) },
+        )
+        is PolymarketFastTradingBanner.Extend -> PolymarketFastTradingBannerUM.Extend(
+            daysLeft = daysLeft,
+            onActionClick = { openFastTradingActivation(PolymarketFastTradingActivationComponent.Action.Extend) },
+            onCloseClick = { dismissFastTradingBanner(this) },
         )
     }
 
-    private fun dismissFastTradingActivation() {
-        modelScope.launch { fastTradingBannerSource.dismissActivation(userWalletId = params.userWalletId) }
+    private fun openFastTradingActivation(action: PolymarketFastTradingActivationComponent.Action) {
+        router.push(PolymarketRoute.FastTradingActivation(userWalletId = params.userWalletId, action = action))
+    }
+
+    private fun dismissFastTradingBanner(banner: PolymarketFastTradingBanner) {
+        modelScope.launch { fastTradingBannerSource.dismiss(userWalletId = params.userWalletId, banner = banner) }
     }
 
     private fun returnToGate() {
@@ -428,10 +445,11 @@ internal class PolymarketMainModel @Inject constructor(
         messageSender.send(SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)))
     }
 
-    private fun onEventClick(eventId: String) {
+    private fun onEventClick(event: PolymarketEvent) {
         router.push(
             PolymarketRoute.EventDetails(
-                eventId = eventId,
+                eventId = event.id,
+                eventType = event.eventType,
                 userWalletId = params.userWalletId,
                 categoryLabel = selectedFeedCategory()?.label,
             ),

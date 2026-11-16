@@ -14,10 +14,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
 import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -37,6 +39,7 @@ internal class TangemPayVerifiedModel @Inject constructor(
     private val getTangemPayProductsAvailabilityUseCase: GetTangemPayProductsAvailabilityUseCase,
     private val startTangemPayOnboardingUseCase: StartTangemPayOnboardingUseCase,
     private val analytics: AnalyticsEventHandler,
+    getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayVerifiedComponent.Params>()
@@ -49,6 +52,7 @@ internal class TangemPayVerifiedModel @Inject constructor(
         onChoosePlanClick = ::onChoosePlanClick,
         onOpenMoneyAccountClick = ::onOpenMoneyAccountClick,
         onCloseClick = ::onCloseClick,
+        isColdWallet = getUserWalletUseCase(params.userWalletId).getOrNull()?.isColdWallet == true,
     )
 
     val stackNavigation = StackNavigation<TangemPayVerifiedRoute>()

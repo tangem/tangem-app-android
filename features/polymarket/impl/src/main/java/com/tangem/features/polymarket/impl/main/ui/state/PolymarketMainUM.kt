@@ -43,4 +43,15 @@ internal sealed interface PolymarketFastTradingBannerUM {
         override val onActionClick: () -> Unit,
         val onCloseClick: () -> Unit,
     ) : PolymarketFastTradingBannerUM
+
+    data class Reactivate(
+        override val onActionClick: () -> Unit,
+        val onCloseClick: () -> Unit,
+    ) : PolymarketFastTradingBannerUM
+
+    data class Extend(
+        val daysLeft: Int,
+        override val onActionClick: () -> Unit,
+        val onCloseClick: () -> Unit,
+    ) : PolymarketFastTradingBannerUM
 }

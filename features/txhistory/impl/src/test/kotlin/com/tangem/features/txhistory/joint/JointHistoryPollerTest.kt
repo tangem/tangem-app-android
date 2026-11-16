@@ -17,6 +17,7 @@ internal class JointHistoryPollerTest {
 
     private val isResumed = MutableStateFlow(true)
     private val hasLoadedMorePages = MutableStateFlow(false)
+    private val isWalletLinked = MutableStateFlow(true)
     private var reloads = 0
 
     @Test
@@ -107,6 +108,52 @@ internal class JointHistoryPollerTest {
     }
 
     @Test
+    fun `GIVEN a wallet not linked to the device WHEN intervals pass THEN history is not reloaded`() = runTest {
+        // Arrange
+        isWalletLinked.value = false
+        launchPoller(currency = jointCurrency)
+
+        // Act
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 3)
+        runCurrent()
+
+        // Assert
+        assertThat(reloads).isEqualTo(0)
+    }
+
+    @Test
+    fun `GIVEN a wallet not linked WHEN it gets linked THEN polling starts`() = runTest {
+        // Arrange
+        isWalletLinked.value = false
+        launchPoller(currency = jointCurrency)
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 2)
+
+        // Act
+        isWalletLinked.value = true
+        advanceTimeBy(POLL_INTERVAL_MILLIS)
+        runCurrent()
+
+        // Assert
+        assertThat(reloads).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN a polling joint currency WHEN the link is lost THEN polling stops`() = runTest {
+        // Arrange
+        launchPoller(currency = jointCurrency)
+        advanceTimeBy(POLL_INTERVAL_MILLIS)
+        runCurrent()
+
+        // Act
+        isWalletLinked.value = false
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 3)
+        runCurrent()
+
+        // Assert
+        assertThat(reloads).isEqualTo(1)
+    }
+
+    @Test
     fun `GIVEN a non-joint currency WHEN resumed THEN history is not reloaded`() = runTest {
         // Arrange
         launchPoller(currency = MockCryptoCurrencyFactory().ethereum)
@@ -126,6 +173,7 @@ internal class JointHistoryPollerTest {
             currency = currency,
             isResumed = isResumed,
             hasLoadedMorePages = hasLoadedMorePages,
+            isWalletLinked = isWalletLinked,
             reload = { reloads++ },
         )
         runCurrent()

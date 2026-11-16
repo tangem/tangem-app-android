@@ -2,6 +2,7 @@ package com.tangem.features.earn.lending.impl.session
 
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.earn.lending.impl.provider.isSameTransactionAs
 import com.tangem.features.earn.product.api.product.EarnRow
@@ -16,12 +17,14 @@ import kotlin.time.Duration
 
 /**
  * @property fee       the fee picked in the selector, priced for the summed gas limit of [txs]
+ * @property feeType   which selector option [fee] is, reported to analytics
  * @property operation what [txs] were built to do; they are verified against it, not against a fresher state
  * @property txs       estimated transactions, the preparation (if any) first
  * @property planKey   the provider state the transactions were built for
  */
 internal data class LendingPlan(
     override val fee: Fee,
+    val feeType: AnalyticsParam.FeeType,
     override val expectedAmount: BigDecimal?,
     override val rows: List<EarnRow>,
     override val withdrawMode: WithdrawMode?,
@@ -30,6 +33,7 @@ internal data class LendingPlan(
     val amount: BigDecimal,
     val txs: List<TransactionData.Uncompiled>,
     val planKey: String,
+    val isWithUpgrade: Boolean,
 ) : EarnPlan {
 
     override val quoteTtl: Duration? = null

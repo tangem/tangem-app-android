@@ -90,8 +90,7 @@ internal class EarnInfoConverter @Inject constructor(
                         cryptoText(amount, status.currency, isBalanceHidden)
                     }
                 }.toImmutableList(),
-                // The informer modal cannot be built without entries
-                onHowItWorksClick = ready.howItWorks
+                onHowItWorksClick = product.howItWorks
                     ?.takeIf { it.entries.isNotEmpty() }
                     ?.let { { callbacks.onHowItWorksClick(it) } },
             ),

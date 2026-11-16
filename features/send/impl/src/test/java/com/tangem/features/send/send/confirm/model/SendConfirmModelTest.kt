@@ -53,6 +53,7 @@ import com.tangem.test.core.ProvideTestModels
 import io.mockk.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -993,6 +994,70 @@ internal class SendConfirmModelTest : SendModelTestBase() {
 
             // Assert
             assertThat(amountSlot.captured).isEqualTo(BigDecimal("0.5"))
+        }
+
+        @Test
+        fun `GIVEN linked wallet WHEN onSendClick THEN the link is ensured before the operation is prepared`() = runTest {
+            // Arrange
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery { jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), any()) } returns prepared().right()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerifyOrder {
+                ensureWalletLinkedUseCase(testUserWallet)
+                jointSendDelegate.prepareOperation(jointAccount, any(), any(), any(), any())
+            }
+        }
+
+        @Test
+        fun `GIVEN wallet link refused WHEN onSendClick THEN nothing is prepared and the step stays editable`() = runTest {
+            // Arrange
+            val onSendTransaction: () -> Unit = mockk(relaxed = true)
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery { ensureWalletLinkedUseCase(testUserWallet) } returns false
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            val confirmUM = sut.uiState.value.confirmUM as ConfirmUM.Content
+            assertThat(confirmUM.isSending).isFalse()
+            coVerify(exactly = 0) { jointSendDelegate.prepareOperation(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { jointSendDelegate.submitOperation(any()) }
+            verify(exactly = 0) { onSendTransaction() }
+        }
+
+        @Test
+        fun `GIVEN wallet link sheet is open WHEN onSendClick THEN the button keeps loading until it is answered`() = runTest {
+            // Arrange
+            val linking = CompletableDeferred<Boolean>()
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery { ensureWalletLinkedUseCase(testUserWallet) } coAnswers { linking.await() }
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+            val whileLinking = sut.uiState.value.confirmUM as ConfirmUM.Content
+            linking.complete(false)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(whileLinking.isSending).isTrue()
+            assertThat((sut.uiState.value.confirmUM as ConfirmUM.Content).isSending).isFalse()
         }
 
         @Test

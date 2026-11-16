@@ -421,22 +421,6 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideCheckTangemPayEligibilityByKycUseCase(
-            residencyRepository: TangemPayResidencyRepository,
-        ): CheckTangemPayEligibilityForCustomerUseCase {
-            return CheckTangemPayEligibilityForCustomerUseCase(residencyRepository)
-        }
-
-        @Provides
-        fun provideGetTangemPayProductsAvailabilityForCustomerUseCase(
-            checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
-        ): GetTangemPayProductsAvailabilityForCustomerUseCase {
-            return GetTangemPayProductsAvailabilityForCustomerUseCase(
-                checkTangemPayEligibilityForCustomerUseCase = checkTangemPayEligibilityForCustomerUseCase,
-            )
-        }
-
-        @Provides
         fun provideGetTangemPayProductsAvailabilityForCountryUseCase(
             checkTangemPayEligibilityUseCase: CheckTangemPayEligibilityUseCase,
         ): GetTangemPayProductsAvailabilityForCountryUseCase {
@@ -633,17 +617,6 @@ internal interface TangemPayDataModule {
             customerSummaryRepository: CustomerSummaryRepository,
         ): GetCustomerSummaryUseCase {
             return GetCustomerSummaryUseCase(customerSummaryRepository = customerSummaryRepository)
-        }
-
-        @Provides
-        fun provideIsTangemPayCustomerVerifiedUseCase(
-            getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
-            tangemPayFeatureToggles: TangemPayFeatureToggles,
-        ): IsTangemPayCustomerVerifiedUseCase {
-            return IsTangemPayCustomerVerifiedUseCase(
-                getCustomerSummaryUseCase = getCustomerSummaryUseCase,
-                tangemPayFeatureToggles = tangemPayFeatureToggles,
-            )
         }
 
         @Provides

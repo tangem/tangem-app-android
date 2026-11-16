@@ -20,36 +20,24 @@ internal class EarnPickerCta @Inject constructor() {
         onActionClick: (EarnAction) -> Unit,
         onBlocked: (EarnBlock) -> Unit,
         onAddFunds: () -> Unit,
-    ): Result {
+    ): TangemButtonUM {
         if (state !is EarnProductState.Ready) {
-            return Result(button = button(EarnPickerTexts.startEarning, isEnabled = false), hint = null)
+            return button(EarnPickerTexts.startEarning, isEnabled = false)
         }
 
         val primary = state.primary
         if (ethBalance == null) {
-            return Result(button = button(primary.label, isEnabled = false), hint = null)
+            return button(primary.label, isEnabled = false)
         }
 
         val block = primary.guardedBy(state).block
-        val minDeposit = state.limits.minDeposit
         val isStart = state.position == EarnPositionState.None
         return when {
-            block != null -> Result(
-                button = button(primary.label, isDimmed = true, onClick = { onBlocked(block) }),
-                hint = null,
-            )
-            isStart && ethBalance < minDeposit -> Result(
-                button = button(EarnPickerTexts.addFunds, onClick = onAddFunds),
-                hint = EarnPickerTexts.minDepositHint(minDeposit),
-            )
-            else -> Result(
-                button = button(primary.label, onClick = { onActionClick(primary.action) }),
-                hint = null,
-            )
+            block != null -> button(primary.label, isDimmed = true, onClick = { onBlocked(block) })
+            isStart && ethBalance < state.limits.minDeposit -> button(EarnPickerTexts.addFunds, onClick = onAddFunds)
+            else -> button(primary.label, onClick = { onActionClick(primary.action) })
         }
     }
-
-    data class Result(val button: TangemButtonUM, val hint: TextReference?)
 
     private fun button(
         text: TextReference,

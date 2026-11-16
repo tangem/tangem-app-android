@@ -2621,7 +2621,7 @@
   <string name="tangempay_card_details_added_to_google_wallet_text">カードをGoogleウォレットに追加しました</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">%1$s をキャンセルし、%2$s に切り替える</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">プランの月額料金を支払い、新しいカードの利用を開始するには</string>
-  <string name="tangempay_card_details_awaiting_deposit_title">%1$s までにアカウントにチャージしてください</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">アカウントに %1$s をチャージしてください</string>
   <string name="tangempay_card_details_card_number">カード番号</string>
   <string name="tangempay_card_details_change_pin">PINコード</string>
   <string name="tangempay_card_details_change_pin_success_description">カードは支払いの準備が整いました。</string>
@@ -2676,7 +2676,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">%s以上の金額を設定してください</string>
   <string name="tangempay_card_limit_setup_error_message">限度額を設定できませんでした。もう一度お試しください</string>
   <string name="tangempay_card_page_activating_banner_title">プラスチックカードを有効化しています</string>
-  <string name="tangempay_card_page_closing_banner_description">最大5分ほどかかる場合があります</string>
+  <string name="tangempay_card_page_closing_banner_description">通常、最大5分ほどかかります。</string>
   <string name="tangempay_card_page_closing_banner_title">カードを解約しています</string>
   <string name="tangempay_card_page_daily_limit_change">変更</string>
   <string name="tangempay_card_page_daily_limit_current_limit">現在の利用限度額</string>

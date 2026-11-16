@@ -56,7 +56,6 @@ data class PreparedPredictionWithdrawal(
     val walletId: String,
     val ownerAddress: String,
     val depositWalletAddress: String,
-    val nonce: String,
     val deadline: String,
     val call: PolymarketApprovalCall,
     val decoded: PredictionTransferCall,

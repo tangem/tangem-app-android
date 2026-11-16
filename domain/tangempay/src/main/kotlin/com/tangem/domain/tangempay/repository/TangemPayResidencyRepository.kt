@@ -5,7 +5,6 @@ import com.tangem.domain.models.tangempay.TangemPayCountry
 import com.tangem.domain.models.tangempay.TangemPayEligibility
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.tangempay.TangemPayRegion
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.error.TangemPayApiError
 
 interface TangemPayResidencyRepository {
@@ -18,10 +17,5 @@ interface TangemPayResidencyRepository {
         product: TangemPayProduct,
         countryCode: String,
         regionCode: String?,
-    ): Either<TangemPayApiError, TangemPayEligibility>
-
-    suspend fun checkEligibilityForCustomer(
-        userWalletId: UserWalletId,
-        product: TangemPayProduct,
     ): Either<TangemPayApiError, TangemPayEligibility>
 }

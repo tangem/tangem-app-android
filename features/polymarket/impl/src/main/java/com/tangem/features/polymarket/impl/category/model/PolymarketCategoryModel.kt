@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.category.model
 
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -159,10 +160,11 @@ internal class PolymarketCategoryModel @Inject constructor(
         uiState.update { it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = value)) }
     }
 
-    private fun openEvent(eventId: String) {
+    private fun openEvent(event: PolymarketEvent) {
         router.push(
             PolymarketRoute.EventDetails(
-                eventId = eventId,
+                eventId = event.id,
+                eventType = event.eventType,
                 userWalletId = params.userWalletId,
                 categoryLabel = selectedCategory().label,
             ),

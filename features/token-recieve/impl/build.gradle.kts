@@ -52,4 +52,7 @@ dependencies {
 
     /** Feature Apis */
     implementation(projects.features.tokenRecieve.api)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

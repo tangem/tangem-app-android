@@ -7,6 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.product.api.product.EarnApyHistory
+import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProvider
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +25,8 @@ internal interface LendingProvider {
     val about: TextReference
 
     val websiteUrl: String
+
+    val legal: EarnLegal
 
     /** Chart periods: the depth of the provider's rate history defines them */
     val apyPeriods: List<EarnPeriod>
@@ -81,6 +84,9 @@ internal interface LendingProviderState {
 
     /** Fingerprint of what the transactions depend on: when it changes, a prepared plan is stale */
     val planKey: String
+
+    /** The provider contract is outdated: the next transaction also upgrades it */
+    val isUpgradeRequired: Boolean
 }
 
 internal sealed interface LendingDepositGate {

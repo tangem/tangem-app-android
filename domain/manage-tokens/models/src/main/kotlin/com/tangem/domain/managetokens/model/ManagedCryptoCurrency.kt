@@ -80,6 +80,7 @@ sealed class ManagedCryptoCurrency {
                     is Network.StandardType.BEP20,
                     is Network.StandardType.ERC20,
                     is Network.StandardType.TRC20,
+                    is Network.StandardType.CAP20,
                     -> network.standardType.name
                     is Network.StandardType.Unspecified -> ""
                 }

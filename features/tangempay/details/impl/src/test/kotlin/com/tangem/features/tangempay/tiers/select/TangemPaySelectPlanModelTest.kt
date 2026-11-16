@@ -12,6 +12,7 @@ import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
@@ -28,6 +29,7 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
@@ -91,6 +93,9 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
             uiMessageSender = uiMessageSender,
             analytics = analytics,
             urlOpener = urlOpener,
+            getUserWalletUseCase = mockk {
+                every { this@mockk(USER_WALLET_ID) } returns mockk<UserWallet.Cold>().right()
+            },
         ).destroyAfterTest()
     }
 
