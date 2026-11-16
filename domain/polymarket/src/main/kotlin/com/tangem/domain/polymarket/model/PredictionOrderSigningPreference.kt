@@ -5,4 +5,6 @@ enum class PredictionOrderSigningPreference {
     AUTOMATIC,
 
     OWNER_ONLY,
+
+    SESSION_KEY_ONLY,
 }

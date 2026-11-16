@@ -47,7 +47,6 @@ internal class PreviewDetailsComponent : DetailsComponent {
     val previewState = DetailsUM(
         items = previewBlocks,
         footer = previewFooter,
-        selectFeedbackEmailTypeBSConfig = TangemBottomSheetConfig.Empty,
         selectContactSupportTypeBSConfig = TangemBottomSheetConfig.Empty,
         popBack = { /* no-op */ },
     )

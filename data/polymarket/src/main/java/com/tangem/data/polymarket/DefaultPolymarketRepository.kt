@@ -43,7 +43,7 @@ import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketCategory
-import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
+import com.tangem.data.polymarket.converter.PolymarketCategoryConverter
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketEvent
@@ -108,13 +108,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
             safeApiCall(
                 call = {
                     polymarketApi.getCategories(walletId = userWalletId.stringValue, locale = null).bind().categories
-                        .map { category ->
-                            PolymarketCategory(
-                                id = category.id,
-                                label = category.label,
-                                icon = PolymarketCategoryIcon.fromKey(category.icon),
-                            )
-                        }
+                        .map(PolymarketCategoryConverter::convert)
                         .right()
                 },
                 onError = { DataError.NetworkError.NoInternetConnection().left() },
@@ -194,6 +188,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
         val response = polymarketApi.getEvents(
             walletId = userWalletId.stringValue,
             category = config.category,
+            filter = config.filter?.value,
             limit = limit,
             cursor = cursor,
         )

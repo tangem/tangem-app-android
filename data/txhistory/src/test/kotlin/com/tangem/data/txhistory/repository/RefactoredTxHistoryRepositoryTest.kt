@@ -1,9 +1,11 @@
 package com.tangem.data.txhistory.repository
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.factory.ExpressTransactionAssetFactory
 import com.tangem.data.txhistory.repository.factory.ExpressTxByIdFactory
+import com.tangem.data.txhistory.repository.paging.TxHistoryPageBatchFetcher
 import com.tangem.store.datasource.txhistory.TxHistoryItemsStore
 import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
@@ -18,8 +20,12 @@ import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.TxHistoryListConfig
+import com.tangem.domain.txhistory.models.Page
+import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.test.core.ProvideTestModels
@@ -58,6 +64,7 @@ internal class RefactoredTxHistoryRepositoryTest {
     private val expressTransactionAssetFactory: ExpressTransactionAssetFactory = mockk()
     private val cacheRegistry: CacheRegistry = mockk()
     private val yieldModuleAddressProvider: YieldModuleAddressProvider = mockk()
+    private val networkConnectionManager: NetworkConnectionManager = mockk()
     private val currency: CryptoCurrency = mockk(relaxed = true)
     private val token = MockCryptoCurrencyFactory().createToken(Blockchain.Polygon)
     private val coin = MockCryptoCurrencyFactory().createCoin(Blockchain.Polygon)
@@ -72,6 +79,7 @@ internal class RefactoredTxHistoryRepositoryTest {
         cacheRegistry = cacheRegistry,
         watchedAddresses = ExpressWatchedAddresses(walletManagersFacade, yieldModuleAddressProvider),
         dispatchers = TestingCoroutineDispatcherProvider(),
+        networkConnectionManager = networkConnectionManager,
     )
 
     @BeforeEach
@@ -396,6 +404,95 @@ internal class RefactoredTxHistoryRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LoadItems {
+
+        @BeforeEach
+        fun resetCache() {
+            clearMocks(txHistoryItemsStore, cacheRegistry, networkConnectionManager)
+            coEvery { walletManagersFacade.getRecentTransactions(any(), any()) } returns emptyList()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN page refresh fails WHEN loadItems THEN cached page served only offline with the option`(
+            model: LoadItemsModel,
+        ) = runTest {
+            // Arrange
+            coEvery {
+                cacheRegistry.invokeOnExpire(key = any(), skipCache = any(), expireIn = any(), block = any())
+            } throws REFRESH_ERROR
+            coEvery { txHistoryItemsStore.getSyncOrNull(any(), model.page) } returns model.cachedPage
+            every { networkConnectionManager.isOnlineSync } returns model.isOnline
+
+            // Act
+            val actual = runCatching { repository.loadItems(request = request(model), batchSize = BATCH_SIZE) }
+
+            // Assert
+            assertThat(actual.getOrNull()).isEqualTo(model.expectedPage)
+            assertThat(actual.exceptionOrNull()).isEqualTo(model.expectedError)
+        }
+
+        private fun provideTestModels() = listOf(
+            LoadItemsModel(
+                shouldUseCacheWhenOffline = true,
+                isOnline = false,
+                cachedPage = CACHED_PAGE,
+                expectedPage = CACHED_PAGE,
+                expectedError = null,
+            ),
+            LoadItemsModel(
+                shouldUseCacheWhenOffline = true,
+                isOnline = false,
+                page = Page.Initial,
+                cachedPage = CACHED_FIRST_PAGE,
+                expectedPage = CACHED_FIRST_PAGE,
+                expectedError = null,
+            ),
+            LoadItemsModel(
+                shouldUseCacheWhenOffline = true,
+                isOnline = true,
+                cachedPage = CACHED_PAGE,
+                expectedPage = null,
+                expectedError = REFRESH_ERROR,
+            ),
+            LoadItemsModel(
+                shouldUseCacheWhenOffline = false,
+                isOnline = false,
+                cachedPage = CACHED_PAGE,
+                expectedPage = null,
+                expectedError = REFRESH_ERROR,
+            ),
+            LoadItemsModel(
+                shouldUseCacheWhenOffline = true,
+                isOnline = false,
+                cachedPage = null,
+                expectedPage = null,
+                expectedError = REFRESH_ERROR,
+            ),
+        )
+
+        private fun request(model: LoadItemsModel) = TxHistoryPageBatchFetcher.Request(
+            page = model.page,
+            params = TxHistoryListConfig(
+                userWalletId = USER_WALLET_ID,
+                currency = currency,
+                shouldRefresh = true,
+                shouldUseCacheWhenOffline = model.shouldUseCacheWhenOffline,
+            ),
+        )
+    }
+
+    data class LoadItemsModel(
+        val shouldUseCacheWhenOffline: Boolean,
+        val isOnline: Boolean,
+        val page: Page = CACHED_PAGE.currentPage,
+        val cachedPage: PaginationWrapper<TxInfo>?,
+        val expectedPage: PaginationWrapper<TxInfo>?,
+        val expectedError: Throwable?,
+    )
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class GetExpressTxById {
 
         @Test
@@ -621,5 +718,18 @@ internal class RefactoredTxHistoryRepositoryTest {
         const val EPOCH_ISO = "1970-01-01T00:00:00.000Z"
         const val TX_ID = "tx-1"
         const val CREATED_AT = "2026-06-01T00:00:00Z"
+        const val BATCH_SIZE = 50
+
+        val CACHED_PAGE = PaginationWrapper<TxInfo>(
+            currentPage = Page.Next("2"),
+            nextPage = Page.LastPage,
+            items = emptyList(),
+        )
+        val CACHED_FIRST_PAGE = PaginationWrapper<TxInfo>(
+            currentPage = Page.Initial,
+            nextPage = Page.Next("2"),
+            items = emptyList(),
+        )
+        val REFRESH_ERROR = IllegalStateException("offline")
     }
 }

@@ -7,6 +7,7 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.BankRail
@@ -62,21 +63,35 @@ internal class DefaultBankOfframpRepositoryTest {
     fun `GIVEN two recipients WHEN getBankAccounts THEN both converted`() = runTest {
         // Arrange
         val response = BankAccountsResponse(result = listOf(account("a-1"), account("a-2")))
-        coEvery { tangemPayApi.getBankAccounts(AUTH_HEADER) } returns ApiResponse.Success(response)
+        coEvery { tangemPayApi.getBankAccounts(AUTH_HEADER, null) } returns ApiResponse.Success(response)
 
         // Act
         val actual = repository.getBankAccounts(WALLET_ID)
 
         // Assert
         assertThat(actual.getOrNull()?.map { it.id }).containsExactly("a-1", "a-2").inOrder()
-        coVerify(exactly = 1) { tangemPayApi.getBankAccounts(AUTH_HEADER) }
+        coVerify(exactly = 1) { tangemPayApi.getBankAccounts(AUTH_HEADER, null) }
+    }
+
+    @Test
+    fun `GIVEN rail WHEN getBankAccounts THEN rail sent as filter`() = runTest {
+        // Arrange
+        val response = BankAccountsResponse(result = listOf(account("a-1")))
+        coEvery { tangemPayApi.getBankAccounts(AUTH_HEADER, "SPEI") } returns ApiResponse.Success(response)
+
+        // Act
+        val actual = repository.getBankAccounts(WALLET_ID, rail = BankRail.SPEI)
+
+        // Assert
+        assertThat(actual.getOrNull()?.map { it.id }).containsExactly("a-1")
+        coVerify(exactly = 1) { tangemPayApi.getBankAccounts(AUTH_HEADER, "SPEI") }
     }
 
     @Test
     fun `GIVEN account without details WHEN getBankAccounts THEN it is skipped`() = runTest {
         // Arrange
         val response = BankAccountsResponse(result = listOf(account("a-1"), account("a-2").copy(details = null)))
-        coEvery { tangemPayApi.getBankAccounts(AUTH_HEADER) } returns ApiResponse.Success(response)
+        coEvery { tangemPayApi.getBankAccounts(AUTH_HEADER, null) } returns ApiResponse.Success(response)
 
         // Act
         val actual = repository.getBankAccounts(WALLET_ID)
@@ -89,7 +104,7 @@ internal class DefaultBankOfframpRepositoryTest {
     fun `GIVEN no recipients WHEN getBankAccounts THEN empty list`() = runTest {
         // Arrange
         coEvery {
-            tangemPayApi.getBankAccounts(AUTH_HEADER)
+            tangemPayApi.getBankAccounts(AUTH_HEADER, null)
         } returns ApiResponse.Success(BankAccountsResponse(result = null))
 
         // Act
@@ -102,7 +117,7 @@ internal class DefaultBankOfframpRepositoryTest {
     @Test
     fun `GIVEN failing request WHEN getBankAccounts THEN unknown error`() = runTest {
         // Arrange
-        coEvery { tangemPayApi.getBankAccounts(AUTH_HEADER) } returns
+        coEvery { tangemPayApi.getBankAccounts(AUTH_HEADER, null) } returns
             ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<BankAccountsResponse>
 
         // Act
@@ -160,8 +175,10 @@ internal class DefaultBankOfframpRepositoryTest {
                 destinations = listOf(
                     OfframpDestination(
                         rail = BankRail.ACH,
+                        currency = "USD",
                         fee = OfframpFee(
                             name = "ACH",
+                            calculationType = AccountFee.CalculationType.FIXED,
                             amount = BigDecimal("1.50"),
                             currency = "USD",
                             description = null,
@@ -253,6 +270,7 @@ internal class DefaultBankOfframpRepositoryTest {
             destinations = listOf(
                 BankOfframpOptionsResponse.Destination(
                     rail = "ACH",
+                    currency = "USD",
                     fee = BankOfframpOptionsResponse.Fee(
                         name = "ACH",
                         calculationType = "FIXED",

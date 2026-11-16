@@ -12,7 +12,6 @@ import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.TangemPayAuthApi
 import com.tangem.spend.datasource.pay.TangemPayProvisioningApi
 import com.tangem.spend.datasource.pay.serialization.TangemPaySerializersModuleProvider
-import com.tangem.spend.datasource.visa.VisaApi
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.serialization.SerializersModuleProvider
 import dagger.Module
@@ -83,24 +82,6 @@ internal object SpendDatasourceModule {
                 ),
                 shouldSaveLogs = false,
                 isLoggable = false,
-                serialization = ApiSerialization.KOTLINX,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideVisaApi(factory: RetrofitFactory): VisaApi {
-        return factory.build(
-            RetrofitApiSpec(
-                apiConfigId = TangemPay.Bff.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-                timeouts = Timeouts(
-                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                ),
                 serialization = ApiSerialization.KOTLINX,
             ),
         )

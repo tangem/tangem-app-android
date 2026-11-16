@@ -1,6 +1,5 @@
 package com.tangem.data.walletconnect.network.ethereum
 
-import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
@@ -9,7 +8,6 @@ import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcJsonRpcError
-import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.test.core.ProvideTestModels
@@ -17,6 +15,7 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -162,9 +161,9 @@ internal class WcEthChainRequestResolverTest {
         }
 
         @Test
-        fun `GIVEN failed respond WHEN respond THEN chainChanged is not emitted`() = runTest {
+        fun `GIVEN answered resolution WHEN respond THEN chainChanged is emitted before the answer`() = runTest {
             // Arrange
-            coEvery { respondService.respond(any(), any()) } returns WcRequestError.UnknownError().left()
+            coEvery { respondService.respond(any(), any()) } returns "".right()
 
             // Act
             resolver.respond(
@@ -173,7 +172,10 @@ internal class WcEthChainRequestResolverTest {
             )
 
             // Assert
-            coVerify(exactly = 0) { chainChangedEmitter.emit(any(), any()) }
+            coVerifyOrder {
+                chainChangedEmitter.emit(topic = TOPIC, chainId = ETHEREUM_CAIP2)
+                respondService.respond(any(), null)
+            }
         }
 
         private fun provideTestModels() = listOf(

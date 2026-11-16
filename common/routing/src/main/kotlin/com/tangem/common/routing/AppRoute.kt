@@ -687,4 +687,7 @@ sealed class AppRoute(val path: String) : Route {
         val preselectedEarnType: PreselectedEarnType? = null,
         val preselectedNetworkId: String? = null,
     ) : AppRoute(path = "/earn")
+
+    @Serializable
+    data class PromoPage(val url: String) : AppRoute(path = "/promo_page")
 }

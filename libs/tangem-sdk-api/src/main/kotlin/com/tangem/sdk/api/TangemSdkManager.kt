@@ -20,14 +20,9 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialData
 import com.tangem.domain.visa.model.MoneyAccountActivationData
-import com.tangem.domain.visa.model.VisaActivationInput
-import com.tangem.domain.visa.model.VisaDataForApprove
-import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
-import com.tangem.sdk.api.visa.VisaCardActivationResponse
-import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 
 @Suppress("TooManyFunctions")
 interface TangemSdkManager {
@@ -170,15 +165,6 @@ interface TangemSdkManager {
     // endregion
 
     // region Visa-specific
-
-    suspend fun activateVisaCard(
-        mode: VisaCardActivationTaskMode,
-        activationInput: VisaActivationInput,
-    ): CompletionResult<VisaCardActivationResponse>
-
-    suspend fun visaCustomerWalletApprove(
-        visaDataForApprove: VisaDataForApprove,
-    ): CompletionResult<VisaSignedDataByCustomerWallet>
 
     suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,

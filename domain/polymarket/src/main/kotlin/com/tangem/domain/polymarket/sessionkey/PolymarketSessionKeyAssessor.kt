@@ -9,7 +9,7 @@ import java.time.Instant
 
 object PolymarketSessionKeyAssessor {
 
-    private val SIGNING_EXPIRY_MARGIN: Duration = Duration.ofMinutes(10)
+    internal val SIGNING_EXPIRY_MARGIN: Duration = Duration.ofMinutes(10)
     private val READINESS_GRACE: Duration = Duration.ofMinutes(10)
 
     fun assess(snapshot: PolymarketSessionKeySnapshot): PolymarketSessionKeyAssessment {
@@ -17,7 +17,23 @@ object PolymarketSessionKeyAssessor {
         return PolymarketSessionKeyAssessment(
             deviceState = resolveDeviceState(snapshot, reconciliation),
             reconciliation = reconciliation,
+            nextChangeAt = nextChangeAt(snapshot),
         )
+    }
+
+    private fun nextChangeAt(snapshot: PolymarketSessionKeySnapshot): Instant? {
+        val activeKeys = snapshot.sessionKeys.filter { it.status == PolymarketSessionKeyStatus.ACTIVE }
+        val own = snapshot.sessionKeys
+            .firstOrNull { it.address == snapshot.localKeyAddress }
+            ?.takeIf { it.status == PolymarketSessionKeyStatus.ACTIVE }
+        val ownBoundaries = listOfNotNull(own?.validUntil?.minus(SIGNING_EXPIRY_MARGIN), own?.renewAfter)
+        val expiries = activeKeys.mapNotNull { it.validUntil }
+        val readinessGraces = if (snapshot.signers == null) {
+            emptyList()
+        } else {
+            activeKeys.mapNotNull { it.authorizedAt?.plus(READINESS_GRACE) }
+        }
+        return (ownBoundaries + expiries + readinessGraces).filter { it > snapshot.now }.minOrNull()
     }
 
     private fun resolveDeviceState(

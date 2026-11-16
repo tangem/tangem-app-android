@@ -9,6 +9,8 @@ import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.data.wallets.converters.PendingWalletCardsBackupConverter
 import com.tangem.data.wallets.store.PendingWalletCardsBackupStore
 import com.tangem.data.wallets.store.PendingWalletCardsBackups
+import com.tangem.data.wallets.store.WalletCardsRegistry
+import com.tangem.data.wallets.store.WalletCardsRegistryStore
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.WalletCardDTO
 import com.tangem.datasource.api.tangemTech.models.WalletCardsBody
@@ -16,19 +18,22 @@ import com.tangem.datasource.api.tangemTech.models.WalletCardsResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.domain.wallets.models.backup.CardBackupStatus
+import com.tangem.domain.wallets.models.backup.CardBackupError
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.models.errors.WalletCardsBackupError
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
+import androidx.datastore.preferences.core.emptyPreferences
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.verify
 import io.mockk.mockk
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -39,6 +44,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.params.provider.EnumSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultWalletCardsBackupRepositoryTest {
@@ -50,15 +56,19 @@ internal class DefaultWalletCardsBackupRepositoryTest {
 
     private val pendingStore = PendingWalletCardsBackupStore(dataStore = dataStore)
 
+    private val registryDataStore = MockStateDataStore<WalletCardsRegistry>(default = emptyMap())
     private val preferencesDataStore = MockStateDataStore(default = emptyPreferences())
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles = mockk()
 
     private val repository = createRepository(pendingStore)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(tangemTechApi, deliveryScheduler)
+        clearMocks(tangemTechApi, deliveryScheduler, onboardingV2FeatureToggles)
+        every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateV2Enabled } returns true
         runBlocking {
             dataStore.updateData { emptyList() }
+            registryDataStore.updateData { emptyMap() }
             preferencesDataStore.updateData { emptyPreferences() }
         }
     }
@@ -212,6 +222,205 @@ internal class DefaultWalletCardsBackupRepositoryTest {
                 assertThat(actual).isEqualTo(WalletCardsBackupError.Unexpected(cause = error).left())
                 coVerify(exactly = 0) { tangemTechApi.saveWalletCards(any(), any()) }
             }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class RegisteredCards {
+
+        @BeforeEach
+        fun stubApi() {
+            coEvery { tangemTechApi.saveWalletCards(any(), any()) } returns ApiResponse.Success(Unit)
+        }
+
+        @Test
+        fun `GIVEN card of wallet reported WHEN another card reported THEN body holds both cards`() = runTest {
+            // Arrange
+            repository.saveSeenWalletCard(
+                userWalletId = WALLET_ID,
+                card = domainCard(CardBackupStatus.CARD_LINKED, cardId = SECOND_CARD_ID, role = null),
+                usedSeed = false,
+            )
+
+            // Act
+            repository.saveSeenWalletCard(
+                userWalletId = WALLET_ID,
+                card = domainCard(CardBackupStatus.ACTIVE, role = null),
+                usedSeed = false,
+            )
+
+            // Assert
+            coVerifyOrder {
+                tangemTechApi.saveWalletCards(
+                    walletId = WALLET_ID.stringValue,
+                    body = WalletCardsBody(
+                        cards = listOf(dtoCard(WalletCardDTO.BackupStatus.CARD_LINKED, SECOND_CARD_ID, role = null)),
+                        usedSeed = false,
+                    ),
+                )
+                tangemTechApi.saveWalletCards(
+                    walletId = WALLET_ID.stringValue,
+                    body = WalletCardsBody(
+                        cards = listOf(
+                            dtoCard(WalletCardDTO.BackupStatus.ACTIVE, role = null),
+                            dtoCard(WalletCardDTO.BackupStatus.CARD_LINKED, SECOND_CARD_ID, role = null),
+                        ),
+                        usedSeed = false,
+                    ),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN card already seen in same state WHEN saveSeenWalletCard THEN nothing is sent`() = runTest {
+            // Arrange
+            val card = domainCard(CardBackupStatus.CARD_LINKED, role = null)
+            repository.saveSeenWalletCard(userWalletId = WALLET_ID, card = card, usedSeed = false)
+
+            // Act
+            val actual = repository.saveSeenWalletCard(userWalletId = WALLET_ID, card = card, usedSeed = false)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 1) { tangemTechApi.saveWalletCards(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN card reported by onboarding WHEN seen without role and error THEN stored ones are kept`() = runTest {
+            // Arrange
+            val error = CardBackupError(code = "50005", message = "TagLost")
+            repository.saveWalletCards(
+                userWalletId = WALLET_ID,
+                cards = listOf(domainCard(CardBackupStatus.CARD_LINKED).copy(error = error)),
+                usedSeed = false,
+            )
+
+            // Act
+            val actual = repository.saveSeenWalletCard(
+                userWalletId = WALLET_ID,
+                card = domainCard(CardBackupStatus.CARD_LINKED, role = null),
+                usedSeed = false,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 1) { tangemTechApi.saveWalletCards(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN stored error WHEN card seen with another status THEN error is dropped and role kept`() = runTest {
+            // Arrange
+            repository.saveWalletCards(
+                userWalletId = WALLET_ID,
+                cards = listOf(
+                    domainCard(CardBackupStatus.NO_BACKUP).copy(error = CardBackupError(code = "1", message = "e")),
+                ),
+                usedSeed = false,
+            )
+
+            // Act
+            repository.saveSeenWalletCard(
+                userWalletId = WALLET_ID,
+                card = domainCard(CardBackupStatus.ACTIVE, role = null),
+                usedSeed = false,
+            )
+
+            // Assert
+            coVerify(exactly = 1) {
+                tangemTechApi.saveWalletCards(
+                    walletId = WALLET_ID.stringValue,
+                    body = WalletCardsBody(cards = listOf(dtoCard(WalletCardDTO.BackupStatus.ACTIVE)), usedSeed = false),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN card of another wallet WHEN reported THEN it is not sent with this wallet`() = runTest {
+            // Arrange
+            val otherWalletId = UserWalletId(stringValue = WALLET_IDS.first())
+            repository.saveSeenWalletCard(
+                userWalletId = otherWalletId,
+                card = domainCard(CardBackupStatus.CARD_LINKED, cardId = SECOND_CARD_ID, role = null),
+                usedSeed = false,
+            )
+
+            // Act
+            repository.saveSeenWalletCard(
+                userWalletId = WALLET_ID,
+                card = domainCard(CardBackupStatus.ACTIVE, role = null),
+                usedSeed = false,
+            )
+
+            // Assert
+            coVerify(exactly = 1) {
+                tangemTechApi.saveWalletCards(
+                    walletId = WALLET_ID.stringValue,
+                    body = WalletCardsBody(
+                        cards = listOf(dtoCard(WalletCardDTO.BackupStatus.ACTIVE, role = null)),
+                        usedSeed = false,
+                    ),
+                )
+            }
+        }
+
+        @ParameterizedTest
+        @EnumSource(CardBackupStatus::class)
+        fun `GIVEN seen card WHEN hasCardWithIncompleteBackup THEN true unless backup is active`(
+            backupStatus: CardBackupStatus,
+        ) = runTest {
+            // Arrange
+            repository.saveSeenWalletCard(
+                userWalletId = WALLET_ID,
+                card = domainCard(backupStatus, role = null),
+                usedSeed = false,
+            )
+
+            // Act
+            val actual = repository.hasCardWithIncompleteBackup(WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(backupStatus != CardBackupStatus.ACTIVE)
+        }
+
+        @Test
+        fun `GIVEN toggle off and card reported before WHEN saveWalletCards THEN only given cards are sent`() =
+            runTest {
+                // Arrange
+                every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateV2Enabled } returns false
+                repository.saveWalletCards(
+                    userWalletId = WALLET_ID,
+                    cards = listOf(domainCard(CardBackupStatus.CARD_LINKED, cardId = SECOND_CARD_ID)),
+                    usedSeed = false,
+                )
+
+                // Act
+                repository.saveWalletCards(
+                    userWalletId = WALLET_ID,
+                    cards = listOf(domainCard(CardBackupStatus.ACTIVE)),
+                    usedSeed = false,
+                )
+
+                // Assert
+                coVerify(exactly = 1) {
+                    tangemTechApi.saveWalletCards(
+                        walletId = WALLET_ID.stringValue,
+                        body = WalletCardsBody(
+                            cards = listOf(dtoCard(WalletCardDTO.BackupStatus.ACTIVE)),
+                            usedSeed = false,
+                        ),
+                    )
+                }
+                assertThat(repository.hasCardWithIncompleteBackup(WALLET_ID)).isFalse()
+            }
+
+        @Test
+        fun `GIVEN nothing seen WHEN hasCardWithIncompleteBackup THEN false`() = runTest {
+            // Act
+            val actual = repository.hasCardWithIncompleteBackup(WALLET_ID)
+
+            // Assert
+            assertThat(actual).isFalse()
+        }
     }
 
     @Nested
@@ -448,10 +657,12 @@ internal class DefaultWalletCardsBackupRepositoryTest {
     private fun createRepository(store: PendingWalletCardsBackupStore) = DefaultWalletCardsBackupRepository(
         tangemTechApi = tangemTechApi,
         pendingStore = store,
+        registryStore = WalletCardsRegistryStore(dataStore = registryDataStore),
         appPreferencesStore = createAppPreferencesStore(
             dispatchers = TestingCoroutineDispatcherProvider(),
             preferencesDataStore = preferencesDataStore,
         ),
+        onboardingV2FeatureToggles = onboardingV2FeatureToggles,
         deliveryScheduler = deliveryScheduler,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -464,22 +675,31 @@ internal class DefaultWalletCardsBackupRepositoryTest {
         val WALLET_ID = UserWalletId(stringValue = "0102030405060708")
         val WALLET_IDS = listOf("0101010101010101", "0202020202020202", "0303030303030303")
         const val CARD_ID = "AC01000000000000"
+        const val SECOND_CARD_ID = "AC02000000000000"
         const val CARD_PUBLIC_KEY = "0AFF"
 
         fun httpError(code: HttpException.Code) = HttpException(code = code, message = null, errorBody = null)
 
-        fun domainCard(backupStatus: CardBackupStatus) = WalletCardBackup(
-            cardId = CARD_ID,
+        fun domainCard(
+            backupStatus: CardBackupStatus,
+            cardId: String = CARD_ID,
+            role: WalletCardBackup.Role? = WalletCardBackup.Role.PRIMARY,
+        ) = WalletCardBackup(
+            cardId = cardId,
             cardPublicKey = CARD_PUBLIC_KEY,
-            role = WalletCardBackup.Role.PRIMARY,
+            role = role,
             backupStatus = backupStatus,
             curves = emptyList(),
         )
 
-        fun dtoCard(backupStatus: WalletCardDTO.BackupStatus) = WalletCardDTO(
-            cardId = CARD_ID,
+        fun dtoCard(
+            backupStatus: WalletCardDTO.BackupStatus,
+            cardId: String = CARD_ID,
+            role: WalletCardDTO.Role? = WalletCardDTO.Role.PRIMARY,
+        ) = WalletCardDTO(
+            cardId = cardId,
             cardPublicKey = CARD_PUBLIC_KEY,
-            role = WalletCardDTO.Role.PRIMARY,
+            role = role,
             backupStatus = backupStatus,
             curves = emptyList(),
         )

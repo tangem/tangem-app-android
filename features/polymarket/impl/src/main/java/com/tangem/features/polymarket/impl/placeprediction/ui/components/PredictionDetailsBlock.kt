@@ -1,25 +1,11 @@
 package com.tangem.features.polymarket.impl.placeprediction.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.surface.TangemSurface
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_info_16
-import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
@@ -30,55 +16,14 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBrea
 internal fun PredictionDetailsBlock(state: PlacePredictionUM, onFeeClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
-            TangemRow(
+            PredictionUsdValueRow(
+                titleRes = R.string.prediction_place_fee,
+                value = (state.quote as? QuoteUM.Content)?.feeTotal?.formatPolymarketMoney().orEmpty(),
+                isLoading = false,
                 divider = true,
-                verticalAlignment = TangemRowVerticalAlignment.Center,
-                titleSlot = { FeeTitle() },
-                valueSlot = {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        TangemBadge(
-                            text = stringReference(PolymarketConst.USD_CODE),
-                            size = TangemBadge.Size.X6,
-                        )
-                        DetailValue(
-                            text = (state.quote as? QuoteUM.Content)?.feeTotal?.formatPolymarketMoney().orEmpty(),
-                        )
-                    }
-                },
                 onClick = onFeeClick.takeIf { state.canShowFeeBreakdown() },
             )
             PredictionSlippageRow(slippage = state.slippage)
         }
     }
-}
-
-@Composable
-private fun FeeTitle() {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = stringResourceSafe(R.string.prediction_place_fee),
-            style = TangemTheme.typography3.body.medium,
-            color = TangemTheme.colors3.text.primary,
-        )
-        Icon(
-            imageVector = Icons.ic_info_16,
-            contentDescription = null,
-            tint = TangemTheme.colors3.icon.tertiary,
-        )
-    }
-}
-
-@Composable
-private fun DetailValue(text: String) {
-    Text(
-        text = text,
-        style = TangemTheme.typography3.body.medium,
-        color = TangemTheme.colors3.text.secondary,
-    )
 }

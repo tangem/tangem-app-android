@@ -116,6 +116,7 @@ internal object PolymarketOutcomeButton {
     enum class Appearance {
         Info,
         Error,
+        Neutral,
     }
 
     /** Height preset, named after the design-system button size it matches. */
@@ -135,6 +136,10 @@ private fun PolymarketOutcomeButton.Appearance.colors(): AppearanceColors = when
     PolymarketOutcomeButton.Appearance.Info -> AppearanceColors(
         background = TangemTheme.colors3.bg.status.infoSubtle,
         content = TangemTheme.colors3.text.accent.blue,
+    )
+    PolymarketOutcomeButton.Appearance.Neutral -> AppearanceColors(
+        background = TangemTheme.colors3.bg.tertiary,
+        content = TangemTheme.colors3.text.primary,
     )
     PolymarketOutcomeButton.Appearance.Error -> AppearanceColors(
         background = TangemTheme.colors3.bg.status.errorSubtle,

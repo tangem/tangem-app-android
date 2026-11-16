@@ -30,6 +30,7 @@ internal class TangemPayApiIdempotencyHeaderTest {
         "createBankOfframpOrder",
         "submitBankOfframpSignature",
         "createBankOfframpRoute",
+        "createBankOfframpQuote",
         "joinWaitlist",
     )
 }

@@ -23,6 +23,10 @@ interface AnalyticsUserIdHandler {
     fun clearUserId()
 }
 
+interface AnalyticsUserPropertiesHandler {
+    fun setUserProperties(properties: Map<String, String>)
+}
+
 interface AnalyticsHandler : AnalyticsEventHandler {
 
     fun id(): String

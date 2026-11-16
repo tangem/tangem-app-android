@@ -61,7 +61,6 @@ class SignPredictionOrderInteractor(
             marketTokenId = request.assetId,
             marketVersion = request.quote.version,
             isNegRisk = request.isNegRisk,
-            quoteReceivedAtMillis = request.quoteReceivedAtMillis,
             nowMillis = System.currentTimeMillis(),
             route = request.route,
         )
@@ -87,6 +86,5 @@ data class PredictionSignRequest(
     val assetId: String,
     val side: PredictionOrderSide,
     val isNegRisk: Boolean,
-    val quoteReceivedAtMillis: Long,
     val route: PredictionOrderSigningRoute = PredictionOrderSigningRoute.Owner,
 )

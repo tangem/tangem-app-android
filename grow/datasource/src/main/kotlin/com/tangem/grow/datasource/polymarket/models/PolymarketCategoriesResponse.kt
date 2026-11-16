@@ -17,4 +17,6 @@ data class PolymarketCategoryDto(
     @Json(name = "id") val id: Int,
     @Json(name = "label") val label: String,
     @Json(name = "icon") val icon: String?,
+    @Json(name = "subcategories") val subcategories: List<PolymarketCategoryDto>? = null,
+    @Json(name = "filters") val filters: List<String>? = null,
 )

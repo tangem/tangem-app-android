@@ -219,7 +219,7 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
             },
             moneyAccountStatusSupplier = mockk<MoneyAccountStatusSupplier> {
                 every { this@mockk.invoke(userWalletId = walletId) } returns flowOf(
-                    AccountStatus.Money(Account.Money(walletId), MoneyAccountStatusValue.NotCreated),
+                    AccountStatus.Money(Account.Money(walletId), MoneyAccountStatusValue.Empty),
                 )
             },
             predictionAccountStatusSupplier = mockk<PredictionAccountStatusSupplier> {
@@ -227,7 +227,6 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
                     PredictionAccountStatusValue.NotOnboarded,
                 )
             },
-            polymarketFeatureToggles = mockk { every { this@mockk.isPolymarketEnabled } returns false },
             // the toggle is off, so the supplier is never invoked
             collectiblesAccountStatusSupplier = mockk(),
             collectiblesFeatureToggles = mockk { every { isCollectiblesEnabled } returns false },

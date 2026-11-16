@@ -16,10 +16,7 @@ internal class DefaultOnboardingDoneComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        OnboardingDone(
-            mode = params.mode,
-            onContinueClick = params.onDone,
-        )
+        OnboardingDone(onContinueClick = params.onDone)
     }
 
     @AssistedFactory

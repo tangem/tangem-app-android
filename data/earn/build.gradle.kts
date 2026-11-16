@@ -31,7 +31,6 @@ dependencies {
     implementation(projects.core.local)
     api(projects.core.utils)
     implementation(projects.core.pagination)
-    implementation(projects.core.configToggles)
     // endregion
 
     // region Project - Data

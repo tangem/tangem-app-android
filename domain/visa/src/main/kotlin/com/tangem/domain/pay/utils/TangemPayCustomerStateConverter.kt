@@ -3,6 +3,7 @@ package com.tangem.domain.pay.utils
 import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.model.CustomerSummary.*
 import com.tangem.domain.pay.model.MoneyAccountActivationState
+import com.tangem.domain.pay.model.MoneyAccountActivationState.Issuing.Step as MoneyAccountIssuingStep
 import com.tangem.domain.pay.model.PaymentAccountActivationState
 import com.tangem.domain.pay.model.PaymentAccountActivationState.Issuing
 import com.tangem.domain.pay.model.TangemPayCustomerState
@@ -119,10 +120,12 @@ object TangemPayCustomerStateConverter : Converter<CustomerSummary, TangemPayCus
             }
             MoneyAccount.Activation.Status.PROCESSING,
             MoneyAccount.Activation.Status.UNKNOWN,
-            -> if (isKycApproved) {
-                MoneyAccountActivationState.Issuing
-            } else {
-                MoneyAccountActivationState.AwaitingKyc(kycStatus)
+            -> when {
+                !isKycApproved -> MoneyAccountActivationState.AwaitingKyc(kycStatus)
+                activation.step == MoneyAccount.Activation.Step.AWAITING_DEPOSIT -> {
+                    MoneyAccountActivationState.Issuing(step = MoneyAccountIssuingStep.AWAITING_DEPOSIT)
+                }
+                else -> MoneyAccountActivationState.Issuing(step = MoneyAccountIssuingStep.ISSUING)
             }
         }
     }

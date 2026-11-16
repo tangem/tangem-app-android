@@ -23,6 +23,10 @@ dependencies {
     api(projects.domain.models)
     // endregion
 
+    // region Tangem SDK (derivation path types)
+    api(tangemDeps.card.core)
+    // endregion
+
     // region Tests
     testImplementation(projects.test.core)
     testImplementation(deps.kotlin.coroutines)

@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.preview.completion
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
@@ -46,6 +47,10 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
         val recipient = draft.toRecipient() ?: return
         onState(CompletionState.Sending)
         val route = createRoute(rail = destination.rail, recipient = recipient, onState = onState) ?: return
+        if (route.fee.calculationType != AccountFee.CalculationType.FIXED) {
+            onNonFixedRouteFee(route = route, onState = onState)
+            return
+        }
         if (!route.matches(destination)) {
             onDestinationChanged(destination.copy(fee = route.fee, eta = route.eta))
             onState(CompletionState.Idle)
@@ -96,6 +101,11 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
         } else {
             onState(CompletionState.Failed(failure = error.toFailure(), errorCode = error.errorCode))
         }
+    }
+
+    private fun onNonFixedRouteFee(route: BankOfframpRoute, onState: (CompletionState) -> Unit) {
+        TangemLogger.withTag(TAG).e("Bank withdraw route fee is not fixed: ${route.fee}")
+        onState(CompletionState.Failed(PreviewFailure.General))
     }
 
     private suspend fun transfer(

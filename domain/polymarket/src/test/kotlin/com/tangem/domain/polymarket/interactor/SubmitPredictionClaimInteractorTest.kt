@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketDepositWalletLock
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
@@ -46,6 +47,7 @@ internal class SubmitPredictionClaimInteractorTest {
         polymarketRepository = polymarketRepository,
         positionsRepository = positionsRepository,
         signer = signer,
+        depositWalletLock = PolymarketDepositWalletLock(),
         currentTimeMillis = { nowMillis },
     )
 

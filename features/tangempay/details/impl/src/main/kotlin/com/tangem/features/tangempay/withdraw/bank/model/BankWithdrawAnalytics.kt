@@ -65,7 +65,7 @@ internal class BankWithdrawAnalytics(
         val method = when (destination?.rail) {
             BankRail.ACH -> MoneyAccountAnalyticsEvents.SendMethod.BANK_TRANSFER_ACH
             BankRail.WIRE -> MoneyAccountAnalyticsEvents.SendMethod.BANK_TRANSFER_WIRE
-            null -> return null
+            BankRail.SPEI, null -> return null
         }
         return MoneyAccountAnalyticsEvents.SendConfirmed(amountUsdc = amount, method = method)
     }

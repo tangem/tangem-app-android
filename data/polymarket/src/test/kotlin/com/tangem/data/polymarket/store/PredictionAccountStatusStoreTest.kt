@@ -9,6 +9,7 @@ import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope
@@ -64,6 +65,43 @@ internal class PredictionAccountStatusStoreTest {
 
         // Assert — a restored value has not been refreshed in this session, whatever it claimed when written
         assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE.copy(source = StatusSource.CACHE))
+    }
+
+    @Test
+    fun `GIVEN persisted positions WHEN the store is created THEN they come back marked as cached`() = runTest {
+        // Arrange
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(
+            default = mapOf(WALLET_A.stringValue to ACTIVE_DTO.copy(positionsValue = BigDecimal("3.25"))),
+        )
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(
+            ACTIVE.copy(
+                source = StatusSource.CACHE,
+                positions = PredictionPositionsValue.Known(amount = BigDecimal("3.25"), source = StatusSource.CACHE),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN known positions WHEN store THEN their amount reaches the disk`() = runTest {
+        // Arrange
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap())
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
+        val positions = PredictionPositionsValue.Known(amount = BigDecimal("3.25"), source = StatusSource.ACTUAL)
+
+        // Act
+        store.store(userWalletId = WALLET_A, value = ACTIVE.copy(positions = positions))
+
+        // Assert
+        assertThat(persisted.data.first()).containsExactly(
+            WALLET_A.stringValue,
+            ACTIVE_DTO.copy(positionsValue = BigDecimal("3.25")),
+        )
     }
 
     @Test

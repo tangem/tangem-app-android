@@ -43,6 +43,7 @@ data class MessageModalUM(
      * @param variant Button style; `primaryButton` and `secondaryButton` set it.
      * @param iconStart Optional leading icon.
      * @param iconEnd Optional trailing icon.
+     * @param isLoading Replaces the content with a loader while an action started by the button runs.
      * @param onClick Click action; call [TangemModalActionScope.dismiss] from it to close the modal.
      */
     @Immutable
@@ -51,6 +52,7 @@ data class MessageModalUM(
         val variant: TangemButton.Variant,
         val iconStart: TangemIconUM? = null,
         val iconEnd: TangemIconUM? = null,
+        val isLoading: Boolean = false,
         val onClick: TangemModalActionScope.() -> Unit,
     )
 }
@@ -138,6 +140,7 @@ class MessageModalButtonBuilder internal constructor(private val variant: Tangem
     var text: TextReference? = null
     var iconStart: TangemIconUM? = null
     var iconEnd: TangemIconUM? = null
+    var isLoading: Boolean = false
 
     /** Click action; without one the button just closes the modal. */
     var onClick: (TangemModalActionScope.() -> Unit)? = null
@@ -169,6 +172,7 @@ class MessageModalButtonBuilder internal constructor(private val variant: Tangem
         variant = variant,
         iconStart = iconStart,
         iconEnd = iconEnd,
+        isLoading = isLoading,
         onClick = onClick ?: { dismiss() },
     )
 }

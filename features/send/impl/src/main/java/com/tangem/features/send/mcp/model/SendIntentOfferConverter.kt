@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 /**
  * Builds the offer an agent's send intent is shown as: the currency the wallet sends, what the agent asks for and who
- * asks. The headline prefers the verified origin over the self-declared name.
+ * asks. The headline names the client, falling back to its origin.
  * Returns `null` when the intent amount is not a positive number.
  */
 internal class SendIntentOfferConverter @Inject constructor(
@@ -32,7 +32,7 @@ internal class SendIntentOfferConverter @Inject constructor(
         val amountText = amountTextConverter.convert(
             SendIntentAmountTextConverter.Input(amount = value.intent.amount, currency = value.currency),
         ) ?: return null
-        val agentIdentity = (value.agent.origin ?: value.agent.name)?.let(::stringReference)
+        val agentIdentity = (value.agent.name ?: value.agent.origin)?.let(::stringReference)
             ?: resourceReference(R.string.mcp_intent_unknown_agent_name)
 
         return SendIntentUM.Offer(

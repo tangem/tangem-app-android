@@ -26,6 +26,7 @@ internal class SwapAmountScreenClickIntentsTest {
         onReduceByAmount = { _, _ -> },
         onApproveClick = {},
         onApproveTypeSelect = {},
+        onTronReapproveClick = { _, _ -> },
         onRetryClick = {},
         onProviderClick = {},
         onProviderSelect = {},

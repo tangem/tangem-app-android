@@ -1,7 +1,12 @@
 package com.tangem.data.quotes.repository
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.quotes.store.QuotesStatusesStore
+import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
@@ -24,11 +29,15 @@ import java.math.BigDecimal
 internal class DefaultQuotesRepositoryTest {
 
     private val quotesStatusesStore = mockk<QuotesStatusesStore>()
-    private val repository: QuotesRepository = DefaultQuotesRepository(quotesStatusesStore = quotesStatusesStore)
+    private val quotesFetcher = mockk<QuotesFetcher>()
+    private val repository: QuotesRepository = DefaultQuotesRepository(
+        quotesStatusesStore = quotesStatusesStore,
+        quotesFetcher = quotesFetcher,
+    )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(quotesStatusesStore)
+        clearMocks(quotesStatusesStore, quotesFetcher)
     }
 
     @Nested
@@ -161,6 +170,63 @@ internal class DefaultQuotesRepositoryTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetFiatUSDRate {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN quotes fetch result WHEN getFiatUSDRate THEN returns derived rate or null`(
+            model: GetFiatUSDRateModel,
+        ) = runTest {
+            // Arrange
+            coEvery {
+                quotesFetcher.fetch(
+                    fiatCurrencyId = "EUR",
+                    currenciesIds = setOf("bitcoin"),
+                    fields = setOf(QuotesFetcher.Field.ALL_PRICES),
+                )
+            } returns model.fetchResult
+
+            // Act
+            val actual = repository.getFiatUSDRate(fiatCurrencyCode = "eur")
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            GetFiatUSDRateModel(
+                fetchResult = btcQuote(price = BigDecimal("50000"), priceUsd = BigDecimal("55000")).right(),
+                expected = BigDecimal("1.1"),
+            ),
+            GetFiatUSDRateModel(
+                fetchResult = QuotesFetcher.Error.InvalidArgumentsError.left(),
+                expected = null,
+            ),
+            GetFiatUSDRateModel(
+                fetchResult = QuotesResponse(quotes = emptyMap()).right(),
+                expected = null,
+            ),
+            GetFiatUSDRateModel(
+                fetchResult = btcQuote(price = null, priceUsd = BigDecimal("55000")).right(),
+                expected = null,
+            ),
+            GetFiatUSDRateModel(
+                fetchResult = btcQuote(price = BigDecimal.ZERO, priceUsd = BigDecimal("55000")).right(),
+                expected = null,
+            ),
+            GetFiatUSDRateModel(
+                fetchResult = btcQuote(price = BigDecimal("50000"), priceUsd = null).right(),
+                expected = null,
+            ),
+        )
+
+        private fun btcQuote(price: BigDecimal?, priceUsd: BigDecimal?) = QuotesResponse(
+            quotes = mapOf("bitcoin" to QuotesResponse.Quote.EMPTY.copy(price = price, priceUsd = priceUsd)),
+        )
+    }
+
     data class GetMultiQuoteSyncOrNullModel(
         val initialStore: Set<QuoteStatus>?,
         val currencyIds: Set<CryptoCurrency.RawID>,
@@ -171,5 +237,10 @@ internal class DefaultQuotesRepositoryTest {
         val initialStore: Set<QuoteStatus>?,
         val currencyId: CryptoCurrency.RawID,
         val expected: QuoteStatus?,
+    )
+
+    data class GetFiatUSDRateModel(
+        val fetchResult: Either<QuotesFetcher.Error, QuotesResponse>,
+        val expected: BigDecimal?,
     )
 }

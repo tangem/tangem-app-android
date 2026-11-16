@@ -16,8 +16,10 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.transaction.combineTransactionFees
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.transaction.usecase.fixYieldSupplyGasLimit
@@ -55,6 +57,7 @@ class EvmGaslessFeeResolver(
         accountStatusList: AccountStatusList,
         nativeTransactionData: TransactionData,
         sentAmount: BigDecimal? = null,
+        approval: GaslessApproval? = null,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val walletManager = prepareWalletManager(userWallet, network)
 
@@ -63,7 +66,16 @@ class EvmGaslessFeeResolver(
             network = network,
             walletManager = walletManager,
             transactionData = transactionData,
+            allowanceSpenderAddress = approval?.spenderAddress,
         ).bind()
+        val approvalNativeFee = approval?.let { approval ->
+            tokenFeeCalculator.calculateInitialFee(
+                userWallet = userWallet,
+                network = network,
+                walletManager = walletManager,
+                transactionData = approval.approvalTransaction,
+            ).bind()
+        }
 
         val nativeInitialFee = calculateNativeFee(
             userWallet = userWallet,
@@ -84,6 +96,8 @@ class EvmGaslessFeeResolver(
             nativeInitialFee = nativeInitialFee,
             transactionData = transactionData,
             sentAmount = sentAmount,
+            approval = approval,
+            approvalNativeFee = approvalNativeFee,
         )
     }
 
@@ -102,14 +116,18 @@ class EvmGaslessFeeResolver(
         tokenCurrencyStatus: CryptoCurrencyStatus,
         nativeTransactionData: TransactionData,
         sentAmount: BigDecimal? = null,
+        approval: GaslessApproval? = null,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val walletManager = prepareWalletManager(userWallet, network)
+
+        val isYieldActive = tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
 
         val initialTxFee = tokenFeeCalculator.calculateInitialFee(
             userWallet = userWallet,
             network = network,
             walletManager = walletManager,
             transactionData = transactionData,
+            allowanceSpenderAddress = approval?.spenderAddress,
         ).bind()
 
         val initialFee = initialTxFee.normal as? Fee.Ethereum
@@ -117,6 +135,14 @@ class EvmGaslessFeeResolver(
                 error = "only Fee.Ethereum supported, but was ${initialTxFee.normal::class.qualifiedName}",
             )
 
+        val approvalNativeFee = approval?.let { approval ->
+            tokenFeeCalculator.calculateInitialFee(
+                userWallet = userWallet,
+                network = network,
+                walletManager = walletManager,
+                transactionData = approval.approvalTransaction,
+            ).bind()
+        }
         val nativeInitialTxFee = calculateNativeFee(
             userWallet = userWallet,
             network = network,
@@ -124,9 +150,7 @@ class EvmGaslessFeeResolver(
             nativeTransactionData = nativeTransactionData,
             transactionData = transactionData,
             initialFee = initialTxFee,
-        )
-
-        val isYieldActive = tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+        ).withApprovalFee(approvalNativeFee)
 
         val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
             walletManager = walletManager,
@@ -135,19 +159,21 @@ class EvmGaslessFeeResolver(
             initialFee = initialFee,
             isYieldActive = isYieldActive,
             userWallet = userWallet,
+            approval = approval,
         ).bind()
 
-        // Only the yield path needs a plan: without an active position the fee token is spent straight
-        // from the wallet balance, and there is nothing to withdraw first.
-        if (isYieldActive) {
+        // Only the yield and the approve paths need a plan: otherwise the fee token is spent straight
+        // from the wallet balance, and nothing has to run before the main transaction.
+        if (isYieldActive || approval != null) {
             attachGaslessFeePlan(
                 resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
                 userWallet = userWallet,
                 tokenStatus = tokenCurrencyStatus,
                 tokenFeeExtended = tokenFeeExtended,
                 transactionData = transactionData,
-                isYieldActive = true,
+                isYieldActive = isYieldActive,
                 sentAmount = sentAmount,
+                approval = approval,
             ).copy(nativeFee = nativeInitialTxFee)
         } else {
             tokenFeeExtended.copy(nativeFee = nativeInitialTxFee)
@@ -202,8 +228,12 @@ class EvmGaslessFeeResolver(
         nativeInitialFee: TransactionFee,
         transactionData: TransactionData,
         sentAmount: BigDecimal?,
+        approval: GaslessApproval?,
+        approvalNativeFee: TransactionFee?,
     ): TransactionFeeExtended {
         val feeValue = nativeInitialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
+        // Paid in the native coin, the approve is a separate transaction, so the balance must cover both
+        val approvalFeeValue = approvalNativeFee?.normal?.amount?.value ?: BigDecimal.ZERO
 
         val networkCurrenciesStatuses = accountStatusList
             .flattenPersonalCurrencies()
@@ -215,7 +245,7 @@ class EvmGaslessFeeResolver(
             feeTokenId = nativeCurrencyStatus.currency.id,
             nativeFee = nativeInitialFee,
         )
-        return if (nativeBalance >= feeValue) {
+        return if (nativeBalance >= feeValue + approvalFeeValue) {
             nativeCoinSelectedResult
         } else {
             findTokensToPayFee(
@@ -226,7 +256,8 @@ class EvmGaslessFeeResolver(
                 networkCurrenciesStatuses = networkCurrenciesStatuses,
                 transactionData = transactionData,
                 sentAmount = sentAmount,
-            ).map { it.copy(nativeFee = nativeInitialFee) }.getOrElse { error ->
+                approval = approval,
+            ).map { it.copy(nativeFee = nativeInitialFee.withApprovalFee(approvalNativeFee)) }.getOrElse { error ->
                 when (error) {
                     GaslessError.NotEnoughFunds,
                     GaslessError.YieldBalanceUnavailable,
@@ -246,6 +277,7 @@ class EvmGaslessFeeResolver(
         networkCurrenciesStatuses: List<CryptoCurrencyStatus>,
         transactionData: TransactionData,
         sentAmount: BigDecimal?,
+        approval: GaslessApproval?,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val initialFee = initialTxFee.normal as? Fee.Ethereum
             ?: raiseIllegalStateError(
@@ -279,6 +311,7 @@ class EvmGaslessFeeResolver(
             initialFee = initialFee,
             isYieldActive = isYieldActive,
             userWallet = userWallet,
+            approval = approval,
         ).bind()
 
         attachGaslessFeePlan(
@@ -289,6 +322,12 @@ class EvmGaslessFeeResolver(
             transactionData = transactionData,
             isYieldActive = isYieldActive,
             sentAmount = sentAmount,
+            approval = approval,
         )
+    }
+
+    /** Paid in the native coin, the approve is a separate transaction the native balance has to cover too. */
+    private fun TransactionFee.withApprovalFee(approvalFee: TransactionFee?): TransactionFee {
+        return approvalFee?.let { combineTransactionFees(approvalFee = it, swapFee = this) } ?: this
     }
 }

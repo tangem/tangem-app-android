@@ -6,8 +6,8 @@ import com.tangem.data.collectibles.converter.CollectibleBuybackTxConverter
 import com.tangem.data.collectibles.converter.MachineCategoriesConverter
 import com.tangem.data.collectibles.converter.MachineConverter
 import com.tangem.data.collectibles.converter.MachineNftConverter
+import com.tangem.data.collectibles.converter.CollectibleTxStateConverter
 import com.tangem.data.collectibles.converter.CollectibleTxStatusConverter
-import com.tangem.data.collectibles.converter.OpenedPackConverter
 import com.tangem.data.collectibles.converter.TurboModeConverter
 import com.tangem.data.collectibles.error.CollectiblesErrorResolver
 import com.tangem.data.collectibles.pagination.CollectibleGachaMachineNftsBatchFetcher
@@ -27,7 +27,6 @@ import com.tangem.grow.datasource.collectibles.models.request.CollectibleTxReque
 import com.tangem.grow.datasource.collectibles.models.request.GenerateBuybackDataRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.GeneratePurchaseTxRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequestBody
-import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -127,25 +126,33 @@ internal class DefaultCollectiblesRepository @Inject constructor(
     override suspend fun getTxState(
         userWalletId: UserWalletId,
         txId: String,
+        includeAutoBuyback: Boolean,
         includeNftWon: Boolean,
     ): CollectibleTxState = withContext(dispatchers.io) {
-        collectiblesApi.getTxStatus(
+        val response = collectiblesApi.getTxStatus(
             userWalletId = userWalletId.stringValue,
             txId = txId,
             includeNftWon = includeNftWon,
-        )
-            .getOrThrow()
-            .toState()
+            includeAutoBuyback = includeAutoBuyback,
+        ).getOrThrow()
+
+        CollectibleTxStateConverter.convert(response)
     }
 
-    override suspend fun openPack(userWalletId: UserWalletId, txId: String): CollectibleTxState =
-        withContext(dispatchers.io) {
-            collectiblesApi.openPack(
-                userWalletId = userWalletId.stringValue,
-                body = CollectibleTxRequestBody(txId = txId),
-                includeNftWon = true,
-            ).getOrThrow().toState()
-        }
+    override suspend fun openPack(
+        userWalletId: UserWalletId,
+        txId: String,
+        includeAutoBuyback: Boolean,
+    ): CollectibleTxState = withContext(dispatchers.io) {
+        val response = collectiblesApi.openPack(
+            userWalletId = userWalletId.stringValue,
+            body = CollectibleTxRequestBody(txId = txId),
+            includeNftWon = true,
+            includeAutoBuyback = includeAutoBuyback,
+        ).getOrThrow()
+
+        CollectibleTxStateConverter.convert(response)
+    }
 
     override suspend fun getBuybackOffer(userWalletId: UserWalletId, nftAddress: String): CollectibleBuybackOffer? =
         withContext(dispatchers.io) {
@@ -197,11 +204,6 @@ internal class DefaultCollectiblesRepository @Inject constructor(
 
             CollectibleBuybackStatusConverter.convert(response.status)
         }
-
-    private fun CollectibleTxResponse.toState() = CollectibleTxState(
-        status = CollectibleTxStatusConverter.convert(status),
-        pack = nftWon?.let { nft -> OpenedPackConverter.convert(OpenedPackConverter.Input(txId = txId, nft = nft)) },
-    )
 
     private suspend fun fetchMachinesPage(
         config: CollectibleGachaMachinesListConfig,

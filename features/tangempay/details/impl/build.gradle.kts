@@ -19,6 +19,7 @@ dependencies {
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)
+    implementation(projects.core.abTests)
     implementation(projects.core.analytics.models)
     implementation(projects.core.biometricAuth.api)
     implementation(projects.core.error)
@@ -32,8 +33,10 @@ dependencies {
     api(projects.features.tangempay.details.api)
     implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.eligibility.api)
+    implementation(projects.features.moneyAccount.details.api)
     api(projects.features.tokenRecieve.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.txhistory.api)
     api(projects.features.promoBanners.api)
 
     /** Domain */

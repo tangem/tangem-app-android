@@ -5,8 +5,6 @@ import arrow.core.getOrElse
 import com.tangem.common.card.Card
 import com.tangem.common.core.CardSession
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -18,6 +16,7 @@ import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.lib.auth.session.WalletRegistrationResult
 import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed
 import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed.Stage
 import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed.WalletType
@@ -53,7 +52,9 @@ class WalletRegistrationLauncher @Inject internal constructor(
             walletRegistrar.register(
                 walletId = userWallet.walletId.toBase64(),
                 signer = mobileSigner.signerFor(userWallet),
-            ).onLeft { error ->
+            ).onRight { result ->
+                if (result == WalletRegistrationResult.Registered) sendWalletLinked()
+            }.onLeft { error ->
                 TangemLogger.e("Mobile wallet registration deferred: $error")
                 sendRegistrationFailed(WalletType.Mobile, Stage.Register, error)
             }
@@ -117,7 +118,7 @@ class WalletRegistrationLauncher @Inject internal constructor(
      * card is available yet. Requests and deciphers the wallet nonce so its (seconds-long) round-trip
      * can complete before the wrapped card command finishes and the in-session signing needs it.
      *
-     * No card-based gating here (already-registered / twin / Visa): those need the card and are still
+     * No card-based gating here (already-registered / twin): those need the card and are still
      * enforced later in [registerColdInSession] and by the registrar's own idempotency check, so at
      * worst an ineligible or already-registered card wastes a nonce.
      *
@@ -147,8 +148,7 @@ class WalletRegistrationLauncher @Inject internal constructor(
      * [session] (the card is tapped here); phase 2 (the network POST) is dispatched on
      * [appCoroutineScope] afterwards, so the user doesn't hold the card during the request.
      *
-     * Twin and Visa cards are skipped: a twin's id is derived from both cards (can't be built here)
-     * and Visa cards are not a cold-registration target.
+     * Cards outside [isColdRegistrationSupported] (twins) are skipped.
      *
      * [shouldForce] is for a card that took over a mobile wallet's walletId (hot → cold upgrade): the
      * local marker left by the mobile registration would skip it, so the marker is dropped first — even
@@ -161,7 +161,7 @@ class WalletRegistrationLauncher @Inject internal constructor(
         shouldForce: Boolean = false,
     ) {
         val cardDto = CardDTO(card)
-        if (cardDto.isTangemTwins || VisaUtilities.isVisaCard(cardDto)) return
+        if (!cardDto.isColdRegistrationSupported) return
         val walletId = UserWalletIdBuilder.card(cardDto).build()?.toBase64() ?: return
 
         if (shouldForce) {
@@ -195,6 +195,9 @@ class WalletRegistrationLauncher @Inject internal constructor(
         appCoroutineScope.launch {
             runSuspendCatching {
                 walletRegistrar.submit(prepared)
+                    .onRight { result ->
+                        if (result == WalletRegistrationResult.Registered) sendWalletLinked()
+                    }
                     .onLeft { error ->
                         TangemLogger.e("Cold wallet registration submit deferred: $error")
                         sendRegistrationFailed(WalletType.Cold, Stage.Submit, error)
@@ -229,6 +232,10 @@ class WalletRegistrationLauncher @Inject internal constructor(
     suspend fun unregister(userWalletId: UserWalletId) {
         walletRegistrar.unregister(userWalletId.toBase64())
             .onLeft { TangemLogger.e("Wallet unregister deferred: $it") }
+    }
+
+    private fun sendWalletLinked() {
+        analyticsEventHandler.send(BackendAuthAnalyticsEvent.WalletLinked())
     }
 
     private fun sendRegistrationFailed(walletType: WalletType, stage: Stage, error: WalletRegistrationError) {

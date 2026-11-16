@@ -23,12 +23,14 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_16
+import com.tangem.core.ui.utils.zoomTransitionSource
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
 import com.tangem.features.feed.components.v2.blocks.model.AddAccountBlockModel
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.ui.v2.FeedBlockShape
 import com.tangem.features.feed.ui.v2.FeedShortcutCard
 import kotlinx.coroutines.flow.StateFlow
 
@@ -66,7 +68,7 @@ internal class AddAccountBlockComponent(
         FeedShortcutCard(
             title = stringResourceSafe(R.string.account_form_title_create),
             onClick = ::onClick,
-            modifier = modifier,
+            modifier = modifier.zoomTransitionSource(key = SHARED_TRANSITION_KEY, shape = FeedBlockShape),
             icon = { AddAccountIcon() },
         )
     }
@@ -76,6 +78,8 @@ internal class AddAccountBlockComponent(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         bottomSheet.child?.instance?.BottomSheet()
+
+        AfterModalsClosed(pending = model.routeAwaitingSheetClose, onClose = model::onSheetsClosed)
     }
 
     private fun onClick() {
@@ -125,6 +129,7 @@ internal class AddAccountBlockComponent(
 
     companion object {
         const val KEY = "add_account"
+        const val SHARED_TRANSITION_KEY = "feed_add_account_block"
     }
 }
 

@@ -18,6 +18,7 @@ import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPosition
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -47,6 +48,7 @@ internal class PolymarketPositionsModel @Inject constructor(
                     PolymarketPositionsTab.FINISHED -> Tab.Finished
                 },
                 content = PolymarketPositionsUM.Content.Loading,
+                filters = PolymarketPositionsFilter.of(params.initialTab).toImmutableList(),
                 onTabSelect = ::selectTab,
                 onBackClick = ::onBack,
                 onFinishedPositionDismiss = ::dismissFinishedPosition,
@@ -79,6 +81,7 @@ internal class PolymarketPositionsModel @Inject constructor(
         uiState.update { state ->
             state.copy(
                 selectedTab = tab,
+                filters = PolymarketPositionsFilter.of(tab.toDomain()).toImmutableList(),
                 selectedFilter = PolymarketPositionsFilter.ALL,
                 content = feed.state.value.content,
                 finishedPosition = null,
@@ -91,7 +94,7 @@ internal class PolymarketPositionsModel @Inject constructor(
     }
 
     private fun selectFilter(filter: PolymarketPositionsFilter) {
-        if (uiState.value.selectedTab != Tab.Active || filter == uiState.value.selectedFilter) return
+        if (filter == uiState.value.selectedFilter || filter !in uiState.value.filters) return
         feed.selectFilter(filter)
         val content = feed.state.value.takeIf { it.filter == filter }?.content ?: PolymarketPositionsUM.Content.Loading
         uiState.update { it.copy(selectedFilter = filter, content = content, onRefreshRetry = null) }
@@ -103,10 +106,7 @@ internal class PolymarketPositionsModel @Inject constructor(
 
     private fun createFeed(tab: Tab): PolymarketPositionsLoader.Feed = loader.createFeed(
         userWalletId = params.userWalletId,
-        tab = when (tab) {
-            Tab.Active -> PolymarketPositionsTab.ACTIVE
-            Tab.Finished -> PolymarketPositionsTab.FINISHED
-        },
+        tab = tab.toDomain(),
         onPositionClick = if (tab == Tab.Active) ::openPosition else null,
         onClosedPositionClick = if (tab == Tab.Finished) ::openFinishedPosition else null,
     )
@@ -150,6 +150,11 @@ internal class PolymarketPositionsModel @Inject constructor(
 
     private fun dismissFinishedPosition() {
         uiState.update { it.copy(finishedPosition = null) }
+    }
+
+    private fun Tab.toDomain(): PolymarketPositionsTab = when (this) {
+        Tab.Active -> PolymarketPositionsTab.ACTIVE
+        Tab.Finished -> PolymarketPositionsTab.FINISHED
     }
 
     private fun onBack() {

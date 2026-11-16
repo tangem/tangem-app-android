@@ -5,7 +5,7 @@ import com.tangem.core.analytics.api.ExceptionLogger
 import com.tangem.utils.logging.TangemLogger
 import org.json.JSONObject
 
-class AnalyticsEventsLogger(
+internal class AnalyticsEventsLogger(
     private val name: String,
 ) : EventLogger, ExceptionLogger {
 

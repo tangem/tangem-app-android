@@ -3,6 +3,7 @@ package com.tangem.tap.domain.userWalletList.di
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
@@ -17,6 +18,7 @@ import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.serialization.*
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.backup.SeenWalletCardReporter
 import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -65,7 +67,9 @@ internal object UserWalletsListRepositoryModule {
         isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
         getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
         walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
+        seenWalletCardReporter: Lazy<SeenWalletCardReporter>,
         tangemSdkManager: Lazy<TangemSdkManager>,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -122,6 +126,8 @@ internal object UserWalletsListRepositoryModule {
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,
             walletRegistrationTrigger = walletRegistrationTrigger,
+            seenWalletCardReporter = seenWalletCardReporter,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
 

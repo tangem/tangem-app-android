@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.amount.state
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -27,13 +28,16 @@ internal class BankWithdrawRailTextTest {
         assertThat(actual).isEqualTo(stringReference("FedWire"))
     }
 
-    @Test
-    fun `GIVEN destination without a fee name WHEN toTitleReference THEN the built-in label shown`() {
-        // Act & Assert
-        assertThat(offrampDestination(rail = BankRail.ACH).toTitleReference())
-            .isEqualTo(resourceReference(R.string.tangempay_bank_transfer_fee_ach))
-        assertThat(offrampDestination(rail = BankRail.WIRE).toTitleReference())
-            .isEqualTo(resourceReference(R.string.tangempay_bank_transfer_fee_fedwire))
+    @ParameterizedTest
+    @MethodSource("provideBuiltInLabelModels")
+    fun `GIVEN destination without a fee name WHEN toTitleReference THEN the built-in label shown`(
+        model: BuiltInLabelModel,
+    ) {
+        // Act
+        val actual = offrampDestination(rail = model.rail).toTitleReference()
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
     }
 
     @Test
@@ -85,6 +89,17 @@ internal class BankWithdrawRailTextTest {
         // Assert
         assertThat(actual).isEqualTo(model.expected)
     }
+
+    private fun provideBuiltInLabelModels() = listOf(
+        BuiltInLabelModel(rail = BankRail.ACH, expected = resourceReference(R.string.tangempay_bank_transfer_fee_ach)),
+        BuiltInLabelModel(
+            rail = BankRail.WIRE,
+            expected = resourceReference(R.string.tangempay_bank_transfer_fee_fedwire),
+        ),
+        BuiltInLabelModel(rail = BankRail.SPEI, expected = stringReference("SPEI")),
+    )
+
+    internal data class BuiltInLabelModel(val rail: BankRail, val expected: TextReference)
 
     private fun provideTotalFeeModels() = listOf(
         TotalFeeModel(railFee = BigDecimal("11.00"), networkFee = BigDecimal.ZERO, expected = "$11"),

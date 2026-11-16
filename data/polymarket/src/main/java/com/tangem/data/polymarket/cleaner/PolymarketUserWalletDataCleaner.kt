@@ -1,7 +1,6 @@
 package com.tangem.data.polymarket.cleaner
 
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
-import com.tangem.data.polymarket.store.PredictionPositionsValueStore
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
@@ -28,7 +27,6 @@ import javax.inject.Inject
  *
  * @property credentialsStore             secure storage of the L2 API credentials
  * @property predictionAccountStatusStore cache of the prediction account status
- * @property positionsValueStore          session store of the open positions value
  * @property onboardedStore               record of wallets the backend confirmed as ready to trade
  * @property requisitesStore              session store of the funding requisites
  * @property withdrawalStore              record of the withdrawal batch still awaiting the relayer
@@ -39,7 +37,6 @@ import javax.inject.Inject
 internal class PolymarketUserWalletDataCleaner @Inject constructor(
     private val credentialsStore: PolymarketCredentialsStore,
     private val predictionAccountStatusStore: PredictionAccountStatusStore,
-    private val positionsValueStore: PredictionPositionsValueStore,
     private val onboardedStore: PolymarketOnboardedStore,
     private val requisitesStore: PredictionDepositRequisitesStore,
     private val withdrawalStore: PredictionWithdrawalStore,
@@ -54,9 +51,6 @@ internal class PolymarketUserWalletDataCleaner @Inject constructor(
 
             runSuspendCatching { predictionAccountStatusStore.clear(userWalletId) }
                 .onFailure { TangemLogger.e("Failed to clear the account status of $userWalletId", it) }
-
-            runSuspendCatching { positionsValueStore.clear(userWalletId) }
-                .onFailure { TangemLogger.e("Failed to clear the positions value of $userWalletId", it) }
 
             runSuspendCatching { onboardedStore.clear(userWalletId) }
                 .onFailure { TangemLogger.e("Failed to clear the onboarded flag of $userWalletId", it) }

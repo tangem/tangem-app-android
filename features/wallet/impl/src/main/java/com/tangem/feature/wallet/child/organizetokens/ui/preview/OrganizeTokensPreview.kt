@@ -8,6 +8,8 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -52,6 +54,16 @@ internal object OrganizeTokensPreview {
         onItemLongClick = null,
     )
 
+    private val draggableTokenState = TangemTokenRow.State.Organize(
+        id = draggableToken.id,
+        icon = TangemTokenIcon.UiState.Token(
+            TangemTokenIcon.State(url = null, topIcon = R.drawable.img_polygon_22),
+        ),
+        title = stringReference(value = "Polygon"),
+        ticker = stringReference(value = "POL"),
+        fiatBalance = stringReference(value = "$ 42,900.13"),
+    )
+
     private val tokenList = List(networksSize) { it }
         .flatMap { index ->
             val lastNetworkIndex = networksSize - 1
@@ -74,10 +86,11 @@ internal object OrganizeTokensPreview {
             val tokens: MutableList<OrganizeRowItemUM.Token> = mutableListOf()
             repeat(times = tokensSize) { i ->
                 val tokenNumber = i + 1
+                val tokenId = "${group.id}_token_$tokenNumber"
                 tokens.add(
                     OrganizeRowItemUM.Token(
                         tokenRowUM = draggableToken.copy(
-                            id = "${group.id}_token_$tokenNumber",
+                            id = tokenId,
                             titleUM = TangemTokenRowUM.TitleUM.Content(
                                 text = combinedReference(
                                     stringReference(value = "Token $tokenNumber"),
@@ -90,6 +103,11 @@ internal object OrganizeTokensPreview {
                                     ),
                                 ),
                             ),
+                        ),
+                        tokenRowState = draggableTokenState.copy(
+                            id = tokenId,
+                            title = stringReference(value = "Token $tokenNumber"),
+                            ticker = stringReference(value = "TKN$tokenNumber"),
                         ),
                         groupId = group.id,
                         accountId = "account_$networkNumber",

@@ -153,6 +153,12 @@ internal fun LazyListScope.tokensListItems2(
                         isBalanceHidden = isBalanceHidden,
                         modifier = modifier,
                     )
+                    is TokensListItemUM2.Collectibles -> collectiblesItem(
+                        listItem = listItem,
+                        index = index,
+                        isBalanceHidden = isBalanceHidden,
+                        modifier = modifier,
+                    )
                     is TokensListItemUM2.AccountV2 -> accountItemV2(
                         listItem = listItem,
                         index = index,
@@ -227,6 +233,26 @@ private fun LazyListScope.jointPendingItem(
     modifier: Modifier = Modifier,
 ) {
     item(key = listItem.id, contentType = TokensListItemUM2.JointPending::class.java) {
+        TangemAccountRow(
+            avatar = listItem.avatar,
+            state = listItem.state,
+            isBalanceHidden = isBalanceHidden,
+            modifier = modifier
+                .padding(top = if (index == 0) 12.dp else 8.dp)
+                .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+                .semantics { lazyListItemPosition = index }
+                .animateContentSize(),
+        )
+    }
+}
+
+private fun LazyListScope.collectiblesItem(
+    listItem: TokensListItemUM2.Collectibles,
+    index: Int,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    item(key = listItem.id, contentType = TokensListItemUM2.Collectibles::class.java) {
         TangemAccountRow(
             avatar = listItem.avatar,
             state = listItem.state,

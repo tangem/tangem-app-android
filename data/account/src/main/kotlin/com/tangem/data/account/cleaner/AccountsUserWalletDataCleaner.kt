@@ -2,6 +2,7 @@ package com.tangem.data.account.cleaner
 
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.LegacyUserTokensResponseStore
+import com.tangem.data.account.store.WalletAccountsSyncStatusStore
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.models.wallet.UserWalletId
@@ -26,6 +27,7 @@ internal class AccountsUserWalletDataCleaner @Inject constructor(
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val legacyUserTokensResponseStore: LegacyUserTokensResponseStore,
     private val eTagsStore: ETagsStore,
+    private val syncStatusStore: WalletAccountsSyncStatusStore,
 ) : UserWalletDataCleaner {
 
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
@@ -34,6 +36,7 @@ internal class AccountsUserWalletDataCleaner @Inject constructor(
             launch { clearSafely(store = "accounts response") { accountsResponseStoreFactory.clear(userWalletIds) } }
             launch { clearSafely(store = "legacy user tokens") { legacyUserTokensResponseStore.clear(userWalletIds) } }
             launch { clearSafely(store = "ETags") { eTagsStore.clear(userWalletIds) } }
+            launch { clearSafely(store = "sync status") { syncStatusStore.clear(userWalletIds) } }
         }
     }
 

@@ -91,6 +91,13 @@ internal class PolymarketFeedPoller(
         scope.launch { tick() }
     }
 
+    /** A recovered sports connection invalidates every loaded page, regardless of the polling deadline. */
+    fun refreshLoadedPages() {
+        scope.launch {
+            if (tickerJob.isActive) refreshPages(batchFlow.state.value.data.map { it.key })
+        }
+    }
+
     private fun stampLoadedPages(state: PolymarketEventsBatchListState) {
         val keys = state.data.mapTo(mutableSetOf()) { it.key }
 
@@ -109,7 +116,6 @@ internal class PolymarketFeedPoller(
     }
 
     private suspend fun tick() {
-        val config = config ?: return
         val state = batchFlow.state.value
         if (state.data.isEmpty()) return
 
@@ -119,10 +125,17 @@ internal class PolymarketFeedPoller(
             meta.fetchedAt.elapsedNow() >= staleAfter && meta.lastAttemptAt.elapsedNow() >= pollInterval
         }
 
-        stalePages.forEach { key ->
+        refreshPages(stalePages)
+    }
+
+    private suspend fun refreshPages(keys: List<Int>) {
+        val config = config ?: return
+        keys.forEach { key ->
             if (!refreshesInFlight.add(key)) return@forEach
 
-            pageMeta[key] = pageMeta.getValue(key).copy(lastAttemptAt = timeSource.markNow())
+            val now = timeSource.markNow()
+            val meta = pageMeta[key] ?: PageMeta(fetchedAt = now, lastAttemptAt = now, failCount = 0)
+            pageMeta[key] = meta.copy(lastAttemptAt = now)
 
             TangemLogger.i("Feed: refreshing page $key")
             actionsFlow.emit(

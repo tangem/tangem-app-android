@@ -14,7 +14,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createWalletActionButtons
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
-import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
@@ -48,10 +47,6 @@ internal class SetTokenListTransformer(
         PolymarketWalletBlockConverter(appCurrency = appCurrency, clickIntents = clickIntents)
     }
 
-    private val collectiblesConverter by lazy {
-        CollectiblesWalletBlockConverter(appCurrency = appCurrency, clickIntents = clickIntents)
-    }
-
     override fun transform(prevState: WalletState): WalletState {
         return when (prevState) {
             is WalletState.MultiCurrency.Content -> {
@@ -61,7 +56,6 @@ internal class SetTokenListTransformer(
                     tangemPayMainUM = prevState.tangemPayMainUM.toLoadedState(),
                     moneyAccountMainUM = prevState.moneyAccountMainUM.toLoadedMoneyAccountState(),
                     polymarketWalletBlockUM = predictionBlockState(),
-                    collectiblesWalletBlockUM = collectiblesBlockState(),
                     buttons = prevState.enableButtons(),
                 )
             }
@@ -88,7 +82,6 @@ internal class SetTokenListTransformer(
                     tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
                     moneyAccountMainUM = walletUM.moneyAccountMainUM.toLoadedMoneyAccountState(),
                     polymarketWalletBlockUM = predictionBlockState(),
-                    collectiblesWalletBlockUM = collectiblesBlockState(),
                     tokensListUM = tokensListUM,
                     areActionsAvailable = areActionsAvailable,
                     buttons = createWalletActionButtons(
@@ -176,17 +169,6 @@ internal class SetTokenListTransformer(
         } ?: return this
 
         return moneyAccountConverter.convert(moneyAccountStatus)
-    }
-
-    private fun collectiblesBlockState(): CollectiblesWalletBlockUM {
-        val collectiblesAccountStatus = when (params) {
-            is TokenConverterParams.Account -> params.accountList.accountStatuses
-                .filterIsInstance<AccountStatus.Collectibles>()
-                .firstOrNull()
-            is TokenConverterParams.Wallet -> return CollectiblesWalletBlockUM.Hidden
-        } ?: return CollectiblesWalletBlockUM.Hidden
-
-        return collectiblesConverter.convert(collectiblesAccountStatus)
     }
 
     private fun predictionBlockState(): PolymarketWalletBlockUM {

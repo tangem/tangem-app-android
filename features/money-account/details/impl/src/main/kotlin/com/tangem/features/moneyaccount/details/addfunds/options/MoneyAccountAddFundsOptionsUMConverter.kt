@@ -19,13 +19,16 @@ internal class MoneyAccountAddFundsOptionsUMConverter(
     private val onBankTransferClick: () -> Unit,
 ) : Converter<MoneyAccountAddFundsOptionsUMConverter.Input, MoneyAccountAddFundsOptionsUM> {
 
-    data class Input(val isBankTransferLoading: Boolean = false)
+    data class Input(
+        val isBankTransferLoading: Boolean = false,
+        val hasSpei: Boolean = false,
+    )
 
     override fun convert(value: Input): MoneyAccountAddFundsOptionsUM = MoneyAccountAddFundsOptionsUM(
         items = listOfNotNull(
             swapItem(),
             receiveItem(),
-            bankTransferItem(isLoading = value.isBankTransferLoading),
+            bankTransferItem(isLoading = value.isBankTransferLoading, hasSpei = value.hasSpei),
         ).toImmutableList(),
     )
 
@@ -49,10 +52,14 @@ internal class MoneyAccountAddFundsOptionsUMConverter(
         )
     }
 
-    private fun bankTransferItem(isLoading: Boolean) = MoneyAccountAddFundsOptionUM(
+    private fun bankTransferItem(isLoading: Boolean, hasSpei: Boolean) = MoneyAccountAddFundsOptionUM(
         icon = brandIcon(Icons.ic_government_20),
         title = resourceReference(R.string.tangempay_topup_bank_transfer_title),
-        description = resourceReference(R.string.tangempay_topup_bank_transfer_body),
+        description = if (hasSpei) {
+            resourceReference(R.string.money_account_add_funds_bank_description)
+        } else {
+            resourceReference(R.string.tangempay_topup_bank_transfer_body)
+        },
         onClick = if (isLoading) null else onBankTransferClick,
         isLoading = isLoading,
     )

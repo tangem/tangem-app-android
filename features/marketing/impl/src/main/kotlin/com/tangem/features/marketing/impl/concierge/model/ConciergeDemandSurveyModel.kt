@@ -11,6 +11,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.marketing.SubmitDemandSurveyUseCase
 import com.tangem.domain.marketing.models.SurveyAnswer
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
@@ -86,7 +87,12 @@ internal class ConciergeDemandSurveyModel @Inject constructor(
                     if (question.key != questionKey) return@map question
                     question.copy(
                         options = question.options
-                            .map { option -> option.copy(isSelected = option.key == optionKey) }
+                            .map { option ->
+                                val isTapped = option.key == optionKey
+                                // An optional answer can be taken back by tapping it again, a required one can't
+                                val isSelected = if (question.isOptional && isTapped) !option.isSelected else isTapped
+                                option.copy(isSelected = isSelected)
+                            }
                             .toImmutableList(),
                     )
                 }.toImmutableList(),
@@ -126,6 +132,10 @@ internal class ConciergeDemandSurveyModel @Inject constructor(
             DialogMessage(
                 title = resourceReference(R.string.common_something_went_wrong),
                 message = resourceReference(R.string.common_unknown_error),
+                firstActionBuilder = {
+                    EventMessageAction(title = resourceReference(R.string.common_retry), onClick = ::submit)
+                },
+                secondActionBuilder = { cancelAction() },
             ),
         )
     }

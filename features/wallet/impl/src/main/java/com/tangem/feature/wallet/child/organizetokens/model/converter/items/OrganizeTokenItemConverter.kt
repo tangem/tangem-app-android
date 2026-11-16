@@ -6,14 +6,17 @@ import androidx.compose.ui.unit.sp
 import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.tokens.toTokenIconState
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.format.bigdecimal.cryptoStyled
 import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
@@ -34,11 +37,13 @@ internal class OrganizeTokenItemConverter(
     override fun convert(value: AccountCryptoCurrencyStatus): OrganizeRowItemUM.Token {
         val (account, currencyStatus) = value
         val currency = currencyStatus.currency
+        val id = getTokenItemId(currency.id)
+        val iconState = iconStateConverter.convert(currencyStatus)
 
         return OrganizeRowItemUM.Token(
             tokenRowUM = TangemTokenRowUM.Actionable(
-                id = getTokenItemId(currency.id),
-                headIconUM = TangemIconUM.Currency(iconStateConverter.convert(currencyStatus)),
+                id = id,
+                headIconUM = TangemIconUM.Currency(iconState),
                 titleUM = TangemTokenRowUM.TitleUM.Content(
                     text = combinedReference(
                         stringReference(currency.name),
@@ -77,6 +82,17 @@ internal class OrganizeTokenItemConverter(
                 tailUM = TangemRowTailUM.Draggable(R.drawable.ic_drag_24),
                 onItemClick = null,
                 onItemLongClick = null,
+            ),
+            tokenRowState = TangemTokenRow.State.Organize(
+                id = id,
+                icon = iconState.toTokenIconState(),
+                title = stringReference(currency.name),
+                ticker = stringReference(currency.symbol),
+                fiatBalance = stringReference(
+                    currencyStatus.getTotalFiatAmount().format {
+                        fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                    },
+                ),
             ),
             groupId = currency.network.id.toString(),
             accountId = account.accountId.value,

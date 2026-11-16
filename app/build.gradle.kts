@@ -219,6 +219,7 @@ dependencies {
     implementation(projects.grow.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
+    implementation(projects.core.decompose.ui)
     implementation(projects.core.error.ext)
     implementation(projects.core.security)
     implementation(projects.core.biometricAuth.impl)
@@ -315,6 +316,9 @@ dependencies {
     implementation(projects.features.details.impl)
     implementation(projects.features.disclaimer.api)
     implementation(projects.features.disclaimer.impl)
+    implementation(projects.features.earn.api)
+    implementation(projects.features.earn.impl)
+    implementation(projects.features.earn.flow.impl)
     implementation(projects.features.forceUpdate.api)
     implementation(projects.features.forceUpdate.impl)
     implementation(projects.features.pushNotifications.api)
@@ -441,13 +445,7 @@ dependencies {
 
     /** Firebase libraries */
     implementation(platform(deps.firebase.bom))
-    implementation(deps.firebase.crashlytics)
-    runtimeOnly(deps.firebase.crashlytics.ndk)
     implementation(deps.firebase.messaging)
-    implementation(deps.firebase.perf) {
-        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
-        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-    }
     /** Tangem libraries */
     implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")

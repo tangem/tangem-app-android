@@ -9,6 +9,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.organizetokens.model.OrganizeTokensModel
 import com.tangem.feature.wallet.child.organizetokens.ui.OrganizeTokensContent
+import com.tangem.feature.wallet.child.organizetokens.ui.OrganizeTokensModalContent
 
 internal class OrganizeTokensComponent(
     appComponentContext: AppComponentContext,
@@ -25,11 +26,19 @@ internal class OrganizeTokensComponent(
     override fun BottomSheet() {
         val uiState by model.uiState.collectAsStateWithLifecycle()
 
-        OrganizeTokensContent(
-            organizeTokensUM = uiState,
-            dragAndDropIntents = model.dragAndDropAdapter,
-            onDismiss = ::dismiss,
-        )
+        if (model.isRedesignedTokenRowsEnabled) {
+            OrganizeTokensModalContent(
+                organizeTokensUM = uiState,
+                dragAndDropIntents = model.dragAndDropAdapter,
+                onDismiss = ::dismiss,
+            )
+        } else {
+            OrganizeTokensContent(
+                organizeTokensUM = uiState,
+                dragAndDropIntents = model.dragAndDropAdapter,
+                onDismiss = ::dismiss,
+            )
+        }
     }
 
     interface Callback {

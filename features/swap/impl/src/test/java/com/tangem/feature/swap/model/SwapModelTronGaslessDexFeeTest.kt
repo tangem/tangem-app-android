@@ -28,7 +28,7 @@ internal class SwapModelTronGaslessDexFeeTest : SwapModelTestBase() {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(swapInteractor, swapFeatureToggles)
+        clearMocks(swapInteractor, swapFeatureToggles, isEvmGaslessFeeSupportedForNetwork)
         setUpBase()
         coEvery {
             swapInteractor.loadSwapFee(
@@ -74,6 +74,33 @@ internal class SwapModelTronGaslessDexFeeTest : SwapModelTestBase() {
                 }
             }
 
+        @Test
+        fun `GIVEN EVM DEX swap and EVM gasless toggle on WHEN loadFeeExtended THEN loads gasless fee for quoted swap data`() =
+            runTest {
+                // Arrange
+                every { swapFeatureToggles.isEvmGaslessDexSwapEnabled } returns true
+                every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
+                val fromStatus = swapCurrencyStatus(currency = token(Blockchain.Ethereum))
+                val model = createLoadedModel(fromStatus)
+
+                // Act
+                model.feeSelectorRepository.loadFeeExtended(selectedToken = null)
+
+                // Assert
+                coVerify(exactly = 1) {
+                    swapInteractor.loadSwapFee(
+                        quotesLoadedState = any(),
+                        fromStatus = fromStatus,
+                        toStatus = any(),
+                        amount = any(),
+                        swapData = swapDataModel,
+                        selectedFeeToken = null,
+                        isGasless = true,
+                        txType = any(),
+                    )
+                }
+            }
+
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN DEX swap without Tron gasless WHEN loadFeeExtended THEN network is not supported`(
@@ -81,6 +108,7 @@ internal class SwapModelTronGaslessDexFeeTest : SwapModelTestBase() {
         ) = runTest {
             // Arrange
             every { swapFeatureToggles.isTronGaslessDexSwapEnabled } returns model.isToggleEnabled
+            every { swapFeatureToggles.isEvmGaslessDexSwapEnabled } returns false
             val fromStatus = swapCurrencyStatus(currency = token(model.blockchain))
             val swapModel = createLoadedModel(fromStatus)
 

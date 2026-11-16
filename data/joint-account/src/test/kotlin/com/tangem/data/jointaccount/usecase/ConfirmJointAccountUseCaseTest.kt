@@ -15,12 +15,10 @@ import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
-import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.Runs
@@ -39,7 +37,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ConfirmJointAccountUseCaseTest {
@@ -77,7 +74,7 @@ internal class ConfirmJointAccountUseCaseTest {
     @Test
     fun `GIVEN confirming account WHEN invoke THEN signed payload is sent and the list refreshed`() = runTest {
         // Arrange
-        val jointAccount = jointAccount(safeAddress = computedSafeAddress(SafeSingleton.SAFE_L2))
+        val jointAccount = jointAccount(safeAddress = computedSafeAddress())
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
         val inputSlot = slot<JointAccountSignInput>()
         coEvery { signer.sign(userWalletId = MockAccounts.userWalletId, input = capture(inputSlot)) } returns
@@ -106,7 +103,7 @@ internal class ConfirmJointAccountUseCaseTest {
                 membersCount = 2,
                 threshold = 2,
             ),
-            safeAddress = computedSafeAddress(SafeSingleton.SAFE_L2).lowercase(),
+            safeAddress = computedSafeAddress().lowercase(),
         )
         assertThat(payloadSlot.captured).isEqualTo(expectedPayload)
         // The signed payload and the sent payload are one and the same object of values
@@ -116,27 +113,28 @@ internal class ConfirmJointAccountUseCaseTest {
         }
     }
 
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `the backend address picks the singleton`(model: SingletonModel) = runTest {
-        // Arrange — which Safe singleton the backend deploys is undecided (alignment №21), both must work
-        val jointAccount = jointAccount(safeAddress = computedSafeAddress(model.singleton))
-        every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
-        val payloadSlot = slot<JointAccountConfirmationPayload>()
-        coEvery { repository.confirm(any(), capture(payloadSlot), any()) } returns jointAccount.right()
+    @Test
+    fun `GIVEN the SafeL2 address of the composition WHEN invoke THEN AddressMismatch and the card is never asked`() =
+        runTest {
+            // Arrange
+            val safeL2Address = DefaultSafeAddressCalculator()
+                .compute(owners = listOf(OWNER_ADDRESS, MEMBER_ADDRESS), threshold = 2, singleton = SAFE_L2_SINGLETON)
+                .getOrNull()!!
+            val jointAccount = jointAccount(safeAddress = safeL2Address)
+            every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
 
-        // Act
-        val actual = useCase(account = account)
+            // Act
+            val actual = useCase(account = account)
 
-        // Assert
-        assertThat(actual).isEqualTo(jointAccount.right())
-        assertThat(payloadSlot.captured.safeAddress).isEqualTo(computedSafeAddress(model.singleton).lowercase())
-    }
+            // Assert
+            assertThat(actual).isEqualTo(JointAccountConfirmationError.AddressMismatch.left())
+            coVerify(exactly = 0) { signer.sign(any(), any()) }
+        }
 
     @Test
     fun `GIVEN a checksummed safe address WHEN invoke THEN the lower-case spelling is signed and sent`() = runTest {
         // Arrange — the backend compares the canonical payload byte by byte and only knows the lower-case form
-        val checksummed = computedSafeAddress(SafeSingleton.SAFE_L2)
+        val checksummed = computedSafeAddress()
         val jointAccount = jointAccount(safeAddress = checksummed)
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
         val inputSlot = slot<JointAccountSignInput>()
@@ -154,10 +152,6 @@ internal class ConfirmJointAccountUseCaseTest {
         // The signed payload carries the same spelling as the one sent
         assertThat(inputSlot.captured.makePayload(OWNER_ADDRESS)).isEqualTo(payloadSlot.captured)
     }
-
-    private fun provideTestModels() = SafeSingleton.entries.map(::SingletonModel)
-
-    data class SingletonModel(val singleton: SafeSingleton)
 
     @Test
     fun `GIVEN backend address matches no singleton WHEN invoke THEN AddressMismatch and the card is never asked`() =
@@ -341,7 +335,7 @@ internal class ConfirmJointAccountUseCaseTest {
 
             // Assert
             assertThat(message.captured).contains(DEAD_ADDRESS)
-            assertThat(message.captured).contains(computedSafeAddress(SafeSingleton.SAFE_L2))
+            assertThat(message.captured).contains(computedSafeAddress())
             assertThat(shouldSanitize.captured).isFalse()
             unmockkObject(TangemLogger)
         }
@@ -362,7 +356,7 @@ internal class ConfirmJointAccountUseCaseTest {
 
     private fun jointAccount(
         status: JointAccount.Status = JointAccount.Status.CONFIRMING,
-        safeAddress: String? = computedSafeAddress(SafeSingleton.SAFE_L2),
+        safeAddress: String? = computedSafeAddress(),
     ): JointAccount {
         return JointAccount(
             cryptoAccountId = account.accountId.value,
@@ -378,9 +372,9 @@ internal class ConfirmJointAccountUseCaseTest {
         )
     }
 
-    private fun computedSafeAddress(singleton: SafeSingleton): String {
+    private fun computedSafeAddress(): String {
         return DefaultSafeAddressCalculator()
-            .compute(owners = listOf(OWNER_ADDRESS, MEMBER_ADDRESS), threshold = 2, singleton = singleton)
+            .compute(owners = listOf(OWNER_ADDRESS, MEMBER_ADDRESS), threshold = 2)
             .getOrNull()!!
     }
 
@@ -392,6 +386,7 @@ internal class ConfirmJointAccountUseCaseTest {
     )
 
     private companion object {
+        const val SAFE_L2_SINGLETON = "0xEdd160fEBBD92E350D4D398fb636302fccd67C7e"
         const val OWNER_ADDRESS = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf"
         const val MEMBER_ADDRESS = "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF"
         const val DEAD_ADDRESS = "0x000000000000000000000000000000000000dEaD"

@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.button.TangemButtonUM
-import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
@@ -33,7 +32,6 @@ internal sealed interface WalletUM {
 
     val polymarketWalletBlockUM: PolymarketWalletBlockUM
 
-    val collectiblesWalletBlockUM: CollectiblesWalletBlockUM
     val jointOperationBanners: ImmutableList<JointOperationBannerUM>
 
     /** Whether the marketing block is shown; it gives way to system cards */
@@ -51,7 +49,6 @@ internal sealed interface WalletUM {
         override val tangemPayMainUM: TangemPayMainUM,
         override val moneyAccountMainUM: MoneyAccountMainUM,
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM,
-        override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM,
         override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf(),
         val areActionsAvailable: Boolean = false,
         override val isMarketingBlockVisible: Boolean = false,
@@ -76,7 +73,6 @@ internal sealed interface WalletUM {
         override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
         override val moneyAccountMainUM: MoneyAccountMainUM = MoneyAccountMainUM.Empty
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden
-        override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden
         override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf()
         override val isMarketingBlockVisible: Boolean = false
     }

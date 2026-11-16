@@ -28,7 +28,8 @@ internal class DefaultAccountCreateEditComponent @AssistedInject constructor(
             isCreateMode = params is AccountCreateEditComponent.Params.Create,
             modifier = modifier,
         )
-        BackHandler(onBack = state.onCloseClick)
+        // only while there are changes to confirm: otherwise back is a plain pop, left to the stack's predictive back
+        BackHandler(enabled = state.buttonState.isButtonEnabled, onBack = state.onCloseClick)
     }
 
     @AssistedFactory

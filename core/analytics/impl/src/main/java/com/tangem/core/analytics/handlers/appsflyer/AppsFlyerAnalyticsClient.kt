@@ -16,7 +16,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 
-interface AppsFlyerAnalyticsClient : EventLogger, UserIdHolder
+internal interface AppsFlyerAnalyticsClient : EventLogger, UserIdHolder
 
 internal class AppsFlyerClient @AssistedInject constructor(
     @Assisted apiKey: String,

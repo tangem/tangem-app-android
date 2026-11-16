@@ -379,6 +379,7 @@ internal class PolymarketSearchModelTest {
             messageSender = messageSender,
             regionAccess = regionAccess,
             searchPolymarketEventsUseCase = searchEventsUseCase,
+            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
         ).also { model = it }
     }
 

@@ -16,7 +16,6 @@ import com.tangem.grow.datasource.yield.models.incentives.YieldClaimHistoryRespo
 import com.tangem.grow.datasource.yield.models.incentives.YieldIncentivesResponse
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
-import io.mockk.called
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -75,36 +74,6 @@ internal class DefaultYieldIncentivesRepositoryTest {
         // Assert
         assertThat(actual).isEqualTo(YieldIncentivesError.Unavailable.left())
     }
-
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN toggle disabled WHEN any method is called THEN feature absent and api untouched`(
-        model: ToggleOffModel,
-    ) = runTest {
-        // Arrange
-        val repository = createRepository(testScope = this, isMerklIncentivesEnabled = false)
-
-        // Act
-        val actual = model.call(repository)
-
-        // Assert
-        assertThat(actual).isEqualTo(YieldIncentivesError.FeatureAbsent.left())
-        coVerify { api wasNot called }
-    }
-
-    internal data class ToggleOffModel(
-        val name: String,
-        val call: suspend (YieldIncentivesRepository) -> Either<YieldIncentivesError, Any>,
-    ) {
-        override fun toString(): String = name
-    }
-
-    private fun provideTestModels() = listOf(
-        ToggleOffModel("getIncentives") { it.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) },
-        ToggleOffModel("getAprHistory") { it.getAprHistory(chainId = CHAIN_ID, tokenAddress = TOKEN, days = 30) },
-        ToggleOffModel("getClaimCalldata") { it.getClaimCalldata(chainId = CHAIN_ID, userAddress = ADDRESS) },
-        ToggleOffModel("getClaimHistory") { it.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS) },
-    )
 
     @Test
     fun `GIVEN cached incentives within 30s WHEN getIncentives twice THEN api called once`() = runTest {
@@ -366,12 +335,11 @@ internal class DefaultYieldIncentivesRepositoryTest {
         val expected: YieldIncentivesError,
     )
 
-    private fun createRepository(testScope: TestScope, isMerklIncentivesEnabled: Boolean = true) =
+    private fun createRepository(testScope: TestScope) =
         DefaultYieldIncentivesRepository(
             api = api,
             cache = DefaultYieldIncentivesCache(currentTimeMillis = { testScope.testScheduler.currentTime }),
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-            isMerklIncentivesEnabled = isMerklIncentivesEnabled,
         )
 
     private fun incentivesResponse(lastUpdatedAt: String = TIMESTAMP) = YieldIncentivesResponse(

@@ -63,6 +63,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val cardAuthenticator: TangemPayCardAuthenticator,
 ) {
 
     val cardId: String = card.id
@@ -87,6 +88,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
     val uiState: StateFlow<TangemPayCardDetailsUM>
         field = MutableStateFlow(stateFactory.getInitialState())
 
+    private val revealAuthJobHolder = JobHolder()
     private val revealCardDetailsJobHolder = JobHolder()
     private val showCardDetailsTimerJobHolder = JobHolder()
 
@@ -145,8 +147,14 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
             .launchIn(scope)
     }
 
-    private fun requestReveal() {
-        cardDetailsEventListener.send(CardDetailsEvent.Show(cardId))
+    fun requestReveal() {
+        if (revealAuthJobHolder.isActive) return
+        scope.launch {
+            val isAuthenticated = cardAuthenticator.authenticate(
+                title = TextReference.Res(R.string.tangempay_card_details_title),
+            )
+            if (isAuthenticated) cardDetailsEventListener.send(CardDetailsEvent.Show(cardId))
+        }.saveIn(revealAuthJobHolder)
     }
 
     private fun requestHide() {

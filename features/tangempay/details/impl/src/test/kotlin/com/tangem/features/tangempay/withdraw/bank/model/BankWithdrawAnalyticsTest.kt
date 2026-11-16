@@ -181,6 +181,13 @@ internal class BankWithdrawAnalyticsTest {
                 ),
             ),
             MoneyAccountModel(
+                step = "send attempted over SPEI",
+                report = {
+                    onSendAttempted(savedRecipientDraft().copy(destination = offrampDestination(rail = BankRail.SPEI)))
+                },
+                expectedEvents = emptyList(),
+            ),
+            MoneyAccountModel(
                 step = "send attempted without an amount",
                 report = { onSendAttempted(savedRecipientDraft().copy(amount = null)) },
                 expectedEvents = emptyList(),

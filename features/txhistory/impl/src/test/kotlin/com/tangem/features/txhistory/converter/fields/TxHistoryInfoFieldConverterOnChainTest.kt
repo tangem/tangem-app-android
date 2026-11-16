@@ -672,7 +672,7 @@ internal class TxHistoryInfoFieldConverterOnChainTest {
 
         val result = converter.convert(tx) as TransactionItemUM.Content
 
-        val moneyAccountName = resRef(R.string.tangempay_unified_onboarding_money_account_header)
+        val moneyAccountName = resRef(R.string.money_account_main_name)
         assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
         assertThat(result.subtitle).isEqualTo(
             ContentSubtitle.OwnAccount(

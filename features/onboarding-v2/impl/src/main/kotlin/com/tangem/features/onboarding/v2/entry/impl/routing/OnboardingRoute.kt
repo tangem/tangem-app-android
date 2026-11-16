@@ -5,7 +5,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.onboarding.v2.TitleProvider
-import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
@@ -27,12 +26,6 @@ sealed class OnboardingRoute : Route {
         val onForceExit: () -> Unit,
     ) : OnboardingRoute()
 
-    data class Visa(
-        val titleProvider: TitleProvider,
-        val scanResponse: ScanResponse,
-        val onDone: () -> Unit,
-    ) : OnboardingRoute()
-
     data class Twins(
         val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,
@@ -51,8 +44,5 @@ sealed class OnboardingRoute : Route {
         val modelCallbacks: PushNotificationsModelCallbacks,
     ) : OnboardingRoute()
 
-    data class Done(
-        val mode: OnboardingDoneComponent.Mode,
-        val onDone: () -> Unit,
-    ) : OnboardingRoute()
+    data class Done(val onDone: () -> Unit) : OnboardingRoute()
 }

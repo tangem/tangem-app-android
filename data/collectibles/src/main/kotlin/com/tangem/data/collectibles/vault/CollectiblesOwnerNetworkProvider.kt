@@ -17,7 +17,7 @@ import javax.inject.Inject
 /**
  * Network the gacha program is addressed through — built on [COLLECTIBLES_OWNER_DERIVATION_PATH], not the wallet's
  * ordinary Solana account: the vault is `PDA(["vault", owner])` and the wallet manager's address on this network is
- * what the SDK takes as `cold_owner`.
+ * what the SDK takes as `owner`.
  */
 internal class CollectiblesOwnerNetworkProvider @Inject constructor(
     private val networkFactory: NetworkFactory,

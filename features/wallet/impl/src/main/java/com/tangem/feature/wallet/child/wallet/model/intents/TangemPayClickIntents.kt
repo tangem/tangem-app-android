@@ -22,10 +22,9 @@ import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
+import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -74,13 +73,12 @@ internal interface TangemPayIntents {
 internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val onboardingRepository: OnboardingRepository,
-    private val produceInitialDataTangemPay: ProduceTangemPayInitialDataUseCase,
+    private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
     override suspend fun onPullToRefresh() {
@@ -100,11 +98,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         )
 
         modelScope.launch {
-            produceInitialDataTangemPay.invoke(userWallet.walletId)
-                .onRight {
-                    paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWallet.walletId))
-                    moneyAccountStatusFetcher.invoke(userWallet.walletId)
-                }
+            renewTangemPaySessionUseCase(userWallet.walletId)
                 .onLeft {
                     stateHolder.update(
                         TangemPayRefreshShowProgressTransformer(

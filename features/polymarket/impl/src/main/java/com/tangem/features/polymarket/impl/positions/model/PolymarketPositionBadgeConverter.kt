@@ -38,7 +38,7 @@ internal class PolymarketPositionBadgeConverter(private val shouldShowAmount: Bo
             PolymarketPositionStatus.LOST -> badge(
                 label = R.string.prediction_positions_lost,
                 status = TangemBadge.Status.Error,
-                amount = value.currentValue,
+                amount = value.realizedPnl + value.cashPnl,
                 icon = Icons.ic_heart_broken_16,
             )
             PolymarketPositionStatus.SPLIT -> badge(

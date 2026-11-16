@@ -48,6 +48,7 @@ dependencies {
     implementation(projects.grow.datasource)
     api(projects.core.utils)
     implementation(projects.core.pagination)
+    implementation(projects.core.socket)
     implementation(projects.data.common)
     implementation(projects.libs.blockchainSdk)
     // endregion

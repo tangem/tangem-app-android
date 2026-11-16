@@ -1,9 +1,12 @@
 package com.tangem.data.staking.di
 
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
 import com.tangem.domain.models.currency.balance.BalanceContributionProvider
 import com.tangem.domain.staking.StakingIdFactory
+import com.tangem.domain.staking.contribution.StakingContributionFetcher
 import com.tangem.domain.staking.contribution.StakingContributionProvider
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import dagger.Module
 import dagger.Provides
@@ -26,6 +29,18 @@ internal object StakingContributionProviderModule {
             stakingBalanceSupplier = stakingBalanceSupplier,
             stakingIdFactory = stakingIdFactory,
             analyticsExceptionHandler = analyticsExceptionHandler,
+        )
+    }
+
+    @Provides
+    @IntoSet
+    fun provideStakingContributionFetcher(
+        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
+        stakingIdFactory: StakingIdFactory,
+    ): BalanceContributionFetcher {
+        return StakingContributionFetcher(
+            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+            stakingIdFactory = stakingIdFactory,
         )
     }
 }

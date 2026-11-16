@@ -27,11 +27,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.formatAnnotatedWithLinks
 import com.tangem.core.ui.extensions.resolveReference
@@ -46,10 +48,10 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.distinctUntilChanged
 import com.tangem.core.ui.R as CoreUiR
 
-private const val CARD_WIDTH = 266f
-private const val CARD_HEIGHT = 172f
-private const val CARD_SPACING = 12f
-private const val SCREEN_MARGIN = 24f
+internal const val SELECT_PLAN_CARD_WIDTH = 266f
+internal const val SELECT_PLAN_CARD_HEIGHT = 172f
+private const val SELECT_PLAN_CARD_SPACING = 12f
+internal const val SELECT_PLAN_SCREEN_MARGIN = 24f
 
 @Composable
 internal fun TangemPaySelectPlanScreen(state: TangemPaySelectPlanUM, modifier: Modifier = Modifier) {
@@ -61,21 +63,24 @@ internal fun TangemPaySelectPlanScreen(state: TangemPaySelectPlanUM, modifier: M
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             SelectPlanTopBar(state = state)
-
             AnimatedContent(
                 targetState = state.content,
                 modifier = Modifier.weight(1f),
                 contentKey = { it::class },
                 label = "SelectPlanContent",
             ) { content ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    when (content) {
-                        is TangemPaySelectPlanUM.Content.Select -> SelectContent(state = state)
-                        is TangemPaySelectPlanUM.Content.Confirm -> ConfirmContent(state = state, content = content)
+                when (content) {
+                    TangemPaySelectPlanUM.Content.Loading -> ProvideTangemShimmer {
+                        Column(modifier = Modifier.fillMaxSize()) { SelectPlanSkeletonContent() }
+                    }
+                    is TangemPaySelectPlanUM.Content.Error -> CenteredContent {
+                        UnableToLoadData(onRetryClick = content.onRetryClick)
+                    }
+                    is TangemPaySelectPlanUM.Content.Select -> ScrollableContent {
+                        SelectContent(state = state)
+                    }
+                    is TangemPaySelectPlanUM.Content.Confirm -> ScrollableContent {
+                        ConfirmContent(state = state, content = content)
                     }
                 }
             }
@@ -85,6 +90,9 @@ internal fun TangemPaySelectPlanScreen(state: TangemPaySelectPlanUM, modifier: M
                 label = "SelectPlanFooter",
             ) { content ->
                 when (content) {
+                    TangemPaySelectPlanUM.Content.Loading,
+                    is TangemPaySelectPlanUM.Content.Error,
+                    -> Unit
                     is TangemPaySelectPlanUM.Content.Select -> SelectFooter(content = content)
                     is TangemPaySelectPlanUM.Content.Confirm -> ConfirmFooter(content = content)
                 }
@@ -93,6 +101,28 @@ internal fun TangemPaySelectPlanScreen(state: TangemPaySelectPlanUM, modifier: M
 
         ComparePlansBottomSheet(compare = state.compare, onLinkClick = state.onLinkClick)
     }
+}
+
+@Composable
+private fun CenteredContent(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .navigationBarsPadding(),
+        contentAlignment = Alignment.Center,
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun ScrollableContent(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        content = content,
+    )
 }
 
 @Composable
@@ -121,16 +151,16 @@ private fun ColumnScope.SelectContent(state: TangemPaySelectPlanUM) {
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val endPadding = (maxWidth - SCREEN_MARGIN.dp - CARD_WIDTH.dp).coerceAtLeast(0.dp)
+        val endPadding = (maxWidth - SELECT_PLAN_SCREEN_MARGIN.dp - SELECT_PLAN_CARD_WIDTH.dp).coerceAtLeast(0.dp)
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag(TangemPayTestTags.SELECT_PLAN_PAGER)
                 .padding(top = 12.dp),
-            pageSize = PageSize.Fixed(CARD_WIDTH.dp),
-            contentPadding = PaddingValues(start = SCREEN_MARGIN.dp, end = endPadding),
-            pageSpacing = CARD_SPACING.dp,
+            pageSize = PageSize.Fixed(SELECT_PLAN_CARD_WIDTH.dp),
+            contentPadding = PaddingValues(start = SELECT_PLAN_SCREEN_MARGIN.dp, end = endPadding),
+            pageSpacing = SELECT_PLAN_CARD_SPACING.dp,
             beyondViewportPageCount = 1,
         ) { page ->
             PlanCard(imageUrl = plans[page].imageUrl)
@@ -314,8 +344,8 @@ private fun ConfirmFooter(content: TangemPaySelectPlanUM.Content.Confirm, modifi
 private fun PlanCard(imageUrl: String?, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .width(CARD_WIDTH.dp)
-            .aspectRatio(ratio = CARD_WIDTH / CARD_HEIGHT),
+            .width(SELECT_PLAN_CARD_WIDTH.dp)
+            .aspectRatio(ratio = SELECT_PLAN_CARD_WIDTH / SELECT_PLAN_CARD_HEIGHT),
     ) {
         Image(
             modifier = Modifier.matchParentSize(),
@@ -349,6 +379,28 @@ private fun TangemPaySelectPlanScreenPreview() {
 private fun TangemPaySelectPlanConfirmPreview() {
     TangemThemePreviewRedesign {
         TangemPaySelectPlanScreen(state = previewState(isConfirm = true))
+    }
+}
+
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Composable
+private fun TangemPaySelectPlanLoadingPreview() {
+    TangemThemePreviewRedesign {
+        TangemPaySelectPlanScreen(
+            state = previewState(isConfirm = false).copy(content = TangemPaySelectPlanUM.Content.Loading),
+        )
+    }
+}
+
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Composable
+private fun TangemPaySelectPlanErrorPreview() {
+    TangemThemePreviewRedesign {
+        TangemPaySelectPlanScreen(
+            state = previewState(isConfirm = false).copy(
+                content = TangemPaySelectPlanUM.Content.Error(onRetryClick = {}),
+            ),
+        )
     }
 }
 

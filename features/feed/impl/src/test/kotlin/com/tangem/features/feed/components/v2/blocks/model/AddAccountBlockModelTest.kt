@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.ZoomTransitions
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
@@ -180,7 +181,7 @@ internal class AddAccountBlockModelTest {
     }
 
     @Test
-    fun `GIVEN joint accounts are off AND one wallet has room WHEN the block is tapped THEN creation opens`() =
+    fun `GIVEN joint accounts are off AND one wallet has room WHEN the block is tapped THEN creation is held`() =
         runTest {
             // Arrange
             wallets.value = listOf(wallet(walletAId))
@@ -194,9 +195,8 @@ internal class AddAccountBlockModelTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) {
-                router.push(route = AppRoute.CreateAccount(userWalletId = walletAId), onComplete = any())
-            }
+            assertThat(model.routeAwaitingSheetClose.value)
+                .isEqualTo(AppRoute.CreateAccount(userWalletId = walletAId))
             // the path dismisses before navigating, which is a no-op on an empty slot — but no sheet opens
             assertThat(openedSheets.filterNotNull()).isEmpty()
             model.onDestroy()
@@ -325,7 +325,7 @@ internal class AddAccountBlockModelTest {
     }
 
     @Test
-    fun `GIVEN several wallets but only one with room WHEN the block is tapped THEN creation opens for it`() =
+    fun `GIVEN several wallets but only one with room WHEN the block is tapped THEN its creation is held`() =
         runTest {
             // Arrange
             wallets.value = listOf(wallet(walletAId), wallet(walletBId))
@@ -341,14 +341,13 @@ internal class AddAccountBlockModelTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) {
-                router.push(route = AppRoute.CreateAccount(userWalletId = walletBId), onComplete = any())
-            }
+            assertThat(model.routeAwaitingSheetClose.value)
+                .isEqualTo(AppRoute.CreateAccount(userWalletId = walletBId))
             model.onDestroy()
         }
 
     @Test
-    fun `GIVEN the chooser is open WHEN a wallet is picked THEN creation opens for that wallet`() = runTest {
+    fun `GIVEN the chooser is open WHEN a wallet is picked THEN its creation is held`() = runTest {
         // Arrange
         wallets.value = listOf(wallet(walletAId), wallet(walletBId))
         accountLists.value = listOf(
@@ -365,9 +364,34 @@ internal class AddAccountBlockModelTest {
         advanceUntilIdle()
 
         // Assert
+        assertThat(model.routeAwaitingSheetClose.value)
+            .isEqualTo(AppRoute.CreateAccount(userWalletId = walletBId))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN creation is held WHEN the sheets have closed THEN creation opens`() = runTest {
+        // Arrange
+        wallets.value = listOf(wallet(walletAId))
+        accountLists.value = listOf(accountList(walletAId, canAddCrypto = true))
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onClick()
+        advanceUntilIdle()
+        val route = requireNotNull(model.routeAwaitingSheetClose.value)
+
+        // Act
+        model.onSheetsClosed(route)
+
+        // Assert
         verify(exactly = 1) {
-            router.push(route = AppRoute.CreateAccount(userWalletId = walletBId), onComplete = any())
+            router.push(
+                route = AppRoute.CreateAccount(userWalletId = walletAId),
+                onComplete = any(),
+            )
         }
+        assertThat(ZoomTransitions.claim(route)).isEqualTo("feed_add_account_block")
+        assertThat(model.routeAwaitingSheetClose.value).isNull()
         model.onDestroy()
     }
 
@@ -442,7 +466,7 @@ internal class AddAccountBlockModelTest {
         }
 
     @Test
-    fun `GIVEN the joint limit is not reached WHEN the option is tapped THEN joint creation opens`() = runTest {
+    fun `GIVEN the joint limit is not reached WHEN the option is tapped THEN joint creation is held`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -457,12 +481,9 @@ internal class AddAccountBlockModelTest {
 
         // Assert
         val source = AppRoute.JointAccountCreation.Source.MainScreen
-        verify(exactly = 1) {
-            router.push(
-                route = AppRoute.JointAccountCreation(userWalletId = walletAId, source = source),
-                onComplete = any(),
-            )
-        }
+        assertThat(model.routeAwaitingSheetClose.value).isEqualTo(
+            AppRoute.JointAccountCreation(userWalletId = walletAId, source = source),
+        )
         verify(exactly = 1) {
             analyticsEventHandler.send(event = JointAccountAnalyticsEvent.ButtonCreateJointAccount(source = source))
         }

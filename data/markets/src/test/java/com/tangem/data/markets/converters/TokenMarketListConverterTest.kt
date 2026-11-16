@@ -5,7 +5,11 @@ import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.store.datasource.markets.models.response.TokenMarketListResponse
 import com.tangem.domain.markets.TokenMarket
+import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 internal class TokenMarketListConverterTest {
@@ -128,6 +132,128 @@ internal class TokenMarketListConverterTest {
         assertThat(actual.tokens.single().isRestrictedForCountry).isFalse()
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class YieldRate {
+
+        @Test
+        fun `GIVEN staking apy and Yield Mode apy WHEN convert THEN the staking maximum wins as sent`() {
+            // Arrange — staking apy is used unshifted and beats Yield Mode, which alone would give 0.07
+            val stakingOpportunities = listOf(
+                createStakingOpportunity(apy = BigDecimal("0.03")),
+                createStakingOpportunity(apy = BigDecimal("0.05")),
+            )
+            val response = createResponse(
+                createToken(
+                    id = "ethereum",
+                    stakingOpportunities = stakingOpportunities,
+                    maxYieldApy = BigDecimal("7"),
+                ),
+            )
+
+            // Act
+            val actual = TokenMarketListConverter.convert(response)
+
+            // Assert
+            assertThat(actual.tokens.single().yieldRate).isEqualTo(BigDecimal("0.05"))
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN no positive staking apy and Yield Mode apy WHEN convert THEN yield rate is the percent shifted two places`(
+            model: FallbackModel,
+        ) {
+            // Arrange
+            val response = createResponse(
+                createToken(
+                    id = "ethereum",
+                    stakingOpportunities = model.stakingOpportunities,
+                    maxYieldApy = model.maxYieldApy,
+                ),
+            )
+
+            // Act
+            val actual = TokenMarketListConverter.convert(response)
+
+            // Assert
+            assertThat(actual.tokens.single().yieldRate).isEqualTo(model.expected)
+        }
+
+        @Test
+        fun `GIVEN neither staking nor Yield Mode apy WHEN convert THEN yield rate is null`() {
+            // Arrange
+            val response = createResponse(
+                createToken(id = "ethereum", stakingOpportunities = null, maxYieldApy = null),
+            )
+
+            // Act
+            val actual = TokenMarketListConverter.convert(response)
+
+            // Assert
+            assertThat(actual.tokens.single().yieldRate).isNull()
+        }
+
+        @Test
+        fun `GIVEN staking opportunities with null apy only WHEN convert THEN conversion throws as a known defect`() {
+            // Arrange — no apy left after dropping nulls, so max() throws instead of falling back to Yield Mode
+            val response = createResponse(
+                createToken(
+                    id = "ethereum",
+                    stakingOpportunities = listOf(createStakingOpportunity(apy = null)),
+                    maxYieldApy = BigDecimal("5.5"),
+                ),
+            )
+
+            // Act
+            val actual = runCatching { TokenMarketListConverter.convert(response) }
+
+            // Assert
+            assertThat(actual.exceptionOrNull()).isInstanceOf(NoSuchElementException::class.java)
+        }
+
+        @Test
+        fun `GIVEN empty staking opportunities list WHEN convert THEN conversion throws as a known defect`() {
+            // Arrange — same max() on an empty list as the all-null case
+            val response = createResponse(
+                createToken(
+                    id = "ethereum",
+                    stakingOpportunities = emptyList(),
+                    maxYieldApy = BigDecimal("5.5"),
+                ),
+            )
+
+            // Act
+            val actual = runCatching { TokenMarketListConverter.convert(response) }
+
+            // Assert
+            assertThat(actual.exceptionOrNull()).isInstanceOf(NoSuchElementException::class.java)
+        }
+
+        private fun provideTestModels() = listOf(
+            FallbackModel(
+                stakingOpportunities = listOf(createStakingOpportunity(apy = BigDecimal("0"))),
+                maxYieldApy = BigDecimal("5.5"),
+                expected = BigDecimal("0.055"),
+            ),
+            FallbackModel(
+                stakingOpportunities = listOf(createStakingOpportunity(apy = BigDecimal("-0.01"))),
+                maxYieldApy = BigDecimal("5.5"),
+                expected = BigDecimal("0.055"),
+            ),
+            FallbackModel(
+                stakingOpportunities = null,
+                maxYieldApy = BigDecimal("5.5"),
+                expected = BigDecimal("0.055"),
+            ),
+        )
+    }
+
+    internal data class FallbackModel(
+        val stakingOpportunities: List<TokenMarketListResponse.Token.StakingOpportunities>?,
+        val maxYieldApy: BigDecimal,
+        val expected: BigDecimal,
+    )
+
     private fun createResponse(vararg tokens: TokenMarketListResponse.Token) = TokenMarketListResponse(
         imageHost = "https://img.tangem.org/",
         tokens = tokens.toList(),
@@ -144,6 +270,8 @@ internal class TokenMarketListConverterTest {
         name: String = id,
         symbol: String = id.take(n = 3).uppercase(),
         isRestrictedForCountry: Boolean? = null,
+        stakingOpportunities: List<TokenMarketListResponse.Token.StakingOpportunities>? = null,
+        maxYieldApy: BigDecimal? = null,
     ) = TokenMarketListResponse.Token(
         id = id,
         name = name,
@@ -153,10 +281,17 @@ internal class TokenMarketListConverterTest {
         marketRating = null,
         marketCap = null,
         isUnderMarketCapLimit = null,
-        stakingOpportunities = null,
-        maxYieldApy = null,
+        stakingOpportunities = stakingOpportunities,
+        maxYieldApy = maxYieldApy,
         networks = networks,
         isRestrictedForCountry = isRestrictedForCountry,
+    )
+
+    private fun createStakingOpportunity(apy: BigDecimal?) = TokenMarketListResponse.Token.StakingOpportunities(
+        id = 1,
+        apy = apy,
+        networkId = null,
+        rewardType = null,
     )
 
     private fun createNetwork(

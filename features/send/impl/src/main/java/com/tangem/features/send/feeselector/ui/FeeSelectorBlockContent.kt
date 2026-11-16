@@ -193,7 +193,9 @@ private fun RowScope.FeeError(state: FeeSelectorUM.Error) {
 
 @Composable
 private fun GetFeeError.warningText(): String? = when (this) {
-    is GetFeeError.GaslessError.NotEnoughFunds -> {
+    is GetFeeError.GaslessError.NotEnoughFunds,
+    is GetFeeError.GaslessError.TronAllowanceTooHigh,
+    -> {
         stringResourceSafe(R.string.gasless_not_enough_funds_to_cover_token_fee)
     }
     is GetFeeError.GaslessError.TronActivationRateLimited -> if (isPerWallet) {
@@ -251,7 +253,8 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
                 .testTag(FeeSelectorBlockTestTags.FEE_AMOUNT),
         )
 
-        val isGaslessAvailable = state.feeExtraInfo.transactionFeeExtended != null
+        val isGaslessAvailable = state.feeExtraInfo.transactionFeeExtended != null ||
+            state.feeExtraInfo.sponsoredFee.isAvailable
 
         if (!state.feeItems.isSingleItem() || isGaslessAvailable) {
             Icon(

@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import com.tangem.data.pay.analytics.TangemPayUserPropertiesSender
 import com.tangem.data.pay.store.TangemPayCustomerSummaryStore
 import com.tangem.data.pay.util.CustomerSummaryConverter
 import com.tangem.domain.models.wallet.UserWalletId
@@ -22,6 +23,7 @@ internal class DefaultCustomerSummaryRepository @Inject constructor(
     private val tangemPayApi: TangemPayApi,
     private val requestHelper: TangemPayRequestPerformer,
     private val customerSummaryStore: TangemPayCustomerSummaryStore,
+    private val userPropertiesSender: TangemPayUserPropertiesSender,
 ) : CustomerSummaryRepository {
 
     private val mutexes = ConcurrentHashMap<UserWalletId, Mutex>()
@@ -38,6 +40,7 @@ internal class DefaultCustomerSummaryRepository @Inject constructor(
                     fetchedAt = System.nanoTime(),
                 )
                 customerSummaryStore.update { cache -> cache + (userWalletId to entry) }
+                userPropertiesSender.onSummaryFetched(userWalletId = userWalletId, summary = summary)
             }
         }
     }

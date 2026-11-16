@@ -53,9 +53,19 @@ interface TangemPayApi {
         @Path("product_instance_id") productInstanceId: String,
     ): ApiResponse<BankCredentialsResponse>
 
+    @GET("v1/account/bank-credentials/{product_instance_id}")
+    suspend fun getAllBankCredentials(
+        @Header("Authorization") authHeader: String,
+        @Path("product_instance_id") productInstanceId: String,
+        @Query("rails") rails: String,
+    ): ApiResponse<BankCredentialsListResponse>
+
     /** Recipients saved for bank off-ramp withdrawals. */
     @GET("v1/account/bank-accounts")
-    suspend fun getBankAccounts(@Header("Authorization") authHeader: String): ApiResponse<BankAccountsResponse>
+    suspend fun getBankAccounts(
+        @Header("Authorization") authHeader: String,
+        @Query("rail") rail: String?,
+    ): ApiResponse<BankAccountsResponse>
 
     /** Source tokens and bank rails a withdrawal can use, with each rail's fee and ETA. */
     @GET("v1/account/bank-offramp/options")
@@ -70,6 +80,19 @@ interface TangemPayApi {
         @Header("X-Idempotency-Key") idempotencyKey: String,
         @Body body: BankOfframpRouteRequest,
     ): ApiResponse<BankOfframpRouteResponse>
+
+    @POST("v1/account/bank-offramp/quote")
+    suspend fun createBankOfframpQuote(
+        @Header("Authorization") authHeader: String,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
+        @Body body: BankOfframpQuoteRequest,
+    ): ApiResponse<BankOfframpQuoteResponse>
+
+    @POST("v1/account/bank-offramp/transfer")
+    suspend fun createBankOfframpTransfer(
+        @Header("Authorization") authHeader: String,
+        @Body body: BankOfframpTransferRequest,
+    ): ApiResponse<BankOfframpTransferResponse>
 
     @GET("v1/customer/wallets/{customer_wallet_id}")
     suspend fun checkCustomerWalletId(

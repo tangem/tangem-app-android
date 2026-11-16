@@ -68,8 +68,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         val accountId = queryParams[ACCOUNT_ID_KEY]
 
         scope.launch {
-            val userWalletId = walletId?.let(::UserWalletId)
-            val userWallet = resolveAndSelectUserWalletUseCase(userWalletId) ?: return@launch
+            val userWallet = resolveUserWallet(walletId) ?: return@launch
 
             val cryptoCurrency = resolveCryptoCurrency(
                 userWallet = userWallet,
@@ -158,6 +157,16 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
      * A multi-currency link needs both [networkId] and [tokenId] to match a token; a malformed link can never match,
      * so we skip the refresh/await entirely to avoid wasted backend work and return immediately for the redirect.
      */
+    private suspend fun resolveUserWallet(walletId: String?): UserWallet? {
+        val userWalletId = walletId?.let(UserWalletId::fromHexOrNull)
+        if (walletId != null && userWalletId == null) {
+            TangemLogger.e("Malformed $WALLET_ID_KEY in token details deeplink")
+            appRouter.popTo(AppRoute.Wallet)
+            return null
+        }
+        return resolveAndSelectUserWalletUseCase(userWalletId)
+    }
+
     private suspend fun resolveCryptoCurrency(
         userWallet: UserWallet,
         networkId: String?,

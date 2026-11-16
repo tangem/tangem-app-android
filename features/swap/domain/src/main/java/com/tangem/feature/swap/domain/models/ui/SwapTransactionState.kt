@@ -54,5 +54,9 @@ sealed class SwapTransactionState {
         data object UnknownError : Error()
 
         data class TangemPayWithdrawalError(val txId: String) : Error()
+
+        data class SolanaGaslessError(
+            val error: com.tangem.domain.transaction.error.SolanaGaslessError,
+        ) : Error()
     }
 }

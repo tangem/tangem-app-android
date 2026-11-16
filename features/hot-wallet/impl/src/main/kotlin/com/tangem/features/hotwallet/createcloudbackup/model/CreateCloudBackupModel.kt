@@ -36,6 +36,7 @@ import com.tangem.domain.wallets.usecase.GetHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.CreateCloudBackupComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.createcloudbackup.entity.CreateCloudBackupUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -64,6 +65,7 @@ internal class CreateCloudBackupModel @Inject constructor(
     private val createCloudBackupUseCase: CreateCloudBackupUseCase,
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase,
     private val cloudBackupRepository: CloudBackupRepository,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val saveBackupPasswordUseCase: SaveBackupPasswordUseCase,
 ) : Model() {
 
@@ -130,7 +132,9 @@ internal class CreateCloudBackupModel @Inject constructor(
 
         uiState.value = buildPreparingUM()
         modelScope.launch {
-            cloudBackupRepository.getAccountInfo(interactive = true).fold(
+            cloudBackupRepository.inAccountOf(params.userWalletId.stringValue, hotWalletFeatureToggles) {
+                cloudBackupRepository.getAccountInfo(interactive = true)
+            }.fold(
                 ifLeft = ::onAuthError,
                 ifRight = {
                     uiState.value = buildSetPasswordUM()
@@ -289,15 +293,16 @@ internal class CreateCloudBackupModel @Inject constructor(
         privateInfo.passphrase?.fill(' ')
 
         try {
-            createCloudBackupUseCase(
-                walletId = params.userWalletId.stringValue,
-                walletName = hotWallet.name,
-                secret = secret,
-                password = password,
-            ).fold(
+            cloudBackupRepository.inAccountOf(params.userWalletId.stringValue, hotWalletFeatureToggles) {
+                createCloudBackupUseCase(
+                    walletId = params.userWalletId.stringValue,
+                    walletName = hotWallet.name,
+                    secret = secret,
+                    password = password,
+                ).onRight { setCloudBackupStateUseCase(params.userWalletId.stringValue, isBackedUp = true) }
+            }.fold(
                 ifLeft = ::onUploadError,
                 ifRight = { backup ->
-                    setCloudBackupStateUseCase(params.userWalletId.stringValue, isBackedUp = true)
                     // offered only once the file exists, so the password is never stored for a backup that
                     // failed to upload and the username can be the name the file actually got
                     saveBackupPasswordUseCase(username = backup.backupName, password = password)
@@ -405,4 +410,14 @@ private fun List<String>.joinToCharArray(separator: Char): CharArray {
         offset += word.length
     }
     return joined
+}
+
+/** A wallet whose backup went missing is backed up again into its own account, never into the pinned one */
+private suspend fun <T> CloudBackupRepository.inAccountOf(
+    walletId: String,
+    toggles: HotWalletFeatureToggles,
+    block: suspend () -> T,
+): T {
+    val isAccountKnown = toggles.isMultipleHotWalletsEnabled && hasAccountOf(walletId)
+    return if (isAccountKnown) withAccountOf(walletId, block) else block()
 }

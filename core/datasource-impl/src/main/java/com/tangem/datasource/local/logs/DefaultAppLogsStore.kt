@@ -34,18 +34,24 @@ internal class DefaultAppLogsStore @Inject constructor(
     private val mutex = Mutex()
     private val zipMutex = Mutex()
 
+    // A dedicated directory, so the FileProvider exposes only the logs and not the whole filesDir
+    private val logsDir by lazy {
+        File(applicationContext.filesDir, LOGS_DIR_NAME)
+    }
+
     private val logFile by lazy {
-        File(applicationContext.filesDir, PERMITTED_FILE_NAME)
+        logsDir.mkdirs()
+        File(logsDir, PERMITTED_FILE_NAME).also(::moveLegacyLogs)
     }
 
     private val logFileZip by lazy {
-        File(applicationContext.filesDir, PERMITTED_FILE_NAME_ZIP)
+        File(logsDir, PERMITTED_FILE_NAME_ZIP)
     }
 
     // Separate from logFileZip: the archive with info carries wallet data, and a later logs-only request
     // (e.g. the support email) must not overwrite it while its consumer is still reading it
     private val infoLogsDir by lazy {
-        File(applicationContext.filesDir, INFO_LOGS_DIR_NAME)
+        File(logsDir, INFO_LOGS_DIR_NAME)
     }
 
     private val infoLogsFile by lazy {
@@ -150,6 +156,16 @@ internal class DefaultAppLogsStore @Inject constructor(
         }
     }
 
+    private fun moveLegacyLogs(logFile: File) {
+        val legacyDir = applicationContext.filesDir
+        val legacyLogFile = File(legacyDir, PERMITTED_FILE_NAME)
+        // Not logged on failure: TangemLogger writes into this very file, still being initialized here
+        val isLegacyLogObsolete = logFile.exists() || legacyLogFile.renameTo(logFile)
+        if (isLegacyLogObsolete) legacyLogFile.delete()
+        File(legacyDir, PERMITTED_FILE_NAME_ZIP).delete()
+        File(legacyDir, INFO_LOGS_DIR_NAME).deleteRecursively()
+    }
+
     private fun createFileIfNotExist() {
         if (!logFile.exists()) {
             runCatching { logFile.createNewFile() }
@@ -200,6 +216,7 @@ internal class DefaultAppLogsStore @Inject constructor(
         // the only name that we allow to send as email to company addresses
         const val PERMITTED_FILE_NAME = "log.txt"
         const val PERMITTED_FILE_NAME_ZIP = "log.zip"
+        const val LOGS_DIR_NAME = "logs"
         const val INFO_LOGS_DIR_NAME = "info_logs"
         const val INFO_LOGS_FILE_NAME = "infoLogs.txt"
     }

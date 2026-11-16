@@ -40,6 +40,12 @@ interface MarketingBannerComponent : ComposableContentComponent {
 
         /** LINKED single banner rendered inline next to a host item (currently an onramp provider offer). */
         data class Linked(val requestFlow: Flow<LinkedBannerRequest?>) : Params
+
+        /**
+         * PSEUDO_PROVIDER cards and STANDALONE_CTA strips (onramp only), together as separate rows in campaign
+         * priority order, no carousel. `null` in the flow hides them.
+         */
+        data class Cta(val requestFlow: Flow<CtaBannerRequest?>) : Params
     }
 
     interface Factory : ComponentFactory<Params, MarketingBannerComponent>

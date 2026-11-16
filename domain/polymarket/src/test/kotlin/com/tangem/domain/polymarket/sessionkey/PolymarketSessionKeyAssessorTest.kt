@@ -394,6 +394,71 @@ internal class PolymarketSessionKeyAssessorTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class NextChange {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN session keys and signers WHEN assess THEN schedules the next moment time changes the result`(
+            model: NextChangeModel,
+        ) {
+            // Act
+            val actual = PolymarketSessionKeyAssessor.assess(model.snapshot).nextChangeAt
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            NextChangeModel(
+                case = "no active key changes nothing",
+                snapshot = snapshot(keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.REVOKED))),
+                expected = null,
+            ),
+            NextChangeModel(
+                case = "pending own key changes nothing",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING, validUntil = IN_ONE_HOUR)),
+                ),
+                expected = null,
+            ),
+            NextChangeModel(
+                case = "own active key changes when the signing margin starts",
+                snapshot = snapshot(keys = listOf(key(Owner.LOCAL, validUntil = IN_ONE_HOUR))),
+                expected = IN_ONE_HOUR - Duration.ofMinutes(10),
+            ),
+            NextChangeModel(
+                case = "own active key inside the signing margin changes when it expires",
+                snapshot = snapshot(keys = listOf(key(Owner.LOCAL, validUntil = ALMOST_EXPIRED))),
+                expected = ALMOST_EXPIRED,
+            ),
+            NextChangeModel(
+                case = "own active key changes when its renewal is due",
+                snapshot = snapshot(keys = listOf(key(Owner.LOCAL, renewAfter = IN_ONE_HOUR))),
+                expected = IN_ONE_HOUR,
+            ),
+            NextChangeModel(
+                case = "previous active key changes when it expires",
+                snapshot = snapshot(keys = listOf(key(Owner.PREVIOUS, validUntil = IN_ONE_HOUR))),
+                expected = IN_ONE_HOUR,
+            ),
+            NextChangeModel(
+                case = "freshly authorized key changes when its readiness grace ends",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL, authorizedAt = FRESH)),
+                    signers = listOf(matching(key(Owner.LOCAL, authorizedAt = FRESH))),
+                ),
+                expected = FRESH + Duration.ofMinutes(10),
+            ),
+            NextChangeModel(
+                case = "readiness grace changes nothing without signers",
+                snapshot = snapshot(keys = listOf(key(Owner.LOCAL, authorizedAt = FRESH)), signers = null),
+                expected = VALID_UNTIL - Duration.ofMinutes(10),
+            ),
+        )
+    }
+
     data class Model(
         val case: String,
         val snapshot: PolymarketSessionKeySnapshot,
@@ -410,6 +475,14 @@ internal class PolymarketSessionKeyAssessorTest {
         override fun toString(): String = case
     }
 
+    data class NextChangeModel(
+        val case: String,
+        val snapshot: PolymarketSessionKeySnapshot,
+        val expected: Instant?,
+    ) {
+        override fun toString(): String = case
+    }
+
     enum class Owner(val address: String, val deviceId: String) {
         LOCAL(address = "0x5e55000000000000000000000000000000000001", deviceId = DEVICE_ID),
         PREVIOUS(address = "0x5e55000000000000000000000000000000000002", deviceId = DEVICE_ID),
@@ -422,6 +495,7 @@ internal class PolymarketSessionKeyAssessorTest {
         val VALID_UNTIL: Instant = NOW + Duration.ofDays(180)
         val ALMOST_EXPIRED: Instant = NOW + Duration.ofMinutes(9)
         val FRESH: Instant = NOW - Duration.ofMinutes(1)
+        val IN_ONE_HOUR: Instant = NOW + Duration.ofHours(1)
 
         val UNRECORDED = PolymarketSessionSigner(
             address = "0xf0e1000000000000000000000000000000000009",

@@ -3,7 +3,6 @@ package com.tangem.domain.transaction.usecase.gasless
 import arrow.core.Either
 import arrow.core.left
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.GaslessProtocolData
@@ -16,6 +15,7 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 class CreateAndSendGaslessTransactionUseCase(
     private val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase,
     private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
+    private val createAndSendSolanaGaslessTransactionUseCase: CreateAndSendSolanaGaslessTransactionUseCase,
 ) {
 
     /**
@@ -31,12 +31,15 @@ class CreateAndSendGaslessTransactionUseCase(
             null -> SendTransactionError.DataError("Gasless send called with a native fee").left()
             GaslessProtocolData.Evm -> createAndSendEvmGaslessTransactionUseCase(
                 userWallet = userWallet,
-                // The token fee is priced on the bare call. The module is upgraded only when a yield withdraw
-                // pays that fee, see ResolveGaslessFeePlanUseCase
-                transactionData = transactionData.unwrapYieldModuleUpgrade(),
+                transactionData = transactionData.unwrapYieldSendUpgrade(),
                 fee = fee,
             )
             is GaslessProtocolData.Tron -> createAndSendTronGaslessTransactionUseCase(
+                userWallet = userWallet,
+                transactionData = transactionData,
+                fee = fee,
+            )
+            is GaslessProtocolData.Solana -> createAndSendSolanaGaslessTransactionUseCase(
                 userWallet = userWallet,
                 transactionData = transactionData,
                 fee = fee,

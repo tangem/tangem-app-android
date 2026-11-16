@@ -15,6 +15,7 @@ import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.wallets.models.CreateHotWalletError
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
@@ -160,7 +161,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
                 every { isHotWalletCreationSupported() } returns true
                 coEvery {
                     createHotWalletUseCase(HotAuth.NoAuth, MnemonicType.Words12)
-                } returns RuntimeException("error").left()
+                } returns CreateHotWalletError.Failed(RuntimeException("error")).left()
                 val model = createModel(testScope = this)
 
                 // Act
@@ -198,7 +199,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
             every { isHotWalletCreationSupported() } returns true
             coEvery {
                 createHotWalletUseCase(HotAuth.NoAuth, MnemonicType.Words12)
-            } returns RuntimeException("error").left()
+            } returns CreateHotWalletError.Failed(RuntimeException("error")).left()
             val model = createModel(testScope = this)
             model.uiState.value.onGetCardClick.invoke()
             advanceUntilIdle()
@@ -355,6 +356,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
                 getCustomerOffersUseCase = mockk(relaxed = true),
                 createHotWalletUseCase = createHotWalletUseCase,
                 isHotWalletCreationSupported = isHotWalletCreationSupported,
+                analyticsEventHandler = mockk(relaxed = true),
             ),
             analytics = analytics,
             tangemPayFeatureToggles = tangemPayFeatureToggles,

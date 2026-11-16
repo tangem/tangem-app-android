@@ -13,6 +13,10 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.feature.tester.presentation.backendauth.OpenWalletLinkSheetAction
 import com.tangem.feature.tester.presentation.backendauth.state.BackendAuthStatusUM
 import com.tangem.feature.tester.presentation.backendauth.state.BackendAuthStatusUM.Action
 import com.tangem.feature.tester.presentation.backendauth.state.BackendAuthStatusUM.IconAction
@@ -63,6 +67,8 @@ internal class BackendAuthStatusViewModel @Inject constructor(
     private val deviceRegistrar: DeviceRegistrar,
     private val sessionTokenRefresher: SessionTokenRefresher,
     private val walletRegistrar: WalletRegistrar,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val openWalletLinkSheetAction: OpenWalletLinkSheetAction,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -128,7 +134,7 @@ internal class BackendAuthStatusViewModel @Inject constructor(
                 ),
             ),
             Section(
-                rows = buildRegisteredWalletRows(registeredWalletIds),
+                rows = buildWalletRows(userWalletsListRepository.userWalletsSync(), registeredWalletIds),
             ),
             Section(
                 rows = buildTokenRows(tokens),
@@ -172,29 +178,73 @@ internal class BackendAuthStatusViewModel @Inject constructor(
     }.toImmutableList()
 
     /**
-     * One row per locally-registered wallet ([AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY]), each with a
-     * cross action that unregisters it from the auth service.
+     * One row per wallet of the app with its registration state ([AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY]): a
+     * registered one can be unregistered, another one linked through the sheet. Registered ids of wallets no longer in
+     * the app follow, so they can still be unregistered.
      */
-    private fun buildRegisteredWalletRows(walletIds: Set<String>): ImmutableList<StatusRow> = buildList {
-        if (walletIds.isEmpty()) {
-            add(StatusRow("Registered wallets", "none"))
+    private fun buildWalletRows(
+        userWallets: List<UserWallet>,
+        registeredWalletIds: Set<String>,
+    ): ImmutableList<StatusRow> = buildList {
+        val walletIds = userWallets.map { it.walletId.toBase64() }
+        if (walletIds.isEmpty() && registeredWalletIds.isEmpty()) {
+            add(StatusRow("Wallets", "none"))
             return@buildList
         }
-        walletIds.forEachIndexed { index, walletId ->
+        userWallets.zip(walletIds).forEachIndexed { index, (userWallet, walletId) ->
+            val isRegistered = walletId in registeredWalletIds
             add(
-                StatusRow(
-                    label = "Registered wallet ${index + 1}",
-                    value = walletId.shorten(),
-                    copyValue = walletId,
-                    iconActions = persistentListOf(
-                        iconAction("Unregister", CoreUiR.drawable.ic_close_24) {
-                            walletRegistrar.unregister(walletId).fold({ "failed: $it" }, { "ok" })
-                        },
-                    ),
+                walletRow(
+                    label = "Wallet ${index + 1}",
+                    name = userWallet.name,
+                    walletId = walletId,
+                    isRegistered = isRegistered,
+                    action = if (isRegistered) unregisterAction(walletId) else linkAction(userWallet),
+                ),
+            )
+        }
+        (registeredWalletIds - walletIds.toSet()).forEachIndexed { index, walletId ->
+            add(
+                walletRow(
+                    label = "Unknown wallet ${index + 1}",
+                    name = "Not in the app",
+                    walletId = walletId,
+                    isRegistered = true,
+                    action = unregisterAction(walletId),
                 ),
             )
         }
     }.toImmutableList()
+
+    private fun walletRow(label: String, name: String, walletId: String, isRegistered: Boolean, action: IconAction) =
+        StatusRow(
+            label = label,
+            value = "$name ${if (isRegistered) "✅" else "❌"}",
+            copyValue = walletId,
+            subtitle = walletId.shorten(),
+            iconActions = persistentListOf(action),
+        )
+
+    private fun unregisterAction(walletId: String): IconAction =
+        iconAction(label = "Unregister", iconRes = CoreUiR.drawable.ic_close_24) {
+            walletRegistrar.unregister(walletId).fold({ "failed: $it" }, { "ok" })
+        }
+
+    private fun linkAction(userWallet: UserWallet) = IconAction(
+        label = "Link",
+        iconRes = CoreUiR.drawable.ic_plus_24,
+        isProgressShown = false,
+        isClosingTester = true,
+        // A locked card has no wallets to check the curve of, so linking it fails without a scan
+        disabledReason = if (userWallet is UserWallet.Cold && userWallet.isLocked) {
+            "Unlock the wallet to link it: a locked card has no wallet data to link"
+        } else {
+            null
+        },
+        onClick = { openWalletLinkSheetAction(userWallet) },
+    )
+
+    private fun UserWalletId.toBase64(): String = Base64.encodeToString(value, Base64.NO_WRAP)
 
     private fun onCopy(row: StatusRow) {
         val value = row.copyValue ?: return

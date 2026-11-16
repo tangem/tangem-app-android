@@ -70,6 +70,8 @@ dependencies {
     implementation(projects.domain.wallets)
     // endregion
 
+    implementation(projects.features.collectibles.api)
+
     // region Tests
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)

@@ -23,6 +23,7 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
@@ -46,6 +47,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
@@ -386,6 +388,42 @@ internal class TangemPayOnboardingModelTest {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideEntryChannelModels")
+    fun `GIVEN onboarding entry WHEN model created THEN activation screen event sent with its channel`(
+        model: EntryChannelModel,
+    ) = runTest {
+        // Act
+        val onboardingModel = createModel(model.params)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened(entryChannel = model.expectedChannel))
+        }
+        onboardingModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN main banner entry WHEN get card clicked THEN get card event sent with banner channel`() = runTest {
+        // Arrange
+        coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns emptyList()
+        val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
+        advanceUntilIdle()
+        val content = model.uiState.value as TangemPayOnboardingScreenState.Content
+
+        // Act
+        content.buttonConfig.onClick.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                TangemPayAnalyticsEvents.GetCardClicked(entryChannel = TangemPayAnalyticsEvents.EntryChannel.BANNER),
+            )
+        }
+        model.onDestroy()
+    }
+
     @Test
     fun `GIVEN KYC not approved WHEN onboarding starts THEN residency step opened without order`() = runTest {
         // Arrange
@@ -496,6 +534,38 @@ internal class TangemPayOnboardingModelTest {
         tariffPlan = null,
     )
 
+    private fun provideEntryChannelModels() = listOf(
+        EntryChannelModel(
+            params = TangemPayOnboardingComponent.Params.FromBannerOnMain,
+            expectedChannel = TangemPayAnalyticsEvents.EntryChannel.BANNER,
+        ),
+        EntryChannelModel(
+            params = TangemPayOnboardingComponent.Params.FromBannerInSettings,
+            expectedChannel = TangemPayAnalyticsEvents.EntryChannel.DETAILS,
+        ),
+        EntryChannelModel(
+            params = TangemPayOnboardingComponent.Params.Deeplink(deeplink),
+            expectedChannel = TangemPayAnalyticsEvents.EntryChannel.DEEPLINK,
+        ),
+        EntryChannelModel(
+            params = TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink,
+            expectedChannel = TangemPayAnalyticsEvents.EntryChannel.DEEPLINK,
+        ),
+        EntryChannelModel(
+            params = TangemPayOnboardingComponent.Params.ContinueOnboarding(OFFER_WALLET_ID),
+            expectedChannel = null,
+        ),
+        EntryChannelModel(
+            params = TangemPayOnboardingComponent.Params.HotWalletOnboarding(OFFER_WALLET_ID),
+            expectedChannel = null,
+        ),
+    )
+
+    data class EntryChannelModel(
+        val params: TangemPayOnboardingComponent.Params,
+        val expectedChannel: TangemPayAnalyticsEvents.EntryChannel?,
+    )
+
     private fun TestScope.createModel(params: TangemPayOnboardingComponent.Params): TangemPayOnboardingModel {
         val testDispatcher = StandardTestDispatcher(testScheduler)
         return TangemPayOnboardingModel(
@@ -521,6 +591,7 @@ internal class TangemPayOnboardingModelTest {
                 getCustomerOffersUseCase = mockk(relaxed = true),
                 createHotWalletUseCase = mockk(relaxed = true),
                 isHotWalletCreationSupported = mockk(relaxed = true),
+                analyticsEventHandler = mockk(relaxed = true),
             ),
             userWalletsListRepository = userWalletsListRepository,
             uiMessageSender = uiMessageSender,
