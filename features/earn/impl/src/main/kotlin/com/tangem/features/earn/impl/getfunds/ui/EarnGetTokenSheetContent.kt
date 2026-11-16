@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -99,14 +100,22 @@ private fun GetTokenRow(row: EarnGetTokenSheetUM.Row) {
         titleSlot = { TangemRowText(text = row.title, role = TangemRowTextRole.Title) },
         subtitleSlot = { TangemRowText(text = row.subtitle, role = TangemRowTextRole.Subtitle, maxLines = 2) },
         endSlot = {
-            Icon(
-                imageVector = Icons.ic_chevron_right_20,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = TangemTheme.colors3.icon.secondary,
-            )
+            if (row.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = TangemTheme.colors3.icon.secondary,
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.ic_chevron_right_20,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = TangemTheme.colors3.icon.secondary,
+                )
+            }
         },
-        onClick = row.onClick,
+        onClick = row.onClick.takeUnless { row.isLoading },
     )
 }
 
@@ -131,6 +140,7 @@ private fun EarnGetTokenSheetContentPreview() {
                             icon = Icons.ic_arrow_down_20,
                             title = stringReference("Deposit ETH"),
                             subtitle = stringReference("Receive to your wallet from anywhere"),
+                            isLoading = true,
                             isEnabled = true,
                             onClick = {},
                         ),
@@ -138,6 +148,7 @@ private fun EarnGetTokenSheetContentPreview() {
                             icon = Icons.ic_arrow_up_down_20,
                             title = stringReference("Swap to ETH"),
                             subtitle = stringReference("Convert another token you already hold"),
+                            isLoading = false,
                             isEnabled = false,
                             onClick = {},
                         ),
@@ -145,6 +156,7 @@ private fun EarnGetTokenSheetContentPreview() {
                             icon = Icons.ic_card_20,
                             title = stringReference("Buy ETH"),
                             subtitle = stringReference("Card or bank, via trusted partner"),
+                            isLoading = false,
                             isEnabled = true,
                             onClick = {},
                         ),

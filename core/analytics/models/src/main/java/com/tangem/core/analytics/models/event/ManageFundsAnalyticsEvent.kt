@@ -1,9 +1,9 @@
-package com.tangem.features.commonfeatures.impl.managefunds.analytics
+package com.tangem.core.analytics.models.event
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 
-internal sealed class ManageFundsAnalyticsEvent(
+sealed class ManageFundsAnalyticsEvent(
     event: String,
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = CATEGORY, event = event, params = params) {
