@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.balance.BalanceContributionProvider
 import com.tangem.domain.models.yield.supply.YieldSupplyBalanceFetcher
 import com.tangem.domain.models.yield.supply.YieldSupplyBalanceProvider
 import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.domain.yield.supply.YieldSupplyWrappedNativeFactory
 import com.tangem.domain.yield.supply.status.YieldModuleStatusContributionFetcher
 import com.tangem.domain.yield.supply.status.YieldModuleStatusContributionProvider
 import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
@@ -81,10 +82,12 @@ internal object YieldModuleStatusModule {
     fun provideYieldSupplyBalanceProvider(
         yieldModuleStatusSupplier: YieldModuleStatusSupplier,
         tokensFeatureToggles: TokensFeatureToggles,
+        wrappedNativeFactory: YieldSupplyWrappedNativeFactory,
     ): YieldSupplyBalanceProvider {
         return YieldModuleStatusContributionProvider(
             yieldModuleStatusSupplier = yieldModuleStatusSupplier,
             tokensFeatureToggles = tokensFeatureToggles,
+            wrappedNativeFactory = wrappedNativeFactory,
         )
     }
 
