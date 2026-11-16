@@ -1308,7 +1308,9 @@
   <string name="joint_account_coming_soon_description">This action isn\'t supported for joint accounts yet. We\'re working on it</string>
   <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
   <string name="joint_account_compromised_message">The account address on your device doesn\'t match the one from our servers.</string>
+  <string name="joint_account_compromised_message_v2">We couldn’t confirm this account’s details are correct, so we paused it to keep your funds safe.</string>
   <string name="joint_account_compromised_title">Can\'t verify this account</string>
+  <string name="joint_account_compromised_title_v2">Account paused for safety</string>
   <string name="joint_account_confirm_account_subtitle">Before using your Joint Account, make sure every member sees exactly the same address.</string>
   <string name="joint_account_confirm_account_title">Confirm the account</string>
   <string name="joint_account_confirm_address_compare_subtitle">Contact all members outside Tangem by phone, messenger, or in person. Check that everyone sees the exact same address.</string>
