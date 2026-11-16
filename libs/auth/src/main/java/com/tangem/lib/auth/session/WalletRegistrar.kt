@@ -1,6 +1,7 @@
 package com.tangem.lib.auth.session
 
 import arrow.core.Either
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Binds a wallet to the already-registered device with the Tangem Auth Service, proving wallet
@@ -27,8 +28,13 @@ interface WalletRegistrar {
     /**
      * Registers the wallet identified by [walletId] (Base64 `UserWalletId`) in one shot: nonce
      * request, signing and POST. Use this when there is no session/UX constraint (MOBILE wallets).
+     * A wallet registered locally or already known to the server comes back as
+     * [WalletRegistrationResult.AlreadyRegistered].
      */
-    suspend fun register(walletId: String, signer: WalletSigner): Either<WalletRegistrationError, Unit>
+    suspend fun register(
+        walletId: String,
+        signer: WalletSigner,
+    ): Either<WalletRegistrationError, WalletRegistrationResult>
 
     /**
      * Best-effort check of whether [walletId] (Base64 `UserWalletId`) is already registered. Lets a
@@ -37,6 +43,12 @@ interface WalletRegistrar {
      * idempotency check still runs inside [prepare], so a stale `false` only costs one nonce request.
      */
     suspend fun isRegistered(walletId: String): Boolean
+
+    /**
+     * Base64 `UserWalletId`s of the wallets registered on this device, re-emitted on every registration change
+     * made through any path. Stops emitting (without falling back to an empty set) if the marker store can't be read.
+     */
+    fun registeredWalletIds(): Flow<Set<String>>
 
     /**
      * Whether a device session exists, i.e. a registration attempt can reach the backend at all. Lets a
@@ -83,9 +95,10 @@ interface WalletRegistrar {
 
     /**
      * Phase 2: sends the [prepared] registration, persists the reissued tokens, and marks the wallet
-     * registered. No card needed — safe to run after the session has closed.
+     * registered. No card needed — safe to run after the session has closed. A wallet the server already
+     * knows comes back as [WalletRegistrationResult.AlreadyRegistered].
      */
-    suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit>
+    suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, WalletRegistrationResult>
 
     /**
      * Unbinds a previously registered wallet from the authenticated device. Persists the fresh

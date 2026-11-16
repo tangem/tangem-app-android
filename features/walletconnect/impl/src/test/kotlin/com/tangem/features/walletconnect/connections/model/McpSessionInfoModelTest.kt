@@ -3,21 +3,26 @@ package com.tangem.features.walletconnect.connections.model
 import android.text.format.DateFormat
 import arrow.core.left
 import arrow.core.right
+import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.mcp.models.analytics.McpSessionsAnalyticsEvent
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.walletconnect.connections.components.McpSessionInfoComponent
+import com.tangem.features.walletconnect.impl.R
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -71,6 +76,26 @@ internal class McpSessionInfoModelTest {
 
         // Assert
         verify(exactly = 1) { analytics.send(McpSessionsAnalyticsEvent.AgentDisconnected(session())) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN revoke succeeds WHEN revoke clicked THEN connection revoked snackbar is shown`() = runTest {
+        // Arrange
+        coEvery { mcpRepository.revokeSession(SESSION_ID) } returns Unit.right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value!!.onRevokeClick()
+        advanceUntilIdle()
+
+        // Assert
+        val message = slot<SnackbarMessage>()
+        verify(exactly = 1) { messageSender.send(capture(message)) }
+        assertThat(message.captured.message).isEqualTo(resourceReference(R.string.mcp_session_revoked))
+        assertThat(message.captured.startIconId).isEqualTo(R.drawable.ic_success_20)
+        assertThat(message.captured.isIconTinted).isFalse()
         model.onDestroy()
     }
 

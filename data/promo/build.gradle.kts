@@ -15,7 +15,6 @@ dependencies {
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.datetime)
     // endregion
 
     // region Other libraries

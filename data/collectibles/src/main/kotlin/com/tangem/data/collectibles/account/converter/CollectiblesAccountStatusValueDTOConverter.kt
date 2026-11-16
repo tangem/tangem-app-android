@@ -15,8 +15,7 @@ import javax.inject.Inject
  * the store refuse the write, so a loading or failed read cannot be recorded as the account itself.
  *
  * [convertBack] restores the value as [StatusSource.CACHE]: it has not been re-read from the chain in this
- * session, whatever it was when it was written. [CollectiblesAccountStatusValue.MissedDerivation] is the exception —
- * it says the owner key is missing on this device, which no chain read is needed to know.
+ * session, whatever it was when it was written.
  */
 internal class CollectiblesAccountStatusValueDTOConverter @Inject constructor(
     private val currencyFactory: CollectiblesVaultCurrencyFactory,
@@ -29,8 +28,8 @@ internal class CollectiblesAccountStatusValueDTOConverter @Inject constructor(
         is CollectiblesAccountStatusValue.UpdateRequired -> CollectiblesAccountStatusValueDTO.UpdateRequired(
             balance = value.vaultBalance?.toDTO(),
         )
-        is CollectiblesAccountStatusValue.MissedDerivation -> CollectiblesAccountStatusValueDTO.MissedDerivation
         is CollectiblesAccountStatusValue.Loading,
+        is CollectiblesAccountStatusValue.MissedDerivation,
         is CollectiblesAccountStatusValue.NotOnboarded,
         is CollectiblesAccountStatusValue.Error,
         -> null
@@ -45,7 +44,6 @@ internal class CollectiblesAccountStatusValueDTOConverter @Inject constructor(
             source = StatusSource.CACHE,
             vaultBalance = value.balance?.toDomain(),
         )
-        is CollectiblesAccountStatusValueDTO.MissedDerivation -> CollectiblesAccountStatusValue.MissedDerivation
     }
 
     private fun CollectiblesVaultBalance.toDTO() = CollectiblesVaultBalanceDTO(

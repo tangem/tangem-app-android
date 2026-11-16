@@ -6,6 +6,7 @@ import com.tangem.core.analytics.api.AnalyticsEventFilter
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
+import com.tangem.core.analytics.api.AnalyticsUserPropertiesHandler
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
@@ -36,11 +37,12 @@ internal class DefaultAnalyticsEventHandlerTest {
     private val userIdHandler: UserIdTestHandler = mockk(relaxed = true)
     private val errorHandler: ErrorTestHandler = mockk(relaxed = true)
     private val exceptionHandler: ExceptionTestHandler = mockk(relaxed = true)
-    private val allHandlers = setOf(plainHandler, userIdHandler, errorHandler, exceptionHandler)
+    private val userPropertiesHandler: UserPropertiesTestHandler = mockk(relaxed = true)
+    private val allHandlers = setOf(plainHandler, userIdHandler, errorHandler, exceptionHandler, userPropertiesHandler)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(plainHandler, userIdHandler, errorHandler, exceptionHandler)
+        clearMocks(plainHandler, userIdHandler, errorHandler, exceptionHandler, userPropertiesHandler)
     }
 
     @Nested
@@ -254,6 +256,26 @@ internal class DefaultAnalyticsEventHandlerTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class UserProperties {
+
+        @Test
+        fun `GIVEN properties WHEN setUserProperties THEN only user properties handlers receive them`() = runTest {
+            // Arrange
+            val handler = createHandler()
+            val properties = mapOf("pay_kyc_status" to "approved")
+
+            // Act
+            handler.setUserProperties(properties)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { userPropertiesHandler.setUserProperties(properties) }
+            verify(exactly = 0) { plainHandler.send(any()) }
+        }
+    }
+
     private fun TestScope.createHandler(
         handlers: Lazy<Set<AnalyticsHandler>> = Lazy { allHandlers },
         filters: List<AnalyticsEventFilter> = emptyList(),
@@ -282,6 +304,8 @@ internal class DefaultAnalyticsEventHandlerTest {
     }
 
     private interface UserIdTestHandler : AnalyticsHandler, AnalyticsUserIdHandler
+
+    private interface UserPropertiesTestHandler : AnalyticsHandler, AnalyticsUserPropertiesHandler
 
     private interface ErrorTestHandler : AnalyticsHandler, AnalyticsErrorHandler
 

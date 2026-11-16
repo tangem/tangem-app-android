@@ -12,12 +12,25 @@ sealed interface MoneyAccountStatusValueDM {
     data object Empty : MoneyAccountStatusValueDM
 
     @Serializable
-    @SerialName("not_created")
-    data object NotCreated : MoneyAccountStatusValueDM
-
-    @Serializable
     @SerialName("activating")
     data class Activating(
+        @SerialName("customer_id") val customerId: String,
+        @SerialName("step") val step: StepDM,
+    ) : MoneyAccountStatusValueDM {
+
+        @Serializable
+        enum class StepDM {
+            @SerialName("issuing")
+            ISSUING,
+
+            @SerialName("awaiting_deposit")
+            AWAITING_DEPOSIT,
+        }
+    }
+
+    @Serializable
+    @SerialName("failed")
+    data class Failed(
         @SerialName("customer_id") val customerId: String,
     ) : MoneyAccountStatusValueDM
 
@@ -26,13 +39,6 @@ sealed interface MoneyAccountStatusValueDM {
     data class ActiveAccount(
         @SerialName("customer_id") val customerId: String,
         @SerialName("product_instance_id") val productInstanceId: String? = null,
-        @SerialName("balance") val balance: BalanceDM?,
-    ) : MoneyAccountStatusValueDM
-
-    @Serializable
-    @SerialName("deactivated")
-    data class Deactivated(
-        @SerialName("customer_id") val customerId: String,
         @SerialName("balance") val balance: BalanceDM?,
     ) : MoneyAccountStatusValueDM
 

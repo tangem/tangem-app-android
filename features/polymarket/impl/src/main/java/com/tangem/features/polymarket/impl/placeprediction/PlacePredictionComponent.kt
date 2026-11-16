@@ -21,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.features.polymarket.impl.placeprediction.amount.PlacePredictionAmountComponent
+import com.tangem.features.polymarket.impl.placeprediction.order.PlacePredictionOrderComponent
 import com.tangem.features.polymarket.impl.placeprediction.slippage.PlacePredictionSlippageComponent
 import com.tangem.features.polymarket.impl.placeprediction.status.PlacePredictionStatusComponent
 import com.tangem.features.polymarket.impl.placeprediction.summary.PlacePredictionSummaryComponent
@@ -30,6 +31,7 @@ internal class PlacePredictionComponent(
     appComponentContext: AppComponentContext,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val params: Params,
+    isQuickOrderEnabled: Boolean,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<PlacePredictionRoute>()
@@ -43,7 +45,7 @@ internal class PlacePredictionComponent(
         key = "placePredictionStack",
         source = stackNavigation,
         serializer = null,
-        initialConfiguration = PlacePredictionRoute.Amount,
+        initialConfiguration = if (isQuickOrderEnabled) PlacePredictionRoute.Order else PlacePredictionRoute.Amount,
         handleBackButton = false,
         childFactory = { configuration, factoryContext ->
             getChildComponent(
@@ -77,6 +79,11 @@ internal class PlacePredictionComponent(
         factoryContext: AppComponentContext,
     ): ComposableContentComponent = when (configuration) {
         is PlacePredictionRoute.Amount -> PlacePredictionAmountComponent(
+            appComponentContext = factoryContext,
+            params = params,
+            tokenReceiveComponentFactory = tokenReceiveComponentFactory,
+        )
+        is PlacePredictionRoute.Order -> PlacePredictionOrderComponent(
             appComponentContext = factoryContext,
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,

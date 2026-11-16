@@ -38,6 +38,7 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
+import com.tangem.features.wallet.WalletLinkComponent
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.promobanners.api.swapcashback.CampaignsComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
@@ -56,6 +57,7 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.startup.AppStartupGateComponent
 import com.tangem.tap.routing.utils.ChildFactory
 import com.tangem.tap.routing.utils.DeepLinkFactory
+import com.tangem.tap.routing.utils.PromoPageRouter
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import dagger.assisted.Assisted
@@ -83,9 +85,11 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
     private val appsFlyerDeeplinkRouter: AppsFlyerDeeplinkRouter,
+    private val promoPageRouter: PromoPageRouter,
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsComponentFactory: ScanFailsComponent.Factory,
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
+    private val walletLinkComponentFactory: WalletLinkComponent.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val backupServiceProvider: BackupServiceProvider,
@@ -118,6 +122,10 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         scanFailsComponentFactory
             .create(child("scanFailsComponent"), Unit)
     }
+
+    /** Created eagerly: it serves link requests from any feature, including before the first frame is drawn */
+    private val walletLinkComponent: WalletLinkComponent =
+        walletLinkComponentFactory.create(child("walletLinkComponent"), Unit)
 
     private val navigation = navigationProvider.getOrCreateTyped<AppRoute>()
 
@@ -166,6 +174,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         configureProxies()
         initializeInitialNavigation()
         appsFlyerDeeplinkRouter.observe(scope = componentScope, currentRoute = currentRoute)
+        promoPageRouter.observe(scope = componentScope, currentRoute = currentRoute)
     }
 
     private fun initializeInitialNavigation() {
@@ -215,6 +224,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             modifier = modifier,
             wcContent = { wcRoutingComponent.Content(it) },
             promoContent = { campaignsComponent.Content(it) },
+            walletLinkContent = { walletLinkComponent.Content(it) },
             hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
             startupGateContent = { appStartupGateComponent.Content(it) },
             scanFailsContent = { scanFailsComponent.Content(it) },

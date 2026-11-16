@@ -10,17 +10,18 @@ import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.formatFiat
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.converter.Converter
 
-internal class TangemPayDailyDepositLimitUMConverter : Converter<BankCredentials.DepositLimit, DailyDepositLimitUM?> {
+internal class TangemPayDailyDepositLimitUMConverter : Converter<BankCredentials, DailyDepositLimitUM?> {
 
-    override fun convert(value: BankCredentials.DepositLimit): DailyDepositLimitUM? {
-        if (value.period != BankCredentials.DepositLimit.Period.DAY) return null
-        val formattedAmount = value.amount.formatFiatAmount(currencyCode = BANK_CREDENTIALS_CURRENCY_CODE)
+    override fun convert(value: BankCredentials): DailyDepositLimitUM? {
+        val limit = value.depositLimit ?: return null
+        if (limit.period != BankCredentials.DepositLimit.Period.DAY) return null
+        val formattedAmount = limit.amount.formatFiatAmount(currencyCode = BANK_CREDENTIALS_CURRENCY_CODE)
         return DailyDepositLimitUM(
             value = stringReference(formattedAmount),
             hint = resourceReference(
                 id = R.string.tangempay_bank_transfer_details_daily_deposits_hint,
                 formatArgs = wrappedList(formattedAmount),
-            ),
+            ).takeUnless { value.isSpei },
         )
     }
 }

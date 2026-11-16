@@ -17,10 +17,14 @@ internal class SelectedTokenItemConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val onTokenClick: () -> Unit,
     private val isTokenSelectionAvailable: Boolean,
+    private val isSponsoredFeeAvailable: Boolean = false,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
-        if (value.value !is CryptoCurrencyStatus.Loaded) {
+        // With a sponsor the coin is offered even from an empty or unopened account
+        val isShown = value.value is CryptoCurrencyStatus.Loaded ||
+            isSponsoredFeeAvailable && value.value !is CryptoCurrencyStatus.Loading
+        if (!isShown) {
             return TokenItemState.Loading(id = value.currency.id.value)
         }
 

@@ -65,24 +65,12 @@ internal class GetMoneyAccountCryptoCurrencyStatusUseCaseTest {
 
     private fun provideTestModels(): List<StatusModel> {
         val active = activeAccount(balance = BALANCE)
-        val deactivated = MoneyAccountStatusValue.Account.Deactivated(
-            source = StatusSource.ACTUAL,
-            cryptoCurrency = ACCOUNT_TOKEN,
-            balance = BALANCE,
-            customerId = CUSTOMER_ID,
-        )
         return listOf(
             StatusModel(
                 name = "active account",
                 value = active,
                 currency = ACCOUNT_TOKEN,
                 expected = ACCOUNT to requireNotNull(active.cryptoCurrencyStatus),
-            ),
-            StatusModel(
-                name = "deactivated account",
-                value = deactivated,
-                currency = ACCOUNT_TOKEN,
-                expected = ACCOUNT to requireNotNull(deactivated.cryptoCurrencyStatus),
             ),
             StatusModel(
                 name = "account without balance",
@@ -97,8 +85,8 @@ internal class GetMoneyAccountCryptoCurrencyStatusUseCaseTest {
                 expected = null,
             ),
             StatusModel(
-                name = "account not created",
-                value = MoneyAccountStatusValue.NotCreated,
+                name = "no account",
+                value = MoneyAccountStatusValue.Empty,
                 currency = ACCOUNT_TOKEN,
                 expected = null,
             ),
@@ -107,6 +95,7 @@ internal class GetMoneyAccountCryptoCurrencyStatusUseCaseTest {
                 value = MoneyAccountStatusValue.Onboarding.Activating(
                     source = StatusSource.ACTUAL,
                     customerId = CUSTOMER_ID,
+                    step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
                 ),
                 currency = ACCOUNT_TOKEN,
                 expected = null,
@@ -126,6 +115,7 @@ internal class GetMoneyAccountCryptoCurrencyStatusUseCaseTest {
         balance = balance,
         customerId = CUSTOMER_ID,
         productInstanceId = "instance",
+        error = null,
     )
 
     private fun moneyAccountStatus(value: MoneyAccountStatusValue) = AccountStatus.Money(

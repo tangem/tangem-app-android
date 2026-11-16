@@ -27,6 +27,7 @@ internal fun OnrampMainScreen(
     state: OnrampMainComponentUM,
     marketingBannerComponent: MarketingBannerComponent,
     linkedMarketingBannerComponent: MarketingBannerComponent,
+    ctaMarketingBannerComponent: MarketingBannerComponent,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -36,6 +37,7 @@ internal fun OnrampMainScreen(
                 startButton = state.topBarConfig.startButtonUM,
                 endButton = state.topBarConfig.endButtonUM,
                 title = state.topBarConfig.title.resolveReference(),
+                subtitle = state.topBarConfig.subtitle.resolveReference(),
             )
         },
         contentWindowInsets = WindowInsetsZero,
@@ -45,6 +47,7 @@ internal fun OnrampMainScreen(
             state = state,
             marketingBannerComponent = marketingBannerComponent,
             linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+            ctaMarketingBannerComponent = ctaMarketingBannerComponent,
             modifier = Modifier.padding(scaffoldPaddings),
         )
     }
@@ -55,6 +58,7 @@ internal fun OnrampMainComponentContent(
     state: OnrampMainComponentUM,
     marketingBannerComponent: MarketingBannerComponent,
     linkedMarketingBannerComponent: MarketingBannerComponent,
+    ctaMarketingBannerComponent: MarketingBannerComponent,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -74,6 +78,7 @@ internal fun OnrampMainComponentContent(
                     state = state,
                     marketingBannerComponent = marketingBannerComponent,
                     linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+                    ctaMarketingBannerComponent = ctaMarketingBannerComponent,
                 )
             }
         }
@@ -140,6 +145,7 @@ private fun Content(
     state: OnrampMainComponentUM.Content,
     marketingBannerComponent: MarketingBannerComponent,
     linkedMarketingBannerComponent: MarketingBannerComponent,
+    ctaMarketingBannerComponent: MarketingBannerComponent,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -158,6 +164,7 @@ private fun Content(
 
         TangemThemeRedesign {
             marketingBannerComponent.Content(Modifier.fillMaxWidth())
+            ctaMarketingBannerComponent.Content(Modifier.fillMaxWidth())
         }
 
         OnrampOffersContent(

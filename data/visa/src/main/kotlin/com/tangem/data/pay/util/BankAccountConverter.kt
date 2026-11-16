@@ -72,6 +72,7 @@ internal object BankAccountConverter : Converter<BankAccountsResponse.BankAccoun
     private fun convertRail(value: String?): BankRail? = when {
         value.equalsIgnoringCase(BankRail.ACH.name) -> BankRail.ACH
         value.equalsIgnoringCase(BankRail.WIRE.name) -> BankRail.WIRE
+        value.equalsIgnoringCase(BankRail.SPEI.name) -> BankRail.SPEI
         else -> null
     }
 

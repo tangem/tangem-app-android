@@ -3,6 +3,7 @@ package com.tangem.domain.wallets.usecase
 import arrow.core.Either
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerKeysRepository
 import com.tangem.domain.jointaccount.repository.JointOwnerKeysRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -10,8 +11,8 @@ import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 
 /**
- * Derives [currencies]' missing network keys together with the wallet's missing joint-account owner keys
- * in a single [DerivationsRepository.derivePublicKeys] call, so a Cold wallet only needs one NFC tap.
+ * Derives [currencies]' missing network keys together with the wallet's missing joint-account and collectibles
+ * owner keys in a single [DerivationsRepository.derivePublicKeys] call, so a Cold wallet only needs one NFC tap.
  *
  * Reports what the card actually did as a [DerivationOutcome], so callers can tell a card that derived nothing
  * from one that derived at least a part of what was asked.
@@ -19,6 +20,7 @@ import com.tangem.operations.derivation.ExtendedPublicKeysMap
 class DeriveCurrencyAndOwnerKeysUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val jointOwnerKeysRepository: JointOwnerKeysRepository,
+    private val collectiblesOwnerKeysRepository: CollectiblesOwnerKeysRepository,
 ) {
 
     suspend operator fun invoke(
@@ -28,7 +30,8 @@ class DeriveCurrencyAndOwnerKeysUseCase(
         return Either.catch {
             val currencyDerivations = derivationsRepository.findMissingDerivations(userWalletId, currencies)
             val jointDerivations = jointOwnerKeysRepository.findMissingOwnerKeyDerivations(userWalletId)
-            val derivations = currencyDerivations.merge(jointDerivations)
+            val collectiblesDerivation = collectiblesOwnerKeysRepository.findMissingOwnerKeyDerivation(userWalletId)
+            val derivations = currencyDerivations.merge(jointDerivations).merge(collectiblesDerivation)
 
             if (derivations.values.all(List<DerivationPath>::isEmpty)) return@catch DerivationOutcome.NOTHING_MISSING
 

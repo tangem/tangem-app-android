@@ -3,7 +3,6 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.feedback.models.SupportChatInfoProvider
 import com.tangem.domain.feedback.models.SupportChatTopic
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
 import com.tangem.domain.polymarket.support.PredictionSupportChatInfoProvider
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import dagger.Module
@@ -23,11 +22,9 @@ internal object PredictionSupportChatModule {
     @SupportChatTopicKey(SupportChatTopic.PREDICTIONS)
     fun providePredictionSupportChatInfoProvider(
         predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
-        predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
         derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     ): SupportChatInfoProvider = PredictionSupportChatInfoProvider(
         predictionAccountStatusSupplier = predictionAccountStatusSupplier,
-        predictionPositionsValueSupplier = predictionPositionsValueSupplier,
         derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
     )
 }

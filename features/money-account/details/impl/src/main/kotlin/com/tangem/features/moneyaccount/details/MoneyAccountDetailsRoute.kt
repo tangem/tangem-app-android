@@ -11,7 +11,7 @@ internal sealed class MoneyAccountDetailsRoute : Route {
     data object Details : MoneyAccountDetailsRoute()
 
     @Serializable
-    data class BankDetails(val bankCredentials: BankCredentials) : MoneyAccountDetailsRoute()
+    data class BankDetails(val bankCredentials: List<BankCredentials>) : MoneyAccountDetailsRoute()
 
     @Serializable
     data class WithdrawHub(val productInstanceId: String?) : MoneyAccountDetailsRoute()

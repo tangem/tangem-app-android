@@ -33,6 +33,7 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSourcesObse
 import com.tangem.features.tangempay.withdraw.buildWithdrawSwapRoute
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUMFactory
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -69,6 +70,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val bankWithdrawSourcesObserver: BankWithdrawSourcesObserver,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -200,6 +202,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
                 is BankWithdrawSourceAccount.Payment -> paymentAccountStatusFetcher(params.userWalletId)
                 is BankWithdrawSourceAccount.Money -> withContext(NonCancellable) {
                     delay(ON_CHAIN_REFRESH_DELAY_MILLIS)
+                    txHistoryContentUpdateEmitter.triggerUpdate()
                     moneyAccountStatusFetcher(params.userWalletId)
                 }
             }.onLeft { error ->

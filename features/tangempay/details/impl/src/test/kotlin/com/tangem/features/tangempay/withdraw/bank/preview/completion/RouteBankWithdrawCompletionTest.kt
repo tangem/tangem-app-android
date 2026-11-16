@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
@@ -114,6 +115,30 @@ internal class RouteBankWithdrawCompletionTest {
             )
             coVerify(exactly = 0) { moneyAccountTransfer.send(any(), any(), any(), any(), any()) }
             assertThat(states).containsExactly(CompletionState.Sending, CompletionState.Idle).inOrder()
+        }
+
+    @Test
+    fun `GIVEN route with a percentage fee WHEN complete twice THEN general failure, nothing sent, same route kept`() =
+        runTest {
+            // Arrange
+            coEvery { bankOfframpOrderRepository.createRoute(userWalletId, any(), any(), any(), any()) } returns
+                route(calculationType = AccountFee.CalculationType.PERCENTAGE).right()
+            val completion = createCompletion()
+
+            // Act
+            completion.complete(draft, states::add)
+            completion.complete(draft, states::add)
+
+            // Assert
+            coVerify(exactly = 1) { bankOfframpOrderRepository.createRoute(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { moneyAccountTransfer.send(any(), any(), any(), any(), any()) }
+            assertThat(changedDestinations).isEmpty()
+            assertThat(states).containsExactly(
+                CompletionState.Sending,
+                CompletionState.Failed(PreviewFailure.General),
+                CompletionState.Sending,
+                CompletionState.Failed(PreviewFailure.General),
+            ).inOrder()
         }
 
     @Test
@@ -311,9 +336,20 @@ internal class RouteBankWithdrawCompletionTest {
         moneyAccountTransfer = moneyAccountTransfer,
     )
 
-    private fun route(fee: BigDecimal = BigDecimal("1.00"), minDays: Int = 1, maxDays: Int = 3) = BankOfframpRoute(
+    private fun route(
+        fee: BigDecimal = BigDecimal("1.00"),
+        calculationType: AccountFee.CalculationType = AccountFee.CalculationType.FIXED,
+        minDays: Int = 1,
+        maxDays: Int = 3,
+    ) = BankOfframpRoute(
         depositAddress = DEPOSIT_ADDRESS,
-        fee = OfframpFee(name = null, amount = fee, currency = "USD", description = null),
+        fee = OfframpFee(
+            name = null,
+            calculationType = calculationType,
+            amount = fee,
+            currency = "USD",
+            description = null,
+        ),
         eta = OfframpEta(minDays = minDays, maxDays = maxDays),
         bankAccountId = "acc-1",
     )

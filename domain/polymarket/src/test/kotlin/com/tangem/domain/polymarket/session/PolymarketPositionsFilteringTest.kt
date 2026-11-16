@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.session
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketClosedPositionStatus
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.domain.polymarket.model.PolymarketPositionsState
@@ -18,6 +19,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTestBase() {
@@ -45,6 +47,32 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
             PolymarketPositionsState(listOf(stillWon), PaginationStatus.EndOfPagination, PolymarketPositionsFilter.WON),
         )
         assertThat(requests.map { it.second }).containsExactly(0, 0).inOrder()
+    }
+
+    @ParameterizedTest
+    @EnumSource(PolymarketPositionsFilter::class, names = ["WON", "LOST", "SPLIT", "CLOSED"])
+    fun `GIVEN Finished history WHEN a finished status is selected THEN keeps only positions that ended so`(
+        filter: PolymarketPositionsFilter,
+    ) = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.FINISHED)
+        val history = mapOf(
+            PolymarketPositionsFilter.WON to closedPosition("won", PolymarketClosedPositionStatus.WON),
+            PolymarketPositionsFilter.LOST to closedPosition("lost", PolymarketClosedPositionStatus.LOST),
+            PolymarketPositionsFilter.SPLIT to closedPosition("split", PolymarketClosedPositionStatus.SPLIT),
+            PolymarketPositionsFilter.CLOSED to closedPosition("sold", PolymarketClosedPositionStatus.CLOSED),
+        )
+        fetch = { page(history.values.toList()) }
+
+        // Act
+        session.selectFilter(filter)
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Assert
+        assertThat(session.state.value).isEqualTo(
+            PolymarketPositionsState(listOf(history.getValue(filter)), PaginationStatus.EndOfPagination, filter),
+        )
     }
 
     @ParameterizedTest

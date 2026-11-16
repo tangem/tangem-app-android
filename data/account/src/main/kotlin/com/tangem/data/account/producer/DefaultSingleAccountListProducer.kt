@@ -14,7 +14,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isTangemPayCompatible
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.isPredictionAccountSupported
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -24,7 +23,6 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 
 /**
@@ -44,7 +42,6 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
-    private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val polymarketOnboardedStore: PolymarketOnboardedStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountListProducer {
@@ -73,8 +70,6 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     }
 
     private fun predictionOnboardedFlow(walletId: UserWalletId): Flow<Boolean> {
-        if (!polymarketFeatureToggles.isPolymarketEnabled) return flowOf(false)
-
         return polymarketOnboardedStore.isOnboarded(walletId)
     }
 

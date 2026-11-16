@@ -32,19 +32,19 @@ data class BankOfframpPlaceOrderRequest(
         @SerialName("details") val details: Details,
     )
 
-    /** Every field is required here, unlike the saved recipients the backend sends back. */
+    /** The bank, the addresses, the routing number and the account type are sent for ACH and wire only. */
     @Serializable
     data class Details(
         @SerialName("currency") val currency: String,
         @SerialName("rail") val rail: String,
         @SerialName("third_party") val isThirdParty: Boolean,
         @SerialName("beneficiary") val beneficiary: Beneficiary,
-        @SerialName("beneficiary_address") val beneficiaryAddress: Address,
-        @SerialName("bank_name") val bankName: String,
-        @SerialName("bank_address") val bankAddress: Address,
+        @SerialName("beneficiary_address") val beneficiaryAddress: Address? = null,
+        @SerialName("bank_name") val bankName: String? = null,
+        @SerialName("bank_address") val bankAddress: Address? = null,
         @SerialName("account_number") val accountNumber: String,
-        @SerialName("routing_number") val routingNumber: String,
-        @SerialName("bank_account_type") val bankAccountType: String,
+        @SerialName("routing_number") val routingNumber: String? = null,
+        @SerialName("bank_account_type") val bankAccountType: String? = null,
     )
 
     /** [businessName] carries the company for a business beneficiary; [firstName] and [lastName] an individual. */

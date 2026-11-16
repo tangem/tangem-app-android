@@ -11,8 +11,10 @@ import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderValidationError
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -52,12 +54,10 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
 
         // Assert
-        assertThat(summary.uiState.value).isEqualTo(accepted)
-        summary.onPlaceClick()
+        assertThat(summary.uiState.value).isEqualTo(accepted.copy(placeButtonStyle = PlaceButtonStyleUM.CARD))
+        summary.tapPlace()
         advanceUntilIdle()
         assertThat(request.captured.quote).isEqualTo((accepted.quote as QuoteUM.Content).signable.quote)
-        assertThat(request.captured.quoteReceivedAtMillis)
-            .isEqualTo((accepted.quote as QuoteUM.Content).signable.receivedAtMillis)
         coVerify(exactly = 2) { getQuoteUseCase(any(), any()) }
     }
 
@@ -111,7 +111,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
 
         // Assert
         assertThat(amount.uiState.value.quote).isEqualTo(QuoteUM.Loading)
-        assertThat(amount.uiState.value.isPrimaryButtonEnabled).isFalse()
+        assertThat(amount.uiState.value.isReadyToPlace).isFalse()
         verify(exactly = 0) { router.push(any<PlacePredictionRoute.Summary>(), any()) }
         advanceTimeBy(1_001)
         val prepared = prepareOrder(amount)
@@ -133,7 +133,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN an expired quote WHEN confirmed THEN the generic error keeps the snapshot on summary`() = runTest {
+    fun `GIVEN an order failing its checks WHEN confirmed THEN the generic error keeps the snapshot on summary`() = runTest {
         // Arrange
         val amount = createAmountModel(this)
         advanceUntilIdle()
@@ -142,14 +142,14 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
         val summary = createSummaryModel(this, amount)
         coEvery { signOrderInteractor(any()) } returns PredictionOrderFailure.Invalid(
-            PredictionOrderValidationError.StaleQuote(ageMillis = 60_001),
+            PredictionOrderValidationError.SignatureNotWrapped(length = 130),
         ).left()
         val accepted = summary.uiState.value
         val dialog = slot<DialogMessage>()
         every { messageSender.send(capture(dialog)) } returns Unit
 
         // Act
-        summary.onPlaceClick()
+        summary.tapPlace()
         advanceUntilIdle()
         dialog.captured.secondAction?.onClick?.invoke()
         advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
@@ -159,7 +159,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         assertThat(dialog.captured.message).isEqualTo(resourceReference(R.string.prediction_place_error_description))
         assertThat(dialog.captured.firstAction.title).isEqualTo(resourceReference(R.string.common_support))
         assertThat(dialog.captured.secondAction).isNotNull()
-        assertThat(summary.uiState.value).isEqualTo(accepted.copy(submit = SubmitUM.Idle))
+        assertThat(summary.uiState.value).isEqualTo(accepted.copy(submit = SubmitUM.Idle, holdResetKey = 1))
         verify(exactly = 0) { router.popTo(any<PlacePredictionRoute>(), any()) }
         coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
         coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }

@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.repository.BankOfframpRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
@@ -19,9 +20,12 @@ internal class DefaultBankOfframpRepository @Inject constructor(
     private val requestPerformer: TangemPayRequestPerformer,
 ) : BankOfframpRepository {
 
-    override suspend fun getBankAccounts(userWalletId: UserWalletId): Either<BankOfframpError, List<BankAccount>> {
+    override suspend fun getBankAccounts(
+        userWalletId: UserWalletId,
+        rail: BankRail?,
+    ): Either<BankOfframpError, List<BankAccount>> {
         return requestPerformer.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getBankAccounts(authHeader = authHeader)
+            tangemPayApi.getBankAccounts(authHeader = authHeader, rail = rail?.name)
         }
             .map { response -> response.result.orEmpty().mapNotNull(BankAccountConverter::convert) }
             .mapLeft { error -> error.toBankOfframpError(operation = "getBankAccounts") }

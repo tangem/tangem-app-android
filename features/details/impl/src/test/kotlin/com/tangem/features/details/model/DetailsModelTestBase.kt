@@ -5,16 +5,12 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.WalletMetaInfo
-import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -30,7 +26,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -39,7 +34,6 @@ internal abstract class DetailsModelTestBase {
     protected val userWalletId = UserWalletId("011")
     protected val wallet1 = UserWalletId("01")
     protected val wallet2 = UserWalletId("02")
-    protected val customerId = "customer-1"
     protected val buyUrl = "https://tangem.com/buy"
 
     protected val socialsBuilder: SocialsBuilder = mockk()
@@ -50,7 +44,6 @@ internal abstract class DetailsModelTestBase {
     protected val urlOpener: UrlOpener = mockk(relaxUnitFun = true)
     protected val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
     protected val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
-    protected val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase = mockk()
     protected val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxUnitFun = true)
     protected val getWalletsUseCase: GetWalletsUseCase = mockk()
     protected val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk()
@@ -67,8 +60,6 @@ internal abstract class DetailsModelTestBase {
 
     @BeforeEach
     fun setUp() {
-        mockkObject(VisaUtilities)
-
         // Defaults sufficient for model construction (init block).
         coEvery { checkIsWalletConnectAvailableUseCase(any()) } returns false.right()
         every { getWalletsUseCase.invokeSync() } returns emptyList()
@@ -91,11 +82,6 @@ internal abstract class DetailsModelTestBase {
         every { itemsBuilder.hasTangemPayItem(any()) } returns false
     }
 
-    @AfterEach
-    fun tearDown() {
-        unmockkObject(VisaUtilities)
-    }
-
     protected fun createModel(testScope: TestScope): DetailsModel = DetailsModel(
         socialsBuilder = socialsBuilder,
         paramsContainer = MutableParamsContainer(DetailsComponent.Params(userWalletId)),
@@ -106,7 +92,6 @@ internal abstract class DetailsModelTestBase {
         urlOpener = urlOpener,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
-        getTangemPayCustomerIdUseCase = getTangemPayCustomerIdUseCase,
         sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         getWalletsUseCase = getWalletsUseCase,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
@@ -121,20 +106,13 @@ internal abstract class DetailsModelTestBase {
         } returns list
     }
 
-    protected fun metaInfo(id: UserWalletId = userWalletId, isVisa: Boolean? = null): WalletMetaInfo =
-        WalletMetaInfo(userWalletId = id, isVisa = isVisa)
+    protected fun metaInfo(id: UserWalletId = userWalletId): WalletMetaInfo = WalletMetaInfo(userWalletId = id)
 
     protected fun hotWallet(id: UserWalletId): UserWallet.Hot = mockk {
         every { walletId } returns id
     }
 
-    protected fun coldWallet(id: UserWalletId, isVisa: Boolean): UserWallet.Cold {
-        val cardMock = mockk<CardDTO>()
-        every { VisaUtilities.isVisaCard(cardMock) } returns isVisa
-        val scan = mockk<ScanResponse> { every { card } returns cardMock }
-        return mockk {
-            every { walletId } returns id
-            every { scanResponse } returns scan
-        }
+    protected fun coldWallet(id: UserWalletId): UserWallet.Cold = mockk {
+        every { walletId } returns id
     }
 }

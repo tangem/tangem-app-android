@@ -71,9 +71,10 @@ internal class WcEthChainRequestResolver @Inject constructor(
             "Resolved ${request.request.method} request ${request.request.id} without UI: $resolution",
         )
         when (resolution) {
-            is Resolution.Answered -> respondService
-                .respond(request = request, response = null)
-                .onRight { chainChangedEmitter.emit(topic = request.topic, chainId = resolution.chainId) }
+            is Resolution.Answered -> {
+                chainChangedEmitter.emit(topic = request.topic, chainId = resolution.chainId)
+                respondService.respond(request = request, response = null)
+            }
             Resolution.UnrecognizedChain -> respondService.rejectRequestNonBlock(
                 request = request,
                 error = WcJsonRpcError.UnrecognizedChain,
@@ -96,7 +97,7 @@ internal class WcEthChainRequestResolver @Inject constructor(
     sealed interface Resolution {
 
         /**
-         * Answered with success, and followed by `chainChanged` so the dApp's own provider moves to
+         * Answered with success, and preceded by `chainChanged` so the dApp's own provider moves to
          * [chainId] rather than keeping the chain it defaulted to.
          */
         sealed interface Answered : Resolution {

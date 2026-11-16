@@ -4,6 +4,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.flow.DefaultPredictionPositionsUpdater
 import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketClosedPositionStatus
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
@@ -75,6 +76,12 @@ internal abstract class PolymarketPositionsSessionTestBase {
         every { this@mockk.result } returns result
         every { resolutionStatus } returns resolution
     }
+
+    protected fun closedPosition(assetId: String, status: PolymarketClosedPositionStatus): PolymarketPosition.Closed =
+        mockk {
+            every { id } returns PolymarketPositionId("condition", assetId)
+            every { this@mockk.status } returns status
+        }
 
     protected fun page(
         positions: List<PolymarketPosition> = listOf(position()),

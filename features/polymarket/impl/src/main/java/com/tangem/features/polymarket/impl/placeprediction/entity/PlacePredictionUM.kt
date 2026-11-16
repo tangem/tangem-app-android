@@ -12,6 +12,8 @@ import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
+import com.tangem.utils.StringsSigns.ARROW_RIGHT
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -31,10 +33,12 @@ internal data class PlacePredictionUM(
     val minAmount: BigDecimal? = null,
     val priceError: PriceErrorUM? = null,
     val submit: SubmitUM,
-    val isPrimaryButtonEnabled: Boolean,
+    val placeAction: PlaceActionUM,
     val isAwaitingFunds: Boolean = false,
     val lastFeeRate: BigDecimal = BigDecimal.ZERO,
     val isAmountFromFraction: Boolean = false,
+    val placeButtonStyle: PlaceButtonStyleUM = PlaceButtonStyleUM.HOLD,
+    val holdResetKey: Int = 0,
 ) {
 
     companion object {
@@ -63,7 +67,7 @@ internal data class PlacePredictionUM(
             tradingPermission = TradingPermissionUM.Unknown,
             notifications = persistentListOf(),
             submit = SubmitUM.Idle,
-            isPrimaryButtonEnabled = false,
+            placeAction = PlaceActionUM.Unavailable,
         )
     }
 }
@@ -82,7 +86,7 @@ private fun PlacePredictionUM.isWholePosition(amount: BigDecimal): Boolean {
     return amount.signum() > 0 && amount.compareTo(position.available) == 0
 }
 
-private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
+internal val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 
 internal fun PlacePredictionUM.canQuote(): Boolean = when (val order = order) {
     is OrderSideUM.Buy -> true
@@ -111,8 +115,13 @@ internal fun PlacePredictionUM.canPollPrice(): Boolean = when (val order = order
     }
 }
 
+internal val PlacePredictionUM.isReadyToPlace: Boolean
+    get() = placeAction == PlaceActionUM.Ready
+
 internal fun PlacePredictionUM.feeBreakdownQuote(): QuoteUM.Content? =
     (quote as? QuoteUM.Content)?.takeIf { submit is SubmitUM.Idle }
+
+internal fun PlacePredictionUM.orderTotal(): BigDecimal? = (quote as? QuoteUM.Content)?.total
 
 internal fun PlacePredictionUM.canShowFeeBreakdown(): Boolean = feeBreakdownQuote() != null
 
@@ -133,16 +142,30 @@ internal data class MarketHeaderUM(
     val outcomeAccent: PolymarketOutcomeAccent = PolymarketOutcomeAccent.Neutral,
     val isPriceUnavailable: Boolean = false,
     val entryPrice: String? = null,
-)
+) {
+
+    fun priceLabel(): String? {
+        val livePrice = when {
+            isPriceUnavailable -> DASH_SIGN
+            outcomePrice != null -> outcomePrice
+            else -> return null
+        }
+        val entryPricePrefix = entryPrice?.let { "$it $ARROW_RIGHT " }.orEmpty()
+
+        return "$entryPricePrefix$livePrice"
+    }
+}
 
 @Immutable
 internal sealed interface AmountCaptionUM {
 
+    sealed interface Error : AmountCaptionUM
+
     data class ToWin(val payout: BigDecimal) : AmountCaptionUM
 
-    data class Shortfall(val error: PaymentAmountErrorUM) : AmountCaptionUM
+    data class Shortfall(val error: PaymentAmountErrorUM, val payout: BigDecimal?) : AmountCaptionUM.Error
 
-    data class BelowMinimum(val minAmount: BigDecimal) : AmountCaptionUM
+    data class BelowMinimum(val minAmount: BigDecimal) : AmountCaptionUM.Error
 }
 
 internal enum class PaymentAmountErrorUM(val text: TextReference) {
@@ -270,4 +293,15 @@ internal sealed interface SubmitUM {
     data object AwaitingFill : SubmitUM
 
     data class Result(val result: PlaceResultUM) : SubmitUM
+}
+
+internal val SubmitUM.canAcceptQuote: Boolean
+    get() = this is SubmitUM.Idle
+
+@Immutable
+internal sealed interface PlaceActionUM {
+
+    data object Unavailable : PlaceActionUM
+
+    data object Ready : PlaceActionUM
 }

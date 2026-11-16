@@ -9,6 +9,7 @@ import com.tangem.data.account.repository.DefaultAccountsCRUDRepository
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.cache.etag.ETagsStore
@@ -18,8 +19,6 @@ import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
-import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -40,25 +39,21 @@ internal object AccountDataModule {
         walletAccountsApi: WalletAccountsApi,
         walletAccountsSaver: WalletAccountsSaver,
         accountsResponseStoreFactory: AccountsResponseStoreFactory,
-        userTokensSaver: UserTokensSaver,
         accountConverterFactoryContainer: AccountConverterFactoryContainer,
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
-        jointAccountFeatureToggles: JointAccountFeatureToggles,
-        collectiblesFeatureToggles: CollectiblesFeatureToggles,
+        supportedAccountTypes: SupportedAccountTypes,
     ): AccountsCRUDRepository {
         return DefaultAccountsCRUDRepository(
             walletAccountsApi = walletAccountsApi,
             walletAccountsSaver = walletAccountsSaver,
             accountsResponseStoreFactory = accountsResponseStoreFactory,
             archivedAccountsStoreFactory = ArchivedAccountsStoreFactory,
-            userTokensSaver = userTokensSaver,
             archivedAccountsETagStore = RuntimeStateStore(emptyMap()),
             convertersContainer = accountConverterFactoryContainer,
             resources = context.resources,
             dispatchers = dispatchers,
-            jointAccountFeatureToggles = jointAccountFeatureToggles,
-            collectiblesFeatureToggles = collectiblesFeatureToggles,
+            supportedAccountTypes = supportedAccountTypes,
         )
     }
 

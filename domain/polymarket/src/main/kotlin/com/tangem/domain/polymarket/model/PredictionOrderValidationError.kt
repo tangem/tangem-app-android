@@ -45,6 +45,4 @@ sealed interface PredictionOrderValidationError : PolymarketError {
      * @property found the session key the envelope names, `null` if there is none
      */
     data class SessionKeyMismatch(val expected: String?, val found: String?) : PredictionOrderValidationError
-
-    data class StaleQuote(val ageMillis: Long) : PredictionOrderValidationError
 }

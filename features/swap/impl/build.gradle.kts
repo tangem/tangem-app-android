@@ -19,6 +19,7 @@ dependencies {
     api(projects.features.swap.domain)
     implementation(projects.features.marketing.api)
     implementation(projects.features.send.impl)
+    implementation(projects.features.txhistory.api)
 
     /** Core modules */
     api(projects.core.analytics)
@@ -105,10 +106,6 @@ dependencies {
     api(deps.kotlin.immutable.collections)
     implementation(deps.jodatime)
     implementation(deps.kotlin.serialization)
-    implementation(deps.firebase.perf) {
-        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
-        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-    }
 
     /** Tangem libs */
     api(tangemDeps.blockchain)

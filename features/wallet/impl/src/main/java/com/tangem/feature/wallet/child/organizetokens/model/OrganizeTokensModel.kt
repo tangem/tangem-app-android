@@ -32,6 +32,7 @@ import com.tangem.feature.wallet.child.organizetokens.model.transformer.Organize
 import com.tangem.feature.wallet.child.organizetokens.model.transformer.OrganizeDisableBalanceSortingTransformer
 import com.tangem.feature.wallet.child.organizetokens.model.transformer.OrganizeSortingProgressStateTransformer
 import com.tangem.feature.wallet.impl.R
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
@@ -46,6 +47,7 @@ import javax.inject.Inject
 internal class OrganizeTokensModel @Inject constructor(
     paramsContainer: ParamsContainer,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    walletFeatureToggles: WalletFeatureToggles,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
@@ -65,6 +67,8 @@ internal class OrganizeTokensModel @Inject constructor(
     private var cachedAccountStatusList: AccountStatusList? = null
 
     private var isAccountsModeEnabled: Boolean = false
+
+    val isRedesignedTokenRowsEnabled: Boolean = walletFeatureToggles.isRedesignedTokenRowsEnabled
 
     val uiState: StateFlow<OrganizeTokensUM>
         field = MutableStateFlow(getInitialState())

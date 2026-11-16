@@ -399,26 +399,31 @@ private fun ConnectionsTopBar(config: WcConnectionsTopAppBarConfig, showEndButto
         title = resourceReference(R.string.wc_connections),
         contentAlign = TangemTopNavigation.ContentAlign.Center,
         onBack = config.startButtonUM.onClicked,
-        endButtonsGroup = {
-            if (!showEndButton) return@TangemTopNavigation
-            Box {
-                TangemButton.GroupEntry(
-                    imageVector = Icons.ic_dots_horizontal_20,
-                    modifier = Modifier.testTag(WalletConnectScreenTestTags.MORE_BUTTON),
-                    onClick = { shouldShowDropdownMenu = true },
-                )
-                TangemDropdownMenu(
-                    expanded = shouldShowDropdownMenu,
-                    modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
-                    onDismissRequest = { shouldShowDropdownMenu = false },
-                    content = {
-                        TangemDropdownItem(
-                            item = config.disconnectAllItem,
-                            dismissParent = { shouldShowDropdownMenu = false },
-                        )
-                    },
-                )
+        // A non-null group that emits nothing still renders the stack's material pill, which reads
+        // as a stray dot in the corner.
+        endButtonsGroup = if (showEndButton) {
+            {
+                Box {
+                    TangemButton.GroupEntry(
+                        imageVector = Icons.ic_dots_horizontal_20,
+                        modifier = Modifier.testTag(WalletConnectScreenTestTags.MORE_BUTTON),
+                        onClick = { shouldShowDropdownMenu = true },
+                    )
+                    TangemDropdownMenu(
+                        expanded = shouldShowDropdownMenu,
+                        modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
+                        onDismissRequest = { shouldShowDropdownMenu = false },
+                        content = {
+                            TangemDropdownItem(
+                                item = config.disconnectAllItem,
+                                dismissParent = { shouldShowDropdownMenu = false },
+                            )
+                        },
+                    )
+                }
             }
+        } else {
+            null
         },
     )
 }

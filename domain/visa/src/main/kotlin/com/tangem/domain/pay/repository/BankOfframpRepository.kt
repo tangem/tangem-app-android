@@ -6,6 +6,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.pay.model.bankofframp.BankRail
 
 /**
  * Bank off-ramp catalog: the recipients the customer has saved and the routes a withdrawal can take.
@@ -15,7 +16,10 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
  */
 interface BankOfframpRepository {
 
-    suspend fun getBankAccounts(userWalletId: UserWalletId): Either<BankOfframpError, List<BankAccount>>
+    suspend fun getBankAccounts(
+        userWalletId: UserWalletId,
+        rail: BankRail? = null,
+    ): Either<BankOfframpError, List<BankAccount>>
 
     suspend fun getOptions(
         userWalletId: UserWalletId,

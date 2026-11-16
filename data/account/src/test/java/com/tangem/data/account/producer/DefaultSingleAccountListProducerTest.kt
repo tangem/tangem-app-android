@@ -12,7 +12,6 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.test.core.getEmittedValues
@@ -51,9 +50,6 @@ class DefaultSingleAccountListProducerTest {
     private val moneyAccountsFeatureToggles = mockk<MoneyAccountFeatureToggles> {
         every { isMoneyAccountsEnabled } returns false
     }
-    private val polymarketFeatureToggles = mockk<PolymarketFeatureToggles> {
-        every { isPolymarketEnabled } returns false
-    }
     private val polymarketOnboardedStore = mockk<PolymarketOnboardedStore> {
         every { isOnboarded(any()) } returns flowOf(false)
     }
@@ -64,7 +60,6 @@ class DefaultSingleAccountListProducerTest {
         flowProducerTools = flowProducerTools,
         userWalletsListRepository = userWalletsListRepository,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
-        polymarketFeatureToggles = polymarketFeatureToggles,
         polymarketOnboardedStore = polymarketOnboardedStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -113,7 +108,6 @@ class DefaultSingleAccountListProducerTest {
             flowProducerTools = flowProducerTools,
             userWalletsListRepository = userWalletsListRepository,
             moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
-            polymarketFeatureToggles = polymarketFeatureToggles,
             polymarketOnboardedStore = polymarketOnboardedStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
@@ -134,9 +128,9 @@ class DefaultSingleAccountListProducerTest {
     }
 
     @Test
-    fun `GIVEN polymarket enabled WHEN produce THEN account list contains prediction account`() = runTest {
+    fun `GIVEN prediction onboarded WHEN produce THEN account list contains prediction account`() = runTest {
         // Arrange
-        val producer = createProducer(isPolymarketEnabled = true, onboardedFlow = flowOf(true))
+        val producer = createProducer(onboardedFlow = flowOf(true))
 
         val accountList = AccountList.empty(userWalletId)
         every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
@@ -149,26 +143,10 @@ class DefaultSingleAccountListProducerTest {
     }
 
     @Test
-    fun `GIVEN polymarket disabled WHEN produce THEN account list has no prediction account`() = runTest {
-        // Arrange
-        val producer = createProducer(isPolymarketEnabled = false)
-
-        val accountList = AccountList.empty(userWalletId)
-        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
-
-        // Act
-        val actual = producer.produce().let(::getEmittedValues)
-
-        // Assert
-        Truth.assertThat(actual).containsExactly(accountList.withPaymentAccount())
-    }
-
-    @Test
     fun `GIVEN single-currency wallet WHEN produce THEN account list has no prediction account`() = runTest {
         // Arrange
         val singleCurrencyWallet = MockUserWalletFactory.createSingleWalletWithToken()
         val producer = createProducer(
-            isPolymarketEnabled = true,
             onboardedFlow = flowOf(true),
             walletsRepository = mockk {
                 every { userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(singleCurrencyWallet))
@@ -245,7 +223,7 @@ class DefaultSingleAccountListProducerTest {
     @Test
     fun `GIVEN nothing recorded WHEN produce THEN account list has no prediction account`() = runTest {
         // Arrange
-        val producer = createProducer(isPolymarketEnabled = true, onboardedFlow = flowOf(false))
+        val producer = createProducer(onboardedFlow = flowOf(false))
 
         val accountList = AccountList.empty(userWalletId)
         every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
@@ -261,7 +239,7 @@ class DefaultSingleAccountListProducerTest {
     fun `GIVEN nothing recorded WHEN the record appears THEN account list re-emits with the account`() = runTest {
         // Arrange
         val record = MutableStateFlow(value = false)
-        val producer = createProducer(isPolymarketEnabled = true, onboardedFlow = record)
+        val producer = createProducer(onboardedFlow = record)
 
         val accountList = AccountList.empty(userWalletId)
         every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
@@ -276,22 +254,6 @@ class DefaultSingleAccountListProducerTest {
         }
     }
 
-    @Test
-    fun `GIVEN polymarket disabled WHEN produce THEN the onboarding record is never read`() = runTest {
-        // Arrange
-        val onboardedStore = mockk<PolymarketOnboardedStore>()
-        val producer = createProducer(isPolymarketEnabled = false, onboardedStore = onboardedStore)
-
-        val accountList = AccountList.empty(userWalletId)
-        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
-
-        // Act
-        producer.produce().let(::getEmittedValues)
-
-        // Assert
-        verify(exactly = 0) { onboardedStore.isOnboarded(any()) }
-    }
-
     private fun AccountList.withPaymentAccount(): AccountList = plus(Account.Payment(userWalletId))
         .getOrElse { error("Unable to add payment account: $it") }
 
@@ -299,7 +261,6 @@ class DefaultSingleAccountListProducerTest {
         .getOrElse { error("Unable to add prediction account: $it") }
 
     private fun createProducer(
-        isPolymarketEnabled: Boolean,
         onboardedFlow: Flow<Boolean> = flowOf(false),
         onboardedStore: PolymarketOnboardedStore = mockk {
             every { isOnboarded(any()) } returns onboardedFlow
@@ -312,9 +273,6 @@ class DefaultSingleAccountListProducerTest {
             flowProducerTools = flowProducerTools,
             userWalletsListRepository = walletsRepository,
             moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
-            polymarketFeatureToggles = mockk {
-                every { this@mockk.isPolymarketEnabled } returns isPolymarketEnabled
-            },
             polymarketOnboardedStore = onboardedStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )

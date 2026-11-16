@@ -86,6 +86,17 @@ internal class TangemPayOnboardingModel @Inject constructor(
         -> TangemPayOnboardingStarter.Mode.StartOnboarding
     }
 
+    private val entryChannel = when (params) {
+        is TangemPayOnboardingComponent.Params.FromBannerOnMain -> TangemPayAnalyticsEvents.EntryChannel.BANNER
+        is TangemPayOnboardingComponent.Params.FromBannerInSettings -> TangemPayAnalyticsEvents.EntryChannel.DETAILS
+        is TangemPayOnboardingComponent.Params.Deeplink,
+        is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink,
+        -> TangemPayAnalyticsEvents.EntryChannel.DEEPLINK
+        is TangemPayOnboardingComponent.Params.ContinueOnboarding,
+        is TangemPayOnboardingComponent.Params.HotWalletOnboarding,
+        -> null
+    }
+
     private val starterCallbacks = TangemPayOnboardingStarter.Callbacks(
         onLoadingChange = { isLoading ->
             uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = isLoading))
@@ -96,7 +107,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     )
 
     init {
-        analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened())
+        analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened(entryChannel = entryChannel))
         init()
     }
 
@@ -177,7 +188,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     }
 
     private fun onGetCardClick() {
-        analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
+        analytics.send(TangemPayAnalyticsEvents.GetCardClicked(entryChannel = entryChannel))
         val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
         modelScope.launch {
             val walletsIds =

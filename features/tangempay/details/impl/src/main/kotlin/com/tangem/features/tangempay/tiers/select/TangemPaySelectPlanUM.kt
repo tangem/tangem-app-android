@@ -47,6 +47,10 @@ internal data class TangemPaySelectPlanUM(
     @Immutable
     sealed interface Content {
 
+        data object Loading : Content
+
+        data class Error(val onRetryClick: () -> Unit) : Content
+
         data class Select(
             val isProcessing: Boolean,
             val selectButtonIconEnd: TangemIconUM?,

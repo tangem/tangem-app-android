@@ -313,6 +313,36 @@ internal class DefaultCloudBackupRepositoryTest {
     }
 
     @Test
+    fun `GIVEN a remembered account WHEN hasAccountOf THEN returns true`() = runTest {
+        // Arrange
+        accountStore.accounts[WALLET_ID] = ACCOUNT_NAME
+
+        // Act
+        val actual = repository.hasAccountOf(WALLET_ID)
+
+        // Assert
+        assertThat(actual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a backup made before accounts were remembered WHEN hasAccountOf THEN returns false`() = runTest {
+        // Act
+        val actual = repository.hasAccountOf(WALLET_ID)
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an account WHEN withAccount THEN the block runs in it`() = runTest {
+        // Act
+        val actual = repository.withAccount(OTHER_ACCOUNT_NAME) { currentCoroutineContext()[GoogleDriveAccount] }
+
+        // Assert
+        assertThat(actual?.name).isEqualTo(OTHER_ACCOUNT_NAME)
+    }
+
+    @Test
     fun `GIVEN a block of one wallet running WHEN withAccountOf another THEN it runs without waiting`() = runTest {
         // Arrange
         accountStore.accounts[WALLET_ID] = ACCOUNT_NAME

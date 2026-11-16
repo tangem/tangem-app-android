@@ -12,6 +12,5 @@ class ScanFailsDialogAnalytics(button: Buttons, source: AnalyticsParam.ScreensSo
 ) {
     enum class Buttons(val event: String) {
         HOW_TO_SCAN("Button blog"),
-        TRY_AGAIN("Button try again"),
     }
 }

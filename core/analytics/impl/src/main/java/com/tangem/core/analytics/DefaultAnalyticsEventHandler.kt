@@ -35,6 +35,7 @@ internal class DefaultAnalyticsEventHandler @Inject constructor(
     AnalyticsErrorHandler,
     AnalyticsExceptionHandler,
     AnalyticsUserIdHandler,
+    AnalyticsUserPropertiesHandler,
     ParamsInterceptorHolder {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -74,6 +75,15 @@ internal class DefaultAnalyticsEventHandler @Inject constructor(
             analyticsMutex.withLock {
                 handlers.get().filterIsInstance<AnalyticsUserIdHandler>()
                     .forEach { handler -> handler.clearUserId() }
+            }
+        }
+    }
+
+    override fun setUserProperties(properties: Map<String, String>) {
+        analyticsScope.launch {
+            analyticsMutex.withLock {
+                handlers.get().filterIsInstance<AnalyticsUserPropertiesHandler>()
+                    .forEach { handler -> handler.setUserProperties(properties) }
             }
         }
     }

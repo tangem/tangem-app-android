@@ -57,6 +57,7 @@ sealed class WcRequestError {
             SendTransactionError.UserCancelledError -> "UserCancelledError"
             is SendTransactionError.CreateAccountUnderfunded -> "CreateAccountUnderfunded"
             SendTransactionError.GaslessFeeIncreased -> "GaslessFeeIncreased"
+            is SendTransactionError.SolanaGasless -> "SolanaGasless"
         }
 
         private fun SendTransactionError.message(): String = when (this) {
@@ -69,7 +70,9 @@ sealed class WcRequestError {
             SendTransactionError.UserCancelledError -> "UserCancelledError"
             is SendTransactionError.CreateAccountUnderfunded,
             -> "CreateAccountUnderfunded"
-            SendTransactionError.GaslessFeeIncreased -> "GaslessFeeIncreased"
+            SendTransactionError.GaslessFeeIncreased,
+            is SendTransactionError.SolanaGasless,
+            -> getAnalyticsDescription()
         }
     }
 }

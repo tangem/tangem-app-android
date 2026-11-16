@@ -92,14 +92,13 @@ internal class WcEthAddNetworkUseCase @AssistedInject constructor(
             namespaces = sdkNewNamespaces,
         )
         val isSessionUpdated = sdkUpdateSession(sessionUpdate).isRight()
-        val respondResult = respondService.respond(rawSdkRequest, response = null)
 
         // Only a session that really carries the network can carry the event; without the update there is
         // nothing to wait for, and waiting would hold the sheet open for the whole timeout for nothing.
         if (isSessionUpdated) {
             chainChangedEmitter.emit(topic = context.session.sdkModel.topic, chainId = networkToAddCAIP2)
         }
-        return respondResult
+        return respondService.respond(rawSdkRequest, response = null)
     }
 
     private suspend fun sdkUpdateSession(sessionUpdate: Wallet.Params.SessionUpdate) =

@@ -7,6 +7,7 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -39,6 +40,7 @@ internal class BankCredentialsConverterTest {
                 amount = BigDecimal("10000"),
                 period = BankCredentials.DepositLimit.Period.DAY,
             ),
+            exchangeRate = BankCredentials.ExchangeRate(rate = BigDecimal("17.25"), base = "USD", quote = "MXN"),
         )
         assertThat(actual).isEqualTo(expected)
     }
@@ -58,6 +60,7 @@ internal class BankCredentialsConverterTest {
             transferMessage = null,
             fee = null,
             depositLimit = null,
+            exchangeRate = null,
         )
 
         // Act
@@ -76,6 +79,7 @@ internal class BankCredentialsConverterTest {
             transferMessage = null,
             depositFee = null,
             depositLimit = null,
+            exchangeRate = null,
         )
         assertThat(actual).isEqualTo(expected)
     }
@@ -83,7 +87,7 @@ internal class BankCredentialsConverterTest {
     @Test
     fun `GIVEN response without the extension WHEN convert THEN new fields are null`() {
         // Arrange
-        val response = result(transferMessage = null, fee = null, depositLimit = null)
+        val response = result(transferMessage = null, fee = null, depositLimit = null, exchangeRate = null)
 
         // Act
         val actual = BankCredentialsConverter.convert(response)
@@ -92,6 +96,7 @@ internal class BankCredentialsConverterTest {
         assertThat(actual.transferMessage).isNull()
         assertThat(actual.depositFee).isNull()
         assertThat(actual.depositLimit).isNull()
+        assertThat(actual.exchangeRate).isNull()
         assertThat(actual.accountNumber).isEqualTo("707613210122")
     }
 
@@ -103,6 +108,16 @@ internal class BankCredentialsConverterTest {
 
         // Assert
         assertThat(actual.depositFee).isEqualTo(model.expected)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideExchangeRateModels")
+    fun `GIVEN exchange rate WHEN convert THEN mapped only when complete`(model: ExchangeRateModel) {
+        // Act
+        val actual = BankCredentialsConverter.convert(result(exchangeRate = model.exchangeRate))
+
+        // Assert
+        assertThat(actual.exchangeRate).isEqualTo(model.expected)
     }
 
     @Test
@@ -167,6 +182,10 @@ internal class BankCredentialsConverterTest {
             expected = BankCredentials.DepositFee(BigDecimal("1"), BankCredentials.DepositFee.Type.PERCENTAGE),
         ),
         FeeModel(
+            fee = BankCredentialsResponse.Fee(type = "variable", amount = "1.00"),
+            expected = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.PERCENTAGE),
+        ),
+        FeeModel(
             fee = BankCredentialsResponse.Fee(type = "tiered", amount = "1.00"),
             expected = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.UNKNOWN),
         ),
@@ -178,6 +197,38 @@ internal class BankCredentialsConverterTest {
         FeeModel(fee = BankCredentialsResponse.Fee(type = "flat", amount = "n/a"), expected = null),
     )
 
+    private fun provideExchangeRateModels() = listOf(
+        ExchangeRateModel(
+            exchangeRate = BankCredentialsResponse.ExchangeRate(rate = "17.25", base = "USD", quote = "MXN"),
+            expected = BankCredentials.ExchangeRate(rate = BigDecimal("17.25"), base = "USD", quote = "MXN"),
+        ),
+        ExchangeRateModel(exchangeRate = null, expected = null),
+        ExchangeRateModel(
+            exchangeRate = BankCredentialsResponse.ExchangeRate(rate = null, base = "USD", quote = "MXN"),
+            expected = null,
+        ),
+        ExchangeRateModel(
+            exchangeRate = BankCredentialsResponse.ExchangeRate(rate = "n/a", base = "USD", quote = "MXN"),
+            expected = null,
+        ),
+        ExchangeRateModel(
+            exchangeRate = BankCredentialsResponse.ExchangeRate(rate = "17.25", base = " ", quote = "MXN"),
+            expected = null,
+        ),
+        ExchangeRateModel(
+            exchangeRate = BankCredentialsResponse.ExchangeRate(rate = "17.25", base = null, quote = "MXN"),
+            expected = null,
+        ),
+        ExchangeRateModel(
+            exchangeRate = BankCredentialsResponse.ExchangeRate(rate = "17.25", base = "USD", quote = null),
+            expected = null,
+        ),
+        ExchangeRateModel(
+            exchangeRate = BankCredentialsResponse.ExchangeRate(rate = "17.25", base = "USD", quote = " "),
+            expected = null,
+        ),
+    )
+
     private fun result(
         rail: String? = "ACH",
         transferMessage: String? = "REF-A1B2C3D4",
@@ -185,6 +236,11 @@ internal class BankCredentialsConverterTest {
         depositLimit: BankCredentialsResponse.DepositLimit? = BankCredentialsResponse.DepositLimit(
             amount = "10000",
             period = "day",
+        ),
+        exchangeRate: BankCredentialsResponse.ExchangeRate? = BankCredentialsResponse.ExchangeRate(
+            rate = "17.25",
+            base = "USD",
+            quote = "MXN",
         ),
     ) = BankCredentialsResponse.Result(
         type = "fiat",
@@ -198,7 +254,13 @@ internal class BankCredentialsConverterTest {
         transferMessage = transferMessage,
         fee = fee,
         depositLimit = depositLimit,
+        exchangeRate = exchangeRate,
     )
 
     data class FeeModel(val fee: BankCredentialsResponse.Fee, val expected: BankCredentials.DepositFee?)
+
+    data class ExchangeRateModel(
+        val exchangeRate: BankCredentialsResponse.ExchangeRate?,
+        val expected: BankCredentials.ExchangeRate?,
+    )
 }

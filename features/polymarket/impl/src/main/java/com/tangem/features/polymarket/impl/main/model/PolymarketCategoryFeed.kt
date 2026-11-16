@@ -4,6 +4,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
@@ -19,6 +20,8 @@ internal class PolymarketCategoryFeed(
     val batchFlow: PolymarketEventsBatchFlow,
     val poller: PolymarketFeedPoller,
 ) {
+
+    val visibleEventIds = MutableStateFlow(emptySet<String>())
 
     var scrollPosition: PolymarketFeedScrollPosition? = null
 }

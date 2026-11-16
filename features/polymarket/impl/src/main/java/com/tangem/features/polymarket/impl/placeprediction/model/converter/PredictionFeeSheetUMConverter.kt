@@ -13,15 +13,28 @@ import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 internal object PredictionFeeSheetUMConverter {
 
-    fun convert(quote: PredictionOrderQuote, slippage: SlippageUM, tokenSymbol: String): PredictionFeeSheetUM {
+    private val PredictionOrderQuote.orderAmount: BigDecimal
+        get() = when (side) {
+            PredictionOrderSide.BUY -> notional
+            PredictionOrderSide.SELL -> expectedExecutionAmount
+        }
+
+    fun convert(
+        quote: PredictionOrderQuote,
+        slippage: SlippageUM,
+        tokenSymbol: String,
+        heading: PredictionFeeSheetUM.Heading,
+    ): PredictionFeeSheetUM {
         return PredictionFeeSheetUM(
+            title = resourceReference(heading.titleRes),
             rows = persistentListOf(
                 PredictionFeeSheetUM.Row(
-                    title = resourceReference(R.string.prediction_fee_sheet_order),
-                    amount = quote.notional.formatPolymarketMoney(),
+                    title = resourceReference(quote.orderRowTitleRes(heading)),
+                    amount = quote.orderAmount.formatPolymarketMoney(),
                     description = quote.orderDescription(slippage, tokenSymbol),
                 ),
                 PredictionFeeSheetUM.Row(
@@ -38,6 +51,11 @@ internal object PredictionFeeSheetUMConverter {
                 ),
             ),
         )
+    }
+
+    private fun PredictionOrderQuote.orderRowTitleRes(heading: PredictionFeeSheetUM.Heading): Int = when (side) {
+        PredictionOrderSide.BUY -> heading.buyOrderRowTitleRes
+        PredictionOrderSide.SELL -> heading.sellOrderRowTitleRes
     }
 
     private fun PredictionOrderQuote.orderDescription(slippage: SlippageUM, tokenSymbol: String): TextReference {

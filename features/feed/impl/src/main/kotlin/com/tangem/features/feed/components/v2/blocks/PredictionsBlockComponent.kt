@@ -9,15 +9,18 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.decompose.navigation.pushZooming
 import com.tangem.core.ui.components.account.PredictionAccountIcon
 import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.PredictionTestTags
+import com.tangem.core.ui.utils.zoomTransitionSource
 import com.tangem.features.feed.components.v2.blocks.model.PredictionsBlockModel
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.v2.FeedBlockIconBadge
+import com.tangem.features.feed.ui.v2.FeedBlockShape
 import com.tangem.features.feed.ui.v2.FeedPromoCard
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -53,14 +56,17 @@ internal class PredictionsBlockComponent(
             title = stringResourceSafe(R.string.prediction_main_title),
             description = stringResourceSafe(R.string.prediction_account_subtitle),
             ambientVariant = TangemAmbientBackground.Variant.Violet,
-            onClick = { router.push(AppRoute.Polymarket()) },
-            modifier = modifier.testTag(PredictionTestTags.FEED_BANNER),
+            onClick = { router.pushZooming(route = AppRoute.Polymarket(), sourceKey = SHARED_TRANSITION_KEY) },
+            modifier = modifier
+                .testTag(PredictionTestTags.FEED_BANNER)
+                .zoomTransitionSource(key = SHARED_TRANSITION_KEY, shape = FeedBlockShape),
             icon = { PredictionsIcon() },
         )
     }
 
     companion object {
         const val KEY = "predictions"
+        private const val SHARED_TRANSITION_KEY = "feed_predictions_block"
     }
 }
 

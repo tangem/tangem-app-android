@@ -2,8 +2,13 @@ package com.tangem.spend.pushProvisioning.impl
 
 import arrow.core.left
 import arrow.core.right
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
+import com.google.android.gms.common.api.Status
 import com.google.android.gms.tapandpay.TapAndPayStatusCodes
 import com.google.android.gms.tapandpay.issuer.TokenInfo
+import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
 import com.google.common.truth.Truth.assertThat
 import com.meawallet.mpp.GooglePayTokenState
 import com.meawallet.mpp.MppError
@@ -402,6 +407,48 @@ internal class GoogleWalletResultsTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TaskToTapAndPayFailure {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN completed TapAndPay task WHEN toTapAndPayFailure THEN failure taken from Google's status`(
+            model: TapAndPayFailureModel,
+        ) {
+            // Act
+            val actual = model.task.toTapAndPayFailure()
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            TapAndPayFailureModel(task = Tasks.forResult("SANDBOX"), expected = null),
+            TapAndPayFailureModel(
+                task = Tasks.forException<String>(
+                    ApiException(Status(TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE, "Not allowlisted")),
+                ),
+                expected = TapAndPayFailure(
+                    code = TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE,
+                    message = "Not allowlisted",
+                ),
+            ),
+            TapAndPayFailureModel(
+                task = Tasks.forException<String>(ApiException(Status(TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE))),
+                expected = TapAndPayFailure(code = TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE, message = null),
+            ),
+            TapAndPayFailureModel(
+                task = Tasks.forException<String>(IllegalStateException("Unexpected")),
+                expected = TapAndPayFailure(code = CommonStatusCodes.ERROR, message = "Unexpected"),
+            ),
+            TapAndPayFailureModel(
+                task = Tasks.forCanceled<String>(),
+                expected = TapAndPayFailure(code = CommonStatusCodes.ERROR, message = null),
+            ),
+        )
+    }
+
+    @Nested
     inner class Describe {
 
         @Test
@@ -430,4 +477,6 @@ internal class GoogleWalletResultsTest {
     internal data class AddResultModel(val error: MppError, val expected: AddResult)
 
     internal data class ThrowableModel(val throwable: Throwable, val expected: AddResult)
+
+    internal data class TapAndPayFailureModel(val task: Task<*>, val expected: TapAndPayFailure?)
 }

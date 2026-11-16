@@ -1,7 +1,7 @@
 package com.tangem.domain.collectibles.vault.repository
 
 import arrow.core.Either
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultLimits
 import com.tangem.domain.models.account.CollectiblesVaultBalance
@@ -10,14 +10,13 @@ import com.tangem.domain.models.wallet.UserWallet
 /**
  * Access to a wallet's `tangem_gacha_vault` account.
  *
- * The vault's `cold_owner` is the key at `COLLECTIBLES_OWNER_DERIVATION_PATH`, not the wallet's ordinary Solana
- * account, and the vault address is `PDA(["vault", cold_owner])`. "Cold" is the program's wording: a mobile wallet
- * derives and signs the same key locally.
+ * The vault's `owner` is the key at `COLLECTIBLES_OWNER_DERIVATION_PATH`, not the wallet's ordinary Solana
+ * account, and the vault address is `PDA(["vault", owner])`.
  */
 interface GachaVaultRepository {
 
     /**
-     * Brings the vault to the state [hotDelegate] needs: creates it when it is absent, re-points it when it
+     * Brings the vault to the state [sessionKey] needs: creates it when it is absent, re-points it when it
      * belongs to another device, leaves it alone when it is already right. For a device that already holds the
      * owner key, so the read costs no card session.
      *
@@ -26,17 +25,17 @@ interface GachaVaultRepository {
      */
     suspend fun initOrUpdateVault(
         userWallet: UserWallet,
-        hotDelegate: HotDelegatePublicKey,
+        sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit>
 
     /**
-     * Derives the owner key, then creates the vault or re-points its `hot_delegate`, all under one signature. The
+     * Derives the owner key, then creates the vault or re-points its `session_key`, all under one signature. The
      * read stays in here because without the derived key there is no address to read.
      */
     suspend fun deriveOwnerAndSetUpVault(
         userWallet: UserWallet,
-        hotDelegate: HotDelegatePublicKey,
+        sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit>
 
@@ -60,14 +59,14 @@ interface GachaVaultRepository {
      */
     suspend fun closeVault(userWallet: UserWallet): Either<CollectiblesAccountError, Unit>
 
-    /** The base58 `hot_delegate` the vault points at, or `null` when the wallet has no vault on chain. */
-    suspend fun getVaultHotDelegate(userWallet: UserWallet): Either<CollectiblesAccountError, String?>
+    /** The base58 `session_key` the vault points at, or `null` when the wallet has no vault on chain. */
+    suspend fun getVaultSessionKey(userWallet: UserWallet): Either<CollectiblesAccountError, String?>
 
     /** `PDA(["vault", owner])`, derived locally: the player the gacha sees, as the spin is paid from it. */
     suspend fun getVaultAddress(userWallet: UserWallet): Either<CollectiblesAccountError, String>
 
     /**
-     * Pays for one spin with `purchase_pack`, signed by the hot delegate without a prompt. Not idempotent: never call
+     * Pays for one spin with `purchase_pack`, signed by the session key without a prompt. Not idempotent: never call
      * again for the same [memo] while the outcome is unknown.
      *
      * @param amount the pack price in base units of USDC, as the backend issued it

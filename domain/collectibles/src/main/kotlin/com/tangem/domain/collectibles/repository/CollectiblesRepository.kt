@@ -29,11 +29,23 @@ interface CollectiblesRepository {
     /** Reports the hash of the spin sent on chain; the backend then starts watching the payment. */
     suspend fun reportPurchaseTxSent(userWalletId: UserWalletId, txId: String, txHash: String): CollectibleTxStatus
 
-    /** @param includeNftWon asks for the card won, which the backend leaves out otherwise */
-    suspend fun getTxState(userWalletId: UserWalletId, txId: String, includeNftWon: Boolean = false): CollectibleTxState
+    /**
+     * @param includeAutoBuyback asks for the Turbo mode payout, which the backend leaves out otherwise
+     * @param includeNftWon asks for the card won, which the backend leaves out otherwise
+     */
+    suspend fun getTxState(
+        userWalletId: UserWalletId,
+        txId: String,
+        includeAutoBuyback: Boolean,
+        includeNftWon: Boolean = false,
+    ): CollectibleTxState
 
-    /** The card may come later than the opening: the answer can be `pack-opened` without it. */
-    suspend fun openPack(userWalletId: UserWalletId, txId: String): CollectibleTxState
+    /**
+     * The card may come later than the opening: the answer can be `pack-opened` without it.
+     *
+     * @param includeAutoBuyback asks for the Turbo mode payout, which the backend leaves out otherwise
+     */
+    suspend fun openPack(userWalletId: UserWalletId, txId: String, includeAutoBuyback: Boolean): CollectibleTxState
 
     /** `null` while the backend has no offer for [nftAddress] yet. */
     suspend fun getBuybackOffer(userWalletId: UserWalletId, nftAddress: String): CollectibleBuybackOffer?

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -32,6 +33,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TxHistoryDetailsTestTags
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 
 private val IconSize = 72.dp
@@ -80,6 +82,7 @@ internal fun TxHistoryDetailsAmountBlock(
         }
         Text(
             text = amountBlock.amount.orMaskWithStars(isBalanceHidden).resolveReference(),
+            modifier = Modifier.testTag(TxHistoryDetailsTestTags.AMOUNT),
             color = if (amountBlock.isFailed) {
                 TangemTheme.colors3.text.secondary
             } else {

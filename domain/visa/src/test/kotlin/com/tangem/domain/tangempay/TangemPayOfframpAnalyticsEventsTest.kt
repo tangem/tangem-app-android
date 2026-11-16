@@ -204,6 +204,11 @@ internal class TangemPayOfframpAnalyticsEventsTest {
             expectedParams = mapOf(AnalyticsParam.Key.TYPE to "Wire"),
         ),
         EventModel(
+            event = TangemPayAnalyticsEvents.Offramp.SendSuccessScreenShowed(rail = BankRail.SPEI),
+            expectedId = "[$CATEGORY] Send Success Screen Showed",
+            expectedParams = emptyMap(),
+        ),
+        EventModel(
             event = TangemPayAnalyticsEvents.Offramp.SendSuccessScreenShowed(rail = null),
             expectedId = "[$CATEGORY] Send Success Screen Showed",
             expectedParams = emptyMap(),

@@ -1,6 +1,8 @@
 package com.tangem.features.polymarket.impl.main.model.transformer
 
+import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketLiveQuote
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
@@ -16,6 +18,8 @@ internal class PolymarketFeedContentTransformer(
     private val eventUMConverter: PolymarketEventUMConverter,
     private val onReloadClick: () -> Unit,
     private val onNextPageRetryClick: () -> Unit,
+    private val sports: PolymarketSportsState = PolymarketSportsState(emptyMap()),
+    private val quotes: Map<String, PolymarketLiveQuote> = emptyMap(),
 ) : Transformer<PolymarketMainUM> {
 
     override fun transform(prevState: PolymarketMainUM): PolymarketMainUM {
@@ -48,7 +52,7 @@ internal class PolymarketFeedContentTransformer(
         if (events.isEmpty()) return PolymarketMainUM.ContentUM.Empty
 
         return PolymarketMainUM.ContentUM.Content(
-            events = eventUMConverter.convertList(events).toImmutableList(),
+            events = events.map { eventUMConverter.convert(it, sports.events[it.id], quotes) }.toImmutableList(),
             footer = footer,
         )
     }

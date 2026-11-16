@@ -57,6 +57,10 @@ fun BaseTestCase.openTheAppFromRecents() {
     device.uiDevice.click(centerX, centerY)
 }
 
+fun BaseTestCase.clickNearScreenBottom() {
+    device.uiDevice.click(device.uiDevice.displayWidth / 2, (device.uiDevice.displayHeight * 0.9f).toInt())
+}
+
 fun BaseTestCase.collapseAppByHomeButton() {
     device.uiDevice.pressHome()
     device.uiDevice.wait(

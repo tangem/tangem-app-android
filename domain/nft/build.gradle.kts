@@ -26,6 +26,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.account)
+    api(projects.domain.common)
     api(projects.domain.networks)
     api(projects.domain.quotes)
     api(projects.domain.tokens)
@@ -42,5 +43,6 @@ dependencies {
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
+    testImplementation(tangemDeps.blockchain)
     // endregion
 }

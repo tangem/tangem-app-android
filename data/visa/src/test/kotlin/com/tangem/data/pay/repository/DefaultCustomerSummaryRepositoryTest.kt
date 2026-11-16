@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.pay.analytics.TangemPayUserPropertiesSender
 import com.tangem.data.pay.store.TangemPayCustomerSummaryStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerSummary
@@ -15,6 +16,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
@@ -27,16 +29,18 @@ internal class DefaultCustomerSummaryRepositoryTest {
     private val tangemPayApi: TangemPayApi = mockk()
     private val requestHelper: TangemPayRequestPerformer = mockk()
     private val customerSummaryStore = TangemPayCustomerSummaryStore()
+    private val userPropertiesSender: TangemPayUserPropertiesSender = mockk(relaxed = true)
 
     private val repository = DefaultCustomerSummaryRepository(
         tangemPayApi = tangemPayApi,
         requestHelper = requestHelper,
         customerSummaryStore = customerSummaryStore,
+        userPropertiesSender = userPropertiesSender,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemPayApi, requestHelper)
+        clearMocks(tangemPayApi, requestHelper, userPropertiesSender)
         customerSummaryStore.clear()
 
         coEvery {
@@ -103,6 +107,23 @@ internal class DefaultCustomerSummaryRepositoryTest {
         assertThat(results[0].isRight()).isTrue()
         assertThat(results[1]).isEqualTo(results[0])
         coVerify(exactly = 1) { tangemPayApi.getCustomerSummary(authHeader = AUTH_HEADER) }
+    }
+
+    @Test
+    fun `GIVEN concurrent callers WHEN fetch THEN user properties reported once from the fresh summary`() = runTest {
+        // Arrange
+        coEvery { tangemPayApi.getCustomerSummary(authHeader = AUTH_HEADER) } coAnswers {
+            delay(1_000)
+            ApiResponse.Success(CustomerSummaryResponse(result = customerSummaryResult()))
+        }
+
+        // Act
+        val results = List(size = 2) { async { repository.fetch(USER_WALLET_ID) } }.awaitAll()
+
+        // Assert
+        val summary = results[0].getOrNull()
+        assertThat(summary).isNotNull()
+        verify(exactly = 1) { userPropertiesSender.onSummaryFetched(USER_WALLET_ID, summary!!) }
     }
 
     @Test

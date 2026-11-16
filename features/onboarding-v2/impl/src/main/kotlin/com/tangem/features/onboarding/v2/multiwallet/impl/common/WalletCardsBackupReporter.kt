@@ -4,7 +4,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.usecase.ReportWalletCardsBackupUseCase
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
@@ -15,7 +14,6 @@ import javax.inject.Inject
  */
 internal class WalletCardsBackupReporter @Inject constructor(
     private val reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase,
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val appScope: AppCoroutineScope,
 ) {
 
@@ -29,8 +27,6 @@ internal class WalletCardsBackupReporter @Inject constructor(
      *                     wallet creation take it from [usedSeedPhrase]
      */
     fun report(scanResponse: ScanResponse, cards: List<WalletCardBackup>, usedSeed: Boolean) {
-        if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
-
         val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
 
         if (userWalletId == null) {

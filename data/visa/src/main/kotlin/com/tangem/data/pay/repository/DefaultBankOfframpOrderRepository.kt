@@ -6,21 +6,28 @@ import arrow.core.raise.ensureNotNull
 import com.tangem.data.pay.util.BankOfframpErrorConverter
 import com.tangem.data.pay.util.BankOfframpOrderRequestConverter
 import com.tangem.data.pay.util.BankOfframpOrderStateConverter
+import com.tangem.data.pay.util.BankOfframpQuoteConverter
+import com.tangem.data.pay.util.BankOfframpQuoteRequestConverter
 import com.tangem.data.pay.util.BankOfframpRouteConverter
 import com.tangem.data.pay.util.BankOfframpRouteRequestConverter
+import com.tangem.data.pay.util.BankOfframpTransferConverter
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
+import com.tangem.domain.pay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
+import com.tangem.domain.pay.model.bankofframp.BankOfframpTransfer
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.BankOfframpSignatureRequest
+import com.tangem.spend.datasource.pay.models.request.BankOfframpTransferRequest
 import com.tangem.utils.extensions.addHexPrefix
+import java.math.BigDecimal
 import javax.inject.Inject
 
 internal class DefaultBankOfframpOrderRepository @Inject constructor(
@@ -105,21 +112,68 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
                 idempotencyKey = idempotencyKey,
                 body = body,
             )
-        }.mapLeft { error -> error.toRouteError() }.bind()
+        }.mapLeft { error -> error.toAccountOfframpError(operation = "createRoute") }.bind()
 
         val result = ensureNotNull(response.result) { emptyResult(operation = "createRoute") }
         ensureNotNull(BankOfframpRouteConverter.convert(result)) { incompleteResult(operation = "createRoute") }
     }
 
+    override suspend fun createQuote(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+        amount: BigDecimal,
+        recipient: BankOfframpRecipient,
+        idempotencyKey: String,
+    ): Either<BankOfframpError, BankOfframpQuote> = either {
+        val body = BankOfframpQuoteRequestConverter.convert(
+            BankOfframpQuoteRequestConverter.Input(
+                productInstanceId = productInstanceId,
+                amount = amount,
+                recipient = recipient,
+            ),
+        ).bind()
+        val response = requestPerformer.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.createBankOfframpQuote(
+                authHeader = authHeader,
+                idempotencyKey = idempotencyKey,
+                body = body,
+            )
+        }.mapLeft { error -> error.toAccountOfframpError(operation = "createQuote") }.bind()
+
+        val result = ensureNotNull(response.result) { emptyResult(operation = "createQuote") }
+        ensureNotNull(BankOfframpQuoteConverter.convert(result)) { incompleteResult(operation = "createQuote") }
+    }
+
+    override suspend fun createTransfer(
+        userWalletId: UserWalletId,
+        quoteId: String,
+    ): Either<BankOfframpError, BankOfframpTransfer> = either {
+        val response = requestPerformer.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.createBankOfframpTransfer(
+                authHeader = authHeader,
+                body = BankOfframpTransferRequest(quoteId = quoteId),
+            )
+        }.mapLeft { error -> error.toTransferError() }.bind()
+
+        val result = ensureNotNull(response.result) { emptyResult(operation = "createTransfer") }
+        ensureNotNull(BankOfframpTransferConverter.convert(result)) { incompleteResult(operation = "createTransfer") }
+    }
+
     private fun VisaApiError.toBankOfframpError(operation: String) =
         BankOfframpErrorConverter.convert(BankOfframpErrorConverter.Input(error = this, operation = operation))
 
-    private fun VisaApiError.toRouteError(): BankOfframpError =
+    private fun VisaApiError.toAccountOfframpError(operation: String): BankOfframpError =
         if (this == VisaApiError.NotFound || errorCode == FORBIDDEN_ERROR_CODE) {
             BankOfframpError.Unavailable(errorCode = errorCode)
         } else {
-            toBankOfframpError(operation = "createRoute")
+            toBankOfframpError(operation = operation)
         }
+
+    private fun VisaApiError.toTransferError(): BankOfframpError = if (errorCode == FORBIDDEN_ERROR_CODE) {
+        BankOfframpError.Unavailable(errorCode = errorCode)
+    } else {
+        toBankOfframpError(operation = "createTransfer")
+    }
 
     private fun emptyResult(operation: String) = BankOfframpError.Unknown(
         cause = IllegalStateException("Bank off-ramp $operation returned an empty result"),

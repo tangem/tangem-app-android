@@ -120,6 +120,7 @@ interface PolymarketApi {
         @Query("category") category: Int?,
         @Query("limit") limit: Int,
         @Query("cursor") cursor: String?,
+        @Query("filter") filter: String? = null,
     ): ApiResponse<PolymarketEventsResponse>
 
     /**

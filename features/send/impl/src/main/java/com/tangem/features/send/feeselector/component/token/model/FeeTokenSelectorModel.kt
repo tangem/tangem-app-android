@@ -19,7 +19,6 @@ import com.tangem.features.send.feeselector.component.token.entity.FeeTokenSelec
 import com.tangem.features.send.feeselector.model.FeeSelectorIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -68,17 +67,37 @@ internal class FeeTokenSelectorModel @Inject constructor(
 
     private fun stateFromParent(newParentState: FeeSelectorUM.Content): FeeTokenSelectorUM {
         val parentState = newParentState
-        val selectedCurrencyStatus = parentState.feeExtraInfo.feeCryptoCurrencyStatus
-        val notEnoughForFee = parentState.feeExtraInfo.notEnoughForFeeCurrencies
+        val feeExtraInfo = parentState.feeExtraInfo
+        val selectedCurrencyStatus = feeExtraInfo.feeCryptoCurrencyStatus
+        val notEnoughForFee = feeExtraInfo.notEnoughForFeeCurrencies
         val selectedTokenUM = convertToken(selectedCurrencyStatus, notEnoughForFee)
+        val tokens = feeExtraInfo.availableFeeCurrencies?.map { status ->
+            convertToken(status, notEnoughForFee)
+        } ?: listOf(selectedTokenUM)
 
+        if (!feeExtraInfo.sponsoredFee.isAvailable) {
+            return FeeTokenSelectorUM(
+                parent = parentState,
+                selectedToken = selectedTokenUM,
+                tokens = tokens.toImmutableList(),
+            )
+        }
+
+        val sponsoredFeeUM = convertSponsoredFee(selectedCurrencyStatus)
         return FeeTokenSelectorUM(
             parent = parentState,
-            selectedToken = selectedTokenUM,
-            tokens = parentState.feeExtraInfo.availableFeeCurrencies?.map { status ->
-                convertToken(status, notEnoughForFee)
-            }?.toImmutableList() ?: persistentListOf(selectedTokenUM),
+            selectedToken = if (feeExtraInfo.sponsoredFee.isSelected) sponsoredFeeUM else selectedTokenUM,
+            tokens = (tokens + sponsoredFeeUM).toImmutableList(),
         )
+    }
+
+    private fun convertSponsoredFee(status: CryptoCurrencyStatus): FeeTokenItemState {
+        return FeeTokenForListConverter(
+            appCurrencyProvider = Provider { appCurrency },
+            canPayFee = true,
+            onTokenClick = ::onSponsoredFeeSelected,
+            isSponsoredFee = true,
+        ).convert(status)
     }
 
     private fun convertToken(

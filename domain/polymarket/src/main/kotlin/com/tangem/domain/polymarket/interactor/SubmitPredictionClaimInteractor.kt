@@ -6,6 +6,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketDepositWalletLock
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketRepository
@@ -60,6 +61,7 @@ class SubmitPredictionClaimInteractor(
     private val polymarketRepository: PolymarketRepository,
     private val positionsRepository: PolymarketPositionsRepository,
     private val signer: PolymarketTypedDataSigner,
+    private val depositWalletLock: PolymarketDepositWalletLock,
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) {
 
@@ -68,7 +70,7 @@ class SubmitPredictionClaimInteractor(
      *  screen or a repeated tap converges on the claim already in flight rather than relaying a second one
      */
     suspend fun claim(params: Params): Either<PredictionClaimFailure, PredictionClaimReceipt> = either {
-        settle(params, submit(params))
+        settle(params, depositWalletLock.withLock(params.userWalletId) { submit(params) })
     }
 
     private suspend fun Raise<PredictionClaimFailure>.submit(params: Params): PredictionClaimReceipt {

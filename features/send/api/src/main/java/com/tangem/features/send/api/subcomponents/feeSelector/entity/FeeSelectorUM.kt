@@ -76,6 +76,15 @@ data class FeeExtraInfo(
     val transactionFeeExtended: TransactionFeeExtended? = null,
     val isNotEnoughFunds: Boolean = false,
     val isFeeTokenSelectedByUser: Boolean = false,
+    val sponsoredFee: SponsoredFeeState = SponsoredFeeState(),
+)
+
+@Immutable
+data class SponsoredFeeState(
+    val isAvailable: Boolean = false,
+    val isSelected: Boolean = false,
+    /** The user's pick of the sponsored fee, kept while the sponsorship is briefly unavailable. */
+    val isSmartGasPickedByUser: Boolean = false,
 )
 
 sealed class FeeNonce {

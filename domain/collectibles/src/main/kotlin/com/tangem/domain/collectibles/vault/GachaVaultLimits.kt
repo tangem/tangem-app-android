@@ -1,7 +1,7 @@
 package com.tangem.domain.collectibles.vault
 
 /**
- * Spending caps the vault enforces on its `hot_delegate`, in USDC base units (6 decimals).
+ * Spending caps the vault enforces on its `session_key`, in USDC base units (6 decimals).
  *
  * [dailyCap] is a UTC-day bucket, not a rolling window, so up to twice its value can legitimately pass in a
  * 24-hour span straddling midnight. The program requires `0 < perSpinCap <= dailyCap` and rejects the rest with

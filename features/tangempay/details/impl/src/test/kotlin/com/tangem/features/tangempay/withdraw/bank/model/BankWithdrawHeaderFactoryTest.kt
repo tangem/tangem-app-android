@@ -101,7 +101,7 @@ internal class BankWithdrawHeaderFactoryTest {
             title = resourceReference(R.string.tangempay_withdraw_bank_confirm_title),
             subtitle = null,
         ),
-        // GIVEN saved individual recipient WHEN header created THEN title is the full display name
+        // GIVEN saved individual recipient WHEN header created THEN title is the full name
         HeaderModel(
             draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1"), recipient = melnikov),
             step = TangemPayBankWithdrawInnerRoute.Amount,
@@ -128,7 +128,7 @@ internal class BankWithdrawHeaderFactoryTest {
             title = resourceReference(R.string.tangempay_withdraw_hub_bank_section_title),
             subtitle = null,
         ),
-        // GIVEN new personal entry with a picked recipient WHEN header created THEN title is the display name
+        // GIVEN new personal entry with a picked recipient WHEN header created THEN title is the full name
         HeaderModel(
             draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, recipient = melnikov),
             step = TangemPayBankWithdrawInnerRoute.Amount,
@@ -153,10 +153,11 @@ internal class BankWithdrawHeaderFactoryTest {
             title = resourceReference(R.string.tangempay_withdraw_hub_to_personal_account),
             subtitle = counter(current = 5, total = 5),
         ),
+        // GIVEN saved recipient with a backend display name WHEN header created THEN title is the beneficiary name
         HeaderModel(
-            draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1"), recipient = primaryChecking),
+            draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1"), recipient = melnikovWithBankName),
             step = TangemPayBankWithdrawInnerRoute.Amount,
-            title = stringReference("Primary checking"),
+            title = stringReference("Andrei Melnikov"),
             subtitle = null,
         ),
     )
@@ -170,8 +171,8 @@ internal class BankWithdrawHeaderFactoryTest {
 
         val arasaka = bankAccount(id = "acc-2", beneficiary = Beneficiary.Business(name = "Arasaka"))
 
-        /** The backend's own display name wins over the name assembled from the beneficiary. */
-        val primaryChecking = melnikov.copy(displayName = "Primary checking")
+        /** The backend builds `display_name` as the name plus the bank, so the bank would show twice. */
+        val melnikovWithBankName = melnikov.copy(displayName = "Andrei Melnikov Test Bank")
 
         fun counter(current: Int, total: Int): TextReference =
             resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(current, total))

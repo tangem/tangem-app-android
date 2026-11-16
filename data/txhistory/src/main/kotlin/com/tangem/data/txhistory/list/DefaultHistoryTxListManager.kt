@@ -4,6 +4,7 @@ package com.tangem.data.txhistory.list
 
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.data.txhistory.fetcher.TX_HISTORY_TAG
 import com.tangem.data.txhistory.list.chain.*
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
@@ -48,9 +49,11 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
     private val tangemPayOnChainHistoryFactory: TangemPayOnChainHistory.Factory,
     private val indexTableOnChainHistoryFactory: IndexTableOnChainHistory.Factory,
     private val txHistoryRepositoryV2: TxHistoryRepositoryV2,
+    private val networkConnectionManager: NetworkConnectionManager,
     @Assisted private val userWalletId: UserWalletId,
     @Assisted private val currency: CryptoCurrency,
     @Assisted private val modelScope: CoroutineScope,
+    @Assisted private val shouldUseCacheWhenOffline: Boolean,
 ) : HistoryTxListManager {
 
     private val actionsFlow: Channel<Action> = Channel()
@@ -140,6 +143,7 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
             userWalletId = userWalletId,
             currency = currency,
             modelScope = modelScope,
+            shouldUseCacheWhenOffline = shouldUseCacheWhenOffline,
         )
         val onChainHistory: OnChainHistory = when (historySources.onChainSource) {
             OnChainSource.BSDK -> bsdkOnChainHistoryFactory.create(env)
@@ -194,7 +198,9 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
             isCryptoPortfolio || isMoneyAccountCurrency() -> txHistoryItemsCountUseCase(userWalletId, currency).fold(
                 ifLeft = { error ->
                     when (error) {
-                        is TxHistoryStateError.DataError -> throw error
+                        is TxHistoryStateError.DataError -> {
+                            if (isCacheShownOffline()) OnChainSource.BSDK else throw error
+                        }
                         is TxHistoryStateError.AddressNotReady -> throw error
                         is TxHistoryStateError.EmptyTxHistories -> OnChainSource.BSDK
                         is TxHistoryStateError.TxHistoryNotImplemented -> OnChainSource.IndexTable
@@ -207,6 +213,8 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
             else -> OnChainSource.IndexTable
         }
     }
+
+    private fun isCacheShownOffline(): Boolean = shouldUseCacheWhenOffline && !networkConnectionManager.isOnlineSync
 
     private suspend fun isMoneyAccountCurrency(): Boolean {
         return moneyAccountCurrency.invokeSync(userWalletId, currency).isSome()
@@ -240,6 +248,7 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
             userWalletId: UserWalletId,
             currency: CryptoCurrency,
             modelScope: CoroutineScope,
+            shouldUseCacheWhenOffline: Boolean,
         ): DefaultHistoryTxListManager
     }
 }

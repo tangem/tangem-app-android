@@ -9,6 +9,7 @@ import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.pushZooming
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
@@ -77,6 +78,14 @@ internal class CollectiblesBlockModel @Inject constructor(
         override val onBack: () -> Unit = bottomSheetNavigation::dismiss
     }
 
+    /**
+     * The wallet picked in the chooser, held until the chooser has finished collapsing: the screen zooms out of
+     * the card, which the sheet still covers while it slides away. The component reports the sheet gone through
+     * [onWalletSheetClosed].
+     */
+    val walletAwaitingSheetClose: StateFlow<UserWalletId?>
+        field = MutableStateFlow<UserWalletId?>(value = null)
+
     private val walletSelectionJob = JobHolder()
 
     fun onClick() {
@@ -128,10 +137,19 @@ internal class CollectiblesBlockModel @Inject constructor(
             .filterNotNull()
             .onEach { walletId ->
                 bottomSheetNavigation.dismiss()
-                openCollectibles(walletId)
+                openWhenSheetClosed(walletId)
             }
             .launchIn(modelScope)
             .saveIn(walletSelectionJob)
+    }
+
+    private fun openWhenSheetClosed(walletId: UserWalletId) {
+        walletAwaitingSheetClose.value = walletId
+    }
+
+    fun onWalletSheetClosed(walletId: UserWalletId) {
+        walletAwaitingSheetClose.value = null
+        modelScope.launch { openCollectibles(walletId) }
     }
 
     private suspend fun openCollectibles(userWalletId: UserWalletId) {
@@ -142,6 +160,9 @@ internal class CollectiblesBlockModel @Inject constructor(
             CollectiblesStartRoute.Main
         }
 
-        router.push(AppRoute.Collectibles(userWalletId = userWalletId, startRoute = startRoute))
+        router.pushZooming(
+            route = AppRoute.Collectibles(userWalletId = userWalletId, startRoute = startRoute),
+            sourceKey = CollectiblesBlockComponent.SHARED_TRANSITION_KEY,
+        )
     }
 }

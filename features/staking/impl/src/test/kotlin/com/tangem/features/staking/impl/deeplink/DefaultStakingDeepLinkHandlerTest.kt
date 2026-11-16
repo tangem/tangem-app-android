@@ -176,6 +176,16 @@ internal class DefaultStakingDeepLinkHandlerTest {
     }
 
     @Test
+    fun `GIVEN non-hex wallet id WHEN created THEN ignored`() = runTest {
+        // Act
+        createHandler(params + (WALLET_ID_KEY to "not-a-hex-id"))
+
+        // Assert
+        verifyNothingPushed()
+        coVerify(exactly = 0) { supplier.getSyncOrNull(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN wallet id of selected wallet WHEN created THEN staking route pushed`() = runTest {
         // Act
         createHandler(params + (WALLET_ID_KEY to wallet.walletId.stringValue))

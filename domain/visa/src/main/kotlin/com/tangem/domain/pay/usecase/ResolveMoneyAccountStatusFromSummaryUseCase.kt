@@ -2,6 +2,7 @@ package com.tangem.domain.pay.usecase
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.MoneyAccountStatusValue
+import com.tangem.domain.models.account.MoneyAccountStatusValue.Onboarding.Activating.Step as ActivatingStep
 import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.model.MoneyAccountActivationState
 import com.tangem.domain.pay.model.TangemPayCustomerState
@@ -20,31 +21,45 @@ class ResolveMoneyAccountStatusFromSummaryUseCase {
                 MoneyAccountStatusValue.Empty
             }
             is TangemPayCustomerState.Former -> {
-                account(state.moneyAccount, summary)
+                account(state.moneyAccount, summary, isFormer = true)
             }
             is TangemPayCustomerState.Accounts,
             -> {
-                account(state.moneyAccount, summary)
+                account(state.moneyAccount, summary, isFormer = false)
             }
         }
     }
 
-    private fun account(state: MoneyAccountActivationState, summary: CustomerSummary): MoneyAccountStatusValue? {
+    private fun account(
+        state: MoneyAccountActivationState,
+        summary: CustomerSummary,
+        isFormer: Boolean,
+    ): MoneyAccountStatusValue? {
         return when (state) {
             MoneyAccountActivationState.NotStarted,
             MoneyAccountActivationState.Unavailable,
             is MoneyAccountActivationState.AwaitingKyc,
-            is MoneyAccountActivationState.Failed,
             -> {
                 MoneyAccountStatusValue.Empty
             }
 
-            MoneyAccountActivationState.Issuing -> {
-                MoneyAccountStatusValue.Onboarding.Activating(
+            is MoneyAccountActivationState.Failed -> if (isFormer) {
+                MoneyAccountStatusValue.Empty
+            } else {
+                MoneyAccountStatusValue.Onboarding.Failed(
                     source = StatusSource.ACTUAL,
                     customerId = summary.customerId,
                 )
             }
+
+            is MoneyAccountActivationState.Issuing -> MoneyAccountStatusValue.Onboarding.Activating(
+                source = StatusSource.ACTUAL,
+                customerId = summary.customerId,
+                step = when (state.step) {
+                    MoneyAccountActivationState.Issuing.Step.ISSUING -> ActivatingStep.ISSUING
+                    MoneyAccountActivationState.Issuing.Step.AWAITING_DEPOSIT -> ActivatingStep.AWAITING_DEPOSIT
+                },
+            )
 
             MoneyAccountActivationState.Deactivated,
             MoneyAccountActivationState.Completed,

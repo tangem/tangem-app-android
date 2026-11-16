@@ -276,15 +276,6 @@ internal class BankWithdrawSourcesObserverTest {
 
         private fun provideTestModels(): List<MoneyNoOptionsModel> = listOf(
             MoneyNoOptionsModel(
-                description = "closed account with balance",
-                value = MoneyAccountStatusValue.Account.Deactivated(
-                    source = StatusSource.ACTUAL,
-                    cryptoCurrency = usdcPolygon,
-                    balance = moneyAccountBalance(),
-                    customerId = "cust_1",
-                ),
-            ),
-            MoneyNoOptionsModel(
                 description = "bank off-ramp channel not granted",
                 value = activeMoneyAccount(token = usdcPolygon, isBankOfframpAvailable = false),
             ),
@@ -306,8 +297,8 @@ internal class BankWithdrawSourcesObserverTest {
                 offramp = offrampOptions(sources = listOf(offrampSource("Base", BASE_CHAIN_ID, USDC_BASE))),
             ),
             MoneyNoOptionsModel(
-                description = "account not created",
-                value = MoneyAccountStatusValue.NotCreated,
+                description = "no account",
+                value = MoneyAccountStatusValue.Empty,
             ),
             MoneyNoOptionsModel(
                 description = "account unavailable",

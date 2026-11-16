@@ -152,10 +152,9 @@ internal class TangemPayDetailsComponent(
             is TangemPayDetailsNavigation.VaBankingDetailsError -> DefaultTangemPayBankingDetailsErrorComponent(
                 appComponentContext = context,
                 params = TangemPayBankingDetailsErrorComponent.Params(
-                    retry = { model.loadBankCredentials(navigation.productInstanceId) },
+                    retry = { model.retryBankCredentials(navigation.productInstanceId) },
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onContactSupport = model::onContactSupportClicked,
-                    onResolved = model::onVaBankingDetailsResolved,
                 ),
             )
             is TangemPayDetailsNavigation.ChooseNetwork -> PaymentChooseNetworkComponent(

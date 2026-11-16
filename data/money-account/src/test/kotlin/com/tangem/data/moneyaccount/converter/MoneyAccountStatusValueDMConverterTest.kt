@@ -10,6 +10,8 @@ import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 
 internal class MoneyAccountStatusValueDMConverterTest {
@@ -36,6 +38,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
             customerId = "customer-1",
             productInstanceId = "instance-1",
             isBankOfframpAvailable = true,
+            error = null,
         )
 
         // Act
@@ -55,6 +58,62 @@ internal class MoneyAccountStatusValueDMConverterTest {
 
         // Assert
         assertThat(restored).isEqualTo(MoneyAccountStatusValue.Error.Unavailable)
+    }
+
+    @Test
+    fun `GIVEN failed onboarding WHEN cached and restored THEN failed from cache`() {
+        // Arrange
+        val failed = MoneyAccountStatusValue.Onboarding.Failed(
+            source = StatusSource.ACTUAL,
+            customerId = "customer-1",
+        )
+
+        // Act
+        val cached = converter.convert(failed)
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = cached)
+
+        // Assert
+        assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Failed(customerId = "customer-1"))
+        assertThat(restored).isEqualTo(failed.copy(source = StatusSource.CACHE))
+    }
+
+    @ParameterizedTest
+    @EnumSource(MoneyAccountStatusValue.Onboarding.Activating.Step::class)
+    fun `GIVEN activating onboarding WHEN cached and restored THEN step kept from cache`(
+        step: MoneyAccountStatusValue.Onboarding.Activating.Step,
+    ) {
+        // Arrange
+        val activating = MoneyAccountStatusValue.Onboarding.Activating(
+            source = StatusSource.ACTUAL,
+            customerId = "customer-1",
+            step = step,
+        )
+
+        // Act
+        val cached = converter.convert(activating)
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = cached)
+
+        // Assert
+        assertThat(restored).isEqualTo(activating.copy(source = StatusSource.CACHE))
+    }
+
+    @Test
+    fun `GIVEN active account with refresh error WHEN cached and restored THEN error dropped`() {
+        // Arrange
+        val active = MoneyAccountStatusValue.Account.Active(
+            source = StatusSource.ONLY_CACHE,
+            cryptoCurrency = cryptoCurrency,
+            balance = null,
+            customerId = "customer-1",
+            productInstanceId = "instance-1",
+            error = MoneyAccountStatusValue.Error.NotSynced,
+        )
+
+        // Act
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = converter.convert(active))
+
+        // Assert
+        assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE, error = null))
     }
 
     private companion object {

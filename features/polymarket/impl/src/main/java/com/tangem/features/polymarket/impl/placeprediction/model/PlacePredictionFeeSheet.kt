@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 internal class PlacePredictionFeeSheet(
     private val uiState: StateFlow<PlacePredictionUM>,
     scope: CoroutineScope,
+    private val heading: PredictionFeeSheetUM.Heading,
 ) {
 
     val navigation = SlotNavigation<Unit>()
@@ -46,6 +47,7 @@ internal class PlacePredictionFeeSheet(
             quote = content.signable.quote,
             slippage = state.slippage,
             tokenSymbol = state.collateral.tokenSymbol,
+            heading = heading,
         )
     }
 }

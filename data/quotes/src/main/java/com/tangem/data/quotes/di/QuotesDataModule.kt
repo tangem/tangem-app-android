@@ -5,6 +5,7 @@ import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.quotes.multi.DefaultMultiQuoteUpdater
 import com.tangem.data.quotes.repository.DefaultQuotesRepository
 import com.tangem.data.quotes.store.DefaultQuotesStatusesStore
@@ -16,6 +17,7 @@ import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
+import com.tangem.domain.quotes.GetFiatUSDRateUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
@@ -61,8 +63,11 @@ internal object QuotesDataModule {
 
     @Singleton
     @Provides
-    fun providesQuotesRepository(quotesStatusesStore: QuotesStatusesStore): QuotesRepository {
-        return DefaultQuotesRepository(quotesStatusesStore = quotesStatusesStore)
+    fun providesQuotesRepository(
+        quotesStatusesStore: QuotesStatusesStore,
+        quotesFetcher: QuotesFetcher,
+    ): QuotesRepository {
+        return DefaultQuotesRepository(quotesStatusesStore = quotesStatusesStore, quotesFetcher = quotesFetcher)
     }
 
     @Singleton
@@ -85,6 +90,12 @@ internal object QuotesDataModule {
     @Provides
     fun provideGetCurrencyUSDQuoteUseCase(quotesRepository: QuotesRepository): GetCurrencyUSDQuoteUseCase {
         return GetCurrencyUSDQuoteUseCase(quotesRepository)
+    }
+
+    @Singleton
+    @Provides
+    fun provideGetFiatUSDRateUseCase(quotesRepository: QuotesRepository): GetFiatUSDRateUseCase {
+        return GetFiatUSDRateUseCase(quotesRepository)
     }
 
     @Singleton

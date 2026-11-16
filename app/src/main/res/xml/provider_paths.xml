@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <files-path name="files" path="/"/>
+    <files-path name="logs" path="logs/" />
+    <!-- The whole cache stays shared: the Usedesk SDK copies chat attachments into the cache root -->
     <cache-path name="shared_images" path="." />
 </paths>

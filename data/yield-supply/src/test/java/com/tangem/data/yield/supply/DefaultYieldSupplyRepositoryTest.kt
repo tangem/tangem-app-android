@@ -59,8 +59,16 @@ internal class DefaultYieldSupplyRepositoryTest {
     private val appPreferencesStore: AppPreferencesStore = mockk()
     private val growPreferencesKeys = GrowPreferencesKeys()
 
-    private val repository = createRepository(isMerklIncentivesEnabled = false)
-    private val incentivisedRepository = createRepository(isMerklIncentivesEnabled = true)
+    private val repository = DefaultYieldSupplyRepository(
+        yieldSupplyApi = yieldSupplyApi,
+        yieldIncentivesApi = yieldIncentivesApi,
+        store = store,
+        walletManagersFacade = walletManagersFacade,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+        analyticsExceptionHandler = analyticsExceptionHandler,
+        appPreferencesStore = appPreferencesStore,
+        growPreferencesKeys = growPreferencesKeys,
+    )
 
     private val userWalletId = UserWalletId("abcdef012345")
     private val token = token()
@@ -110,23 +118,7 @@ internal class DefaultYieldSupplyRepositoryTest {
     }
 
     @Test
-    fun `GIVEN api returns markets WHEN updateMarkets THEN stores dtos and returns them with network ids`() = runTest {
-        // Arrange
-        val dto = marketDto(chainId = 1)
-        coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
-            YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"),
-        )
-
-        // Act
-        val result = repository.updateMarkets()
-
-        // Assert
-        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto).copy(backendId = "ethereum"))
-        coVerify(exactly = 1) { store.store(listOf(dto)) }
-    }
-
-    @Test
-    fun `GIVEN incentives enabled WHEN updateMarkets THEN the campaign overlays the plain markets`() = runTest {
+    fun `GIVEN incentivised markets WHEN updateMarkets THEN the campaign overlays the plain markets`() = runTest {
         // Arrange — the same token in both lists; the incentivised row carries the campaign fields on top
         val plain = marketDto(chainId = 1)
         val incentivised = marketDto(chainId = 1, hasActiveCampaign = true)
@@ -137,7 +129,7 @@ internal class DefaultYieldSupplyRepositoryTest {
         )
 
         // Act
-        val result = incentivisedRepository.updateMarkets()
+        val result = repository.updateMarkets()
 
         // Assert
         assertThat(result).containsExactly(YieldMarketTokenConverter.convert(incentivised).copy(backendId = "ethereum"))
@@ -163,7 +155,7 @@ internal class DefaultYieldSupplyRepositoryTest {
         } returns success(YieldMarketsResponse(marketDtos = emptyList(), lastUpdated = "now"))
 
         // Act
-        incentivisedRepository.updateMarkets()
+        repository.updateMarkets()
 
         // Assert
         val testnetIds = testnetChainIds.map(Int::toString)
@@ -188,7 +180,7 @@ internal class DefaultYieldSupplyRepositoryTest {
             )
 
             // Act
-            val result = incentivisedRepository.updateMarkets()
+            val result = repository.updateMarkets()
 
             // Assert — the incentivised row wins where the two overlap
             assertThat(result).containsExactly(
@@ -211,7 +203,7 @@ internal class DefaultYieldSupplyRepositoryTest {
                     as ApiResponse<YieldMarketsResponse>
 
             // Act
-            val error = runCatching { incentivisedRepository.updateMarkets() }.exceptionOrNull()
+            val error = runCatching { repository.updateMarkets() }.exceptionOrNull()
 
             // Assert
             assertThat(error).isNotNull()
@@ -230,7 +222,7 @@ internal class DefaultYieldSupplyRepositoryTest {
             )
 
             // Act
-            val result = incentivisedRepository.updateMarkets()
+            val result = repository.updateMarkets()
 
             // Assert
             assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto).copy(backendId = "ethereum"))
@@ -266,68 +258,13 @@ internal class DefaultYieldSupplyRepositoryTest {
             )
 
             // Act
-            val result = incentivisedRepository.updateMarkets()
+            val result = repository.updateMarkets()
 
             // Assert
             assertThat(result).containsExactly(
                 YieldMarketTokenConverter.convert(incentivised).copy(backendId = "ethereum"),
             )
         }
-
-    @Test
-    fun `GIVEN incentives disabled WHEN updateMarkets THEN the incentivised endpoint is not called`() = runTest {
-        // Arrange
-        coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
-            YieldMarketsResponse(marketDtos = listOf(marketDto(chainId = 1)), lastUpdated = "now"),
-        )
-
-        // Act
-        repository.updateMarkets()
-
-        // Assert
-        coVerify(exactly = 0) { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) }
-    }
-
-    @Test
-    fun `GIVEN incentives disabled WHEN updateMarkets THEN Monad markets are not requested`() = runTest {
-        // Arrange
-        val chains = slot<String>()
-        coEvery { yieldSupplyApi.getYieldMarkets(capture(chains)) } returns ApiResponse.Success(
-            YieldMarketsResponse(marketDtos = listOf(marketDto(chainId = 1)), lastUpdated = "now"),
-        )
-
-        // Act
-        repository.updateMarkets()
-
-        // Assert
-        assertThat(chains.captured.split(",")).doesNotContain(Blockchain.Monad.getChainId().toString())
-    }
-
-    @Test
-    fun `GIVEN incentives disabled WHEN getCachedMarkets THEN cached Monad markets are dropped`() = runTest {
-        // Arrange
-        val monadChainId = requireNotNull(Blockchain.Monad.getChainId())
-        coEvery { store.getSyncOrNull() } returns listOf(marketDto(chainId = 1), marketDto(chainId = monadChainId))
-
-        // Act
-        val result = repository.getCachedMarkets()
-
-        // Assert
-        assertThat(result.map { it.chainId }).containsExactly(1)
-    }
-
-    @Test
-    fun `GIVEN incentives enabled WHEN getCachedMarkets THEN cached Monad markets are kept`() = runTest {
-        // Arrange
-        val monadChainId = requireNotNull(Blockchain.Monad.getChainId())
-        coEvery { store.getSyncOrNull() } returns listOf(marketDto(chainId = 1), marketDto(chainId = monadChainId))
-
-        // Act
-        val result = incentivisedRepository.getCachedMarkets()
-
-        // Assert
-        assertThat(result.map { it.chainId }).containsExactly(1, monadChainId)
-    }
 
     @Test
     fun `GIVEN store flow WHEN getMarketsFlow THEN emits enriched domain`() = runTest {
@@ -366,19 +303,6 @@ internal class DefaultYieldSupplyRepositoryTest {
 
         // Assert
         assertThat(error).isInstanceOf(IllegalStateException::class.java)
-    }
-
-    @Test
-    fun `GIVEN incentives disabled WHEN getTokenStatus for Monad token THEN throws without calling api`() = runTest {
-        // Arrange
-        val monadToken = token(rawId = "monad")
-
-        // Act
-        val error = runCatching { repository.getTokenStatus(monadToken) }.exceptionOrNull()
-
-        // Assert
-        assertThat(error).isInstanceOf(IllegalStateException::class.java)
-        coVerify(exactly = 0) { yieldSupplyApi.getYieldTokenStatus(any(), any()) }
     }
 
     @Test
@@ -691,18 +615,6 @@ internal class DefaultYieldSupplyRepositoryTest {
         .filterNot { it.isTestnet() }
         .mapNotNull { it.getChainId() }
         .joinToString(",")
-
-    private fun createRepository(isMerklIncentivesEnabled: Boolean) = DefaultYieldSupplyRepository(
-        yieldSupplyApi = yieldSupplyApi,
-        yieldIncentivesApi = yieldIncentivesApi,
-        store = store,
-        walletManagersFacade = walletManagersFacade,
-        dispatchers = TestingCoroutineDispatcherProvider(),
-        analyticsExceptionHandler = analyticsExceptionHandler,
-        appPreferencesStore = appPreferencesStore,
-        growPreferencesKeys = growPreferencesKeys,
-        isMerklIncentivesEnabled = isMerklIncentivesEnabled,
-    )
 
     private fun chartResponse() = YieldTokenChartResponse(
         underlying = "USDT",

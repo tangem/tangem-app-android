@@ -70,7 +70,6 @@ class CardContextInterceptor @AssistedInject constructor(
             ProductType.Wallet2 -> AnalyticsParam.ProductType.Wallet2.value
             ProductType.Ring -> AnalyticsParam.ProductType.Ring.value
             ProductType.Start2Coin -> AnalyticsParam.ProductType.Start2Coin.value
-            ProductType.Visa -> AnalyticsParam.ProductType.Visa.value
             else -> if (DemoHelper.isDemoCard(scanResponse)) getDemoCardProductType() else "Other"
         }
     }

@@ -466,6 +466,152 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
 
     // endregion
 
+    // region EVM gasless swap (onSwapEvmGaslessDex)
+
+    @Test
+    fun `GIVEN EVM gasless fee WHEN onSwap THEN the swap is relayed with that fee instead of a regular send`() =
+        runTest {
+            // Arrange
+            val fromStatus = evmTokenStatus()
+            val gaslessFee = evmGaslessFeeExtended(fromStatus.status)
+            val swapTx = swapTxUncompiled()
+            coEvery {
+                createTransactionUseCase(
+                    amount = any(), fee = any(), memo = any(),
+                    destination = any(), userWalletId = any(), network = any(), txExtras = any(),
+                )
+            } returns swapTx.right()
+            coEvery {
+                createAndSendGaslessTransactionUseCase(userWallet = any(), transactionData = any(), fee = any())
+            } returns SWAP_HASH.right()
+
+            // Act
+            val result = onSwapEvmGasless(fromStatus, swapFee = evmGaslessSwapFee(gaslessFee, fromStatus.status))
+
+            // Assert
+            assertThat((result as? SwapTransactionState.TxSent)?.txHash).isEqualTo(SWAP_HASH)
+            val userWallet = fromStatus.userWallet
+            coVerify(exactly = 1) {
+                createAndSendGaslessTransactionUseCase(
+                    userWallet = userWallet,
+                    transactionData = swapTx,
+                    fee = gaslessFee,
+                )
+            }
+            coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
+            coVerify(exactly = 0) {
+                sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
+            }
+        }
+
+    @Test
+    fun `GIVEN EVM gasless send fails WHEN onSwap THEN returns TransactionError`() = runTest {
+        // Arrange
+        val fromStatus = evmTokenStatus()
+        val sendError = SendTransactionError.UnknownError(Exception("relayer"))
+        coEvery {
+            createTransactionUseCase(
+                amount = any(), fee = any(), memo = any(),
+                destination = any(), userWalletId = any(), network = any(), txExtras = any(),
+            )
+        } returns swapTxUncompiled().right()
+        coEvery {
+            createAndSendGaslessTransactionUseCase(userWallet = any(), transactionData = any(), fee = any())
+        } returns sendError.left()
+
+        // Act
+        val result = onSwapEvmGasless(
+            fromStatus,
+            swapFee = evmGaslessSwapFee(evmGaslessFeeExtended(fromStatus.status), fromStatus.status),
+        )
+
+        // Assert
+        assertThat(result).isEqualTo(SwapTransactionState.Error.TransactionError(sendError))
+    }
+
+    @Test
+    fun `GIVEN EVM gasless swap tx cannot be built WHEN onSwap THEN returns UnknownError without sending`() =
+        runTest {
+            // Arrange
+            val fromStatus = evmTokenStatus()
+            coEvery {
+                createTransactionUseCase(
+                    amount = any(), fee = any(), memo = any(),
+                    destination = any(), userWalletId = any(), network = any(), txExtras = any(),
+                )
+            } returns IllegalStateException("tx build failed").left()
+
+            // Act
+            val result = onSwapEvmGasless(
+                fromStatus,
+                swapFee = evmGaslessSwapFee(evmGaslessFeeExtended(fromStatus.status), fromStatus.status),
+            )
+
+            // Assert
+            assertThat(result).isEqualTo(SwapTransactionState.Error.UnknownError)
+            coVerify(exactly = 0) {
+                createAndSendGaslessTransactionUseCase(userWallet = any(), transactionData = any(), fee = any())
+            }
+        }
+
+    private suspend fun onSwapEvmGasless(fromStatus: SwapCurrencyStatus, swapFee: SwapFee): SwapTransactionState =
+        sut.onSwap(
+            fromSwapCurrencyStatus = fromStatus,
+            toSwapCurrencyStatus = hotStatus(),
+            swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
+            swapData = evmTokenDexSwapData(),
+            amountToSwap = "1.0",
+            balanceStatus = SwapBalanceStatus.Sufficient,
+            fee = swapFee,
+            expressOperationType = ExpressOperationType.SWAP,
+            isTangemPayWithdrawal = false,
+        )
+
+    private fun evmTokenStatus(): SwapCurrencyStatus {
+        val hotWallet = mockk<UserWallet.Hot>(relaxed = true)
+        return buildSwapCurrencyStatus(
+            networkRawId = ethNetwork,
+            contractAddress = "0xUsdt",
+            isCoin = false,
+            decimals = 6,
+        ).let { SwapCurrencyStatus(userWallet = hotWallet, status = it.status, account = it.account) }
+    }
+
+    /** A token swap: the gasless executor calls with value = 0. */
+    private fun evmTokenDexSwapData(): SwapDataModel = SwapDataModel(
+        toTokenAmount = SwapAmount(BigDecimal("0.5"), 18),
+        transaction = ExpressTransactionModel.DEX(
+            fromAmount = SwapAmount(BigDecimal("1.0"), 6),
+            toAmount = SwapAmount(BigDecimal("0.5"), 18),
+            txValue = "0",
+            txId = "tx-id",
+            txTo = DEX_ROUTER,
+            txExtraId = null,
+            txFrom = WALLET_ADDRESS,
+            txData = "0xdata",
+            otherNativeFeeWei = null,
+            gas = BigInteger.valueOf(150_000L),
+            allowanceContract = null,
+        ),
+    )
+
+    private fun evmGaslessFeeExtended(feeTokenStatus: CryptoCurrencyStatus) = TransactionFeeExtended(
+        transactionFee = TransactionFee.Single(normal = EVM_TOKEN_FEE),
+        feeTokenId = feeTokenStatus.currency.id,
+        gaslessProtocolData = GaslessProtocolData.Evm,
+    )
+
+    private fun evmGaslessSwapFee(feeExtended: TransactionFeeExtended, feeTokenStatus: CryptoCurrencyStatus) =
+        SwapFee(
+            fee = EVM_TOKEN_FEE,
+            transactionFeeResult = TransactionFeeResult.LoadedExtended(feeExtended),
+            selectedFeeToken = feeTokenStatus,
+            otherNativeFee = BigDecimal.ZERO,
+            feeBucket = FeeBucket.MARKET,
+        )
+
+    // endregion
+
     // region Tron gasless swap (onSwapTronGaslessDex)
 
     @Test
@@ -676,6 +822,9 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
         )
 
         val MIN_FEE: Fee = feeOf(BigDecimal("0.001"))
+        val EVM_TOKEN_FEE: Fee = Fee.Common(
+            amount = Amount(currencySymbol = "USDT", value = BigDecimal("0.17"), decimals = 6),
+        )
         val NORMAL_FEE: Fee = feeOf(BigDecimal("0.002"))
         val PRIORITY_FEE: Fee = feeOf(BigDecimal("0.003"))
 

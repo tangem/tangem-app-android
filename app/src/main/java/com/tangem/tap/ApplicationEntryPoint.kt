@@ -14,7 +14,6 @@ import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.core.analytics.AnalyticsHandlersInitializer
-import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.log.TangemLoggingInitializer
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import dagger.hilt.EntryPoint
@@ -33,8 +32,6 @@ internal interface ApplicationEntryPoint {
     fun getGetAppThemeModeUseCase(): GetAppThemeModeUseCase
 
     fun getTangemLoggingInitializer(): TangemLoggingInitializer
-
-    fun getBlockchainExceptionHandler(): BlockchainExceptionHandler
 
     fun getWorkerFactory(): HiltWorkerFactory
 

@@ -2,10 +2,13 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.VirtualAccountRequisitesBottomSheetTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 
 class VirtualAccountRequisitesBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<VirtualAccountRequisitesBottomSheetPageObject>(semanticsProvider = semanticsProvider) {
@@ -28,6 +31,26 @@ class VirtualAccountRequisitesBottomSheetPageObject(semanticsProvider: Semantics
 
     val depositLimitSubtitle: KNode = child {
         hasTestTag(VirtualAccountRequisitesBottomSheetTestTags.DEPOSIT_LIMIT_SUBTITLE)
+        useUnmergedTree = true
+    }
+
+    val accountDetailsTitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_va_account_details))
+        useUnmergedTree = true
+    }
+
+    val swiftWarning: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_bank_transfer_swift_warning))
+        useUnmergedTree = true
+    }
+
+    fun feeTitle(feeType: String): KNode = child {
+        hasTestTag(TangemPayTestTags.vaDepositFeeTitle(feeType))
+        useUnmergedTree = true
+    }
+
+    fun feeValue(feeType: String): KNode = child {
+        hasTestTag(TangemPayTestTags.vaDepositFeeValue(feeType))
         useUnmergedTree = true
     }
 

@@ -9,6 +9,7 @@ import com.tangem.blockchain.blockchains.ethereum.gasless.EthereumGaslessDataPro
 import com.tangem.blockchain.blockchains.ethereum.models.EIP7702AuthorizationData
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
@@ -39,9 +40,11 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.mapToGaslessSendError
 import com.tangem.domain.transaction.models.Eip7702Authorization
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessTransactionData
+import com.tangem.domain.transaction.models.GaslessYieldWithdraw
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigInteger
@@ -75,7 +78,7 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                 val context = prepareGaslessContext(userWallet, uncompiledTxDataList, fee)
                 val signedData = signGaslessTransactionByUser(userWallet, context)
                 signAndSendTransactionOnBackend(context, signedData).also {
-                    if (fee.gaslessFeePlan.upgradesYieldModule()) {
+                    if (uncompiledTxDataList.upgradesYieldModule() || fee.gaslessFeePlan.upgradesYieldModule()) {
                         walletManagersFacade.resetYieldSendUpgradeDecision(
                             userWalletId = userWallet.walletId,
                             network = context.currency.network,
@@ -151,8 +154,9 @@ class CreateAndSendEvmGaslessTransactionUseCase(
             calls = calls,
             feeObj = feeObj,
             nonce = gaslessContractNonce,
-            plan = fee.gaslessFeePlan,
+            plan = unwrapFeePlanIfNeeded(plan = fee.gaslessFeePlan, transactionDataList = transactionDataList),
             withdrawGasLimit = fee.withdrawGasLimit,
+            approveGasLimit = fee.approveGasLimit,
         )
 
         val chainId = gaslessTransactionRepository.getChainIdForNetwork(currency.network)
@@ -367,7 +371,7 @@ class CreateAndSendEvmGaslessTransactionUseCase(
      * Discriminated union of the gasless transaction payload to sign and send.
      *
      * [Single] carries exactly one user call. [Batch] carries several user calls in execution order,
-     * followed by the yield-withdraw call when [GaslessFeePlan.TokenPayWithYieldWithdraw] is resolved.
+     * wrapped by the fee-plan sub-calls of [GaslessFeePlan.TokenPay].
      */
     internal sealed interface GaslessPayload {
         data class Single(val data: GaslessTransactionData) : GaslessPayload
@@ -422,55 +426,80 @@ class CreateAndSendEvmGaslessTransactionUseCase(
     internal companion object {
 
         /**
-         * Assembles the [GaslessPayload] from already-built domain objects and the resolved fee plan.
-         *
-         * Dispatch rules:
-         * - [GaslessFeePlan.TokenPayWithYieldWithdraw] → [GaslessPayload.Batch]: the yield-withdraw
-         *   call is appended after the user's [calls] so that the fee token balance is topped up
-         *   before the gasless service processes the fee.
-         * - [GaslessFeePlan.TokenPay] or `null` (plan not explicitly resolved) → [GaslessPayload.Single]
-         *   for one call, [GaslessPayload.Batch] of [calls] for several.
-         * - [GaslessFeePlan.NativePay] → error: native-pay fees must never reach this use case
-         *   (they are handled by the standard send path).
+         * The batch runs `[approve, calls, withdraw]`: [calls] spend the allowance granted by the approve call,
+         * and the withdraw call tops up the fee token before the fee is charged.
          */
+        @Suppress("LongParameterList")
         internal fun assembleGaslessPayload(
             calls: List<GaslessTransactionData.Transaction>,
             feeObj: GaslessTransactionData.Fee,
             nonce: BigInteger,
             plan: GaslessFeePlan?,
             withdrawGasLimit: BigInteger?,
+            approveGasLimit: BigInteger?,
         ): GaslessPayload {
             require(calls.isNotEmpty()) { "At least one call is required for a gasless transaction" }
-            val withdrawTx = when (plan) {
-                is GaslessFeePlan.TokenPayWithYieldWithdraw -> GaslessTransactionData.Transaction(
-                    to = plan.yieldModuleAddress,
-                    value = BigInteger.ZERO,
-                    gasLimit = withdrawGasLimit
-                        ?: error("Withdraw gas limit is required for a yield-withdraw batch"),
-                    data = plan.withdrawCallData.data,
-                )
-                is GaslessFeePlan.TokenPay, null -> null
+            val tokenPay = when (plan) {
+                is GaslessFeePlan.TokenPay -> plan
                 is GaslessFeePlan.NativePay -> error("NativePay must not reach the gasless send path")
+                null -> null
             }
+            val transactions = listOfNotNull(tokenPay?.approval?.toApproveTransaction(approveGasLimit)) +
+                calls +
+                listOfNotNull(tokenPay?.yieldWithdraw?.toWithdrawTransaction(withdrawGasLimit))
 
-            return if (calls.size == 1 && withdrawTx == null) {
+            return if (transactions.size == 1) {
                 GaslessPayload.Single(
-                    GaslessTransactionData(transaction = calls.single(), fee = feeObj, nonce = nonce),
+                    GaslessTransactionData(transaction = transactions.single(), fee = feeObj, nonce = nonce),
                 )
             } else {
                 GaslessPayload.Batch(
-                    GaslessBatchTransactionData(
-                        transactions = calls + listOfNotNull(withdrawTx),
-                        fee = feeObj,
-                        nonce = nonce,
-                    ),
+                    GaslessBatchTransactionData(transactions = transactions, fee = feeObj, nonce = nonce),
                 )
             }
         }
 
+        private fun GaslessApproval.toApproveTransaction(gasLimit: BigInteger?) = GaslessTransactionData.Transaction(
+            to = approvalTransaction.destinationAddress,
+            value = BigInteger.ZERO,
+            gasLimit = gasLimit ?: error("Approve gas limit is required for an approve batch"),
+            data = (approvalTransaction.extras as? EthereumTransactionExtras)?.callData?.data
+                ?: error("Approve call data is required"),
+        )
+
+        private fun GaslessYieldWithdraw.toWithdrawTransaction(gasLimit: BigInteger?) =
+            GaslessTransactionData.Transaction(
+                to = moduleAddress,
+                value = BigInteger.ZERO,
+                gasLimit = gasLimit ?: error("Withdraw gas limit is required for a yield-withdraw batch"),
+                data = callData.data,
+            )
+
+        /**
+         * The yield module is one per wallet: when a user call already upgrades it, the fee withdraw, which runs after
+         * the user calls, drops its own upgrade instead of upgrading the module twice in one batch.
+         */
+        internal fun unwrapFeePlanIfNeeded(
+            plan: GaslessFeePlan?,
+            transactionDataList: List<TransactionData.Uncompiled>,
+        ): GaslessFeePlan? {
+            val tokenPay = plan as? GaslessFeePlan.TokenPay ?: return plan
+            val withdraw = tokenPay.yieldWithdraw ?: return plan
+            if (!transactionDataList.upgradesYieldModule()) return plan
+
+            return tokenPay.copy(
+                yieldWithdraw = withdraw.copy(callData = withdraw.callData.unwrapYieldModuleUpgrade()),
+            )
+        }
+
         internal fun GaslessFeePlan?.upgradesYieldModule(): Boolean {
-            val withdrawCallData = (this as? GaslessFeePlan.TokenPayWithYieldWithdraw)?.withdrawCallData
+            val withdrawCallData = (this as? GaslessFeePlan.TokenPay)?.yieldWithdraw?.callData
             return withdrawCallData is EthereumYieldSupplyUpgradeToAndCallCallData
+        }
+
+        private fun List<TransactionData.Uncompiled>.upgradesYieldModule(): Boolean = any { transactionData ->
+            val callData = (transactionData.extras as? EthereumTransactionExtras)?.callData
+            callData is EthereumYieldSupplyUpgradeToAndCallCallData
         }
 
         fun BigInteger.toFormattedHex(bytes: Int): String {
@@ -483,7 +512,8 @@ class CreateAndSendEvmGaslessTransactionUseCase(
          * - Yield-mode calls ([isCalledOnDestination]): the call runs against
          *   [TransactionData.Uncompiled.destinationAddress] — the user's yield module (send, swap, init, enter,
          *   exit, withdraw, Merkl claim, module upgrade), the yield factory (deploy) or the token contract
-         *   (approve). For a yield-supply send, `send(token, dest, amount)` is a method ON the module and the
+         *   (approve), or the DEX router for a compiled swap call ([CompiledSmartContractCallData]).
+         *   For a yield-supply send, `send(token, dest, amount)` is a method ON the module and the
          *   recipient is encoded inside the call data; `destinationAddress` is patched to the module in
          *   `DefaultTransactionRepository.createTransaction`. Targeting the recipient instead reverts the whole
          *   batch with GAS_ESTIMATION_FAILED / require(false).
@@ -506,6 +536,7 @@ class CreateAndSendEvmGaslessTransactionUseCase(
         private fun SmartContractCallData.isCalledOnDestination(): Boolean {
             if (this is EthereumYieldSupplyUpgradeToAndCallCallData) return true
             return when (unwrapYieldModuleUpgrade()) {
+                is CompiledSmartContractCallData,
                 is EthereumYieldSupplySendCallData,
                 is EthereumYieldSupplySwapCallData,
                 is EthereumYieldSupplyDeployCallData,

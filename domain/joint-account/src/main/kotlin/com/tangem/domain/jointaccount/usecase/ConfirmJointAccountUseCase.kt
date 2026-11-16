@@ -15,7 +15,6 @@ import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
-import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.supplier.find
@@ -121,31 +120,20 @@ class ConfirmJointAccountUseCase(
         }
 
         val owners = jointAccount.members.map(JointAccount.Member::address)
-        val computed = SafeSingleton.entries
-            .map { singleton ->
-                // A composition no Safe can be deployed from is a distinct failure, not a mismatch
-                safeAddressCalculator.compute(
-                    owners = owners,
-                    threshold = jointAccount.threshold,
-                    singleton = singleton,
+        // A composition no Safe can be deployed from is a distinct failure, not a mismatch
+        val computed = safeAddressCalculator.compute(owners = owners, threshold = jointAccount.threshold)
+            .mapLeft { addressError ->
+                refused(
+                    error = JointAccountFlowError.Failed(cause = IllegalStateException(addressError.toString())),
+                    reason = "the Safe address does not compute: $addressError",
                 )
-                    .mapLeft { addressError ->
-                        refused(
-                            error = JointAccountFlowError.Failed(
-                                cause = IllegalStateException(addressError.toString()),
-                            ),
-                            reason = "the Safe address does not compute under $singleton: $addressError",
-                        )
-                    }
-                    .bind()
             }
+            .bind()
 
-        val isConfirmed = computed.any { it.equals(backendAddress, ignoreCase = true) }
-
-        ensure(isConfirmed) {
+        ensure(computed.equals(backendAddress, ignoreCase = true)) {
             refused(
                 error = JointAccountConfirmationError.AddressMismatch,
-                reason = "the announced Safe address $backendAddress is none of ${computed.joinToString()}, " +
+                reason = "the announced Safe address $backendAddress is not $computed, " +
                     "computed from ${owners.size} owners and threshold ${jointAccount.threshold}",
                 // Both addresses are the whole diagnostic, and the sanitizer replaces any hex run of 8 or more
                 // characters in the exported log file — the only build a user can send us logs from

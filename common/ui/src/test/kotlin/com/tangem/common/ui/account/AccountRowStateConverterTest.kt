@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.models.StatusSource
@@ -12,6 +13,7 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.Account.Personal.Companion.createMainAccount
+import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -101,7 +103,11 @@ internal class AccountRowStateConverterTest {
             val actual = accountStatus.account.toAvatarState()
 
             // Assert
-            assertThat((actual as TangemAvatar.UiState.Account).color).isEqualTo(model.expected)
+            val expected = TangemAvatar.UiState.Account(
+                imageVector = CryptoPortfolioIcon.Icon.Star.toAvatarIcon(),
+                color = model.expected,
+            )
+            assertThat(actual).isEqualTo(expected)
         }
 
         private fun provideTestModels() = listOf(
@@ -118,6 +124,66 @@ internal class AccountRowStateConverterTest {
             ColorModel(CryptoPortfolioIcon.Color.UFOGreen, TangemAvatar.FillColor.UfoGreen),
             ColorModel(CryptoPortfolioIcon.Color.VitalGreen, TangemAvatar.FillColor.VitalGreen),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AvatarGlyph {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN account icon and pending flag WHEN toAvatarState THEN avatar matches`(model: GlyphModel) {
+            // Arrange
+            val account = account(name = model.name, icon = model.icon)
+
+            // Act
+            val actual = account.toAvatarState(hasPendingOperation = model.hasPendingOperation)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            GlyphModel(
+                name = AccountName.DefaultMain,
+                icon = CryptoPortfolioIcon.Icon.Letter,
+                hasPendingOperation = false,
+                expected = TangemAvatar.UiState.Account(
+                    letter = AccountNameUM.DefaultMain.value,
+                    color = TangemAvatar.FillColor.AzureBlue,
+                ),
+            ),
+            GlyphModel(
+                name = AccountName("Savings").getOrNull()!!,
+                icon = CryptoPortfolioIcon.Icon.Letter,
+                hasPendingOperation = true,
+                expected = TangemAvatar.UiState.Account(
+                    letter = stringReference("Savings"),
+                    color = TangemAvatar.FillColor.AzureBlue,
+                    hasIndicator = true,
+                ),
+            ),
+            GlyphModel(
+                name = AccountName.DefaultMain,
+                icon = CryptoPortfolioIcon.Icon.Star,
+                hasPendingOperation = true,
+                expected = TangemAvatar.UiState.Account(
+                    imageVector = CryptoPortfolioIcon.Icon.Star.toAvatarIcon(),
+                    color = TangemAvatar.FillColor.AzureBlue,
+                    hasIndicator = true,
+                ),
+            ),
+        )
+
+        private fun account(name: AccountName, icon: CryptoPortfolioIcon.Icon): Account.Personal {
+            val mainAccount = createMainAccount(userWalletId)
+            return Account.Personal(
+                accountId = mainAccount.accountId,
+                accountName = name,
+                icon = CryptoPortfolioIcon.ofCustomAccount(value = icon, color = CryptoPortfolioIcon.Color.Azure),
+                derivationIndex = mainAccount.derivationIndex,
+            )
+        }
     }
 
     private fun accountStatus(
@@ -168,6 +234,13 @@ internal class AccountRowStateConverterTest {
         val totalFiatBalance: TotalFiatBalance,
         val values: List<CryptoCurrencyStatus.Value>,
         val expected: KClass<out TangemAccountRow.State>,
+    )
+
+    data class GlyphModel(
+        val name: AccountName,
+        val icon: CryptoPortfolioIcon.Icon,
+        val hasPendingOperation: Boolean,
+        val expected: TangemAvatar.UiState,
     )
 
     data class ColorModel(val color: CryptoPortfolioIcon.Color, val expected: TangemAvatar.FillColor)

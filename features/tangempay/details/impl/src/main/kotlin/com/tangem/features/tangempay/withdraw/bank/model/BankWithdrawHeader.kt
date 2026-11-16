@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.toFullName
 
 internal data class BankWithdrawHeaderUM(
     val title: TextReference,
@@ -42,7 +43,7 @@ internal object BankWithdrawHeaderFactory {
 
     private fun recipientTitle(draft: BankWithdrawDraft): TextReference {
         val recipient = draft.recipient
-        if (recipient != null) return stringReference(recipient.displayName)
+        if (recipient != null) return stringReference(recipient.details.beneficiary.toFullName())
         return when (draft.entry) {
             BankWithdrawEntry.NewPersonal -> resourceReference(R.string.tangempay_withdraw_hub_to_personal_account)
             BankWithdrawEntry.NewBusiness -> resourceReference(R.string.tangempay_withdraw_hub_to_business_account)

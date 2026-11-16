@@ -20,13 +20,13 @@ internal enum class CollectiblesMenuItem(val id: String) {
     DELIVERIES("deliveries"),
     HOW_IT_WORKS("how_it_works"),
     GET_ASSISTANCE("get_assistance"),
-    HOT_DELEGATE("hot_delegate"),
+    SESSION_KEY("session_key"),
     CLOSE_ACCOUNT("close_account"),
 }
 
 /**
  * Builds the top bar menu closed; opening and dismissing it is a state update. The input is the base58 address of
- * the vault's `hot_delegate`, null until it is read.
+ * the vault's `session_key`, null until it is read.
  */
 internal class CollectiblesMenuConverter(
     private val onMenuClick: () -> Unit,
@@ -58,10 +58,10 @@ internal class CollectiblesMenuConverter(
                 titleRef = TextReference.Res(R.string.collectibles_main_menu_get_assistance),
             ),
 
-            // TODO testing only, remove once Gasless pays the spin fee: until then the hot delegate is topped up by hand
+            // TODO testing only, remove once Gasless pays the spin fee: until then the session key is topped up by hand
             value?.let {
                 item(
-                    item = CollectiblesMenuItem.HOT_DELEGATE,
+                    item = CollectiblesMenuItem.SESSION_KEY,
                     icon = Icons.ic_copy_20,
                     titleRef = stringReference("Session key address"),
                     hasDividerAbove = true,

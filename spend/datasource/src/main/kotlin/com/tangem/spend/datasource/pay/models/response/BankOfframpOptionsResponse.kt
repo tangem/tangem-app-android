@@ -39,6 +39,7 @@ data class BankOfframpOptionsResponse(
     @Serializable
     data class Destination(
         @SerialName("rail") val rail: String?,
+        @SerialName("currency") val currency: String?,
         @SerialName("fee") val fee: Fee?,
         @SerialName("eta") val eta: Eta?,
     )

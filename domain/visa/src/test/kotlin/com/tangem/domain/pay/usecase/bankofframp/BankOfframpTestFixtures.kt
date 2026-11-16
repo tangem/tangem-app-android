@@ -31,9 +31,10 @@ internal fun bankAccountDetails(
     beneficiary: Beneficiary = Beneficiary.Individual(firstName = "John", lastName = "Doe"),
     routingNumber: String = "021000021",
     beneficiaryAddress: PostalAddress = postalAddress(),
+    rail: BankRail? = BankRail.ACH,
 ): BankAccountDetails = BankAccountDetails(
     currency = "USD",
-    rail = BankRail.ACH,
+    rail = rail,
     isThirdParty = false,
     beneficiary = beneficiary,
     beneficiaryAddress = beneficiaryAddress,

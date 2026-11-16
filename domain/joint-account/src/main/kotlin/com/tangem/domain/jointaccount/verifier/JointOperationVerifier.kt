@@ -15,7 +15,6 @@ import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
-import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.jointaccount.signing.JointSignatureRecoverer
 import java.math.BigInteger
 
@@ -141,13 +140,11 @@ class JointOperationVerifier(
     private fun Raise<JointOperationSignError>.checkSafeAddress(jointAccount: JointAccount, safeAddress: String) {
         val owners = jointAccount.members.map(JointAccount.Member::address)
 
-        val isAnySingletonMatching = SafeSingleton.entries.any { singleton ->
-            safeAddressCalculator.compute(owners = owners, threshold = jointAccount.threshold, singleton = singleton)
-                .getOrNull()
-                ?.equals(safeAddress, ignoreCase = true) == true
-        }
+        val isMatching = safeAddressCalculator.compute(owners = owners, threshold = jointAccount.threshold)
+            .getOrNull()
+            ?.equals(safeAddress, ignoreCase = true) == true
 
-        ensure(isAnySingletonMatching) {
+        ensure(isMatching) {
             VerificationFailed(reason = VerificationFailed.Reason.SAFE_ADDRESS_MISMATCH)
         }
     }

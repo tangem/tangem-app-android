@@ -17,11 +17,13 @@ import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.error.TronActivationRefusal
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.tron.TronGaslessApprove
 import com.tangem.domain.transaction.models.tron.TronGaslessApproveEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.models.tron.TronGaslessSwap
 import com.tangem.domain.transaction.models.tron.TronGaslessSwapEstimateParams
+import java.math.BigInteger
 
 /**
  * Fetches the Tron gasless compensation quote (eager estimate) for an original token transfer or an
@@ -50,13 +52,7 @@ class GetTronGaslessFeeUseCase(
             block = {
                 val approve = transactionData.tronGaslessApproveOrNull()
                 val quote = if (approve != null) {
-                    tronGaslessTransactionRepository.estimateApprove(
-                        TronGaslessApproveEstimateParams(
-                            userWalletId = userWalletId,
-                            approve = approve,
-                            feeTokenContract = feeToken.contractAddress,
-                        ),
-                    )
+                    estimateApprove(userWalletId, approve, feeToken)
                 } else {
                     estimateTransfer(userWalletId, transactionData, feeToken)
                 }
@@ -65,6 +61,29 @@ class GetTronGaslessFeeUseCase(
             catch = { raise(it.toGaslessError(feeToken)) },
         )
     }
+
+    suspend fun forApprove(
+        userWalletId: UserWalletId,
+        approve: TronGaslessApprove,
+        feeToken: CryptoCurrency.Token,
+    ): Either<GetFeeError, TransactionFeeExtended> = either {
+        catch(
+            block = { estimateApprove(userWalletId, approve, feeToken).toTransactionFee(feeToken) },
+            catch = { raise(it.toGaslessError(feeToken)) },
+        )
+    }
+
+    private suspend fun estimateApprove(
+        userWalletId: UserWalletId,
+        approve: TronGaslessApprove,
+        feeToken: CryptoCurrency.Token,
+    ): TronGaslessQuote = tronGaslessTransactionRepository.estimateApprove(
+        TronGaslessApproveEstimateParams(
+            userWalletId = userWalletId,
+            approve = approve,
+            feeTokenContract = feeToken.contractAddress,
+        ),
+    )
 
     private suspend fun estimateTransfer(
         userWalletId: UserWalletId,
@@ -128,8 +147,18 @@ class GetTronGaslessFeeUseCase(
         )
     }
 
-    private fun Throwable.toGaslessError(feeToken: CryptoCurrency.Token): GaslessError =
-        when (val refusal = (this as? GaslessServiceException)?.tronActivationRefusal) {
+    private fun Throwable.toGaslessError(feeToken: CryptoCurrency.Token): GaslessError {
+        val allowanceTooHigh = (this as? GaslessServiceException)?.tronAllowanceTooHigh
+        if (allowanceTooHigh != null) {
+            fun BigInteger.inFeeToken() = toBigDecimal().movePointLeft(feeToken.decimals)
+            return GaslessError.TronAllowanceTooHigh(
+                balance = allowanceTooHigh.balanceRaw.inFeeToken(),
+                required = allowanceTooHigh.requiredRaw.inFeeToken(),
+                allowance = allowanceTooHigh.allowanceRaw.inFeeToken(),
+                allowances = allowanceTooHigh.allowancesRaw.mapValues { (_, allowance) -> allowance.inFeeToken() },
+            )
+        }
+        return when (val refusal = (this as? GaslessServiceException)?.tronActivationRefusal) {
             is TronActivationRefusal.BalanceTooLow -> GaslessError.TronActivationNotEnoughFunds(
                 minimumAmount = refusal.minimumAmountRaw.toBigDecimal()
                     .movePointLeft(feeToken.decimals)
@@ -139,4 +168,5 @@ class GetTronGaslessFeeUseCase(
             is TronActivationRefusal.RateLimited -> GaslessError.TronActivationRateLimited(refusal.isPerWallet)
             null -> GaslessError.DataError(this)
         }
+    }
 }

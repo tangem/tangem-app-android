@@ -43,22 +43,27 @@ internal fun BankRailIcon(rail: BankRail, size: Dp, modifier: Modifier = Modifie
 private fun BankRail.brandColor(): Color = when (this) {
     BankRail.ACH -> Color(ACH_BRAND_COLOR)
     BankRail.WIRE -> Color(FEDWIRE_BRAND_COLOR)
+    BankRail.SPEI -> Color(SPEI_BRAND_COLOR)
 }
 
 @Composable
 private fun BankRail.labelColor(): Color = when (this) {
     BankRail.ACH -> TangemTheme.colors3.icon.staticDark
     BankRail.WIRE -> TangemTheme.colors3.icon.staticLight
+    BankRail.SPEI -> TangemTheme.colors3.icon.staticLight
 }
 
 private fun BankRail.label(): String = when (this) {
     BankRail.ACH -> ACH_LABEL
     BankRail.WIRE -> FEDWIRE_LABEL
+    BankRail.SPEI -> SPEI_LABEL
 }
 
 private const val ACH_BRAND_COLOR = 0xFF704AF1
 private const val FEDWIRE_BRAND_COLOR = 0xFFFBEE76
+private const val SPEI_BRAND_COLOR = 0xFF1E1E1E
 private const val ACH_LABEL = "ACH"
 private const val FEDWIRE_LABEL = "Fed"
+private const val SPEI_LABEL = "SPEI"
 private const val CORNER_RATIO = 0.225f
 private const val LABEL_RATIO = 0.325f

@@ -6,6 +6,8 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampAmountButtonUMState
@@ -82,6 +84,59 @@ internal class OnrampStateFactoryTest {
         // Amount input is locked (disabled via isError) — like the unsupported-country case.
         assertThat(result.amountBlockState.amountFieldModel.isError).isTrue()
     }
+
+    @Test
+    fun `GIVEN token with standard WHEN getInitialState THEN subtitle has standard and network name`() {
+        // Arrange
+        val token = MockCryptoCurrencyFactory().createToken(Blockchain.Ethereum)
+
+        // Act
+        val result = createFactory(token).getInitialState(currency = "USDC", onClose = {}, openSettings = {})
+
+        // Assert
+        assertThat(result.topBarConfig.subtitle).isEqualTo(
+            resourceReference(
+                id = R.string.token_details_toolbar_subtitle_standard,
+                formatArgs = wrappedList("ERC20", token.network.name),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN token without standard WHEN getInitialState THEN subtitle has network name only`() {
+        // Arrange
+        val token = MockCryptoCurrencyFactory().createToken(Blockchain.Solana)
+
+        // Act
+        val result = createFactory(token).getInitialState(currency = "USDC", onClose = {}, openSettings = {})
+
+        // Assert
+        assertThat(result.topBarConfig.subtitle).isEqualTo(
+            resourceReference(
+                id = R.string.token_details_toolbar_subtitle_network,
+                formatArgs = wrappedList(token.network.name),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN coin WHEN getInitialState THEN subtitle is main network`() {
+        // Arrange
+        val coin: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
+
+        // Act
+        val result = createFactory(coin).getInitialState(currency = "ETH", onClose = {}, openSettings = {})
+
+        // Assert
+        assertThat(result.topBarConfig.subtitle).isEqualTo(resourceReference(R.string.common_main_network))
+    }
+
+    private fun createFactory(currency: CryptoCurrency) = OnrampStateFactory(
+        currentStateProvider = Provider { currentState },
+        onrampAmountButtonUMStateFactory = OnrampAmountButtonUMStateFactory(),
+        cryptoCurrency = currency,
+        onrampIntents = mockk(relaxed = true),
+    )
 
     private companion object {
         val USD_CURRENCY = OnrampCurrency(

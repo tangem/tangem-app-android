@@ -24,7 +24,7 @@ internal typealias WalletIdWithCollectiblesAccountDTO = Map<String, Collectibles
  * Store of collectibles accounts, one entry per wallet, with dual storage (runtime + persistence).
  *
  * An entry has two halves, written independently. Only the status half is mirrored in the runtime store —
- * nothing observes the delegate. Holding both in one entry is what makes [clear] drop them together.
+ * nothing observes the session key. Holding both in one entry is what makes [clear] drop them together.
  *
  * [get] emits on subscription even when nothing has ever been stored. That is not a convenience: the status is
  * combined with the other accounts' statuses, and `combine` withholds every value until all of its sources have
@@ -82,11 +82,14 @@ internal class CollectiblesAccountStore(
      * Records that the wallet has an account, in the state [value] describes. A [value] that means anything else
      * is refused: a loading or failed read may not be recorded as the account itself.
      *
+     * [CollectiblesAccountStatusValue.NotOnboarded] is the exception, kept in memory only: the backend lists an
+     * account whose vault is not on chain, which every refresh reads again.
+     *
      * A [value] carrying no balance keeps the one already cached — the record and the amount are read separately,
      * and re-reading the record must not blank an amount that is still valid.
      */
     suspend fun store(userWalletId: UserWalletId, value: CollectiblesAccountStatusValue) {
-        if (converter.convert(value) == null) {
+        if (value !is CollectiblesAccountStatusValue.NotOnboarded && converter.convert(value) == null) {
             logger.e("Refusing to record $value as a collectibles account of $userWalletId")
             return
         }
@@ -123,30 +126,30 @@ internal class CollectiblesAccountStore(
         }
     }
 
-    suspend fun getDelegate(userWalletId: UserWalletId): String? {
+    suspend fun getSessionKey(userWalletId: UserWalletId): String? {
         preloaded.await()
 
         return runSuspendCatching {
-            persistenceDataStore.data.first()[userWalletId.stringValue]?.delegateHotWalletId
+            persistenceDataStore.data.first()[userWalletId.stringValue]?.sessionKeyHotWalletId
         }
-            .onFailure { logger.e("Failed to read the collectibles delegate of $userWalletId", it) }
+            .onFailure { logger.e("Failed to read the collectibles session key of $userWalletId", it) }
             .getOrNull()
     }
 
     /** Throws when the write does not reach the disk: an unrecorded key is a keystore entry nothing can reach. */
-    suspend fun storeDelegate(userWalletId: UserWalletId, hotWalletId: String) {
+    suspend fun storeSessionKey(userWalletId: UserWalletId, hotWalletId: String) {
         preloaded.await()
 
         writeMutex.withLock {
-            persist(userWalletId) { stored -> stored.copy(delegateHotWalletId = hotWalletId) }.getOrThrow()
+            persist(userWalletId) { stored -> stored.copy(sessionKeyHotWalletId = hotWalletId) }.getOrThrow()
         }
     }
 
-    suspend fun removeDelegate(userWalletId: UserWalletId) {
+    suspend fun removeSessionKey(userWalletId: UserWalletId) {
         preloaded.await()
 
         writeMutex.withLock {
-            persist(userWalletId) { stored -> stored.copy(delegateHotWalletId = null) }.getOrThrow()
+            persist(userWalletId) { stored -> stored.copy(sessionKeyHotWalletId = null) }.getOrThrow()
         }
     }
 

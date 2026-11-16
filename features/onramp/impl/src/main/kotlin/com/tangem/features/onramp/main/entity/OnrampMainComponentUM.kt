@@ -32,6 +32,7 @@ internal sealed interface OnrampMainComponentUM {
 
 internal data class OnrampMainTopBarUM(
     val title: TextReference,
+    val subtitle: TextReference,
     val startButtonUM: TopAppBarButtonUM,
     val endButtonUM: TopAppBarButtonUM,
 )

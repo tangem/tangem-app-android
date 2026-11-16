@@ -82,6 +82,7 @@ internal class TxHistoryModel @Inject constructor(
         userWalletId = params.userWalletId,
         currency = params.currency,
         modelScope = modelScope,
+        shouldUseCacheWhenOffline = params.shouldUseCacheWhenOffline,
     )
 
     private val isResumed = MutableStateFlow(false)
@@ -292,6 +293,7 @@ internal class TxHistoryModel @Inject constructor(
 
     override fun onTransactionClick(item: TxHistoryInfo) {
         vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Tick)
+        params.onTransactionClick(item)
         txDetailsNavigation.activate(TxHistoryDetailsSlotConfig(item.txId))
     }
 

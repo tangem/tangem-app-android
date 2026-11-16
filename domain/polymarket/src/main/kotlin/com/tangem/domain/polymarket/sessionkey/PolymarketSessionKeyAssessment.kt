@@ -20,6 +20,7 @@ data class PolymarketSessionKeySnapshot(
 data class PolymarketSessionKeyAssessment(
     val deviceState: PolymarketSessionKeyDeviceState,
     val reconciliation: PolymarketSessionKeyReconciliation,
+    val nextChangeAt: Instant?,
 )
 
 sealed interface PolymarketSessionKeyDeviceState {

@@ -61,7 +61,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-private val TopBarHeight: Dp = 64.dp
+private val TopBarHeight: Dp = 72.dp
 private val MarketBlockHorizontalPadding: Dp = 14.dp
 
 private const val TOP_FADE_MID_STOP = 0.8f

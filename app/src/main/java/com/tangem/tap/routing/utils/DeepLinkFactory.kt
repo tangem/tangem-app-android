@@ -7,6 +7,7 @@ import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.common.uri.ExternalUrlValidator
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
@@ -163,7 +164,7 @@ internal class DeepLinkFactory @Inject constructor(
         // `wc:` and other opaque links have no query: getQueryParameters throws for them
         if (!marketingFeatureToggles.isUidBindingEnabled || deeplinkUri.isOpaque) return
 
-        val uid = deeplinkUri.getQueryParameters(MARKETING_UID_PARAM).firstOrNull(String::isNotEmpty) ?: return
+        val uid = deeplinkUri.getQueryParameters(DeeplinkConst.UID_KEY).firstOrNull(String::isNotEmpty) ?: return
         if (deepLinkHandlerRegistry.find(deeplinkUri) == null) return
 
         appCoroutineScope.launch { marketingUidBindingRepository.bind(uid) }
@@ -420,8 +421,6 @@ internal class DeepLinkFactory @Inject constructor(
     private data class ParkedDeeplink(val uri: Uri, val source: DeeplinkSource)
 
     private companion object {
-
-        const val MARKETING_UID_PARAM = "uid"
 
         /**
          * AppsFlyer OneLink domains, mirroring the `autoVerify` App Link filters in the manifest. They are not in

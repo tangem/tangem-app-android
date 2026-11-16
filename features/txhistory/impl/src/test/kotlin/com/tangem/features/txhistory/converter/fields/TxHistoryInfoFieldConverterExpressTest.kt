@@ -313,7 +313,7 @@ internal class TxHistoryInfoFieldConverterExpressTest {
         // Assert
         assertThat((result.subtitle as ContentSubtitle.Asset).owner).isEqualTo(
             ContentSubtitle.AssetOwner.Account(
-                name = resourceReference(R.string.tangempay_unified_onboarding_money_account_header),
+                name = resourceReference(R.string.money_account_main_name),
                 avatar = ContentSubtitle.PortfolioAvatar.Resource(
                     resId = CryptoPortfolioIcon.Icon.Safe.getResId(),
                     color = CryptoPortfolioIcon.Color.VitalGreen.getUiColor(),

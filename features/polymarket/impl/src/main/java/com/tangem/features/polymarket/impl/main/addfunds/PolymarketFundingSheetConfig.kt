@@ -6,5 +6,7 @@ internal sealed interface PolymarketFundingSheetConfig {
 
     data object AddFunds : PolymarketFundingSheetConfig
 
+    data class ChooseNetwork(val receiveConfigs: List<TokenReceiveConfig>) : PolymarketFundingSheetConfig
+
     data class Receive(val config: TokenReceiveConfig) : PolymarketFundingSheetConfig
 }

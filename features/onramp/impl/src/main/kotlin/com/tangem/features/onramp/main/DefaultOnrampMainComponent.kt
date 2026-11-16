@@ -53,6 +53,11 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
         params = MarketingBannerComponent.Params.Linked(requestFlow = model.linkedMarketingRequest),
     )
 
+    private val ctaMarketingBannerComponent: MarketingBannerComponent = marketingBannerComponentFactory.create(
+        context = child("marketing_banner_cta"),
+        params = MarketingBannerComponent.Params.Cta(requestFlow = model.ctaMarketingRequest),
+    )
+
     init {
         lifecycle.subscribe(onStart = model::onStart, onStop = model::onStop)
     }
@@ -94,6 +99,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
             state = state,
             marketingBannerComponent = marketingBannerComponent,
             linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+            ctaMarketingBannerComponent = ctaMarketingBannerComponent,
         )
         bottomSheet.child?.instance?.BottomSheet()
         demandSurvey.child?.instance?.Content(modifier = Modifier)

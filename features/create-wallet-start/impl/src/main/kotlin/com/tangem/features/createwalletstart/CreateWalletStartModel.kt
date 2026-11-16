@@ -196,7 +196,9 @@ internal class CreateWalletStartModel @Inject constructor(
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
                 when (error) {
-                    is SaveWalletError.DataError -> TangemLogger.e("Unable to save user wallet: $error")
+                    is SaveWalletError.DataError,
+                    is SaveWalletError.HotWalletsLimitReached,
+                    -> TangemLogger.e("Unable to save user wallet: $error")
                     is SaveWalletError.WalletAlreadySaved -> {
                         userWalletsListRepository.unlock(
                             userWalletId = userWallet.walletId,

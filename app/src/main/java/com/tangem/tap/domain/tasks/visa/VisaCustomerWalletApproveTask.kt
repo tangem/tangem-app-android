@@ -32,11 +32,6 @@ class VisaCustomerWalletApproveTask(
             return
         }
 
-        if (visaDataForApprove.cardId != null && card.cardId != visaDataForApprove.cardId) {
-            callback(CompletionResult.Failure(VisaActivationError.CardIdNotMatched.tangemError))
-            return
-        }
-
         proceedApprove(card, session, callback)
     }
 
@@ -147,7 +142,6 @@ class VisaCustomerWalletApproveTask(
     }
 
     data class Input(
-        val cardId: String? = null,
         val targetAddress: String,
         val hashToSign: String,
         val sign: (signature: String, customerWalletAddress: String) -> VisaSignedDataByCustomerWallet,

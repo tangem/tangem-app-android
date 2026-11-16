@@ -33,6 +33,12 @@ sealed class FeeSelectorParams {
      */
     abstract val isTronGaslessSupported: Boolean
 
+    /**
+     * Asks whether a third party can pay the network fee for the quoted transaction. Called with the fee the user would
+     * pay; null for flows that never offer it.
+     */
+    abstract val onLoadSponsoredFee: (suspend (TransactionFee) -> SponsoredFeeAvailability)?
+
     data class FeeSelectorBlockParams(
         override val state: FeeSelectorUM,
         override val userWalletId: UserWalletId,
@@ -48,6 +54,7 @@ sealed class FeeSelectorParams {
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val shouldShowOnlySpeedOption: Boolean = false,
         override val isTronGaslessSupported: Boolean = false,
+        override val onLoadSponsoredFee: (suspend (TransactionFee) -> SponsoredFeeAvailability)? = null,
         override val onDisableCustomFee: () -> Boolean = { false },
         val bottomSheetShown: (Boolean) -> Unit = {},
         val blockAppearance: BlockAppearance = BlockAppearance.Default,
@@ -68,6 +75,7 @@ sealed class FeeSelectorParams {
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val shouldShowOnlySpeedOption: Boolean = false,
         override val isTronGaslessSupported: Boolean = false,
+        override val onLoadSponsoredFee: (suspend (TransactionFee) -> SponsoredFeeAvailability)? = null,
         override val onDisableCustomFee: () -> Boolean = { false },
         val callback: FeeSelectorModelCallback,
         /**
